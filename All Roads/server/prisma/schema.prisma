@@ -1,0 +1,779 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String?  @unique
+  password     String? // Nullable to support SSO-only accounts
+  firstName    String
+  lastName     String
+  displayName  String?
+  tierTag      String?
+  phoneNumber  String?
+  dateOfBirth  DateTime
+  profileImage String?
+
+  // SSO Authentication
+  ssoProviders   String[] @default([]) // Array of provider names: "apple", "google"
+  ssoProviderIds Json? // JSON object mapping provider names to provider user IDs
+
+  // Membership
+  membershipTier String @default("standard")
+  role           String @default("member")
+
+  // Player Rating
+  currentRating     Float    @default(1.0)
+  pickupRating      Float    @default(1.0)
+  leagueRating      Float    @default(1.0)
+  totalGamesPlayed  Int      @default(0)
+  pickupGamesPlayed Int      @default(0)
+  leagueGamesPlayed Int      @default(0)
+  ratingLastUpdated DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organizedEvents        Event[]                 @relation("EventOrganizer")
+  bookings               Booking[]
+  teamMemberships        TeamMember[]
+  facilities             Facility[]              @relation("FacilityOwner")
+  reviews                Review[]
+  organizedLeagues       League[]                @relation("LeagueOrganizer")
+  gameParticipations     GameParticipation[]
+  votesGiven             PlayerVote[]            @relation("VoterVotes")
+  votesReceived          PlayerVote[]            @relation("ReceivedVotes")
+  salutesGiven           Salute[]                @relation("SalutesGiven")
+  salutesReceived        Salute[]                @relation("SalutesReceived")
+  uploadedDocuments      LeagueDocument[]        @relation("DocumentUploader")
+  uploadedCertifications CertificationDocument[] @relation("CertificationUploader")
+  rentals                FacilityRental[]
+  refreshTokens          RefreshToken[]
+  passwordResetTokens    PasswordResetToken[]
+
+  @@map("users")
+}
+
+model Event {
+  id                  String   @id @default(uuid())
+  title               String
+  description         String
+  sportType           String
+  skillLevel          String
+  eventType           String
+  status              String   @default("active")
+  cancellationReason  String? // Reason for cancellation (if status is cancelled)
+  startTime           DateTime
+  endTime             DateTime
+  maxParticipants     Int
+  currentParticipants Int      @default(0)
+  price               Float    @default(0)
+  equipment           String[] @default([])
+  rules               String?
+  imageUrl            String?
+
+  // Eligibility restrictions (stored as JSON)
+  eligibilityRestrictedToTeams   String[] @default([]) // Team IDs
+  eligibilityRestrictedToLeagues String[] @default([]) // League IDs
+  eligibilityMinAge              Int?
+  eligibilityMaxAge              Int?
+  eligibilityRequiredSkillLevel  String?
+  eligibilityMinSkillLevel       String?
+  eligibilityMaxSkillLevel       String?
+  eligibilityIsInviteOnly        Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  organizerId String
+  facilityId  String?
+  rentalId    String?
+  timeSlotId  String? // Direct link to time slot (for owned facilities)
+
+  // Relations
+  organizer               User                @relation("EventOrganizer", fields: [organizerId], references: [id])
+  facility                Facility?           @relation(fields: [facilityId], references: [id])
+  rental                  FacilityRental?     @relation(fields: [rentalId], references: [id])
+  timeSlot                FacilityTimeSlot?   @relation(fields: [timeSlotId], references: [id])
+  rentalsUsedForThisEvent FacilityRental[]    @relation("RentalUsedForEvent")
+  bookings                Booking[]
+  gameParticipations      GameParticipation[]
+  playerVotes             PlayerVote[]
+  salutes                 Salute[]
+  matches                 Match[]
+
+  @@map("events")
+}
+
+model Facility {
+  id                  String   @id @default(uuid())
+  name                String
+  description         String
+  sportTypes          String[] @default([])
+  amenities           String[] @default([])
+  imageUrl            String?
+  rating              Float    @default(0)
+  pricePerHour        Float
+  isActive            Boolean  @default(true)
+  isVerified          Boolean  @default(false)
+  verificationStatus  String   @default("pending") // pending, approved, rejected, expired
+  accessInstructions  String?
+  parkingInfo         String?
+  minimumBookingHours Int      @default(1)
+  bufferTimeMins      Int      @default(0)
+
+  // Contact Information
+  contactName    String?
+  contactPhone   String?
+  contactEmail   String?
+  contactWebsite String?
+
+  // Facility Map
+  facilityMapUrl          String?
+  facilityMapThumbnailUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Address
+  street  String
+  city    String
+  state   String
+  zipCode String
+  country String @default("USA")
+
+  // Location
+  latitude  Float
+  longitude Float
+
+  // Foreign Keys
+  ownerId String
+
+  // Relations
+  owner             User                   @relation("FacilityOwner", fields: [ownerId], references: [id])
+  events            Event[]
+  bookings          Booking[]
+  reviews           Review[]
+  verification      FacilityVerification?
+  rateSchedules     FacilityRateSchedule[]
+  availabilitySlots FacilityAvailability[]
+  accessImages      FacilityAccessImage[]
+  courts            FacilityCourt[]
+
+  @@map("facilities")
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  sportType   String
+  skillLevel  String
+  maxMembers  Int
+  isPrivate   Boolean  @default(false)
+  imageUrl    String?
+  leagueId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members           TeamMember[]
+  league            League?            @relation("LegacyLeague", fields: [leagueId], references: [id])
+  leagueMemberships LeagueMembership[]
+  homeMatches       Match[]            @relation("HomeMatches")
+  awayMatches       Match[]            @relation("AwayMatches")
+
+  @@map("teams")
+}
+
+model League {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  sportType   String
+  skillLevel  String
+
+  // Season management
+  seasonId   String?
+  seasonName String?
+  startDate  DateTime?
+  endDate    DateTime?
+  isActive   Boolean   @default(true)
+
+  // Points system configuration (stored as JSON)
+  pointsConfig Json @default("{\"win\": 3, \"draw\": 1, \"loss\": 0}")
+
+  // Certification
+  isCertified Boolean   @default(false)
+  certifiedAt DateTime?
+
+  // Metadata
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  organizerId String
+
+  // Relations
+  organizer         User                    @relation("LeagueOrganizer", fields: [organizerId], references: [id])
+  legacyTeams       Team[]                  @relation("LegacyLeague")
+  memberships       LeagueMembership[]
+  matches           Match[]
+  seasons           Season[]
+  documents         LeagueDocument[]
+  certificationDocs CertificationDocument[]
+
+  @@index([sportType])
+  @@index([isActive])
+  @@index([isCertified])
+  @@map("leagues")
+}
+
+model TeamMember {
+  id       String   @id @default(uuid())
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+
+  // Foreign Keys
+  userId String
+  teamId String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+model Booking {
+  id            String   @id @default(uuid())
+  status        String   @default("confirmed")
+  bookingType   String
+  totalPrice    Float
+  paymentStatus String   @default("pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Foreign Keys
+  userId     String
+  eventId    String?
+  facilityId String?
+  courtId    String?
+  rentalId   String?
+
+  // Relations
+  user     User            @relation(fields: [userId], references: [id])
+  event    Event?          @relation(fields: [eventId], references: [id])
+  facility Facility?       @relation(fields: [facilityId], references: [id])
+  court    FacilityCourt?  @relation(fields: [courtId], references: [id])
+  rental   FacilityRental? @relation(fields: [rentalId], references: [id])
+
+  @@map("bookings")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  userId     String
+  facilityId String
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@map("reviews")
+}
+
+model FacilityVerification {
+  id              String    @id @default(uuid())
+  status          String    @default("pending") // pending, approved, rejected, expired
+  submittedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  expiresAt       DateTime?
+  rejectionReason String?
+  reviewerNotes   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Foreign Keys
+  facilityId String  @unique
+  reviewedBy String?
+
+  // Relations
+  facility  Facility               @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  documents VerificationDocument[]
+
+  @@map("facility_verifications")
+}
+
+model VerificationDocument {
+  id         String   @id @default(uuid())
+  fileName   String
+  fileUrl    String // Encrypted storage URL
+  fileType   String // deed, lease, license, etc.
+  fileSize   Int
+  mimeType   String
+  uploadedAt DateTime @default(now())
+
+  // Foreign Keys
+  verificationId String
+
+  // Relations
+  verification FacilityVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  @@map("verification_documents")
+}
+
+model FacilityRateSchedule {
+  id         String    @id @default(uuid())
+  name       String // e.g., "Weekend Peak Hours", "Summer Rates"
+  rateType   String // base, peak, seasonal, discount
+  hourlyRate Float
+  startDate  DateTime?
+  endDate    DateTime?
+  daysOfWeek Int[]     @default([]) // 0=Sunday, 1=Monday, etc.
+  startTime  String? // HH:MM format
+  endTime    String? // HH:MM format
+  minHours   Int?
+  priority   Int       @default(0) // Higher priority rules override lower
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Foreign Keys
+  facilityId String
+
+  // Relations
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@map("facility_rate_schedules")
+}
+
+model FacilityAvailability {
+  id           String    @id @default(uuid())
+  dayOfWeek    Int // 0=Sunday, 1=Monday, etc.
+  startTime    String // HH:MM format
+  endTime      String // HH:MM format
+  isRecurring  Boolean   @default(true)
+  specificDate DateTime? // For one-time availability
+  isBlocked    Boolean   @default(false) // True for maintenance/private events
+  blockReason  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Foreign Keys
+  facilityId String
+
+  // Relations
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@map("facility_availability")
+}
+
+model FacilityAccessImage {
+  id           String   @id @default(uuid())
+  imageUrl     String
+  caption      String?
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Foreign Keys
+  facilityId String
+
+  // Relations
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@map("facility_access_images")
+}
+
+model GameParticipation {
+  id               String   @id @default(uuid())
+  gameScore        Float    @default(0) // vote_share × game_rating
+  votesReceived    Int      @default(0)
+  votesCast        Int      @default(0)
+  gameRating       Float    @default(1.0) // 1 + mean(rating of all participants)
+  participantCount Int      @default(0)
+  playedAt         DateTime
+  eventType        String // pickup, league, tournament
+  seasonId         String? // For league games
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Foreign Keys
+  userId  String
+  eventId String
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("game_participations")
+}
+
+model PlayerVote {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  eventId    String
+  voterId    String
+  votedForId String
+
+  // Relations
+  event    Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  voter    User  @relation("VoterVotes", fields: [voterId], references: [id], onDelete: Cascade)
+  votedFor User  @relation("ReceivedVotes", fields: [votedForId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, voterId, votedForId])
+  @@index([eventId])
+  @@index([voterId])
+  @@index([votedForId])
+  @@map("player_votes")
+}
+
+model Salute {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  eventId    String
+  fromUserId String
+  toUserId   String
+
+  // Relations
+  event    Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fromUser User  @relation("SalutesGiven", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User  @relation("SalutesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, fromUserId, toUserId])
+  @@index([eventId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@map("salutes")
+}
+
+model FacilityCourt {
+  id        String  @id @default(uuid())
+  name      String // "Court 1", "Field A", etc.
+  sportType String
+  capacity  Int     @default(1)
+  isIndoor  Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  // Map boundary data (stored as JSON array of {x, y} points)
+  // Coordinates are normalized (0-1 range) relative to facility map image
+  boundaryCoordinates Json?
+
+  // Pricing (optional override of facility base rate)
+  pricePerHour Float?
+
+  // Display order for listing
+  displayOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  facilityId String
+
+  // Relations
+  facility     Facility                    @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  availability FacilityCourtAvailability[]
+  timeSlots    FacilityTimeSlot[]
+  bookings     Booking[]
+
+  @@map("facility_courts")
+}
+
+model FacilityCourtAvailability {
+  id           String    @id @default(uuid())
+  dayOfWeek    Int? // 0=Sunday, 1=Monday, etc. (null for one-time)
+  startTime    String // HH:MM format (24-hour)
+  endTime      String // HH:MM format (24-hour)
+  isRecurring  Boolean   @default(true)
+  specificDate DateTime? // For one-time availability/blocks
+  isBlocked    Boolean   @default(false)
+  blockReason  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Foreign Keys
+  courtId String
+
+  // Relations
+  court FacilityCourt @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@index([courtId])
+  @@index([specificDate])
+  @@map("facility_court_availability")
+}
+
+model FacilityTimeSlot {
+  id          String   @id @default(uuid())
+  date        DateTime // Specific date for this slot
+  startTime   String // HH:MM format (24-hour)
+  endTime     String // HH:MM format (24-hour)
+  status      String   @default("available") // available, blocked, rented
+  blockReason String? // Reason if blocked by operator
+  price       Float // Price for this specific slot (can vary by time/date)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  courtId String
+
+  // Relations
+  court  FacilityCourt   @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  rental FacilityRental?
+  events Event[] // Events using this slot directly
+
+  @@unique([courtId, date, startTime])
+  @@index([courtId])
+  @@index([date])
+  @@index([status])
+  @@map("facility_time_slots")
+}
+
+model FacilityRental {
+  id            String @id @default(uuid())
+  status        String @default("confirmed") // confirmed, cancelled, completed, no_show
+  totalPrice    Float
+  paymentStatus String @default("pending") // pending, paid, refunded, failed
+
+  // Cancellation
+  cancelledAt        DateTime?
+  cancellationReason String?
+  cancellationStatus String? // null (not cancelled), pending_cancellation, cancelled
+  refundAmount       Float?
+
+  // Event usage tracking
+  usedForEventId String?
+
+  // Notifications
+  confirmationSent Boolean @default(false)
+  reminderSent24h  Boolean @default(false)
+  reminderSent1h   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  userId     String
+  timeSlotId String @unique
+
+  // Relations
+  user         User             @relation(fields: [userId], references: [id])
+  timeSlot     FacilityTimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  usedForEvent Event?           @relation("RentalUsedForEvent", fields: [usedForEventId], references: [id])
+  events       Event[]
+  bookings     Booking[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([usedForEventId])
+  @@map("facility_rentals")
+}
+
+model LeagueMembership {
+  id       String    @id @default(uuid())
+  status   String    @default("active") // active, pending, withdrawn
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  // Statistics (cached for performance)
+  matchesPlayed  Int @default(0)
+  wins           Int @default(0)
+  losses         Int @default(0)
+  draws          Int @default(0)
+  points         Int @default(0)
+  goalsFor       Int @default(0)
+  goalsAgainst   Int @default(0)
+  goalDifference Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  leagueId String
+  teamId   String
+  seasonId String?
+
+  // Relations
+  league League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season Season? @relation(fields: [seasonId], references: [id])
+
+  @@unique([leagueId, teamId, seasonId])
+  @@index([leagueId])
+  @@index([teamId])
+  @@index([seasonId])
+  @@map("league_memberships")
+}
+
+model Match {
+  id String @id @default(uuid())
+
+  // Match details
+  scheduledAt DateTime
+  playedAt    DateTime?
+  status      String    @default("scheduled") // scheduled, in_progress, completed, cancelled
+
+  // Results
+  homeScore Int?
+  awayScore Int?
+  outcome   String? // home_win, away_win, draw
+
+  // Optional event linking
+  eventId String?
+
+  // Metadata
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  leagueId   String
+  seasonId   String?
+  homeTeamId String
+  awayTeamId String
+
+  // Relations
+  league   League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  season   Season? @relation(fields: [seasonId], references: [id])
+  homeTeam Team    @relation("HomeMatches", fields: [homeTeamId], references: [id])
+  awayTeam Team    @relation("AwayMatches", fields: [awayTeamId], references: [id])
+  event    Event?  @relation(fields: [eventId], references: [id])
+
+  @@index([leagueId])
+  @@index([seasonId])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([scheduledAt])
+  @@map("matches")
+}
+
+model Season {
+  id          String   @id @default(uuid())
+  name        String // "Spring 2024", "Fall 2024"
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  isCompleted Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  leagueId String
+
+  // Relations
+  league      League             @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  memberships LeagueMembership[]
+  matches     Match[]
+
+  @@index([leagueId])
+  @@index([isActive])
+  @@map("seasons")
+}
+
+model LeagueDocument {
+  id           String   @id @default(uuid())
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String   @default("application/pdf")
+  documentType String // rules, schedule, other
+  uploadedAt   DateTime @default(now())
+
+  // Foreign Keys
+  leagueId   String
+  uploadedBy String
+
+  // Relations
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  uploader User   @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+
+  @@index([leagueId])
+  @@map("league_documents")
+}
+
+model CertificationDocument {
+  id           String @id @default(uuid())
+  documentType String // bylaws, board_of_directors
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String @default("application/pdf")
+
+  // Board of Directors data (JSON array)
+  boardMembers Json? // [{name: string, role: string}]
+
+  uploadedAt DateTime  @default(now())
+  approvedAt DateTime?
+
+  // Foreign Keys
+  leagueId   String
+  uploadedBy String
+
+  // Relations
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  uploader User   @relation("CertificationUploader", fields: [uploadedBy], references: [id])
+
+  @@index([leagueId])
+  @@map("certification_documents")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  userId String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  expiresAt DateTime
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  // Foreign Keys
+  userId String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}

@@ -1,0 +1,495 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { TextInput } from '../../components/forms/TextInput';
+import { Button } from '../../components/forms/Button';
+import { Checkbox } from '../../components/forms/Checkbox';
+import { SSOButton } from '../../components/auth/SSOButton';
+import { colors, Spacing, TextStyles } from '../../theme';
+import { ValidationService } from '../../services/auth/ValidationService';
+import { SSOService } from '../../services/auth/SSOService';
+import { registerUser, registerWithSSO } from '../../store/authSlice';
+
+interface RegistrationState {
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
+  agreedToTerms: boolean;
+  ssoProvider: 'apple' | 'google' | null;
+  ssoToken: string | null;
+  ssoUserId: string | null;
+  isLoading: boolean;
+  ssoLoading: 'apple' | 'google' | null;
+  errors: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    username?: string;
+    password?: string;
+    confirmPassword?: string;
+    agreedToTerms?: string;
+    general?: string;
+  };
+}
+
+export const RegistrationScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const validationService = new ValidationService();
+
+  const [state, setState] = useState<RegistrationState>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    agreedToTerms: false,
+    ssoProvider: null,
+    ssoToken: null,
+    ssoUserId: null,
+    isLoading: false,
+    ssoLoading: null,
+    errors: {},
+  });
+
+  const updateField = (field: keyof RegistrationState, value: any) => {
+    setState((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateError = (field: string, error: string | undefined) => {
+    setState((prev) => ({
+      ...prev,
+      errors: { ...prev.errors, [field]: error },
+    }));
+  };
+
+  const validateField = (field: string, value: string) => {
+    let error: string | null = null;
+
+    switch (field) {
+      case 'firstName':
+        error = validationService.validateFirstName(value);
+        break;
+      case 'lastName':
+        error = validationService.validateLastName(value);
+        break;
+      case 'email':
+        error = validationService.validateEmail(value);
+        break;
+      case 'username':
+        error = validationService.validateUsername(value);
+        break;
+      case 'password':
+        error = validationService.validatePassword(value);
+        break;
+      case 'confirmPassword':
+        error = validationService.validateConfirmPassword(state.password, value);
+        break;
+    }
+
+    updateError(field, error || undefined);
+  };
+
+  const validateForm = (): boolean => {
+    const errors = validationService.validateRegistrationForm({
+      firstName: state.firstName,
+      lastName: state.lastName,
+      email: state.email,
+      username: state.username,
+      password: state.ssoProvider ? '' : state.password,
+      confirmPassword: state.ssoProvider ? '' : state.confirmPassword,
+      agreedToTerms: state.agreedToTerms,
+    });
+
+    setState((prev) => ({ ...prev, errors }));
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleManualRegistration = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    updateField('isLoading', true);
+    updateError('general', undefined);
+
+    try {
+      const result = await dispatch(
+        registerUser({
+          firstName: state.firstName,
+          lastName: state.lastName,
+          email: state.email,
+          username: state.username,
+          password: state.password,
+          agreedToTerms: state.agreedToTerms,
+        })
+      ).unwrap();
+
+      // Navigate to home screen on success
+      Alert.alert('Success', 'Welcome to Muster!');
+      // navigation.navigate('Home'); // Uncomment when navigation is configured
+    } catch (error: any) {
+      if (error.status === 409) {
+        if (error.message.includes('email')) {
+          updateError('email', 'This email is already registered');
+        } else if (error.message.includes('username')) {
+          updateError('username', 'This username is taken');
+        }
+      } else if (error.message === 'No internet connection') {
+        updateError('general', 'No internet connection. Please check your network and try again');
+      } else if (error.message === 'Request timed out') {
+        updateError('general', 'Request timed out. Please try again');
+      } else {
+        updateError('general', error.message || 'Registration failed. Please try again');
+      }
+    } finally {
+      updateField('isLoading', false);
+    }
+  };
+
+  const handleSSORegistration = async (provider: 'apple' | 'google') => {
+    updateField('ssoLoading', provider);
+    updateError('general', undefined);
+
+    try {
+      const ssoService = new SSOService();
+      const userData = provider === 'apple'
+        ? await ssoService.signInWithApple()
+        : await ssoService.signInWithGoogle();
+
+      // Pre-populate form with SSO data
+      setState((prev) => ({
+        ...prev,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        ssoProvider: provider,
+        ssoToken: userData.providerToken,
+        ssoUserId: userData.providerId,
+        ssoLoading: null,
+      }));
+    } catch (error: any) {
+      updateField('ssoLoading', null);
+      if (error.message !== 'User cancelled') {
+        updateError('general', `Sign in with ${provider === 'apple' ? 'Apple' : 'Google'} failed. Please try again`);
+      }
+    }
+  };
+
+  const handleSSOComplete = async () => {
+    if (!state.username.trim()) {
+      updateError('username', 'Username is required');
+      return;
+    }
+
+    if (!state.agreedToTerms) {
+      updateError('agreedToTerms', 'You must agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
+    updateField('isLoading', true);
+    updateError('general', undefined);
+
+    try {
+      const result = await dispatch(
+        registerWithSSO({
+          provider: state.ssoProvider!,
+          providerToken: state.ssoToken!,
+          providerUserId: state.ssoUserId!,
+          email: state.email,
+          firstName: state.firstName,
+          lastName: state.lastName,
+          username: state.username,
+        })
+      ).unwrap();
+
+      Alert.alert('Success', 'Welcome to Muster!');
+      // navigation.navigate('Home'); // Uncomment when navigation is configured
+    } catch (error: any) {
+      if (error.status === 409) {
+        if (error.message.includes('email')) {
+          // Show account linking modal
+          // TODO: Implement AccountLinkingModal
+          updateError('general', 'An account with this email already exists. Account linking coming soon.');
+        } else if (error.message.includes('username')) {
+          updateError('username', 'This username is taken');
+        }
+      } else {
+        updateError('general', error.message || 'Registration failed. Please try again');
+      }
+    } finally {
+      updateField('isLoading', false);
+    }
+  };
+
+  const handleNavigateToLogin = () => {
+    // navigation.navigate('Login'); // Uncomment when navigation is configured
+  };
+
+  const handleOpenTerms = () => {
+    // TODO: Open Terms of Service
+    Alert.alert('Terms of Service', 'Terms of Service will be displayed here');
+  };
+
+  const handleOpenPrivacy = () => {
+    // TODO: Open Privacy Policy
+    Alert.alert('Privacy Policy', 'Privacy Policy will be displayed here');
+  };
+
+  const isFormValid = () => {
+    if (state.ssoProvider) {
+      return state.username.trim() && state.agreedToTerms;
+    }
+    return (
+      state.firstName.trim() &&
+      state.lastName.trim() &&
+      state.email.trim() &&
+      state.username.trim() &&
+      state.password.trim() &&
+      state.confirmPassword.trim() &&
+      state.agreedToTerms &&
+      Object.keys(state.errors).length === 0
+    );
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join Muster to find games and connect with players</Text>
+        </View>
+
+        {!state.ssoProvider && (
+          <>
+            <SSOButton
+              provider="apple"
+              onPress={() => handleSSORegistration('apple')}
+              isLoading={state.ssoLoading === 'apple'}
+              disabled={state.isLoading || state.ssoLoading !== null}
+            />
+            <SSOButton
+              provider="google"
+              onPress={() => handleSSORegistration('google')}
+              isLoading={state.ssoLoading === 'google'}
+              disabled={state.isLoading || state.ssoLoading !== null}
+            />
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+          </>
+        )}
+
+        <TextInput
+          label="First Name"
+          value={state.firstName}
+          onChangeText={(text) => updateField('firstName', text)}
+          placeholder="Enter your first name"
+          error={state.errors.firstName}
+          onBlur={() => validateField('firstName', state.firstName)}
+          icon="person-outline"
+          editable={!state.isLoading && !state.ssoProvider}
+          autoCapitalize="words"
+        />
+
+        <TextInput
+          label="Last Name"
+          value={state.lastName}
+          onChangeText={(text) => updateField('lastName', text)}
+          placeholder="Enter your last name"
+          error={state.errors.lastName}
+          onBlur={() => validateField('lastName', state.lastName)}
+          icon="person-outline"
+          editable={!state.isLoading && !state.ssoProvider}
+          autoCapitalize="words"
+        />
+
+        <TextInput
+          label="Email"
+          value={state.email}
+          onChangeText={(text) => updateField('email', text)}
+          placeholder="Enter your email"
+          error={state.errors.email}
+          onBlur={() => validateField('email', state.email)}
+          icon="mail-outline"
+          editable={!state.isLoading && !state.ssoProvider}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+
+        <TextInput
+          label="Username"
+          value={state.username}
+          onChangeText={(text) => updateField('username', text)}
+          placeholder="Choose a username"
+          error={state.errors.username}
+          onBlur={() => validateField('username', state.username)}
+          icon="at"
+          editable={!state.isLoading}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+
+        {!state.ssoProvider && (
+          <>
+            <TextInput
+              label="Password"
+              value={state.password}
+              onChangeText={(text) => updateField('password', text)}
+              placeholder="Create a password"
+              error={state.errors.password}
+              onBlur={() => validateField('password', state.password)}
+              icon="lock-closed-outline"
+              secureTextEntry
+              editable={!state.isLoading}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <TextInput
+              label="Confirm Password"
+              value={state.confirmPassword}
+              onChangeText={(text) => updateField('confirmPassword', text)}
+              placeholder="Confirm your password"
+              error={state.errors.confirmPassword}
+              onBlur={() => validateField('confirmPassword', state.confirmPassword)}
+              icon="lock-closed-outline"
+              secureTextEntry
+              editable={!state.isLoading}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </>
+        )}
+
+        <Checkbox
+          label={
+            <Text style={styles.checkboxLabel}>
+              I agree to the{' '}
+              <Text style={styles.link} onPress={handleOpenTerms}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.link} onPress={handleOpenPrivacy}>
+                Privacy Policy
+              </Text>
+            </Text>
+          }
+          checked={state.agreedToTerms}
+          onToggle={() => updateField('agreedToTerms', !state.agreedToTerms)}
+          error={state.errors.agreedToTerms}
+        />
+
+        {state.errors.general && (
+          <Text style={styles.errorText}>{state.errors.general}</Text>
+        )}
+
+        <Button
+          title={state.ssoProvider ? 'Complete Registration' : 'Register'}
+          onPress={state.ssoProvider ? handleSSOComplete : handleManualRegistration}
+          variant="primary"
+          isLoading={state.isLoading}
+          disabled={!isFormValid()}
+        />
+
+        <TouchableOpacity
+          style={styles.loginLink}
+          onPress={handleNavigateToLogin}
+          disabled={state.isLoading}
+        >
+          <Text style={styles.loginLinkText}>
+            Already have an account?{' '}
+            <Text style={styles.link}>Log In</Text>
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.xl,
+  },
+  header: {
+    marginBottom: Spacing.xl,
+  },
+  title: {
+    ...TextStyles.h1,
+    color: colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    ...TextStyles.body,
+    color: colors.textSecondary,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    ...TextStyles.body,
+    color: colors.textSecondary,
+    marginHorizontal: Spacing.md,
+  },
+  checkboxLabel: {
+    ...TextStyles.body,
+    color: colors.textPrimary,
+  },
+  link: {
+    color: colors.grass,
+    fontWeight: '600',
+  },
+  errorText: {
+    ...TextStyles.body,
+    color: colors.track,
+    textAlign: 'center',
+    marginVertical: Spacing.md,
+  },
+  loginLink: {
+    marginTop: Spacing.lg,
+    alignItems: 'center',
+  },
+  loginLinkText: {
+    ...TextStyles.body,
+    color: colors.textSecondary,
+  },
+});

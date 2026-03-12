@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "Muster",
+    "slug": "muster",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3D8C5E"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.muster.app",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to your camera to upload profile photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload profile photos.",
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show nearby facilities and events."
+      }
+    },
+    "android": {
+      "package": "com.muster.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#3D8C5E"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "NOTIFICATIONS"
+      ]
+    },
+      "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Muster",
+      "shortName": "Muster",
+      "description": "Find a game. Find your people. - Community sports booking & player recognition",
+      "themeColor": "#3D8C5E",
+      "backgroundColor": "#FFFFFF"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#3D8C5E",
+          "sounds": [
+            "./assets/sounds/notification.wav"
+          ]
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your photos to upload profile pictures."
+        }
+      ]
+    ],
+    "scheme": "muster",
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+}

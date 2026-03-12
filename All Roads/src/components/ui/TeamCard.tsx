@@ -1,0 +1,302 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Team, SportType, SkillLevel } from '../../types';
+
+interface TeamCardProps {
+  team: Team;
+  onPress?: (team: Team) => void;
+  style?: any;
+  compact?: boolean;
+}
+
+export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compact = false }) => {
+  const getSportIcon = (sportType: SportType) => {
+    switch (sportType) {
+      case SportType.BASKETBALL:
+        return 'basketball-outline';
+      case SportType.SOCCER:
+        return 'football-outline';
+      case SportType.TENNIS:
+        return 'tennisball-outline';
+      case SportType.VOLLEYBALL:
+        return 'american-football-outline';
+      default:
+        return 'fitness-outline';
+    }
+  };
+
+  const getSkillLevelColor = (skillLevel: SkillLevel) => {
+    switch (skillLevel) {
+      case SkillLevel.BEGINNER:
+        return '#34C759';
+      case SkillLevel.INTERMEDIATE:
+        return '#FF9500';
+      case SkillLevel.ADVANCED:
+        return '#FF3B30';
+      default:
+        return '#007AFF';
+    }
+  };
+
+  const availableSlots = team.maxMembers - team.members.length;
+  const isFull = availableSlots <= 0;
+
+  return (
+    <TouchableOpacity
+      style={[styles.container, style]}
+      onPress={() => onPress?.(team)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.header}>
+        <View style={styles.teamInfo}>
+          {team.logo ? (
+            <Image source={{ uri: team.logo }} style={styles.logo} />
+          ) : (
+            <View style={styles.logoPlaceholder}>
+              <Ionicons
+                name={getSportIcon(team.sportType) as any}
+                size={24}
+                color="#007AFF"
+              />
+            </View>
+          )}
+          <View style={styles.nameContainer}>
+            <Text style={styles.name} numberOfLines={1}>
+              {team.name}
+            </Text>
+            <Text style={styles.captain}>
+              Captain: {team.captain?.firstName} {team.captain?.lastName}
+            </Text>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.skillBadge,
+            { backgroundColor: getSkillLevelColor(team.skillLevel) },
+          ]}
+        >
+          <Text style={styles.skillText}>
+            {team.skillLevel.replace('_', ' ').toUpperCase()}
+          </Text>
+        </View>
+      </View>
+
+      {team.description && (
+        <Text style={styles.description} numberOfLines={2}>
+          {team.description}
+        </Text>
+      )}
+
+      <View style={styles.details}>
+        <View style={styles.detailRow}>
+          <Ionicons
+            name={getSportIcon(team.sportType) as any}
+            size={16}
+            color="#666"
+          />
+          <Text style={styles.detailText}>
+            {team.sportType.charAt(0).toUpperCase() + team.sportType.slice(1)}
+          </Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Ionicons name="people-outline" size={16} color="#666" />
+          <Text style={[styles.detailText, isFull && styles.fullText]}>
+            {team.members.length}/{team.maxMembers} members
+          </Text>
+        </View>
+
+        <View style={styles.detailRow}>
+          <Ionicons
+            name={team.isPublic ? 'globe-outline' : 'lock-closed-outline'}
+            size={16}
+            color="#666"
+          />
+          <Text style={styles.detailText}>
+            {team.isPublic ? 'Public team' : 'Private team'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.stats}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{team.stats?.gamesPlayed || 0}</Text>
+          <Text style={styles.statLabel}>Games</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{team.stats?.gamesWon || 0}</Text>
+          <Text style={styles.statLabel}>Wins</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {team.stats?.winRate ? `${(team.stats.winRate * 100).toFixed(0)}%` : '0%'}
+          </Text>
+          <Text style={styles.statLabel}>Win Rate</Text>
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <View style={styles.availability}>
+          <View style={[styles.statusBadge, isFull && styles.fullBadge]}>
+            <Text style={[styles.statusText, isFull && styles.fullStatusText]}>
+              {isFull ? 'Full' : `${availableSlots} spots available`}
+            </Text>
+          </View>
+        </View>
+        {team.isPublic && !isFull && (
+          <View style={styles.joinButton}>
+            <Text style={styles.joinText}>Join Team</Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  teamInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  logoPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F8FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nameContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  captain: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  skillBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  skillText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  description: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  details: {
+    marginBottom: 12,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+  },
+  fullText: {
+    color: '#FF3B30',
+    fontWeight: '500',
+  },
+  stats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  availability: {
+    flex: 1,
+  },
+  statusBadge: {
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+  },
+  fullBadge: {
+    backgroundColor: '#FFE8E8',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#34C759',
+  },
+  fullStatusText: {
+    color: '#FF3B30',
+  },
+  joinButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  joinText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
