@@ -139,6 +139,18 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Events',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            
+            // Reset the Events stack to the list screen
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Events', params: { screen: 'EventsList' } }],
+            });
+          },
+        })}
       />
       <Tab.Screen 
         name="Facilities" 

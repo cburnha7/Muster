@@ -62,16 +62,25 @@ export class UserService extends BaseApiService {
 
   /**
    * Get user's bookings
+   * UPDATED: Now sends userId as query parameter for development
    */
   async getUserBookings(
     status?: 'upcoming' | 'past' | 'cancelled',
     pagination?: PaginationParams,
     skipCache: boolean = false
   ): Promise<PaginatedResponse<Booking>> {
+    // DEVELOPMENT: Add userId as query parameter for mock auth
+    const { authService } = await import('../auth/AuthService');
+    const currentUser = authService.getCurrentUser();
+    
     const params = {
       ...pagination,
       status,
+      ...(currentUser?.id && { userId: currentUser.id }), // Add userId to query params
     };
+
+    console.log('📚 UserService.getUserBookings - params:', params);
+    console.log('📚 UserService.getUserBookings - currentUser:', currentUser?.email, currentUser?.id);
 
     return this.get<PaginatedResponse<Booking>>(API_ENDPOINTS.USERS.BOOKINGS, { 
       params,
@@ -282,6 +291,14 @@ export class UserService extends BaseApiService {
     };
 
     return this.get(`${API_ENDPOINTS.USERS.PROFILE}/calendar`, { params });
+  }
+
+  /**
+   * Search users by name or email
+   */
+  async searchUsers(query: string): Promise<User[]> {
+    const params = { query };
+    return this.get<User[]>(`${API_ENDPOINTS.USERS.BASE}/search`, { params });
   }
 }
 

@@ -59,6 +59,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
   const availableSpots = event.maxParticipants - event.currentParticipants;
   const isFullyBooked = availableSpots <= 0;
+  const isInviteOnly = event.eligibility?.isInviteOnly && !event.eligibility?.wasAutoOpenedToPublic;
+  const wasAutoOpened = event.eligibility?.wasAutoOpenedToPublic;
 
   return (
     <TouchableOpacity
@@ -77,15 +79,23 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
             {event.title}
           </Text>
         </View>
-        <View
-          style={[
-            styles.skillBadge,
-            { backgroundColor: getSkillLevelColor(event.skillLevel) },
-          ]}
-        >
-          <Text style={styles.skillText}>
-            {event.skillLevel.replace('_', ' ').toUpperCase()}
-          </Text>
+        <View style={styles.headerBadges}>
+          {isInviteOnly && (
+            <View style={styles.inviteOnlyBadge}>
+              <Ionicons name="lock-closed" size={12} color={colors.court} />
+              <Text style={styles.inviteOnlyText}>Invite Only</Text>
+            </View>
+          )}
+          <View
+            style={[
+              styles.skillBadge,
+              { backgroundColor: getSkillLevelColor(event.skillLevel) },
+            ]}
+          >
+            <Text style={styles.skillText}>
+              {event.skillLevel.replace('_', ' ').toUpperCase()}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -144,6 +154,15 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           </Text>
         </View>
       </View>
+
+      {wasAutoOpened && (
+        <View style={styles.autoOpenedBanner}>
+          <Ionicons name="megaphone-outline" size={14} color={colors.sky} />
+          <Text style={styles.autoOpenedText}>
+            Now open to public - was invite-only
+          </Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -167,7 +186,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
   sportInfo: {
@@ -181,6 +200,27 @@ const styles = StyleSheet.create({
     color: '#333',
     marginLeft: 8,
     flex: 1,
+  },
+  headerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  inviteOnlyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: colors.court + '20',
+    borderWidth: 1,
+    borderColor: colors.court,
+  },
+  inviteOnlyText: {
+    color: colors.court,
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   skillBadge: {
     paddingHorizontal: 8,
@@ -265,6 +305,23 @@ const styles = StyleSheet.create({
   rentalText: {
     fontSize: 12,
     color: colors.grass,
+    marginLeft: 6,
+    fontWeight: '600',
+  },
+  autoOpenedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.sky + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.sky + '30',
+  },
+  autoOpenedText: {
+    fontSize: 12,
+    color: colors.sky,
     marginLeft: 6,
     fontWeight: '600',
   },

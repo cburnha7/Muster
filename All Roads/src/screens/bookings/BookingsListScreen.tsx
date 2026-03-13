@@ -15,8 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
+import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
 
 import { userService } from '../../services/api/UserService';
@@ -56,6 +56,8 @@ export function BookingsListScreen(): JSX.Element {
   // Local state
   const [activeFilter, setActiveFilter] = useState<BookingFilter>('upcoming');
   const [refreshing, setRefreshing] = useState(false);
+  const [showStepOutModal, setShowStepOutModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   // Get filtered bookings
   const getFilteredBookings = (): Booking[] => {
@@ -123,77 +125,56 @@ export function BookingsListScreen(): JSX.Element {
 
   // Handle cancel booking
   const handleCancelBooking = (booking: Booking) => {
-    if (!booking.event) {
-      Alert.alert('Error', 'Event information not available');
+      if (!booking.event) {
+        Alert.alert('Error', 'Event information not available');
+        return;
+      }
+
+      // Create a mock user object for validation
+      const mockUser = { id: booking.userId } as any;
+
+      // Validate cancellation
+      const BookingValidationService = require('../../services/booking').BookingValidationService;
+      const validationResult = BookingValidationService.validateCancellation(
+        booking.event,
+        mockUser,
+        booking.status
+      );
+
+      if (!validationResult.canBook) {
+        Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
+        return;
+      }
+
+      // Show the modal
+      setSelectedBooking(booking);
+      setShowStepOutModal(true);
+    }
+
+  const confirmCancelBooking = async () => {
+    if (!selectedBooking || !selectedBooking.event) {
       return;
     }
 
-    // Create a mock user object for validation (in real app, this would come from auth state)
-    const mockUser = { id: booking.userId } as any;
-
-    // Validate cancellation
-    const BookingValidationService = require('../../services/booking').BookingValidationService;
-    const validationResult = BookingValidationService.validateCancellation(
-      booking.event,
-      mockUser,
-      booking.status
-    );
-
-    if (!validationResult.canBook) {
-      Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
-      return;
-    }
-
-    // Calculate refund amount
-    const refundAmount = BookingValidationService.calculateRefundAmount(
-      booking.event.price,
-      booking.event.startTime
-    );
-
-    let alertMessage = `Are you sure you want to step out of "${booking.event.title}"?`;
-    
-    if (validationResult.warnings && validationResult.warnings.length > 0) {
-      alertMessage += '\n\n' + validationResult.warnings.join('\n');
-    }
-    
-    if (booking.event.price > 0) {
-      alertMessage += `\n\nRefund amount: $${refundAmount.toFixed(2)}`;
-    }
-
-    Alert.alert(
-      'Step Out',
-      alertMessage,
-      [
-        { text: 'Stay In', style: 'cancel' },
-        {
-          text: 'Step Out',
-          style: 'destructive',
-          onPress: () => confirmCancelBooking(booking, refundAmount),
-        },
-      ]
-    );
-  };
-
-  const confirmCancelBooking = async (booking: Booking, refundAmount: number) => {
     try {
-      await eventService.cancelBooking(booking.event!.id, booking.id);
+      await eventService.cancelBooking(selectedBooking.event.id, selectedBooking.id);
       
       dispatch(cancelBookingAction({
-        bookingId: booking.id,
+        bookingId: selectedBooking.id,
         cancellationReason: 'Cancelled by user',
       }));
 
-      // Show success message with refund info
-      const BookingValidationService = require('../../services/booking').BookingValidationService;
-      const confirmationMessage = BookingValidationService.getCancellationConfirmationMessage(
-        booking.event!,
-        refundAmount
-      );
+      // Close modal and clear selection
+      setShowStepOutModal(false);
+      setSelectedBooking(null);
 
-      Alert.alert('Stepped Out', confirmationMessage);
+      // Reload bookings
+      await loadBookings(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking';
       Alert.alert('Error', errorMessage);
+      setShowStepOutModal(false);
+      setSelectedBooking(null);
     }
   };
 
@@ -287,7 +268,7 @@ export function BookingsListScreen(): JSX.Element {
         case 'upcoming':
           return {
             title: 'No Upcoming Bookings',
-            subtitle: 'Book an event to see it here',
+            subtitle: 'Join an event to see it here',
             icon: 'calendar-outline',
           };
         case 'past':
@@ -305,7 +286,7 @@ export function BookingsListScreen(): JSX.Element {
         default:
           return {
             title: 'No Bookings Yet',
-            subtitle: 'Start booking events to see them here',
+            subtitle: 'Start joining events to see them here',
             icon: 'calendar-outline',
           };
       }
@@ -315,15 +296,16 @@ export function BookingsListScreen(): JSX.Element {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name={emptyState.icon as any} size={64} color="#CCC" />
+        <Ionicons name={emptyState.icon as any} size={64} color="#E0E0E0" />
         <Text style={styles.emptyTitle}>{emptyState.title}</Text>
         <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
         {activeFilter === 'upcoming' && (
-          <FormButton
-            title="Browse Events"
-            onPress={() => navigation.navigate('Events' as never)}
+          <TouchableOpacity 
             style={styles.browseButton}
-          />
+            onPress={() => navigation.navigate('Events' as never)}
+          >
+            <Text style={styles.browseButtonText}>Browse Events</Text>
+          </TouchableOpacity>
         )}
       </View>
     );
@@ -342,10 +324,6 @@ export function BookingsListScreen(): JSX.Element {
   if (error && filteredBookings.length === 0) {
     return (
       <View style={styles.container}>
-        <ScreenHeader
-          title="My Bookings"
-          showBack={false}
-        />
         <ErrorDisplay
           message={error}
           onRetry={() => loadBookings()}
@@ -356,11 +334,6 @@ export function BookingsListScreen(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="My Bookings"
-        showBack={false}
-      />
-
       {renderFilterTabs()}
 
       {isLoading && filteredBookings.length === 0 ? (
@@ -378,7 +351,8 @@ export function BookingsListScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#007AFF']}
+              tintColor="#3D8C5E"
+              colors={['#3D8C5E']}
             />
           }
           onEndReached={loadMoreBookings}
@@ -391,6 +365,17 @@ export function BookingsListScreen(): JSX.Element {
           windowSize={getOptimalWindowSize()}
         />
       )}
+
+      {/* Step Out Modal */}
+      <StepOutModal
+        visible={showStepOutModal}
+        eventTitle={selectedBooking?.event?.title || 'Event'}
+        onCancel={() => {
+          setShowStepOutModal(false);
+          setSelectedBooking(null);
+        }}
+        onConfirm={confirmCancelBooking}
+      />
     </View>
   );
 }
@@ -398,7 +383,7 @@ export function BookingsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F7F4EE',
   },
   filterTabs: {
     flexDirection: 'row',
@@ -406,7 +391,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#E0E0E0',
   },
   filterTab: {
     flex: 1,
@@ -419,15 +404,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeFilterTab: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#3D8C5E',
   },
   filterTabText: {
     fontSize: 14,
-    fontWeight: '500',
     color: '#666',
   },
   activeFilterTabText: {
     color: '#FFFFFF',
+    fontWeight: '600',
   },
   filterBadge: {
     backgroundColor: '#FF3B30',
@@ -451,6 +436,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+    paddingVertical: 48,
   },
   emptyTitle: {
     fontSize: 20,
@@ -461,12 +447,21 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#999',
     textAlign: 'center',
+    lineHeight: 24,
     marginBottom: 24,
   },
   browseButton: {
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#3D8C5E',
+    borderRadius: 8,
+  },
+  browseButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   footer: {
     paddingVertical: 16,

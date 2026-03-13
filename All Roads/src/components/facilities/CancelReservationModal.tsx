@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   modal: {
     width: '90%',
     maxWidth: 500,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 5,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   detailsContainer: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.chalk + '80',
+    backgroundColor: colors.chalk,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },

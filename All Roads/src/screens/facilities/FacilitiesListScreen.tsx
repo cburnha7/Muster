@@ -17,7 +17,7 @@ import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { facilityService } from '../../services/api/FacilityService';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, Spacing } from '../../theme';
 import {
   setFacilities,
   appendFacilities,
@@ -191,25 +191,26 @@ export function FacilitiesListScreen(): JSX.Element {
       onPress={() => handleFacilityPress(item)}
       activeOpacity={0.7}
     >
-      <View style={styles.numberBadge}>
-        <Text style={styles.numberText}>{index + 1}</Text>
-      </View>
-      
-      <View style={styles.facilityContent}>
+      <View style={styles.cardContent}>
         <View style={styles.facilityHeader}>
-          <Text style={styles.facilityName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          {item.ownerId === currentUser?.id && (
-            <View style={styles.ownerBadge}>
-              <Ionicons name="star" size={12} color={colors.court} />
-              <Text style={styles.ownerText}>Your Ground</Text>
-            </View>
-          )}
+          <View style={styles.numberBadge}>
+            <Text style={styles.numberText}>{index + 1}</Text>
+          </View>
+          <View style={styles.facilityTitleContainer}>
+            <Text style={styles.facilityName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            {item.ownerId === currentUser?.id && (
+              <View style={styles.ownerBadge}>
+                <Ionicons name="star" size={12} color={colors.court} />
+                <Text style={styles.ownerText}>Your Ground</Text>
+              </View>
+            )}
+          </View>
         </View>
         
         <View style={styles.facilityInfo}>
-          <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+          <Ionicons name="location-outline" size={16} color={colors.soft} />
           <Text style={styles.facilityAddress} numberOfLines={1}>
             {item.address}
           </Text>
@@ -231,7 +232,7 @@ export function FacilitiesListScreen(): JSX.Element {
         )}
         
         <View style={styles.facilityFooter}>
-          {item.rating && (
+          {item.rating && item.rating > 0 && (
             <View style={styles.rating}>
               <Ionicons name="star" size={14} color={colors.court} />
               <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
@@ -242,8 +243,6 @@ export function FacilitiesListScreen(): JSX.Element {
           )}
         </View>
       </View>
-      
-      <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
     </TouchableOpacity>
   ), [handleFacilityPress, currentUser]);
 
@@ -277,7 +276,7 @@ export function FacilitiesListScreen(): JSX.Element {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Filter Grounds</Text>
             <TouchableOpacity onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={24} color={colors.textPrimary} />
+              <Ionicons name="close" size={24} color={colors.ink} />
             </TouchableOpacity>
           </View>
 
@@ -391,7 +390,7 @@ export function FacilitiesListScreen(): JSX.Element {
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
-        <Ionicons name="add" size={28} color={colors.textInverse} />
+        <Ionicons name="add" size={28} color={colors.chalk} />
       </TouchableOpacity>
 
       {renderFilterModal()}
@@ -402,15 +401,13 @@ export function FacilitiesListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.chalk,
   },
   searchBar: {
     flex: 1,
@@ -431,7 +428,7 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     height: 250,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chalk,
     marginBottom: Spacing.md,
   },
   mapPlaceholder: {
@@ -441,26 +438,42 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chalk,
   },
   mapPlaceholderText: {
-    ...TextStyles.h4,
-    color: colors.textSecondary,
+    fontSize: 16,
+    color: colors.soft,
     marginTop: Spacing.md,
   },
   mapPlaceholderSubtext: {
-    ...TextStyles.caption,
-    color: colors.textTertiary,
+    fontSize: 14,
+    color: colors.soft,
     marginTop: Spacing.xs,
   },
   listContent: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
     paddingBottom: 80,
   },
   facilityCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  facilityHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   numberBadge: {
     width: 32,
@@ -469,109 +482,111 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grass,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.md,
+    marginRight: 12,
   },
   numberText: {
-    ...TextStyles.body,
-    color: colors.textInverse,
+    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: '700',
   },
-  facilityContent: {
+  facilityTitleContainer: {
     flex: 1,
-  },
-  facilityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
   },
   facilityName: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
-    flex: 1,
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '600',
+    marginBottom: 4,
   },
   ownerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.courtLight,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    backgroundColor: '#FFF5E6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 12,
-    marginLeft: Spacing.sm,
+    alignSelf: 'flex-start',
   },
   ownerText: {
-    ...TextStyles.caption,
-    color: colors.ink,
+    fontSize: 12,
+    color: colors.court,
     fontWeight: '600',
-    marginLeft: 2,
+    marginLeft: 4,
   },
   facilityInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 12,
   },
   facilityAddress: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
-    marginLeft: Spacing.xs,
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 6,
     flex: 1,
   },
   sportTypes: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    flexWrap: 'wrap',
+    marginBottom: 12,
+    gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginRight: Spacing.xs,
+    backgroundColor: colors.grass + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   sportTagText: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 13,
+    color: colors.grass,
+    fontWeight: '500',
   },
   moreText: {
-    ...TextStyles.caption,
-    color: colors.textTertiary,
-    fontSize: 11,
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
   },
   facilityFooter: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   rating: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: Spacing.md,
   },
   ratingText: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
-    marginLeft: 2,
-    fontWeight: '600',
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 6,
+    fontWeight: '500',
   },
   distance: {
-    ...TextStyles.caption,
-    color: colors.textTertiary,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
   },
   emptyTitle: {
-    ...TextStyles.h3,
-    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
+    fontSize: 16,
+    color: colors.soft,
     textAlign: 'center',
+    lineHeight: 24,
   },
   loadingMore: {
     paddingVertical: Spacing.lg,
@@ -597,11 +612,11 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -612,75 +627,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.soft,
   },
   modalTitle: {
-    ...TextStyles.h3,
-    color: colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.ink,
   },
   filterContent: {
     padding: Spacing.lg,
   },
   filterLabel: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
     marginBottom: Spacing.md,
   },
   sportTypeContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: Spacing.lg,
+    gap: 8,
   },
   sportChip: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.surface,
-    marginRight: Spacing.sm,
-    marginBottom: Spacing.sm,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
   },
   sportChipSelected: {
     backgroundColor: colors.grass,
+    borderColor: colors.grass,
   },
   sportChipText: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
+    fontSize: 14,
+    color: colors.ink,
   },
   sportChipTextSelected: {
-    color: colors.textInverse,
-    fontWeight: '600',
+    color: colors.chalk,
+    fontWeight: '500',
   },
   modalActions: {
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: colors.soft,
+    gap: 8,
   },
   clearButton: {
     flex: 1,
     paddingVertical: Spacing.md,
-    marginRight: Spacing.sm,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.soft,
     alignItems: 'center',
   },
   clearButtonText: {
-    ...TextStyles.body,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.ink,
   },
   applyButton: {
     flex: 1,
     paddingVertical: Spacing.md,
-    marginLeft: Spacing.sm,
     borderRadius: 8,
     backgroundColor: colors.grass,
     alignItems: 'center',
   },
   applyButtonText: {
-    ...TextStyles.body,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.textInverse,
+    color: colors.chalk,
   },
 });

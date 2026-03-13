@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,9 +21,11 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
+import { colors, Spacing } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
-import { userService } from '../../services/api/UserService';
+import { useGetEventsQuery, useGetUserBookingsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import { selectEventsTabEvents } from '../../store/selectors/eventSelectors';
 import {
   setLoading,
   setLoadingMore,
@@ -38,7 +41,7 @@ import {
   selectEventsLoadingMore,
   selectEventsError,
 } from '../../store/slices/eventsSlice';
-import { selectBookings, setBookings } from '../../store/slices/bookingsSlice';
+import { selectBookings } from '../../store/slices/bookingsSlice';
 import { useAuth } from '../../context/AuthContext';
 import { Event, EventFilters, SportType, SkillLevel, EventStatus } from '../../types';
 
@@ -46,35 +49,68 @@ export function EventsListScreen(): JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  // Redux state
-  const events = useSelector(selectEvents);
-  const filters = useSelector(selectEventFilters);
-  const pagination = useSelector(selectEventsPagination);
-  const isLoading = useSelector(selectEventsLoading);
-  const isLoadingMore = useSelector(selectEventsLoadingMore);
-  const error = useSelector(selectEventsError);
-  const bookings = useSelector(selectBookings);
-  
   // Auth context
   const { user: currentUser } = useAuth();
 
-  // Get booked event IDs
-  const bookedEventIds = useMemo(() => {
-    return new Set(bookings.map(booking => booking.eventId));
-  }, [bookings]);
-
-  // Filter out booked events only (show all events user hasn't joined, including their own)
-  const availableEvents = useMemo(() => {
-    if (!currentUser) return events;
-    return events.filter(event => !bookedEventIds.has(event.id));
-  }, [events, currentUser, bookedEventIds]);
-
-  // Local state
+  // Local state for custom filters
+  const [customFilters, setCustomFilters] = useState<EventFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Determine if using default or custom filters
+  const hasCustomFilters = Object.keys(customFilters).length > 0 || searchQuery.trim().length > 0;
+  const activeFilters = hasCustomFilters ? customFilters : DEFAULT_EVENT_FILTERS;
+
+  // RTK Query hooks - use default filters when no custom filters applied
+  const { 
+    data: eventsData, 
+    isLoading: eventsLoading, 
+    error: eventsError,
+    refetch: refetchEvents 
+  } = useGetEventsQuery({
+    filters: activeFilters,
+    pagination: { page: 1, limit: 20 },
+  });
+
+  const { 
+    data: bookingsData,
+    isLoading: bookingsLoading,
+    refetch: refetchBookings 
+  } = useGetUserBookingsQuery({
+    status: 'upcoming',
+    pagination: { page: 1, limit: 100 },
+  });
+
+  // Use selector only when using default filters, otherwise use raw data
+  const rawEvents = eventsData?.data || [];
+  
+  // Get user's booked event IDs to filter them out
+  const upcomingBookings = bookingsData?.data || [];
+  const bookedEventIds = new Set(upcomingBookings.map(b => b.eventId));
+  
+  // Filter out events that the user has already joined
+  const availableEvents = rawEvents.filter(event => !bookedEventIds.has(event.id));
+
+  console.log('📊 EventsListScreen - Events data:', {
+    hasCustomFilters,
+    rawEventsCount: rawEvents.length,
+    availableEventsCount: availableEvents.length,
+    eventsLoading,
+    eventsError,
+  });
+
+  // Combined loading state
+  const isLoading = eventsLoading || bookingsLoading;
+  const isLoadingMore = false; // We'll handle pagination separately
+  const error = eventsError ? String(eventsError) : null;
+
   // Filter options
+  // Handle create event
+  const handleCreateEvent = () => {
+    (navigation as any).navigate('CreateEvent');
+  };
+
   const sportTypeOptions: SelectOption[] = [
     { label: 'All Sports', value: '' },
     { label: 'Basketball', value: SportType.BASKETBALL },
@@ -93,74 +129,41 @@ export function EventsListScreen(): JSX.Element {
     { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
   ];
 
-  // Load events
-  const loadEvents = useCallback(async (isRefresh = false, isLoadMore = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else if (isLoadMore) {
-        dispatch(setLoadingMore(true));
-      } else {
-        dispatch(setLoading(true));
-      }
-
-      // Fetch from API - skip cache on refresh to ensure fresh data
-      const page = isLoadMore ? pagination.page + 1 : 1;
-      const response = await eventService.getEvents(filters, { page, limit: pagination.limit }, isRefresh);
-
-      if (isLoadMore) {
-        dispatch(appendEvents(response));
-      } else {
-        dispatch(setEvents(response));
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load events';
-      dispatch(setError(errorMessage));
-      
-      if (isRefresh) {
-        Alert.alert('Error', errorMessage);
-      }
-    } finally {
-      setRefreshing(false);
-    }
-  }, [dispatch, filters, pagination.page, pagination.limit]);
-
   // Search events with debouncing
   const debouncedSearch = useMemo(
     () => debounce(async (query: string) => {
       if (!query.trim()) {
-        loadEvents();
+        setCustomFilters({});
         return;
       }
 
       try {
-        dispatch(setLoading(true));
-        
         const searchFilters: EventFilters = {
-          ...filters,
+          ...customFilters,
           status: EventStatus.ACTIVE,
         };
 
         const response = await eventService.searchEvents(query, searchFilters, {
           page: 1,
-          limit: pagination.limit,
+          limit: 20,
         });
 
+        // For search, we use the old Redux slice temporarily
         dispatch(setEvents({
           data: response.results,
           pagination: {
             page: 1,
-            limit: pagination.limit,
+            limit: 20,
             total: response.total,
-            totalPages: Math.ceil(response.total / pagination.limit),
+            totalPages: Math.ceil(response.total / 20),
           },
         }));
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Search failed';
-        dispatch(setError(errorMessage));
+        console.error('Search error:', errorMessage);
       }
     }, 300),
-    [dispatch, filters, pagination.limit, loadEvents]
+    [dispatch, customFilters]
   );
 
   const searchEvents = useCallback((query: string) => {
@@ -172,72 +175,53 @@ export function EventsListScreen(): JSX.Element {
     (navigation as any).navigate('EventDetails', { eventId: event.id });
   };
 
-  // Handle create event
-  const handleCreateEvent = () => {
-    (navigation as any).navigate('CreateEvent');
-  };
-
   // Handle filter changes
   const handleFilterChange = (key: keyof EventFilters, value: string | undefined) => {
-    const newFilters = { ...filters };
+    const newFilters = { ...customFilters };
     if (value === '' || value === null || value === undefined) {
       delete newFilters[key];
     } else {
       (newFilters as any)[key] = value;
     }
-    dispatch(setFilters(newFilters));
+    setCustomFilters(newFilters);
   };
 
   // Apply filters
   const applyFilters = () => {
     setShowFilters(false);
-    loadEvents();
+    // Filters are already applied via customFilters state
   };
 
   // Clear all filters
   const clearAllFilters = () => {
-    dispatch(clearFilters());
+    setCustomFilters({});
     setSearchQuery('');
     setShowFilters(false);
-    loadEvents();
   };
 
-  // Load more events (pagination)
+  // Load more events (pagination) - simplified for now
   const loadMoreEvents = () => {
-    if (!isLoadingMore && pagination.page < pagination.totalPages) {
-      loadEvents(false, true);
-    }
+    // Pagination will be handled in a future iteration
+    console.log('Load more events - pagination not yet implemented with RTK Query');
   };
 
   // Refresh events
-  const onRefresh = () => {
-    loadEvents(true);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchEvents(), refetchBookings()]);
+    setRefreshing(false);
   };
 
   // Load events on screen focus
   useFocusEffect(
     useCallback(() => {
-      console.log('🔄 Events screen focused - reloading events and bookings');
-      
-      // Reload both events and bookings to ensure accurate filtering
-      const reloadData = async () => {
-        try {
-          // Reload events
-          loadEvents(true);
-          
-          // Reload bookings to update the filter
-          if (currentUser) {
-            const bookingsResponse = await userService.getUserBookings('upcoming', { page: 1, limit: 100 });
-            dispatch(setBookings(bookingsResponse));
-          }
-        } catch (error) {
-          console.error('Error reloading data on focus:', error);
-        }
-      };
-      
-      reloadData();
+      console.log('🔄 Events screen focused - refetching events and bookings');
+      if (currentUser) {
+        refetchEvents();
+        refetchBookings();
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser?.id]) // Reload when user changes
+    }, [currentUser?.id])
   );
 
   // Render event item
@@ -264,18 +248,16 @@ export function EventsListScreen(): JSX.Element {
   // Render empty state
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="calendar-outline" size={64} color="#CCC" />
+      <Ionicons name="calendar-outline" size={64} color={colors.soft} />
       <Text style={styles.emptyTitle}>No Events Found</Text>
       <Text style={styles.emptySubtitle}>
-        {searchQuery || Object.keys(filters).length > 0
+        {searchQuery || Object.keys(customFilters).length > 0
           ? 'Try adjusting your search or filters'
           : 'Be the first to create an event!'}
       </Text>
-      <FormButton
-        title="Create Event"
-        onPress={handleCreateEvent}
-        style={styles.createButton}
-      />
+      <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
+        <Text style={styles.createButtonText}>Create Event</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -292,7 +274,7 @@ export function EventsListScreen(): JSX.Element {
       <FormSelect
         label="Sport Type"
         placeholder="Select sport type"
-        value={filters.sportType || ''}
+        value={customFilters.sportType || ''}
         options={sportTypeOptions}
         onSelect={(option) => handleFilterChange('sportType', option.value as string)}
       />
@@ -300,7 +282,7 @@ export function EventsListScreen(): JSX.Element {
       <FormSelect
         label="Skill Level"
         placeholder="Select skill level"
-        value={filters.skillLevel || ''}
+        value={customFilters.skillLevel || ''}
         options={skillLevelOptions}
         onSelect={(option) => handleFilterChange('skillLevel', option.value as string)}
       />
@@ -326,35 +308,27 @@ export function EventsListScreen(): JSX.Element {
     if (!isLoadingMore) return null;
     return (
       <View style={styles.footer}>
-        <LoadingSpinner size="small" />
+        <ActivityIndicator size="small" color={colors.grass} />
       </View>
     );
   };
 
-  if (error && events.length === 0) {
+  if (error && availableEvents.length === 0) {
     return (
       <View style={styles.container}>
-        <ScreenHeader
-          title="Events"
-          rightIcon="add"
-          onRightPress={handleCreateEvent}
-        />
-        <ErrorDisplay
-          message={error}
-          onRetry={() => loadEvents()}
-        />
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color={colors.track} />
+          <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetchEvents()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="Events"
-        rightIcon="add"
-        onRightPress={handleCreateEvent}
-      />
-
       <View style={styles.searchContainer}>
         <SearchBar
           placeholder="Search events..."
@@ -370,12 +344,18 @@ export function EventsListScreen(): JSX.Element {
           <Ionicons
             name="options-outline"
             size={20}
-            color={Object.keys(filters).length > 0 ? '#007AFF' : '#666'}
+            color={Object.keys(customFilters).length > 0 ? colors.grass : colors.ink}
           />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleCreateEvent}
+        >
+          <Ionicons name="add" size={24} color={colors.grass} />
         </TouchableOpacity>
       </View>
 
-      {isLoading && events.length === 0 ? (
+      {isLoading && availableEvents.length === 0 ? (
         <LoadingSpinner />
       ) : (
         <FlatList
@@ -390,7 +370,8 @@ export function EventsListScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#007AFF']}
+              tintColor={colors.grass}
+              colors={[colors.grass]}
             />
           }
           onEndReached={loadMoreEvents}
@@ -420,25 +401,33 @@ export function EventsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.chalk,
   },
   searchBar: {
     flex: 1,
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
   filterButton: {
-    padding: 8,
+    padding: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
+    marginRight: Spacing.sm,
+  },
+  addButton: {
+    padding: Spacing.sm,
+    borderRadius: 8,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
   },
   emptyContainer: {
     flexGrow: 1,
@@ -447,26 +436,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
+    color: colors.ink,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.soft,
     textAlign: 'center',
-    marginBottom: 24,
+    lineHeight: 24,
+    marginBottom: Spacing.lg,
   },
   createButton: {
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.grass,
+    borderRadius: 8,
+  },
+  createButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.chalk,
   },
   footer: {
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
   },
   filtersOverlay: {
@@ -486,10 +485,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalk,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     paddingBottom: 32,
     maxHeight: '80%',
   },
@@ -497,41 +496,66 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.soft,
   },
   filtersTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.ink,
   },
   filtersActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
+    marginTop: Spacing.lg,
   },
   filterActionButton: {
     flex: 1,
-    marginHorizontal: 8,
+    marginHorizontal: Spacing.sm,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  errorText: {
+    fontSize: 16,
+    color: colors.track,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.lg,
+    lineHeight: 24,
+  },
+  retryButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.grass,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.chalk,
   },
   sectionContainer: {
-    backgroundColor: '#FFFFFF',
-    marginBottom: 8,
+    backgroundColor: colors.chalk,
+    marginBottom: Spacing.sm,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#F9FAFB',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.chalk,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.soft,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginLeft: 8,
+    color: colors.ink,
+    marginLeft: Spacing.sm,
   },
 });

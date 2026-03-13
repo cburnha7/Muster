@@ -12,16 +12,17 @@ import { Ionicons } from '@expo/vector-icons';
 
 export interface SelectOption {
   label: string;
-  value: string | number;
+  value: string | number | boolean;
   disabled?: boolean;
 }
 
 interface FormSelectProps {
   label?: string;
   placeholder?: string;
-  value?: string | number;
+  value?: string | number | boolean;
   options: SelectOption[];
-  onSelect: (option: SelectOption) => void;
+  onSelect?: (option: SelectOption) => void;
+  onValueChange?: (value: string | number | boolean) => void;
   error?: string;
   required?: boolean;
   disabled?: boolean;
@@ -37,6 +38,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   value,
   options,
   onSelect,
+  onValueChange,
   error,
   required = false,
   disabled = false,
@@ -51,7 +53,13 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 
   const handleSelect = (option: SelectOption) => {
     if (!option.disabled) {
-      onSelect(option);
+      // Support both onSelect and onValueChange
+      if (onSelect) {
+        onSelect(option);
+      }
+      if (onValueChange) {
+        onValueChange(option.value);
+      }
       setIsModalVisible(false);
     }
   };

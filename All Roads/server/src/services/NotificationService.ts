@@ -239,6 +239,47 @@ export class NotificationService {
   }
 
   /**
+   * Send notification when event is auto-opened to public
+   */
+  async sendEventAutoOpenedNotification(
+    userId: string,
+    userEmail: string,
+    eventId: string
+  ): Promise<void> {
+    try {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          title: true,
+          startTime: true,
+          minimumPlayerCount: true,
+          currentParticipants: true,
+        },
+      });
+
+      if (!event) return;
+
+      const notification: NotificationTemplate = {
+        title: 'Event Opened to Public',
+        body: `Your invite-only event "${event.title}" has been automatically opened to the public because it didn't reach the minimum ${event.minimumPlayerCount} players within 2 days of the event date.`,
+        data: {
+          type: 'event_auto_opened',
+          eventId: eventId,
+        },
+      };
+
+      // TODO: Implement actual notification sending (push notification, email, etc.)
+      console.log('Sending event auto-opened notification to user', userId);
+      console.log('Notification:', notification);
+      
+      // Log for monitoring
+      console.log(`Event ${eventId} auto-opened: ${event.currentParticipants}/${event.minimumPlayerCount} players`);
+    } catch (error) {
+      console.error('Error sending event auto-opened notification:', error);
+    }
+  }
+
+  /**
    * Check user notification preferences before sending
    */
   private static async shouldSendNotification(userId: string, notificationType: string): Promise<boolean> {

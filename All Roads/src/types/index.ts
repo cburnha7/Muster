@@ -62,6 +62,18 @@ export enum MemberStatus {
   REMOVED = 'removed',
 }
 
+export enum TeamTransactionType {
+  JOIN_FEE = 'join_fee',
+  TOP_UP = 'top_up',
+  BOOKING_DEBIT = 'booking_debit',
+  REFUND = 'refund',
+}
+
+export enum JoinFeeType {
+  ONE_TIME = 'one_time',
+  MONTHLY = 'monthly',
+}
+
 export enum ParticipantStatus {
   CONFIRMED = 'confirmed',
   PENDING = 'pending',
@@ -224,6 +236,9 @@ export interface Event {
       };
     };
   };
+  // Group fee coverage
+  isGroupFeeCovered?: boolean; // Event cost covered by roster balance
+  coveringTeamId?: string; // Which roster is covering the cost
   createdAt: Date;
   updatedAt: Date;
 }
@@ -237,6 +252,9 @@ export interface EventEligibility {
   minSkillLevel?: SkillLevel; // Minimum skill level (beginner < intermediate < advanced)
   maxSkillLevel?: SkillLevel; // Maximum skill level
   isInviteOnly?: boolean; // Requires invitation to join
+  minimumPlayerCount?: number; // Minimum players needed (required for invite-only)
+  wasAutoOpenedToPublic?: boolean; // Track if event was auto-opened
+  autoOpenedAt?: Date; // When the event was auto-opened
 }
 
 export interface Participant {
@@ -290,6 +308,13 @@ export interface Team {
   leagueId?: string; // Optional league association
   league?: League;
   stats: TeamStats;
+  // Roster balance fields
+  balance: number; // Current roster balance in USD
+  joinFee?: number; // Optional join fee amount
+  joinFeeType?: JoinFeeType; // 'one_time' or 'monthly'
+  stripeAccountId?: string; // Stripe Connect account
+  lastBalanceUpdate: Date;
+  transactions?: TeamTransaction[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -710,3 +735,20 @@ export interface FacilityWithVerification extends Facility {
 // ============================================================================
 
 export * from './league';
+
+export interface TeamTransaction {
+  id: string;
+  teamId: string;
+  type: TeamTransactionType;
+  amount: number; // Positive for credits, negative for debits
+  balanceBefore: number;
+  balanceAfter: number;
+  description: string;
+  stripePaymentId?: string;
+  paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
+  userId?: string;
+  user?: User;
+  rentalId?: string;
+  rental?: any; // FacilityRental type
+  createdAt: Date;
+}

@@ -21,6 +21,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { updateEvent } from '../../store/slices/eventsSlice';
+import { colors, Spacing } from '../../theme';
 import {
   Event,
   UpdateEventData,
@@ -612,7 +613,7 @@ export function EditEventScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
   scrollView: {
     flex: 1,
@@ -644,10 +645,18 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   eventInfo: {
-    backgroundColor: '#F0F8FF',
+    backgroundColor: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     marginTop: 16,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   infoLabel: {
     fontSize: 14,
@@ -661,6 +670,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   deleteButton: {
     marginRight: 8,

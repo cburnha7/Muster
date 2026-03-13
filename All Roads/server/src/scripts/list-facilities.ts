@@ -2,36 +2,23 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function listFacilities() {
+async function checkFacility() {
   try {
-    const facilities = await prisma.facility.findMany({
-      include: {
-        owner: {
-          select: {
-            email: true,
-          },
-        },
-        courts: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-          },
-        },
-      },
+    const facility = await prisma.facility.findFirst({
+      where: { name: 'My House' },
     });
 
-    console.log(`\nFound ${facilities.length} facilities:\n`);
-
-    facilities.forEach(facility => {
-      console.log(`- ${facility.name} (ID: ${facility.id})`);
-      console.log(`  Owner: ${facility.owner.email}`);
-      console.log(`  Courts: ${facility.courts.length}`);
-      facility.courts.forEach(court => {
-        console.log(`    - ${court.name} (${court.isActive ? 'Active' : 'Inactive'})`);
-      });
-      console.log('');
-    });
+    if (facility) {
+      console.log('\n🏟️  Facility Details:');
+      console.log('Name:', facility.name);
+      console.log('ID:', facility.id);
+      console.log('Owner ID:', facility.ownerId);
+      console.log('isActive:', facility.isActive);
+      console.log('isVerified:', facility.isVerified);
+      console.log('\n');
+    } else {
+      console.log('Facility not found');
+    }
   } catch (error) {
     console.error('Error:', error);
   } finally {
@@ -39,4 +26,4 @@ async function listFacilities() {
   }
 }
 
-listFacilities();
+checkFacility();

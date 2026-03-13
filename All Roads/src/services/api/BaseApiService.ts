@@ -80,7 +80,7 @@ export class BaseApiService {
         const currentUser = authService.getCurrentUser();
         console.log('👤 Current user from authService:', currentUser?.email, currentUser?.id);
         if (currentUser && currentUser.id) {
-          config.headers['x-user-id'] = currentUser.id;
+          config.headers['X-User-Id'] = currentUser.id;
           console.log('🔐 API Request - User ID attached:', currentUser.id, currentUser.email);
         } else {
           console.log('⚠️ API Request - No current user');

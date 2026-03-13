@@ -14,8 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
 import { colors, Spacing, TextStyles } from '../../theme';
-import { ValidationService } from '../../services/auth/ValidationService';
-import { requestPasswordReset } from '../../store/authSlice';
+import ValidationService from '../../services/auth/ValidationService';
+import { requestPasswordReset } from '../../store/slices/authSlice';
 
 interface ForgotPasswordState {
   email: string;
@@ -30,7 +30,6 @@ interface ForgotPasswordState {
 export const ForgotPasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const validationService = new ValidationService();
 
   const [state, setState] = useState<ForgotPasswordState>({
     email: '',
@@ -51,7 +50,7 @@ export const ForgotPasswordScreen: React.FC = () => {
   };
 
   const validateEmail = (email: string) => {
-    const error = validationService.validateEmail(email);
+    const error = ValidationService.validateEmail(email);
     updateError('email', error || undefined);
   };
 
@@ -59,7 +58,7 @@ export const ForgotPasswordScreen: React.FC = () => {
     updateError('general', undefined);
 
     // Validate email
-    const emailError = validationService.validateEmail(state.email);
+    const emailError = ValidationService.validateEmail(state.email);
     if (emailError) {
       updateError('email', emailError);
       return;

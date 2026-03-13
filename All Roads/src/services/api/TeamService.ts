@@ -335,6 +335,14 @@ export class TeamService extends BaseApiService {
   async getTeamLeagues(teamId: string): Promise<any[]> {
     return this.get(`${API_ENDPOINTS.TEAMS.BY_ID(teamId)}/leagues`);
   }
+
+  /**
+   * Add a member directly to a private roster (owner/admin only)
+   */
+  async addMemberDirectly(teamId: string, userId: string): Promise<TeamMember> {
+    const data = { userId };
+    return this.post<TeamMember>(`${API_ENDPOINTS.TEAMS.BY_ID(teamId)}/add-member`, data);
+  }
 }
 
 // Create and export singleton instance

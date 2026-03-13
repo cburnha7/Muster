@@ -110,6 +110,12 @@ class TokenService {
    * Requirements: 8.2, 25.3
    */
   async storeRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    // Delete any existing token with the same value (shouldn't happen, but handle it)
+    await prisma.refreshToken.deleteMany({
+      where: { token },
+    });
+    
+    // Create the new token
     await prisma.refreshToken.create({
       data: {
         userId,

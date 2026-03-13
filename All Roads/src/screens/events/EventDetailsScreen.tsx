@@ -20,6 +20,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { CancelEventModal } from '../../components/events/CancelEventModal';
+import { StepOutModal } from '../../components/bookings/StepOutModal';
 
 import { eventService } from '../../services/api/EventService';
 import { BookingValidationService } from '../../services/booking';
@@ -27,6 +28,7 @@ import { useAuth } from '../../context/AuthContext';
 import { setSelectedEvent, updateEventParticipants, removeEvent } from '../../store/slices/eventsSlice';
 import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
+import { useCancelBookingMutation } from '../../store/api/eventsApi';
 import { colors } from '../../theme';
 import {
   Event,
@@ -34,6 +36,7 @@ import {
   SkillLevel,
   EventStatus,
   Participant,
+  BookingStatus,
 } from '../../types';
 import type { Match } from '../../types/league';
 
@@ -57,6 +60,9 @@ export function EventDetailsScreen(): JSX.Element {
   // Auth context
   const { user: currentUser } = useAuth();
 
+  // RTK Query mutations
+  const [cancelBookingMutation] = useCancelBookingMutation();
+
   // Local state
   const [event, setEvent] = useState<Event | null>(selectedEvent);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,9 +76,10 @@ export function EventDetailsScreen(): JSX.Element {
   const [isSubmittingSalutes, setIsSubmittingSalutes] = useState(false);
   const [salutesSubmitted, setSalutesSubmitted] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showStepOutModal, setShowStepOutModal] = useState(false);
 
   // Load event details
-  const loadEvent = useCallback(async (isRefresh = false) => {
+  const loadEvent = useCallback(async (isRefresh = false, skipCache = false) => {
     if (!eventId) return;
 
     try {
@@ -86,8 +93,8 @@ export function EventDetailsScreen(): JSX.Element {
       // Fetch event from API
       const eventResponse = await eventService.getEvent(eventId);
       
-      // Fetch participants
-      const participantsResponse = await eventService.getEventParticipants(eventId);
+      // Fetch participants (skip cache if requested)
+      const participantsResponse = await eventService.getEventParticipants(eventId, skipCache);
 
       // Check if event is in the past and if salutes have been submitted
       const isPastEvent = new Date(eventResponse.endTime) < new Date();
@@ -108,10 +115,10 @@ export function EventDetailsScreen(): JSX.Element {
     }
   }, [eventId, dispatch]);
 
-  // Load event on screen focus
+  // Load event on screen focus (always skip cache for participants)
   useFocusEffect(
     useCallback(() => {
-      loadEvent();
+      loadEvent(false, true);
     }, [loadEvent])
   );
 
@@ -122,6 +129,13 @@ export function EventDetailsScreen(): JSX.Element {
   const isUserBooked = participants.some(
     participant => participant.userId === currentUser?.id
   );
+  
+  console.log('🔍 EventDetails - isUserBooked check:', {
+    isUserBooked,
+    participantsCount: participants.length,
+    currentUserId: currentUser?.id,
+    participantUserIds: participants.map(p => p.userId),
+  });
 
   // Check if user is the organizer
   const isOrganizer = event?.organizerId === currentUser?.id;
@@ -193,8 +207,6 @@ export function EventDetailsScreen(): JSX.Element {
       console.log('Calling bookEvent API...');
       const booking = await eventService.bookEvent(event.id, currentUser.id);
       console.log('Booking successful:', booking);
-      console.log('Booking has event data:', !!booking.event);
-      console.log('Booking event start time:', booking.event?.startTime);
       
       // Add booking to Redux store
       console.log('Adding booking to Redux store...');
@@ -212,18 +224,20 @@ export function EventDetailsScreen(): JSX.Element {
       const newParticipants = await eventService.getEventParticipants(event.id);
       setParticipants(newParticipants);
 
-      // Navigate to Home tab to show updated bookings
-      console.log('Navigating to Home tab...');
-      (navigation as any).navigate('Home');
-      
-      // Show success message after navigation
-      setTimeout(() => {
-        Alert.alert(
-          'Joined Up!',
-          `You've successfully joined "${event.title}". Check your bookings to see details.`,
-          [{ text: 'OK' }]
-        );
-      }, 300);
+      // Show success message
+      Alert.alert(
+        'Joined Up!',
+        `You've successfully joined "${event.title}". Check your bookings to see details.`,
+        [
+          { 
+            text: 'OK',
+            onPress: () => {
+              // Navigate to Home tab after user dismisses alert
+              (navigation as any).navigate('Home', { screen: 'HomeScreen' });
+            }
+          }
+        ]
+      );
     } catch (error) {
       console.error('Booking error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to book event';
@@ -235,87 +249,78 @@ export function EventDetailsScreen(): JSX.Element {
 
   // Handle cancel booking
   const handleCancelBooking = async () => {
-    if (!event || !currentUser) return;
+      if (!event || !currentUser) {
+        return;
+      }
 
-    const userBooking = participants.find(p => p.userId === currentUser.id);
-    if (!userBooking) return;
+      const userBooking = participants.find(p => p.userId === currentUser.id);
 
-    // Validate cancellation
-    const validationResult = BookingValidationService.validateCancellation(
-      event,
-      currentUser,
-      userBooking.status as any
-    );
+      if (!userBooking) {
+        Alert.alert('Error', 'Could not find your booking for this event');
+        return;
+      }
 
-    if (!validationResult.canBook) {
-      Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
+      // Validate cancellation
+      const validationResult = BookingValidationService.validateCancellation(
+        event,
+        currentUser,
+        userBooking.status as unknown as BookingStatus
+      );
+
+      if (!validationResult.canBook) {
+        Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
+        return;
+      }
+
+      // Show the modal
+      setShowStepOutModal(true);
+    }
+
+  // Handle step out confirmation from modal
+  const handleStepOutConfirm = async () => {
+    if (!event || !currentUser) {
       return;
     }
 
-    // Calculate refund amount
-    const refundAmount = BookingValidationService.calculateRefundAmount(
-      event.price,
-      event.startTime
-    );
-
-    // Show cancellation confirmation with refund info
-    const cancellationMessage = BookingValidationService.getCancellationConfirmationMessage(
-      event,
-      refundAmount
-    );
-
-    let alertMessage = 'Are you sure you want to step out of this event?';
-    if (validationResult.warnings && validationResult.warnings.length > 0) {
-      alertMessage += '\n\n' + validationResult.warnings.join('\n');
-    }
-    if (refundAmount !== event.price) {
-      alertMessage += `\n\nRefund amount: $${refundAmount.toFixed(2)}`;
+    const userBooking = participants.find(p => p.userId === currentUser.id);
+    
+    if (!userBooking) {
+      Alert.alert('Error', 'Could not find your booking for this event');
+      return;
     }
 
-    Alert.alert(
-      'Step Out',
-      alertMessage,
-      [
-        { text: 'Stay In', style: 'cancel' },
-        {
-          text: 'Step Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsBooking(true);
-              
-              await eventService.cancelBooking(event.id, userBooking.bookingId);
-              
-              // Remove booking from Redux store
-              dispatch(removeBooking(userBooking.bookingId));
-              
-              // Update local state
-              const updatedParticipants = Math.max(0, event.currentParticipants - 1);
-              const updatedEvent = { ...event, currentParticipants: updatedParticipants };
-              setEvent(updatedEvent);
-              dispatch(updateEventParticipants({ eventId: event.id, count: updatedParticipants }));
-              
-              // Reload participants
-              const newParticipants = await eventService.getEventParticipants(event.id);
-              setParticipants(newParticipants);
+    try {
+      console.log('🚶 Canceling booking with RTK Query mutation:', {
+        eventId: event.id,
+        bookingId: userBooking.bookingId,
+      });
 
-              // Navigate to Home tab
-              (navigation as any).navigate('Home');
-              
-              // Show success message after navigation
-              setTimeout(() => {
-                Alert.alert('Stepped Out', cancellationMessage);
-              }, 300);
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking';
-              Alert.alert('Error', errorMessage);
-            } finally {
-              setIsBooking(false);
-            }
-          },
-        },
-      ]
-    );
+      // Use RTK Query mutation - this will automatically invalidate cache
+      await cancelBookingMutation({
+        eventId: event.id,
+        bookingId: userBooking.bookingId,
+      }).unwrap();
+
+      console.log('✅ Booking cancelled successfully');
+
+      // Remove booking from Redux store
+      dispatch(removeBooking(userBooking.bookingId));
+
+      // Close modal
+      setShowStepOutModal(false);
+
+      // Clear participants state immediately to force UI update
+      setParticipants([]);
+
+      // Force a complete reload with cache bypass
+      await loadEvent(false, true);
+      
+      console.log('✅ Event reloaded after step out');
+    } catch (error) {
+      console.error('❌ Step out error:', error);
+      Alert.alert('Error', 'Failed to step out. Please try again.');
+      setShowStepOutModal(false);
+    }
   };
 
   // Handle edit event - removed since EditEvent screen doesn't exist
@@ -588,7 +593,7 @@ export function EventDetailsScreen(): JSX.Element {
       <ScreenHeader
         title="Event Details"
         showBack={true}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => (navigation as any).navigate('Home', { screen: 'HomeScreen' })}
         rightComponent={
           isOrganizer ? (
             <TouchableOpacity 
@@ -1024,6 +1029,14 @@ export function EventDetailsScreen(): JSX.Element {
         eventTitle={event.title}
         onCancel={() => setShowCancelModal(false)}
         onConfirm={handleCancelEvent}
+      />
+
+      {/* Step Out Modal */}
+      <StepOutModal
+        visible={showStepOutModal}
+        eventTitle={event?.title || 'Event'}
+        onCancel={() => setShowStepOutModal(false)}
+        onConfirm={handleStepOutConfirm}
       />
 
       {/* Salute Modal */}

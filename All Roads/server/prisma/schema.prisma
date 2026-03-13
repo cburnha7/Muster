@@ -57,6 +57,7 @@ model User {
   rentals                FacilityRental[]
   refreshTokens          RefreshToken[]
   passwordResetTokens    PasswordResetToken[]
+  teamTransactions       TeamTransaction[]
 
   @@map("users")
 }
@@ -80,7 +81,7 @@ model Event {
   imageUrl            String?
 
   // Eligibility restrictions (stored as JSON)
-  eligibilityRestrictedToTeams   String[] @default([]) // Team IDs
+  eligibilityRestrictedToTeams   String[] @default([]) // Roster IDs
   eligibilityRestrictedToLeagues String[] @default([]) // League IDs
   eligibilityMinAge              Int?
   eligibilityMaxAge              Int?
@@ -88,6 +89,15 @@ model Event {
   eligibilityMinSkillLevel       String?
   eligibilityMaxSkillLevel       String?
   eligibilityIsInviteOnly        Boolean  @default(false)
+  
+  // Invite-only event fields
+  minimumPlayerCount             Int?     // Minimum players needed for event to proceed
+  wasAutoOpenedToPublic          Boolean  @default(false) // Track if event was auto-opened
+  autoOpenedAt                   DateTime? // When the event was auto-opened
+  
+  // Group fee coverage
+  isGroupFeeCovered              Boolean  @default(false) // Event cost covered by roster balance
+  coveringTeamId                 String? // Which roster is covering the cost
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,6 +191,14 @@ model Team {
   isPrivate   Boolean  @default(false)
   imageUrl    String?
   leagueId    String?
+  
+  // Roster balance and join fee fields
+  balance            Float   @default(0) // Current roster balance in USD
+  joinFee            Float?  // Optional join fee amount
+  joinFeeType        String? // 'one_time' or 'monthly'
+  stripeAccountId    String? // Stripe Connect account for receiving payments
+  lastBalanceUpdate  DateTime @default(now())
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -190,6 +208,7 @@ model Team {
   leagueMemberships LeagueMembership[]
   homeMatches       Match[]            @relation("HomeMatches")
   awayMatches       Match[]            @relation("AwayMatches")
+  transactions      TeamTransaction[]
 
   @@map("teams")
 }
@@ -584,6 +603,7 @@ model FacilityRental {
   usedForEvent Event?           @relation("RentalUsedForEvent", fields: [usedForEventId], references: [id])
   events       Event[]
   bookings     Booking[]
+  teamTransactions TeamTransaction[]
 
   @@index([userId])
   @@index([status])
@@ -776,4 +796,37 @@ model PasswordResetToken {
   @@index([token])
   @@index([expiresAt])
   @@map("password_reset_tokens")
+}
+
+model TeamTransaction {
+  id              String   @id @default(uuid())
+  type            String // 'join_fee', 'top_up', 'booking_debit', 'refund'
+  amount          Float // Positive for credits, negative for debits
+  balanceBefore   Float
+  balanceAfter    Float
+  description     String
+  
+  // Payment details
+  stripePaymentId String? // Stripe payment intent ID
+  paymentStatus   String  @default("pending") // pending, completed, failed, refunded
+  
+  // Related entities
+  userId          String? // User who made the payment (for join fees and top-ups)
+  rentalId        String? // Rental paid for with roster balance
+  
+  createdAt       DateTime @default(now())
+  
+  // Foreign Keys
+  teamId          String
+  
+  // Relations
+  team   Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user   User?           @relation(fields: [userId], references: [id])
+  rental FacilityRental? @relation(fields: [rentalId], references: [id])
+  
+  @@index([teamId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("team_transactions")
 }

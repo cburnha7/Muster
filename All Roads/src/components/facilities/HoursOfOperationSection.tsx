@@ -328,11 +328,19 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     padding: Spacing.lg,
-    marginTop: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionHeader: {
     marginBottom: Spacing.md,
@@ -351,7 +359,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   dayName: {
     ...TextStyles.body,
@@ -375,7 +383,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -386,7 +394,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   modalTitle: {
     ...TextStyles.h3,
@@ -411,7 +419,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 30,
     borderRadius: 15,
-    backgroundColor: colors.border,
+    backgroundColor: '#E0E0E0',
     padding: 2,
     justifyContent: 'center',
   },
@@ -422,7 +430,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -441,12 +449,10 @@ const styles = StyleSheet.create({
   timePicker: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chalk,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   timeValue: {
     ...TextStyles.body,
@@ -469,7 +475,7 @@ const styles = StyleSheet.create({
   modalActions: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#F0F0F0',
   },
   doneButton: {
     backgroundColor: colors.grass,
@@ -490,7 +496,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   pickerModal: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     width: '100%',
     maxWidth: 400,
@@ -502,7 +508,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   pickerTitle: {
     ...TextStyles.h4,
@@ -518,10 +524,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   pickerOptionSelected: {
-    backgroundColor: colors.chalk,
+    backgroundColor: '#F7F4EE',
   },
   pickerOptionText: {
     ...TextStyles.body,

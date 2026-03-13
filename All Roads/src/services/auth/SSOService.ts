@@ -6,10 +6,19 @@
  */
 
 import { Platform } from 'react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { SSOUserData } from '../../types/auth';
+
+// Conditionally import Apple Authentication (only available on iOS)
+let AppleAuthentication: any = null;
+if (Platform.OS === 'ios') {
+  try {
+    AppleAuthentication = require('expo-apple-authentication');
+  } catch (error) {
+    console.warn('expo-apple-authentication not available');
+  }
+}
 
 // Complete the auth session for web
 WebBrowser.maybeCompleteAuthSession();
@@ -45,7 +54,7 @@ class SSOService {
   async isAppleSignInAvailable(): Promise<boolean> {
     try {
       // Apple Sign In is only available on iOS 13+ and macOS 10.15+
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === 'ios' && AppleAuthentication) {
         return await AppleAuthentication.isAvailableAsync();
       }
       return false;
@@ -77,7 +86,7 @@ class SSOService {
     try {
       // Check availability first
       const isAvailable = await this.isAppleSignInAvailable();
-      if (!isAvailable) {
+      if (!isAvailable || !AppleAuthentication) {
         throw new Error('Apple Sign In is not available on this device');
       }
 

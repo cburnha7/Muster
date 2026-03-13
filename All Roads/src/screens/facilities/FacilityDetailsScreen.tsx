@@ -23,6 +23,7 @@ import {
   removeFacility,
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
+import { colors, Spacing } from '../../theme';
 import { Event, SportType, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 
@@ -106,7 +107,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
             try {
               await facilityService.deleteFacility(facilityId);
               dispatch(removeFacility(facilityId));
-              navigation.goBack();
+              // Navigate back with refresh parameter to force list reload
+              navigation.navigate('Facilities' as never, { 
+                screen: 'FacilitiesList',
+                params: { refresh: Date.now() }
+              } as never);
             } catch (err: any) {
               Alert.alert('Error', err.message || 'Failed to delete ground');
             }
@@ -485,10 +490,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
   content: {
-    paddingBottom: 20,
+    paddingBottom: Spacing.lg,
   },
   imageContainer: {
     width: '100%',
@@ -499,48 +504,48 @@ const styles = StyleSheet.create({
     height: 250,
   },
   header: {
-    backgroundColor: '#FFF',
-    padding: 16,
+    backgroundColor: colors.chalk,
+    padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.soft,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   titleContainer: {
     flex: 1,
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
   name: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
+    marginBottom: Spacing.sm,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: colors.grass + '20',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
     borderRadius: 16,
     alignSelf: 'flex-start',
   },
   verifiedText: {
     fontSize: 14,
-    color: '#10B981',
+    color: colors.grass,
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: Spacing.xs,
   },
   actions: {
     flexDirection: 'row',
   },
   actionButton: {
-    padding: 8,
-    marginLeft: 8,
+    padding: Spacing.sm,
+    marginLeft: Spacing.sm,
   },
   rating: {
     flexDirection: 'row',
@@ -548,37 +553,37 @@ const styles = StyleSheet.create({
   },
   stars: {
     flexDirection: 'row',
-    marginRight: 8,
+    marginRight: Spacing.sm,
   },
   ratingText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.soft,
   },
   section: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    marginTop: 8,
+    backgroundColor: colors.chalk,
+    padding: Spacing.lg,
+    marginTop: Spacing.sm,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    color: colors.ink,
+    marginBottom: Spacing.md,
   },
   description: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    fontSize: 16,
+    color: colors.soft,
+    lineHeight: 24,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   infoText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 12,
+    fontSize: 16,
+    color: colors.soft,
+    marginLeft: Spacing.md,
     flex: 1,
   },
   sportsContainer: {
@@ -652,17 +657,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3D8C5E',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    backgroundColor: colors.grass,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     borderRadius: 8,
-    marginTop: 16,
-    gap: 8,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
   },
   bookButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFF',
+    color: colors.chalk,
   },
   parkingInfo: {
     flexDirection: 'row',
@@ -754,7 +759,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '95%',
     height: '90%',
-    backgroundColor: '#FFF',
+    backgroundColor: colors.chalk,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -762,15 +767,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFF',
+    borderBottomColor: colors.soft,
+    backgroundColor: colors.chalk,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.ink,
   },
   closeButton: {
     padding: 4,

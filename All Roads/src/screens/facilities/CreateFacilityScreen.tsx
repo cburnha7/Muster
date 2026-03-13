@@ -599,6 +599,12 @@ export function CreateFacilityScreen(): JSX.Element {
             loading={isSubmitting}
             disabled={isSubmitting}
           />
+          <FormButton
+            title="Cancel"
+            variant="secondary"
+            onPress={() => navigation.goBack()}
+            disabled={isSubmitting}
+          />
         </View>
       </ScrollView>
 
@@ -885,7 +891,7 @@ export function CreateFacilityScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
   },
   scrollView: {
     flex: 1,
@@ -894,11 +900,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   section: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     padding: Spacing.lg,
-    marginTop: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -969,7 +983,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chalk,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1009,7 +1023,8 @@ const styles = StyleSheet.create({
     marginTop: -Spacing.sm,
   },
   buttonContainer: {
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.lg,
   },
   modalOverlay: {
     flex: 1,
@@ -1019,14 +1034,14 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   addCourtModal: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     width: '100%',
     maxWidth: 500,
     maxHeight: '90%',
   },
   modalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: Spacing.lg,
     width: '100%',
@@ -1039,7 +1054,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   modalTitle: {
     ...TextStyles.h3,
@@ -1079,7 +1094,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#F0F0F0',
   },
   modalButton: {
     flex: 1,
@@ -1089,9 +1104,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.chalk,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1117,12 +1130,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   duplicateCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chalk,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   duplicateName: {
     ...TextStyles.h4,

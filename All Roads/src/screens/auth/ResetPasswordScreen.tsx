@@ -14,8 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
 import { colors, Spacing, TextStyles } from '../../theme';
-import { ValidationService } from '../../services/auth/ValidationService';
-import { resetPassword } from '../../store/authSlice';
+import ValidationService from '../../services/auth/ValidationService';
+import { resetPassword } from '../../store/slices/authSlice';
 
 interface ResetPasswordState {
   resetToken: string;
@@ -34,7 +34,6 @@ export const ResetPasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
-  const validationService = new ValidationService();
 
   // Extract token from route params or URL
   const resetToken = (route.params as any)?.token || '';
@@ -74,9 +73,9 @@ export const ResetPasswordScreen: React.FC = () => {
     let error: string | null = null;
 
     if (field === 'newPassword') {
-      error = validationService.validatePassword(value);
+      error = ValidationService.validatePassword(value);
     } else if (field === 'confirmPassword') {
-      error = validationService.validateConfirmPassword(state.newPassword, value);
+      error = ValidationService.validateConfirmPassword(state.newPassword, value);
     }
 
     updateError(field, error || undefined);
@@ -102,8 +101,8 @@ export const ResetPasswordScreen: React.FC = () => {
     updateError('general', undefined);
 
     // Validate passwords
-    const passwordError = validationService.validatePassword(state.newPassword);
-    const confirmError = validationService.validateConfirmPassword(
+    const passwordError = ValidationService.validatePassword(state.newPassword);
+    const confirmError = ValidationService.validateConfirmPassword(
       state.newPassword,
       state.confirmPassword
     );

@@ -32,21 +32,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     });
   };
 
-  const getStatusColor = (status: BookingStatus) => {
-    switch (status) {
-      case BookingStatus.CONFIRMED:
-        return '#34C759';
-      case BookingStatus.CANCELLED:
-        return '#FF3B30';
-      case BookingStatus.COMPLETED:
-        return '#007AFF';
-      case BookingStatus.NO_SHOW:
-        return '#FF9500';
-      default:
-        return '#666';
-    }
-  };
-
   const getPaymentStatusColor = (status: PaymentStatus) => {
     switch (status) {
       case PaymentStatus.PAID:
@@ -62,75 +47,63 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     }
   };
 
-  const canCancel = booking.status === BookingStatus.CONFIRMED && 
-                   booking.event && 
+  const canCancel = booking.status === BookingStatus.CONFIRMED &&
+                   booking.event &&
                    new Date(booking.event.startTime) > new Date();
 
-  const isUpcoming = booking.event && 
-                    new Date(booking.event.startTime) > new Date() &&
-                    booking.status === BookingStatus.CONFIRMED;
-
-  // Debug logging
-  console.log('BookingCard render:', {
-    bookingId: booking.id,
-    status: booking.status,
-    hasEvent: !!booking.event,
-    canCancel,
-    hasOnCancel: !!onCancel,
-    willShowButton: canCancel && !!onCancel,
-  });
-
   return (
-    <TouchableOpacity
-      style={[styles.container, style]}
-      onPress={() => onPress?.(booking)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.header}>
-        <View style={styles.eventInfo}>
-          <Text style={styles.eventTitle} numberOfLines={1}>
-            {booking.event?.title || 'Event Details'}
-          </Text>
-          <Text style={styles.facilityName} numberOfLines={1}>
-            {booking.event?.facility?.name || 'Location TBD'}
-          </Text>
+    <View style={[styles.container, style]}>
+      {/* Card content - tappable to navigate to event details */}
+      <TouchableOpacity
+        onPress={() => onPress?.(booking)}
+        activeOpacity={0.7}
+        disabled={!onPress}
+      >
+        <View style={styles.header}>
+          <View style={styles.eventInfo}>
+            <Text style={styles.eventTitle} numberOfLines={1}>
+              {booking.event?.title || 'Event Details'}
+            </Text>
+            <Text style={styles.facilityName} numberOfLines={1}>
+              {booking.event?.facility?.name || 'Location TBD'}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      {booking.event && (
-        <View style={styles.details}>
-          <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>
-              {formatDate(booking.event.startTime)} at {formatTime(booking.event.startTime)}
-            </Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="time-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>
-              Duration: {Math.round(
-                (new Date(booking.event.endTime).getTime() - 
-                 new Date(booking.event.startTime).getTime()) / (1000 * 60)
-              )} minutes
-            </Text>
-          </View>
-
-          {booking.team && (
+        {booking.event && (
+          <View style={styles.details}>
             <View style={styles.detailRow}>
-              <Ionicons name="people-outline" size={16} color="#666" />
+              <Ionicons name="calendar-outline" size={16} color="#666" />
               <Text style={styles.detailText}>
-                Team: {booking.team.name}
+                {formatDate(booking.event.startTime)} at {formatTime(booking.event.startTime)}
               </Text>
             </View>
-          )}
-        </View>
-      )}
+            <View style={styles.detailRow}>
+              <Ionicons name="time-outline" size={16} color="#666" />
+              <Text style={styles.detailText}>
+                Duration: {Math.round(
+                  (new Date(booking.event.endTime).getTime() -
+                   new Date(booking.event.startTime).getTime()) / (1000 * 60)
+                )} minutes
+              </Text>
+            </View>
+            {booking.team && (
+              <View style={styles.detailRow}>
+                <Ionicons name="people-outline" size={16} color="#666" />
+                <Text style={styles.detailText}>
+                  Roster: {booking.team.name}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
 
+      {/* Footer with price and Step Out button - NOT inside the parent touchable */}
       <View style={styles.footer}>
         <View style={styles.paymentInfo}>
           <Text style={styles.price}>
-            {booking.event?.price ? `$${booking.event.price}` : 'Free'}
+            {booking.event?.price ? `${booking.event.price}` : 'Free'}
           </Text>
           {booking.event?.price && booking.event.price > 0 && (
             <View
@@ -151,8 +124,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             style={styles.cancelButton}
             onPress={() => {
               console.log('📍 BookingCard: Step Out button pressed');
+              console.log('📍 Booking:', booking.id, booking.eventId);
               onCancel(booking);
             }}
+            activeOpacity={0.7}
           >
             <Text style={styles.cancelText}>Step Out</Text>
           </TouchableOpacity>
@@ -171,7 +146,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </Text>
         )}
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -195,7 +170,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   eventInfo: {
     flex: 1,
@@ -211,23 +186,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '600',
-  },
   details: {
     marginBottom: 12,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   detailText: {
     fontSize: 14,
@@ -247,7 +212,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#007AFF',
+    color: '#3D8C5E',
     marginRight: 12,
   },
   paymentBadge: {
@@ -270,21 +235,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
-  },
-  upcomingBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F4FD',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  upcomingText: {
-    color: '#007AFF',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 6,
   },
   bookingInfo: {
     borderTopWidth: 1,

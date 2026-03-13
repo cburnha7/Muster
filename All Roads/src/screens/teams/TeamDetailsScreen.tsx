@@ -14,6 +14,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { FormButton } from '../../components/forms/FormButton';
+import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
 import { teamService } from '../../services/api/TeamService';
 import { leagueService } from '../../services/api/LeagueService';
 import {
@@ -26,7 +27,7 @@ import {
   updateTeamMemberRole,
 } from '../../store/slices/teamsSlice';
 import { selectSelectedTeam, selectUserTeams } from '../../store/slices/teamsSlice';
-import { Team, TeamMember, TeamRole, MemberStatus } from '../../types';
+import { Team, TeamMember, TeamRole, MemberStatus, User } from '../../types';
 import { League } from '../../types/league';
 import { colors } from '../../theme';
 
@@ -108,12 +109,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     if (!team) return;
 
     Alert.alert(
-      'Join Team',
+      'Join Roster',
       `Do you want to join ${team.name}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Step Out', style: 'cancel' },
         {
-          text: 'Join',
+          text: 'Join Up',
           onPress: async () => {
             try {
               setIsJoining(true);
@@ -121,10 +122,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               const updatedTeam = await teamService.getTeam(teamId);
               setTeam(updatedTeam);
               dispatch(joinTeamAction(updatedTeam));
-              Alert.alert('Success', 'You have joined the team!');
+              Alert.alert('Success', 'You have joined the roster!');
             } catch (err: any) {
-              console.error('Error joining team:', err);
-              Alert.alert('Error', err.message || 'Failed to join team');
+              console.error('Error joining roster:', err);
+              Alert.alert('Error', err.message || 'Failed to join roster');
             } finally {
               setIsJoining(false);
             }
@@ -138,10 +139,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     if (!team) return;
 
     Alert.alert(
-      'Leave Team',
+      'Leave Roster',
       `Are you sure you want to leave ${team.name}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Step Out', style: 'cancel' },
         {
           text: 'Leave',
           style: 'destructive',
@@ -150,12 +151,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               setIsLeaving(true);
               await teamService.leaveTeam(teamId);
               dispatch(leaveTeamAction(teamId));
-              Alert.alert('Success', 'You have left the team', [
+              Alert.alert('Success', 'You have left the roster', [
                 { text: 'OK', onPress: () => navigation.goBack() },
               ]);
             } catch (err: any) {
-              console.error('Error leaving team:', err);
-              Alert.alert('Error', err.message || 'Failed to leave team');
+              console.error('Error leaving roster:', err);
+              Alert.alert('Error', err.message || 'Failed to leave roster');
             } finally {
               setIsLeaving(false);
             }
@@ -167,17 +168,17 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   const handleEditTeam = () => {
     // Navigate to edit screen (to be implemented)
-    Alert.alert('Edit Team', 'Edit team functionality coming soon');
+    Alert.alert('Edit Roster', 'Edit roster functionality coming soon');
   };
 
   const handleDeleteTeam = async () => {
     if (!team) return;
 
     Alert.alert(
-      'Delete Team',
+      'Delete Roster',
       `Are you sure you want to delete ${team.name}? This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Step Out', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
@@ -185,12 +186,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             try {
               await teamService.deleteTeam(teamId);
               dispatch(removeTeam(teamId));
-              Alert.alert('Success', 'Team deleted successfully', [
+              Alert.alert('Success', 'Roster deleted successfully', [
                 { text: 'OK', onPress: () => navigation.goBack() },
               ]);
             } catch (err: any) {
-              console.error('Error deleting team:', err);
-              Alert.alert('Error', err.message || 'Failed to delete team');
+              console.error('Error deleting roster:', err);
+              Alert.alert('Error', err.message || 'Failed to delete roster');
             }
           },
         },
@@ -253,9 +254,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
     Alert.alert(
       'Remove Member',
-      `Remove ${member.user?.firstName || 'this member'} from the team?`,
+      `Remove ${member.user?.firstName || 'this member'} from the roster?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Step Out', style: 'cancel' },
         {
           text: 'Remove',
           style: 'destructive',
@@ -264,7 +265,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               await teamService.removeFromTeam(teamId, member.userId);
               dispatch(removeTeamMember({ teamId, userId: member.userId }));
               await loadTeamDetails(); // Reload to get updated data
-              Alert.alert('Success', 'Member removed from team');
+              Alert.alert('Success', 'Member removed from roster');
             } catch (err: any) {
               console.error('Error removing member:', err);
               Alert.alert('Error', err.message || 'Failed to remove member');
@@ -279,7 +280,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     if (!team) return;
 
     const roleOptions = [
-      { text: 'Cancel', style: 'cancel' as const },
+      { text: 'Step Out', style: 'cancel' as const },
       {
         text: 'Make Co-Captain',
         onPress: () => updateMemberRole(member, TeamRole.CO_CAPTAIN),
@@ -302,6 +303,23 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     } catch (err: any) {
       console.error('Error updating member role:', err);
       Alert.alert('Error', err.message || 'Failed to update member role');
+    }
+  };
+
+  const handleAddMemberDirectly = async (user: User) => {
+    if (!team) return;
+
+    try {
+      await teamService.addMemberDirectly(teamId, user.id);
+      await loadTeamDetails(); // Reload to get updated member list
+      Alert.alert(
+        'Player Added',
+        `${user.firstName} ${user.lastName} has been added to the roster and will receive a notification.`
+      );
+    } catch (err: any) {
+      console.error('Error adding player:', err);
+      Alert.alert('Error', err.message || 'Failed to add player to roster');
+      throw err; // Re-throw to let AddMemberSearch handle it
     }
   };
 
@@ -409,8 +427,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Team Details" showBack onBackPress={() => navigation.goBack()} />
-        <LoadingSpinner message="Loading team..." />
+        <ScreenHeader title="Roster Details" showBack onBackPress={() => navigation.goBack()} />
+        <LoadingSpinner message="Loading roster..." />
       </View>
     );
   }
@@ -418,9 +436,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   if (error || !team) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Team Details" showBack onBackPress={() => navigation.goBack()} />
+        <ScreenHeader title="Roster Details" showBack onBackPress={() => navigation.goBack()} />
         <ErrorDisplay
-          message={error || 'Team not found'}
+          message={error || 'Roster not found'}
           onRetry={loadTeamDetails}
         />
       </View>
@@ -475,7 +493,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         {/* Team Stats */}
         {team.stats && (
           <View style={styles.statsContainer}>
-            <Text style={styles.sectionTitle}>Team Statistics</Text>
+            <Text style={styles.sectionTitle}>Roster Statistics</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{team.stats?.gamesPlayed || 0}</Text>
@@ -499,7 +517,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             
             <TouchableOpacity
               style={styles.viewMoreButton}
-              onPress={() => Alert.alert('Team Stats', 'Detailed statistics coming soon')}
+              onPress={() => Alert.alert('Roster Stats', 'Detailed statistics coming soon')}
             >
               <Text style={styles.viewMoreText}>View Detailed Statistics →</Text>
             </TouchableOpacity>
@@ -518,6 +536,34 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           </View>
 
           {activeMembers.map(renderMember)}
+
+          {/* Add Member Search - Only for private rosters with owner/admin access */}
+          {(() => {
+            console.log('🔍 Add Member Section Check:', {
+              isPublic: team.isPublic,
+              canManageTeam,
+              availableSlots,
+              shouldShow: !team.isPublic && canManageTeam && availableSlots > 0
+            });
+            return null;
+          })()}
+          {!team.isPublic && canManageTeam && availableSlots > 0 && (
+            <View style={styles.addMemberSection}>
+              <View style={styles.addMemberHeader}>
+                <Text style={styles.addMemberTitle}>Add Members</Text>
+                <View style={styles.privateBadge}>
+                  <Text style={styles.privateBadgeText}>🔒 Private</Text>
+                </View>
+              </View>
+              <Text style={styles.addMemberDescription}>
+                Search for existing users and add them directly to your roster. They will be notified immediately.
+              </Text>
+              <AddMemberSearch
+                onAddMember={handleAddMemberDirectly}
+                existingMemberIds={activeMembers.map(m => m.userId)}
+              />
+            </View>
+          )}
         </View>
 
         {/* Leagues Section */}
@@ -537,7 +583,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           ) : (
             <View style={styles.noLeagues}>
               <Text style={styles.noLeaguesText}>
-                This team is not participating in any leagues yet.
+                This roster is not participating in any leagues yet.
               </Text>
             </View>
           )}
@@ -596,7 +642,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         <View style={styles.actions}>
           {!isUserMember && availableSlots > 0 && (
             <FormButton
-              title="Join Team"
+              title="Join Up"
               onPress={handleJoinTeam}
               disabled={isJoining}
             />
@@ -604,7 +650,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
           {isUserMember && !isUserCaptain && (
             <FormButton
-              title="Leave Team"
+              title="Leave Roster"
               onPress={handleLeaveTeam}
               variant="secondary"
               disabled={isLeaving}
@@ -614,11 +660,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           {isUserCaptain && (
             <>
               <FormButton
-                title="Edit Team"
+                title="Edit Roster"
                 onPress={handleEditTeam}
               />
               <FormButton
-                title="Delete Team"
+                title="Delete Roster"
                 onPress={handleDeleteTeam}
                 variant="danger"
               />
@@ -749,6 +795,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#10B981',
     fontWeight: '500',
+  },
+  addMemberSection: {
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    gap: 12,
+  },
+  addMemberHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  addMemberTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  privateBadge: {
+    backgroundColor: colors.courtLight + '20',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  privateBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.court,
+  },
+  addMemberDescription: {
+    fontSize: 14,
+    color: colors.soft,
+    lineHeight: 20,
   },
   memberItem: {
     flexDirection: 'row',

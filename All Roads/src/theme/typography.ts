@@ -1,164 +1,102 @@
-/**
- * Typography system for Muster
- * Defines font sizes, weights, and line heights
- * 
- * Brand Typography v1.0:
- * - Display/Heading: Fraunces (serif) - elegant, distinctive
- * - UI/Body: Nunito (sans-serif) - friendly, readable
- * 
- * Note: Custom fonts (Fraunces, Nunito) require installation via expo-google-fonts
- * Currently using system fonts as fallback
- * 
- * To install custom fonts:
- * npm install @expo-google-fonts/fraunces @expo-google-fonts/nunito expo-font
- */
+// Install via expo-google-fonts:
+// npx expo install @expo-google-fonts/fraunces @expo-google-fonts/nunito
 
-export const Typography = {
-  // Font Families
-  fontFamily: {
-    display: 'Fraunces_700Bold',
-    heading: 'Fraunces_900Black',
-    ui: 'Nunito_900Black',
-    body: 'Nunito_400Regular',
-    label: 'Nunito_800ExtraBold',
-    regular: 'Nunito_400Regular',
-    medium: 'Nunito_600SemiBold',
-    semibold: 'Nunito_600SemiBold',
-    bold: 'Nunito_700Bold',
-  },
+import {
+  Fraunces_300Light,
+  Fraunces_300Light_Italic,
+  Fraunces_700Bold,
+  Fraunces_700Bold_Italic,
+  Fraunces_900Black,
+} from '@expo-google-fonts/fraunces';
 
-  // Font Sizes (from brand guidelines)
-  fontSize: {
-    display: 52,      // Display text - Fraunces 700
-    h1: 34,           // Large headings
-    h2: 28,           // Section headings - Fraunces 900
-    h3: 22,           // Subsection headings
-    h4: 20,           // Card titles
-    ui: 14,           // Buttons/UI - Nunito 900
-    bodyLarge: 17,    // Emphasized body
-    body: 15,         // Standard body - Nunito 400
-    caption: 13,      // Captions
-    label: 10,        // Labels - Nunito 800 caps
-    small: 11,        // Fine print
-  },
+import {
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+} from '@expo-google-fonts/nunito';
 
-  // Font Weights
-  fontWeight: {
-    regular: '400' as const,
-    medium: '500' as const,
-    semibold: '600' as const,
-    bold: '700' as const,
-    extrabold: '800' as const,
-    black: '900' as const,
-  },
+// ── Font map for useFonts() ──────────────────────
+export const fontAssets = {
+  Fraunces_300Light,
+  Fraunces_300Light_Italic,
+  Fraunces_700Bold,
+  Fraunces_700Bold_Italic,
+  Fraunces_900Black,
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+};
 
-  // Line Heights
-  lineHeight: {
-    display: 52,      // 1.0 - tight for display
-    h1: 41,
-    h2: 34,
-    h3: 28,
-    h4: 25,
-    ui: 18,
-    bodyLarge: 22,
-    body: 25,         // 1.65 - comfortable reading
-    caption: 18,
-    label: 16,
-    small: 13,
-  },
+// ── Font family names ────────────────────────────
+export const fonts = {
+  display:       'Fraunces_700Bold',       // hero / marketing text
+  displayItalic: 'Fraunces_700Bold_Italic',// italic accent
+  displayLight:  'Fraunces_300Light_Italic',// soft italic moments
+  heading:       'Fraunces_900Black',      // screen headings
+  ui:            'Nunito_900Black',        // buttons / tab labels
+  label:         'Nunito_800ExtraBold',    // badges / caps labels
+  semibold:      'Nunito_700Bold',         // card meta / emphasis
+  body:          'Nunito_400Regular',      // body copy
 } as const;
 
-/**
- * Text style presets
- */
+// ── Type scale ───────────────────────────────────
+export const typeScale = {
+  display:  { fontSize: 48, lineHeight: 52, letterSpacing: -0.8 },
+  h1:       { fontSize: 32, lineHeight: 36, letterSpacing: -0.5 },
+  h2:       { fontSize: 24, lineHeight: 28, letterSpacing: -0.3 },
+  h3:       { fontSize: 20, lineHeight: 24, letterSpacing: -0.2 },
+  bodyLg:   { fontSize: 17, lineHeight: 26, letterSpacing: 0 },
+  body:     { fontSize: 15, lineHeight: 22, letterSpacing: 0 },
+  bodySm:   { fontSize: 13, lineHeight: 20, letterSpacing: 0 },
+  label:    { fontSize: 11, lineHeight: 16, letterSpacing: 1.6 },
+  caption:  { fontSize: 10, lineHeight: 14, letterSpacing: 1.8 },
+} as const;
+
+export type FontKey = keyof typeof fonts;
+export type TypeScaleKey = keyof typeof typeScale;
+
+// ── Text Styles ──────────────────────────────────
+// Pre-composed text styles combining font family and type scale
 export const TextStyles = {
-  // Display text - hero sections
   display: {
-    fontFamily: Typography.fontFamily.display,
-    fontSize: Typography.fontSize.display,
-    fontWeight: Typography.fontWeight.bold,
-    lineHeight: Typography.lineHeight.display,
-    letterSpacing: -0.5,
+    fontFamily: fonts.display,
+    ...typeScale.display,
   },
-  // Headings
   h1: {
-    fontFamily: Typography.fontFamily.heading,
-    fontSize: Typography.fontSize.h1,
-    fontWeight: Typography.fontWeight.bold,
-    lineHeight: Typography.lineHeight.h1,
+    fontFamily: fonts.heading,
+    ...typeScale.h1,
   },
   h2: {
-    fontFamily: Typography.fontFamily.heading,
-    fontSize: Typography.fontSize.h2,
-    fontWeight: Typography.fontWeight.black,
-    lineHeight: Typography.lineHeight.h2,
+    fontFamily: fonts.heading,
+    ...typeScale.h2,
   },
   h3: {
-    fontFamily: Typography.fontFamily.heading,
-    fontSize: Typography.fontSize.h3,
-    fontWeight: Typography.fontWeight.semibold,
-    lineHeight: Typography.lineHeight.h3,
+    fontFamily: fonts.semibold,
+    ...typeScale.h3,
   },
-  h4: {
-    fontFamily: Typography.fontFamily.body,
-    fontSize: Typography.fontSize.h4,
-    fontWeight: Typography.fontWeight.semibold,
-    lineHeight: Typography.lineHeight.h4,
-  },
-  // UI elements
-  ui: {
-    fontFamily: Typography.fontFamily.ui,
-    fontSize: Typography.fontSize.ui,
-    fontWeight: Typography.fontWeight.black,
-    lineHeight: Typography.lineHeight.ui,
-    letterSpacing: 0.56, // 0.04em
-  },
-  // Body text
   bodyLarge: {
-    fontFamily: Typography.fontFamily.body,
-    fontSize: Typography.fontSize.bodyLarge,
-    fontWeight: Typography.fontWeight.regular,
-    lineHeight: Typography.lineHeight.bodyLarge,
+    fontFamily: fonts.body,
+    ...typeScale.bodyLg,
   },
   body: {
-    fontFamily: Typography.fontFamily.body,
-    fontSize: Typography.fontSize.body,
-    fontWeight: Typography.fontWeight.regular,
-    lineHeight: Typography.lineHeight.body,
+    fontFamily: fonts.body,
+    ...typeScale.body,
   },
-  bodyBold: {
-    fontFamily: Typography.fontFamily.bold,
-    fontSize: Typography.fontSize.body,
-    fontWeight: Typography.fontWeight.bold,
-    lineHeight: Typography.lineHeight.body,
-  },
-  // Small text
-  caption: {
-    fontFamily: Typography.fontFamily.body,
-    fontSize: Typography.fontSize.caption,
-    fontWeight: Typography.fontWeight.regular,
-    lineHeight: Typography.lineHeight.caption,
-  },
-  captionBold: {
-    fontFamily: Typography.fontFamily.semibold,
-    fontSize: Typography.fontSize.caption,
-    fontWeight: Typography.fontWeight.semibold,
-    lineHeight: Typography.lineHeight.caption,
+  bodySmall: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
   },
   label: {
-    fontFamily: Typography.fontFamily.label,
-    fontSize: Typography.fontSize.label,
-    fontWeight: Typography.fontWeight.extrabold,
-    lineHeight: Typography.lineHeight.label,
-    letterSpacing: 2, // 0.2em
+    fontFamily: fonts.label,
+    ...typeScale.label,
     textTransform: 'uppercase' as const,
   },
-  small: {
-    fontFamily: Typography.fontFamily.body,
-    fontSize: Typography.fontSize.small,
-    fontWeight: Typography.fontWeight.regular,
-    lineHeight: Typography.lineHeight.small,
+  caption: {
+    fontFamily: fonts.body,
+    ...typeScale.caption,
   },
 } as const;
-
-export type TextStyleKey = keyof typeof TextStyles;

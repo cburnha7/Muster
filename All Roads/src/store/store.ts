@@ -3,6 +3,7 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { persistStore, persistReducer, createTransform } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
+import { eventsApi } from './api/eventsApi';
 import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice } from './slices';
 
 // Transform to handle cache expiration and selective persistence
@@ -41,7 +42,7 @@ const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
   whitelist: ['auth', 'events', 'facilities', 'teams', 'bookings', 'leagues', 'matches'], // Only persist these slices
-  blacklist: ['api'], // Don't persist RTK Query cache
+  blacklist: ['api', 'eventsApi'], // Don't persist RTK Query cache
   transforms: [cacheTransform],
   // Throttle writes to storage
   throttle: 1000,
@@ -57,6 +58,7 @@ const rootReducer = combineReducers({
   leagues: leaguesSlice,
   matches: matchesSlice,
   api: api.reducer,
+  eventsApi: eventsApi.reducer,
 });
 
 // Persisted reducer
@@ -69,7 +71,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', eventsApi.reducerPath],
         // Ignore these paths in the state
         ignoredPaths: [
           'events.events',
@@ -88,7 +90,7 @@ export const store = configureStore({
           return true;
         },
       },
-    }).concat(api.middleware),
+    }).concat(api.middleware, eventsApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

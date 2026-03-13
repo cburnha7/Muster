@@ -10,7 +10,6 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
 import { RootStackParamList } from '../../navigation/types';
 import { CancelReservationModal } from '../facilities/CancelReservationModal';
 
@@ -232,7 +231,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.grass} />
+        <ActivityIndicator size="small" color="#3D8C5E" />
       </View>
     );
   }
@@ -249,7 +248,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
         activeOpacity={0.7}
       >
         <View style={styles.sectionHeaderLeft}>
-          <Ionicons name="calendar" size={20} color={colors.grass} />
+          <Ionicons name="calendar" size={20} color="#3D8C5E" />
           <Text style={styles.sectionTitle}>My Reservations</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{unusedReservations.length}</Text>
@@ -258,7 +257,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
         <Ionicons
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
           size={24}
-          color={colors.soft}
+          color="#999"
         />
       </TouchableOpacity>
 
@@ -279,7 +278,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 >
                   <View style={styles.compactCardContent}>
                     <View style={styles.compactCardHeader}>
-                      <Ionicons name="location" size={20} color={colors.grass} />
+                      <Ionicons name="location" size={20} color="#3D8C5E" />
                       <Text style={styles.compactCardTitle} numberOfLines={1}>
                         {reservation.timeSlot.court.facility.name}
                       </Text>
@@ -288,7 +287,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       {reservation.timeSlot.court.name} • {formatDate(reservation.timeSlot.date)}
                     </Text>
                     <View style={styles.timeContainer}>
-                      <Ionicons name="time-outline" size={14} color={colors.soft} />
+                      <Ionicons name="time-outline" size={14} color="#999" />
                       <Text style={styles.timeText}>
                         {formatTime(reservation.timeSlot.startTime)} - {formatTime(reservation.timeSlot.endTime)}
                       </Text>
@@ -298,7 +297,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 
                 {reservation.cancellationStatus === 'pending_cancellation' ? (
                   <View style={styles.pendingBadge}>
-                    <Ionicons name="time-outline" size={16} color={colors.court} />
+                    <Ionicons name="time-outline" size={16} color="#E8A030" />
                     <Text style={styles.pendingText}>Pending{'\n'}Cancellation</Text>
                   </View>
                 ) : (
@@ -308,7 +307,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       onPress={() => handleCreateEvent(reservation)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="add-circle" size={20} color={colors.grass} />
+                      <Ionicons name="add-circle" size={20} color="#3D8C5E" />
                       <Text style={styles.createEventText}>Create</Text>
                     </TouchableOpacity>
                     
@@ -317,7 +316,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       onPress={() => handleCancelReservation(reservation)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="close-circle" size={20} color={colors.track} />
+                      <Ionicons name="close-circle" size={20} color="#FF3B30" />
                       <Text style={styles.cancelText}>Cancel</Text>
                     </TouchableOpacity>
                   </View>
@@ -357,22 +356,28 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.background,
-    marginBottom: Spacing.lg,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginTop: 16,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
     overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: colors.chalk,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
@@ -380,43 +385,41 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    ...TextStyles.bodyLarge,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
-    marginLeft: Spacing.sm,
+    color: '#333',
+    marginLeft: 8,
   },
   countBadge: {
-    backgroundColor: colors.grass + '20',
-    paddingHorizontal: Spacing.sm,
+    backgroundColor: '#3D8C5E20',
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
-    marginLeft: Spacing.sm,
+    marginLeft: 8,
   },
   countBadgeText: {
-    ...TextStyles.caption,
-    color: colors.grass,
-    fontWeight: '700',
     fontSize: 11,
+    color: '#3D8C5E',
+    fontWeight: '700',
   },
   loadingContainer: {
-    padding: Spacing.xl,
+    padding: 32,
     alignItems: 'center',
   },
   reservationRow: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   compactCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
   },
   compactCardTouchable: {
     flex: 1,
-    marginRight: Spacing.sm,
+    marginRight: 8,
   },
   compactCardContent: {
     flex: 1,
@@ -427,46 +430,46 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   compactCardTitle: {
-    ...TextStyles.bodyLarge,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
-    marginLeft: Spacing.sm,
+    color: '#333',
+    marginLeft: 8,
     flex: 1,
   },
   compactCardSubtitle: {
-    ...TextStyles.body,
-    color: colors.soft,
-    marginBottom: Spacing.xs,
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
   },
   timeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: Spacing.xs,
+    marginRight: 4,
   },
   timeText: {
-    ...TextStyles.caption,
-    color: colors.soft,
+    fontSize: 12,
+    color: '#999',
     marginLeft: 4,
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: 4,
   },
   createEventButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    backgroundColor: colors.grass + '10',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#3D8C5E10',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.grass + '30',
+    borderColor: '#3D8C5E30',
     minWidth: 80,
   },
   createEventText: {
-    ...TextStyles.caption,
-    color: colors.grass,
+    fontSize: 12,
+    color: '#3D8C5E',
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -474,17 +477,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    backgroundColor: colors.track + '10',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#FF3B3010',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.track + '30',
+    borderColor: '#FF3B3030',
     minWidth: 80,
   },
   cancelText: {
-    ...TextStyles.caption,
-    color: colors.track,
+    fontSize: 12,
+    color: '#FF3B30',
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -492,17 +495,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    backgroundColor: colors.court + '15',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#E8A03015',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.court + '40',
+    borderColor: '#E8A03040',
     minWidth: 100,
   },
   pendingText: {
-    ...TextStyles.caption,
-    color: colors.court,
+    fontSize: 12,
+    color: '#E8A030',
     fontWeight: '700',
     marginLeft: 6,
     textAlign: 'center',

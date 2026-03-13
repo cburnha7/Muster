@@ -11,22 +11,20 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { colors, Spacing, TextStyles } from '../../theme';
 import { MusterIcon } from '../../theme/MusterIcon';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
-import { ValidationService } from '../../services/auth/ValidationService';
-import { SSOService } from '../../services/auth/SSOService';
-import { loginUser, loginWithSSO } from '../../store/authSlice';
+import ValidationService from '../../services/auth/ValidationService';
+import SSOService from '../../services/auth/SSOService';
+import { loginUser, loginWithSSO } from '../../store/slices/authSlice';
 import { ErrorMessages, SuccessMessages } from '../../constants/errorMessages';
 
 export function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const validationService = new ValidationService();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -112,10 +110,9 @@ export function LoginScreen() {
     setErrors({});
 
     try {
-      const ssoService = new SSOService();
       const userData = provider === 'apple'
-        ? await ssoService.signInWithApple()
-        : await ssoService.signInWithGoogle();
+        ? await SSOService.signInWithApple()
+        : await SSOService.signInWithGoogle();
 
       await dispatch(
         loginWithSSO({
@@ -290,7 +287,7 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F7F4EE',
   },
   scrollView: {
     flex: 1,
@@ -298,21 +295,22 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: Spacing.xl,
+    padding: 32,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: Spacing.xxl,
+    marginBottom: 48,
   },
   appName: {
-    ...TextStyles.display,
-    color: colors.grass,
-    marginTop: Spacing.lg,
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#3D8C5E',
+    marginTop: 16,
   },
   tagline: {
-    ...TextStyles.body,
-    color: colors.soft,
-    marginTop: Spacing.xs,
+    fontSize: 16,
+    color: '#999',
+    marginTop: 4,
   },
   form: {
     width: '100%',
@@ -320,80 +318,81 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   title: {
-    ...TextStyles.h2,
-    color: colors.ink,
-    marginBottom: Spacing.xs,
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
   },
   subtitle: {
-    ...TextStyles.body,
-    color: colors.soft,
-    marginBottom: Spacing.lg,
+    fontSize: 16,
+    color: '#999',
+    marginBottom: 24,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Spacing.lg,
+    marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: '#E0E0E0',
   },
   dividerText: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
-    marginHorizontal: Spacing.md,
+    fontSize: 16,
+    color: '#666',
+    marginHorizontal: 12,
   },
   errorText: {
-    ...TextStyles.body,
-    color: colors.track,
+    fontSize: 16,
+    color: '#FF3B30',
     textAlign: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: 12,
   },
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: Spacing.md,
+    marginVertical: 12,
   },
   forgotPassword: {
-    ...TextStyles.body,
-    color: colors.grass,
+    fontSize: 16,
+    color: '#3D8C5E',
     fontWeight: '600',
   },
   signUpContainer: {
-    marginTop: Spacing.lg,
+    marginTop: 24,
     alignItems: 'center',
   },
   signUpText: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
+    fontSize: 16,
+    color: '#666',
   },
   signUpLink: {
-    color: colors.grass,
+    color: '#3D8C5E',
     fontWeight: '600',
   },
   testAccountsContainer: {
-    marginTop: Spacing.xxl,
-    padding: Spacing.lg,
-    backgroundColor: colors.chalk,
+    marginTop: 48,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#E0E0E0',
   },
   testAccountsTitle: {
-    ...TextStyles.bodyLarge,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
-    marginBottom: Spacing.xs,
+    color: '#333',
+    marginBottom: 4,
   },
   testAccountsText: {
-    ...TextStyles.body,
-    color: colors.soft,
+    fontSize: 16,
+    color: '#999',
   },
   testAccountsPassword: {
-    ...TextStyles.caption,
-    color: colors.soft,
-    marginTop: Spacing.xs,
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
   },
 });

@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, Spacing } from '../../theme';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -181,7 +182,6 @@ export function TeamsListScreen(): JSX.Element {
   if (error && !teams.length) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Teams" />
         <ErrorDisplay
           message={error}
           onRetry={() => loadTeams(1)}
@@ -193,7 +193,6 @@ export function TeamsListScreen(): JSX.Element {
   if (isLoading && !refreshing && !teams.length) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Teams" />
         <LoadingSpinner message="Loading teams..." />
       </View>
     );
@@ -201,13 +200,31 @@ export function TeamsListScreen(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="Teams"
-        rightAction={{
-          icon: 'filter',
-          onPress: () => setShowFilters(!showFilters),
-        }}
-      />
+      <View style={styles.header}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSearch={handleSearch}
+          placeholder="Search teams..."
+          style={styles.searchBar}
+        />
+        <TouchableOpacity 
+          style={styles.filterButton} 
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Ionicons 
+            name="options-outline" 
+            size={20} 
+            color={Object.keys(filters).length > 0 ? colors.grass : colors.ink} 
+          />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={handleCreateTeam}
+        >
+          <Ionicons name="add" size={24} color={colors.grass} />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.content}>
         <SearchBar
@@ -272,88 +289,117 @@ export function TeamsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.chalk,
+  },
+  searchBar: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  filterButton: {
+    padding: Spacing.sm,
+    borderRadius: 8,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
+    marginRight: Spacing.sm,
+  },
+  addButton: {
+    padding: Spacing.sm,
+    borderRadius: 8,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
   },
   content: {
     flex: 1,
   },
   listContent: {
-    padding: 16,
+    padding: Spacing.lg,
     paddingBottom: 100,
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: Spacing.xl,
     marginTop: 60,
   },
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
+    color: colors.ink,
+    marginBottom: Spacing.sm,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.soft,
     textAlign: 'center',
-    marginBottom: 24,
+    lineHeight: 24,
+    marginBottom: Spacing.xl,
   },
   emptyStateButton: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    backgroundColor: colors.grass,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
     borderRadius: 8,
   },
   emptyStateButtonText: {
-    color: '#FFFFFF',
+    color: colors.chalk,
     fontSize: 16,
     fontWeight: '600',
   },
   footerLoader: {
-    paddingVertical: 20,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
   },
   filtersContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    backgroundColor: colors.chalk,
+    padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.soft,
   },
   filtersTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 12,
+    color: colors.ink,
+    marginBottom: Spacing.md,
   },
   filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#F3F4F6',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
     borderRadius: 6,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   filterButtonText: {
     fontSize: 14,
-    color: '#374151',
+    color: colors.ink,
   },
   joinButton: {
     position: 'absolute',
     bottom: 80,
     right: 16,
-    backgroundColor: '#10B981',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    backgroundColor: colors.grass,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: 24,
-    shadowColor: '#000',
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   joinButtonText: {
-    color: '#FFFFFF',
+    color: colors.chalk,
     fontSize: 14,
     fontWeight: '600',
   },

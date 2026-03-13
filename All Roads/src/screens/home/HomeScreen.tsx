@@ -21,8 +21,6 @@ import { FormButton } from '../../components/forms/FormButton';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 
 // Services
-import { eventService } from '../../services/api/EventService';
-import { userService } from '../../services/api/UserService';
 import { authService } from '../../services/api/AuthService';
 
 // Context
@@ -30,8 +28,11 @@ import { useAuth } from '../../context/AuthContext';
 
 // Store
 import { selectUser } from '../../store/slices/authSlice';
-import { selectUpcomingBookings } from '../../store/slices/bookingsSlice';
-import { setBookings } from '../../store/slices/bookingsSlice';
+import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import { selectHomeScreenEvents } from '../../store/selectors/eventSelectors';
+
+// Theme
+import { colors, Spacing } from '../../theme';
 
 // Types
 import { Event, Booking } from '../../types';
@@ -42,91 +43,77 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'H
 
 export function HomeScreen(): JSX.Element {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const dispatch = useDispatch();
   const { isLoading: authLoading } = useAuth();
   
   // Redux state
   const user = useSelector(selectUser);
-  const upcomingBookings = useSelector(selectUpcomingBookings);
+  
+  // RTK Query hooks
+  const { 
+    data: eventsData, 
+    isLoading: eventsLoading, 
+    error: eventsError,
+    refetch: refetchEvents 
+  } = useGetEventsQuery({
+    filters: DEFAULT_EVENT_FILTERS,
+    pagination: { page: 1, limit: 20 },
+  });
+
+  const { 
+    data: bookingsData, 
+    isLoading: bookingsLoading,
+    refetch: refetchBookings 
+  } = useGetUserBookingsQuery({
+    status: 'upcoming',
+    pagination: { page: 1, limit: 100 },
+  });
+
+  // RTK Query mutations
+  const [cancelBookingMutation] = useCancelBookingMutation();
+
+  // Use selector to get filtered events (max 10 for home screen)
+  const rawEvents = eventsData?.data || [];
+  const upcomingBookings = bookingsData?.data || [];
+  
+  // Filter out events that the user has already joined
+  const bookedEventIds = new Set(upcomingBookings.map(b => b.eventId));
+  const nearbyEvents = rawEvents
+    .filter(event => !bookedEventIds.has(event.id))
+    .slice(0, 10);
+
+  console.log('🏠 HomeScreen - Events data:', {
+    rawEventsCount: rawEvents.length,
+    nearbyEventsCount: nearbyEvents.length,
+    eventsLoading,
+  });
+
+  // Combined loading state
+  const isLoading = eventsLoading || bookingsLoading;
   
   // Local state
-  const [nearbyEvents, setNearbyEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  // Load initial data
-  const loadHomeData = useCallback(async (skipCache = false) => {
-    try {
-      setIsLoading(true);
-      
-      // Ensure auth service is initialized before making API calls
-      await authService.ensureInitialized();
-      
-      // Fetch real data from backend - skip cache if requested
-      const [eventsResponse, bookingsResponse] = await Promise.all([
-        eventService.getEvents({}, { page: 1, limit: 20 }, skipCache),
-        userService.getUserBookings('upcoming', { page: 1, limit: 20 }, skipCache),
-      ]);
-      
-      console.log('HomeScreen: Loaded bookings:', bookingsResponse.data.length);
-      console.log('HomeScreen: Bookings:', bookingsResponse.data.map(b => ({
-        id: b.id,
-        eventId: b.eventId,
-        status: b.status,
-        paymentStatus: b.paymentStatus,
-        eventTitle: b.event?.title,
-        startTime: b.event?.startTime,
-      })));
-      
-      // Set bookings in Redux store
-      dispatch(setBookings(bookingsResponse));
-      
-      console.log('HomeScreen: After dispatch');
-      
-      // Get booked event IDs to filter them out from nearby events
-      const bookedEventIds = new Set(bookingsResponse.data.map(booking => booking.eventId));
-      console.log('HomeScreen: Booked event IDs:', Array.from(bookedEventIds));
-      
-      // Filter out events that user has already booked
-      const filteredEvents = eventsResponse.data.filter(event => !bookedEventIds.has(event.id));
-      console.log('HomeScreen: Total events:', eventsResponse.data.length, 'Filtered events:', filteredEvents.length);
-      setNearbyEvents(filteredEvents);
-      
-    } catch (error) {
-      console.error('Error loading home data:', error);
-      Alert.alert('Error', 'Failed to load home screen data. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dispatch]);
-
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadHomeData();
+    await Promise.all([refetchEvents(), refetchBookings()]);
     setIsRefreshing(false);
-  }, [loadHomeData]);
+  }, [refetchEvents, refetchBookings]);
 
-  // Load data on mount, but wait for auth to be ready
-  useEffect(() => {
-    if (!authLoading) {
-      loadHomeData();
-    }
-  }, [authLoading, loadHomeData]);
-
-  // Reload data when screen comes into focus (e.g., after creating/deleting an event)
+  // Reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log('🔄 Home screen focused - reloading data with skipCache=true');
+      console.log('🔄 Home screen focused - refetching data');
       if (!authLoading) {
-        loadHomeData(true); // Skip cache on focus to get fresh data
+        refetchEvents();
+        refetchBookings();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authLoading]) // Only depend on authLoading to avoid excessive reloads
+    }, [authLoading])
   );
 
   // Handle search with debouncing for better performance
@@ -159,9 +146,12 @@ export function HomeScreen(): JSX.Element {
 
   // Handle step out (cancel booking)
   const handleStepOut = useCallback((booking: Booking) => {
+    console.log('🚶 HomeScreen: handleStepOut called');
     console.log('🚶 Step out clicked for booking:', booking.id, 'event:', booking.eventId);
+    console.log('🚶 Booking object:', JSON.stringify(booking, null, 2));
     setSelectedBooking(booking);
     setStepOutModalVisible(true);
+    console.log('🚶 Modal should now be visible');
   }, []);
 
   const handleStepOutConfirm = useCallback(async () => {
@@ -169,8 +159,14 @@ export function HomeScreen(): JSX.Element {
 
     console.log('✅ User confirmed step out');
     try {
-      console.log('🔄 Calling cancelBooking with eventId:', selectedBooking.eventId, 'bookingId:', selectedBooking.id);
-      await eventService.cancelBooking(selectedBooking.eventId, selectedBooking.id);
+      console.log('🔄 Calling cancelBooking mutation with eventId:', selectedBooking.eventId, 'bookingId:', selectedBooking.id);
+      
+      // Use RTK Query mutation - this will automatically invalidate cache and refetch
+      await cancelBookingMutation({
+        eventId: selectedBooking.eventId,
+        bookingId: selectedBooking.id,
+      }).unwrap();
+      
       console.log('✅ Successfully stepped out');
       
       // Close modal
@@ -180,13 +176,14 @@ export function HomeScreen(): JSX.Element {
       // Show success message
       Alert.alert('Success', 'You have stepped out of the event');
       
-      // Reload data to reflect changes
-      await loadHomeData(true);
+      // RTK Query will automatically refetch due to cache invalidation
+      // But we can manually trigger it to be sure
+      await Promise.all([refetchEvents(), refetchBookings()]);
     } catch (error) {
       console.error('❌ Error stepping out:', error);
       Alert.alert('Error', 'Failed to step out of the event. Please try again.');
     }
-  }, [selectedBooking, loadHomeData]);
+  }, [selectedBooking, cancelBookingMutation, refetchEvents, refetchBookings]);
 
   const handleStepOutCancel = useCallback(() => {
     console.log('❌ User cancelled step out');
@@ -198,7 +195,12 @@ export function HomeScreen(): JSX.Element {
     <ScrollView 
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        <RefreshControl 
+          refreshing={isRefreshing} 
+          onRefresh={handleRefresh}
+          tintColor={colors.grass}
+          colors={[colors.grass]}
+        />
       }
     >
       <View style={styles.content}>
@@ -231,7 +233,12 @@ export function HomeScreen(): JSX.Element {
             </TouchableOpacity>
           </View>
           
-          {isLoading ? (
+          {eventsError ? (
+            <View style={styles.errorState}>
+              <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
+              <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
+            </View>
+          ) : isLoading ? (
             <Text style={styles.placeholder}>Loading...</Text>
           ) : upcomingBookings.length > 0 ? (
             <View>
@@ -247,16 +254,15 @@ export function HomeScreen(): JSX.Element {
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={48} color="#9CA3AF" />
+              <Ionicons name="calendar-outline" size={64} color={colors.soft} />
               <Text style={styles.emptyStateTitle}>No upcoming bookings</Text>
               <Text style={styles.emptyStateText}>Book your next sports activity!</Text>
-              <FormButton
-                title="Find Events"
+              <TouchableOpacity 
+                style={styles.emptyStateButtonStyle}
                 onPress={() => (navigation as any).navigate('Events', { screen: 'EventsList' })}
-                variant="primary"
-                size="small"
-                style={styles.emptyStateButton}
-              />
+              >
+                <Text style={styles.emptyStateButtonText}>Find Events</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -270,7 +276,12 @@ export function HomeScreen(): JSX.Element {
             </TouchableOpacity>
           </View>
           
-          {isLoading ? (
+          {eventsError ? (
+            <View style={styles.errorState}>
+              <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
+              <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
+            </View>
+          ) : isLoading ? (
             <Text style={styles.placeholder}>Loading...</Text>
           ) : nearbyEvents.length > 0 ? (
             <View>
@@ -285,7 +296,7 @@ export function HomeScreen(): JSX.Element {
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="location-outline" size={48} color="#9CA3AF" />
+              <Ionicons name="location-outline" size={64} color={colors.soft} />
               <Text style={styles.emptyStateTitle}>No nearby events</Text>
               <Text style={styles.emptyStateText}>Check back later or expand your search area</Text>
             </View>
@@ -307,95 +318,113 @@ export function HomeScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
   content: {
-    padding: 20,
+    padding: Spacing.lg,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.ink,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.soft,
+    lineHeight: 24,
   },
   searchBar: {
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
     marginHorizontal: -4, // Offset the SearchBar's internal margin
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalk,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.ink,
   },
   seeAllText: {
-    fontSize: 14,
-    color: '#007AFF',
+    fontSize: 16,
+    color: colors.sky,
     fontWeight: '500',
   },
   placeholder: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontStyle: 'italic',
+    fontSize: 16,
+    color: colors.soft,
     textAlign: 'center',
-    paddingVertical: 20,
+    paddingVertical: Spacing.lg,
   },
   
   // Cards
   bookingCard: {
     marginHorizontal: 0,
-    marginVertical: 4,
+    marginVertical: Spacing.xs,
   },
   eventCard: {
     marginHorizontal: 0,
-    marginVertical: 4,
+    marginVertical: Spacing.xs,
   },
   
   // Empty States
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
   },
   emptyStateTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#6B7280',
-    marginTop: 12,
-    marginBottom: 4,
+    color: colors.ink,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   emptyStateText: {
-    fontSize: 14,
-    color: '#9CA3AF',
+    fontSize: 16,
+    color: colors.soft,
     textAlign: 'center',
-    marginBottom: 16,
+    lineHeight: 24,
+    marginBottom: Spacing.lg,
   },
   emptyStateButton: {
     minWidth: 120,
+  },
+  emptyStateButtonStyle: {
+    backgroundColor: colors.grass,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  emptyStateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.chalk,
+  },
+  
+  // Error State
+  errorState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  errorText: {
+    fontSize: 16,
+    color: colors.track,
+    textAlign: 'center',
+    marginTop: Spacing.md,
+    lineHeight: 24,
   },
 });

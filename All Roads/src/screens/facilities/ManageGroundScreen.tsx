@@ -37,6 +37,15 @@ export function ManageGroundScreen() {
     loadCourts();
   }, [facilityId]);
 
+  // Reload courts when screen comes into focus (after adding/editing)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadCourts();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   const loadCourts = async () => {
     try {
       setLoading(true);

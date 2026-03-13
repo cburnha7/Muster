@@ -9,6 +9,7 @@
 
 import cron from 'node-cron';
 import { TimeSlotMaintenanceJob } from './TimeSlotMaintenanceJob';
+import { InviteOnlyEventAutoOpenJob } from './InviteOnlyEventAutoOpenJob';
 
 /**
  * Initialize all cron jobs
@@ -41,6 +42,37 @@ export function initializeCronJobs() {
       }
     } catch (error: any) {
       console.error('❌ Time slot maintenance failed', { error: error.message });
+      // TODO: Send alert to on-call engineer
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Invite-Only Event Auto-Open Job - Every 6 hours
+  cron.schedule('0 */6 * * *', async () => {
+    console.log('🔄 Starting invite-only event auto-open job');
+
+    try {
+      const job = new InviteOnlyEventAutoOpenJob();
+      const metrics = await job.execute();
+
+      console.log('✅ Invite-only auto-open completed', {
+        eventsChecked: metrics.eventsChecked,
+        eventsAutoOpened: metrics.eventsAutoOpened,
+        notificationsSent: metrics.notificationsSent,
+        duration: `${metrics.duration}ms`,
+      });
+
+      // Send alert if there were errors
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some events had errors during auto-open', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+        // TODO: Send alert to monitoring system
+      }
+    } catch (error: any) {
+      console.error('❌ Invite-only auto-open job failed', { error: error.message });
       // TODO: Send alert to on-call engineer
     }
   }, {

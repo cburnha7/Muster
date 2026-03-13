@@ -1,4 +1,6 @@
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   LoginCredentials, 
   RegisterData, 
@@ -35,56 +37,101 @@ export class AuthService {
    */
   async initialize(): Promise<boolean> {
     try {
-      // DEVELOPMENT MODE: Auto-login with mock user
-      // Comment out this block to re-enable real authentication
-      this.currentUser = {
-        id: 'a6e3e977-0cea-4374-9008-047de0b0618c', // player@muster.app
-        email: 'player@muster.app',
-        firstName: 'Player',
-        lastName: 'Account',
-        profileImage: 'https://ui-avatars.com/api/?name=Player&background=3B82F6&color=fff&size=200',
-        phoneNumber: '+1 (555) 123-4567',
-        preferredSports: [SportType.BASKETBALL, SportType.SOCCER],
-        notificationPreferences: {
-          eventReminders: true,
-          eventUpdates: true,
-          newEventAlerts: true,
-          marketingEmails: false,
-          pushNotifications: true,
-        },
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date(),
-      };
-      this.token = 'mock_token_' + Date.now();
-      this.refreshToken = 'mock_refresh_token_' + Date.now();
-      this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-      return true;
-      // END DEVELOPMENT MODE
+      // Check if we're in development mode and want to use mock auth
+      const useMockAuth = process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true';
       
-      /* Production code (currently disabled):
-      const [token, refreshToken, userData, expiresAt] = await Promise.all([
-        SecureStore.getItemAsync(TOKEN_KEY),
-        SecureStore.getItemAsync(REFRESH_TOKEN_KEY),
-        SecureStore.getItemAsync(USER_KEY),
-        SecureStore.getItemAsync(EXPIRES_AT_KEY),
-      ]);
+      if (useMockAuth) {
+        // DEVELOPMENT MODE: Check localStorage for selected user, no default
+        console.warn('⚠️ Using mock authentication - NOT FOR PRODUCTION');
+        
+        let userId: string | null = null;
+        let email: string | null = null;
+        let firstName: string | null = null;
+        let lastName: string | null = null;
 
-      if (token && refreshToken && userData && expiresAt) {
-        this.token = token;
-        this.refreshToken = refreshToken;
-        this.currentUser = JSON.parse(userData);
-        this.expiresAt = new Date(expiresAt);
-
-        // Check if token needs refresh
-        if (this.shouldRefreshToken()) {
-          await this.refreshAccessToken();
+        if (Platform.OS === 'web') {
+          userId = localStorage.getItem('mock_user_id');
+          email = localStorage.getItem('mock_user_email');
+          firstName = localStorage.getItem('mock_user_firstName');
+          lastName = localStorage.getItem('mock_user_lastName');
         }
 
+        // If no user selected, return false to show login screen
+        if (!userId || !email || !firstName || !lastName) {
+          console.log('⚠️ No mock user selected, showing login screen');
+          return false;
+        }
+
+        this.currentUser = {
+          id: userId,
+          email,
+          firstName,
+          lastName,
+          profileImage: `https://ui-avatars.com/api/?name=${firstName}&background=3B82F6&color=fff&size=200`,
+          phoneNumber: '+1 (555) 123-4567',
+          preferredSports: [SportType.BASKETBALL, SportType.SOCCER],
+          notificationPreferences: {
+            eventReminders: true,
+            eventUpdates: true,
+            newEventAlerts: true,
+            marketingEmails: false,
+            pushNotifications: true,
+          },
+          createdAt: new Date('2024-01-15'),
+          updatedAt: new Date(),
+        };
+        this.token = 'mock_token_' + Date.now();
+        this.refreshToken = 'mock_refresh_token_' + Date.now();
+        this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        
+        console.log('👤 Mock user loaded:', email, userId);
         return true;
+      }
+      
+      // Production code: Load from secure storage
+      if (Platform.OS === 'web') {
+        // Web: Use sessionStorage/localStorage
+        const token = sessionStorage.getItem(TOKEN_KEY);
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+        const userData = localStorage.getItem(USER_KEY);
+        const expiresAt = localStorage.getItem(EXPIRES_AT_KEY);
+
+        if (token && refreshToken && userData && expiresAt) {
+          this.token = token;
+          this.refreshToken = refreshToken;
+          this.currentUser = JSON.parse(userData);
+          this.expiresAt = new Date(expiresAt);
+
+          // Check if token needs refresh
+          if (this.shouldRefreshToken()) {
+            await this.refreshAccessToken();
+          }
+
+          return true;
+        }
+      } else {
+        // Native: Use SecureStore
+        const token = await SecureStore.getItemAsync(TOKEN_KEY);
+        const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+        const userData = await SecureStore.getItemAsync(USER_KEY);
+        const expiresAt = await SecureStore.getItemAsync(EXPIRES_AT_KEY);
+
+        if (token && refreshToken && userData && expiresAt) {
+          this.token = token;
+          this.refreshToken = refreshToken;
+          this.currentUser = JSON.parse(userData);
+          this.expiresAt = new Date(expiresAt);
+
+          // Check if token needs refresh
+          if (this.shouldRefreshToken()) {
+            await this.refreshAccessToken();
+          }
+
+          return true;
+        }
       }
 
       return false;
-      */
     } catch (error) {
       console.error('Failed to initialize auth service:', error);
       await this.clearStoredAuth();
@@ -154,13 +201,14 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       // Attempt to notify server of logout
-      if (this.token) {
+      if (this.token && this.refreshToken) {
         await fetch(`${this.config.baseURL}/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ refreshToken: this.refreshToken }),
         });
       }
     } catch (error) {
@@ -266,6 +314,48 @@ export class AuthService {
   }
 
   /**
+   * Switch mock user (development only)
+   */
+  async switchMockUser(userId: string, email: string, firstName: string, lastName: string): Promise<void> {
+    if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH !== 'true') {
+      throw new Error('Mock user switching only available in development mode');
+    }
+
+    // Store selected user in localStorage
+    if (Platform.OS === 'web') {
+      localStorage.setItem('mock_user_id', userId);
+      localStorage.setItem('mock_user_email', email);
+      localStorage.setItem('mock_user_firstName', firstName);
+      localStorage.setItem('mock_user_lastName', lastName);
+    }
+
+    // Update current user
+    this.currentUser = {
+      id: userId,
+      email,
+      firstName,
+      lastName,
+      profileImage: `https://ui-avatars.com/api/?name=${firstName}&background=3B82F6&color=fff&size=200`,
+      phoneNumber: '+1 (555) 123-4567',
+      preferredSports: [SportType.BASKETBALL, SportType.SOCCER],
+      notificationPreferences: {
+        eventReminders: true,
+        eventUpdates: true,
+        newEventAlerts: true,
+        marketingEmails: false,
+        pushNotifications: true,
+      },
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date(),
+    };
+    this.token = 'mock_token_' + Date.now();
+    this.refreshToken = 'mock_refresh_token_' + Date.now();
+    this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    console.log('🔄 Switched to mock user:', email, userId);
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
@@ -293,12 +383,21 @@ export class AuthService {
     this.currentUser = authResponse.user;
     this.expiresAt = authResponse.expiresAt;
 
-    await Promise.all([
-      SecureStore.setItemAsync(TOKEN_KEY, authResponse.token),
-      SecureStore.setItemAsync(REFRESH_TOKEN_KEY, authResponse.refreshToken),
-      SecureStore.setItemAsync(USER_KEY, JSON.stringify(authResponse.user)),
-      SecureStore.setItemAsync(EXPIRES_AT_KEY, authResponse.expiresAt.toISOString()),
-    ]);
+    if (Platform.OS === 'web') {
+      // Web: Use sessionStorage/localStorage
+      sessionStorage.setItem(TOKEN_KEY, authResponse.token);
+      localStorage.setItem(REFRESH_TOKEN_KEY, authResponse.refreshToken);
+      localStorage.setItem(USER_KEY, JSON.stringify(authResponse.user));
+      localStorage.setItem(EXPIRES_AT_KEY, authResponse.expiresAt.toISOString());
+    } else {
+      // Native: Use SecureStore
+      await Promise.all([
+        SecureStore.setItemAsync(TOKEN_KEY, authResponse.token),
+        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, authResponse.refreshToken),
+        SecureStore.setItemAsync(USER_KEY, JSON.stringify(authResponse.user)),
+        SecureStore.setItemAsync(EXPIRES_AT_KEY, authResponse.expiresAt.toISOString()),
+      ]);
+    }
   }
 
   /**
@@ -309,11 +408,19 @@ export class AuthService {
     this.refreshToken = tokenResponse.refreshToken;
     this.expiresAt = tokenResponse.expiresAt;
 
-    await Promise.all([
-      SecureStore.setItemAsync(TOKEN_KEY, tokenResponse.token),
-      SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokenResponse.refreshToken),
-      SecureStore.setItemAsync(EXPIRES_AT_KEY, tokenResponse.expiresAt.toISOString()),
-    ]);
+    if (Platform.OS === 'web') {
+      // Web: Use sessionStorage/localStorage
+      sessionStorage.setItem(TOKEN_KEY, tokenResponse.token);
+      localStorage.setItem(REFRESH_TOKEN_KEY, tokenResponse.refreshToken);
+      localStorage.setItem(EXPIRES_AT_KEY, tokenResponse.expiresAt.toISOString());
+    } else {
+      // Native: Use SecureStore
+      await Promise.all([
+        SecureStore.setItemAsync(TOKEN_KEY, tokenResponse.token),
+        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokenResponse.refreshToken),
+        SecureStore.setItemAsync(EXPIRES_AT_KEY, tokenResponse.expiresAt.toISOString()),
+      ]);
+    }
   }
 
   /**
@@ -326,15 +433,25 @@ export class AuthService {
     this.expiresAt = null;
 
     try {
-      await Promise.all([
-        SecureStore.deleteItemAsync(TOKEN_KEY),
-        SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
-        SecureStore.deleteItemAsync(USER_KEY),
-        SecureStore.deleteItemAsync(EXPIRES_AT_KEY),
-      ]);
+      if (Platform.OS === 'web') {
+        // Use AsyncStorage for web
+        await Promise.all([
+          AsyncStorage.removeItem(TOKEN_KEY),
+          AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
+          AsyncStorage.removeItem(USER_KEY),
+          AsyncStorage.removeItem(EXPIRES_AT_KEY),
+        ]);
+      } else {
+        // Use SecureStore for native platforms
+        await Promise.all([
+          SecureStore.deleteItemAsync(TOKEN_KEY),
+          SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+          SecureStore.deleteItemAsync(USER_KEY),
+          SecureStore.deleteItemAsync(EXPIRES_AT_KEY),
+        ]);
+      }
     } catch (error) {
-      // SecureStore may not be available on web, ignore errors
-      console.log('SecureStore clear failed (expected on web):', error);
+      console.log('Storage clear failed:', error);
     }
   }
 }

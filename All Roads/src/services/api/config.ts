@@ -47,6 +47,7 @@ export const API_ENDPOINTS = {
 
   // Users
   USERS: {
+    BASE: '/users',
     PROFILE: '/users/profile',
     PROFILE_IMAGE: '/users/profile/image',
     BOOKINGS: '/users/bookings',

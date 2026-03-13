@@ -16,9 +16,9 @@ import { Button } from '../../components/forms/Button';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
 import { colors, Spacing, TextStyles } from '../../theme';
-import { ValidationService } from '../../services/auth/ValidationService';
-import { SSOService } from '../../services/auth/SSOService';
-import { registerUser, registerWithSSO } from '../../store/authSlice';
+import ValidationService from '../../services/auth/ValidationService';
+import SSOService from '../../services/auth/SSOService';
+import { registerUser, registerWithSSO } from '../../store/slices/authSlice';
 
 interface RegistrationState {
   firstName: string;
@@ -48,7 +48,6 @@ interface RegistrationState {
 export const RegistrationScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const validationService = new ValidationService();
 
   const [state, setState] = useState<RegistrationState>({
     firstName: '',
@@ -82,22 +81,22 @@ export const RegistrationScreen: React.FC = () => {
 
     switch (field) {
       case 'firstName':
-        error = validationService.validateFirstName(value);
+        error = ValidationService.validateFirstName(value);
         break;
       case 'lastName':
-        error = validationService.validateLastName(value);
+        error = ValidationService.validateLastName(value);
         break;
       case 'email':
-        error = validationService.validateEmail(value);
+        error = ValidationService.validateEmail(value);
         break;
       case 'username':
-        error = validationService.validateUsername(value);
+        error = ValidationService.validateUsername(value);
         break;
       case 'password':
-        error = validationService.validatePassword(value);
+        error = ValidationService.validatePassword(value);
         break;
       case 'confirmPassword':
-        error = validationService.validateConfirmPassword(state.password, value);
+        error = ValidationService.validateConfirmPassword(state.password, value);
         break;
     }
 
@@ -105,7 +104,7 @@ export const RegistrationScreen: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    const errors = validationService.validateRegistrationForm({
+    const errors = ValidationService.validateRegistrationForm({
       firstName: state.firstName,
       lastName: state.lastName,
       email: state.email,
@@ -166,10 +165,9 @@ export const RegistrationScreen: React.FC = () => {
     updateError('general', undefined);
 
     try {
-      const ssoService = new SSOService();
       const userData = provider === 'apple'
-        ? await ssoService.signInWithApple()
-        : await ssoService.signInWithGoogle();
+        ? await SSOService.signInWithApple()
+        : await SSOService.signInWithGoogle();
 
       // Pre-populate form with SSO data
       setState((prev) => ({

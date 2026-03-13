@@ -407,8 +407,11 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       dispatch(removeFacility(facilityId));
       console.log('🗑️ Navigating back...');
       
-      // Navigate immediately without showing success alert
-      navigation.navigate('Facilities' as never, { screen: 'FacilitiesList' } as never);
+      // Navigate with refresh parameter to force list reload
+      navigation.navigate('Facilities' as never, { 
+        screen: 'FacilitiesList',
+        params: { refresh: Date.now() }
+      } as never);
     } catch (err: any) {
       console.error('❌ Delete error:', err);
       Alert.alert('Error', err.message || 'Failed to delete ground');
@@ -841,7 +844,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
   },
   scrollView: {
     flex: 1,
@@ -850,11 +853,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   section: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     padding: Spacing.lg,
-    marginTop: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -925,7 +936,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chalk,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -961,7 +972,8 @@ const styles = StyleSheet.create({
     marginTop: -Spacing.sm,
   },
   buttonContainer: {
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.lg,
   },
   deleteButton: {
     backgroundColor: colors.track,
@@ -984,14 +996,14 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   addCourtModal: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     width: '100%',
     maxWidth: 500,
     maxHeight: '90%',
   },
   modalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: Spacing.lg,
     width: '100%',
@@ -1004,7 +1016,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   modalTitle: {
     ...TextStyles.h3,
@@ -1044,7 +1056,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#F0F0F0',
   },
   modalButton: {
     flex: 1,
@@ -1054,9 +1066,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.chalk,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1079,7 +1089,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   deleteModalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: Spacing.xl,
     width: '100%',
@@ -1120,9 +1130,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelDeleteButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.chalk,
   },
   cancelDeleteButtonText: {
     ...TextStyles.body,

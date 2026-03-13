@@ -58,10 +58,13 @@ export function ProfileScreen() {
   const loadMyGrounds = async (userId: string) => {
     try {
       setLoadingGrounds(true);
+      console.log('🏟️ ProfileScreen: Loading grounds for user:', userId);
       const response = await facilityService.getFacilitiesByOwner(userId, {
         page: 1,
         limit: 10,
       });
+      console.log('🏟️ ProfileScreen: Received grounds:', response);
+      console.log('🏟️ ProfileScreen: Number of grounds:', response.data?.length || 0);
       setMyGrounds(response.data);
     } catch (err: any) {
       console.error('Failed to load owned grounds:', err);
@@ -432,7 +435,7 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
   },
   contentSection: {
     paddingHorizontal: Spacing.lg,
@@ -440,9 +443,9 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: Spacing.xl,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
   },
   profileImageContainer: {
     marginBottom: Spacing.lg,
@@ -461,18 +464,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileImagePlaceholderText: {
-    ...TextStyles.display,
     fontSize: 36,
-    color: colors.textInverse,
+    color: colors.chalk,
   },
   name: {
-    ...TextStyles.h2,
-    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: Spacing.xs,
   },
   email: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
+    fontSize: 16,
+    color: '#666',
     marginBottom: Spacing.lg,
   },
   editButton: {
@@ -482,17 +485,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   editButtonText: {
-    ...TextStyles.body,
-    color: colors.textInverse,
+    fontSize: 16,
+    color: colors.chalk,
     fontWeight: '600',
   },
   section: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     marginTop: Spacing.lg,
     marginHorizontal: Spacing.lg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
     overflow: 'hidden',
   },
   sectionHeader: {
@@ -501,8 +510,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.chalk,
+    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
@@ -510,8 +519,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
   countBadge: {
     backgroundColor: colors.grass + '20',
@@ -521,13 +531,12 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   countBadgeText: {
-    ...TextStyles.caption,
+    fontSize: 11,
     color: colors.grass,
     fontWeight: '700',
-    fontSize: 11,
   },
   seeAllText: {
-    ...TextStyles.body,
+    fontSize: 16,
     color: colors.grass,
     fontWeight: '600',
   },
@@ -540,7 +549,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
   },
   compactCardContent: {
     flex: 1,
@@ -551,15 +561,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   compactCardTitle: {
-    ...TextStyles.bodyLarge,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: '#333',
     marginLeft: Spacing.sm,
     flex: 1,
   },
   compactCardSubtitle: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
+    fontSize: 14,
+    color: '#666',
     marginBottom: Spacing.sm,
   },
   compactCardFooter: {
@@ -573,31 +583,36 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusBadgeText: {
-    ...TextStyles.caption,
-    fontWeight: '600',
     fontSize: 11,
+    fontWeight: '600',
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   ratingText: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
+    fontSize: 12,
+    color: '#666',
     marginLeft: 2,
     fontWeight: '600',
   },
   participantsText: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
+    fontSize: 12,
+    color: '#666',
   },
   menuContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     marginTop: Spacing.lg,
     marginHorizontal: Spacing.lg,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
     overflow: 'hidden',
   },
   menuItem: {
@@ -606,15 +621,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
   },
   menuItemText: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
+    fontSize: 16,
+    color: '#333',
   },
   menuItemArrow: {
     fontSize: 24,
-    color: colors.textTertiary,
+    color: '#999',
   },
   logoutMenuItem: {
     borderBottomWidth: 0,
@@ -625,14 +641,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sportsContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     marginTop: Spacing.lg,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
     padding: Spacing.lg,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   sportsList: {
     flexDirection: 'row',
@@ -646,7 +668,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   sportTagText: {
-    ...TextStyles.body,
+    fontSize: 14,
     color: colors.grass,
     fontWeight: '500',
   },

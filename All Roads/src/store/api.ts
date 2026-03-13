@@ -6,12 +6,23 @@ import { API_BASE_URL } from '../services/api/config';
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    // Get token from auth state
-    const token = (getState() as RootState).auth.token;
+    // Get token from auth state (note: field is 'accessToken' not 'token')
+    const token = (getState() as RootState).auth.accessToken;
     
     // If we have a token, include it in the Authorization header
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
+    }
+    
+    // DEVELOPMENT: Send X-User-Id header for mock authentication
+    if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
+      // Import authService to get current user
+      const { authService } = require('../services/auth/AuthService');
+      const currentUser = authService.getCurrentUser();
+      if (currentUser?.id) {
+        headers.set('X-User-Id', currentUser.id);
+        console.log('🔑 Setting X-User-Id header:', currentUser.id);
+      }
     }
     
     headers.set('content-type', 'application/json');

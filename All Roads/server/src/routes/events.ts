@@ -690,6 +690,10 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
   try {
     const { id, bookingId } = req.params;
 
+    console.log('🚶 DELETE /events/:id/book/:bookingId');
+    console.log('📋 Event ID:', id);
+    console.log('📋 Booking ID:', bookingId);
+
     // Delete the booking and update event participant count
     await prisma.$transaction([
       prisma.booking.delete({
@@ -703,9 +707,10 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
       }),
     ]);
 
+    console.log('✅ Booking cancelled successfully');
     res.status(204).send();
   } catch (error) {
-    console.error('Cancel booking error:', error);
+    console.error('❌ Cancel booking error:', error);
     res.status(500).json({ error: 'Failed to cancel booking' });
   }
 });

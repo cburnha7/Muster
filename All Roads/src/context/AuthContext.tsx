@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useSelector } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
+import { selectUser, selectAccessToken, selectIsAuthenticated } from '../store/slices/authSlice';
 
 interface AuthContextType {
   user: User | null;
@@ -18,9 +20,33 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  // Get auth state from Redux
+  const reduxUser = useSelector(selectUser);
+  const reduxToken = useSelector(selectAccessToken);
+  const reduxIsAuthenticated = useSelector(selectIsAuthenticated);
+  
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Sync with Redux state and update authService
+  useEffect(() => {
+    if (reduxUser) {
+      setUser(reduxUser);
+      // Update authService with the Redux user data
+      if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true' && reduxUser.id && reduxUser.email) {
+        authService.switchMockUser(
+          reduxUser.id,
+          reduxUser.email,
+          reduxUser.firstName || 'User',
+          reduxUser.lastName || ''
+        ).catch(err => console.error('Failed to sync authService with Redux user:', err));
+      }
+    }
+    if (reduxToken) {
+      setToken(reduxToken);
+    }
+  }, [reduxUser, reduxToken]);
 
   // Load stored session on mount
   useEffect(() => {

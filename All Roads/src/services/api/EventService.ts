@@ -19,12 +19,20 @@ export class EventService extends BaseApiService {
 
   /**
    * Get all events with optional filtering and pagination
+   * @deprecated Use RTK Query's useGetEventsQuery hook instead for better caching and automatic synchronization
+   * @see src/store/api/eventsApi.ts - useGetEventsQuery
    */
   async getEvents(
     filters?: EventFilters,
     pagination?: PaginationParams,
     skipCache: boolean = false
   ): Promise<PaginatedResponse<Event>> {
+    if (__DEV__) {
+      console.warn(
+        '⚠️ EventService.getEvents is deprecated. Use RTK Query\'s useGetEventsQuery hook instead for better caching and automatic synchronization.'
+      );
+    }
+    
     const params = {
       ...filters,
       ...pagination,
@@ -105,8 +113,16 @@ export class EventService extends BaseApiService {
 
   /**
    * Book an event (individual or team booking)
+   * @deprecated Use RTK Query's useBookEventMutation hook instead for automatic cache invalidation
+   * @see src/store/api/eventsApi.ts - useBookEventMutation
    */
   async bookEvent(eventId: string, userId: string, teamId?: string): Promise<Booking> {
+    if (__DEV__) {
+      console.warn(
+        '⚠️ EventService.bookEvent is deprecated. Use RTK Query\'s useBookEventMutation hook instead for automatic cache invalidation.'
+      );
+    }
+    
     const data = { userId, ...(teamId && { teamId }) };
     const result = await this.post<Booking>(API_ENDPOINTS.EVENTS.BOOK(eventId), data);
     
@@ -118,8 +134,16 @@ export class EventService extends BaseApiService {
 
   /**
    * Cancel a booking
+   * @deprecated Use RTK Query's useCancelBookingMutation hook instead for automatic cache invalidation
+   * @see src/store/api/eventsApi.ts - useCancelBookingMutation
    */
   async cancelBooking(eventId: string, bookingId: string): Promise<void> {
+    if (__DEV__) {
+      console.warn(
+        '⚠️ EventService.cancelBooking is deprecated. Use RTK Query\'s useCancelBookingMutation hook instead for automatic cache invalidation.'
+      );
+    }
+    
     const result = await this.delete<void>(`${API_ENDPOINTS.EVENTS.BY_ID(eventId)}/book/${bookingId}`);
     
     // Clear cache after cancelling booking to ensure fresh data
@@ -131,8 +155,11 @@ export class EventService extends BaseApiService {
   /**
    * Get participants for an event
    */
-  async getEventParticipants(eventId: string): Promise<Participant[]> {
-    return this.get<Participant[]>(API_ENDPOINTS.EVENTS.PARTICIPANTS(eventId));
+  async getEventParticipants(eventId: string, skipCache = false): Promise<Participant[]> {
+    return this.get<Participant[]>(
+      API_ENDPOINTS.EVENTS.PARTICIPANTS(eventId),
+      { cacheOptions: { skipCache } }
+    );
   }
 
   /**

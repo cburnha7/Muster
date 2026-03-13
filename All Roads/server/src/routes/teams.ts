@@ -150,11 +150,61 @@ router.get('/:id/leagues', async (req, res) => {
 // Create team
 router.post('/', async (req, res) => {
   try {
+    const { initialMemberIds, ...teamData } = req.body;
+
+    // Create the team
     const team = await prisma.team.create({
-      data: req.body,
+      data: teamData,
     });
 
-    res.status(201).json(team);
+    // Add initial members if provided
+    if (initialMemberIds && Array.isArray(initialMemberIds) && initialMemberIds.length > 0) {
+      console.log(`Adding ${initialMemberIds.length} initial members to team ${team.id}`);
+      
+      // Create team members for each user
+      await prisma.teamMember.createMany({
+        data: initialMemberIds.map((userId: string) => ({
+          teamId: team.id,
+          userId,
+          role: 'member',
+          status: 'active',
+          joinedAt: new Date(),
+        })),
+      });
+
+      console.log(`Successfully added ${initialMemberIds.length} members to team ${team.id}`);
+    }
+
+    // Fetch the complete team with members
+    const completeTeam = await prisma.team.findUnique({
+      where: { id: team.id },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
+        },
+        captain: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json(completeTeam);
   } catch (error) {
     console.error('Create team error:', error);
     res.status(500).json({ error: 'Failed to create team' });

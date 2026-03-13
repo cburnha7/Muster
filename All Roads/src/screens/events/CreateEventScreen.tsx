@@ -65,6 +65,7 @@ interface FormData {
   maxAge: string;
   requiredSkillLevel: SkillLevel | '';
   isInviteOnly: boolean;
+  minimumPlayerCount: string; // Minimum players needed for event
 }
 
 interface FormErrors {
@@ -139,6 +140,7 @@ export function CreateEventScreen(): JSX.Element {
     maxAge: '',
     requiredSkillLevel: '',
     isInviteOnly: false,
+    minimumPlayerCount: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -612,6 +614,22 @@ export function CreateEventScreen(): JSX.Element {
       newErrors.price = 'Price must be a valid number (0 or greater)';
     }
 
+    // Minimum player count validation for invite-only events
+    if (formData.isInviteOnly) {
+      if (!formData.minimumPlayerCount) {
+        newErrors.minimumPlayerCount = 'Minimum player count is required for invite-only events';
+      } else {
+        const minPlayers = parseInt(formData.minimumPlayerCount);
+        const maxParticipants = parseInt(formData.maxParticipants);
+        
+        if (isNaN(minPlayers) || minPlayers < 1) {
+          newErrors.minimumPlayerCount = 'Must be a valid number greater than 0';
+        } else if (!isNaN(maxParticipants) && minPlayers > maxParticipants) {
+          newErrors.minimumPlayerCount = 'Cannot exceed maximum participants';
+        }
+      }
+    }
+
     // Date/time validation - skip if slots are selected (slot times are already validated)
     if (selectedSlots.length === 0 && formData.startDate && formData.startTime) {
       const startDateTime = new Date(formData.startDate);
@@ -752,6 +770,9 @@ export function CreateEventScreen(): JSX.Element {
         teamIds: isTeamBasedEvent ? formData.teamIds : undefined,
         eligibility: formData.enableEligibilityRestrictions ? {
           isInviteOnly: formData.isInviteOnly,
+          minimumPlayerCount: formData.isInviteOnly && formData.minimumPlayerCount 
+            ? parseInt(formData.minimumPlayerCount) 
+            : undefined,
           restrictedToTeams: formData.restrictedToTeams.length > 0 ? formData.restrictedToTeams : undefined,
           minAge: formData.minAge ? parseInt(formData.minAge) : undefined,
           maxAge: formData.maxAge ? parseInt(formData.maxAge) : undefined,
@@ -1221,7 +1242,30 @@ export function CreateEventScreen(): JSX.Element {
                     {formData.isInviteOnly ? '✓ ' : '☐ '}
                     Invite Only
                   </Text>
+                  <Text style={styles.eligibilityOptionHint}>
+                    Event will not appear in public lists until opened
+                  </Text>
                 </TouchableOpacity>
+
+                {formData.isInviteOnly && (
+                  <View style={styles.inviteOnlyDetails}>
+                    <FormInput
+                      label="Minimum Player Count"
+                      placeholder="e.g., 8"
+                      value={formData.minimumPlayerCount}
+                      onChangeText={(value) => handleInputChange('minimumPlayerCount', value)}
+                      error={errors.minimumPlayerCount}
+                      keyboardType="numeric"
+                      required
+                    />
+                    <View style={styles.inviteOnlyInfoBox}>
+                      <Ionicons name="information-circle-outline" size={20} color={colors.sky} />
+                      <Text style={styles.inviteOnlyInfoText}>
+                        If minimum players aren't reached 2 days before the event, it will automatically open to the public.
+                      </Text>
+                    </View>
+                  </View>
+                )}
 
                 <View style={styles.ageRestrictions}>
                   <Text style={styles.sectionLabel}>Age Restrictions</Text>
@@ -1292,25 +1336,22 @@ export function CreateEventScreen(): JSX.Element {
               </View>
             )}
           </View>
+
+          <FormButton
+            title="Create Event"
+            onPress={handleSubmit}
+            loading={isLoading}
+            disabled={isLoading}
+          />
+
+          <FormButton
+            title="Cancel"
+            variant="secondary"
+            onPress={handleCancel}
+            disabled={isLoading}
+          />
         </View>
       </ScrollView>
-
-      <View style={styles.actions}>
-        <FormButton
-          title="Cancel"
-          variant="outline"
-          onPress={handleCancel}
-          style={styles.actionButton}
-          disabled={isLoading}
-        />
-        <FormButton
-          title="Create Event"
-          onPress={handleSubmit}
-          style={styles.actionButton}
-          loading={isLoading}
-          disabled={isLoading}
-        />
-      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -1318,7 +1359,7 @@ export function CreateEventScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
   scrollView: {
     flex: 1,
@@ -1327,13 +1368,21 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   rentalBanner: {
-    backgroundColor: colors.grassLight + '15',
+    backgroundColor: '#FFFFFF',
     borderLeftWidth: 4,
     borderLeftColor: colors.grass,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 8,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   rentalBannerHeader: {
     flexDirection: 'row',
@@ -1385,13 +1434,21 @@ const styles = StyleSheet.create({
   lockedFieldsInfoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.skyLight + '20',
+    backgroundColor: '#FFFFFF',
     borderLeftWidth: 3,
     borderLeftColor: colors.sky,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
     marginBottom: 16,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   lockedFieldsInfoText: {
     flex: 1,
@@ -1401,12 +1458,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   lockedFieldDisplay: {
-    backgroundColor: colors.chalk,
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   lockedFieldLabel: {
     ...TextStyles.caption,
@@ -1483,18 +1546,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
-  actions: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  actionButton: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
   teamSelection: {
     marginTop: 16,
   },
@@ -1514,33 +1565,50 @@ const styles = StyleSheet.create({
   },
   teamItem: {
     padding: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
     marginBottom: 8,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   teamItemSelected: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#3B82F6',
+    backgroundColor: colors.grass + '15',
+    borderWidth: 2,
+    borderColor: colors.grass,
   },
   teamItemText: {
     fontSize: 16,
     color: '#374151',
   },
   teamItemTextSelected: {
-    color: '#1E40AF',
+    color: colors.grass,
     fontWeight: '600',
   },
   noTeamsBox: {
     padding: 16,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.court,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   noTeamsText: {
     fontSize: 14,
-    color: '#92400E',
+    color: '#666',
     lineHeight: 20,
   },
   errorText: {
@@ -1556,10 +1624,16 @@ const styles = StyleSheet.create({
   },
   eligibilityToggle: {
     padding: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   eligibilityToggleLabel: {
     fontSize: 16,
@@ -1576,15 +1650,51 @@ const styles = StyleSheet.create({
   },
   eligibilityOption: {
     padding: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
     marginBottom: 16,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   eligibilityOptionText: {
     fontSize: 16,
     color: '#374151',
+  },
+  eligibilityOptionHint: {
+    fontSize: 13,
+    color: colors.soft,
+    marginTop: 4,
+  },
+  inviteOnlyDetails: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: colors.chalk,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.soft,
+  },
+  inviteOnlyInfoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderLeftWidth: 3,
+    borderLeftColor: colors.sky,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  inviteOnlyInfoText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.ink,
+    marginLeft: 8,
+    lineHeight: 18,
   },
   ageRestrictions: {
     marginTop: 8,
@@ -1614,10 +1724,16 @@ const styles = StyleSheet.create({
   readOnlyField: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   readOnlyLabel: {
     fontSize: 14,
@@ -1678,12 +1794,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   selectedSlotsSummary: {
-    backgroundColor: colors.grass + '10',
+    backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: colors.grass,
     borderRadius: 12,
     padding: Spacing.lg,
     marginTop: Spacing.md,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   summaryHeader: {
     flexDirection: 'row',

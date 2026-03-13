@@ -4,6 +4,60 @@ import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
+// Search users by name or email
+router.get('/search', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    if (query.length < 2) {
+      return res.status(400).json({ error: 'Search query must be at least 2 characters' });
+    }
+
+    // Search users by first name, last name, or email
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            firstName: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            lastName: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            email: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profileImage: true,
+      },
+      take: 20, // Limit results to 20 users
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
 // Get current user profile
 router.get('/profile', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -122,50 +176,24 @@ router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
 // Get current user bookings
 router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
-    // Get user ID from authenticated request or fall back to host user
+    // Get user ID from authenticated request
     let userId = req.user?.userId;
 
     console.log('📋 GET /users/bookings');
     console.log('📋 Auth header:', req.headers.authorization ? `Bearer ${req.headers.authorization.substring(7, 27)}...` : 'none');
-    console.log('📋 Decoded user ID from token:', userId);
-    console.log('📋 x-user-id header:', req.headers['x-user-id']);
-
-    // DEVELOPMENT: Allow x-user-id header to override user ID
-    if (!userId && req.headers['x-user-id']) {
-      userId = req.headers['x-user-id'] as string;
-      console.log('📋 Using x-user-id header:', userId);
-    }
+    console.log('📋 X-User-Id header:', req.headers['x-user-id']);
+    console.log('📋 Decoded user ID from middleware:', userId);
 
     if (!userId) {
-      // TEMPORARY: Hardcode host user for development
-      const hostUser = await prisma.user.findFirst({
-        where: { email: 'host@muster.app' },
-        select: { id: true, email: true },
-      });
-      
-      if (hostUser) {
-        userId = hostUser.id;
-        console.log('📋 No auth, using host user:', hostUser.email, userId);
-      } else {
-        // Final fallback: use first user
-        const user = await prisma.user.findFirst({
-          select: { id: true, email: true },
-        });
-        userId = user?.id;
-        console.log('📋 No host found, using fallback user:', user?.email, userId);
-      }
-    } else {
-      // Log which user we're fetching bookings for
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true, firstName: true, lastName: true },
-      });
-      console.log('📋 Fetching bookings for authenticated user:', user?.email, `${user?.firstName} ${user?.lastName}`);
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (!userId) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    // Log which user we're fetching bookings for
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true, lastName: true },
+    });
+    console.log('📋 Fetching bookings for user:', user?.email, `${user?.firstName} ${user?.lastName}`);
 
     const { page = '1', limit = '20', status } = req.query;
     const pageNum = parseInt(page as string);

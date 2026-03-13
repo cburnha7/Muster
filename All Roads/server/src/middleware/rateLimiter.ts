@@ -7,23 +7,25 @@ import rateLimit from 'express-rate-limit';
  * the number of requests per IP address within a time window.
  * 
  * Configuration:
- * - Login: 5 requests per 15 minutes
- * - Registration: 3 requests per 15 minutes
- * - Password Reset: 3 requests per 15 minutes
+ * - Development: More lenient limits for testing
+ * - Production: Strict limits for security
  * 
  * Returns 429 status code when rate limit is exceeded.
  * Uses memory store for development (consider Redis for production).
  */
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 /**
  * Rate limiter for login endpoint
- * Limits: 5 requests per IP address per 15 minutes
+ * Development: 100 requests per 15 minutes
+ * Production: 5 requests per 15 minutes
  * 
  * Validates: Requirements 15.1, 15.4
  */
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window per IP
+  max: isDevelopment ? 100 : 5, // More lenient in development
   message: 'Too many login attempts. Please try again in 15 minutes',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -37,13 +39,14 @@ export const loginRateLimiter = rateLimit({
 
 /**
  * Rate limiter for registration endpoint
- * Limits: 3 requests per IP address per 15 minutes
+ * Development: 50 requests per 15 minutes
+ * Production: 3 requests per 15 minutes
  * 
  * Validates: Requirements 15.2, 15.6
  */
 export const registrationRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // 3 requests per window per IP
+  max: isDevelopment ? 50 : 3, // More lenient in development
   message: 'Too many registration attempts. Please try again in 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
@@ -57,13 +60,14 @@ export const registrationRateLimiter = rateLimit({
 
 /**
  * Rate limiter for password reset endpoint
- * Limits: 3 requests per IP address per 15 minutes
+ * Development: 50 requests per 15 minutes
+ * Production: 3 requests per 15 minutes
  * 
  * Validates: Requirements 15.3, 15.8
  */
 export const passwordResetRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // 3 requests per window per IP
+  max: isDevelopment ? 50 : 3, // More lenient in development
   message: 'Too many password reset requests. Please try again in 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,

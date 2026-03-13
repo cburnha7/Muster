@@ -41,7 +41,9 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               Alert.alert('Success', 'Court deleted successfully');
               onCourtUpdated();
             } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to delete court');
+              console.error('Delete court error:', error);
+              const errorMessage = error?.response?.data?.error || error?.message || 'Failed to delete court';
+              Alert.alert('Error', errorMessage);
             }
           },
         },
