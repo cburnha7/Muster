@@ -39,6 +39,23 @@
 **Files Modified**:
 - `src/screens/bookings/BookingsListScreen.tsx` - Added auth checks and not logged in UI
 
+### 3. Token Refresh Errors After Logout
+**Problem**: After logout, the app showed "Token refresh failed: No refresh token available" errors.
+
+**Root Cause**:
+- API interceptor in `src/store/api.ts` was dispatching plain action objects instead of using action creators
+- When 401 errors occurred after logout, the interceptor tried to refresh tokens that didn't exist
+- Error messages were confusing ("logging out" when already logged out)
+
+**Solution**:
+- Updated `src/store/api.ts` to import and use `clearAuth` and `setTokens` action creators
+- Changed error messages from "logging out" to "clearing session" (more accurate)
+- Properly dispatch action creators instead of plain objects
+- Silent cleanup when no refresh token is available (user is already logged out)
+
+**Files Modified**:
+- `src/store/api.ts` - Import and use action creators, improved error messages
+
 ## How It Works Now
 
 ### Logout Flow
@@ -57,15 +74,25 @@
 4. If authenticated: Loads bookings from API with proper auth headers
 5. On screen focus: Only reloads if user is authenticated
 
+### Token Refresh Flow
+1. API request returns 401 error
+2. Interceptor checks if refresh token exists in Redux or TokenStorage
+3. If no refresh token: Silently clear session (user already logged out)
+4. If refresh token exists: Call /auth/refresh endpoint
+5. On success: Store new tokens and retry original request
+6. On failure: Clear session silently
+
 ## Testing
-- Logout from profile screen → Should navigate to login screen
+- Logout from profile screen → Should navigate to login screen without errors
 - Navigate to bookings after logout → Should show "Not Logged In" UI
 - Login → Bookings should load properly
-- Logout while on bookings tab → Should show "Not Logged In" UI
+- Logout while on bookings tab → Should show "Not Logged In" UI without token refresh errors
+- Token expiration → Should refresh automatically or clear session gracefully
 
 ## Related Files
 - `src/context/AuthContext.tsx` - Auth context with Redux integration
-- `src/store/slices/authSlice.ts` - Redux auth state with clearAuth action
+- `src/store/slices/authSlice.ts` - Redux auth state with clearAuth and setTokens actions
+- `src/store/api.ts` - RTK Query API with proper action creators
 - `src/navigation/RootNavigator.tsx` - Root navigation with auth flow
 - `src/screens/profile/ProfileScreen.tsx` - Profile screen with logout
 - `src/screens/bookings/BookingsListScreen.tsx` - Bookings screen with auth checks

@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
 import { API_BASE_URL } from '../services/api/config';
 import TokenStorage from '../services/auth/TokenStorage';
+import { clearAuth, setTokens } from './slices/authSlice';
 
 // Define base query with authentication
 const baseQuery = fetchBaseQuery({
@@ -65,10 +66,10 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
       }
       
       if (!refreshToken) {
-        console.error('❌ No refresh token available, logging out...');
-        // Clear auth state and navigate to login
+        console.error('❌ No refresh token available, clearing session...');
+        // Clear auth state silently (user is already logged out)
         await TokenStorage.clearAll();
-        api.dispatch({ type: 'auth/clearAuth' });
+        api.dispatch(clearAuth());
         isRefreshing = false;
         refreshPromise = null;
         return result;
@@ -99,27 +100,24 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         await TokenStorage.storeTokens(tokenData.accessToken, tokenData.refreshToken);
         
         // Update Redux state
-        api.dispatch({
-          type: 'auth/setTokens',
-          payload: {
-            accessToken: tokenData.accessToken,
-            refreshToken: tokenData.refreshToken,
-          },
-        });
+        api.dispatch(setTokens({
+          accessToken: tokenData.accessToken,
+          refreshToken: tokenData.refreshToken,
+        }));
         
         // Retry the original query with new token
         result = await baseQuery(args, api, extraOptions);
       } else {
-        console.error('❌ Token refresh failed, logging out...');
-        // Refresh failed, clear session and logout
+        console.error('❌ Token refresh failed, clearing session...');
+        // Refresh failed, clear session silently
         await TokenStorage.clearAll();
-        api.dispatch({ type: 'auth/clearAuth' });
+        api.dispatch(clearAuth());
       }
     } catch (error) {
       console.error('❌ Token refresh error:', error);
       // Clear session on any error
       await TokenStorage.clearAll();
-      api.dispatch({ type: 'auth/clearAuth' });
+      api.dispatch(clearAuth());
     } finally {
       isRefreshing = false;
       refreshPromise = null;
