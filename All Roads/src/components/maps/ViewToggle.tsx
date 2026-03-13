@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 
@@ -9,6 +9,11 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
+  // Hide map toggle on web since maps are not supported
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
