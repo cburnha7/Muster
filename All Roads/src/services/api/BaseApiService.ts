@@ -131,11 +131,16 @@ export class BaseApiService {
               }
               return this.client.request(error.config);
             }
-          } catch (refreshError) {
-            // Refresh failed, redirect to login
-            console.error('Token refresh failed:', refreshError);
-            // In a real app, you might want to emit an event or call a callback
-            // to handle logout and redirect to login screen
+          } catch (refreshError: any) {
+            // If no refresh token available, silently fail (user is logged out)
+            if (refreshError.message === 'No refresh token available') {
+              console.log('⚠️ No refresh token available - user needs to log in');
+              // Don't log this as an error, it's expected after logout
+            } else {
+              // Actual refresh failure
+              console.error('Token refresh failed:', refreshError);
+            }
+            // Continue with the original error handling
           }
         }
 

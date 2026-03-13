@@ -40,21 +40,24 @@
 - `src/screens/bookings/BookingsListScreen.tsx` - Added auth checks and not logged in UI
 
 ### 3. Token Refresh Errors After Logout
-**Problem**: After logout, the app showed "Token refresh failed: No refresh token available" errors.
+**Problem**: After logout, the app showed "Token refresh failed: No refresh token available" errors in console.
 
 **Root Cause**:
 - API interceptor in `src/store/api.ts` was dispatching plain action objects instead of using action creators
-- When 401 errors occurred after logout, the interceptor tried to refresh tokens that didn't exist
+- BaseApiService in `src/services/api/BaseApiService.ts` was logging "No refresh token available" as an error
+- When 401 errors occurred after logout, both interceptors tried to refresh tokens that didn't exist
 - Error messages were confusing ("logging out" when already logged out)
 
 **Solution**:
 - Updated `src/store/api.ts` to import and use `clearAuth` and `setTokens` action creators
+- Updated `src/services/api/BaseApiService.ts` to handle "No refresh token available" gracefully
 - Changed error messages from "logging out" to "clearing session" (more accurate)
-- Properly dispatch action creators instead of plain objects
-- Silent cleanup when no refresh token is available (user is already logged out)
+- Silent handling when no refresh token is available (user is already logged out)
+- Only log actual refresh failures, not expected "no token" cases
 
 **Files Modified**:
 - `src/store/api.ts` - Import and use action creators, improved error messages
+- `src/services/api/BaseApiService.ts` - Graceful handling of missing refresh tokens
 
 ## How It Works Now
 
@@ -93,6 +96,7 @@
 - `src/context/AuthContext.tsx` - Auth context with Redux integration
 - `src/store/slices/authSlice.ts` - Redux auth state with clearAuth and setTokens actions
 - `src/store/api.ts` - RTK Query API with proper action creators
+- `src/services/api/BaseApiService.ts` - Axios-based API service with graceful token refresh handling
 - `src/navigation/RootNavigator.tsx` - Root navigation with auth flow
 - `src/screens/profile/ProfileScreen.tsx` - Profile screen with logout
 - `src/screens/bookings/BookingsListScreen.tsx` - Bookings screen with auth checks
