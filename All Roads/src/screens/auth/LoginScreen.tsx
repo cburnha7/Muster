@@ -7,19 +7,21 @@ import {
   Platform,
   ScrollView,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
 import { MusterIcon } from '../../theme/MusterIcon';
-import { TextInput } from '../../components/forms/TextInput';
-import { Button } from '../../components/forms/Button';
+import { FormInput } from '../../components/forms/FormInput';
+import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { loginUser, loginWithSSO } from '../../store/slices/authSlice';
 import { ErrorMessages, SuccessMessages } from '../../constants/errorMessages';
+import { colors } from '../../theme';
 
 export function LoginScreen() {
   const { login } = useAuth();
@@ -208,7 +210,7 @@ export function LoginScreen() {
           )}
 
           {/* Username/Email Input */}
-          <TextInput
+          <FormInput
             label="Username or Email"
             value={username}
             onChangeText={(text) => {
@@ -218,14 +220,14 @@ export function LoginScreen() {
             placeholder="Enter username or email"
             error={errors.username}
             onBlur={() => validateField('username', username)}
-            icon="person-outline"
+            leftIcon="person-outline"
             editable={!isLoading}
             autoCapitalize="none"
             autoCorrect={false}
           />
 
           {/* Password Input */}
-          <TextInput
+          <FormInput
             label="Password"
             value={password}
             onChangeText={(text) => {
@@ -235,7 +237,7 @@ export function LoginScreen() {
             placeholder="Enter password"
             error={errors.password}
             onBlur={() => validateField('password', password)}
-            icon="lock-closed-outline"
+            leftIcon="lock-closed-outline"
             secureTextEntry
             editable={!isLoading}
             autoCapitalize="none"
@@ -249,29 +251,30 @@ export function LoginScreen() {
               checked={rememberMe}
               onToggle={() => setRememberMe(!rememberMe)}
             />
-            <Text style={styles.forgotPassword} onPress={handleForgotPassword}>
-              Forgot Password?
-            </Text>
+            <TouchableOpacity onPress={handleForgotPassword}>
+              <Text style={styles.forgotPassword}>Forgot Password?</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Login Button */}
-          <Button
+          <FormButton
             title="Sign In"
             onPress={handleLogin}
             variant="primary"
-            isLoading={isLoading}
+            loading={isLoading}
             disabled={isLoading || ssoLoading !== null}
           />
 
           {/* Sign Up Link */}
-          <View style={styles.signUpContainer}>
+          <TouchableOpacity
+            style={styles.signUpContainer}
+            onPress={handleNavigateToSignUp}
+          >
             <Text style={styles.signUpText}>
               Don't have an account?{' '}
-              <Text style={styles.signUpLink} onPress={handleNavigateToSignUp}>
-                Sign Up
-              </Text>
+              <Text style={styles.signUpLink}>Sign Up</Text>
             </Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Test Accounts Info */}
           <View style={styles.testAccountsContainer}>
@@ -290,7 +293,7 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F4EE',
+    backgroundColor: colors.chalk,
   },
   scrollView: {
     flex: 1,
@@ -298,21 +301,22 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 32,
+    padding: 16,
+    paddingBottom: 20,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
   },
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#3D8C5E',
+    color: colors.grass,
     marginTop: 16,
   },
   tagline: {
     fontSize: 16,
-    color: '#999',
+    color: colors.soft,
     marginTop: 4,
   },
   form: {
@@ -321,81 +325,94 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.ink,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: 15,
+    color: colors.soft,
     marginBottom: 24,
+    lineHeight: 22,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#E5E7EB',
   },
   dividerText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 14,
+    color: colors.soft,
     marginHorizontal: 12,
   },
   errorText: {
-    fontSize: 16,
-    color: '#FF3B30',
+    fontSize: 14,
+    color: colors.track,
     textAlign: 'center',
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 12,
+    marginBottom: 20,
+    marginTop: -4,
   },
   forgotPassword: {
-    fontSize: 16,
-    color: '#3D8C5E',
+    fontSize: 15,
+    color: colors.grass,
     fontWeight: '600',
   },
   signUpContainer: {
-    marginTop: 24,
+    marginTop: 20,
     alignItems: 'center',
+    paddingVertical: 12,
   },
   signUpText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 15,
+    color: colors.soft,
   },
   signUpLink: {
-    color: '#3D8C5E',
+    color: colors.grass,
     fontWeight: '600',
   },
   testAccountsContainer: {
-    marginTop: 48,
+    marginTop: 32,
     padding: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   testAccountsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    color: colors.ink,
+    marginBottom: 8,
   },
   testAccountsText: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: 15,
+    color: colors.soft,
+    lineHeight: 22,
   },
   testAccountsPassword: {
     fontSize: 14,
-    color: '#999',
+    color: colors.soft,
     marginTop: 4,
   },
 });

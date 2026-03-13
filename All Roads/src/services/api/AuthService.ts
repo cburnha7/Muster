@@ -6,7 +6,6 @@
  *               8.6, 8.7, 8.11, 8.12, 10.1, 11.3, 12.5, 16.1, 16.2, 16.3, 33.1, 33.2
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import TokenStorage from '../auth/TokenStorage';
 import {
   User,
@@ -20,8 +19,6 @@ import {
 } from '../../types/auth';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
-const TOKEN_KEY = '@muster_auth_token';
-const USER_KEY = '@muster_user';
 
 // Network timeout in milliseconds (30 seconds)
 const NETWORK_TIMEOUT = 30000;
@@ -46,7 +43,7 @@ class AuthService {
 
   private async initializeTokenCache(): Promise<void> {
     try {
-      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      const token = await TokenStorage.getAccessToken();
       this.tokenCache = token;
       console.log('🔐 AuthService initialized, token cache:', token ? `${token.substring(0, 20)}...` : 'null');
     } catch (error) {
@@ -136,13 +133,9 @@ class AuthService {
     await TokenStorage.storeTokens(authResponse.accessToken, authResponse.refreshToken);
     await TokenStorage.storeUser(authResponse.user);
     
-    // Update cache for backward compatibility
+    // Update cache
     this.tokenCache = authResponse.accessToken;
     this.tokenExpirationTime = this.parseTokenExpiration(authResponse.accessToken);
-    
-    // Store in AsyncStorage for backward compatibility
-    await AsyncStorage.setItem(TOKEN_KEY, authResponse.accessToken);
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(authResponse.user));
   }
 
   /**
@@ -284,9 +277,6 @@ class AuthService {
     await TokenStorage.storeTokens(response.accessToken, response.refreshToken);
     this.tokenCache = response.accessToken;
     this.tokenExpirationTime = this.parseTokenExpiration(response.accessToken);
-    
-    // Update AsyncStorage for backward compatibility
-    await AsyncStorage.setItem(TOKEN_KEY, response.accessToken);
 
     return response;
   }
@@ -315,8 +305,6 @@ class AuthService {
     } finally {
       // Always clear local storage
       await TokenStorage.clearAll();
-      await AsyncStorage.removeItem(TOKEN_KEY);
-      await AsyncStorage.removeItem(USER_KEY);
       this.tokenCache = null;
       this.tokenExpirationTime = null;
     }
@@ -409,13 +397,6 @@ class AuthService {
   async getStoredUser(): Promise<User | null> {
     try {
       const user = await TokenStorage.getUser();
-      
-      // Fallback to AsyncStorage for backward compatibility
-      if (!user) {
-        const userJson = await AsyncStorage.getItem(USER_KEY);
-        return userJson ? JSON.parse(userJson) : null;
-      }
-      
       return user;
     } catch (error) {
       console.error('Get user error:', error);
