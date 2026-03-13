@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { TextInput } from '../../components/forms/TextInput';
-import { Button } from '../../components/forms/Button';
+import { FormInput } from '../../components/forms/FormInput';
+import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { registerUser, registerWithSSO } from '../../store/slices/authSlice';
@@ -316,52 +316,52 @@ export const RegistrationScreen: React.FC = () => {
           </>
         )}
 
-        <TextInput
+        <FormInput
           label="First Name"
           value={state.firstName}
           onChangeText={(text) => updateField('firstName', text)}
           placeholder="Enter your first name"
           error={state.errors.firstName}
           onBlur={() => validateField('firstName', state.firstName)}
-          icon="person-outline"
+          leftIcon="person-outline"
           editable={!state.isLoading && !state.ssoProvider}
           autoCapitalize="words"
         />
 
-        <TextInput
+        <FormInput
           label="Last Name"
           value={state.lastName}
           onChangeText={(text) => updateField('lastName', text)}
           placeholder="Enter your last name"
           error={state.errors.lastName}
           onBlur={() => validateField('lastName', state.lastName)}
-          icon="person-outline"
+          leftIcon="person-outline"
           editable={!state.isLoading && !state.ssoProvider}
           autoCapitalize="words"
         />
 
-        <TextInput
+        <FormInput
           label="Email"
           value={state.email}
           onChangeText={(text) => updateField('email', text)}
           placeholder="Enter your email"
           error={state.errors.email}
           onBlur={() => validateField('email', state.email)}
-          icon="mail-outline"
+          leftIcon="mail-outline"
           editable={!state.isLoading && !state.ssoProvider}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
         />
 
-        <TextInput
+        <FormInput
           label="Username"
           value={state.username}
           onChangeText={(text) => updateField('username', text)}
           placeholder="Choose a username"
           error={state.errors.username}
           onBlur={() => validateField('username', state.username)}
-          icon="at"
+          leftIcon="at"
           editable={!state.isLoading}
           autoCapitalize="none"
           autoCorrect={false}
@@ -369,28 +369,28 @@ export const RegistrationScreen: React.FC = () => {
 
         {!state.ssoProvider && (
           <>
-            <TextInput
+            <FormInput
               label="Password"
               value={state.password}
               onChangeText={(text) => updateField('password', text)}
               placeholder="Create a password"
               error={state.errors.password}
               onBlur={() => validateField('password', state.password)}
-              icon="lock-closed-outline"
+              leftIcon="lock-closed-outline"
               secureTextEntry
               editable={!state.isLoading}
               autoCapitalize="none"
               autoCorrect={false}
             />
 
-            <TextInput
+            <FormInput
               label="Confirm Password"
               value={state.confirmPassword}
               onChangeText={(text) => updateField('confirmPassword', text)}
               placeholder="Confirm your password"
               error={state.errors.confirmPassword}
               onBlur={() => validateField('confirmPassword', state.confirmPassword)}
-              icon="lock-closed-outline"
+              leftIcon="lock-closed-outline"
               secureTextEntry
               editable={!state.isLoading}
               autoCapitalize="none"
@@ -421,12 +421,20 @@ export const RegistrationScreen: React.FC = () => {
           <Text style={styles.errorText}>{state.errors.general}</Text>
         )}
 
-        <Button
-          title={state.ssoProvider ? 'Complete Registration' : 'Register'}
+        <FormButton
+          title={state.ssoProvider ? 'Complete Registration' : 'Create Account'}
           onPress={state.ssoProvider ? handleSSOComplete : handleManualRegistration}
           variant="primary"
-          isLoading={state.isLoading}
+          loading={state.isLoading}
           disabled={!isFormValid()}
+        />
+
+        <FormButton
+          title="Cancel"
+          onPress={handleNavigateToLogin}
+          variant="secondary"
+          disabled={state.isLoading}
+          style={{ marginTop: 12 }}
         />
 
         <TouchableOpacity

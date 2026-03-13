@@ -8,6 +8,7 @@ import {
   TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../theme';
 
 interface FormInputProps extends TextInputProps {
   label?: string;
@@ -65,7 +66,7 @@ export const FormInput: React.FC<FormInputProps> = ({
           <Ionicons
             name={leftIcon as any}
             size={20}
-            color={error ? '#FF3B30' : isFocused ? '#007AFF' : '#666'}
+            color={error ? colors.track : isFocused ? colors.grass : colors.soft}
             style={styles.leftIcon}
           />
         )}
@@ -92,7 +93,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={isSecure ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color="#666"
+              color={colors.soft}
             />
           </TouchableOpacity>
         )}
@@ -105,7 +106,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={rightIcon as any}
               size={20}
-              color={error ? '#FF3B30' : isFocused ? '#007AFF' : '#666'}
+              color={error ? colors.track : isFocused ? colors.grass : colors.soft}
             />
           </TouchableOpacity>
         )}
@@ -124,35 +125,43 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
+    color: colors.ink,
     marginBottom: 8,
   },
   required: {
-    color: '#FF3B30',
+    color: colors.track,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
     paddingHorizontal: 16,
     minHeight: 48,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: '#007AFF',
+    borderColor: colors.grass,
     backgroundColor: '#FFFFFF',
   },
   inputContainerError: {
-    borderColor: '#FF3B30',
+    borderColor: colors.track,
     backgroundColor: '#FFF5F5',
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: colors.ink,
     paddingVertical: 12,
   },
   inputWithLeftIcon: {
@@ -170,7 +179,7 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 14,
-    color: '#FF3B30',
+    color: colors.track,
     marginTop: 4,
   },
 });

@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../theme';
 
 interface FormButtonProps {
   title: string;
@@ -91,9 +92,9 @@ export const FormButton: React.FC<FormButtonProps> = ({
       case 'danger':
         return '#FFFFFF';
       case 'secondary':
-        return '#666';
+        return colors.ink;
       case 'outline':
-        return '#007AFF';
+        return colors.grass;
       default:
         return '#FFFFFF';
     }
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
   
   // Color variants
   primary: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.grass,
   },
   primaryText: {
     color: '#FFFFFF',
@@ -210,20 +211,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   secondaryText: {
-    color: '#666',
+    color: colors.ink,
   },
   
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: colors.grass,
   },
   outlineText: {
-    color: '#007AFF',
+    color: colors.grass,
   },
   
   danger: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.track,
   },
   dangerText: {
     color: '#FFFFFF',
