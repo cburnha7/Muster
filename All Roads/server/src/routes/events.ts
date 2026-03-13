@@ -271,11 +271,16 @@ router.post('/', async (req, res) => {
       }
 
       // Validate event time matches slot
+      // NOTE: Slot times are stored as local times (e.g., "18:00" means 6 PM local)
+      // The client sends event times as UTC ISO strings
+      // We need to compare them properly accounting for timezone conversion
+      
       const slotDate = new Date(timeSlot.date);
       const [startHours, startMinutes] = timeSlot.startTime.split(':').map(Number);
       const [endHours, endMinutes] = timeSlot.endTime.split(':').map(Number);
       
-      // Use UTC date components to create local date (slot dates are UTC midnight representing local dates)
+      // The client constructs local datetime then converts to UTC
+      // So we need to do the same: create local datetime from slot date + time
       const slotStart = new Date(
         slotDate.getUTCFullYear(),
         slotDate.getUTCMonth(),
@@ -299,8 +304,28 @@ router.post('/', async (req, res) => {
       const eventStart = new Date(eventData.startTime);
       const eventEnd = new Date(eventData.endTime);
 
+      console.log('Time validation:');
+      console.log('  Slot start (local):', slotStart.toString());
+      console.log('  Slot start (UTC):', slotStart.toISOString());
+      console.log('  Event start (UTC):', eventStart.toISOString());
+      console.log('  Slot end (local):', slotEnd.toString());
+      console.log('  Slot end (UTC):', slotEnd.toISOString());
+      console.log('  Event end (UTC):', eventEnd.toISOString());
+      console.log('  Match:', eventStart.getTime() === slotStart.getTime() && eventEnd.getTime() === slotEnd.getTime());
+
+      // Compare the timestamps (both are now in the same reference frame)
       if (eventStart.getTime() !== slotStart.getTime() || eventEnd.getTime() !== slotEnd.getTime()) {
-        return res.status(400).json({ error: 'Event time must match time slot' });
+        return res.status(400).json({ 
+          error: 'Event time must match time slot',
+          expected: {
+            start: slotStart.toISOString(),
+            end: slotEnd.toISOString(),
+          },
+          received: {
+            start: eventStart.toISOString(),
+            end: eventEnd.toISOString(),
+          }
+        });
       }
     }
 
