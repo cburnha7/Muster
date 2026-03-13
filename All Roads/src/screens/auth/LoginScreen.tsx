@@ -275,15 +275,6 @@ export function LoginScreen() {
               <Text style={styles.signUpLink}>Sign Up</Text>
             </Text>
           </TouchableOpacity>
-
-          {/* Test Accounts Info */}
-          <View style={styles.testAccountsContainer}>
-            <Text style={styles.testAccountsTitle}>Test Accounts</Text>
-            <Text style={styles.testAccountsText}>
-              player, host, owner, playerplus
-            </Text>
-            <Text style={styles.testAccountsPassword}>Password: 1234</Text>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -382,37 +373,5 @@ const styles = StyleSheet.create({
   signUpLink: {
     color: colors.grass,
     fontWeight: '600',
-  },
-  testAccountsContainer: {
-    marginTop: 32,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  testAccountsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 8,
-  },
-  testAccountsText: {
-    fontSize: 15,
-    color: colors.soft,
-    lineHeight: 22,
-  },
-  testAccountsPassword: {
-    fontSize: 14,
-    color: colors.soft,
-    marginTop: 4,
   },
 });

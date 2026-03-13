@@ -38,10 +38,10 @@ class TokenStorage {
   async storeTokens(accessToken: string, refreshToken: string): Promise<void> {
     try {
       if (isWeb) {
-        // On web, tokens are stored in HTTP-only cookies by the backend
-        // We store them in sessionStorage/localStorage as backup for client-side checks
-        sessionStorage.setItem(KEYS.ACCESS_TOKEN, accessToken);
+        // On web, store both tokens in localStorage so they persist across page refreshes
+        localStorage.setItem(KEYS.ACCESS_TOKEN, accessToken);
         localStorage.setItem(KEYS.REFRESH_TOKEN, refreshToken);
+        console.log('✅ Tokens stored in localStorage');
       } else {
         // On mobile, use SecureStore for encrypted storage
         await SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, accessToken);
@@ -60,7 +60,9 @@ class TokenStorage {
   async getAccessToken(): Promise<string | null> {
     try {
       if (isWeb) {
-        return sessionStorage.getItem(KEYS.ACCESS_TOKEN);
+        const token = localStorage.getItem(KEYS.ACCESS_TOKEN);
+        console.log('📥 getAccessToken from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+        return token;
       } else {
         return await SecureStore.getItemAsync(KEYS.ACCESS_TOKEN);
       }
@@ -94,8 +96,9 @@ class TokenStorage {
   async clearTokens(): Promise<void> {
     try {
       if (isWeb) {
-        sessionStorage.removeItem(KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(KEYS.ACCESS_TOKEN);
         localStorage.removeItem(KEYS.REFRESH_TOKEN);
+        console.log('🗑️ Tokens cleared from localStorage');
       } else {
         await SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN);
         await SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN);
