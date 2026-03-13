@@ -1424,7 +1424,7 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   disabledField: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.chalk,
     opacity: 0.7,
   },
   disabledText: {
@@ -1452,7 +1452,7 @@ const styles = StyleSheet.create({
   lockedFieldsInfoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderLeftWidth: 3,
     borderLeftColor: colors.sky,
     padding: 12,
@@ -1476,7 +1476,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   lockedFieldDisplay: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderRadius: 8,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,

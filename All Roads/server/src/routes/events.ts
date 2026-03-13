@@ -272,16 +272,18 @@ router.post('/', async (req, res) => {
 
       // Validate event time matches slot
       // NOTE: Slot times are stored as local times (e.g., "18:00" means 6 PM local)
-      // The client sends event times as UTC ISO strings
-      // We need to compare them properly accounting for timezone conversion
+      // The client sends event times as UTC ISO strings after converting from local time
+      // The client creates: new Date(year, month, day, hours, minutes) in LOCAL timezone
+      // Then converts to UTC via .toISOString()
+      // So we need to construct the expected UTC time the same way
       
       const slotDate = new Date(timeSlot.date);
       const [startHours, startMinutes] = timeSlot.startTime.split(':').map(Number);
       const [endHours, endMinutes] = timeSlot.endTime.split(':').map(Number);
       
-      // The client constructs local datetime then converts to UTC
-      // So we need to do the same: create local datetime from slot date + time
-      const slotStart = new Date(
+      // Use Date.UTC to create timestamps in UTC directly
+      // This matches what the client sends after converting local time to UTC
+      const slotStartUTC = Date.UTC(
         slotDate.getUTCFullYear(),
         slotDate.getUTCMonth(),
         slotDate.getUTCDate(),
@@ -291,7 +293,7 @@ router.post('/', async (req, res) => {
         0
       );
       
-      const slotEnd = new Date(
+      const slotEndUTC = Date.UTC(
         slotDate.getUTCFullYear(),
         slotDate.getUTCMonth(),
         slotDate.getUTCDate(),
@@ -305,21 +307,21 @@ router.post('/', async (req, res) => {
       const eventEnd = new Date(eventData.endTime);
 
       console.log('Time validation:');
-      console.log('  Slot start (local):', slotStart.toString());
-      console.log('  Slot start (UTC):', slotStart.toISOString());
-      console.log('  Event start (UTC):', eventStart.toISOString());
-      console.log('  Slot end (local):', slotEnd.toString());
-      console.log('  Slot end (UTC):', slotEnd.toISOString());
-      console.log('  Event end (UTC):', eventEnd.toISOString());
-      console.log('  Match:', eventStart.getTime() === slotStart.getTime() && eventEnd.getTime() === slotEnd.getTime());
+      console.log('  Slot start (UTC timestamp):', slotStartUTC);
+      console.log('  Slot start (UTC ISO):', new Date(slotStartUTC).toISOString());
+      console.log('  Event start (UTC ISO):', eventStart.toISOString());
+      console.log('  Slot end (UTC timestamp):', slotEndUTC);
+      console.log('  Slot end (UTC ISO):', new Date(slotEndUTC).toISOString());
+      console.log('  Event end (UTC ISO):', eventEnd.toISOString());
+      console.log('  Match:', eventStart.getTime() === slotStartUTC && eventEnd.getTime() === slotEndUTC);
 
-      // Compare the timestamps (both are now in the same reference frame)
-      if (eventStart.getTime() !== slotStart.getTime() || eventEnd.getTime() !== slotEnd.getTime()) {
+      // Compare the timestamps
+      if (eventStart.getTime() !== slotStartUTC || eventEnd.getTime() !== slotEndUTC) {
         return res.status(400).json({ 
           error: 'Event time must match time slot',
           expected: {
-            start: slotStart.toISOString(),
-            end: slotEnd.toISOString(),
+            start: new Date(slotStartUTC).toISOString(),
+            end: new Date(slotEndUTC).toISOString(),
           },
           received: {
             start: eventStart.toISOString(),
