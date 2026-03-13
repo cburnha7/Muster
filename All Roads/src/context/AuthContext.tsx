@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
-import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser } from '../store/slices/authSlice';
+import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser, clearAuth } from '../store/slices/authSlice';
 
 interface AuthContextType {
   user: User | null;
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await authService.logout();
       
       // Dispatch Redux action to clear auth state
-      dispatch({ type: 'auth/clearAuth' });
+      dispatch(clearAuth());
       
       console.log('AuthContext: Logout complete');
     } catch (error) {

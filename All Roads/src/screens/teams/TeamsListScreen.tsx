@@ -227,13 +227,6 @@ export function TeamsListScreen(): JSX.Element {
       </View>
 
       <View style={styles.content}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSearch={handleSearch}
-          placeholder="Search teams..."
-        />
-
         {showFilters && (
           <View style={styles.filtersContainer}>
             <Text style={styles.filtersTitle}>Filters</Text>

@@ -11,6 +11,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
 
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -43,6 +44,7 @@ type BookingFilter = 'all' | 'upcoming' | 'past' | 'cancelled';
 export function BookingsListScreen(): JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const { user, isAuthenticated } = useAuth();
 
   // Redux state
   const allBookings = useSelector(selectBookings);
@@ -77,6 +79,12 @@ export function BookingsListScreen(): JSX.Element {
 
   // Load bookings
   const loadBookings = useCallback(async (isRefresh = false, isLoadMore = false) => {
+    // Don't load if not authenticated
+    if (!isAuthenticated || !user) {
+      console.log('BookingsListScreen: Not authenticated, skipping load');
+      return;
+    }
+
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -112,7 +120,7 @@ export function BookingsListScreen(): JSX.Element {
     } finally {
       setRefreshing(false);
     }
-  }, [dispatch, activeFilter, pagination.page, pagination.limit]);
+  }, [dispatch, activeFilter, pagination.page, pagination.limit, isAuthenticated, user]);
 
   // Handle booking press
   const handleBookingPress = (booking: Booking) => {
@@ -198,9 +206,30 @@ export function BookingsListScreen(): JSX.Element {
   // Load bookings on screen focus or filter change
   useFocusEffect(
     useCallback(() => {
-      loadBookings();
-    }, [loadBookings])
+      if (isAuthenticated && user) {
+        loadBookings();
+      }
+    }, [loadBookings, isAuthenticated, user])
   );
+
+  // Show not authenticated state
+  if (!isAuthenticated || !user) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.emptyState}>
+          <Ionicons name="log-in-outline" size={64} color="#E0E0E0" />
+          <Text style={styles.emptyTitle}>Not Logged In</Text>
+          <Text style={styles.emptySubtitle}>Please log in to view your bookings</Text>
+          <TouchableOpacity 
+            style={styles.browseButton}
+            onPress={() => navigation.navigate('Auth' as never)}
+          >
+            <Text style={styles.browseButtonText}>Log In</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   // Render booking item
   const renderBookingItem = useCallback(({ item }: { item: Booking }) => (

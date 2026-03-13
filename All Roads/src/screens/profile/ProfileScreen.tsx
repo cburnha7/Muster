@@ -104,13 +104,6 @@ export function ProfileScreen() {
     try {
       console.log('Logout button pressed');
       await logout();
-      
-      // Force navigation to auth screen
-      (navigation as any).reset({
-        index: 0,
-        routes: [{ name: 'Auth' }],
-      });
-      
       console.log('Logout successful');
     } catch (error) {
       console.error('Logout error:', error);

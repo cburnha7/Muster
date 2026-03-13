@@ -22,7 +22,8 @@ export function RootNavigator(): JSX.Element {
   // Log user state changes
   useEffect(() => {
     console.log('RootNavigator: User state changed:', user ? `Logged in as ${user.username}` : 'Not logged in');
-  }, [user]);
+    console.log('RootNavigator: Auth loading:', authLoading);
+  }, [user, authLoading]);
 
   // Show loading screen while checking auth
   if (authLoading) {
