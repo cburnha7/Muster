@@ -6,6 +6,7 @@ import axios, {
   InternalAxiosRequestConfig 
 } from 'axios';
 import { authService } from '../auth/AuthService';
+import TokenStorage from '../auth/TokenStorage';
 import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
 
@@ -67,8 +68,8 @@ export class BaseApiService {
       async (config: InternalAxiosRequestConfig) => {
         console.log('🚀 BaseApiService interceptor running');
         
-        // Add authentication token
-        const token = authService.getToken();
+        // Add authentication token - read from TokenStorage for consistency
+        let token = await TokenStorage.getAccessToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
           console.log('🔐 API Request - Token attached:', token.substring(0, 20) + '...');
@@ -123,9 +124,9 @@ export class BaseApiService {
         if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
           try {
             await authService.refreshAccessToken();
-            // Retry the original request with new token
+            // Retry the original request with new token from TokenStorage
             if (error.config) {
-              const token = authService.getToken();
+              const token = await TokenStorage.getAccessToken();
               if (token) {
                 error.config.headers.Authorization = `Bearer ${token}`;
               }
