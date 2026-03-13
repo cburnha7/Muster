@@ -177,32 +177,12 @@ export function EventDetailsScreen(): JSX.Element {
       return;
     }
 
-    // Show warnings if any
+    // Log warnings but proceed anyway (no alert dialog)
     if (validationResult.warnings && validationResult.warnings.length > 0) {
-      console.log('⚠️ Showing warnings alert:', validationResult.warnings);
-      const warningMessage = validationResult.warnings.join('\n');
-      Alert.alert(
-        'Booking Notice',
-        warningMessage + '\n\nDo you want to continue with the booking?',
-        [
-          { 
-            text: 'Cancel', 
-            style: 'cancel',
-            onPress: () => console.log('❌ User cancelled booking from warning alert')
-          },
-          { 
-            text: 'Continue', 
-            onPress: () => {
-              console.log('✅ User confirmed booking from warning alert');
-              proceedWithBooking();
-            }
-          },
-        ]
-      );
-      return;
+      console.log('⚠️ Warnings (proceeding anyway):', validationResult.warnings);
     }
 
-    console.log('✅ No warnings, proceeding with booking directly...');
+    console.log('✅ Proceeding with booking...');
     await proceedWithBooking();
   };
 
