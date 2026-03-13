@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, Text } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
-import { Ionicons } from '@expo/vector-icons';
 import { Event } from '../../types';
 import { LocationService, Coordinates } from '../../services/location/LocationService';
 import { EventMapPreview } from './EventMapPreview';
@@ -15,18 +14,6 @@ interface EventsMapViewProps {
 }
 
 export function EventsMapView({ events, userBookedEventIds, onEventPress }: EventsMapViewProps) {
-  // Map view is not supported on web
-  if (Platform.OS === 'web') {
-    return (
-      <View style={styles.webFallback}>
-        <Ionicons name="map-outline" size={64} color={colors.inkFaint} />
-        <Text style={styles.webFallbackTitle}>Map View Not Available</Text>
-        <Text style={styles.webFallbackText}>
-          Map view is only available on iOS and Android. Please use the list view.
-        </Text>
-      </View>
-    );
-  }
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,25 +103,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.chalk,
-  },
-  webFallback: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.chalk,
-    paddingHorizontal: 32,
-  },
-  webFallbackTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.ink,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  webFallbackText: {
-    fontSize: 16,
-    color: colors.inkFaint,
-    textAlign: 'center',
-    lineHeight: 24,
   },
 });

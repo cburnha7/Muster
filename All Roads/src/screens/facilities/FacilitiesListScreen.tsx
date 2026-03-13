@@ -17,7 +17,7 @@ import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
-import { GroundsMapView } from '../../components/maps/GroundsMapView';
+import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
 import { facilityService } from '../../services/api/FacilityService';
 import { colors, Spacing } from '../../theme';
 import {
@@ -358,7 +358,7 @@ export function FacilitiesListScreen(): JSX.Element {
       {isLoading && !facilities.length ? (
         <LoadingSpinner />
       ) : viewMode === 'map' ? (
-        <GroundsMapView
+        <GroundsMapViewWrapper
           grounds={facilities}
           onGroundPress={handleFacilityPress}
         />

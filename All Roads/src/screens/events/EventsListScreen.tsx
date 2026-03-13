@@ -22,7 +22,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { ViewToggle } from '../../components/maps/ViewToggle';
-import { EventsMapView } from '../../components/maps/EventsMapView';
+import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
 import { colors, Spacing } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
@@ -365,7 +365,7 @@ export function EventsListScreen(): JSX.Element {
       {isLoading && availableEvents.length === 0 ? (
         <LoadingSpinner />
       ) : viewMode === 'map' ? (
-        <EventsMapView
+        <EventsMapViewWrapper
           events={availableEvents}
           userBookedEventIds={Array.from(bookedEventIds)}
           onEventPress={handleEventPress}
