@@ -204,10 +204,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    minHeight: 40,
   },
   paymentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   price: {
     fontSize: 18,
