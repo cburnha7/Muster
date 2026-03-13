@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   courtCard: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: Spacing.lg,
     shadowColor: colors.ink,

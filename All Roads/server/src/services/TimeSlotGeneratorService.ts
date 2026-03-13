@@ -91,6 +91,9 @@ export class TimeSlotGeneratorService {
 
       // Use facility default price if court pricePerHour is null
       const price = court.pricePerHour ?? court.facility.pricePerHour ?? 50;
+      
+      // Get slot increment from facility (default to 60 minutes if not set)
+      const slotIncrementMinutes = court.facility.slotIncrementMinutes ?? 60;
 
       // Loop through each date in range, generate slots for each date
       const allSlots: TimeSlotData[] = [];
@@ -102,7 +105,8 @@ export class TimeSlotGeneratorService {
           courtId,
           currentDate,
           operatingHours,
-          price
+          price,
+          slotIncrementMinutes
         );
         allSlots.push(...slotsForDate);
         currentDate.setUTCDate(currentDate.getUTCDate() + 1);
@@ -174,6 +178,86 @@ export class TimeSlotGeneratorService {
   }
 
   /**
+   * Regenerate future unbooked slots for a facility when slot increment changes
+   * This preserves already booked/rented slots and only regenerates available slots
+   */
+  async regenerateSlotsAfterIncrementChange(
+    facilityId: string,
+    newIncrementMinutes: number
+  ): Promise<{
+    courtsProcessed: number;
+    slotsDeleted: number;
+    slotsGenerated: number;
+    errors: string[];
+  }> {
+    const errors: string[] = [];
+    let courtsProcessed = 0;
+    let totalDeleted = 0;
+    let totalGenerated = 0;
+
+    try {
+      // Get all courts for this facility
+      const courts = await prisma.facilityCourt.findMany({
+        where: { facilityId, isActive: true },
+      });
+
+      const today = this.normalizeToUTCMidnight(new Date());
+
+      for (const court of courts) {
+        try {
+          // Delete only future available slots (not booked or rented)
+          const deleteResult = await prisma.facilityTimeSlot.deleteMany({
+            where: {
+              courtId: court.id,
+              date: { gte: today },
+              status: 'available',
+            },
+          });
+
+          totalDeleted += deleteResult.count;
+
+          // Regenerate slots with new increment
+          const { start, end } = this.calculate365DayRange(today);
+          const result = await this.generateSlotsForCourt({
+            courtId: court.id,
+            startDate: start,
+            endDate: end,
+            skipExisting: true, // Skip any remaining booked/rented slots
+          });
+
+          totalGenerated += result.slotsGenerated;
+          courtsProcessed++;
+
+          this.logger.info('Regenerated slots for court after increment change', {
+            courtId: court.id,
+            deleted: deleteResult.count,
+            generated: result.slotsGenerated,
+          });
+        } catch (error: any) {
+          errors.push(`Court ${court.id}: ${error.message}`);
+          this.logger.error('Failed to regenerate slots for court', {
+            courtId: court.id,
+            error: error.message,
+          });
+        }
+      }
+
+      return {
+        courtsProcessed,
+        slotsDeleted: totalDeleted,
+        slotsGenerated: totalGenerated,
+        errors,
+      };
+    } catch (error: any) {
+      this.logger.error('Failed to regenerate slots after increment change', {
+        facilityId,
+        error: error.message,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Check if a court has complete slot coverage for the next N days
    */
   async checkSlotCoverage(courtId: string, days: number = 365): Promise<{
@@ -222,7 +306,8 @@ export class TimeSlotGeneratorService {
     courtId: string,
     date: Date,
     operatingHours: OperatingHours[],
-    pricePerHour: number
+    pricePerHour: number,
+    slotIncrementMinutes: number = 60
   ): TimeSlotData[] {
     const normalizedDate = this.normalizeToUTCMidnight(date);
     const dayOfWeek = normalizedDate.getUTCDay();
@@ -241,19 +326,47 @@ export class TimeSlotGeneratorService {
       const startHour = this.parseTime(hours.startTime);
       const endHour = this.parseTime(hours.endTime);
       
-      // Generate hourly slots from startTime to endTime
-      for (let hour = startHour; hour < endHour; hour++) {
-        const startTime = this.formatTime(hour);
-        const endTime = this.formatTime(hour + 1);
-        
-        slots.push({
-          courtId,
-          date: normalizedDate,
-          startTime,
-          endTime,
-          price: pricePerHour,
-          status: 'available',
-        });
+      // Calculate price per slot based on increment
+      const pricePerSlot = (pricePerHour * slotIncrementMinutes) / 60;
+      
+      // Generate slots based on increment (30 or 60 minutes)
+      if (slotIncrementMinutes === 30) {
+        // Generate 30-minute slots
+        for (let hour = startHour; hour < endHour; hour++) {
+          // First half-hour slot
+          slots.push({
+            courtId,
+            date: normalizedDate,
+            startTime: this.formatTime(hour, 0),
+            endTime: this.formatTime(hour, 30),
+            price: pricePerSlot,
+            status: 'available',
+          });
+          
+          // Second half-hour slot (only if not at the end hour)
+          if (hour < endHour - 1 || (hour === endHour - 1 && endHour * 60 > hour * 60 + 30)) {
+            slots.push({
+              courtId,
+              date: normalizedDate,
+              startTime: this.formatTime(hour, 30),
+              endTime: this.formatTime(hour + 1, 0),
+              price: pricePerSlot,
+              status: 'available',
+            });
+          }
+        }
+      } else {
+        // Generate hourly slots (default behavior)
+        for (let hour = startHour; hour < endHour; hour++) {
+          slots.push({
+            courtId,
+            date: normalizedDate,
+            startTime: this.formatTime(hour, 0),
+            endTime: this.formatTime(hour + 1, 0),
+            price: pricePerSlot,
+            status: 'available',
+          });
+        }
       }
     }
     
@@ -331,10 +444,10 @@ export class TimeSlotGeneratorService {
   }
 
   /**
-   * Format hour to HH:MM
+   * Format hour and minutes to HH:MM
    */
-  private formatTime(hour: number): string {
-    return `${hour.toString().padStart(2, '0')}:00`;
+  private formatTime(hour: number, minutes: number = 0): string {
+    return `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   }
 
   /**

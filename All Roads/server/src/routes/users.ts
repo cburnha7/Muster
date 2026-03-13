@@ -220,7 +220,11 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
         where,
         skip,
         take: limitNum,
-        orderBy: { createdAt: 'desc' },
+        orderBy: {
+          event: {
+            startTime: 'asc', // Sort by event start time, soonest first
+          },
+        },
         include: {
           event: {
             select: {

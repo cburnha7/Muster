@@ -16,6 +16,8 @@ import { debounce, getOptimalBatchSize, getOptimalWindowSize } from '../../utils
 import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { ViewToggle } from '../../components/maps/ViewToggle';
+import { GroundsMapView } from '../../components/maps/GroundsMapView';
 import { facilityService } from '../../services/api/FacilityService';
 import { colors, Spacing } from '../../theme';
 import {
@@ -54,6 +56,7 @@ export function FacilitiesListScreen(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState<FacilityFilters>(filters);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   
   // Track last load time with a ref to avoid triggering re-renders
   const lastLoadTimeRef = React.useRef<number>(0);
@@ -96,7 +99,7 @@ export function FacilitiesListScreen(): JSX.Element {
     try {
       dispatch(setLoading(true));
       const response = await facilityService.getFacilities(
-        forceRefresh ? { ...filters, _t: Date.now() } : filters,
+        forceRefresh ? { ...filters } as any : filters,
         {
           page: 1,
           limit: pagination.limit,
@@ -185,66 +188,68 @@ export function FacilitiesListScreen(): JSX.Element {
     setShowFilters(false);
   };
 
-  const renderFacilityItem = useCallback(({ item, index }: { item: Facility; index: number }) => (
-    <TouchableOpacity
-      style={styles.facilityCard}
-      onPress={() => handleFacilityPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.facilityHeader}>
-          <View style={styles.numberBadge}>
-            <Text style={styles.numberText}>{index + 1}</Text>
+  const renderFacilityItem = useCallback(({ item, index }: { item: Facility; index: number }) => {
+    // Format address from facility fields
+    const formattedAddress = `${item.city}, ${item.state}`;
+    
+    return (
+      <TouchableOpacity
+        style={styles.facilityCard}
+        onPress={() => handleFacilityPress(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardContent}>
+          <View style={styles.facilityHeader}>
+            <View style={styles.numberBadge}>
+              <Text style={styles.numberText}>{index + 1}</Text>
+            </View>
+            <View style={styles.facilityTitleContainer}>
+              <Text style={styles.facilityName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {item.ownerId === currentUser?.id && (
+                <View style={styles.ownerBadge}>
+                  <Ionicons name="star" size={12} color={colors.court} />
+                  <Text style={styles.ownerText}>Your Ground</Text>
+                </View>
+              )}
+            </View>
           </View>
-          <View style={styles.facilityTitleContainer}>
-            <Text style={styles.facilityName} numberOfLines={1}>
-              {item.name}
+          
+          <View style={styles.facilityInfo}>
+            <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
+            <Text style={styles.facilityAddress} numberOfLines={1}>
+              {formattedAddress}
             </Text>
-            {item.ownerId === currentUser?.id && (
-              <View style={styles.ownerBadge}>
-                <Ionicons name="star" size={12} color={colors.court} />
-                <Text style={styles.ownerText}>Your Ground</Text>
-              </View>
-            )}
           </View>
-        </View>
-        
-        <View style={styles.facilityInfo}>
-          <Ionicons name="location-outline" size={16} color={colors.soft} />
-          <Text style={styles.facilityAddress} numberOfLines={1}>
-            {item.address}
-          </Text>
-        </View>
-        
-        {item.sportTypes && item.sportTypes.length > 0 && (
-          <View style={styles.sportTypes}>
-            {item.sportTypes.slice(0, 3).map((sport, idx) => (
-              <View key={idx} style={styles.sportTag}>
-                <Text style={styles.sportTagText}>
-                  {sport.charAt(0).toUpperCase() + sport.slice(1)}
-                </Text>
-              </View>
-            ))}
-            {item.sportTypes.length > 3 && (
-              <Text style={styles.moreText}>+{item.sportTypes.length - 3}</Text>
-            )}
-          </View>
-        )}
-        
-        <View style={styles.facilityFooter}>
-          {item.rating && item.rating > 0 && (
-            <View style={styles.rating}>
-              <Ionicons name="star" size={14} color={colors.court} />
-              <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+          
+          {item.sportTypes && item.sportTypes.length > 0 && (
+            <View style={styles.sportTypes}>
+              {item.sportTypes.slice(0, 3).map((sport, idx) => (
+                <View key={idx} style={styles.sportTag}>
+                  <Text style={styles.sportTagText}>
+                    {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                  </Text>
+                </View>
+              ))}
+              {item.sportTypes.length > 3 && (
+                <Text style={styles.moreText}>+{item.sportTypes.length - 3}</Text>
+              )}
             </View>
           )}
-          {item.distance && (
-            <Text style={styles.distance}>{item.distance.toFixed(1)} km away</Text>
-          )}
+          
+          <View style={styles.facilityFooter}>
+            {item.rating && item.rating > 0 && (
+              <View style={styles.rating}>
+                <Ionicons name="star" size={14} color={colors.court} />
+                <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  ), [handleFacilityPress, currentUser]);
+      </TouchableOpacity>
+    );
+  }, [handleFacilityPress, currentUser]);
 
   const keyExtractor = useCallback((item: Facility) => item.id, []);
 
@@ -253,7 +258,7 @@ export function FacilitiesListScreen(): JSX.Element {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="map-outline" size={64} color={colors.soft} />
+        <Ionicons name="map-outline" size={64} color={colors.inkFaint} />
         <Text style={styles.emptyTitle}>No Grounds Found</Text>
         <Text style={styles.emptySubtitle}>
           {searchQuery
@@ -321,18 +326,6 @@ export function FacilitiesListScreen(): JSX.Element {
     </Modal>
   );
 
-  const renderMapPlaceholder = () => (
-    <View style={styles.mapContainer}>
-      <View style={styles.mapPlaceholder}>
-        <Ionicons name="map" size={48} color={colors.soft} />
-        <Text style={styles.mapPlaceholderText}>Map view coming soon</Text>
-        <Text style={styles.mapPlaceholderSubtext}>
-          Pins will correlate with numbers below
-        </Text>
-      </View>
-    </View>
-  );
-
   if (error && !facilities.length) {
     return (
       <View style={styles.container}>
@@ -352,6 +345,10 @@ export function FacilitiesListScreen(): JSX.Element {
           placeholder="Search grounds..."
           style={styles.searchBar}
         />
+        <ViewToggle
+          viewMode={viewMode}
+          onToggle={setViewMode}
+        />
         <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
           <Ionicons name="filter" size={24} color={colors.grass} />
           {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
@@ -360,13 +357,17 @@ export function FacilitiesListScreen(): JSX.Element {
 
       {isLoading && !facilities.length ? (
         <LoadingSpinner />
+      ) : viewMode === 'map' ? (
+        <GroundsMapView
+          grounds={facilities}
+          onGroundPress={handleFacilityPress}
+        />
       ) : (
         <FlatList
           data={facilities}
           renderItem={renderFacilityItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}
-          ListHeaderComponent={renderMapPlaceholder}
           refreshControl={
             <RefreshControl refreshing={isLoading} onRefresh={loadFacilities} />
           }
@@ -408,10 +409,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     backgroundColor: colors.chalk,
+    gap: Spacing.sm,
   },
   searchBar: {
     flex: 1,
-    marginRight: Spacing.md,
   },
   filterButton: {
     padding: Spacing.sm,
@@ -425,27 +426,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.track,
-  },
-  mapContainer: {
-    height: 250,
-    backgroundColor: colors.chalk,
-    marginBottom: Spacing.md,
-  },
-  mapPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.chalk,
-  },
-  mapPlaceholderText: {
-    fontSize: 16,
-    color: colors.soft,
-    marginTop: Spacing.md,
-  },
-  mapPlaceholderSubtext: {
-    fontSize: 14,
-    color: colors.soft,
-    marginTop: Spacing.xs,
   },
   listContent: {
     paddingHorizontal: 0,
@@ -584,7 +564,7 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontSize: 16,
-    color: colors.soft,
+    color: colors.inkFaint,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -627,7 +607,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.soft,
+    borderBottomColor: colors.inkFaint,
   },
   modalTitle: {
     fontSize: 18,
@@ -655,7 +635,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.chalk,
     borderWidth: 1,
-    borderColor: colors.soft,
+    borderColor: colors.inkFaint,
   },
   sportChipSelected: {
     backgroundColor: colors.grass,
@@ -673,7 +653,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.soft,
+    borderTopColor: colors.inkFaint,
     gap: 8,
   },
   clearButton: {
@@ -681,7 +661,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.soft,
+    borderColor: colors.inkFaint,
     alignItems: 'center',
   },
   clearButtonText: {

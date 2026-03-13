@@ -136,9 +136,10 @@ model Facility {
   isVerified          Boolean  @default(false)
   verificationStatus  String   @default("pending") // pending, approved, rejected, expired
   accessInstructions  String?
-  parkingInfo         String?
-  minimumBookingHours Int      @default(1)
-  bufferTimeMins      Int      @default(0)
+  parkingInfo          String?
+  minimumBookingHours  Int      @default(1)
+  bufferTimeMins       Int      @default(0)
+  slotIncrementMinutes Int      @default(60) // 30 or 60 minutes
 
   // Contact Information
   contactName    String?

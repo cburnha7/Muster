@@ -135,6 +135,8 @@ export interface Facility {
   contactWebsite?: string;
   // Pricing
   pricePerHour: number;
+  // Slot increment
+  slotIncrementMinutes: number; // 30 or 60 minutes
   // Owner
   ownerId: string;
   owner?: User;

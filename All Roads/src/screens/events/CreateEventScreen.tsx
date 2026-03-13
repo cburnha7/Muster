@@ -1774,7 +1774,7 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
     shadowColor: colors.ink,
     shadowOffset: {
       width: 0,

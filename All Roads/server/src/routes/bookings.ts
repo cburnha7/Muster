@@ -26,7 +26,11 @@ router.get('/', async (req, res) => {
           },
           facility: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: {
+          event: {
+            startTime: 'asc', // Sort by event start time, soonest first
+          },
+        },
       }),
       prisma.booking.count({ where }),
     ]);
@@ -68,7 +72,11 @@ router.get('/user/:userId', async (req, res) => {
           },
           facility: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: {
+          event: {
+            startTime: 'asc', // Sort by event start time, soonest first
+          },
+        },
       }),
       prisma.booking.count({ where: { userId } }),
     ]);

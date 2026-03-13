@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   slotAvailable: {
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
   slotUserRental: {
     backgroundColor: colors.sky + '10',

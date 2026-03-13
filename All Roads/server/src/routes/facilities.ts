@@ -3,6 +3,7 @@ import { prisma } from '../index';
 import { rateCalculator } from '../services/RateCalculator';
 import { availabilityService } from '../services/AvailabilityService';
 import { verificationService } from '../services/VerificationService';
+import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
 import { 
   uploadMap, 
   validateImageFile, 
@@ -12,6 +13,7 @@ import {
 } from '../services/ImageUploadService';
 
 const router = Router();
+const timeSlotGenerator = new TimeSlotGeneratorService();
 
 // Get all facilities
 router.get('/', async (req, res) => {
@@ -560,13 +562,41 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { hoursOfOperation, ...updateData } = req.body;
+    const { hoursOfOperation, slotIncrementMinutes, ...updateData } = req.body;
 
     // TODO: Add authorization check - only owner can update
 
+    // Check if slot increment is changing
+    let incrementChanged = false;
+    let oldIncrement: number | undefined;
+    
+    if (slotIncrementMinutes !== undefined) {
+      // Validate slot increment (must be 30 or 60)
+      if (slotIncrementMinutes !== 30 && slotIncrementMinutes !== 60) {
+        return res.status(400).json({ 
+          error: 'Invalid slot increment. Must be 30 or 60 minutes.' 
+        });
+      }
+      
+      // Get current increment value
+      const currentFacility = await prisma.facility.findUnique({
+        where: { id },
+        select: { slotIncrementMinutes: true },
+      });
+      
+      if (currentFacility && currentFacility.slotIncrementMinutes !== slotIncrementMinutes) {
+        incrementChanged = true;
+        oldIncrement = currentFacility.slotIncrementMinutes;
+      }
+    }
+
+    // Update facility
     const facility = await prisma.facility.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        ...(slotIncrementMinutes !== undefined && { slotIncrementMinutes }),
+      },
     });
 
     // Update hours of operation if provided
@@ -596,7 +626,41 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    res.json(facility);
+    // Regenerate time slots if increment changed
+    if (incrementChanged) {
+      console.log(`🔄 Slot increment changed from ${oldIncrement} to ${slotIncrementMinutes} minutes for facility ${id}`);
+      
+      try {
+        const regenerateResult = await timeSlotGenerator.regenerateSlotsAfterIncrementChange(
+          id,
+          slotIncrementMinutes
+        );
+        
+        console.log('✅ Slot regeneration complete:', regenerateResult);
+        
+        res.json({
+          ...facility,
+          slotRegenerationResult: {
+            success: true,
+            ...regenerateResult,
+          },
+        });
+      } catch (regenerateError: any) {
+        console.error('❌ Slot regeneration failed:', regenerateError);
+        
+        // Return facility update success but note regeneration failure
+        res.json({
+          ...facility,
+          slotRegenerationResult: {
+            success: false,
+            error: regenerateError.message,
+            message: 'Facility updated but slot regeneration failed. Please regenerate slots manually.',
+          },
+        });
+      }
+    } else {
+      res.json(facility);
+    }
   } catch (error) {
     console.error('Update facility error:', error);
     res.status(500).json({ error: 'Failed to update facility' });

@@ -21,6 +21,8 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
+import { ViewToggle } from '../../components/maps/ViewToggle';
+import { EventsMapView } from '../../components/maps/EventsMapView';
 import { colors, Spacing } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
@@ -57,6 +59,7 @@ export function EventsListScreen(): JSX.Element {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   // Determine if using default or custom filters
   const hasCustomFilters = Object.keys(customFilters).length > 0 || searchQuery.trim().length > 0;
@@ -337,6 +340,10 @@ export function EventsListScreen(): JSX.Element {
           onSearch={searchEvents}
           style={styles.searchBar}
         />
+        <ViewToggle
+          viewMode={viewMode}
+          onToggle={setViewMode}
+        />
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setShowFilters(true)}
@@ -357,6 +364,12 @@ export function EventsListScreen(): JSX.Element {
 
       {isLoading && availableEvents.length === 0 ? (
         <LoadingSpinner />
+      ) : viewMode === 'map' ? (
+        <EventsMapView
+          events={availableEvents}
+          userBookedEventIds={Array.from(bookedEventIds)}
+          onEventPress={handleEventPress}
+        />
       ) : (
         <FlatList
           data={availableEvents}
@@ -409,10 +422,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     backgroundColor: colors.chalk,
+    gap: Spacing.sm,
   },
   searchBar: {
     flex: 1,
-    marginRight: Spacing.md,
   },
   filterButton: {
     padding: Spacing.sm,
@@ -420,7 +433,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chalk,
     borderWidth: 1,
     borderColor: colors.soft,
-    marginRight: Spacing.sm,
   },
   addButton: {
     padding: Spacing.sm,
