@@ -156,6 +156,12 @@ export class EventService extends BaseApiService {
    * Get participants for an event
    */
   async getEventParticipants(eventId: string, skipCache = false): Promise<Participant[]> {
+    if (!eventId) {
+      console.error('❌ getEventParticipants called with undefined eventId');
+      throw new Error('Event ID is required');
+    }
+    
+    console.log('📋 Fetching participants for event:', eventId);
     return this.get<Participant[]>(
       API_ENDPOINTS.EVENTS.PARTICIPANTS(eventId),
       { cacheOptions: { skipCache } }
