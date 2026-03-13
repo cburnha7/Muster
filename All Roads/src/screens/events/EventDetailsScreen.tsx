@@ -1030,6 +1030,12 @@ export function EventDetailsScreen(): JSX.Element {
             loading={true}
             onPress={() => {}}
           />
+        ) : event.status === EventStatus.CANCELLED ? (
+          <FormButton
+            title="Cancelled"
+            disabled={true}
+            onPress={() => {}}
+          />
         ) : isUserBooked ? (
           <FormButton
             title="Step Out"

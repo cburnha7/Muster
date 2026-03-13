@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -190,6 +190,13 @@ export function BookingsListScreen(): JSX.Element {
   const handleFilterChange = (filter: BookingFilter) => {
     setActiveFilter(filter);
   };
+
+  // Reload bookings when filter changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadBookings();
+    }
+  }, [activeFilter]);
 
   // Load more bookings (pagination)
   const loadMoreBookings = () => {
