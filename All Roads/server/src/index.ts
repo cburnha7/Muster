@@ -27,34 +27,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Allow localhost on any port
-    if (origin.startsWith('http://localhost:')) {
-      return callback(null, true);
-    }
-    
-    // Allow Vercel deployment
-    if (origin === 'https://muster-ecru.vercel.app') {
-      return callback(null, true);
-    }
-    
-    // Allow configured origin from environment variable
-    if (process.env.CORS_ORIGIN && origin === process.env.CORS_ORIGIN) {
-      return callback(null, true);
-    }
-    
-    // In production, reject unknown origins
-    if (process.env.NODE_ENV === 'production') {
-      return callback(new Error('Not allowed by CORS'));
-    }
-    
-    // Allow all origins in development
-    callback(null, true);
-  },
+  origin: process.env.CORS_ORIGIN || 'https://muster-ecru.vercel.app',
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id', 'X-Request-ID'],
   exposedHeaders: ['X-Request-ID'],
 }));
