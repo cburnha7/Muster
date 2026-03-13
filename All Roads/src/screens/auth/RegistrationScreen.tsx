@@ -252,16 +252,30 @@ export const RegistrationScreen: React.FC = () => {
     if (state.ssoProvider) {
       return state.username.trim() && state.agreedToTerms;
     }
-    return (
-      state.firstName.trim() &&
-      state.lastName.trim() &&
-      state.email.trim() &&
-      state.username.trim() &&
-      state.password.trim() &&
-      state.confirmPassword.trim() &&
-      state.agreedToTerms &&
-      Object.keys(state.errors).length === 0
-    );
+    
+    // First check if all required fields are filled
+    if (
+      !state.firstName.trim() ||
+      !state.lastName.trim() ||
+      !state.email.trim() ||
+      !state.username.trim() ||
+      !state.password.trim() ||
+      !state.confirmPassword.trim() ||
+      !state.agreedToTerms
+    ) {
+      return false;
+    }
+    
+    // Then validate each field to check for errors
+    const firstNameError = ValidationService.validateFirstName(state.firstName);
+    const lastNameError = ValidationService.validateLastName(state.lastName);
+    const emailError = ValidationService.validateEmail(state.email);
+    const usernameError = ValidationService.validateUsername(state.username);
+    const passwordError = ValidationService.validatePassword(state.password);
+    const confirmPasswordError = ValidationService.validateConfirmPassword(state.password, state.confirmPassword);
+    
+    // Return true only if no validation errors exist
+    return !firstNameError && !lastNameError && !emailError && !usernameError && !passwordError && !confirmPasswordError;
   };
 
   return (
@@ -433,7 +447,7 @@ export const RegistrationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.chalk,
   },
   scrollView: {
     flex: 1,
@@ -446,12 +460,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TextStyles.h1,
-    color: colors.textPrimary,
+    color: colors.ink,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     ...TextStyles.body,
-    color: colors.textSecondary,
+    color: colors.soft,
   },
   divider: {
     flexDirection: 'row',
@@ -461,16 +475,16 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: '#E5E7EB',
   },
   dividerText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
+    color: colors.soft,
     marginHorizontal: Spacing.md,
   },
   checkboxLabel: {
     ...TextStyles.body,
-    color: colors.textPrimary,
+    color: colors.ink,
   },
   link: {
     color: colors.grass,
@@ -488,6 +502,6 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
+    color: colors.soft,
   },
 });
