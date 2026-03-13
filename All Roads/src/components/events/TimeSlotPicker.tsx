@@ -436,23 +436,32 @@ const styles = StyleSheet.create({
   slotItem: {
     padding: Spacing.md,
     borderRadius: 8,
-    borderWidth: 2,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   slotAvailable: {
     backgroundColor: colors.background,
-    borderColor: colors.grass,
   },
   slotUserRental: {
     backgroundColor: colors.sky + '10',
-    borderColor: colors.sky,
+    shadowColor: colors.sky,
+    shadowOpacity: 0.12,
   },
   slotSelected: {
     backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    shadowColor: colors.grass,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 3,
   },
   slotDisabled: {
     backgroundColor: colors.chalk,
-    borderColor: colors.border,
     opacity: 0.5,
   },
   slotContent: {

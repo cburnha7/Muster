@@ -148,13 +148,22 @@ const styles = StyleSheet.create({
   courtCard: {
     backgroundColor: colors.background,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.border,
     padding: Spacing.lg,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   courtCardSelected: {
-    borderColor: colors.grass,
     backgroundColor: colors.grass + '10',
+    shadowColor: colors.grass,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 3,
   },
   courtCardHeader: {
     flexDirection: 'row',

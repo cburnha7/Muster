@@ -240,8 +240,12 @@ router.post('/', async (req, res) => {
 
     // Handle timeSlotId (direct slot selection for owners) - only if not using rental
     if (eventData.timeSlotId && !eventData.rentalId) {
-      const timeSlot = await prisma.facilityTimeSlot.findUnique({
-        where: { id: eventData.timeSlotId },
+      // Check if multiple slots are selected
+      const slotIds = eventData.timeSlotIds || [eventData.timeSlotId];
+      
+      // Fetch all selected slots
+      const timeSlots = await prisma.facilityTimeSlot.findMany({
+        where: { id: { in: slotIds } },
         include: {
           court: {
             include: {
@@ -249,14 +253,23 @@ router.post('/', async (req, res) => {
             },
           },
         },
+        orderBy: { startTime: 'asc' },
       });
 
-      if (!timeSlot) {
+      if (timeSlots.length === 0) {
         return res.status(404).json({ error: 'Time slot not found' });
       }
 
-      // Verify slot belongs to the selected facility
-      if (timeSlot.court.facilityId !== eventData.facilityId) {
+      if (timeSlots.length !== slotIds.length) {
+        return res.status(404).json({ error: 'Some time slots not found' });
+      }
+
+      const firstSlot = timeSlots[0];
+      const lastSlot = timeSlots[timeSlots.length - 1];
+
+      // Verify all slots belong to the selected facility
+      const invalidSlot = timeSlots.find(slot => slot.court.facilityId !== eventData.facilityId);
+      if (invalidSlot) {
         return res.status(400).json({ error: 'Time slot does not belong to selected facility' });
       }
 
@@ -265,24 +278,18 @@ router.post('/', async (req, res) => {
         return res.status(403).json({ error: 'Only facility owners can directly select time slots' });
       }
 
-      // Verify slot is available
-      if (timeSlot.status !== 'available') {
-        return res.status(400).json({ error: 'Time slot is not available' });
+      // Verify all slots are available
+      const unavailableSlot = timeSlots.find(slot => slot.status !== 'available');
+      if (unavailableSlot) {
+        return res.status(400).json({ error: 'One or more time slots are not available' });
       }
 
-      // Validate event time matches slot
-      // NOTE: Slot times are stored as local times (e.g., "18:00" means 6 PM local)
-      // The client sends event times as UTC ISO strings after converting from local time
-      // The client creates: new Date(year, month, day, hours, minutes) in LOCAL timezone
-      // Then converts to UTC via .toISOString()
-      // So we need to construct the expected UTC time the same way
-      
-      const slotDate = new Date(timeSlot.date);
-      const [startHours, startMinutes] = timeSlot.startTime.split(':').map(Number);
-      const [endHours, endMinutes] = timeSlot.endTime.split(':').map(Number);
+      // Validate event time matches slots (start from first, end at last)
+      const slotDate = new Date(firstSlot.date);
+      const [startHours, startMinutes] = firstSlot.startTime.split(':').map(Number);
+      const [endHours, endMinutes] = lastSlot.endTime.split(':').map(Number);
       
       // Use Date.UTC to create timestamps in UTC directly
-      // This matches what the client sends after converting local time to UTC
       const slotStartUTC = Date.UTC(
         slotDate.getUTCFullYear(),
         slotDate.getUTCMonth(),
@@ -306,11 +313,12 @@ router.post('/', async (req, res) => {
       const eventStart = new Date(eventData.startTime);
       const eventEnd = new Date(eventData.endTime);
 
-      console.log('Time validation:');
-      console.log('  Slot start (UTC timestamp):', slotStartUTC);
+      console.log('Time validation (multiple slots):');
+      console.log('  Number of slots:', timeSlots.length);
+      console.log('  First slot:', firstSlot.startTime);
+      console.log('  Last slot:', lastSlot.endTime);
       console.log('  Slot start (UTC ISO):', new Date(slotStartUTC).toISOString());
       console.log('  Event start (UTC ISO):', eventStart.toISOString());
-      console.log('  Slot end (UTC timestamp):', slotEndUTC);
       console.log('  Slot end (UTC ISO):', new Date(slotEndUTC).toISOString());
       console.log('  Event end (UTC ISO):', eventEnd.toISOString());
       console.log('  Match:', eventStart.getTime() === slotStartUTC && eventEnd.getTime() === slotEndUTC);

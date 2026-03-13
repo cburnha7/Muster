@@ -965,8 +965,8 @@ export function CreateEventScreen(): JSX.Element {
             </View>
           )}
 
-          {/* Date and Time Selection */}
-          {formData.facilityId && (
+          {/* Date and Time Selection - Only show after court is selected */}
+          {formData.facilityId && selectedCourt && (
             <>
               {/* Calendar for Date Selection - Only show if not from reservation */}
               {!isFromReservation && (
@@ -1774,8 +1774,15 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.background,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   calendarLegend: {
     marginTop: Spacing.md,
