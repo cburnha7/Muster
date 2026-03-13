@@ -308,16 +308,8 @@ export function EditEventScreen(): JSX.Element {
       const updatedEvent = await eventService.updateEvent(event.id, updateData);
       dispatch(updateEvent(updatedEvent));
 
-      Alert.alert(
-        'Success',
-        'Event updated successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      // Navigate back to the event details screen
+      navigation.goBack();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update event';
       Alert.alert('Error', errorMessage);

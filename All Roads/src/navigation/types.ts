@@ -37,6 +37,7 @@ export type MainTabParamList = {
 export type HomeStackParamList = {
   HomeScreen: undefined;
   EventDetails: { eventId: string };
+  EditEvent: { eventId: string };
   FacilityDetails: { facilityId: string };
   SearchResults: { query: string; filters?: any };
 };

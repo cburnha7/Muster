@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../types';
 import { HomeScreen } from '../../screens/home/HomeScreen';
 import { EventDetailsScreen } from '../../screens/events/EventDetailsScreen';
+import { EditEventScreen } from '../../screens/events/EditEventScreen';
 import { FacilityDetailsScreen } from '../../screens/facilities/FacilityDetailsScreen';
 import { SearchResultsScreen } from '../../screens/search/SearchResultsScreen';
 
@@ -22,6 +23,13 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen}
+      />
+      <Stack.Screen 
+        name="EditEvent" 
+        component={EditEventScreen}
+        options={{
+          presentation: 'modal',
+        }}
       />
       <Stack.Screen 
         name="FacilityDetails" 

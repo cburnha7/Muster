@@ -499,8 +499,9 @@ router.put('/:id', async (req, res) => {
     }
 
     // Only the organizer can edit the event
-    const userId = req.body.organizerId || req.headers['x-user-id'];
-    if (userId && existing.organizerId !== userId) {
+    // The organizerId should be in the request body (sent by the client)
+    const requestingUserId = req.body.organizerId;
+    if (requestingUserId && existing.organizerId !== requestingUserId) {
       return res.status(403).json({ error: 'Only the organizer can edit this event' });
     }
 
