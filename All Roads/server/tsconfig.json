@@ -16,5 +16,13 @@
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/scripts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/scripts",
+    "src/tests",
+    "src/prisma/seed.ts",
+    "src/middleware/rateLimiter.test.ts",
+    "src/services/__tests__"
+  ]
 }
