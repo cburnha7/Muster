@@ -72,6 +72,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('AuthContext: Starting logout...');
       await authService.logout();
+      
+      // Dispatch Redux action to clear auth state
+      dispatch({ type: 'auth/clearAuth' });
+      
       console.log('AuthContext: Logout complete');
     } catch (error) {
       console.error('Logout error:', error);
