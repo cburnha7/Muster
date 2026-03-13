@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
+import { colors } from '../../theme';
 
 interface BookingCardProps {
   booking: Booking;
@@ -51,6 +52,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                    booking.event &&
                    new Date(booking.event.startTime) > new Date();
 
+  const availableSpots = booking.event 
+    ? booking.event.maxParticipants - booking.event.currentParticipants 
+    : 0;
+  const isFullyBooked = availableSpots <= 0;
+
   return (
     <View style={[styles.container, style]}>
       {/* Card content - tappable to navigate to event details */}
@@ -69,6 +75,28 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </Text>
           </View>
         </View>
+
+        {booking.event && (
+          <View style={[
+            styles.participantsTracker,
+            isFullyBooked && {
+              backgroundColor: colors.track + '15',
+              borderColor: colors.track + '30',
+            }
+          ]}>
+            <Ionicons 
+              name="people" 
+              size={16} 
+              color={isFullyBooked ? colors.track : colors.grass} 
+            />
+            <Text style={[
+              styles.participantsText,
+              isFullyBooked && styles.participantsFullText
+            ]}>
+              {booking.event.currentParticipants}/{booking.event.maxParticipants} players
+            </Text>
+          </View>
+        )}
 
         {booking.event && (
           <View style={styles.details}>
@@ -103,7 +131,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       <View style={styles.footer}>
         <View style={styles.paymentInfo}>
           <Text style={styles.price}>
-            {booking.event?.price ? `${booking.event.price}` : 'Free'}
+            {booking.event?.price && booking.event.price > 0 ? `$${booking.event.price.toFixed(2)}` : 'Free'}
           </Text>
           {booking.event?.price && booking.event.price > 0 && (
             <View
@@ -185,6 +213,27 @@ const styles = StyleSheet.create({
   facilityName: {
     fontSize: 14,
     color: '#666',
+  },
+  participantsTracker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.grass + '15',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.grass + '30',
+  },
+  participantsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.grass,
+    marginLeft: 6,
+  },
+  participantsFullText: {
+    color: colors.track,
   },
   details: {
     marginBottom: 12,
