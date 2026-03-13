@@ -179,25 +179,29 @@ export function LoginScreen() {
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to continue</Text>
 
-          {/* SSO Buttons */}
-          <SSOButton
-            provider="apple"
-            onPress={() => handleSSOLogin('apple')}
-            isLoading={ssoLoading === 'apple'}
-            disabled={isLoading || ssoLoading !== null}
-          />
-          <SSOButton
-            provider="google"
-            onPress={() => handleSSOLogin('google')}
-            isLoading={ssoLoading === 'google'}
-            disabled={isLoading || ssoLoading !== null}
-          />
+          {/* SSO Buttons - Only show on native platforms */}
+          {Platform.OS !== 'web' && (
+            <>
+              <SSOButton
+                provider="apple"
+                onPress={() => handleSSOLogin('apple')}
+                isLoading={ssoLoading === 'apple'}
+                disabled={isLoading || ssoLoading !== null}
+              />
+              <SSOButton
+                provider="google"
+                onPress={() => handleSSOLogin('google')}
+                isLoading={ssoLoading === 'google'}
+                disabled={isLoading || ssoLoading !== null}
+              />
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine} />
+              </View>
+            </>
+          )}
 
           {/* General Error */}
           {errors.general && (

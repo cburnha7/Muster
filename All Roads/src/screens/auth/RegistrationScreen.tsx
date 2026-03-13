@@ -279,7 +279,7 @@ export const RegistrationScreen: React.FC = () => {
           <Text style={styles.subtitle}>Join Muster to find games and connect with players</Text>
         </View>
 
-        {!state.ssoProvider && (
+        {!state.ssoProvider && Platform.OS !== 'web' && (
           <>
             <SSOButton
               provider="apple"
