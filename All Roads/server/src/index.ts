@@ -36,12 +36,23 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow configured origin
+    // Allow Vercel deployment
+    if (origin === 'https://muster-ecru.vercel.app') {
+      return callback(null, true);
+    }
+    
+    // Allow configured origin from environment variable
     if (process.env.CORS_ORIGIN && origin === process.env.CORS_ORIGIN) {
       return callback(null, true);
     }
     
-    callback(null, true); // Allow all origins in development
+    // In production, reject unknown origins
+    if (process.env.NODE_ENV === 'production') {
+      return callback(new Error('Not allowed by CORS'));
+    }
+    
+    // Allow all origins in development
+    callback(null, true);
   },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id', 'X-Request-ID'],
