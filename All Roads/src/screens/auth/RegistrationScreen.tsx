@@ -453,24 +453,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: Spacing.xl,
+    padding: 16,
+    paddingBottom: 20,
   },
   header: {
-    marginBottom: Spacing.xl,
+    marginBottom: 24,
+    marginTop: 8,
   },
   title: {
-    ...TextStyles.h1,
+    fontSize: 28,
+    fontWeight: '700',
     color: colors.ink,
-    marginBottom: Spacing.xs,
+    marginBottom: 8,
   },
   subtitle: {
-    ...TextStyles.body,
+    fontSize: 15,
     color: colors.soft,
+    lineHeight: 22,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Spacing.lg,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
@@ -478,30 +482,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   dividerText: {
-    ...TextStyles.body,
+    fontSize: 14,
     color: colors.soft,
-    marginHorizontal: Spacing.md,
+    marginHorizontal: 12,
   },
   checkboxLabel: {
-    ...TextStyles.body,
+    fontSize: 15,
     color: colors.ink,
+    lineHeight: 20,
   },
   link: {
     color: colors.grass,
     fontWeight: '600',
   },
   errorText: {
-    ...TextStyles.body,
+    fontSize: 14,
     color: colors.track,
     textAlign: 'center',
-    marginVertical: Spacing.md,
+    marginVertical: 12,
+    paddingHorizontal: 16,
   },
   loginLink: {
-    marginTop: Spacing.lg,
+    marginTop: 20,
     alignItems: 'center',
+    paddingVertical: 12,
   },
   loginLinkText: {
-    ...TextStyles.body,
+    fontSize: 15,
     color: colors.soft,
   },
 });
