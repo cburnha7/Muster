@@ -70,6 +70,7 @@ export function EventDetailsScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participantsLoaded, setParticipantsLoaded] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [salutedParticipants, setSalutedParticipants] = useState<Set<string>>(new Set());
   const [showSaluteModal, setShowSaluteModal] = useState(false);
@@ -105,6 +106,7 @@ export function EventDetailsScreen(): JSX.Element {
 
       setEvent(eventResponse);
       setParticipants(participantsResponse);
+      setParticipantsLoaded(true);
       dispatch(setSelectedEvent(eventResponse));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load event';
@@ -135,6 +137,7 @@ export function EventDetailsScreen(): JSX.Element {
     participantsCount: participants.length,
     currentUserId: currentUser?.id,
     participantUserIds: participants.map(p => p.userId),
+    participantsLoaded,
   });
 
   // Check if user is the organizer
@@ -326,8 +329,9 @@ export function EventDetailsScreen(): JSX.Element {
       // Close modal
       setShowStepOutModal(false);
 
-      // Clear participants state immediately to force UI update
+      // Clear participants state and reset loaded flag to show loading state
       setParticipants([]);
+      setParticipantsLoaded(false);
 
       // Force a complete reload with cache bypass
       await loadEvent(false, true);
@@ -340,12 +344,11 @@ export function EventDetailsScreen(): JSX.Element {
     }
   };
 
-  // Handle edit event - removed since EditEvent screen doesn't exist
-  // TODO: Create EditEventScreen or reuse CreateEventScreen with edit mode
-  // const handleEditEvent = () => {
-  //   if (!event) return;
-  //   (navigation as any).navigate('EditEvent', { eventId: event.id });
-  // };
+  // Handle edit event
+  const handleEditEvent = () => {
+    if (!event) return;
+    (navigation as any).navigate('EditEvent', { eventId: event.id });
+  };
 
   // Handle cancel event (organizer cancels the event)
   const handleCancelEvent = async (reason: string) => {
@@ -613,15 +616,23 @@ export function EventDetailsScreen(): JSX.Element {
         onBackPress={() => (navigation as any).navigate('Home', { screen: 'HomeScreen' })}
         rightComponent={
           isOrganizer ? (
-            <TouchableOpacity 
-              onPress={() => {
-                console.log('🗑️ Cancel button clicked!');
-                setShowCancelModal(true);
-              }}
-              style={{ padding: 8 }}
-            >
-              <Ionicons name="close-circle-outline" size={24} color={colors.track} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={handleEditEvent}
+                style={{ padding: 8 }}
+              >
+                <Ionicons name="create-outline" size={24} color={colors.grass} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => {
+                  console.log('🗑️ Cancel button clicked!');
+                  setShowCancelModal(true);
+                }}
+                style={{ padding: 8 }}
+              >
+                <Ionicons name="close-circle-outline" size={24} color={colors.track} />
+              </TouchableOpacity>
+            </View>
           ) : undefined
         }
       />
@@ -808,7 +819,7 @@ export function EventDetailsScreen(): JSX.Element {
                   <View style={styles.leagueHeader}>
                     <Ionicons name="shield-outline" size={20} color={colors.grass} />
                     <Text style={styles.leagueName}>{leagueName}</Text>
-                    <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+                    <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
                   </View>
                   
                   <View style={styles.matchDetails}>
@@ -835,7 +846,7 @@ export function EventDetailsScreen(): JSX.Element {
                   
                   {match.scheduledAt && (
                     <View style={styles.matchMeta}>
-                      <Ionicons name="calendar-outline" size={14} color={colors.soft} />
+                      <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
                       <Text style={styles.matchMetaText}>
                         {new Date(match.scheduledAt).toLocaleDateString('en-US', {
                           month: 'short',
@@ -1012,7 +1023,14 @@ export function EventDetailsScreen(): JSX.Element {
 
       {/* Action Buttons */}
       <View style={styles.actions}>
-        {isUserBooked ? (
+        {!participantsLoaded ? (
+          <FormButton
+            title="Loading..."
+            disabled={true}
+            loading={true}
+            onPress={() => {}}
+          />
+        ) : isUserBooked ? (
           <FormButton
             title="Step Out"
             variant="danger"
@@ -1036,6 +1054,7 @@ export function EventDetailsScreen(): JSX.Element {
               'Cannot Join'
             }
             disabled={true}
+            onPress={() => {}}
           />
         )}
       </View>
@@ -1247,7 +1266,7 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.soft,
+    color: colors.inkFaint,
     marginHorizontal: 12,
   },
   matchMeta: {
@@ -1257,11 +1276,11 @@ const styles = StyleSheet.create({
   },
   matchMetaText: {
     fontSize: 13,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   matchMetaDot: {
     fontSize: 13,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   section: {
     backgroundColor: '#FFFFFF',

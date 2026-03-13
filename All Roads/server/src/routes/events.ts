@@ -488,9 +488,28 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Verify the event exists and check organizer
+    const existing = await prisma.event.findUnique({
+      where: { id },
+      select: { organizerId: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Only the organizer can edit the event
+    const userId = req.body.organizerId || req.headers['x-user-id'];
+    if (userId && existing.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the organizer can edit this event' });
+    }
+
+    // Don't allow overwriting organizerId
+    const { organizerId, ...updateData } = req.body;
+
     const event = await prisma.event.update({
       where: { id },
-      data: req.body,
+      data: updateData,
       include: {
         organizer: {
           select: {
