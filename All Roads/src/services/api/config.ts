@@ -3,8 +3,25 @@ import { ApiServiceConfig } from './BaseApiService';
 /**
  * API service configuration for different environments
  */
+const getBaseURL = () => {
+  const envURL = process.env.EXPO_PUBLIC_API_URL;
+  
+  // If environment variable is set, use it
+  if (envURL) {
+    return envURL;
+  }
+  
+  // Default to localhost for development
+  if (__DEV__) {
+    return 'http://localhost:3000/api';
+  }
+  
+  // Production fallback
+  return 'https://muster-production.up.railway.app/api';
+};
+
 export const apiConfig: ApiServiceConfig = {
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: getBaseURL(),
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second base delay
