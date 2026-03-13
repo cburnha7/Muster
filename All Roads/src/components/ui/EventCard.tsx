@@ -99,6 +99,26 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         </View>
       </View>
 
+      <View style={[
+        styles.participantsTracker,
+        isFullyBooked && {
+          backgroundColor: colors.track + '15',
+          borderColor: colors.track + '30',
+        }
+      ]}>
+        <Ionicons 
+          name="people" 
+          size={16} 
+          color={isFullyBooked ? colors.track : colors.grass} 
+        />
+        <Text style={[
+          styles.participantsText,
+          isFullyBooked && styles.participantsFullText
+        ]}>
+          {event.currentParticipants}/{event.maxParticipants} players
+        </Text>
+      </View>
+
       <Text style={styles.description} numberOfLines={2}>
         {event.description}
       </Text>
@@ -127,13 +147,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           </View>
         )}
 
-        <View style={styles.detailRow}>
-          <Ionicons name="people-outline" size={16} color="#666" />
-          <Text style={[styles.detailText, isFullyBooked && styles.fullText]}>
-            {event.currentParticipants}/{event.maxParticipants} participants
-          </Text>
-        </View>
-
         {event.eligibility && (
           <View style={styles.detailRow}>
             <Ionicons name="shield-checkmark-outline" size={16} color="#FF9500" />
@@ -146,7 +159,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
       <View style={styles.footer}>
         <Text style={styles.price}>
-          {event.price > 0 ? `$${event.price}` : 'Free'}
+          {event.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
         </Text>
         <View style={[styles.statusBadge, isFullyBooked && styles.fullBadge]}>
           <Text style={[styles.statusText, isFullyBooked && styles.fullStatusText]}>
@@ -205,6 +218,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  participantsTracker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.grass + '15',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.grass + '30',
+  },
+  participantsText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.grass,
+    marginLeft: 6,
+  },
+  participantsFullText: {
+    color: colors.track,
   },
   inviteOnlyBadge: {
     flexDirection: 'row',
