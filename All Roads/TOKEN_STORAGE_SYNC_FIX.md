@@ -16,13 +16,14 @@ When users logged in via Redux:
 5. API requests had no Authorization header, resulting in 401 errors
 
 ## Solution
-Updated BaseApiService to read tokens directly from TokenStorage instead of relying on auth/AuthService's cache:
+Updated BaseApiService to read both tokens AND user data directly from TokenStorage instead of relying on auth/AuthService's cache:
 
-1. **Request Interceptor**: Changed from `authService.getToken()` (synchronous cache) to `await TokenStorage.getAccessToken()` (reads from actual storage)
-2. **Token Refresh**: After refresh, read new token from TokenStorage instead of authService cache
-3. **Import TokenStorage**: Added TokenStorage import to BaseApiService
+1. **Request Interceptor - Token**: Changed from `authService.getToken()` (synchronous cache) to `await TokenStorage.getAccessToken()` (reads from actual storage)
+2. **Request Interceptor - User**: Changed from `authService.getCurrentUser()` to `await TokenStorage.getUser()` (reads from actual storage)
+3. **Token Refresh**: After refresh, read new token from TokenStorage instead of authService cache
+4. **Import TokenStorage**: Added TokenStorage import to BaseApiService
 
-This ensures BaseApiService always reads the latest tokens that were stored by the login process.
+This ensures BaseApiService always reads the latest tokens and user data that were stored by the login process, and properly sets both the Authorization header and X-User-Id header for mock authentication.
 
 ## Files Modified
 - `src/services/api/BaseApiService.ts` - Read tokens from TokenStorage instead of authService cache
@@ -40,13 +41,16 @@ This ensures BaseApiService always reads the latest tokens that were stored by t
 8. Request succeeds
 
 ### API Request Flow
-1. User makes API request (e.g., load bookings)
+1. User makes API request (e.g., load bookings, create event)
 2. BaseApiService request interceptor runs
-3. Interceptor calls `await TokenStorage.getAccessToken()`
-4. Token retrieved from storage (where login stored it)
-5. Authorization header set: `Bearer ${token}`
-6. Request sent with proper authentication
-7. Server validates token and returns data
+3. Interceptor calls `await TokenStorage.getAccessToken()` for token
+4. Interceptor calls `await TokenStorage.getUser()` for user data
+5. Token retrieved from storage (where login stored it)
+6. User data retrieved from storage (where login stored it)
+7. Authorization header set: `Bearer ${token}`
+8. X-User-Id header set: `${user.id}` (for mock auth in development)
+9. Request sent with proper authentication
+10. Server validates token and returns data
 
 ## Testing
 - Login → Navigate to bookings → Should load without 401 errors

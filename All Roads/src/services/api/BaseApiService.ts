@@ -78,8 +78,9 @@ export class BaseApiService {
         }
 
         // DEVELOPMENT: Add x-user-id header for mock auth
-        const currentUser = authService.getCurrentUser();
-        console.log('👤 Current user from authService:', currentUser?.email, currentUser?.id);
+        // Read user from TokenStorage instead of authService
+        const currentUser = await TokenStorage.getUser();
+        console.log('👤 Current user from TokenStorage:', currentUser?.email, currentUser?.id);
         if (currentUser && currentUser.id) {
           config.headers['X-User-Id'] = currentUser.id;
           console.log('🔐 API Request - User ID attached:', currentUser.id, currentUser.email);
