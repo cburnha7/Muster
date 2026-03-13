@@ -721,7 +721,7 @@ export function CreateEventScreen(): JSX.Element {
         const month = slotDate.getUTCMonth();
         const day = slotDate.getUTCDate();
         
-        // Parse the time (stored as UTC time like "17:00" = 5 PM UTC)
+        // Parse the time (stored as local time like "17:00" = 5 PM local)
         const timeParts = firstSlot.startTime.split(':');
         if (timeParts.length < 2) {
           throw new Error('Invalid time format');
@@ -734,15 +734,13 @@ export function CreateEventScreen(): JSX.Element {
           throw new Error('Invalid time values');
         }
         
-        // Create date in UTC timezone directly using Date.UTC
-        // This matches what the server expects
-        const startTimestamp = Date.UTC(year, month, day, hours, minutes, 0, 0);
-        startDateTime = new Date(startTimestamp);
+        // Create date in local timezone — slot times represent local times
+        startDateTime = new Date(year, month, day, hours, minutes, 0, 0);
         
         console.log('First slot date string:', firstSlot.date);
-        console.log('Extracted UTC date components:', { year, month: month + 1, day });
+        console.log('Extracted date components:', { year, month: month + 1, day });
         console.log('Time:', { hours, minutes });
-        console.log('Created UTC datetime:', startDateTime.toISOString());
+        console.log('Created local datetime:', startDateTime.toISOString());
       } else {
         // Manual date/time entry
         startDateTime = new Date(formData.startDate!);
