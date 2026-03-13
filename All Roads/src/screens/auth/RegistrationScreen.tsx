@@ -235,7 +235,7 @@ export const RegistrationScreen: React.FC = () => {
   };
 
   const handleNavigateToLogin = () => {
-    // navigation.navigate('Login'); // Uncomment when navigation is configured
+    navigation.navigate('Login' as never);
   };
 
   const handleOpenTerms = () => {

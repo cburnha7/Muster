@@ -149,12 +149,11 @@ export function LoginScreen() {
   };
 
   const handleForgotPassword = () => {
-    // navigation.navigate('ForgotPassword'); // Uncomment when navigation is configured
-    Alert.alert('Forgot Password', 'Password reset functionality coming soon');
+    navigation.navigate('ForgotPassword' as never);
   };
 
   const handleNavigateToSignUp = () => {
-    // navigation.navigate('Registration'); // Uncomment when navigation is configured
+    navigation.navigate('Registration' as never);
   };
 
   return (
