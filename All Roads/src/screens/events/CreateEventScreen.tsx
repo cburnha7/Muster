@@ -817,8 +817,26 @@ export function CreateEventScreen(): JSX.Element {
         Alert.alert('Success', 'Event created successfully!');
       }, 300);
     } catch (error) {
-      console.error('Create event error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create event';
+      console.error('❌ Create event error:', error);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      
+      // Extract error message from API error response
+      let errorMessage = 'Failed to create event';
+      if (error && typeof error === 'object') {
+        const apiError = error as any;
+        if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+        if (apiError.details) {
+          console.error('❌ Error details object:', apiError.details);
+          if (typeof apiError.details === 'object' && apiError.details.error) {
+            errorMessage = apiError.details.error;
+          }
+        }
+      }
+      
+      console.error('❌ Final error message:', errorMessage);
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
