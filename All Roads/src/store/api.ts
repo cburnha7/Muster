@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
 import { API_BASE_URL } from '../services/api/config';
+import TokenStorage from '../services/auth/TokenStorage';
 
 // Define base query with authentication
 const baseQuery = fetchBaseQuery({
@@ -30,37 +31,98 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+// Track if we're currently refreshing to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let refreshPromise: Promise<any> | null = null;
+
 // Base query with re-authentication logic
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
   
   // If we get a 401, try to refresh the token
   if (result.error && result.error.status === 401) {
-    // Try to refresh token
-    const refreshResult = await baseQuery(
-      {
-        url: '/auth/refresh',
-        method: 'POST',
-        body: {
-          refreshToken: (api.getState() as RootState).auth.refreshToken,
-        },
-      },
-      api,
-      extraOptions
-    );
+    console.log('🔄 401 error detected, attempting token refresh...');
     
-    if (refreshResult.data) {
-      // Store the new token
-      api.dispatch({
-        type: 'auth/setTokens',
-        payload: refreshResult.data,
-      });
-      
-      // Retry the original query
+    // If already refreshing, wait for that refresh to complete
+    if (isRefreshing && refreshPromise) {
+      console.log('⏳ Refresh already in progress, waiting...');
+      await refreshPromise;
+      // Retry the original request with the new token
       result = await baseQuery(args, api, extraOptions);
-    } else {
-      // Refresh failed, logout user
-      api.dispatch({ type: 'auth/logout' });
+      return result;
+    }
+    
+    // Start refresh process
+    isRefreshing = true;
+    
+    try {
+      // Get refresh token from Redux state first, then fallback to TokenStorage
+      let refreshToken = (api.getState() as RootState).auth.refreshToken;
+      
+      if (!refreshToken) {
+        console.log('⚠️ No refresh token in Redux, checking TokenStorage...');
+        refreshToken = await TokenStorage.getRefreshToken();
+      }
+      
+      if (!refreshToken) {
+        console.error('❌ No refresh token available, logging out...');
+        // Clear auth state and navigate to login
+        await TokenStorage.clearAll();
+        api.dispatch({ type: 'auth/clearAuth' });
+        isRefreshing = false;
+        refreshPromise = null;
+        return result;
+      }
+      
+      console.log('🔑 Refresh token found, calling refresh endpoint...');
+      
+      // Create the refresh promise
+      refreshPromise = baseQuery(
+        {
+          url: '/auth/refresh',
+          method: 'POST',
+          body: {
+            refreshToken,
+          },
+        },
+        api,
+        extraOptions
+      );
+      
+      const refreshResult = await refreshPromise;
+      
+      if (refreshResult.data) {
+        const tokenData = refreshResult.data as { accessToken: string; refreshToken: string };
+        console.log('✅ Token refresh successful');
+        
+        // Store new tokens in TokenStorage
+        await TokenStorage.storeTokens(tokenData.accessToken, tokenData.refreshToken);
+        
+        // Update Redux state
+        api.dispatch({
+          type: 'auth/setTokens',
+          payload: {
+            accessToken: tokenData.accessToken,
+            refreshToken: tokenData.refreshToken,
+          },
+        });
+        
+        // Retry the original query with new token
+        result = await baseQuery(args, api, extraOptions);
+      } else {
+        console.error('❌ Token refresh failed, logging out...');
+        // Refresh failed, clear session and logout
+        await TokenStorage.clearAll();
+        api.dispatch({ type: 'auth/clearAuth' });
+      }
+    } catch (error) {
+      console.error('❌ Token refresh error:', error);
+      // Clear session on any error
+      await TokenStorage.clearAll();
+      api.dispatch({ type: 'auth/clearAuth' });
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
     }
   }
   

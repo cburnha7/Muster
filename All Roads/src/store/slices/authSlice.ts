@@ -8,6 +8,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../../services/api/AuthService';
 import SSOService from '../../services/auth/SSOService';
+import TokenStorage from '../../services/auth/TokenStorage';
 import {
   User,
   RegisterData,
@@ -21,6 +22,7 @@ import {
 export interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -30,6 +32,7 @@ export interface AuthState {
 const initialState: AuthState = {
   user: null,
   accessToken: null,
+  refreshToken: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -231,10 +234,11 @@ export const loadCachedUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const user = await authService.getStoredUser();
-      const token = await authService.getStoredToken();
+      const accessToken = await authService.getStoredToken();
+      const refreshToken = await TokenStorage.getRefreshToken();
       
-      if (user && token) {
-        return { user, accessToken: token };
+      if (user && accessToken) {
+        return { user, accessToken, refreshToken };
       }
       
       return null;
@@ -256,8 +260,11 @@ const authSlice = createSlice({
     },
 
     // Set tokens
-    setTokens: (state, action: PayloadAction<{ accessToken: string }>) => {
+    setTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string }>) => {
       state.accessToken = action.payload.accessToken;
+      if (action.payload.refreshToken) {
+        state.refreshToken = action.payload.refreshToken;
+      }
       state.isAuthenticated = true;
     },
 
@@ -265,6 +272,7 @@ const authSlice = createSlice({
     clearAuth: (state) => {
       state.user = null;
       state.accessToken = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
     },
@@ -298,6 +306,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.isLoading = false;
         state.error = null;
@@ -316,6 +325,7 @@ const authSlice = createSlice({
       .addCase(registerWithSSO.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.isLoading = false;
         state.error = null;
@@ -334,6 +344,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.isLoading = false;
         state.error = null;
@@ -352,6 +363,7 @@ const authSlice = createSlice({
       .addCase(loginWithSSO.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.isLoading = false;
         state.error = null;
@@ -370,6 +382,7 @@ const authSlice = createSlice({
       .addCase(linkAccount.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
         state.isLoading = false;
         state.error = null;
@@ -387,6 +400,7 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
         state.isLoading = false;
         state.error = null;
@@ -395,6 +409,7 @@ const authSlice = createSlice({
         // Clear state even if logout fails
         state.user = null;
         state.accessToken = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
         state.isLoading = false;
         state.error = action.payload as string;
@@ -407,12 +422,14 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.fulfilled, (state, action: PayloadAction<TokenResponse>) => {
         state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.isLoading = false;
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         // Clear auth state on refresh failure
         state.user = null;
         state.accessToken = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
         state.isLoading = false;
         state.error = action.payload as string;
@@ -455,6 +472,7 @@ const authSlice = createSlice({
         if (action.payload) {
           state.user = action.payload.user;
           state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken || null;
           state.isAuthenticated = true;
         }
         state.isLoading = false;
@@ -485,3 +503,4 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.isLoading;
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
 export const selectAccessToken = (state: { auth: AuthState }) => state.auth.accessToken;
+export const selectRefreshToken = (state: { auth: AuthState }) => state.auth.refreshToken;

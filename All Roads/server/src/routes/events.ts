@@ -367,7 +367,20 @@ router.post('/', async (req, res) => {
       const timeSlotIds = eventData.timeSlotIds;
       
       // Clean eventData - remove fields that aren't in the Event model
-      const { rentalIds: _, timeSlotIds: __, ...cleanEventData } = eventData;
+      const { rentalIds: _, timeSlotIds: __, eligibility, ...cleanEventData } = eventData;
+      
+      // Transform eligibility object to flat fields if present
+      if (eligibility) {
+        cleanEventData.eligibilityIsInviteOnly = eligibility.isInviteOnly || false;
+        cleanEventData.minimumPlayerCount = eligibility.minimumPlayerCount;
+        cleanEventData.eligibilityRestrictedToTeams = eligibility.restrictedToTeams || [];
+        cleanEventData.eligibilityRestrictedToLeagues = eligibility.restrictedToLeagues || [];
+        cleanEventData.eligibilityMinAge = eligibility.minAge;
+        cleanEventData.eligibilityMaxAge = eligibility.maxAge;
+        cleanEventData.eligibilityRequiredSkillLevel = eligibility.requiredSkillLevel;
+        cleanEventData.eligibilityMinSkillLevel = eligibility.minSkillLevel;
+        cleanEventData.eligibilityMaxSkillLevel = eligibility.maxSkillLevel;
+      }
       
       // Create the event
       const event = await tx.event.create({

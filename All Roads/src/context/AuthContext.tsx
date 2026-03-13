@@ -1,8 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
-import { selectUser, selectAccessToken, selectIsAuthenticated } from '../store/slices/authSlice';
+import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser } from '../store/slices/authSlice';
 
 interface AuthContextType {
   user: User | null;
@@ -20,35 +20,16 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const dispatch = useDispatch();
+  
   // Get auth state from Redux
   const reduxUser = useSelector(selectUser);
   const reduxToken = useSelector(selectAccessToken);
   const reduxIsAuthenticated = useSelector(selectIsAuthenticated);
   
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Sync with Redux state and update authService
-  useEffect(() => {
-    if (reduxUser) {
-      setUser(reduxUser);
-      // Update authService with the Redux user data
-      if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true' && reduxUser.id && reduxUser.email) {
-        authService.switchMockUser(
-          reduxUser.id,
-          reduxUser.email,
-          reduxUser.firstName || 'User',
-          reduxUser.lastName || ''
-        ).catch(err => console.error('Failed to sync authService with Redux user:', err));
-      }
-    }
-    if (reduxToken) {
-      setToken(reduxToken);
-    }
-  }, [reduxUser, reduxToken]);
-
-  // Load stored session on mount
+  // Load cached user on mount
   useEffect(() => {
     loadStoredSession();
   }, []);
@@ -60,13 +41,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Initialize auth service (loads mock user in development)
       await authService.initialize();
       
-      const currentUser = authService.getCurrentUser();
-      const currentToken = authService.getToken();
-
-      if (currentToken && currentUser) {
-        setToken(currentToken);
-        setUser(currentUser);
-      }
+      // Load cached user from TokenStorage into Redux
+      await dispatch(loadCachedUser() as any);
+      
     } catch (error) {
       console.error('Load session error:', error);
     } finally {
@@ -74,23 +51,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const login = async (usernameOrEmail: string, password: string) => {
-    try {
-      const response = await authService.login(usernameOrEmail, password);
-      setUser(response.user);
-      setToken(response.token);
-    } catch (error) {
-      throw error;
+  // Sync authService with Redux user for mock auth
+  useEffect(() => {
+    if (reduxUser && process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
+      authService.switchMockUser(
+        reduxUser.id,
+        reduxUser.email,
+        reduxUser.firstName || 'User',
+        reduxUser.lastName || ''
+      ).catch(err => console.error('Failed to sync authService with Redux user:', err));
     }
+  }, [reduxUser]);
+
+  const login = async (usernameOrEmail: string, password: string) => {
+    // Login is handled by Redux thunks, this is just for backward compatibility
+    throw new Error('Use Redux loginUser thunk instead');
   };
 
   const logout = async () => {
     try {
       console.log('AuthContext: Starting logout...');
       await authService.logout();
-      console.log('AuthContext: Cleared storage, setting user to null');
-      setUser(null);
-      setToken(null);
       console.log('AuthContext: Logout complete');
     } catch (error) {
       console.error('Logout error:', error);
@@ -99,10 +80,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const value: AuthContextType = {
-    user,
-    token,
+    user: reduxUser,
+    token: reduxToken,
     isLoading,
-    isAuthenticated: !!user && !!token,
+    isAuthenticated: reduxIsAuthenticated,
     login,
     logout,
   };
