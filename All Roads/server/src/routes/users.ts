@@ -204,13 +204,19 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
     const where: any = { userId };
     
     if (status === 'upcoming') {
+      where.status = { not: 'cancelled' };
       where.event = {
         startTime: { gte: new Date() },
+        status: { not: 'cancelled' },
       };
     } else if (status === 'past') {
-      where.event = {
-        startTime: { lt: new Date() },
-      };
+      where.OR = [
+        { status: 'cancelled' },
+        { event: { startTime: { lt: new Date() } } },
+        { event: { status: 'cancelled' } },
+      ];
+    } else if (status === 'cancelled') {
+      where.status = 'cancelled';
     } else if (status) {
       where.status = status;
     }

@@ -588,6 +588,20 @@ router.delete('/:id', async (req, res) => {
         });
         console.log('✅ Event marked as cancelled');
 
+        // Cancel all bookings for this event
+        const cancelledBookings = await tx.booking.updateMany({
+          where: { 
+            eventId: id,
+            status: { not: 'cancelled' },
+          },
+          data: {
+            status: 'cancelled',
+            cancellationReason: reason || 'Event cancelled by organizer',
+            cancelledAt: new Date(),
+          },
+        });
+        console.log(`✅ Cancelled ${cancelledBookings.count} booking(s)`);
+
         // Unblock time slot if linked
         if (event.timeSlotId) {
           await tx.facilityTimeSlot.update({
