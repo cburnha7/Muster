@@ -234,6 +234,9 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
               startTime: true,
               endTime: true,
               imageUrl: true,
+              price: true,
+              currentParticipants: true,
+              maxParticipants: true,
               facility: {
                 select: {
                   id: true,
