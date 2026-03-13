@@ -123,13 +123,27 @@ export class EventService extends BaseApiService {
       );
     }
     
+    console.log('📞 EventService.bookEvent called');
+    console.log('📋 Parameters:', { eventId, userId, teamId });
+    
     const data = { userId, ...(teamId && { teamId }) };
-    const result = await this.post<Booking>(API_ENDPOINTS.EVENTS.BOOK(eventId), data);
+    console.log('📦 Request data:', data);
+    console.log('🌐 Request URL:', API_ENDPOINTS.EVENTS.BOOK(eventId));
     
-    // Clear cache after booking to ensure fresh data on home/events screens
-    await this.clearCache();
-    
-    return result;
+    try {
+      const result = await this.post<Booking>(API_ENDPOINTS.EVENTS.BOOK(eventId), data);
+      console.log('✅ EventService.bookEvent successful');
+      console.log('📦 Response:', result);
+      
+      // Clear cache after booking to ensure fresh data on home/events screens
+      await this.clearCache();
+      
+      return result;
+    } catch (error) {
+      console.error('❌ EventService.bookEvent failed');
+      console.error('❌ Error:', error);
+      throw error;
+    }
   }
 
   /**

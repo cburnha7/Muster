@@ -156,72 +156,102 @@ export function EventDetailsScreen(): JSX.Element {
 
   // Handle booking
   const handleBookEvent = async () => {
-    console.log('handleBookEvent called');
-    console.log('event:', event);
-    console.log('currentUser:', currentUser);
+    console.log('🎯 handleBookEvent called');
+    console.log('📋 Event:', event?.id, event?.title);
+    console.log('👤 Current user:', currentUser?.id, currentUser?.email);
     
     if (!event || !currentUser) {
-      console.log('Missing event or currentUser', { hasEvent: !!event, hasCurrentUser: !!currentUser });
+      console.log('❌ Missing event or currentUser', { hasEvent: !!event, hasCurrentUser: !!currentUser });
       Alert.alert('Authentication Required', 'Please log in to book events');
       return;
     }
 
-    console.log('Validating booking...');
+    console.log('🔍 Validating booking...');
     // Validate booking before attempting
     const validationResult = BookingValidationService.validateBooking(event, currentUser);
-    console.log('Validation result:', validationResult);
+    console.log('✅ Validation result:', validationResult);
     
     if (!validationResult.canBook) {
-      console.log('Cannot book:', validationResult.reason);
+      console.log('❌ Cannot book:', validationResult.reason);
       Alert.alert('Cannot Join Up', validationResult.reason || 'Booking not allowed');
       return;
     }
 
     // Show warnings if any
     if (validationResult.warnings && validationResult.warnings.length > 0) {
-      console.log('Showing warnings:', validationResult.warnings);
+      console.log('⚠️ Showing warnings alert:', validationResult.warnings);
       const warningMessage = validationResult.warnings.join('\n');
       Alert.alert(
         'Booking Notice',
         warningMessage + '\n\nDo you want to continue with the booking?',
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Continue', onPress: () => proceedWithBooking() },
+          { 
+            text: 'Cancel', 
+            style: 'cancel',
+            onPress: () => console.log('❌ User cancelled booking from warning alert')
+          },
+          { 
+            text: 'Continue', 
+            onPress: () => {
+              console.log('✅ User confirmed booking from warning alert');
+              proceedWithBooking();
+            }
+          },
         ]
       );
       return;
     }
 
-    console.log('No warnings, proceeding with booking...');
+    console.log('✅ No warnings, proceeding with booking directly...');
     await proceedWithBooking();
   };
 
   const proceedWithBooking = async () => {
-    if (!event || !currentUser) return;
+    if (!event || !currentUser) {
+      console.log('❌ proceedWithBooking: Missing event or currentUser');
+      return;
+    }
 
-    console.log('Starting booking process...', { eventId: event.id, userId: currentUser.id });
+    console.log('🚀 Starting booking process...', { 
+      eventId: event.id, 
+      eventTitle: event.title,
+      userId: currentUser.id,
+      userEmail: currentUser.email 
+    });
 
     try {
       setIsBooking(true);
       
-      console.log('Calling bookEvent API...');
+      console.log('📞 Calling eventService.bookEvent API...');
+      console.log('📋 Request params:', { eventId: event.id, userId: currentUser.id });
+      
       const booking = await eventService.bookEvent(event.id, currentUser.id);
-      console.log('Booking successful:', booking);
+      
+      console.log('✅ Booking API call successful!');
+      console.log('📦 Booking response:', JSON.stringify(booking, null, 2));
       
       // Add booking to Redux store
-      console.log('Adding booking to Redux store...');
+      console.log('💾 Adding booking to Redux store...');
       dispatch(addBooking(booking));
-      console.log('Booking added to Redux');
+      console.log('✅ Booking added to Redux');
       
       // Update local state
       const updatedParticipants = event.currentParticipants + 1;
       const updatedEvent = { ...event, currentParticipants: updatedParticipants };
+      console.log('📊 Updating event participants count:', { 
+        old: event.currentParticipants, 
+        new: updatedParticipants 
+      });
       setEvent(updatedEvent);
       dispatch(updateEventParticipants({ eventId: event.id, count: updatedParticipants }));
       
-      // Reload participants
-      console.log('Reloading participants...');
-      const newParticipants = await eventService.getEventParticipants(event.id);
+      // Reload participants (skip cache to get fresh data)
+      console.log('🔄 Reloading participants list...');
+      const newParticipants = await eventService.getEventParticipants(event.id, true);
+      console.log('✅ Participants reloaded successfully!');
+      console.log('📊 Participants count:', newParticipants.length);
+      console.log('👥 Participant user IDs:', newParticipants.map(p => p.userId));
+      console.log('🔍 Current user in participants?', newParticipants.some(p => p.userId === currentUser.id));
       setParticipants(newParticipants);
 
       // Show success message
@@ -232,6 +262,7 @@ export function EventDetailsScreen(): JSX.Element {
           { 
             text: 'OK',
             onPress: () => {
+              console.log('✅ User dismissed success alert, navigating to Home');
               // Navigate to Home tab after user dismisses alert
               (navigation as any).navigate('Home', { screen: 'HomeScreen' });
             }
@@ -239,10 +270,16 @@ export function EventDetailsScreen(): JSX.Element {
         ]
       );
     } catch (error) {
-      console.error('Booking error:', error);
+      console.error('❌ Booking error occurred!');
+      console.error('❌ Error details:', error);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+      
       const errorMessage = error instanceof Error ? error.message : 'Failed to book event';
       Alert.alert('Booking Failed', errorMessage);
     } finally {
+      console.log('🏁 Booking process finished, setting isBooking to false');
       setIsBooking(false);
     }
   };

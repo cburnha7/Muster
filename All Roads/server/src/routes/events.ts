@@ -648,27 +648,41 @@ router.post('/:id/book', async (req, res) => {
     const { id } = req.params;
     let { userId } = req.body;
 
+    console.log('📞 POST /events/:id/book called');
+    console.log('📋 Event ID:', id);
+    console.log('📋 Request body:', req.body);
+    console.log('👤 User ID from body:', userId);
+
     // TEMPORARY: If userId is "1" (mock user), use first real user from database
     if (userId === '1') {
+      console.log('⚠️ Mock user ID detected, finding first real user...');
       const firstUser = await prisma.user.findFirst();
       if (firstUser) {
         userId = firstUser.id;
+        console.log('✅ Using first user:', firstUser.id, firstUser.email);
       } else {
+        console.log('❌ No users found in database');
         return res.status(400).json({ error: 'No users found in database' });
       }
     }
 
     // Check if event exists and has space
+    console.log('🔍 Checking if event exists...');
     const event = await prisma.event.findUnique({ where: { id } });
     if (!event) {
+      console.log('❌ Event not found');
       return res.status(404).json({ error: 'Event not found' });
     }
+    console.log('✅ Event found:', event.title);
+    console.log('📊 Current participants:', event.currentParticipants, '/', event.maxParticipants);
 
     if (event.currentParticipants >= event.maxParticipants) {
+      console.log('❌ Event is full');
       return res.status(400).json({ error: 'Event is full' });
     }
 
     // Check if user already booked
+    console.log('🔍 Checking for existing booking...');
     const existingBooking = await prisma.booking.findFirst({
       where: {
         userId,
@@ -678,10 +692,13 @@ router.post('/:id/book', async (req, res) => {
     });
 
     if (existingBooking) {
+      console.log('❌ User already booked this event');
       return res.status(400).json({ error: 'Already booked' });
     }
+    console.log('✅ No existing booking found');
 
     // Create booking and update event
+    console.log('💾 Creating booking and updating event...');
     const [booking] = await prisma.$transaction([
       prisma.booking.create({
         data: {
@@ -716,9 +733,13 @@ router.post('/:id/book', async (req, res) => {
       }),
     ]);
 
+    console.log('✅ Booking created successfully!');
+    console.log('📦 Booking ID:', booking.id);
+    console.log('📊 Updated participants:', event.currentParticipants + 1);
+
     res.status(201).json(booking);
   } catch (error) {
-    console.error('Book event error:', error);
+    console.error('❌ Book event error:', error);
     res.status(500).json({ error: 'Failed to book event' });
   }
 });
