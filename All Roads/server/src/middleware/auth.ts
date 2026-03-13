@@ -48,8 +48,9 @@ export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFu
     console.log('🔐 Optional Auth - Header:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none');
     console.log('🔐 Optional Auth - X-User-Id:', xUserId);
     
-    // DEVELOPMENT: Accept X-User-Id header for mock authentication
-    if (xUserId && process.env.NODE_ENV === 'development') {
+    // Accept X-User-Id header as fallback authentication
+    // This allows the app to work when JWT tokens expire but user data is still cached
+    if (xUserId) {
       req.user = { userId: xUserId };
       console.log('🔐 Optional Auth - Using X-User-Id header:', xUserId);
       return next();

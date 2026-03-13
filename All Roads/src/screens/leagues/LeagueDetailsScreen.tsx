@@ -86,13 +86,25 @@ export function LeagueDetailsScreen(): React.ReactElement {
         return 'football-outline';
       case SportType.TENNIS:
       case 'tennis':
+      case SportType.PICKLEBALL:
+      case 'pickleball':
+      case SportType.BADMINTON:
+      case 'badminton':
         return 'tennisball-outline';
       case SportType.VOLLEYBALL:
       case 'volleyball':
         return 'american-football-outline';
-      case SportType.BADMINTON:
-      case 'badminton':
-        return 'tennisball-outline';
+      case SportType.SOFTBALL:
+      case 'softball':
+      case SportType.BASEBALL:
+      case 'baseball':
+        return 'baseball-outline';
+      case SportType.FLAG_FOOTBALL:
+      case 'flag_football':
+        return 'flag-outline';
+      case SportType.KICKBALL:
+      case 'kickball':
+        return 'football-outline';
       default:
         return 'fitness-outline';
     }

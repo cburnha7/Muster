@@ -110,7 +110,13 @@ export function BookingsListScreen(): JSX.Element {
       } else {
         dispatch(setBookings(response));
       }
-    } catch (err) {
+    } catch (err: any) {
+      // If session expired, don't show error — AuthContext will handle redirect
+      if (err?.code === 'SESSION_EXPIRED') {
+        console.log('BookingsListScreen: Session expired, deferring to auth handler');
+        return;
+      }
+
       const errorMessage = err instanceof Error ? err.message : 'Failed to load bookings';
       dispatch(setError(errorMessage));
       

@@ -6,12 +6,18 @@
 
 export enum SportType {
   BASKETBALL = 'basketball',
-  SOCCER = 'soccer',
+  PICKLEBALL = 'pickleball',
   TENNIS = 'tennis',
+  SOCCER = 'soccer',
+  SOFTBALL = 'softball',
+  BASEBALL = 'baseball',
   VOLLEYBALL = 'volleyball',
+  FLAG_FOOTBALL = 'flag_football',
+  KICKBALL = 'kickball',
+  OTHER = 'other',
+  // Legacy values — kept for backward compatibility with existing records
   BADMINTON = 'badminton',
   HOCKEY = 'hockey',
-  OTHER = 'other',
 }
 
 export enum SkillLevel {

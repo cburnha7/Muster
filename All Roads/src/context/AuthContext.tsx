@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { Alert, Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
@@ -33,6 +34,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     loadStoredSession();
   }, []);
+
+  // Listen for session expired events from BaseApiService
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleSessionExpired = () => {
+      console.log('AuthContext: Session expired event received, clearing auth state');
+      dispatch(clearAuth());
+      Alert.alert(
+        'Session Expired',
+        'Your session has expired. Please log in again.',
+        [{ text: 'OK' }]
+      );
+    };
+
+    window.addEventListener('auth:sessionExpired', handleSessionExpired);
+    return () => {
+      window.removeEventListener('auth:sessionExpired', handleSessionExpired);
+    };
+  }, [dispatch]);
 
   const loadStoredSession = async () => {
     try {

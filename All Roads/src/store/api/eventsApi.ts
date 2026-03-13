@@ -1,6 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../store';
 import { apiConfig } from '../../services/api/config';
+import { clearAuth, setTokens } from '../slices/authSlice';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { Event, EventFilters, PaginatedResponse, PaginationParams, Booking, EventStatus } from '../../types';
 
 // Default filter configuration used by both Home Screen and Events Tab
@@ -43,31 +45,47 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   
   // If we get a 401, try to refresh the token
   if (result.error && result.error.status === 401) {
-    // Try to refresh token
+    console.log('🔄 [eventsApi] 401 error, attempting token refresh...');
+    
+    // Get refresh token from Redux state first, then fallback to TokenStorage
+    let refreshToken = (api.getState() as RootState).auth.refreshToken;
+    if (!refreshToken) {
+      refreshToken = await TokenStorage.getRefreshToken();
+    }
+    
+    if (!refreshToken) {
+      console.error('❌ No refresh token available, clearing session...');
+      await TokenStorage.clearAll();
+      api.dispatch(clearAuth());
+      return result;
+    }
+    
     const refreshResult = await baseQuery(
       {
         url: '/auth/refresh',
         method: 'POST',
-        body: {
-          refreshToken: (api.getState() as RootState).auth.refreshToken,
-        },
+        body: { refreshToken },
       },
       api,
       extraOptions
     );
     
     if (refreshResult.data) {
-      // Store the new token
-      api.dispatch({
-        type: 'auth/setTokens',
-        payload: refreshResult.data,
-      });
+      const tokenData = refreshResult.data as { accessToken: string; refreshToken: string };
+      console.log('✅ [eventsApi] Token refresh successful');
       
-      // Retry the original query
+      await TokenStorage.storeTokens(tokenData.accessToken, tokenData.refreshToken);
+      api.dispatch(setTokens({
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken,
+      }));
+      
+      // Retry the original query with new token
       result = await baseQuery(args, api, extraOptions);
     } else {
-      // Refresh failed, logout user
-      api.dispatch({ type: 'auth/logout' });
+      console.error('❌ [eventsApi] Token refresh failed, clearing session...');
+      await TokenStorage.clearAll();
+      api.dispatch(clearAuth());
     }
   }
   

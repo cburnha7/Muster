@@ -132,9 +132,17 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
       case SportType.SOCCER:
         return 'football-outline';
       case SportType.TENNIS:
+      case SportType.PICKLEBALL:
         return 'tennisball-outline';
       case SportType.VOLLEYBALL:
         return 'american-football-outline';
+      case SportType.SOFTBALL:
+      case SportType.BASEBALL:
+        return 'baseball-outline';
+      case SportType.FLAG_FOOTBALL:
+        return 'flag-outline';
+      case SportType.KICKBALL:
+        return 'football-outline';
       default:
         return 'fitness-outline';
     }

@@ -124,25 +124,37 @@ export class BaseApiService {
         // Handle token refresh for 401 errors
         if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
           try {
-            await authService.refreshAccessToken();
+            const refreshToken = await TokenStorage.getRefreshToken();
+            if (!refreshToken) {
+              throw new Error('No refresh token available');
+            }
+            const tokens = await authService.refreshToken(refreshToken);
             // Retry the original request with new token from TokenStorage
             if (error.config) {
-              const token = await TokenStorage.getAccessToken();
-              if (token) {
-                error.config.headers.Authorization = `Bearer ${token}`;
+              error.config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+              // Re-attach user ID header
+              const currentUser = await TokenStorage.getUser();
+              if (currentUser?.id) {
+                error.config.headers['X-User-Id'] = currentUser.id;
               }
               return this.client.request(error.config);
             }
           } catch (refreshError: any) {
-            // If no refresh token available, silently fail (user is logged out)
-            if (refreshError.message === 'No refresh token available') {
-              console.log('⚠️ No refresh token available - user needs to log in');
-              // Don't log this as an error, it's expected after logout
-            } else {
-              // Actual refresh failure
-              console.error('Token refresh failed:', refreshError);
+            // Any refresh failure (missing token or actual failure) — clear session
+            console.error('🔒 Token refresh failed, clearing session:', refreshError.message || refreshError);
+            await TokenStorage.clearAll();
+            
+            // Dispatch a global event so the app can redirect to login
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
             }
-            // Continue with the original error handling
+            
+            // Reject with a clear auth error
+            return Promise.reject({
+              code: 'SESSION_EXPIRED',
+              message: 'Your session has expired. Please log in again.',
+              status: 401,
+            });
           }
         }
 

@@ -83,9 +83,17 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
       case SportType.SOCCER:
         return 'football';
       case SportType.TENNIS:
+      case SportType.PICKLEBALL:
         return 'tennisball';
       case SportType.VOLLEYBALL:
         return 'american-football';
+      case SportType.SOFTBALL:
+      case SportType.BASEBALL:
+        return 'baseball';
+      case SportType.FLAG_FOOTBALL:
+        return 'flag';
+      case SportType.KICKBALL:
+        return 'football';
       default:
         return 'fitness';
     }
@@ -98,11 +106,18 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
       case SportType.BASKETBALL:
         return '#FF6B35';
       case SportType.SOCCER:
+      case SportType.KICKBALL:
         return '#4ECDC4';
       case SportType.TENNIS:
+      case SportType.PICKLEBALL:
         return '#FFD93D';
       case SportType.VOLLEYBALL:
         return '#95E1D3';
+      case SportType.SOFTBALL:
+      case SportType.BASEBALL:
+        return '#E8A030';
+      case SportType.FLAG_FOOTBALL:
+        return '#FF6B35';
       default:
         return '#007AFF';
     }

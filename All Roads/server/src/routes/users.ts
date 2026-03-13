@@ -237,6 +237,7 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
               id: true,
               title: true,
               sportType: true,
+              status: true,
               startTime: true,
               endTime: true,
               imageUrl: true,
