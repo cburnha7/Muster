@@ -282,6 +282,14 @@ export const ManageLeagueScreen: React.FC = () => {
             onSubmit={handleUpdateLeague}
             isEdit={true}
             loading={isUpdating}
+            initialRosters={members
+              .filter((m) => m.memberType === 'roster' && m.status === 'active')
+              .map((m) => ({
+                id: m.memberId,
+                name: (m as any).team?.name || 'Unknown Roster',
+                sportType: (m as any).team?.sportType,
+                memberCount: (m as any).team?.playerCount ?? (m as any).team?._count?.members ?? 0,
+              }))}
           />
         </View>
 

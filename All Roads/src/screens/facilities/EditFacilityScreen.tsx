@@ -752,7 +752,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                 onPress={() => setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })}
               >
                 <View style={[styles.checkbox, newCourt.isIndoor && styles.checkboxChecked]}>
-                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.textInverse} />}
+                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.chalk} />}
                 </View>
                 <Text style={styles.checkboxLabel}>Indoor Court</Text>
               </TouchableOpacity>
@@ -919,7 +919,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   sportChipTextSelected: {
-    color: colors.textInverse,
+    color: colors.chalk,
     fontWeight: '600',
   },
   errorText: {
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteButtonText: {
-    color: colors.textInverse,
+    color: colors.chalk,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
   addCourtButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.textInverse,
+    color: colors.chalk,
   },
   deleteModalOverlay: {
     flex: 1,
@@ -1143,6 +1143,6 @@ const styles = StyleSheet.create({
   confirmDeleteButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.textInverse,
+    color: colors.chalk,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -116,6 +116,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [rosterSearchResults, setRosterSearchResults] = useState<AddedRoster[]>([]);
   const [isSearchingRosters, setIsSearchingRosters] = useState(false);
   const [rosterSearchError, setRosterSearchError] = useState<string | null>(null);
+
+  // Sync initialRosters when they arrive asynchronously (e.g. after API fetch)
+  useEffect(() => {
+    if (initialRosters.length > 0) {
+      setAddedRosters(initialRosters);
+    }
+  }, [initialRosters]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
