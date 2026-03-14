@@ -101,6 +101,9 @@ model Event {
   wasAutoOpenedToPublic          Boolean  @default(false) // Track if event was auto-opened
   autoOpenedAt                   DateTime? // When the event was auto-opened
   
+  // Schedule status (for league shell events)
+  scheduledStatus                String   @default("scheduled") // "unscheduled" | "scheduled"
+
   // Group fee coverage
   isGroupFeeCovered              Boolean  @default(false) // Event cost covered by roster balance
   coveringTeamId                 String? // Which roster is covering the cost
@@ -242,6 +245,15 @@ model League {
 
   // Points system configuration (stored as JSON)
   pointsConfig Json @default("{\"win\": 3, \"draw\": 1, \"loss\": 0}")
+
+  // Schedule management
+  minimumRosterSize        Int?
+  registrationCloseDate    DateTime?
+  preferredGameDays        Int[]      @default([])
+  preferredTimeWindowStart String?    // HH:MM format
+  preferredTimeWindowEnd   String?    // HH:MM format
+  seasonGameCount          Int?
+  scheduleGenerated        Boolean    @default(false)
 
   // Certification
   isCertified Boolean   @default(false)

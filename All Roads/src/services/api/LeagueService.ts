@@ -347,6 +347,15 @@ export class LeagueService extends BaseApiService {
       endTime: endTime.toISOString()
     });
   }
+
+  /**
+   * Manually trigger schedule generation (commissioner only)
+   */
+  async generateSchedule(leagueId: string, userId: string): Promise<{ message: string; eventsCreated: number }> {
+    return this.post<{ message: string; eventsCreated: number }>(`/leagues/${leagueId}/generate-schedule`, {
+      userId
+    });
+  }
 }
 
 // Export singleton instance

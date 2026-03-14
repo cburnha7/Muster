@@ -25,6 +25,14 @@ export interface League {
   leagueType: 'team' | 'pickup';
   visibility: 'public' | 'private';
   membershipFee?: number;
+  // Schedule management
+  minimumRosterSize?: number | null;
+  registrationCloseDate?: Date | string | null;
+  preferredGameDays?: number[];
+  preferredTimeWindowStart?: string | null;
+  preferredTimeWindowEnd?: string | null;
+  seasonGameCount?: number | null;
+  scheduleGenerated?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -48,6 +56,13 @@ export interface CreateLeagueData {
   leagueType: 'team' | 'pickup';
   visibility?: 'public' | 'private';
   membershipFee?: number;
+  // Schedule management
+  minimumRosterSize?: number | null;
+  registrationCloseDate?: Date | string | null;
+  preferredGameDays?: number[];
+  preferredTimeWindowStart?: string | null;
+  preferredTimeWindowEnd?: string | null;
+  seasonGameCount?: number | null;
 }
 
 export interface UpdateLeagueData {
@@ -60,6 +75,13 @@ export interface UpdateLeagueData {
   pointsConfig?: PointsConfig;
   imageUrl?: string;
   isActive?: boolean;
+  // Schedule management
+  minimumRosterSize?: number | null;
+  registrationCloseDate?: Date | string | null;
+  preferredGameDays?: number[];
+  preferredTimeWindowStart?: string | null;
+  preferredTimeWindowEnd?: string | null;
+  seasonGameCount?: number | null;
 }
 
 export interface LeagueFilters {

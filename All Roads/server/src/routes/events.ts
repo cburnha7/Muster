@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../index';
+import { ScheduleGeneratorService } from '../services/ScheduleGeneratorService';
 
 const router = Router();
 
@@ -523,7 +524,7 @@ router.put('/:id', async (req, res) => {
     // Verify the event exists and check organizer
     const existing = await prisma.event.findUnique({
       where: { id },
-      select: { organizerId: true },
+      select: { organizerId: true, scheduledStatus: true, facilityId: true },
     });
 
     if (!existing) {
@@ -540,6 +541,12 @@ router.put('/:id', async (req, res) => {
     // Don't allow overwriting organizerId
     const { organizerId, ...updateData } = req.body;
 
+    // If facility is being assigned to an unscheduled shell event, mark it as scheduled
+    const isAssigningFacility = updateData.facilityId && !existing.facilityId && existing.scheduledStatus === 'unscheduled';
+    if (isAssigningFacility) {
+      updateData.scheduledStatus = 'scheduled';
+    }
+
     const event = await prisma.event.update({
       where: { id },
       data: updateData,
@@ -555,6 +562,13 @@ router.put('/:id', async (req, res) => {
         facility: true,
       },
     });
+
+    // Notify roster players when a shell event becomes scheduled
+    if (isAssigningFacility) {
+      ScheduleGeneratorService.markEventScheduled(id).catch(err => {
+        console.error('Error sending schedule notifications:', err);
+      });
+    }
 
     res.json(event);
   } catch (error) {

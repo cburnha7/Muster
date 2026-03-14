@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { NotificationService } from '../services/NotificationService';
+import { ScheduleGeneratorService } from '../services/ScheduleGeneratorService';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -191,7 +192,13 @@ router.post('/', async (req: Request, res: Response) => {
       organizerId,
       leagueType,
       visibility,
-      membershipFee
+      membershipFee,
+      minimumRosterSize,
+      registrationCloseDate,
+      preferredGameDays,
+      preferredTimeWindowStart,
+      preferredTimeWindowEnd,
+      seasonGameCount
     } = req.body;
 
     // Validate required fields
@@ -241,6 +248,38 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
+    // Validate HH:MM format for time windows
+    const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (preferredTimeWindowStart && !hhmmRegex.test(preferredTimeWindowStart)) {
+      return res.status(400).json({ error: 'preferredTimeWindowStart must be in HH:MM 24-hour format' });
+    }
+    if (preferredTimeWindowEnd && !hhmmRegex.test(preferredTimeWindowEnd)) {
+      return res.status(400).json({ error: 'preferredTimeWindowEnd must be in HH:MM 24-hour format' });
+    }
+    if (preferredTimeWindowStart && preferredTimeWindowEnd && preferredTimeWindowStart >= preferredTimeWindowEnd) {
+      return res.status(400).json({ error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd' });
+    }
+
+    // Validate minimumRosterSize
+    if (minimumRosterSize !== undefined && minimumRosterSize !== null && (typeof minimumRosterSize !== 'number' || minimumRosterSize < 1)) {
+      return res.status(400).json({ error: 'minimumRosterSize must be a positive integer' });
+    }
+
+    // Validate registrationCloseDate is in the future
+    if (registrationCloseDate) {
+      const closeDate = new Date(registrationCloseDate);
+      if (closeDate <= new Date()) {
+        return res.status(400).json({ error: 'registrationCloseDate must be in the future' });
+      }
+    }
+
+    // Validate preferredGameDays values (0-6)
+    if (preferredGameDays && Array.isArray(preferredGameDays)) {
+      if (preferredGameDays.some((d: number) => d < 0 || d > 6)) {
+        return res.status(400).json({ error: 'preferredGameDays values must be between 0 (Sunday) and 6 (Saturday)' });
+      }
+    }
+
     // Create league
     const league = await prisma.league.create({
       data: {
@@ -256,7 +295,13 @@ router.post('/', async (req: Request, res: Response) => {
         organizerId,
         leagueType: finalLeagueType,
         visibility: finalVisibility,
-        ...(membershipFee !== undefined && { membershipFee })
+        ...(membershipFee !== undefined && { membershipFee }),
+        ...(minimumRosterSize !== undefined && { minimumRosterSize }),
+        ...(registrationCloseDate && { registrationCloseDate: new Date(registrationCloseDate) }),
+        ...(preferredGameDays && { preferredGameDays }),
+        ...(preferredTimeWindowStart && { preferredTimeWindowStart }),
+        ...(preferredTimeWindowEnd && { preferredTimeWindowEnd }),
+        ...(seasonGameCount !== undefined && seasonGameCount !== null && { seasonGameCount })
       },
       include: {
         organizer: {
@@ -294,7 +339,13 @@ router.put('/:id', async (req: Request, res: Response) => {
       isActive,
       leagueType,
       visibility,
-      userId // For authorization check
+      userId, // For authorization check
+      minimumRosterSize,
+      registrationCloseDate,
+      preferredGameDays,
+      preferredTimeWindowStart,
+      preferredTimeWindowEnd,
+      seasonGameCount
     } = req.body;
 
     // Check if league exists and user is operator
@@ -320,6 +371,26 @@ router.put('/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Pickup leagues must be public' });
     }
 
+    // Validate schedule management fields
+    const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (preferredTimeWindowStart && !hhmmRegex.test(preferredTimeWindowStart)) {
+      return res.status(400).json({ error: 'preferredTimeWindowStart must be in HH:MM 24-hour format' });
+    }
+    if (preferredTimeWindowEnd && !hhmmRegex.test(preferredTimeWindowEnd)) {
+      return res.status(400).json({ error: 'preferredTimeWindowEnd must be in HH:MM 24-hour format' });
+    }
+    if (preferredTimeWindowStart && preferredTimeWindowEnd && preferredTimeWindowStart >= preferredTimeWindowEnd) {
+      return res.status(400).json({ error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd' });
+    }
+    if (minimumRosterSize !== undefined && minimumRosterSize !== null && (typeof minimumRosterSize !== 'number' || minimumRosterSize < 1)) {
+      return res.status(400).json({ error: 'minimumRosterSize must be a positive integer' });
+    }
+    if (preferredGameDays && Array.isArray(preferredGameDays)) {
+      if (preferredGameDays.some((d: number) => d < 0 || d > 6)) {
+        return res.status(400).json({ error: 'preferredGameDays values must be between 0 (Sunday) and 6 (Saturday)' });
+      }
+    }
+
     // Update league (leagueType is never included in the update data)
     const league = await prisma.league.update({
       where: { id },
@@ -333,7 +404,13 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(pointsConfig && { pointsConfig }),
         ...(imageUrl !== undefined && { imageUrl }),
         ...(isActive !== undefined && { isActive }),
-        ...(visibility !== undefined && { visibility })
+        ...(visibility !== undefined && { visibility }),
+        ...(minimumRosterSize !== undefined && { minimumRosterSize }),
+        ...(registrationCloseDate !== undefined && { registrationCloseDate: registrationCloseDate ? new Date(registrationCloseDate) : null }),
+        ...(preferredGameDays !== undefined && { preferredGameDays }),
+        ...(preferredTimeWindowStart !== undefined && { preferredTimeWindowStart }),
+        ...(preferredTimeWindowEnd !== undefined && { preferredTimeWindowEnd }),
+        ...(seasonGameCount !== undefined && { seasonGameCount })
       },
       include: {
         organizer: {
@@ -637,12 +714,29 @@ router.post('/:id/join', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'League not found' });
     }
 
+    // Check registration close date
+    if (league.registrationCloseDate && new Date() > new Date(league.registrationCloseDate)) {
+      return res.status(400).json({ error: 'Registration has closed for this league' });
+    }
+
     if (league.leagueType === 'team') {
       // Team league: roster-based join (pending approval for public team leagues)
       const effectiveRosterId = rosterId || teamId;
 
       if (!effectiveRosterId) {
         return res.status(400).json({ error: 'Missing required field: rosterId' });
+      }
+
+      // Check minimum roster size
+      if (league.minimumRosterSize) {
+        const playerCount = await prisma.teamMember.count({
+          where: { teamId: effectiveRosterId, status: 'active' }
+        });
+        if (playerCount < league.minimumRosterSize) {
+          return res.status(400).json({
+            error: `Roster needs at least ${league.minimumRosterSize} players to join this league. Current count: ${playerCount}`
+          });
+        }
       }
 
       // Check for existing active/pending membership for this roster
@@ -2018,5 +2112,62 @@ router.post('/:id/certify', upload.single('bylaws'), async (req: Request, res: R
   } catch (error) {
     console.error('Error certifying league:', error);
     res.status(500).json({ error: 'Failed to certify league' });
+  }
+});
+
+// POST /api/leagues/:id/generate-schedule - Manually trigger schedule generation (commissioner only)
+router.post('/:id/generate-schedule', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required field: userId' });
+    }
+
+    const league = await prisma.league.findUnique({
+      where: { id },
+      include: {
+        memberships: {
+          where: { status: 'active', memberType: 'roster' },
+          select: { id: true }
+        }
+      }
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can generate the schedule' });
+    }
+
+    if (league.registrationCloseDate) {
+      return res.status(400).json({ error: 'Schedule generation is handled automatically when a registration close date is set' });
+    }
+
+    if (league.scheduleGenerated) {
+      return res.status(400).json({ error: 'Schedule has already been generated for this league' });
+    }
+
+    if (league.memberships.length < 2) {
+      return res.status(400).json({ error: 'At least 2 active rosters are required to generate a schedule' });
+    }
+
+    if (!league.preferredGameDays?.length || !league.seasonGameCount) {
+      return res.status(400).json({ error: 'Schedule configuration incomplete. Set preferredGameDays and seasonGameCount first.' });
+    }
+
+    const result = await ScheduleGeneratorService.generateRoundRobin(id);
+
+    res.status(201).json({
+      message: `Schedule generated successfully. ${result.eventsCreated} events created.`,
+      eventsCreated: result.eventsCreated
+    });
+  } catch (error) {
+    console.error('Error generating schedule:', error);
+    const msg = error instanceof Error ? error.message : 'Failed to generate schedule';
+    res.status(500).json({ error: msg });
   }
 });

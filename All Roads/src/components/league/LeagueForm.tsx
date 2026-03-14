@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { FormInput } from '../forms/FormInput';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
@@ -45,6 +45,26 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   );
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
 
+  // Schedule management fields
+  const [minimumRosterSize, setMinimumRosterSize] = useState(
+    (initialData as any)?.minimumRosterSize?.toString() || ''
+  );
+  const [registrationCloseDate, setRegistrationCloseDate] = useState(
+    (initialData as any)?.registrationCloseDate?.toString() || ''
+  );
+  const [preferredGameDays, setPreferredGameDays] = useState<number[]>(
+    (initialData as any)?.preferredGameDays || []
+  );
+  const [timeWindowStart, setTimeWindowStart] = useState(
+    (initialData as any)?.preferredTimeWindowStart || ''
+  );
+  const [timeWindowEnd, setTimeWindowEnd] = useState(
+    (initialData as any)?.preferredTimeWindowEnd || ''
+  );
+  const [seasonGameCount, setSeasonGameCount] = useState(
+    (initialData as any)?.seasonGameCount?.toString() || ''
+  );
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const sportTypeOptions: SelectOption[] = [
@@ -86,6 +106,14 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
   };
 
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const toggleGameDay = (day: number) => {
+    setPreferredGameDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
+    );
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -125,6 +153,30 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       newErrors.lossPoints = 'Loss points must be a non-negative number';
     }
 
+    // Validate schedule management fields
+    const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (timeWindowStart && !hhmmRegex.test(timeWindowStart)) {
+      newErrors.timeWindowStart = 'Must be in HH:MM format (e.g. 18:00)';
+    }
+    if (timeWindowEnd && !hhmmRegex.test(timeWindowEnd)) {
+      newErrors.timeWindowEnd = 'Must be in HH:MM format (e.g. 21:00)';
+    }
+    if (timeWindowStart && timeWindowEnd && timeWindowStart >= timeWindowEnd) {
+      newErrors.timeWindowEnd = 'End time must be after start time';
+    }
+    if (minimumRosterSize) {
+      const minSize = parseInt(minimumRosterSize);
+      if (isNaN(minSize) || minSize < 1) {
+        newErrors.minimumRosterSize = 'Must be a positive number';
+      }
+    }
+    if (seasonGameCount) {
+      const count = parseInt(seasonGameCount);
+      if (isNaN(count) || count < 1) {
+        newErrors.seasonGameCount = 'Must be a positive number';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -151,6 +203,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       endDate: endDate ? new Date(endDate) : undefined,
       pointsConfig,
       imageUrl: imageUrl.trim() || undefined,
+      // Schedule management fields
+      minimumRosterSize: minimumRosterSize ? parseInt(minimumRosterSize) : null,
+      registrationCloseDate: registrationCloseDate ? new Date(registrationCloseDate) : null,
+      preferredGameDays: preferredGameDays.length > 0 ? preferredGameDays : undefined,
+      preferredTimeWindowStart: timeWindowStart || null,
+      preferredTimeWindowEnd: timeWindowEnd || null,
+      seasonGameCount: seasonGameCount ? parseInt(seasonGameCount) : null,
       ...(isEdit ? {} : {
         leagueType,
         visibility: leagueType === 'pickup' ? 'public' : visibility,
@@ -301,6 +360,81 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         />
       </View>
 
+      {/* Schedule Configuration — only for team leagues */}
+      {leagueType === 'team' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Schedule Configuration</Text>
+          <Text style={styles.sectionDescription}>
+            Optional settings for roster requirements and auto-scheduling
+          </Text>
+
+          <FormInput
+            label="Minimum Roster Size"
+            placeholder="e.g. 5"
+            value={minimumRosterSize}
+            onChangeText={setMinimumRosterSize}
+            keyboardType="numeric"
+            error={errors.minimumRosterSize}
+          />
+
+          <FormInput
+            label="Registration Close Date"
+            placeholder="YYYY-MM-DD"
+            value={registrationCloseDate}
+            onChangeText={setRegistrationCloseDate}
+          />
+
+          <Text style={styles.fieldLabel}>Preferred Game Days</Text>
+          <View style={styles.dayChipsRow}>
+            {dayLabels.map((label, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.dayChip,
+                  preferredGameDays.includes(idx) && styles.dayChipSelected,
+                ]}
+                onPress={() => toggleGameDay(idx)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.dayChipText,
+                    preferredGameDays.includes(idx) && styles.dayChipTextSelected,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <FormInput
+            label="Time Window Start"
+            placeholder="HH:MM (e.g. 18:00)"
+            value={timeWindowStart}
+            onChangeText={setTimeWindowStart}
+            error={errors.timeWindowStart}
+          />
+
+          <FormInput
+            label="Time Window End"
+            placeholder="HH:MM (e.g. 21:00)"
+            value={timeWindowEnd}
+            onChangeText={setTimeWindowEnd}
+            error={errors.timeWindowEnd}
+          />
+
+          <FormInput
+            label="Season Game Count"
+            placeholder="Total games per roster"
+            value={seasonGameCount}
+            onChangeText={setSeasonGameCount}
+            keyboardType="numeric"
+            error={errors.seasonGameCount}
+          />
+        </View>
+      )}
+
       <View style={styles.actions}>
         {onCancel && (
           <FormButton
@@ -352,5 +486,39 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  fieldLabel: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.ink,
+    marginBottom: Spacing.xs,
+    fontWeight: '600',
+  },
+  dayChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  dayChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  dayChipSelected: {
+    backgroundColor: colors.grass,
+    borderColor: colors.grass,
+  },
+  dayChipText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    fontWeight: '600',
+  },
+  dayChipTextSelected: {
+    color: '#FFFFFF',
   },
 });

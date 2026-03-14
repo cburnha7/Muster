@@ -28,6 +28,7 @@ import { selectUserTeams } from '../../store/slices/teamsSlice';
 /** Shape returned by GET /api/leagues/:id/events */
 interface LeagueEvent extends Event {
   assignedRosters: Array<{ id: string; name: string }>;
+  scheduledStatus?: string;
 }
 
 const MAX_UPCOMING_EVENTS = 3;
@@ -273,6 +274,35 @@ export function LeagueDetailsScreen(): React.ReactElement {
     }
   };
 
+  const handleGenerateSchedule = async () => {
+    if (!league || !currentUser) return;
+
+    Alert.alert(
+      'Generate Schedule',
+      'This will create shell events for all roster matchups. You can assign facilities later. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Generate',
+          onPress: async () => {
+            try {
+              setIsActionLoading(true);
+              const leagueServiceInstance = new LeagueService();
+              await leagueServiceInstance.generateSchedule(league.id, currentUser.id);
+              Alert.alert('Schedule Generated', 'Shell events have been created. Assign facilities to finalize them.');
+              await loadLeague(true);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : 'Failed to generate schedule';
+              Alert.alert('Error', msg);
+            } finally {
+              setIsActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // ── Join request handlers ─────────────────────────────────────────
   const handleApproveRequest = async (requestId: string) => {
     if (!league || !currentUser) return;
@@ -467,6 +497,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 <Text style={styles.eventFacility} numberOfLines={1}>
                   <Ionicons name="location-outline" size={12} color={colors.inkFaint} />{' '}
                   {event.facility.name}
+                </Text>
+              )}
+              {!event.facility && event.scheduledStatus === 'unscheduled' && (
+                <Text style={styles.eventFacilityTbd} numberOfLines={1}>
+                  <Ionicons name="location-outline" size={12} color={colors.court} />{' '}
+                  Facility TBD
                 </Text>
               )}
               {isTeamLeague && event.assignedRosters.length > 0 ? (
@@ -731,6 +767,59 @@ export function LeagueDetailsScreen(): React.ReactElement {
           </View>
         </View>
 
+        {/* Schedule Management Info */}
+        {league.leagueType === 'team' && (league.minimumRosterSize || league.registrationCloseDate || league.preferredGameDays?.length) && (
+          <View style={styles.scheduleInfoSection}>
+            {league.minimumRosterSize && (
+              <View style={styles.scheduleInfoRow}>
+                <Ionicons name="people-outline" size={16} color={colors.inkFaint} />
+                <Text style={styles.scheduleInfoText}>
+                  Min. roster size: {league.minimumRosterSize} players
+                </Text>
+              </View>
+            )}
+            {league.registrationCloseDate && (
+              <View style={styles.scheduleInfoRow}>
+                <Ionicons
+                  name={new Date(league.registrationCloseDate) < new Date() ? 'lock-closed-outline' : 'calendar-outline'}
+                  size={16}
+                  color={new Date(league.registrationCloseDate) < new Date() ? colors.track : colors.inkFaint}
+                />
+                <Text style={[
+                  styles.scheduleInfoText,
+                  new Date(league.registrationCloseDate) < new Date() && { color: colors.track }
+                ]}>
+                  {new Date(league.registrationCloseDate) < new Date()
+                    ? 'Registration closed'
+                    : `Registration closes ${formatDate(league.registrationCloseDate)}`}
+                </Text>
+              </View>
+            )}
+            {league.seasonGameCount && (
+              <View style={styles.scheduleInfoRow}>
+                <Ionicons name="trophy-outline" size={16} color={colors.inkFaint} />
+                <Text style={styles.scheduleInfoText}>
+                  {league.seasonGameCount} games per roster
+                </Text>
+              </View>
+            )}
+
+            {/* Generate Schedule button — commissioner only, no close date, config complete, not yet generated */}
+            {isOperator && !league.registrationCloseDate && !league.scheduleGenerated
+              && league.preferredGameDays?.length && league.seasonGameCount && (
+              <TouchableOpacity
+                style={styles.generateScheduleBtn}
+                onPress={handleGenerateSchedule}
+                disabled={isActionLoading}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.generateScheduleBtnText}>Generate Schedule</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         {/* Join Request Queue (public Team League, operator only) */}
         {renderJoinRequestQueue()}
 
@@ -958,6 +1047,12 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     marginBottom: 2,
   },
+  eventFacilityTbd: {
+    fontSize: 12,
+    color: colors.court,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
   eventRosters: {
     fontSize: 12,
     fontWeight: '600',
@@ -1075,5 +1170,39 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: '100%',
+  },
+  // ── Schedule Info styles ──────────────────────────────────────
+  scheduleInfoSection: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  scheduleInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  scheduleInfoText: {
+    fontSize: 13,
+    color: colors.inkFaint,
+  },
+  generateScheduleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.grass,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    gap: 8,
+  },
+  generateScheduleBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
