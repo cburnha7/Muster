@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -83,6 +84,46 @@ export function HomeScreen(): JSX.Element {
   // Debrief state
   const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
   const [debriefLoading, setDebriefLoading] = useState(false);
+
+  // Live events — derived from bookings where now is between start and end
+  const [now, setNow] = useState(() => new Date());
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Pulse animation for live indicator
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
+
+  // Poll every 30s to keep live section current
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const liveBookings = useMemo(() => {
+    const t = now.getTime();
+    return (bookingsData?.data || []).filter((b) => {
+      if (!b.event?.startTime || !b.event?.endTime) return false;
+      if (b.status !== 'confirmed') return false;
+      const start = new Date(b.event.startTime).getTime();
+      const end = new Date(b.event.endTime).getTime();
+      return t >= start && t < end;
+    });
+  }, [bookingsData, now]);
+
+  // Exclude live events from the upcoming list
+  const liveIds = useMemo(() => new Set(liveBookings.map((b) => b.id)), [liveBookings]);
+  const upcomingOnly = useMemo(
+    () => upcomingBookings.filter((b) => !liveIds.has(b.id)),
+    [upcomingBookings, liveIds]
+  );
 
   // Combined loading state
   const isLoading = eventsLoading || bookingsLoading;
@@ -235,6 +276,33 @@ export function HomeScreen(): JSX.Element {
           style={styles.searchBar}
         />
 
+        {/* Live Events — only shown when there are events in progress */}
+        {liveBookings.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.liveSectionTitleRow}>
+                <Animated.View style={[styles.liveDot, { opacity: pulseAnim }]} />
+                <Text style={styles.sectionTitle}>Live Now</Text>
+              </View>
+            </View>
+            {liveBookings.map((booking) => (
+              <View key={booking.id}>
+                <View style={styles.liveBadgeRow}>
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveBadgeDot} />
+                    <Text style={styles.liveBadgeText}>LIVE</Text>
+                  </View>
+                </View>
+                <BookingCard
+                  booking={booking}
+                  onPress={handleBookingPress}
+                  style={[styles.bookingCard, styles.liveCard]}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Upcoming Bookings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -251,9 +319,9 @@ export function HomeScreen(): JSX.Element {
             </View>
           ) : isLoading ? (
             <Text style={styles.placeholder}>Loading...</Text>
-          ) : upcomingBookings.length > 0 ? (
+          ) : upcomingOnly.length > 0 ? (
             <View>
-              {upcomingBookings.slice(0, 3).map((booking) => (
+              {upcomingOnly.slice(0, 3).map((booking) => (
                 <BookingCard
                   key={booking.id}
                   booking={booking}
@@ -267,7 +335,7 @@ export function HomeScreen(): JSX.Element {
             <View style={styles.emptyState}>
               <Ionicons name="calendar-outline" size={64} color={colors.soft} />
               <Text style={styles.emptyStateTitle}>No upcoming bookings</Text>
-              <Text style={styles.emptyStateText}>Book your next sports activity!</Text>
+              <Text style={styles.emptyStateText}>Join up for your next sports activity!</Text>
               <TouchableOpacity 
                 style={styles.emptyStateButtonStyle}
                 onPress={() => (navigation as any).navigate('Events', { screen: 'EventsList' })}
@@ -385,6 +453,47 @@ const styles = StyleSheet.create({
   bookingCard: {
     marginHorizontal: 0,
     marginVertical: Spacing.xs,
+  },
+  liveCard: {
+    borderWidth: 1,
+    borderColor: colors.grass + '40',
+  },
+  liveSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  liveDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.grass,
+  },
+  liveBadgeRow: {
+    marginBottom: 4,
+    marginLeft: 4,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.grass + '15',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 5,
+  },
+  liveBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.grass,
+  },
+  liveBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.grass,
+    letterSpacing: 1,
   },
   eventCard: {
     marginHorizontal: 0,
