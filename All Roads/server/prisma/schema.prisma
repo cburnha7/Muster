@@ -261,6 +261,7 @@ model League {
 model TeamMember {
   id       String   @id @default(uuid())
   role     String   @default("member")
+  status   String   @default("active")
   joinedAt DateTime @default(now())
 
   // Foreign Keys
