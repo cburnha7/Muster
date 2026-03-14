@@ -196,7 +196,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       Alert.alert('Error', err.message || 'Failed to delete roster');
     }
   };
-  };
 
   const handleGenerateInviteCode = async () => {
     if (!team) return;
