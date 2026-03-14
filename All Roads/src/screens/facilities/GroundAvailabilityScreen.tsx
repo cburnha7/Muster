@@ -372,8 +372,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   calendarContainer: {
-    backgroundColor: colors.chalk,
+    backgroundColor: '#FFFFFF',
     marginBottom: Spacing.md,
+    borderRadius: 12,
+    marginHorizontal: Spacing.lg,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
   },
   section: {
     padding: Spacing.lg,

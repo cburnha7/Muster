@@ -49,14 +49,14 @@ export function StepOutModal({
         />
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Ionicons name="exit-outline" size={32} color={colors.track} />
-            <Text style={styles.title}>Step Out</Text>
+            <Ionicons name="exit-outline" size={32} color={colors.inkFaint} />
+            <Text style={styles.title}>I'm Out</Text>
           </View>
 
           <Text style={styles.eventTitle}>{eventTitle}</Text>
 
           <Text style={styles.description}>
-            Are you sure you want to step out of this event? You will be removed as a participant.
+            Are you sure you want to leave this event? You will be removed as a participant.
           </Text>
 
           <View style={styles.actions}>
@@ -76,7 +76,7 @@ export function StepOutModal({
               {isSubmitting ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.buttonDangerText}>Step Out</Text>
+                <Text style={styles.buttonDangerText}>I'm Out</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   buttonDanger: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.inkFaint,
   },
   buttonDangerText: {
     fontSize: 16,

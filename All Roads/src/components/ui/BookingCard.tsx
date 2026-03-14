@@ -156,13 +156,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => {
-              console.log('📍 BookingCard: Step Out button pressed');
+              console.log('📍 BookingCard: I\'m Out button pressed');
               console.log('📍 Booking:', booking.id, booking.eventId);
               onCancel(booking);
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelText}>Step Out</Text>
+            <Text style={styles.cancelText}>I'm Out</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.inkFaint,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

@@ -159,7 +159,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Step Out',
+          text: "I'm Out",
           style: 'destructive',
           onPress: async () => {
             try {

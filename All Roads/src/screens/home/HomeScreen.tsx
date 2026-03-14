@@ -181,7 +181,7 @@ export function HomeScreen(): JSX.Element {
       await Promise.all([refetchEvents(), refetchBookings()]);
     } catch (error) {
       console.error('❌ Error stepping out:', error);
-      Alert.alert('Error', 'Failed to step out of the event. Please try again.');
+      Alert.alert('Error', 'Failed to leave the event. Please try again.');
     }
   }, [selectedBooking, cancelBookingMutation, refetchEvents, refetchBookings]);
 

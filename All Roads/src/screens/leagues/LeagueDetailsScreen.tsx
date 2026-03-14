@@ -230,12 +230,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!league || !currentUser) return;
 
     Alert.alert(
-      'Step Out',
-      'Are you sure you want to step out of this league?',
+      "I'm Out",
+      'Are you sure you want to leave this league?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Step Out',
+          text: "I'm Out",
           style: 'destructive',
           onPress: async () => {
             try {
@@ -243,7 +243,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
               await leagueService.stepOutOfLeague(league.id, currentUser.id);
               await loadLeague(true);
             } catch (err) {
-              const msg = err instanceof Error ? err.message : 'Failed to step out';
+              const msg = err instanceof Error ? err.message : 'Failed to leave league';
               Alert.alert('Error', msg);
             } finally {
               setIsActionLoading(false);
@@ -539,7 +539,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
         return (
           <View style={styles.actions}>
             <FormButton
-              title="Step Out"
+              title="I'm Out"
               onPress={handleStepOut}
               variant="outline"
               loading={isActionLoading}

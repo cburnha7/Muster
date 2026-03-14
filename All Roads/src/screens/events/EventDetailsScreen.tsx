@@ -288,7 +288,7 @@ export function EventDetailsScreen(): JSX.Element {
       );
 
       if (!validationResult.canBook) {
-        Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
+        Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
         return;
       }
 
@@ -339,7 +339,7 @@ export function EventDetailsScreen(): JSX.Element {
       console.log('✅ Event reloaded after step out');
     } catch (error) {
       console.error('❌ Step out error:', error);
-      Alert.alert('Error', 'Failed to step out. Please try again.');
+      Alert.alert('Error', 'Failed to leave. Please try again.');
       setShowStepOutModal(false);
     }
   };
@@ -1064,8 +1064,8 @@ export function EventDetailsScreen(): JSX.Element {
           />
         ) : isUserBooked ? (
           <FormButton
-            title="Step Out"
-            variant="danger"
+            title="I'm Out"
+            variant="outline"
             onPress={handleCancelBooking}
             loading={isBooking}
             disabled={isBooking}

@@ -156,7 +156,7 @@ export function BookingsListScreen(): JSX.Element {
       );
 
       if (!validationResult.canBook) {
-        Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
+        Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
         return;
       }
 

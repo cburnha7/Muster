@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
 import { SearchBar } from '../../components/ui/SearchBar';
+import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
 import { colors, Spacing } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import {
@@ -123,6 +124,11 @@ export const LeaguesBrowserScreen: React.FC = () => {
     (navigation as any).navigate('LeagueDetails', { leagueId: league.id });
   };
 
+  // Handle create league
+  const handleCreateLeague = () => {
+    (navigation as any).navigate('CreateLeague');
+  };
+
   // Get active filters count
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -161,6 +167,14 @@ export const LeaguesBrowserScreen: React.FC = () => {
             }}
           >
             <Text style={styles.clearButtonText}>Clear Search & Filters</Text>
+          </TouchableOpacity>
+        )}
+        {!searchQuery && activeFiltersCount === 0 && (
+          <TouchableOpacity
+            style={styles.createLeagueButton}
+            onPress={handleCreateLeague}
+          >
+            <Text style={styles.createLeagueButtonText}>Create League</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -202,7 +216,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
         onSearch={handleSearch}
       />
 
-      {/* Filter Button */}
+      {/* Filter Bar */}
       <View style={styles.filterContainer}>
         <TouchableOpacity
           style={[styles.filterButton, activeFiltersCount > 0 && styles.filterButtonActive]}
@@ -227,6 +241,12 @@ export const LeaguesBrowserScreen: React.FC = () => {
             </View>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleCreateLeague}
+        >
+          <Ionicons name="add" size={20} color={colors.grass} />
+        </TouchableOpacity>
       </View>
 
       {/* Leagues List */}
@@ -247,6 +267,13 @@ export const LeaguesBrowserScreen: React.FC = () => {
         onEndReachedThreshold={0.5}
         ListEmptyComponent={renderEmptyState}
         ListFooterComponent={renderFooter}
+      />
+
+      {/* Create League FAB */}
+      <FloatingActionButton
+        icon="add"
+        onPress={handleCreateLeague}
+        backgroundColor={colors.grass}
       />
 
       {/* Filter Modal */}
@@ -414,6 +441,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chalk,
   },
   filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
   },
@@ -457,7 +487,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: Spacing.lg,
+    paddingBottom: 100,
   },
   footerLoader: {
     paddingVertical: Spacing.lg,
@@ -494,6 +524,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.chalk,
+  },
+  createLeagueButton: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.grass,
+    borderRadius: 8,
+  },
+  createLeagueButtonText: {
+    color: colors.chalk,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.soft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorContainer: {
     flex: 1,

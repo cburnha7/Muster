@@ -5,8 +5,8 @@ import { colors } from '../theme';
  * Matches Muster brand colors
  */
 export const calendarTheme = {
-  backgroundColor: colors.chalk,
-  calendarBackground: colors.chalk,
+  backgroundColor: '#FFFFFF',
+  calendarBackground: '#FFFFFF',
   textSectionTitleColor: colors.ink,
   selectedDayBackgroundColor: colors.grass,
   selectedDayTextColor: '#FFFFFF',

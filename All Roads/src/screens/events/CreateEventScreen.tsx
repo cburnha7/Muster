@@ -1857,7 +1857,7 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    backgroundColor: colors.chalk,
+    backgroundColor: '#FFFFFF',
     shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
@@ -1866,6 +1866,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
+    overflow: 'hidden',
   },
   calendarLegend: {
     marginTop: Spacing.md,

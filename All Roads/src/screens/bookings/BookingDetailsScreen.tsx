@@ -106,7 +106,7 @@ export function BookingDetailsScreen(): JSX.Element {
     );
 
     if (!validationResult.canBook) {
-      Alert.alert('Cannot Step Out', validationResult.reason || 'Cannot leave this event');
+      Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
       return;
     }
 
@@ -117,7 +117,7 @@ export function BookingDetailsScreen(): JSX.Element {
     );
 
     // Show cancellation confirmation with refund info
-    let alertMessage = `Are you sure you want to step out of "${booking.event.title}"?\n\nThis action cannot be undone.`;
+    let alertMessage = `Are you sure you want to leave "${booking.event.title}"?\n\nThis action cannot be undone.`;
     
     if (validationResult.warnings && validationResult.warnings.length > 0) {
       alertMessage += '\n\n' + validationResult.warnings.join('\n');
@@ -128,12 +128,12 @@ export function BookingDetailsScreen(): JSX.Element {
     }
 
     Alert.alert(
-      'Step Out',
+      "I'm Out",
       alertMessage,
       [
         { text: 'Stay In', style: 'cancel' },
         {
-          text: 'Step Out',
+          text: "I'm Out",
           style: 'destructive',
           onPress: confirmCancelBooking,
         },
@@ -534,8 +534,8 @@ export function BookingDetailsScreen(): JSX.Element {
         
         {canCancel && (
           <FormButton
-            title="Step Out"
-            variant="danger"
+            title="I'm Out"
+            variant="outline"
             onPress={handleCancelBooking}
             loading={isCancelling}
             disabled={isCancelling}
