@@ -27,6 +27,7 @@ import {
   updateTeamMemberRole,
 } from '../../store/slices/teamsSlice';
 import { selectSelectedTeam, selectUserTeams } from '../../store/slices/teamsSlice';
+import { selectUser } from '../../store/slices/authSlice';
 import { Team, TeamMember, TeamRole, MemberStatus, User } from '../../types';
 import { League } from '../../types/league';
 import { colors } from '../../theme';
@@ -46,6 +47,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   const selectedTeam = useSelector(selectSelectedTeam);
   const userTeams = useSelector(selectUserTeams);
+  const currentUser = useSelector(selectUser);
 
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,10 +60,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
 
   const isUserMember = userTeams.some(t => t.id === teamId);
-  const userMember = team?.members.find(m => m.status === MemberStatus.ACTIVE);
+  // Check if user exists in the roster's member list (covers invited/added players)
+  const isInRosterMembers = team?.members.some(m => m.userId === currentUser?.id) ?? false;
+  const userMember = team?.members.find(m => m.userId === currentUser?.id && m.status === MemberStatus.ACTIVE);
   const isUserCaptain = userMember?.role === TeamRole.CAPTAIN;
   const isUserCoCaptain = userMember?.role === TeamRole.CO_CAPTAIN;
   const canManageTeam = isUserCaptain || isUserCoCaptain;
+  // Show Join Up only if: public roster, OR user is already in the member list (invited by captain)
+  const canSeeJoinButton = !isUserMember && !isInRosterMembers ? (team?.isPublic ?? false) : false;
 
   useEffect(() => {
     loadTeamDetails();
@@ -640,7 +646,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
         {/* Action Buttons */}
         <View style={styles.actions}>
-          {!isUserMember && availableSlots > 0 && (
+          {canSeeJoinButton && availableSlots > 0 && (
             <FormButton
               title="Join Up"
               onPress={handleJoinTeam}

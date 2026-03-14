@@ -261,43 +261,130 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    // Check for active league memberships
-    const activeMembership = await prisma.leagueMembership.findFirst({
-      where: {
-        teamId: id,
-        status: 'active',
-      },
-      include: {
-        league: {
-          select: {
-            id: true,
-            name: true,
-            sportType: true,
-          },
-        },
-      },
-    });
+    // Delete related records first, then the team
+    await prisma.$transaction(async (tx) => {
+      // Delete team members
+      await tx.teamMember.deleteMany({ where: { teamId: id } });
+      
+      // Delete league memberships
+      await tx.leagueMembership.deleteMany({ where: { teamId: id } });
+      
+      // Delete transactions
+      await tx.teamTransaction.deleteMany({ where: { teamId: id } });
 
-    if (activeMembership) {
-      return res.status(400).json({
-        error: 'Cannot delete team that is currently participating in active leagues',
-        league: {
-          id: activeMembership.league.id,
-          name: activeMembership.league.name,
-          sportType: activeMembership.league.sportType,
-        },
+      // Delete matches referencing this team
+      await tx.match.deleteMany({ 
+        where: { OR: [{ homeTeamId: id }, { awayTeamId: id }] } 
       });
-    }
 
-    // Delete the team (cascade will handle related records)
-    await prisma.team.delete({
-      where: { id },
+      // Delete the team
+      await tx.team.delete({ where: { id } });
     });
 
     res.status(204).send();
   } catch (error) {
     console.error('Delete team error:', error);
     res.status(500).json({ error: 'Failed to delete team' });
+  }
+});
+
+// Join team
+router.post('/:id/join', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.headers['x-user-id'] as string | undefined;
+    const { inviteCode } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { id },
+      include: { members: true },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: 'Roster not found' });
+    }
+
+    // Check if already a member
+    const existingMember = team.members.find(m => m.userId === userId);
+    if (existingMember && existingMember.status === 'active') {
+      return res.status(400).json({ error: 'You are already a member of this roster' });
+    }
+
+    // Private roster: require existing membership record (added by captain)
+    if (team.isPrivate) {
+      const wasInvited = team.members.some(m => m.userId === userId);
+
+      if (!wasInvited) {
+        return res.status(403).json({ error: 'This is a private roster. You need an invite to join.' });
+      }
+    }
+
+    // Check capacity
+    const activeCount = team.members.filter(m => m.status === 'active').length;
+    if (activeCount >= team.maxMembers) {
+      return res.status(400).json({ error: 'This roster is full' });
+    }
+
+    // Create or reactivate membership
+    let member;
+    if (existingMember) {
+      member = await prisma.teamMember.update({
+        where: { id: existingMember.id },
+        data: { status: 'active', joinedAt: new Date() },
+        include: { user: { select: { id: true, firstName: true, lastName: true } } },
+      });
+    } else {
+      member = await prisma.teamMember.create({
+        data: {
+          teamId: id,
+          userId,
+          role: 'member',
+          status: 'active',
+          joinedAt: new Date(),
+        },
+        include: { user: { select: { id: true, firstName: true, lastName: true } } },
+      });
+    }
+
+    res.status(201).json(member);
+  } catch (error) {
+    console.error('Join team error:', error);
+    res.status(500).json({ error: 'Failed to join roster' });
+  }
+});
+
+// Leave team
+router.post('/:id/leave', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.headers['x-user-id'] as string | undefined;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const member = await prisma.teamMember.findFirst({
+      where: { teamId: id, userId, status: 'active' },
+    });
+
+    if (!member) {
+      return res.status(404).json({ error: 'You are not a member of this roster' });
+    }
+
+    if (member.role === 'captain') {
+      return res.status(400).json({ error: 'Captains cannot leave. Transfer captaincy first or delete the roster.' });
+    }
+
+    await prisma.teamMember.delete({ where: { id: member.id } });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Leave team error:', error);
+    res.status(500).json({ error: 'Failed to leave roster' });
   }
 });
 
