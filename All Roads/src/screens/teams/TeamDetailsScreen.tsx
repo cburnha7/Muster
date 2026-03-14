@@ -31,6 +31,7 @@ import { selectUser } from '../../store/slices/authSlice';
 import { Team, TeamMember, TeamRole, MemberStatus, User } from '../../types';
 import { League } from '../../types/league';
 import { colors } from '../../theme';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 interface TeamDetailsScreenProps {
   route: {
@@ -58,6 +59,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const [inviteCodeExpiry, setInviteCodeExpiry] = useState<Date | null>(null);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const isUserMember = userTeams.some(t => t.id === teamId);
   // Check if user exists in the roster's member list (covers invited/added players)
@@ -177,32 +179,23 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     Alert.alert('Edit Roster', 'Edit roster functionality coming soon');
   };
 
-  const handleDeleteTeam = async () => {
+  const handleDeleteTeam = () => {
     if (!team) return;
+    setShowDeleteModal(true);
+  };
 
-    Alert.alert(
-      'Delete Roster',
-      `Are you sure you want to delete ${team.name}? This action cannot be undone.`,
-      [
-        { text: 'Step Out', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await teamService.deleteTeam(teamId);
-              dispatch(removeTeam(teamId));
-              Alert.alert('Success', 'Roster deleted successfully', [
-                { text: 'OK', onPress: () => navigation.goBack() },
-              ]);
-            } catch (err: any) {
-              console.error('Error deleting roster:', err);
-              Alert.alert('Error', err.message || 'Failed to delete roster');
-            }
-          },
-        },
-      ]
-    );
+  const confirmDeleteTeam = async () => {
+    try {
+      await teamService.deleteTeam(teamId);
+      dispatch(removeTeam(teamId));
+      setShowDeleteModal(false);
+      navigation.goBack();
+    } catch (err: any) {
+      console.error('Error deleting roster:', err);
+      setShowDeleteModal(false);
+      Alert.alert('Error', err.message || 'Failed to delete roster');
+    }
+  };
   };
 
   const handleGenerateInviteCode = async () => {
@@ -680,6 +673,17 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           />
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={showDeleteModal}
+        title="Delete Roster"
+        message={`Are you sure you want to delete ${team.name}? This action cannot be undone.`}
+        icon="trash-outline"
+        variant="danger"
+        confirmText="Delete"
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteTeam}
+      />
     </View>
   );
 }
