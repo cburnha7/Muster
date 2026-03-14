@@ -91,7 +91,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
     
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyText}>No teams in this league yet</Text>
+        <Text style={styles.emptyText}>No rosters in this league yet</Text>
       </View>
     );
   };

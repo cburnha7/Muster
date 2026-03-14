@@ -82,9 +82,9 @@ export function CreateTeamScreen(): JSX.Element {
     }
 
     if (formData.maxMembers < 2) {
-      newErrors.maxMembers = 'Roster must allow at least 2 members';
+      newErrors.maxMembers = 'Roster must allow at least 2 players';
     } else if (formData.maxMembers > 100) {
-      newErrors.maxMembers = 'Maximum members cannot exceed 100';
+      newErrors.maxMembers = 'Maximum players cannot exceed 100';
     }
 
     setErrors(newErrors);
@@ -113,7 +113,7 @@ export function CreateTeamScreen(): JSX.Element {
 
       const memberCount = pendingMembers.length;
       const successMessage = memberCount > 0
-        ? `Roster created successfully with ${memberCount} member${memberCount !== 1 ? 's' : ''}!`
+        ? `Roster created successfully with ${memberCount} player${memberCount !== 1 ? 's' : ''}!`
         : 'Roster created successfully!';
 
       Alert.alert(
@@ -226,7 +226,7 @@ export function CreateTeamScreen(): JSX.Element {
           />
 
           <FormInput
-            label="Maximum Members *"
+            label="Maximum Players *"
             value={formData.maxMembers.toString()}
             onChangeText={(value) => {
               const numValue = parseInt(value, 10);
@@ -234,7 +234,7 @@ export function CreateTeamScreen(): JSX.Element {
                 updateFormData('maxMembers', value === '' ? 0 : numValue);
               }
             }}
-            placeholder="Enter maximum number of members"
+            placeholder="Enter maximum number of players"
             keyboardType="numeric"
             error={errors.maxMembers}
           />
@@ -254,11 +254,11 @@ export function CreateTeamScreen(): JSX.Element {
             </Text>
           </View>
 
-          {/* Add Members Section - Only show for private rosters */}
+          {/* Add Players Section - Only show for private rosters */}
           {!formData.isPublic && (
             <View style={styles.addMembersSection}>
               <View style={styles.addMembersHeader}>
-                <Text style={styles.addMembersTitle}>Add Members</Text>
+                <Text style={styles.addMembersTitle}>Add Players</Text>
                 <View style={styles.privateBadge}>
                   <Text style={styles.privateBadgeText}>🔒 Private</Text>
                 </View>
@@ -267,11 +267,11 @@ export function CreateTeamScreen(): JSX.Element {
                 Search for existing users and add them to your roster. They will be added when you create the roster.
               </Text>
 
-              {/* Pending Members List */}
+              {/* Pending Players List */}
               {pendingMembers.length > 0 && (
                 <View style={styles.pendingMembersContainer}>
                   <Text style={styles.pendingMembersTitle}>
-                    Members to Add ({pendingMembers.length})
+                    Players to Add ({pendingMembers.length})
                   </Text>
                   {pendingMembers.map((member) => (
                     <View key={member.id} style={styles.pendingMemberItem}>

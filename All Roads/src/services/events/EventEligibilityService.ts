@@ -42,7 +42,7 @@ export class EventEligibilityService {
       );
 
       if (!hasAllowedTeam) {
-        reasons.push('You must be a member of an allowed team');
+        reasons.push('You must be a player of an allowed roster');
       }
     }
 

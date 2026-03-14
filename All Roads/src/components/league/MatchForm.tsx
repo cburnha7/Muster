@@ -49,15 +49,15 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!homeTeamId) {
-      newErrors.homeTeamId = 'Home team is required';
+      newErrors.homeTeamId = 'Home roster is required';
     }
 
     if (!awayTeamId) {
-      newErrors.awayTeamId = 'Away team is required';
+      newErrors.awayTeamId = 'Away roster is required';
     }
 
     if (homeTeamId && awayTeamId && homeTeamId === awayTeamId) {
-      newErrors.awayTeamId = 'Home and away teams must be different';
+      newErrors.awayTeamId = 'Home and away rosters must be different';
     }
 
     if (!scheduledDate) {
@@ -110,8 +110,8 @@ export const MatchForm: React.FC<MatchFormProps> = ({
         <Text style={styles.sectionTitle}>Match Details</Text>
         
         <FormSelect
-          label="Home Team *"
-          placeholder="Select home team"
+          label="Home Roster *"
+          placeholder="Select home roster"
           value={homeTeamId}
           options={teamOptions}
           onSelect={(option) => setHomeTeamId(option.value as string)}
@@ -119,8 +119,8 @@ export const MatchForm: React.FC<MatchFormProps> = ({
         />
 
         <FormSelect
-          label="Away Team *"
-          placeholder="Select away team"
+          label="Away Roster *"
+          placeholder="Select away roster"
           value={awayTeamId}
           options={teamOptions}
           onSelect={(option) => setAwayTeamId(option.value as string)}

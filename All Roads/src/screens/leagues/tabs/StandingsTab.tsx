@@ -79,7 +79,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
 
   const handleTeamPress = (teamId: string) => {
     // TODO: Navigate to team details
-    console.log('Team pressed:', teamId);
+    console.log('Roster pressed:', teamId);
   };
 
   const seasonOptions: SelectOption[] = [

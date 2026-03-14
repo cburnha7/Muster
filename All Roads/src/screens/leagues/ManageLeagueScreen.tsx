@@ -125,7 +125,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   const handleRemoveTeam = (teamId: string, teamName: string) => {
     Alert.alert(
-      'Remove Team',
+      'Remove Roster',
       `Are you sure you want to remove ${teamName} from this league?`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -136,10 +136,10 @@ export const ManageLeagueScreen: React.FC = () => {
             try {
               if (!user?.id) return;
               await leagueService.leaveLeague(leagueId, teamId, user.id);
-              Alert.alert('Success', 'Team removed from league');
+              Alert.alert('Success', 'Roster removed from league');
               loadMembers();
             } catch (error) {
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to remove team');
+              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to remove roster');
             }
           },
         },
@@ -226,22 +226,22 @@ export const ManageLeagueScreen: React.FC = () => {
         {/* Manage Teams */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>League Members</Text>
+            <Text style={styles.sectionTitle}>League Rosters</Text>
             <Text style={styles.memberCount}>
-              {members.length} {members.length === 1 ? 'team' : 'teams'}
+              {members.length} {members.length === 1 ? 'roster' : 'rosters'}
             </Text>
           </View>
           
           {isLoadingMembers ? (
             <View style={styles.loadingContainer}>
-              <LoadingSpinner size="small" message="Loading teams..." />
+              <LoadingSpinner size="small" message="Loading rosters..." />
             </View>
           ) : members.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="people-outline" size={48} color="#999" />
-              <Text style={styles.emptyStateText}>No teams have joined yet</Text>
+              <Text style={styles.emptyStateText}>No rosters have joined yet</Text>
               <Text style={styles.emptyStateSubtext}>
-                Teams can join from the league details page
+                Rosters can join from the league details page
               </Text>
             </View>
           ) : (
@@ -250,7 +250,7 @@ export const ManageLeagueScreen: React.FC = () => {
                 <View key={membership.id} style={styles.teamItem}>
                   <View style={styles.teamInfo}>
                     <Text style={styles.teamName}>
-                      {(membership as any).team?.name || 'Unknown Team'}
+                      {(membership as any).team?.name || 'Unknown Roster'}
                     </Text>
                     <Text style={styles.teamStats}>
                       {membership.matchesPlayed} matches • {membership.points} points
@@ -260,7 +260,7 @@ export const ManageLeagueScreen: React.FC = () => {
                     style={styles.removeButton}
                     onPress={() => handleRemoveTeam(
                       membership.teamId,
-                      (membership as any).team?.name || 'this team'
+                      (membership as any).team?.name || 'this roster'
                     )}
                   >
                     <Ionicons name="close-circle" size={24} color="#FF3B30" />

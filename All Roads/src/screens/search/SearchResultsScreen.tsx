@@ -301,7 +301,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
         showFilters
         filters={filters}
         onFiltersChange={setFilters}
-        placeholder="Search events, facilities, teams..."
+        placeholder="Search events, facilities, rosters..."
       />
 
       <View style={styles.header}>
@@ -314,7 +314,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
         {renderTabButton('all', 'All', totalResults)}
         {renderTabButton('events', 'Events', events.length)}
         {renderTabButton('facilities', 'Facilities', facilities.length)}
-        {renderTabButton('teams', 'Teams', teams.length)}
+        {renderTabButton('teams', 'Rosters', teams.length)}
       </View>
 
       {renderResults()}

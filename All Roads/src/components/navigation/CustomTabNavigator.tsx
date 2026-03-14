@@ -144,7 +144,7 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         name="Teams" 
         component={TeamsStackNavigator}
         options={{
-          tabBarLabel: 'Teams',
+          tabBarLabel: 'Rosters',
         }}
       />
       <Tab.Screen 

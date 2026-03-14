@@ -29,7 +29,7 @@ export function GetStartedScreen({ navigation, onComplete }: GetStartedScreenPro
 
           <Text style={styles.title}>You're All Set!</Text>
           <Text style={styles.subtitle}>
-            Ready to discover amazing sporting events and connect with teams in your area.
+            Ready to discover amazing sporting events and connect with rosters in your area.
           </Text>
 
           {/* Feature Highlights */}
@@ -44,7 +44,7 @@ export function GetStartedScreen({ navigation, onComplete }: GetStartedScreenPro
             </View>
             <View style={styles.featureItem}>
               <Text style={styles.featureIcon}>✓</Text>
-              <Text style={styles.featureText}>Join teams and tournaments</Text>
+              <Text style={styles.featureText}>Join rosters and leagues</Text>
             </View>
             <View style={styles.featureItem}>
               <Text style={styles.featureIcon}>✓</Text>

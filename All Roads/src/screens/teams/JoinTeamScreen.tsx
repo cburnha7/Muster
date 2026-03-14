@@ -85,7 +85,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
     }
 
     Alert.alert(
-      'Join Team',
+      'Join Roster',
       `Do you want to join ${validatedTeam.name}?`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -105,7 +105,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
                 `You have joined ${validatedTeam.name}!`,
                 [
                   {
-                    text: 'View Team',
+                    text: 'View Roster',
                     onPress: () => {
                       navigation.goBack();
                       (navigation as any).navigate('TeamDetails', {
@@ -120,10 +120,10 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
                 ]
               );
             } catch (err: any) {
-              console.error('Error joining team:', err);
+              console.error('Error joining roster:', err);
               Alert.alert(
                 'Error',
-                err.message || 'Failed to join team. Please try again.'
+                err.message || 'Failed to join roster. Please try again.'
               );
             } finally {
               setIsJoining(false);
@@ -139,7 +139,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
   };
 
   if (isJoining) {
-    return <LoadingSpinner message="Joining team..." />;
+    return <LoadingSpinner message="Joining roster..." />;
   }
 
   return (
@@ -148,7 +148,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader
-        title="Join Team"
+        title="Join Roster"
         showBack
         onBackPress={handleCancel}
       />
@@ -161,7 +161,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
         <View style={styles.form}>
           <Text style={styles.title}>Enter Invite Code</Text>
           <Text style={styles.subtitle}>
-            Enter the invite code shared by the team captain to join the team
+            Enter the invite code shared by the roster captain to join the roster
           </Text>
 
           <FormInput
@@ -195,7 +195,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
                 )}
               </View>
 
-              <Text style={styles.teamPreviewTitle}>Team Preview</Text>
+              <Text style={styles.teamPreviewTitle}>Roster Preview</Text>
               <TeamCard
                 team={validatedTeam}
                 onPress={() => {}}
@@ -203,7 +203,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
               />
 
               <View style={styles.teamInfo}>
-                <Text style={styles.infoTitle}>About this team:</Text>
+                <Text style={styles.infoTitle}>About this roster:</Text>
                 <Text style={styles.infoItem}>
                   🏀 Sport: {validatedTeam.sportType}
                 </Text>
@@ -211,7 +211,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
                   📊 Skill Level: {validatedTeam.skillLevel}
                 </Text>
                 <Text style={styles.infoItem}>
-                  👥 Members: {validatedTeam.members.length}/{validatedTeam.maxMembers}
+                  👥 Players: {validatedTeam.members.length}/{validatedTeam.maxMembers}
                 </Text>
                 {validatedTeam.description && (
                   <Text style={styles.infoDescription}>
@@ -221,7 +221,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
               </View>
 
               <FormButton
-                title="Join This Team"
+                title="Join This Roster"
                 onPress={handleJoinTeam}
                 disabled={isJoining}
               />
@@ -231,11 +231,11 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
           <View style={styles.helpSection}>
             <Text style={styles.helpTitle}>Don't have an invite code?</Text>
             <Text style={styles.helpText}>
-              Ask the team captain to share their invite code with you, or browse
-              public teams to join without a code.
+              Ask the roster captain to share their invite code with you, or browse
+              public rosters to join without a code.
             </Text>
             <FormButton
-              title="Browse Public Teams"
+              title="Browse Public Rosters"
               onPress={() => {
                 navigation.goBack();
               }}

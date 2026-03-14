@@ -169,7 +169,7 @@ export function TabNavigator(): JSX.Element {
         name="Teams" 
         component={TeamsStackNavigator}
         options={{
-          tabBarLabel: 'Teams',
+          tabBarLabel: 'Rosters',
         }}
       />
       <Tab.Screen 

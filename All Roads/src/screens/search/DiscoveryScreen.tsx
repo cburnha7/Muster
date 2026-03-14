@@ -309,7 +309,7 @@ export function DiscoveryScreen({ navigation }: DiscoveryScreenProps): JSX.Eleme
       )}
 
       {renderSection(
-        'Nearby Teams',
+        'Nearby Rosters',
         nearbyTeams,
         (team) => (
           <TeamCard

@@ -90,7 +90,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
       </View>
       
       <View style={[styles.headerCell, styles.teamCell]}>
-        <Text style={styles.headerText}>Team</Text>
+        <Text style={styles.headerText}>Roster</Text>
       </View>
       
       <TouchableOpacity 

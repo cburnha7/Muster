@@ -797,10 +797,15 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
     console.log('📋 Event ID:', id);
     console.log('📋 Booking ID:', bookingId);
 
-    // Delete the booking and update event participant count
+    // Update the booking status to cancelled and update event participant count
     await prisma.$transaction([
-      prisma.booking.delete({
+      prisma.booking.update({
         where: { id: bookingId },
+        data: {
+          status: 'cancelled',
+          cancellationReason: 'Stepped out by player',
+          cancelledAt: new Date(),
+        },
       }),
       prisma.event.update({
         where: { id },

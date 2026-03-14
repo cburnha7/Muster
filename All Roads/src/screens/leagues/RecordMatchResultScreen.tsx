@@ -142,7 +142,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   const handleTeamPress = (teamId: string) => {
     // TODO: Navigate to team details if needed
-    console.log('Team pressed:', teamId);
+    console.log('Roster pressed:', teamId);
   };
 
   if (loadingData) {

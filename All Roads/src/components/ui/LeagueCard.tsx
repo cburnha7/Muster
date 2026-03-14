@@ -101,7 +101,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, style }
         <View style={styles.detailRow}>
           <Ionicons name="people-outline" size={16} color="#666" />
           <Text style={styles.detailText}>
-            {league.memberCount || 0} teams
+            {league.memberCount || 0} rosters
           </Text>
         </View>
 

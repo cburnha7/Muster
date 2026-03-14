@@ -833,7 +833,7 @@ export function EventDetailsScreen(): JSX.Element {
                   <View style={styles.matchDetails}>
                     <View style={styles.teamInfo}>
                       <Text style={styles.teamName}>
-                        {match.homeTeam?.name || 'Home Team'}
+                        {match.homeTeam?.name || 'Home Roster'}
                       </Text>
                       {match.homeScore !== undefined && match.homeScore !== null && (
                         <Text style={styles.teamScore}>{match.homeScore}</Text>
@@ -844,7 +844,7 @@ export function EventDetailsScreen(): JSX.Element {
                     
                     <View style={styles.teamInfo}>
                       <Text style={styles.teamName}>
-                        {match.awayTeam?.name || 'Away Team'}
+                        {match.awayTeam?.name || 'Away Roster'}
                       </Text>
                       {match.awayScore !== undefined && match.awayScore !== null && (
                         <Text style={styles.teamScore}>{match.awayScore}</Text>

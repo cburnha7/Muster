@@ -36,8 +36,14 @@ router.get('/', async (req, res) => {
       prisma.team.count({ where }),
     ]);
 
+    // Map isPrivate to isPublic for frontend
+    const mappedTeams = teams.map(({ isPrivate, ...rest }) => ({
+      ...rest,
+      isPublic: !isPrivate,
+    }));
+
     res.json({
-      data: teams,
+      data: mappedTeams,
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
@@ -77,7 +83,9 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    res.json(team);
+    // Map isPrivate to isPublic for frontend
+    const { isPrivate, ...rest } = team;
+    res.json({ ...rest, isPublic: !isPrivate });
   } catch (error) {
     console.error('Get team error:', error);
     res.status(500).json({ error: 'Failed to fetch team' });
@@ -150,7 +158,14 @@ router.get('/:id/leagues', async (req, res) => {
 // Create team
 router.post('/', async (req, res) => {
   try {
-    const { initialMemberIds, ...teamData } = req.body;
+    const { initialMemberIds, isPublic, ...rest } = req.body;
+
+    // Map frontend isPublic to DB isPrivate, and ensure description has a value
+    const teamData = {
+      ...rest,
+      isPrivate: isPublic === undefined ? false : !isPublic,
+      description: rest.description || '',
+    };
 
     // Create the team
     const team = await prisma.team.create({
@@ -204,7 +219,13 @@ router.post('/', async (req, res) => {
       },
     });
 
-    res.status(201).json(completeTeam);
+    // Map isPrivate to isPublic for frontend
+    if (completeTeam) {
+      const { isPrivate: priv, ...restTeam } = completeTeam;
+      res.status(201).json({ ...restTeam, isPublic: !priv });
+    } else {
+      res.status(201).json(completeTeam);
+    }
   } catch (error) {
     console.error('Create team error:', error);
     res.status(500).json({ error: 'Failed to create team' });

@@ -158,10 +158,10 @@ export function TeamsListScreen(): JSX.Element {
         <Text style={styles.emptyStateText}>
           {searchQuery
             ? 'Try adjusting your search or filters'
-            : 'Be the first to create a team!'}
+            : 'Be the first to create a roster!'}
         </Text>
         <TouchableOpacity style={styles.emptyStateButton} onPress={handleCreateTeam}>
-          <Text style={styles.emptyStateButtonText}>Create Team</Text>
+          <Text style={styles.emptyStateButtonText}>Create Roster</Text>
         </TouchableOpacity>
       </View>
     );
@@ -193,7 +193,7 @@ export function TeamsListScreen(): JSX.Element {
   if (isLoading && !refreshing && !teams.length) {
     return (
       <View style={styles.container}>
-        <LoadingSpinner message="Loading teams..." />
+        <LoadingSpinner message="Loading rosters..." />
       </View>
     );
   }
@@ -205,7 +205,7 @@ export function TeamsListScreen(): JSX.Element {
           value={searchQuery}
           onChangeText={setSearchQuery}
           onSearch={handleSearch}
-          placeholder="Search teams..."
+          placeholder="Search rosters..."
           style={styles.searchBar}
         />
         <TouchableOpacity 
@@ -266,7 +266,7 @@ export function TeamsListScreen(): JSX.Element {
       <FloatingActionButton
         icon="add"
         onPress={handleCreateTeam}
-        label="Create Team"
+        label="Create Roster"
       />
 
       <TouchableOpacity

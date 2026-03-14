@@ -30,8 +30,8 @@ const features = [
   {
     id: 3,
     icon: '👥',
-    title: 'Join Teams',
-    description: 'Connect with teams, participate in tournaments, and build lasting friendships.',
+    title: 'Join Rosters',
+    description: 'Connect with rosters, participate in leagues, and build lasting friendships.',
   },
   {
     id: 4,

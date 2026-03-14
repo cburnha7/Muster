@@ -214,7 +214,7 @@ export function HomeScreen(): JSX.Element {
 
         {/* Search Bar */}
         <SearchBar
-          placeholder="Search events, facilities, teams..."
+          placeholder="Search events, facilities, rosters..."
           value={searchQuery}
           onChangeText={setSearchQuery}
           onSearch={handleSearch}

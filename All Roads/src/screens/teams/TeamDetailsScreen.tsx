@@ -218,7 +218,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
     Alert.alert(
       'Share Invite Code',
-      `Invite Code: ${inviteCode}\n\nShare this code with people you want to invite to your team.`,
+      `Invite Code: ${inviteCode}\n\nShare this code with people you want to invite to your roster.`,
       [
         { text: 'OK' },
         {
@@ -234,7 +234,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   const handleInviteMember = () => {
     Alert.alert(
-      'Invite Member',
+      'Invite Player',
       'Enter the email or user ID of the person you want to invite',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -253,8 +253,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     if (!team) return;
 
     Alert.alert(
-      'Remove Member',
-      `Remove ${member.user?.firstName || 'this member'} from the roster?`,
+      'Remove Player',
+      `Remove ${member.user?.firstName || 'this player'} from the roster?`,
       [
         { text: 'Step Out', style: 'cancel' },
         {
@@ -265,10 +265,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               await teamService.removeFromTeam(teamId, member.userId);
               dispatch(removeTeamMember({ teamId, userId: member.userId }));
               await loadTeamDetails(); // Reload to get updated data
-              Alert.alert('Success', 'Member removed from roster');
+              Alert.alert('Success', 'Player removed from roster');
             } catch (err: any) {
               console.error('Error removing member:', err);
-              Alert.alert('Error', err.message || 'Failed to remove member');
+              Alert.alert('Error', err.message || 'Failed to remove player');
             }
           },
         },
@@ -286,7 +286,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         onPress: () => updateMemberRole(member, TeamRole.CO_CAPTAIN),
       },
       {
-        text: 'Make Member',
+        text: 'Make Player',
         onPress: () => updateMemberRole(member, TeamRole.MEMBER),
       },
     ];
@@ -299,10 +299,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       await teamService.updateMemberRole(teamId, member.userId, newRole);
       dispatch(updateTeamMemberRole({ teamId, userId: member.userId, role: newRole }));
       await loadTeamDetails();
-      Alert.alert('Success', 'Member role updated');
+      Alert.alert('Success', 'Player role updated');
     } catch (err: any) {
       console.error('Error updating member role:', err);
-      Alert.alert('Error', err.message || 'Failed to update member role');
+      Alert.alert('Error', err.message || 'Failed to update player role');
     }
   };
 
@@ -347,7 +347,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               {member.user?.firstName} {member.user?.lastName}
             </Text>
             <Text style={styles.memberRole}>
-              {isCaptain ? '👑 Captain' : isCoCaptain ? '⭐ Co-Captain' : 'Member'}
+              {isCaptain ? '👑 Captain' : isCoCaptain ? '⭐ Co-Captain' : 'Player'}
             </Text>
           </View>
         </View>
@@ -528,7 +528,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         <View style={styles.membersContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              Members ({activeMembers.length}/{team.maxMembers})
+              Players ({activeMembers.length}/{team.maxMembers})
             </Text>
             {availableSlots > 0 && (
               <Text style={styles.availableSlots}>{availableSlots} slots available</Text>
@@ -550,7 +550,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           {!team.isPublic && canManageTeam && availableSlots > 0 && (
             <View style={styles.addMemberSection}>
               <View style={styles.addMemberHeader}>
-                <Text style={styles.addMemberTitle}>Add Members</Text>
+                <Text style={styles.addMemberTitle}>Add Players</Text>
                 <View style={styles.privateBadge}>
                   <Text style={styles.privateBadgeText}>🔒 Private</Text>
                 </View>
@@ -592,7 +592,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         {/* Invite Section (for captains/co-captains) */}
         {canManageTeam && (
           <View style={styles.inviteContainer}>
-            <Text style={styles.sectionTitle}>Invite Members</Text>
+            <Text style={styles.sectionTitle}>Invite Players</Text>
             
             {inviteCode ? (
               <View style={styles.inviteCodeBox}>
@@ -621,7 +621,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             ) : (
               <View style={styles.noInviteCode}>
                 <Text style={styles.noInviteCodeText}>
-                  No active invite code. Generate one to invite members.
+                  No active invite code. Generate one to invite players.
                 </Text>
                 <FormButton
                   title="Generate Invite Code"

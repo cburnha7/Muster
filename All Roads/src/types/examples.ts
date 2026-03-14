@@ -134,7 +134,7 @@ export const exampleEvent: Event = {
 export const exampleTeam: Team = {
   id: 'team-101',
   name: 'The Ballers',
-  description: 'Competitive basketball team looking for skilled players',
+  description: 'Competitive basketball roster looking for skilled players',
   captainId: 'user-123',
   captain: exampleUser,
   members: [
@@ -224,7 +224,7 @@ export const exampleFormData = {
   },
   
   createTeam: {
-    name: 'New Team',
+    name: 'New Roster',
     description: 'Looking for players',
     sportType: SportType.SOCCER,
     skillLevel: SkillLevel.BEGINNER,

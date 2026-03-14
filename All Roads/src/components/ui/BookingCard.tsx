@@ -107,12 +107,17 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={16} color="#666" />
+              <Ionicons name="hourglass-outline" size={16} color="#666" />
               <Text style={styles.detailText}>
-                Duration: {Math.round(
-                  (new Date(booking.event.endTime).getTime() -
-                   new Date(booking.event.startTime).getTime()) / (1000 * 60)
-                )} minutes
+                Duration: {(() => {
+                  const ms = new Date(booking.event.endTime).getTime() - new Date(booking.event.startTime).getTime();
+                  const totalMinutes = Math.round(ms / 60000);
+                  const hours = Math.floor(totalMinutes / 60);
+                  const minutes = totalMinutes % 60;
+                  if (hours === 0) return `${minutes}min`;
+                  if (minutes === 0) return `${hours}h`;
+                  return `${hours}h ${minutes}min`;
+                })()}
               </Text>
             </View>
             {booking.team && (

@@ -99,9 +99,9 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
 
       <View style={styles.scoresContainer}>
         <View style={styles.teamScore}>
-          <Text style={styles.teamLabel}>Home Team</Text>
+          <Text style={styles.teamLabel}>Home Roster</Text>
           <Text style={styles.teamName} numberOfLines={1}>
-            {match.homeTeam?.name || 'Home Team'}
+            {match.homeTeam?.name || 'Home Roster'}
           </Text>
           <FormInput
             label="Score *"
@@ -119,9 +119,9 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
         </View>
 
         <View style={styles.teamScore}>
-          <Text style={styles.teamLabel}>Away Team</Text>
+          <Text style={styles.teamLabel}>Away Roster</Text>
           <Text style={styles.teamName} numberOfLines={1}>
-            {match.awayTeam?.name || 'Away Team'}
+            {match.awayTeam?.name || 'Away Roster'}
           </Text>
           <FormInput
             label="Score *"

@@ -114,7 +114,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
             </TouchableOpacity>
             
             <View style={[styles.headerCell, styles.teamCell]}>
-              <Text style={styles.headerText}>Team</Text>
+              <Text style={styles.headerText}>Roster</Text>
             </View>
             
             <View style={[styles.headerCell, styles.statCell]}>

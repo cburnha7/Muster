@@ -154,7 +154,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
     { key: 'standings', title: 'Standings' },
     { key: 'matches', title: 'Matches' },
     { key: 'players', title: 'Players' },
-    { key: 'teams', title: 'Teams' },
+    { key: 'teams', title: 'Rosters' },
     { key: 'info', title: 'Info' },
   ];
 
@@ -278,7 +278,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <View style={styles.stats}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{league.memberCount || 0}</Text>
-              <Text style={styles.statLabel}>Teams</Text>
+              <Text style={styles.statLabel}>Rosters</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{league.matchCount || 0}</Text>

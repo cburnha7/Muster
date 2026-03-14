@@ -103,7 +103,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
         <View style={styles.detailRow}>
           <Ionicons name="people-outline" size={16} color="#666" />
           <Text style={[styles.detailText, isFull && styles.fullText]}>
-            {team.members.length}/{team.maxMembers} members
+            {team.members.length}/{team.maxMembers} players
           </Text>
         </View>
 
@@ -114,7 +114,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
             color="#666"
           />
           <Text style={styles.detailText}>
-            {team.isPublic ? 'Public team' : 'Private team'}
+            {team.isPublic ? 'Public roster' : 'Private roster'}
           </Text>
         </View>
       </View>
@@ -146,7 +146,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
         </View>
         {team.isPublic && !isFull && (
           <View style={styles.joinButton}>
-            <Text style={styles.joinText}>Join Team</Text>
+            <Text style={styles.joinText}>Join Up</Text>
           </View>
         )}
       </View>

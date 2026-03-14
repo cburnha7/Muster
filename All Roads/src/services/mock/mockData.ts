@@ -74,7 +74,7 @@ export const mockFacilities: Facility[] = [
   {
     id: '2',
     name: 'Bayview Recreation Center',
-    description: 'Community recreation center with outdoor fields and indoor courts. Perfect for team sports and tournaments.',
+    description: 'Community recreation center with outdoor fields and indoor courts. Perfect for roster sports and leagues.',
     street: '456 Bay St',
     city: 'San Francisco',
     state: 'CA',
@@ -276,7 +276,7 @@ export const mockTeams: Team[] = [
   {
     id: '1',
     name: 'Bay Area Ballers',
-    description: 'Competitive basketball team looking for skilled players. We play in local leagues and tournaments.',
+    description: 'Competitive basketball roster looking for skilled players. We play in local leagues.',
     captainId: '1',
     captain: mockUser,
     members: [
@@ -307,7 +307,7 @@ export const mockTeams: Team[] = [
   {
     id: '2',
     name: 'SF Soccer Squad',
-    description: 'Casual soccer team for weekend games. All skill levels welcome!',
+    description: 'Casual soccer roster for weekend games. All skill levels welcome!',
     captainId: '2',
     captain: {
       id: '2',

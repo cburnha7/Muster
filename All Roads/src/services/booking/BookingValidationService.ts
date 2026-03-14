@@ -60,7 +60,7 @@ export class BookingValidationService {
     if (event.eventType === 'team_based' && !team) {
       return {
         canBook: false,
-        reason: 'This event requires team registration',
+        reason: 'This event requires roster registration',
       };
     }
 
@@ -81,7 +81,7 @@ export class BookingValidationService {
       if (!isMember) {
         return {
           canBook: false,
-          reason: 'You are not an active member of this team',
+          reason: 'You are not an active player of this roster',
         };
       }
 
@@ -89,7 +89,7 @@ export class BookingValidationService {
       if (team.sportType !== event.sportType) {
         return {
           canBook: false,
-          reason: 'Team sport type does not match event sport type',
+          reason: 'Roster sport type does not match event sport type',
         };
       }
 
@@ -98,7 +98,7 @@ export class BookingValidationService {
       if (isTeamRegistered) {
         return {
           canBook: false,
-          reason: 'Your team is already registered for this event',
+          reason: 'Your roster is already registered for this event',
         };
       }
     }
@@ -239,7 +239,7 @@ export class BookingValidationService {
     let message = `You have successfully booked "${event.title}" on ${eventDate} at ${eventTime}`;
     
     if (team) {
-      message += ` for team "${team.name}"`;
+      message += ` for roster "${team.name}"`;
     }
 
     if (event.facility?.name) {
