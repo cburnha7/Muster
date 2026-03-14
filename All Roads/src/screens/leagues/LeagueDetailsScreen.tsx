@@ -540,12 +540,35 @@ export function LeagueDetailsScreen(): React.ReactElement {
   };
 
   const renderUpcomingEvents = () => {
-    if (upcomingEvents.length === 0 && !isOperator) return null;
-
     const registrationClosed = league?.registrationCloseDate
       ? new Date(league.registrationCloseDate) < new Date()
       : false;
-    const showGenerateBtn = isOperator && registrationClosed && !league?.scheduleGenerated && league?.autoGenerateMatchups !== false;
+
+    // Hide events section entirely until registration closes
+    if (!registrationClosed) {
+      if (!isOperator) return null;
+      // Commissioner sees a locked notice
+      return (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Events</Text>
+          </View>
+          <View style={styles.emptyState}>
+            <Ionicons name="lock-closed-outline" size={40} color={colors.inkFaint} />
+            <Text style={styles.emptyText}>
+              Events are locked until registration closes
+              {league?.registrationCloseDate
+                ? ` on ${formatDate(league.registrationCloseDate)}`
+                : ''}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (upcomingEvents.length === 0 && !isOperator) return null;
+
+    const showGenerateBtn = isOperator && !league?.scheduleGenerated && league?.autoGenerateMatchups !== false;
     const shellEvents = upcomingEvents.filter((e) => e.scheduledStatus === 'unscheduled');
     const scheduledEvents = upcomingEvents.filter((e) => e.scheduledStatus !== 'unscheduled');
 
@@ -841,16 +864,15 @@ export function LeagueDetailsScreen(): React.ReactElement {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
         >
-          {/* League edit form — includes Update/Delete at bottom */}
-          <View style={styles.formSection}>
-            <LeagueForm
-              initialData={league}
-              onSubmit={handleUpdateLeague}
-              onDelete={handleDeleteLeague}
-              isEdit={true}
-              loading={isUpdating}
-            />
-          </View>
+          {/* League edit form — includes Delete/Cancel/Save at bottom */}
+          <LeagueForm
+            initialData={league}
+            onSubmit={handleUpdateLeague}
+            onCancel={() => navigation.goBack()}
+            onDelete={handleDeleteLeague}
+            isEdit={true}
+            loading={isUpdating}
+          />
 
           {/* Join request queue */}
           {renderJoinRequestQueue()}

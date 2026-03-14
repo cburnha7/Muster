@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FormInput } from '../forms/FormInput';
@@ -16,7 +15,6 @@ import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
 import { CreateLeagueData, UpdateLeagueData, SportType, SkillLevel, PointsConfig, Team } from '../../types';
 import { teamService } from '../../services/api/TeamService';
-import { userService } from '../../services/api/UserService';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 
 interface AddedRoster {
@@ -24,12 +22,6 @@ interface AddedRoster {
   name: string;
   sportType?: string;
   memberCount?: number;
-}
-
-interface AddedPerson {
-  id: string;
-  name: string;
-  username?: string;
 }
 
 interface LeagueFormProps {
@@ -40,7 +32,6 @@ interface LeagueFormProps {
   isEdit?: boolean;
   loading?: boolean;
   initialRosters?: AddedRoster[];
-  initialPeople?: AddedPerson[];
 }
 
 export const LeagueForm: React.FC<LeagueFormProps> = ({
@@ -51,7 +42,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   isEdit = false,
   loading = false,
   initialRosters = [],
-  initialPeople = [],
 }) => {
   const [leagueType, setLeagueType] = useState<'team' | 'pickup'>(
     (initialData as Partial<CreateLeagueData>)?.leagueType || 'team'
@@ -126,13 +116,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [rosterSearchResults, setRosterSearchResults] = useState<AddedRoster[]>([]);
   const [isSearchingRosters, setIsSearchingRosters] = useState(false);
   const [rosterSearchError, setRosterSearchError] = useState<string | null>(null);
-
-  // Add People state
-  const [addedPeople, setAddedPeople] = useState<AddedPerson[]>(initialPeople);
-  const [peopleSearchQuery, setPeopleSearchQuery] = useState('');
-  const [peopleSearchResults, setPeopleSearchResults] = useState<AddedPerson[]>([]);
-  const [isSearchingPeople, setIsSearchingPeople] = useState(false);
-  const [peopleSearchError, setPeopleSearchError] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -266,38 +249,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     setAddedRosters(prev => prev.filter(r => r.id !== rosterId));
   };
 
-  // ── People search ──────────────────────────────────────────────
-  const handleSearchPeople = useCallback(async () => {
-    const query = peopleSearchQuery.trim();
-    if (!query) return;
-    setIsSearchingPeople(true);
-    setPeopleSearchError(null);
-    try {
-      const results = await userService.searchUsers(query);
-      const mapped = (results || []).map((u: any) => ({
-        id: u.id,
-        name: u.name || u.username || 'Unknown',
-        username: u.username,
-      }));
-      const addedIds = new Set(addedPeople.map(p => p.id));
-      setPeopleSearchResults(mapped.filter((p: AddedPerson) => !addedIds.has(p.id)));
-    } catch (err) {
-      setPeopleSearchError(err instanceof Error ? err.message : 'Failed to search people');
-      setPeopleSearchResults([]);
-    } finally {
-      setIsSearchingPeople(false);
-    }
-  }, [peopleSearchQuery, addedPeople]);
-
-  const handleAddPerson = (person: AddedPerson) => {
-    setAddedPeople(prev => [...prev, person]);
-    setPeopleSearchResults(prev => prev.filter(p => p.id !== person.id));
-  };
-
-  const handleRemovePerson = (personId: string) => {
-    setAddedPeople(prev => prev.filter(p => p.id !== personId));
-  };
-
   // ── Validation ──────────────────────────────────────────────────
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -388,9 +339,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       scheduleFrequency,
       seasonLength: seasonLength ? parseInt(seasonLength) : null,
       autoGenerateMatchups,
-      // Include added rosters and people for the parent to handle
+      // Include added rosters for the parent to handle
       rosterIds: addedRosters.map(r => r.id),
-      invitedUserIds: addedPeople.map(p => p.id),
       ...(isEdit ? {} : {
         leagueType,
         visibility: leagueType === 'pickup' ? 'public' : visibility,
@@ -476,434 +426,359 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // ── Search section renderer ─────────────────────────────────────
-  const renderSearchSection = (config: {
-    title: string;
-    description: string;
-    query: string;
-    onChangeQuery: (t: string) => void;
-    onSearch: () => void;
-    isSearching: boolean;
-    searchError: string | null;
-    results: { id: string; name: string; meta?: string }[];
-    onAdd: (item: any) => void;
-    addedItems: { id: string; name: string }[];
-    onRemove: (id: string) => void;
-    placeholder: string;
-    emptyLabel: string;
-  }) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{config.title}</Text>
-      <Text style={styles.sectionDescription}>{config.description}</Text>
-
-      <View style={styles.searchRow}>
-        <TextInput
-          style={styles.searchInput}
-          value={config.query}
-          onChangeText={(text) => {
-            config.onChangeQuery(text);
-          }}
-          placeholder={config.placeholder}
-          placeholderTextColor={colors.inkFaint}
-          returnKeyType="search"
-          onSubmitEditing={config.onSearch}
-          accessibilityLabel={config.placeholder}
-        />
-        <TouchableOpacity
-          style={[styles.searchButton, (!config.query.trim() || config.isSearching) && styles.searchButtonDisabled]}
-          onPress={config.onSearch}
-          disabled={!config.query.trim() || config.isSearching}
-          accessibilityRole="button"
-          accessibilityLabel="Search"
-        >
-          {config.isSearching ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Ionicons name="search" size={20} color="#FFFFFF" />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {config.searchError && (
-        <View style={styles.searchErrorRow}>
-          <Ionicons name="alert-circle" size={16} color={colors.track} />
-          <Text style={styles.searchErrorText}>{config.searchError}</Text>
-        </View>
-      )}
-
-      {config.results.length > 0 && (
-        <View style={styles.searchResults}>
-          {config.results.map(item => (
-            <View key={item.id} style={styles.searchResultItem}>
-              <View style={styles.searchResultInfo}>
-                <Text style={styles.searchResultName}>{item.name}</Text>
-                {item.meta && <Text style={styles.searchResultMeta}>{item.meta}</Text>}
-              </View>
-              <TouchableOpacity
-                style={styles.addItemBtn}
-                onPress={() => config.onAdd(item)}
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${item.name}`}
-              >
-                <Ionicons name="add" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {config.results.length === 0 && config.query.trim() && !config.isSearching && !config.searchError && (
-        <Text style={styles.noResults}>No results for "{config.query.trim()}"</Text>
-      )}
-
-      {config.addedItems.length > 0 && (
-        <View style={styles.addedList}>
-          <Text style={styles.addedListLabel}>{config.emptyLabel} ({config.addedItems.length})</Text>
-          {config.addedItems.map(item => (
-            <View key={item.id} style={styles.addedItem}>
-              <Text style={styles.addedItemName}>{item.name}</Text>
-              <TouchableOpacity
-                onPress={() => config.onRemove(item.id)}
-                style={styles.removeItemBtn}
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${item.name}`}
-              >
-                <Ionicons name="close-circle" size={22} color={colors.track} />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {!isEdit && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>League Type</Text>
-          <Text style={styles.sectionDescription}>
-            Choose how your league is structured
-          </Text>
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.form}>
+          {!isEdit && (
+            <>
+              <FormSelect
+                label="League Type *"
+                placeholder="Select league type"
+                value={leagueType}
+                options={leagueTypeOptions}
+                onSelect={handleLeagueTypeChange}
+              />
+
+              {leagueType === 'team' && (
+                <FormSelect
+                  label="Visibility"
+                  placeholder="Select visibility"
+                  value={visibility}
+                  options={visibilityOptions}
+                  onSelect={(option) => setVisibility(option.value as 'public' | 'private')}
+                />
+              )}
+            </>
+          )}
+
+          <FormInput
+            label="League Name *"
+            placeholder="Enter league name"
+            value={name}
+            onChangeText={setName}
+            error={errors.name}
+          />
+
+          <FormInput
+            label="Description"
+            placeholder="Enter league description"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={3}
+          />
 
           <FormSelect
-            label="League Type *"
-            placeholder="Select league type"
-            value={leagueType}
-            options={leagueTypeOptions}
-            onSelect={handleLeagueTypeChange}
+            label="Sport Type *"
+            placeholder="Select sport type"
+            value={sportType}
+            options={sportTypeOptions}
+            onSelect={(option) => setSportType(option.value as string)}
+            error={errors.sportType}
           />
 
-          {leagueType === 'team' && (
-            <FormSelect
-              label="Visibility"
-              placeholder="Select visibility"
-              value={visibility}
-              options={visibilityOptions}
-              onSelect={(option) => setVisibility(option.value as 'public' | 'private')}
-            />
-          )}
-        </View>
-      )}
+          <FormSelect
+            label="Skill Level *"
+            placeholder="Select skill level"
+            value={skillLevel}
+            options={skillLevelOptions}
+            onSelect={(option) => setSkillLevel(option.value as string)}
+            error={errors.skillLevel}
+          />
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Basic Information</Text>
+          <FormInput
+            label="League Logo URL"
+            placeholder="https://example.com/logo.png"
+            value={imageUrl}
+            onChangeText={setImageUrl}
+            keyboardType="url"
+          />
 
-        <FormInput
-          label="League Name *"
-          placeholder="Enter league name"
-          value={name}
-          onChangeText={setName}
-          error={errors.name}
-        />
+          <FormInput
+            label="Season Name"
+            placeholder="e.g., Spring 2026"
+            value={seasonName}
+            onChangeText={setSeasonName}
+          />
 
-        <FormInput
-          label="Description"
-          placeholder="Enter league description"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          numberOfLines={3}
-        />
+          {/* Calendar date picker for Season Start Date */}
+          <Text style={styles.fieldLabel}>Season Start Date</Text>
+          <TouchableOpacity
+            style={styles.datePickerTrigger}
+            onPress={() => setShowCalendar(!showCalendar)}
+            accessibilityRole="button"
+            accessibilityLabel="Select season start date"
+          >
+            <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+            <Text style={[styles.datePickerText, !startDate && styles.datePickerPlaceholder]}>
+              {startDate ? formatDateDisplay(startDate) : 'Select a date'}
+            </Text>
+            <Ionicons name={showCalendar ? 'chevron-up' : 'chevron-down'} size={18} color={colors.inkFaint} />
+          </TouchableOpacity>
+          {showCalendar && renderCalendar()}
 
-        <FormSelect
-          label="Sport Type *"
-          placeholder="Select sport type"
-          value={sportType}
-          options={sportTypeOptions}
-          onSelect={(option) => setSportType(option.value as string)}
-          error={errors.sportType}
-        />
+          <FormSelect
+            label="Schedule Frequency"
+            placeholder="Select frequency"
+            value={scheduleFrequency}
+            options={frequencyOptions}
+            onSelect={(option) => setScheduleFrequency(option.value as 'weekly' | 'monthly')}
+          />
 
-        <FormSelect
-          label="Skill Level *"
-          placeholder="Select skill level"
-          value={skillLevel}
-          options={skillLevelOptions}
-          onSelect={(option) => setSkillLevel(option.value as string)}
-          error={errors.skillLevel}
-        />
+          <FormInput
+            label={`Season Length (${scheduleFrequency === 'weekly' ? 'weeks' : 'months'})`}
+            placeholder={scheduleFrequency === 'weekly' ? 'e.g. 12' : 'e.g. 3'}
+            value={seasonLength}
+            onChangeText={setSeasonLength}
+            keyboardType="numeric"
+          />
 
-        <FormInput
-          label="League Logo URL"
-          placeholder="https://example.com/logo.png"
-          value={imageUrl}
-          onChangeText={setImageUrl}
-          keyboardType="url"
-        />
-      </View>
-
-      {/* Season Configuration */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Season Configuration</Text>
-
-        <FormInput
-          label="Season Name"
-          placeholder="e.g., Spring 2026"
-          value={seasonName}
-          onChangeText={setSeasonName}
-        />
-
-        {/* Calendar date picker for Season Start Date */}
-        <Text style={styles.fieldLabel}>Season Start Date</Text>
-        <TouchableOpacity
-          style={styles.datePickerTrigger}
-          onPress={() => setShowCalendar(!showCalendar)}
-          accessibilityRole="button"
-          accessibilityLabel="Select season start date"
-        >
-          <Ionicons name="calendar-outline" size={20} color={colors.grass} />
-          <Text style={[styles.datePickerText, !startDate && styles.datePickerPlaceholder]}>
-            {startDate ? formatDateDisplay(startDate) : 'Select a date'}
-          </Text>
-          <Ionicons name={showCalendar ? 'chevron-up' : 'chevron-down'} size={18} color={colors.inkFaint} />
-        </TouchableOpacity>
-        {showCalendar && renderCalendar()}
-
-        <FormSelect
-          label="Schedule Frequency"
-          placeholder="Select frequency"
-          value={scheduleFrequency}
-          options={frequencyOptions}
-          onSelect={(option) => setScheduleFrequency(option.value as 'weekly' | 'monthly')}
-        />
-
-        <FormInput
-          label={`Season Length (${scheduleFrequency === 'weekly' ? 'weeks' : 'months'})`}
-          placeholder={scheduleFrequency === 'weekly' ? 'e.g. 12' : 'e.g. 3'}
-          value={seasonLength}
-          onChangeText={setSeasonLength}
-          keyboardType="numeric"
-        />
-
-        {/* Projected End Date — read-only */}
-        <View style={styles.projectedEndRow}>
-          <Text style={styles.fieldLabel}>Projected End Date</Text>
-          <Text style={styles.projectedEndValue}>
-            {projectedEndDate || 'Set start date and season length'}
-          </Text>
-        </View>
-
-        <View style={styles.toggleRow}>
-          <View style={styles.toggleInfo}>
-            <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
-            <Text style={styles.toggleDescription}>
-              Automatically create shell matchup events after registration closes
+          {/* Projected End Date — read-only */}
+          <View style={styles.projectedEndRow}>
+            <Text style={styles.fieldLabel}>Projected End Date</Text>
+            <Text style={styles.projectedEndValue}>
+              {projectedEndDate || 'Set start date and season length'}
             </Text>
           </View>
-          <TouchableOpacity
-            style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
-            onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
-            activeOpacity={0.7}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: autoGenerateMatchups }}
-          >
-            <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      {/* Points System */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Points System</Text>
-        <Text style={styles.sectionDescription}>
-          Configure how many points rosters earn for match results
-        </Text>
-
-        <FormInput
-          label="Points for Win"
-          placeholder="3"
-          value={winPoints}
-          onChangeText={setWinPoints}
-          keyboardType="numeric"
-          error={errors.winPoints}
-        />
-
-        <FormInput
-          label="Points for Draw"
-          placeholder="1"
-          value={drawPoints}
-          onChangeText={setDrawPoints}
-          keyboardType="numeric"
-          error={errors.drawPoints}
-        />
-
-        <FormInput
-          label="Points for Loss"
-          placeholder="0"
-          value={lossPoints}
-          onChangeText={setLossPoints}
-          keyboardType="numeric"
-          error={errors.lossPoints}
-        />
-      </View>
-
-      {/* Schedule Configuration — team leagues only */}
-      {leagueType === 'team' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Schedule Configuration</Text>
-          <Text style={styles.sectionDescription}>
-            Optional settings for roster requirements and auto-scheduling
-          </Text>
-
-          <FormInput
-            label="Minimum Roster Size"
-            placeholder="e.g. 5"
-            value={minimumRosterSize}
-            onChangeText={setMinimumRosterSize}
-            keyboardType="numeric"
-            error={errors.minimumRosterSize}
-          />
-
-          <FormInput
-            label="Registration Close Date"
-            placeholder="YYYY-MM-DD"
-            value={registrationCloseDate}
-            onChangeText={setRegistrationCloseDate}
-          />
-
-          <Text style={styles.fieldLabel}>Preferred Game Days</Text>
-          <View style={styles.dayChipsRow}>
-            {dayLabels.map((label, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[
-                  styles.dayChip,
-                  preferredGameDays.includes(idx) && styles.dayChipSelected,
-                ]}
-                onPress={() => toggleGameDay(idx)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.dayChipText,
-                    preferredGameDays.includes(idx) && styles.dayChipTextSelected,
-                  ]}
-                >
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleInfo}>
+              <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
+              <Text style={styles.toggleDescription}>
+                Automatically create shell matchup events after registration closes
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
+              onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
+              activeOpacity={0.7}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: autoGenerateMatchups }}
+            >
+              <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
+            </TouchableOpacity>
           </View>
 
           <FormInput
-            label="Time Window Start"
-            placeholder="HH:MM (e.g. 18:00)"
-            value={timeWindowStart}
-            onChangeText={setTimeWindowStart}
-            error={errors.timeWindowStart}
-          />
-
-          <FormInput
-            label="Time Window End"
-            placeholder="HH:MM (e.g. 21:00)"
-            value={timeWindowEnd}
-            onChangeText={setTimeWindowEnd}
-            error={errors.timeWindowEnd}
-          />
-
-          <FormInput
-            label="Season Game Count"
-            placeholder="Total games per roster"
-            value={seasonGameCount}
-            onChangeText={setSeasonGameCount}
+            label="Points for Win"
+            placeholder="3"
+            value={winPoints}
+            onChangeText={setWinPoints}
             keyboardType="numeric"
-            error={errors.seasonGameCount}
+            error={errors.winPoints}
           />
+
+          <FormInput
+            label="Points for Draw"
+            placeholder="1"
+            value={drawPoints}
+            onChangeText={setDrawPoints}
+            keyboardType="numeric"
+            error={errors.drawPoints}
+          />
+
+          <FormInput
+            label="Points for Loss"
+            placeholder="0"
+            value={lossPoints}
+            onChangeText={setLossPoints}
+            keyboardType="numeric"
+            error={errors.lossPoints}
+          />
+
+          {/* Schedule Configuration — team leagues only */}
+          {leagueType === 'team' && (
+            <>
+              <FormInput
+                label="Minimum Roster Size"
+                placeholder="e.g. 5"
+                value={minimumRosterSize}
+                onChangeText={setMinimumRosterSize}
+                keyboardType="numeric"
+                error={errors.minimumRosterSize}
+              />
+
+              <FormInput
+                label="Registration Close Date"
+                placeholder="YYYY-MM-DD"
+                value={registrationCloseDate}
+                onChangeText={setRegistrationCloseDate}
+              />
+
+              <Text style={styles.fieldLabel}>Preferred Game Days</Text>
+              <View style={styles.dayChipsRow}>
+                {dayLabels.map((label, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[
+                      styles.dayChip,
+                      preferredGameDays.includes(idx) && styles.dayChipSelected,
+                    ]}
+                    onPress={() => toggleGameDay(idx)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.dayChipText,
+                        preferredGameDays.includes(idx) && styles.dayChipTextSelected,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <FormInput
+                label="Time Window Start"
+                placeholder="HH:MM (e.g. 18:00)"
+                value={timeWindowStart}
+                onChangeText={setTimeWindowStart}
+                error={errors.timeWindowStart}
+              />
+
+              <FormInput
+                label="Time Window End"
+                placeholder="HH:MM (e.g. 21:00)"
+                value={timeWindowEnd}
+                onChangeText={setTimeWindowEnd}
+                error={errors.timeWindowEnd}
+              />
+
+              <FormInput
+                label="Season Game Count"
+                placeholder="Total games per roster"
+                value={seasonGameCount}
+                onChangeText={setSeasonGameCount}
+                keyboardType="numeric"
+                error={errors.seasonGameCount}
+              />
+            </>
+          )}
+
+          {/* Add Rosters — inline in the flat form */}
+          <Text style={styles.fieldLabel}>Add Rosters</Text>
+          <View style={styles.searchRow}>
+            <TextInput
+              style={styles.searchInput}
+              value={rosterSearchQuery}
+              onChangeText={(text) => {
+                setRosterSearchQuery(text);
+                setRosterSearchError(null);
+              }}
+              placeholder="Search rosters by name"
+              placeholderTextColor={colors.inkFaint}
+              returnKeyType="search"
+              onSubmitEditing={handleSearchRosters}
+              accessibilityLabel="Search rosters by name"
+            />
+            <TouchableOpacity
+              style={[styles.searchButton, (!rosterSearchQuery.trim() || isSearchingRosters) && styles.searchButtonDisabled]}
+              onPress={handleSearchRosters}
+              disabled={!rosterSearchQuery.trim() || isSearchingRosters}
+              accessibilityRole="button"
+              accessibilityLabel="Search"
+            >
+              {isSearchingRosters ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons name="search" size={20} color="#FFFFFF" />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {rosterSearchError && (
+            <View style={styles.searchErrorRow}>
+              <Ionicons name="alert-circle" size={16} color={colors.track} />
+              <Text style={styles.searchErrorText}>{rosterSearchError}</Text>
+            </View>
+          )}
+
+          {rosterSearchResults.length > 0 && (
+            <View style={styles.searchResults}>
+              {rosterSearchResults.map(r => (
+                <View key={r.id} style={styles.searchResultItem}>
+                  <View style={styles.searchResultInfo}>
+                    <Text style={styles.searchResultName}>{r.name}</Text>
+                    {r.sportType && (
+                      <Text style={styles.searchResultMeta}>
+                        {r.sportType} • {r.memberCount ?? 0} players
+                      </Text>
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.addItemBtn}
+                    onPress={() => handleAddRoster(r)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Add ${r.name}`}
+                  >
+                    <Ionicons name="add" size={18} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {rosterSearchResults.length === 0 && rosterSearchQuery.trim() && !isSearchingRosters && !rosterSearchError && (
+            <Text style={styles.noResults}>No results for "{rosterSearchQuery.trim()}"</Text>
+          )}
+
+          {addedRosters.length > 0 && (
+            <View style={styles.addedList}>
+              <Text style={styles.addedListLabel}>Added Rosters ({addedRosters.length})</Text>
+              {addedRosters.map(item => (
+                <View key={item.id} style={styles.addedItem}>
+                  <Text style={styles.addedItemName}>{item.name}</Text>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveRoster(item.id)}
+                    style={styles.removeItemBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${item.name}`}
+                  >
+                    <Ionicons name="close-circle" size={22} color={colors.track} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-      )}
+      </ScrollView>
 
-      {/* Add Rosters */}
-      {renderSearchSection({
-        title: 'Add Rosters',
-        description: 'Search for rosters by name and add them to this league',
-        query: rosterSearchQuery,
-        onChangeQuery: (t) => { setRosterSearchQuery(t); setRosterSearchError(null); },
-        onSearch: handleSearchRosters,
-        isSearching: isSearchingRosters,
-        searchError: rosterSearchError,
-        results: rosterSearchResults.map(r => ({
-          id: r.id,
-          name: r.name,
-          meta: r.sportType ? `${r.sportType} • ${r.memberCount ?? 0} players` : undefined,
-        })),
-        onAdd: (item) => handleAddRoster(rosterSearchResults.find(r => r.id === item.id)!),
-        addedItems: addedRosters,
-        onRemove: handleRemoveRoster,
-        placeholder: 'Search rosters by name',
-        emptyLabel: 'Added Rosters',
-      })}
-
-      {/* Add People */}
-      {renderSearchSection({
-        title: 'Add People',
-        description: 'Search for players by name or username and invite them individually',
-        query: peopleSearchQuery,
-        onChangeQuery: (t) => { setPeopleSearchQuery(t); setPeopleSearchError(null); },
-        onSearch: handleSearchPeople,
-        isSearching: isSearchingPeople,
-        searchError: peopleSearchError,
-        results: peopleSearchResults.map(p => ({
-          id: p.id,
-          name: p.name,
-          meta: p.username ? `@${p.username}` : undefined,
-        })),
-        onAdd: (item) => handleAddPerson(peopleSearchResults.find(p => p.id === item.id)!),
-        addedItems: addedPeople,
-        onRemove: handleRemovePerson,
-        placeholder: 'Search by name or username',
-        emptyLabel: 'Invited Players',
-      })}
-
-      {/* Action buttons — always at the very bottom */}
-      <View style={styles.bottomActions}>
-        {onCancel && (
-          <FormButton
-            title="Cancel"
-            variant="outline"
-            onPress={onCancel}
-            disabled={loading}
-            style={styles.bottomActionBtn}
-          />
-        )}
-        <FormButton
-          title={isEdit ? 'Update League' : 'Create League'}
-          onPress={handleSubmit}
-          loading={loading}
-          disabled={loading}
-          style={styles.bottomActionBtn}
-        />
+      {/* Fixed bottom action bar — horizontal row matching EditEventScreen */}
+      <View style={styles.actions}>
         {isEdit && onDelete && (
           <FormButton
             title="Delete"
             variant="danger"
             onPress={onDelete}
+            style={styles.deleteButton}
             disabled={loading}
-            style={styles.bottomActionBtn}
           />
         )}
+        {onCancel && (
+          <FormButton
+            title="Cancel"
+            variant="outline"
+            onPress={onCancel}
+            style={styles.actionButton}
+            disabled={loading}
+          />
+        )}
+        <FormButton
+          title={isEdit ? 'Save Changes' : 'Create League'}
+          onPress={handleSubmit}
+          style={styles.actionButton}
+          loading={loading}
+          disabled={loading}
+        />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -912,22 +787,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.chalk,
   },
-  section: {
-    backgroundColor: '#FFFFFF',
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
+  scrollView: {
+    flex: 1,
   },
-  sectionTitle: {
-    fontFamily: fonts.semibold,
-    ...typeScale.h3,
-    color: colors.ink,
-    marginBottom: Spacing.xs,
+  scrollContent: {
+    paddingBottom: 20,
   },
-  sectionDescription: {
-    fontFamily: fonts.body,
-    ...typeScale.bodySm,
-    color: colors.inkFaint,
-    marginBottom: Spacing.lg,
+  form: {
+    padding: 16,
   },
   fieldLabel: {
     fontFamily: fonts.body,
@@ -1223,18 +1090,28 @@ const styles = StyleSheet.create({
   removeItemBtn: {
     padding: 4,
   },
-  // Bottom action buttons — styled like edit event screen
-  bottomActions: {
+  // Bottom action bar — horizontal row matching EditEventScreen
+  actions: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
-    gap: 8,
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  bottomActionBtn: {
+  deleteButton: {
+    marginRight: 8,
+  },
+  actionButton: {
     flex: 1,
+    marginHorizontal: 4,
   },
 });

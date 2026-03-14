@@ -274,8 +274,9 @@ export function BookingsListScreen(): JSX.Element {
       booking={item}
       onPress={handleBookingPress}
       onCancel={item.status === BookingStatus.CONFIRMED ? () => handleCancelBooking(item) : undefined}
+      hidePrice={activeFilter === 'past'}
     />
-  ), [handleBookingPress, handleCancelBooking]);
+  ), [handleBookingPress, handleCancelBooking, activeFilter]);
 
   const keyExtractor = useCallback((item: Booking) => item.id, []);
 

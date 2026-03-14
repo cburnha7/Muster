@@ -219,7 +219,7 @@ export class BaseApiService {
       const responseData = error.response.data as any;
       return {
         code: responseData.code || `HTTP_${error.response.status}`,
-        message: responseData.message || error.message,
+        message: responseData.message || responseData.error || error.message,
         details: responseData.details || error.response.data,
         timestamp: new Date(),
       };

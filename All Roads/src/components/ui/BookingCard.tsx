@@ -8,6 +8,7 @@ interface BookingCardProps {
   booking: Booking;
   onPress?: (booking: Booking) => void;
   onCancel?: (booking: Booking) => void;
+  hidePrice?: boolean;
   style?: any;
 }
 
@@ -15,6 +16,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   booking,
   onPress,
   onCancel,
+  hidePrice = false,
   style,
 }) => {
   const formatDate = (date: Date) => {
@@ -103,10 +105,12 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               {booking.event.currentParticipants}/{booking.event.maxParticipants} players
             </Text>
           )}
-          <Text style={styles.price}>
-            {booking.event?.price && booking.event.price > 0 ? `$${booking.event.price.toFixed(2)}` : 'Free'}
-          </Text>
-          {booking.event?.price && booking.event.price > 0 && booking.paymentStatus === PaymentStatus.PENDING && (
+          {!hidePrice && (
+            <Text style={styles.price}>
+              {booking.event?.price && booking.event.price > 0 ? `$${booking.event.price.toFixed(2)}` : 'Free'}
+            </Text>
+          )}
+          {!hidePrice && booking.event?.price && booking.event.price > 0 && booking.paymentStatus === PaymentStatus.PENDING && (
             <Text style={styles.pendingLabel}>Pending</Text>
           )}
         </View>
