@@ -77,9 +77,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     loadTeamEvents();
   }, [teamId]);
 
-  const loadTeamDetails = async () => {
+  const loadTeamDetails = async (showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) {
+        setIsLoading(true);
+      }
       setError(null);
       const teamData = await teamService.getTeam(teamId);
       setTeam(teamData);
@@ -180,8 +182,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   };
 
   const handleEditTeam = () => {
-    // Navigate to edit screen (to be implemented)
-    Alert.alert('Update Roster', 'Update roster functionality coming soon');
+    navigation.goBack();
   };
 
   const handleDeleteTeam = () => {
@@ -217,7 +218,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             try {
               await teamService.removeFromTeam(teamId, member.userId);
               dispatch(removeTeamMember({ teamId, userId: member.userId }));
-              await loadTeamDetails(); // Reload to get updated data
+              await loadTeamDetails(false); // Silent refresh
               Alert.alert('Success', 'Player removed from roster');
             } catch (err: any) {
               console.error('Error removing member:', err);
@@ -251,7 +252,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     try {
       await teamService.updateMemberRole(teamId, member.userId, newRole);
       dispatch(updateTeamMemberRole({ teamId, userId: member.userId, role: newRole }));
-      await loadTeamDetails();
+      await loadTeamDetails(false);
       Alert.alert('Success', 'Player role updated');
     } catch (err: any) {
       console.error('Error updating member role:', err);
@@ -264,7 +265,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
     try {
       await teamService.addMemberDirectly(teamId, user.id);
-      await loadTeamDetails(); // Reload to get updated member list
+      await loadTeamDetails(false); // Silent refresh to update member list
       Alert.alert(
         'Player Added',
         `${user.firstName} ${user.lastName} has been added to the roster and will receive a notification.`
