@@ -29,6 +29,7 @@ export function DebriefScreen(): JSX.Element {
   const [salutedIds, setSalutedIds] = useState<Set<string>>(new Set());
   const [facilityRating, setFacilityRating] = useState<number>(0);
   const [isReadonly, setIsReadonly] = useState(readonlyParam ?? false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
     loadDetails();
@@ -46,6 +47,9 @@ export function DebriefScreen(): JSX.Element {
       const hoursSinceEnd = (Date.now() - endTime.getTime()) / (1000 * 60 * 60);
       if (readonlyParam || data.debriefSubmitted || hoursSinceEnd > saluteConstants.windowHours) {
         setIsReadonly(true);
+      }
+      if (data.debriefSubmitted) {
+        setHasSubmitted(true);
       }
 
       // Pre-fill facility rating from server if already submitted
@@ -99,6 +103,8 @@ export function DebriefScreen(): JSX.Element {
         Array.from(salutedIds),
         facilityRating > 0 ? facilityRating : undefined
       );
+      setHasSubmitted(true);
+      setIsReadonly(true);
       Alert.alert('Debrief Submitted', 'Thanks for the feedback!', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
@@ -212,8 +218,14 @@ export function DebriefScreen(): JSX.Element {
         )}
       </ScrollView>
 
-      {/* Submit Button — only in interactive mode */}
-      {!isReadonly && (
+      {/* Footer button */}
+      {hasSubmitted ? (
+        <View style={styles.footer}>
+          <View style={[styles.submitButton, styles.submitButtonDisabled]}>
+            <Text style={styles.submitButtonText}>Submitted</Text>
+          </View>
+        </View>
+      ) : !isReadonly ? (
         <View style={styles.footer}>
           <TouchableOpacity
             style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
@@ -232,7 +244,7 @@ export function DebriefScreen(): JSX.Element {
             )}
           </TouchableOpacity>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
