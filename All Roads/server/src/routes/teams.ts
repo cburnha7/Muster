@@ -207,15 +207,6 @@ router.post('/', async (req, res) => {
             },
           },
         },
-        captain: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profileImage: true,
-          },
-        },
       },
     });
 
@@ -226,9 +217,13 @@ router.post('/', async (req, res) => {
     } else {
       res.status(201).json(completeTeam);
     }
-  } catch (error) {
-    console.error('Create team error:', error);
-    res.status(500).json({ error: 'Failed to create team' });
+  } catch (error: any) {
+    console.error('Create team error:', error?.message || error);
+    console.error('Create team error details:', JSON.stringify(error?.meta || error?.code || ''));
+    res.status(500).json({ 
+      error: 'Failed to create team',
+      details: error?.message || 'Unknown error',
+    });
   }
 });
 
