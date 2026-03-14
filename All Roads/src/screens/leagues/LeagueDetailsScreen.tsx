@@ -841,11 +841,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
         >
-          {/* League edit form */}
+          {/* League edit form — includes Update/Delete at bottom */}
           <View style={styles.formSection}>
             <LeagueForm
               initialData={league}
               onSubmit={handleUpdateLeague}
+              onDelete={handleDeleteLeague}
               isEdit={true}
               loading={isUpdating}
             />
@@ -859,20 +860,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
           {/* Upcoming events & shell matchups */}
           {renderUpcomingEvents()}
-
-          {/* Action buttons */}
-          <View style={styles.commissionerActions}>
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={handleDeleteLeague}
-              disabled={isActionLoading}
-              accessibilityRole="button"
-              accessibilityLabel="Delete league"
-            >
-              <Ionicons name="trash-outline" size={18} color={colors.track} />
-              <Text style={styles.deleteBtnText}>Delete League</Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
       </View>
     );
