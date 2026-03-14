@@ -210,8 +210,8 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
         status: { not: 'cancelled' },
       };
     } else if (status === 'past') {
+      where.status = { not: 'cancelled' };
       where.OR = [
-        { status: 'cancelled' },
         { event: { startTime: { lt: new Date() } } },
         { event: { status: 'cancelled' } },
       ];

@@ -468,7 +468,7 @@ export function BookingDetailsScreen(): JSX.Element {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Amount</Text>
             <Text style={styles.detailValue}>
-              {event?.price && event.price > 0 ? `$${event.price}` : 'Free'}
+              {event?.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
             </Text>
           </View>
 

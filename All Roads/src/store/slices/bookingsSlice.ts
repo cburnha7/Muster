@@ -57,8 +57,11 @@ const categorizeBookings = (bookings: Booking[]) => {
   const past: Booking[] = [];
   
   bookings.forEach(booking => {
-    // Exclude completed and cancelled bookings from upcoming list
-    if (booking.status === BookingStatus.COMPLETED || booking.status === BookingStatus.CANCELLED) {
+    // Cancelled bookings are excluded from both upcoming and past — they only appear in the cancelled filter
+    if (booking.status === BookingStatus.CANCELLED) {
+      return;
+    }
+    if (booking.status === BookingStatus.COMPLETED) {
       past.push(booking);
     } else if (booking.event && new Date(booking.event.startTime) > now) {
       upcoming.push(booking);

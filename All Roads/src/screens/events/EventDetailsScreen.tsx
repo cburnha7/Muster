@@ -966,7 +966,7 @@ export function EventDetailsScreen(): JSX.Element {
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Price</Text>
               <Text style={styles.detailValue}>
-                {event.price > 0 ? `$${event.price}` : 'Free'}
+                {event.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
               </Text>
             </View>
           </View>
