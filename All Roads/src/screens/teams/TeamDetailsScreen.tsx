@@ -55,11 +55,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
-  const [inviteCode, setInviteCode] = useState<string | null>(null);
-  const [inviteCodeExpiry, setInviteCodeExpiry] = useState<Date | null>(null);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   const isUserMember = userTeams.some(t => t.id === teamId);
   // Check if user exists in the roster's member list (covers invited/added players)
@@ -74,13 +74,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   useEffect(() => {
     loadTeamDetails();
     loadTeamLeagues();
+    loadTeamEvents();
   }, [teamId]);
-
-  useEffect(() => {
-    if (team && canManageTeam) {
-      setInviteCode(team.inviteCode || null);
-    }
-  }, [team, canManageTeam]);
 
   const loadTeamDetails = async () => {
     try {
@@ -100,16 +95,26 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const loadTeamLeagues = async () => {
     try {
       setIsLoadingLeagues(true);
-      // Fetch leagues that this team is participating in
       const teamLeagues = await teamService.getTeamLeagues(teamId);
       setLeagues(teamLeagues);
     } catch (err: any) {
       console.error('Error loading team leagues:', err);
-      // Don't set error state for leagues - it's not critical
-      // If the endpoint doesn't exist yet, just show empty leagues
       setLeagues([]);
     } finally {
       setIsLoadingLeagues(false);
+    }
+  };
+
+  const loadTeamEvents = async () => {
+    try {
+      setIsLoadingEvents(true);
+      const events = await teamService.getTeamEvents(teamId);
+      setUpcomingEvents(Array.isArray(events) ? events : []);
+    } catch (err: any) {
+      console.error('Error loading team events:', err);
+      setUpcomingEvents([]);
+    } finally {
+      setIsLoadingEvents(false);
     }
   };
 
@@ -120,7 +125,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       'Join Roster',
       `Do you want to join ${team.name}?`,
       [
-        { text: 'Step Out', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Join Up',
           onPress: async () => {
@@ -150,9 +155,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       'Leave Roster',
       `Are you sure you want to leave ${team.name}?`,
       [
-        { text: 'Step Out', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Leave',
+          text: 'Step Out',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -176,7 +181,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   const handleEditTeam = () => {
     // Navigate to edit screen (to be implemented)
-    Alert.alert('Edit Roster', 'Edit roster functionality coming soon');
+    Alert.alert('Update Roster', 'Update roster functionality coming soon');
   };
 
   const handleDeleteTeam = () => {
@@ -197,56 +202,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     }
   };
 
-  const handleGenerateInviteCode = async () => {
-    if (!team) return;
-
-    try {
-      const result = await teamService.generateInviteCode(teamId);
-      setInviteCode(result.inviteCode);
-      setInviteCodeExpiry(result.expiresAt);
-      Alert.alert('Success', 'New invite code generated!');
-    } catch (err: any) {
-      console.error('Error generating invite code:', err);
-      Alert.alert('Error', err.message || 'Failed to generate invite code');
-    }
-  };
-
-  const handleShareInviteCode = () => {
-    if (!inviteCode) return;
-
-    Alert.alert(
-      'Share Invite Code',
-      `Invite Code: ${inviteCode}\n\nShare this code with people you want to invite to your roster.`,
-      [
-        { text: 'OK' },
-        {
-          text: 'Copy Code',
-          onPress: () => {
-            // In a real app, use Clipboard API
-            Alert.alert('Copied', 'Invite code copied to clipboard');
-          },
-        },
-      ]
-    );
-  };
-
-  const handleInviteMember = () => {
-    Alert.alert(
-      'Invite Player',
-      'Enter the email or user ID of the person you want to invite',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Send Invite',
-          onPress: async () => {
-            // In a real app, show a form to enter user details
-            Alert.alert('Info', 'Direct invitation feature coming soon');
-          },
-        },
-      ]
-    );
-  };
-
   const handleRemoveMember = async (member: TeamMember) => {
     if (!team) return;
 
@@ -254,7 +209,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       'Remove Player',
       `Remove ${member.user?.firstName || 'this player'} from the roster?`,
       [
-        { text: 'Step Out', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
           style: 'destructive',
@@ -278,7 +233,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     if (!team) return;
 
     const roleOptions = [
-      { text: 'Step Out', style: 'cancel' as const },
+      { text: 'Cancel', style: 'cancel' as const },
       {
         text: 'Make Co-Captain',
         onPress: () => updateMemberRole(member, TeamRole.CO_CAPTAIN),
@@ -376,6 +331,13 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     (navigation as any).navigate('Leagues', {
       screen: 'LeagueDetails',
       params: { leagueId },
+    });
+  };
+
+  const handleNavigateToEvent = (eventId: string) => {
+    (navigation as any).navigate('Events', {
+      screen: 'EventDetails',
+      params: { eventId },
     });
   };
 
@@ -587,52 +549,58 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           )}
         </View>
 
-        {/* Invite Section (for captains/co-captains) */}
-        {canManageTeam && (
-          <View style={styles.inviteContainer}>
-            <Text style={styles.sectionTitle}>Invite Players</Text>
-            
-            {inviteCode ? (
-              <View style={styles.inviteCodeBox}>
-                <Text style={styles.inviteCodeLabel}>Current Invite Code:</Text>
-                <Text style={styles.inviteCode}>{inviteCode}</Text>
-                {inviteCodeExpiry && (
-                  <Text style={styles.inviteCodeExpiry}>
-                    Expires: {new Date(inviteCodeExpiry).toLocaleDateString()}
-                  </Text>
-                )}
-                <View style={styles.inviteActions}>
-                  <TouchableOpacity
-                    style={styles.inviteActionButton}
-                    onPress={handleShareInviteCode}
-                  >
-                    <Text style={styles.inviteActionText}>Share Code</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.inviteActionButton}
-                    onPress={handleGenerateInviteCode}
-                  >
-                    <Text style={styles.inviteActionText}>Generate New</Text>
-                  </TouchableOpacity>
-                </View>
+        {/* Upcoming Events Section */}
+        {(isUserMember || isInRosterMembers) && (
+          <View style={styles.eventsContainer}>
+            <Text style={styles.sectionTitle}>
+              Upcoming Events {upcomingEvents.length > 0 && `(${upcomingEvents.length})`}
+            </Text>
+
+            {isLoadingEvents ? (
+              <View style={styles.eventsLoading}>
+                <Text style={styles.eventsLoadingText}>Loading events...</Text>
+              </View>
+            ) : upcomingEvents.length > 0 ? (
+              <View style={styles.eventsList}>
+                {upcomingEvents.map((event) => {
+                  const startDate = new Date(event.startTime);
+                  return (
+                    <TouchableOpacity
+                      key={event.id}
+                      style={styles.eventCard}
+                      onPress={() => handleNavigateToEvent(event.id)}
+                    >
+                      <View style={styles.eventCardDate}>
+                        <Text style={styles.eventCardMonth}>
+                          {startDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
+                        </Text>
+                        <Text style={styles.eventCardDay}>
+                          {startDate.getDate()}
+                        </Text>
+                      </View>
+                      <View style={styles.eventCardInfo}>
+                        <Text style={styles.eventCardTitle} numberOfLines={1}>{event.title}</Text>
+                        <Text style={styles.eventCardTime}>
+                          {startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        </Text>
+                        {event.facility && (
+                          <Text style={styles.eventCardLocation} numberOfLines={1}>
+                            📍 {event.facility.name}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.eventCardChevron}>›</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             ) : (
-              <View style={styles.noInviteCode}>
-                <Text style={styles.noInviteCodeText}>
-                  No active invite code. Generate one to invite players.
+              <View style={styles.noEvents}>
+                <Text style={styles.noEventsText}>
+                  No upcoming events for this roster.
                 </Text>
-                <FormButton
-                  title="Generate Invite Code"
-                  onPress={handleGenerateInviteCode}
-                />
               </View>
             )}
-
-            <FormButton
-              title="Invite by Email"
-              onPress={handleInviteMember}
-              variant="secondary"
-            />
           </View>
         )}
 
@@ -658,7 +626,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           {isUserCaptain && (
             <>
               <FormButton
-                title="Edit Roster"
+                title="Update Roster"
                 onPress={handleEditTeam}
               />
             </>
@@ -1038,6 +1006,79 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noLeaguesText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  eventsContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    marginTop: 12,
+  },
+  eventsLoading: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  eventsLoadingText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  eventsList: {
+    gap: 10,
+  },
+  eventCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.chalk,
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  eventCardDate: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    marginRight: 14,
+  },
+  eventCardMonth: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.grass,
+    letterSpacing: 1,
+  },
+  eventCardDay: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  eventCardInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  eventCardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  eventCardTime: {
+    fontSize: 13,
+    color: colors.inkFaint,
+  },
+  eventCardLocation: {
+    fontSize: 13,
+    color: colors.inkFaint,
+  },
+  eventCardChevron: {
+    fontSize: 22,
+    color: '#D1D5DB',
+    marginLeft: 8,
+  },
+  noEvents: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  noEventsText: {
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',

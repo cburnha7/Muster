@@ -30,7 +30,7 @@ export function ConfirmModal({
   icon = 'alert-circle-outline',
   iconColor,
   confirmText = 'Confirm',
-  cancelText = 'Step Out',
+  cancelText = 'Cancel',
   variant = 'default',
   onCancel,
   onConfirm,

@@ -155,6 +155,44 @@ router.get('/:id/leagues', async (req, res) => {
   }
 });
 
+// Get upcoming events for a team
+router.get('/:id/events', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const team = await prisma.team.findUnique({ where: { id } });
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const now = new Date();
+
+    // Find events where this team is in eligibilityRestrictedToTeams or coveringTeamId
+    const events = await prisma.event.findMany({
+      where: {
+        startTime: { gte: now },
+        status: 'active',
+        OR: [
+          { eligibilityRestrictedToTeams: { has: id } },
+          { coveringTeamId: id },
+        ],
+      },
+      include: {
+        facility: {
+          select: { id: true, name: true, address: true },
+        },
+      },
+      orderBy: { startTime: 'asc' },
+      take: 20,
+    });
+
+    res.json(events);
+  } catch (error) {
+    console.error('Get team events error:', error);
+    res.status(500).json({ error: 'Failed to fetch team events' });
+  }
+});
+
 // Create team
 router.post('/', async (req, res) => {
   try {
@@ -381,6 +419,64 @@ router.post('/:id/leave', async (req, res) => {
   } catch (error) {
     console.error('Leave team error:', error);
     res.status(500).json({ error: 'Failed to leave roster' });
+  }
+});
+
+// Add member directly (for private rosters)
+router.post('/:id/add-member', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { id },
+      include: { members: true },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: 'Roster not found' });
+    }
+
+    // Check if already a member
+    const existing = team.members.find(m => m.userId === userId);
+    if (existing && existing.status === 'active') {
+      return res.status(400).json({ error: 'User is already a player in this roster' });
+    }
+
+    // Check capacity
+    const activeCount = team.members.filter(m => m.status === 'active').length;
+    if (activeCount >= team.maxMembers) {
+      return res.status(400).json({ error: 'This roster is full' });
+    }
+
+    let member;
+    if (existing) {
+      member = await prisma.teamMember.update({
+        where: { id: existing.id },
+        data: { status: 'active', joinedAt: new Date() },
+        include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      });
+    } else {
+      member = await prisma.teamMember.create({
+        data: {
+          teamId: id,
+          userId,
+          role: 'member',
+          status: 'active',
+          joinedAt: new Date(),
+        },
+        include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      });
+    }
+
+    res.status(201).json(member);
+  } catch (error) {
+    console.error('Add member error:', error);
+    res.status(500).json({ error: 'Failed to add player to roster' });
   }
 });
 

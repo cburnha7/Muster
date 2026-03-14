@@ -43,7 +43,8 @@ All UI must import tokens from `src/theme/` — never hardcode colors or fonts.
 - Body copy: `fonts.body` — Nunito 400
 
 ## Vocabulary rules
-- Never use "Cancel" — use **Step Out**
+- Use **"Cancel"** for abandoning or reversing actions, forms, bookings, transactions, and flows the user initiated (e.g. cancelling a court booking, cancelling event creation, dismissing a confirmation dialog)
+- Use **"Step Out"** exclusively for leaving something the user is a member or participant of — leaving a league, leaving a roster, or leaving an event they joined
 - Never use "Book" or "Register" — use **Join Up**
 - Never use "Like", "Kudos", or "Props" — use **Salute**
 - Never use "Team", "Group", or "Outfit" — use **Roster**

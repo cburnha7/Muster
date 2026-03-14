@@ -144,14 +144,10 @@ export class TeamService extends BaseApiService {
   }
 
   /**
-   * Get events for a specific team
+   * Get upcoming events for a specific team
    */
-  async getTeamEvents(
-    teamId: string,
-    pagination?: PaginationParams
-  ): Promise<PaginatedResponse<Event>> {
-    const params = pagination || {};
-    return this.get<PaginatedResponse<Event>>(API_ENDPOINTS.TEAMS.EVENTS(teamId), { params });
+  async getTeamEvents(teamId: string): Promise<Event[]> {
+    return this.get<Event[]>(API_ENDPOINTS.TEAMS.EVENTS(teamId));
   }
 
   /**
