@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,167 +8,100 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { facilityService } from '../../services/api/FacilityService';
 import { eventService } from '../../services/api/EventService';
-import { Facility, Event, FacilityWithVerification } from '../../types';
+import { userService } from '../../services/api/UserService';
+import { leagueService } from '../../services/api/LeagueService';
+import { Facility, Event, Team } from '../../types';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUserTeams } from '../../store/slices/teamsSlice';
+
+interface UserLeague {
+  id: string;
+  name: string;
+  sportType: string;
+  leagueType: 'team' | 'pickup';
+  isActive: boolean;
+  imageUrl?: string;
+  isCertified: boolean;
+  memberCount: number;
+  role: 'commissioner' | 'player';
+}
 
 export function ProfileScreen() {
   const navigation = useNavigation();
   const { user: authUser, logout } = useAuth();
+  const userRosters = useSelector(selectUserTeams) as Team[];
+
   const [myGrounds, setMyGrounds] = useState<Facility[]>([]);
   const [myEvents, setMyEvents] = useState<Event[]>([]);
+  const [myLeagues, setMyLeagues] = useState<UserLeague[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadingGrounds, setLoadingGrounds] = useState(false);
-  const [loadingEvents, setLoadingEvents] = useState(false);
-  const [groundsExpanded, setGroundsExpanded] = useState(true);
+
+  // Collapsible state — all start expanded
   const [eventsExpanded, setEventsExpanded] = useState(true);
+  const [groundsExpanded, setGroundsExpanded] = useState(true);
+  const [rostersExpanded, setRostersExpanded] = useState(true);
+  const [leaguesExpanded, setLeaguesExpanded] = useState(true);
 
-  useEffect(() => {
-    if (authUser) {
-      loadProfile();
-    }
-  }, [authUser]);
-
-  const loadProfile = async () => {
-    if (!authUser) return;
-    
+  const loadData = useCallback(async () => {
+    if (!authUser?.id) return;
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Load owned grounds and events
-      loadMyGrounds(authUser.id);
-      loadMyEvents(authUser.id);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load profile');
+      const [groundsRes, eventsRes, leaguesRes] = await Promise.allSettled([
+        facilityService.getFacilitiesByOwner(authUser.id),
+        userService.getUserEvents(),
+        userService.getUserLeagues(),
+      ]);
+
+      if (groundsRes.status === 'fulfilled') {
+        setMyGrounds(groundsRes.value?.data ?? []);
+      }
+      if (eventsRes.status === 'fulfilled') {
+        setMyEvents(eventsRes.value?.data ?? []);
+      }
+      if (leaguesRes.status === 'fulfilled') {
+        setMyLeagues(leaguesRes.value ?? []);
+      }
+    } catch (err) {
+      console.error('Profile load error:', err);
+      setError('Failed to load profile data');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [authUser?.id]);
 
-  const loadMyGrounds = async (userId: string) => {
-    try {
-      setLoadingGrounds(true);
-      console.log('🏟️ ProfileScreen: Loading grounds for user:', userId);
-      const response = await facilityService.getFacilitiesByOwner(userId, {
-        page: 1,
-        limit: 10,
-      });
-      console.log('🏟️ ProfileScreen: Received grounds:', response);
-      console.log('🏟️ ProfileScreen: Number of grounds:', response.data?.length || 0);
-      setMyGrounds(response.data);
-    } catch (err: any) {
-      console.error('Failed to load owned grounds:', err);
-    } finally {
-      setLoadingGrounds(false);
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const loadMyEvents = async (userId: string) => {
-    try {
-      setLoadingEvents(true);
-      const response = await eventService.getEventsByOrganizer(userId, {}, {
-        page: 1,
-        limit: 10,
-      });
-      setMyEvents(response.data);
-    } catch (err: any) {
-      console.error('Failed to load organized events:', err);
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
-  const handleEditProfile = () => {
-    (navigation as any).navigate('EditProfile');
-  };
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadData();
+  }, [loadData]);
 
-  const handleSettings = () => {
-    (navigation as any).navigate('Settings');
-  };
-
-  const handleNotificationPreferences = () => {
-    (navigation as any).navigate('NotificationPreferences');
-  };
-
-  const handleLogout = async () => {
-    try {
-      console.log('Logout button pressed');
-      await logout();
-      console.log('Logout successful');
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Error', 'Failed to logout. Please try again.');
-    }
-  };
-
-  const handleFacilityPress = (facility: Facility) => {
-    // If user is the owner, navigate to EditFacility screen
-    if (authUser && facility.ownerId === authUser.id) {
-      (navigation as any).navigate('Facilities', {
-        screen: 'EditFacility',
-        params: { facilityId: facility.id }
-      });
-    } else {
-      // Otherwise, navigate to FacilityDetails screen
-      (navigation as any).navigate('Facilities', {
-        screen: 'FacilityDetails',
-        params: { facilityId: facility.id }
-      });
-    }
-  };
-
-  const handleEventPress = (event: Event) => {
-    (navigation as any).navigate('EventDetails', { eventId: event.id });
-  };
-
-  const handleCreateGround = () => {
-    (navigation as any).navigate('CreateFacility');
-  };
-
-  const handleCreateEvent = () => {
-    (navigation as any).navigate('CreateEvent');
-  };
-
-  const getEventStatusColor = (event: Event) => {
-    const now = new Date();
-    const startTime = new Date(event.startTime);
-    const endTime = new Date(event.endTime);
-
-    if (event.status === 'cancelled') return colors.track;
-    if (startTime <= now && endTime >= now) return colors.court;
-    return colors.grass;
-  };
-
-  const getEventStatusText = (event: Event) => {
-    const now = new Date();
-    const startTime = new Date(event.startTime);
-    const endTime = new Date(event.endTime);
-
-    if (event.status === 'cancelled') return 'Cancelled';
-    if (startTime <= now && endTime >= now) return 'In Progress';
-    return 'Upcoming';
-  };
-
-  const getVerificationStatusColor = (facility: Facility) => {
-    const facilityWithVerification = facility as FacilityWithVerification;
-    if (!facilityWithVerification.isVerified) return colors.soft;
-    return colors.grass;
-  };
-
-  const getVerificationStatusText = (facility: Facility) => {
-    const facilityWithVerification = facility as FacilityWithVerification;
-    if (!facilityWithVerification.isVerified) return 'Pending Verification';
-    return 'Verified';
+  const handleLogout = () => {
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+    ]);
   };
 
   if (loading) {
@@ -176,258 +109,273 @@ export function ProfileScreen() {
   }
 
   if (error) {
-    return <ErrorDisplay message={error} onRetry={loadProfile} />;
-  }
-
-  if (!authUser) {
-    return <ErrorDisplay message="User not found" onRetry={loadProfile} />;
+    return <ErrorDisplay message={error} onRetry={loadData} />;
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.grass} />}
+    >
       {/* Profile Header */}
-      <View style={styles.header}>
-        <View style={styles.profileImageContainer}>
-          {authUser.profileImage ? (
-            <Image source={{ uri: authUser.profileImage }} style={styles.profileImage} />
+      <View style={styles.profileHeader}>
+        <View style={styles.avatarRow}>
+          {authUser?.profileImage ? (
+            <Image source={{ uri: authUser.profileImage }} style={styles.avatar} />
           ) : (
-            <View style={styles.profileImagePlaceholder}>
-              <Text style={styles.profileImagePlaceholderText}>
-                {authUser.firstName?.[0]?.toUpperCase() || 'U'}
-                {authUser.lastName?.[0]?.toUpperCase() || ''}
-              </Text>
+            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+              <Ionicons name="person" size={36} color={colors.inkFaint} />
             </View>
           )}
-        </View>
-        <Text style={styles.name}>
-          {authUser.firstName} {authUser.lastName}
-        </Text>
-        <Text style={styles.email}>{authUser.email}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* My Reservations Section */}
-      {authUser.id && <MyReservationsSection userId={authUser.id} />}
-
-      {/* My Grounds Section */}
-      {(myGrounds.length > 0 || loadingGrounds) && (
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setGroundsExpanded(!groundsExpanded)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.sectionHeaderLeft}>
-              <Text style={styles.sectionTitle}>My Grounds</Text>
-              {myGrounds.length > 0 && (
-                <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{myGrounds.length}</Text>
-                </View>
-              )}
-            </View>
-            <Ionicons
-              name={groundsExpanded ? 'chevron-up' : 'chevron-down'}
-              size={24}
-              color={colors.soft}
-            />
-          </TouchableOpacity>
-          
-          {groundsExpanded && (
-            <>
-              {loadingGrounds ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.grass} />
-                </View>
-              ) : (
-                <>
-                  {myGrounds.map((facility) => (
-                    <TouchableOpacity
-                      key={facility.id}
-                      style={styles.compactCard}
-                      onPress={() => handleFacilityPress(facility)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.compactCardContent}>
-                        <View style={styles.compactCardHeader}>
-                          <Ionicons name="location" size={20} color={colors.grass} />
-                          <Text style={styles.compactCardTitle} numberOfLines={1}>
-                            {facility.name}
-                          </Text>
-                        </View>
-                        <Text style={styles.compactCardSubtitle} numberOfLines={1}>
-                          {facility.city}, {facility.state}
-                        </Text>
-                        <View style={styles.compactCardFooter}>
-                          <View
-                            style={[
-                              styles.statusBadge,
-                              { backgroundColor: getVerificationStatusColor(facility) + '20' },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.statusBadgeText,
-                                { color: getVerificationStatusColor(facility) },
-                              ]}
-                            >
-                              {getVerificationStatusText(facility)}
-                            </Text>
-                          </View>
-                          {facility.rating > 0 && (
-                            <View style={styles.ratingContainer}>
-                              <Ionicons name="star" size={14} color={colors.court} />
-                              <Text style={styles.ratingText}>{facility.rating.toFixed(1)}</Text>
-                            </View>
-                          )}
-                        </View>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color={colors.soft} />
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
-            </>
-          )}
-        </View>
-      )}
-
-      {/* My Events Section */}
-      {(myEvents.length > 0 || loadingEvents) && (
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setEventsExpanded(!eventsExpanded)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.sectionHeaderLeft}>
-              <Text style={styles.sectionTitle}>My Events</Text>
-              {myEvents.length > 0 && (
-                <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{myEvents.length}</Text>
-                </View>
-              )}
-            </View>
-            <Ionicons
-              name={eventsExpanded ? 'chevron-up' : 'chevron-down'}
-              size={24}
-              color={colors.soft}
-            />
-          </TouchableOpacity>
-          
-          {eventsExpanded && (
-            <>
-              {loadingEvents ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.grass} />
-                </View>
-              ) : (
-                <>
-                  {myEvents.map((event) => (
-                    <TouchableOpacity
-                      key={event.id}
-                      style={styles.compactCard}
-                      onPress={() => handleEventPress(event)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.compactCardContent}>
-                        <View style={styles.compactCardHeader}>
-                          <Ionicons name="calendar" size={20} color={colors.grass} />
-                          <Text style={styles.compactCardTitle} numberOfLines={1}>
-                            {event.title}
-                          </Text>
-                        </View>
-                        <Text style={styles.compactCardSubtitle} numberOfLines={1}>
-                          {new Date(event.startTime).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </Text>
-                        <View style={styles.compactCardFooter}>
-                          <View
-                            style={[
-                              styles.statusBadge,
-                              { backgroundColor: getEventStatusColor(event) + '20' },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.statusBadgeText,
-                                { color: getEventStatusColor(event) },
-                              ]}
-                            >
-                              {getEventStatusText(event)}
-                            </Text>
-                          </View>
-                          <Text style={styles.participantsText}>
-                            {event.currentParticipants}/{event.maxParticipants} joined
-                          </Text>
-                        </View>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color={colors.soft} />
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
-            </>
-          )}
-        </View>
-      )}
-
-      {/* Menu Options */}
-      <View style={styles.menuContainer}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => (navigation as any).navigate('UserStats')}
-        >
-          <Text style={styles.menuItemText}>Statistics & Achievements</Text>
-          <Text style={styles.menuItemArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={handleSettings}>
-          <Text style={styles.menuItemText}>Settings</Text>
-          <Text style={styles.menuItemArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={handleNotificationPreferences}>
-          <Text style={styles.menuItemText}>Notification Preferences</Text>
-          <Text style={styles.menuItemArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => (navigation as any).navigate('BookingHistory')}
-        >
-          <Text style={styles.menuItemText}>Booking History</Text>
-          <Text style={styles.menuItemArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.menuItem, styles.logoutMenuItem]}
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out-outline" size={20} color={colors.track} />
-          <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Preferred Sports - Commented out until User type includes preferredSports */}
-      {/* {authUser.preferredSports && authUser.preferredSports.length > 0 && (
-        <View style={styles.sportsContainer}>
-          <Text style={styles.sectionTitle}>Preferred Sports</Text>
-          <View style={styles.sportsList}>
-            {authUser.preferredSports.map((sport: string, index: number) => (
-              <View key={index} style={styles.sportTag}>
-                <Text style={styles.sportTagText}>{sport}</Text>
-              </View>
-            ))}
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>
+              {authUser?.firstName} {authUser?.lastName}
+            </Text>
+            {authUser?.email && (
+              <Text style={styles.profileEmail}>{authUser.email}</Text>
+            )}
           </View>
         </View>
-      )} */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => (navigation as any).navigate('EditProfile')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={18} color={colors.grass} />
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => (navigation as any).navigate('Settings')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="settings-outline" size={18} color={colors.inkFaint} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* My Reservations */}
+      {authUser?.id && <MyReservationsSection userId={authUser.id} />}
+
+      {/* My Events */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setEventsExpanded(!eventsExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.sectionHeaderLeft}>
+            <Ionicons name="football" size={20} color={colors.grass} />
+            <Text style={styles.sectionTitle}>My Events</Text>
+            {myEvents.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{myEvents.length}</Text>
+              </View>
+            )}
+          </View>
+          <Ionicons
+            name={eventsExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={colors.inkFaint}
+          />
+        </TouchableOpacity>
+        {eventsExpanded && (
+          myEvents.length > 0 ? (
+            myEvents.map((event) => (
+              <TouchableOpacity
+                key={event.id}
+                style={styles.listItem}
+                onPress={() => (navigation as any).navigate('Events', {
+                  screen: 'EventDetails',
+                  params: { eventId: event.id },
+                })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.listItemContent}>
+                  <Text style={styles.listItemTitle} numberOfLines={1}>{event.title}</Text>
+                  <Text style={styles.listItemSubtitle} numberOfLines={1}>
+                    {event.sportType} • {new Date(event.startTime).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No events yet</Text>
+            </View>
+          )
+        )}
+      </View>
+
+      {/* My Grounds */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setGroundsExpanded(!groundsExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.sectionHeaderLeft}>
+            <Ionicons name="location" size={20} color={colors.grass} />
+            <Text style={styles.sectionTitle}>My Grounds</Text>
+            {myGrounds.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{myGrounds.length}</Text>
+              </View>
+            )}
+          </View>
+          <Ionicons
+            name={groundsExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={colors.inkFaint}
+          />
+        </TouchableOpacity>
+        {groundsExpanded && (
+          myGrounds.length > 0 ? (
+            myGrounds.map((facility) => (
+              <TouchableOpacity
+                key={facility.id}
+                style={styles.listItem}
+                onPress={() => (navigation as any).navigate('FacilityDetails', {
+                  facilityId: facility.id,
+                })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.listItemContent}>
+                  <Text style={styles.listItemTitle} numberOfLines={1}>{facility.name}</Text>
+                  <Text style={styles.listItemSubtitle} numberOfLines={1}>
+                    {facility.sportTypes?.join(', ') || 'Multi-sport'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No grounds yet</Text>
+            </View>
+          )
+        )}
+      </View>
+
+      {/* My Rosters */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setRostersExpanded(!rostersExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.sectionHeaderLeft}>
+            <Ionicons name="people" size={20} color={colors.grass} />
+            <Text style={styles.sectionTitle}>My Rosters</Text>
+            {userRosters.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{userRosters.length}</Text>
+              </View>
+            )}
+          </View>
+          <Ionicons
+            name={rostersExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={colors.inkFaint}
+          />
+        </TouchableOpacity>
+        {rostersExpanded && (
+          userRosters.length > 0 ? (
+            userRosters.map((roster) => (
+              <TouchableOpacity
+                key={roster.id}
+                style={styles.listItem}
+                onPress={() => (navigation as any).navigate('Teams', {
+                  screen: 'TeamDetails',
+                  params: { teamId: roster.id },
+                })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.listItemContent}>
+                  <Text style={styles.listItemTitle} numberOfLines={1}>{roster.name}</Text>
+                  <Text style={styles.listItemSubtitle} numberOfLines={1}>
+                    {roster.sportType} • {roster.members?.length ?? 0} players
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No rosters yet</Text>
+            </View>
+          )
+        )}
+      </View>
+
+      {/* My Leagues */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setLeaguesExpanded(!leaguesExpanded)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.sectionHeaderLeft}>
+            <Ionicons name="trophy" size={20} color={colors.grass} />
+            <Text style={styles.sectionTitle}>My Leagues</Text>
+            {myLeagues.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{myLeagues.length}</Text>
+              </View>
+            )}
+          </View>
+          <Ionicons
+            name={leaguesExpanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={colors.inkFaint}
+          />
+        </TouchableOpacity>
+        {leaguesExpanded && (
+          myLeagues.length > 0 ? (
+            myLeagues.map((league) => (
+              <TouchableOpacity
+                key={league.id}
+                style={styles.listItem}
+                onPress={() => (navigation as any).navigate('Leagues', {
+                  screen: 'LeagueDetails',
+                  params: { leagueId: league.id, leagueType: league.leagueType },
+                })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.listItemContent}>
+                  <View style={styles.listItemTitleRow}>
+                    <Text style={styles.listItemTitle} numberOfLines={1}>{league.name}</Text>
+                    {league.role === 'commissioner' && (
+                      <View style={styles.roleBadge}>
+                        <Text style={styles.roleBadgeText}>Commissioner</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.listItemSubtitle} numberOfLines={1}>
+                    {league.sportType} • {league.memberCount ?? 0} {league.leagueType === 'team' ? 'rosters' : 'players'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No leagues yet</Text>
+            </View>
+          )
+        )}
+      </View>
+
+      {/* Log Out */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+        <Ionicons name="log-out-outline" size={20} color={colors.track} />
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
+
+      <View style={{ height: 32 }} />
     </ScrollView>
   );
 }
@@ -437,81 +385,95 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.chalk,
   },
-  contentSection: {
-    paddingHorizontal: Spacing.lg,
+  content: {
+    paddingBottom: 24,
   },
-  header: {
+  // Profile header
+  profileHeader: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatarRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.xl,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+  },
+  avatarPlaceholder: {
     backgroundColor: colors.chalk,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  profileImageContainer: {
-    marginBottom: Spacing.lg,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  profileImagePlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.grass,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  profileImagePlaceholderText: {
-    fontSize: 36,
-    color: colors.chalk,
+  profileInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
-  name: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: Spacing.xs,
+  profileName: {
+    fontFamily: fonts.heading,
+    ...typeScale.h3,
+    color: colors.ink,
   },
-  email: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: Spacing.lg,
+  profileEmail: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
   },
   editButton: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.grass,
   },
   editButtonText: {
-    fontSize: 16,
-    color: colors.chalk,
-    fontWeight: '600',
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.grass,
+    marginLeft: 4,
   },
+  settingsButton: {
+    padding: 6,
+  },
+  // Sections
   section: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginTop: Spacing.lg,
-    marginHorizontal: Spacing.lg,
+    marginTop: 16,
+    marginHorizontal: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
     overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.lg,
+    justifyContent: 'space-between',
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF',
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
@@ -519,157 +481,91 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: fonts.semibold,
+    ...typeScale.body,
+    color: colors.ink,
+    marginLeft: 8,
   },
   countBadge: {
-    backgroundColor: colors.grass + '20',
-    paddingHorizontal: Spacing.sm,
+    backgroundColor: `${colors.grass}20`,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
-    marginLeft: Spacing.sm,
+    marginLeft: 8,
   },
   countBadgeText: {
+    fontFamily: fonts.label,
     fontSize: 11,
     color: colors.grass,
-    fontWeight: '700',
   },
-  seeAllText: {
-    fontSize: 16,
-    color: colors.grass,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    padding: Spacing.xl,
-    alignItems: 'center',
-  },
-  compactCard: {
+  // List items
+  listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF',
   },
-  compactCardContent: {
+  listItemContent: {
     flex: 1,
+    marginRight: 8,
   },
-  compactCardHeader: {
+  listItemTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    gap: 8,
   },
-  compactCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: Spacing.sm,
-    flex: 1,
+  listItemTitle: {
+    fontFamily: fonts.semibold,
+    ...typeScale.body,
+    color: colors.ink,
+    flexShrink: 1,
   },
-  compactCardSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: Spacing.sm,
+  listItemSubtitle: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
-  compactCardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  roleBadge: {
+    backgroundColor: `${colors.court}20`,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
-  statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 12,
+  roleBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 9,
+    color: colors.court,
+    textTransform: 'uppercase',
   },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
+  emptyState: {
+    padding: 20,
     alignItems: 'center',
   },
-  ratingText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 2,
-    fontWeight: '600',
+  emptyText: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
   },
-  participantsText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  menuContainer: {
+  // Logout
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    marginHorizontal: 16,
+    paddingVertical: 14,
     backgroundColor: '#FFFFFF',
-    marginTop: Spacing.lg,
-    marginHorizontal: Spacing.lg,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF',
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  menuItemArrow: {
-    fontSize: 24,
-    color: '#999',
-  },
-  logoutMenuItem: {
-    borderBottomWidth: 0,
-    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: `${colors.track}30`,
   },
   logoutText: {
+    fontFamily: fonts.ui,
+    fontSize: 15,
     color: colors.track,
-    flex: 1,
-  },
-  sportsContainer: {
-    backgroundColor: '#FFFFFF',
-    marginTop: Spacing.lg,
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.xl,
-    padding: Spacing.lg,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  sportsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  sportTag: {
-    backgroundColor: colors.grass + '20',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: 16,
-  },
-  sportTagText: {
-    fontSize: 14,
-    color: colors.grass,
-    fontWeight: '500',
+    marginLeft: 8,
   },
 });

@@ -628,6 +628,9 @@ model FacilityRental {
   cancellationStatus String? // null (not cancelled), pending_cancellation, cancelled
   refundAmount       Float?
 
+  // Bulk booking session
+  bookingSessionId String? // UUID linking rentals from the same bulk transaction
+
   // Event usage tracking
   usedForEventId String?
 
@@ -654,6 +657,7 @@ model FacilityRental {
   @@index([userId])
   @@index([status])
   @@index([usedForEventId])
+  @@index([bookingSessionId])
   @@map("facility_rentals")
 }
 

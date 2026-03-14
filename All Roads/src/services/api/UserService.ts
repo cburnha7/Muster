@@ -112,6 +112,13 @@ export class UserService extends BaseApiService {
   }
 
   /**
+   * Get user's leagues (organized + member of)
+   */
+  async getUserLeagues(): Promise<any[]> {
+    return this.get<any[]>(API_ENDPOINTS.USERS.LEAGUES);
+  }
+
+  /**
    * Update notification preferences
    */
   async updateNotificationPreferences(

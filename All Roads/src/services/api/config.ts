@@ -70,6 +70,7 @@ export const API_ENDPOINTS = {
     BOOKINGS: '/users/bookings',
     EVENTS: '/users/events',
     TEAMS: '/users/teams',
+    LEAGUES: '/users/leagues',
     NOTIFICATIONS: '/users/notifications',
   },
 

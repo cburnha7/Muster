@@ -278,7 +278,6 @@ export function BookingsListScreen(): JSX.Element {
       { key: 'upcoming', label: 'Upcoming' },
       { key: 'past', label: 'Past' },
       { key: 'cancelled', label: 'Cancelled' },
-      { key: 'all', label: 'All' },
     ];
 
     return (

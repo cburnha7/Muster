@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Switch,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles, ComponentStyles } from '../../theme';
+import { colors, fonts, typeScale, Spacing, TextStyles, ComponentStyles } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
   calendarTheme,
@@ -20,8 +21,14 @@ import {
   formatTime12,
   createMarkedDates,
 } from '../../utils/calendarUtils';
-import { TimeSlotGrid, RentalConfirmationModal } from '../../components/facilities';
+import {
+  TimeSlotGrid,
+  BulkBookingConfirmationModal,
+  BookingConflictModal,
+} from '../../components/facilities';
 import type { TimeSlot } from '../../components/facilities/TimeSlotGrid';
+import type { CartSlot } from '../../components/facilities/BulkBookingConfirmationModal';
+import type { ConflictSlot } from '../../components/facilities/BookingConflictModal';
 import { useAuth } from '../../context/AuthContext';
 
 type CourtAvailabilityScreenNavigationProp = NativeStackNavigationProp<
@@ -59,11 +66,27 @@ export function CourtAvailabilityScreen() {
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
   const [courts, setCourts] = useState<Court[]>([]);
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
-  const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [markedDates, setMarkedDates] = useState<any>({});
+
+  // Selection cart — persists across court/date changes
+  const [selectionCart, setSelectionCart] = useState<Map<string, CartSlot>>(new Map());
+
+  // Whole day toggle
+  const [wholeDayOn, setWholeDayOn] = useState(false);
+
+  // Modals
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showConflict, setShowConflict] = useState(false);
+  const [conflicts, setConflicts] = useState<ConflictSlot[]>([]);
+  const [availableSlotsAfterConflict, setAvailableSlotsAfterConflict] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Clear cart on unmount
+  useEffect(() => {
+    return () => setSelectionCart(new Map());
+  }, []);
 
   // Load courts on mount
   useEffect(() => {
@@ -77,21 +100,34 @@ export function CourtAvailabilityScreen() {
     }
   }, [selectedCourt, selectedDate]);
 
+  // Reset whole-day toggle when court or date changes
+  useEffect(() => {
+    setWholeDayOn(false);
+  }, [selectedCourt?.id, selectedDate]);
+
+  // Derive selected slot IDs for the current court/date view
+  const currentViewSelectedIds = useMemo(() => {
+    if (!selectedCourt) return [];
+    return Array.from(selectionCart.values())
+      .filter((s) => s.courtId === selectedCourt.id && s.date === selectedDate)
+      .map((s) => s.slotId);
+  }, [selectionCart, selectedCourt?.id, selectedDate]);
+
+  // Cart summary stats
+  const cartSlots = useMemo(() => Array.from(selectionCart.values()), [selectionCart]);
+  const cartTotal = useMemo(() => cartSlots.reduce((sum, s) => sum + s.price, 0), [cartSlots]);
+  const cartCourtCount = useMemo(() => new Set(cartSlots.map((s) => s.courtId)).size, [cartSlots]);
+  const cartDayCount = useMemo(() => new Set(cartSlots.map((s) => s.date)).size, [cartSlots]);
+
   const loadCourts = async () => {
     try {
       setLoading(true);
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts`
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to load courts');
-      }
-
+      if (!response.ok) throw new Error('Failed to load courts');
       const data = await response.json();
       setCourts(data);
-
-      // Select the court from params or first court
       if (courtId) {
         const court = data.find((c: Court) => c.id === courtId);
         setSelectedCourt(court || data[0]);
@@ -106,22 +142,17 @@ export function CourtAvailabilityScreen() {
     }
   };
 
-  const loadAvailability = async (courtId: string, date: string) => {
+  const loadAvailability = async (cId: string, date: string) => {
     try {
       setLoadingSlots(true);
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/availability?date=${date}`
+        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}`
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to load availability');
-      }
-
+      if (!response.ok) throw new Error('Failed to load availability');
       const data: AvailabilityData = await response.json();
       setAvailabilityData(data);
-
-      // Update marked dates for calendar
-      updateMarkedDates(data.slots);
+      const marked = createMarkedDates([], [], [], selectedDate);
+      setMarkedDates(marked);
     } catch (error) {
       console.error('Load availability error:', error);
       Alert.alert('Error', 'Failed to load availability. Please try again.');
@@ -130,129 +161,169 @@ export function CourtAvailabilityScreen() {
     }
   };
 
-  const updateMarkedDates = (_timeSlots: TimeSlot[]) => {
-    // For now, just mark the selected date
-    // In a full implementation, we would fetch availability for the entire month
-    const marked = createMarkedDates([], [], [], selectedDate);
-    setMarkedDates(marked);
-  };
-
   const handleDateSelect = (day: DateData) => {
     setSelectedDate(day.dateString);
-    setSelectedSlots([]);
+    // Cart persists — no clearing
   };
 
   const handleCourtSelect = (court: Court) => {
     setSelectedCourt(court);
-    setSelectedSlots([]);
+    // Cart persists — no clearing
   };
+
+  const addSlotToCart = useCallback((slot: TimeSlot) => {
+    if (!selectedCourt || !slot.id) return;
+    setSelectionCart((prev) => {
+      const next = new Map(prev);
+      next.set(slot.id!, {
+        slotId: slot.id!,
+        facilityId,
+        courtId: selectedCourt.id,
+        courtName: selectedCourt.name,
+        date: selectedDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        price: slot.price || 0,
+      });
+      return next;
+    });
+  }, [facilityId, selectedCourt, selectedDate]);
+
+  const removeSlotFromCart = useCallback((slotId: string) => {
+    setSelectionCart((prev) => {
+      const next = new Map(prev);
+      next.delete(slotId);
+      return next;
+    });
+  }, []);
 
   const handleSlotPress = (slot: TimeSlot) => {
-    if (slot.status === 'available') {
-      // Toggle slot selection
-      setSelectedSlots(prev => {
-        const isSelected = prev.some(s => s.id === slot.id);
-        if (isSelected) {
-          return prev.filter(s => s.id !== slot.id);
-        } else {
-          return [...prev, slot];
+    if (slot.status !== 'available' || !slot.id) {
+      if (slot.status !== 'available') {
+        Alert.alert(
+          'Unavailable',
+          slot.status === 'blocked'
+            ? `This time slot is blocked${slot.blockReason ? `: ${slot.blockReason}` : '.'}`
+            : 'This time slot is already rented.'
+        );
+      }
+      return;
+    }
+
+    if (selectionCart.has(slot.id)) {
+      removeSlotFromCart(slot.id);
+      // If user deselects while whole-day is on, turn it off
+      if (wholeDayOn) setWholeDayOn(false);
+    } else {
+      addSlotToCart(slot);
+    }
+  };
+
+  const handleWholeDayToggle = (value: boolean) => {
+    setWholeDayOn(value);
+    if (!selectedCourt || !availabilityData) return;
+
+    if (value) {
+      // Add all available slots for current court+date
+      setSelectionCart((prev) => {
+        const next = new Map(prev);
+        for (const slot of availabilityData.slots) {
+          if (slot.status === 'available' && slot.id) {
+            next.set(slot.id, {
+              slotId: slot.id,
+              facilityId,
+              courtId: selectedCourt.id,
+              courtName: selectedCourt.name,
+              date: selectedDate,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              price: slot.price || 0,
+            });
+          }
         }
+        return next;
       });
     } else {
-      Alert.alert(
-        'Unavailable',
-        slot.status === 'blocked'
-          ? `This time slot is blocked${slot.blockReason ? `: ${slot.blockReason}` : '.'}`
-          : 'This time slot is already rented.'
-      );
+      // Remove all slots for current court+date
+      setSelectionCart((prev) => {
+        const next = new Map(prev);
+        for (const slot of availabilityData.slots) {
+          if (slot.id) next.delete(slot.id);
+        }
+        return next;
+      });
     }
   };
 
-  const handleBookRental = () => {
-    if (selectedSlots.length === 0 || !selectedCourt) {
-      return;
-    }
-    setShowConfirmationModal(true);
-  };
-
-  const handleConfirmRental = async () => {
-    if (selectedSlots.length === 0 || !selectedCourt) {
-      return;
-    }
-
-    if (!user) {
-      Alert.alert('Authentication Required', 'Please log in to book a time slot.');
-      return;
-    }
+  const handleConfirmBulkBooking = async () => {
+    if (cartSlots.length === 0 || !user) return;
+    setSubmitting(true);
 
     try {
-      // Book all selected slots
-      const bookingPromises = selectedSlots.map(slot =>
-        fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${selectedCourt.id}/slots/${slot.id}/rent`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId: user.id }),
-          }
-        )
-      );
+      const slots = cartSlots.map((s) => ({
+        facilityId: s.facilityId,
+        courtId: s.courtId,
+        slotId: s.slotId,
+      }));
 
-      const responses = await Promise.all(bookingPromises);
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/rentals/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, slots }),
+      });
 
-      // Check if all bookings succeeded
-      const failedBookings = responses.filter(r => !r.ok);
-      if (failedBookings.length > 0) {
-        const firstFailed = failedBookings[0];
-        if (firstFailed) {
-          const errorResponse = await firstFailed.json();
-          throw new Error(errorResponse.error || 'Failed to book some time slots');
+      if (response.status === 201) {
+        const data = await response.json();
+        setShowConfirmation(false);
+        setSelectionCart(new Map());
+
+        // Reload current view
+        if (selectedCourt) {
+          await loadAvailability(selectedCourt.id, selectedDate);
         }
-        throw new Error('Failed to book some time slots');
+
+        Alert.alert(
+          'Booking Confirmed',
+          `${data.slotCount} slot${data.slotCount !== 1 ? 's' : ''} booked for $${data.totalPrice.toFixed(2)}.`,
+          [
+            { text: 'View My Rentals', onPress: () => navigation.navigate('MyRentals') },
+            { text: 'Continue', style: 'cancel' },
+          ]
+        );
+      } else if (response.status === 409) {
+        const data = await response.json();
+        setShowConfirmation(false);
+        setConflicts(data.conflicts);
+        setAvailableSlotsAfterConflict(data.availableSlots);
+        setShowConflict(true);
+      } else {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Booking failed');
       }
-
-      setShowConfirmationModal(false);
-
-      const slotCount = selectedSlots.length;
-      const firstSlot = selectedSlots[0];
-      const lastSlot = selectedSlots[slotCount - 1];
-      
-      if (!firstSlot || !lastSlot) {
-        throw new Error('Invalid slot selection');
-      }
-
-      const timeRange = slotCount === 1
-        ? `${formatTime12(firstSlot.startTime)} - ${formatTime12(firstSlot.endTime)}`
-        : `${formatTime12(firstSlot.startTime)} - ${formatTime12(lastSlot.endTime)}`;
-
-      // Reload availability to show updated slots
-      if (selectedCourt) {
-        await loadAvailability(selectedCourt.id, selectedDate);
-      }
-      setSelectedSlots([]);
-
-      Alert.alert(
-        'Booking Confirmed!',
-        `Your ${slotCount} time slot${slotCount > 1 ? 's have' : ' has'} been reserved for ${timeRange} on ${selectedDate}.`,
-        [
-          {
-            text: 'View My Rentals',
-            onPress: () => {
-              navigation.navigate('MyRentals');
-            },
-          },
-          {
-            text: 'Continue Booking',
-            style: 'cancel',
-          },
-        ]
-      );
     } catch (error: any) {
-      console.error('Book rental error:', error);
-      Alert.alert('Booking Failed', error.message || 'Failed to book rental. Please try again.');
+      console.error('Bulk booking error:', error);
+      Alert.alert('Booking Failed', error.message || 'Please try again.');
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const handleBookAvailableAfterConflict = async () => {
+    // Remove conflict slots from cart, then resubmit
+    const conflictIds = new Set(conflicts.map((c) => c.slotId));
+    setSelectionCart((prev) => {
+      const next = new Map(prev);
+      for (const id of conflictIds) {
+        next.delete(id);
+      }
+      return next;
+    });
+    setShowConflict(false);
+
+    // Small delay to let state update, then trigger confirm
+    setTimeout(() => {
+      setShowConfirmation(true);
+    }, 100);
   };
 
   if (loading) {
@@ -267,11 +338,9 @@ export function CourtAvailabilityScreen() {
   if (courts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="basketball-outline" size={64} color={colors.soft} />
+        <Ionicons name="basketball-outline" size={64} color={colors.inkFaint} />
         <Text style={styles.emptyTitle}>No Courts Available</Text>
-        <Text style={styles.emptySubtitle}>
-          This facility doesn't have any courts set up yet.
-        </Text>
+        <Text style={styles.emptySubtitle}>This facility doesn't have any courts set up yet.</Text>
       </View>
     );
   }
@@ -289,36 +358,38 @@ export function CourtAvailabilityScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Court</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.courtList}>
-            {courts.map((court) => (
-              <TouchableOpacity
-                key={court.id}
-                style={[
-                  styles.courtCard,
-                  selectedCourt?.id === court.id && styles.courtCardSelected,
-                ]}
-                onPress={() => handleCourtSelect(court)}
-              >
-                <View style={styles.courtCardHeader}>
-                  <Ionicons
-                    name={court.isIndoor ? 'home' : 'sunny'}
-                    size={20}
-                    color={selectedCourt?.id === court.id ? colors.grass : colors.soft}
-                  />
-                  <Text
-                    style={[
-                      styles.courtName,
-                      selectedCourt?.id === court.id && styles.courtNameSelected,
-                    ]}
-                  >
-                    {court.name}
-                  </Text>
-                </View>
-                <Text style={styles.courtSportType}>{court.sportType}</Text>
-                {court.pricePerHour && (
-                  <Text style={styles.courtPrice}>${court.pricePerHour}/hr</Text>
-                )}
-              </TouchableOpacity>
-            ))}
+            {courts.map((court) => {
+              const courtCartCount = Array.from(selectionCart.values()).filter(
+                (s) => s.courtId === court.id
+              ).length;
+              return (
+                <TouchableOpacity
+                  key={court.id}
+                  style={[styles.courtCard, selectedCourt?.id === court.id && styles.courtCardSelected]}
+                  onPress={() => handleCourtSelect(court)}
+                >
+                  <View style={styles.courtCardHeader}>
+                    <Ionicons
+                      name={court.isIndoor ? 'home' : 'sunny'}
+                      size={20}
+                      color={selectedCourt?.id === court.id ? colors.grass : colors.inkFaint}
+                    />
+                    <Text style={[styles.courtName, selectedCourt?.id === court.id && styles.courtNameSelected]}>
+                      {court.name}
+                    </Text>
+                    {courtCartCount > 0 && (
+                      <View style={styles.courtBadge}>
+                        <Text style={styles.courtBadgeText}>{courtCartCount}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.courtSportType}>{court.sportType}</Text>
+                  {court.pricePerHour != null && (
+                    <Text style={styles.courtPrice}>${court.pricePerHour}/hr</Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
@@ -334,6 +405,22 @@ export function CourtAvailabilityScreen() {
             style={styles.calendar}
           />
         </View>
+
+        {/* Whole Day Toggle */}
+        {availabilityData && availabilityData.slots.some((s) => s.status === 'available') && (
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLabel}>
+              <Ionicons name="sunny" size={18} color={colors.court} />
+              <Text style={styles.toggleText}>Book the Whole Day</Text>
+            </View>
+            <Switch
+              value={wholeDayOn}
+              onValueChange={handleWholeDayToggle}
+              trackColor={{ false: '#DDD', true: colors.grassLight }}
+              thumbColor={wholeDayOn ? colors.grass : '#F4F4F4'}
+            />
+          </View>
+        )}
 
         {/* Time Slots */}
         <View style={styles.section}>
@@ -356,12 +443,12 @@ export function CourtAvailabilityScreen() {
               timeSlots={availabilityData.slots}
               onSlotPress={handleSlotPress}
               selectable={true}
-              selectedSlots={selectedSlots.map(s => s.id!)}
+              selectedSlots={currentViewSelectedIds}
               currentUserId={user?.id}
             />
           ) : (
             <View style={styles.noSlotsContainer}>
-              <Ionicons name="calendar-outline" size={48} color={colors.soft} />
+              <Ionicons name="calendar-outline" size={48} color={colors.inkFaint} />
               <Text style={styles.noSlotsText}>No time slots available for this date</Text>
             </View>
           )}
@@ -383,278 +470,136 @@ export function CourtAvailabilityScreen() {
               <View style={[styles.legendDot, { backgroundColor: colors.track }]} />
               <Text style={styles.legendText}>Blocked</Text>
             </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: colors.court }]} />
+              <Text style={styles.legendText}>Selected</Text>
+            </View>
           </View>
         </View>
+
+        {/* Spacer for footer */}
+        {cartSlots.length > 0 && <View style={{ height: 120 }} />}
       </ScrollView>
 
-      {/* Book Button */}
-      {selectedSlots.length > 0 && (
+      {/* Selection Summary Footer */}
+      {cartSlots.length > 0 && (
         <View style={styles.footer}>
-          <View style={styles.selectedSlotInfo}>
-            <Text style={styles.selectedSlotLabel}>
-              Selected: {selectedSlots.length} time slot{selectedSlots.length > 1 ? 's' : ''}
-            </Text>
-            {(() => {
-              const firstSlot = selectedSlots[0];
-              const lastSlot = selectedSlots[selectedSlots.length - 1];
-              if (!firstSlot || !lastSlot) return null;
-              
-              return selectedSlots.length === 1 ? (
-                <Text style={styles.selectedSlotTime}>
-                  {formatTime12(firstSlot.startTime)} - {formatTime12(firstSlot.endTime)}
-                </Text>
-              ) : (
-                <Text style={styles.selectedSlotTime}>
-                  {formatTime12(firstSlot.startTime)} - {formatTime12(lastSlot.endTime)}
-                </Text>
-              );
-            })()}
-            <Text style={styles.selectedSlotPrice}>
-              Total: ${selectedSlots.reduce((sum, slot) => sum + (slot.price || 0), 0).toFixed(2)}
-            </Text>
+          <View style={styles.footerSummary}>
+            <View style={styles.footerStats}>
+              <Ionicons name="cart" size={18} color={colors.grass} />
+              <Text style={styles.footerStatsText}>
+                {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''}
+                {cartCourtCount > 1 ? ` · ${cartCourtCount} courts` : ''}
+                {cartDayCount > 1 ? ` · ${cartDayCount} days` : ''}
+              </Text>
+            </View>
+            <Text style={styles.footerPrice}>${cartTotal.toFixed(2)}</Text>
           </View>
-          <TouchableOpacity style={styles.bookButton} onPress={handleBookRental}>
+          <TouchableOpacity
+            style={styles.bookButton}
+            onPress={() => setShowConfirmation(true)}
+          >
             <Text style={styles.bookButtonText}>
-              Book {selectedSlots.length} Slot{selectedSlots.length > 1 ? 's' : ''}
+              Book {cartSlots.length} Slot{cartSlots.length !== 1 ? 's' : ''}
             </Text>
             <Ionicons name="arrow-forward" size={20} color={colors.chalk} />
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Confirmation Modal */}
-      {(() => {
-        const firstSlot = selectedSlots[0];
-        const lastSlot = selectedSlots[selectedSlots.length - 1];
-        if (!firstSlot || !lastSlot || !selectedCourt) return null;
-        
-        return (
-          <RentalConfirmationModal
-            visible={showConfirmationModal}
-            onClose={() => setShowConfirmationModal(false)}
-            onConfirm={handleConfirmRental}
-            facilityName={facilityName}
-            courtName={selectedCourt.name}
-            date={selectedDate}
-            startTime={firstSlot.startTime}
-            endTime={lastSlot.endTime}
-            price={selectedSlots.reduce((sum, slot) => sum + (slot.price || selectedCourt.pricePerHour || 0), 0)}
-            slotCount={selectedSlots.length}
-          />
-        );
-      })()}
+      {/* Bulk Confirmation Modal */}
+      <BulkBookingConfirmationModal
+        visible={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmBulkBooking}
+        facilityName={facilityName}
+        cartSlots={cartSlots}
+        loading={submitting}
+      />
+
+      {/* Conflict Modal */}
+      <BookingConflictModal
+        visible={showConflict}
+        onClose={() => setShowConflict(false)}
+        onBookAvailable={handleBookAvailableAfterConflict}
+        conflicts={conflicts}
+        availableCount={availableSlotsAfterConflict.length}
+        loading={submitting}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  loadingText: {
-    marginTop: Spacing.md,
-    ...TextStyles.body,
-    color: colors.soft,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    padding: Spacing.xxl,
-  },
-  emptyTitle: {
-    ...TextStyles.h3,
-    color: colors.ink,
-    marginTop: Spacing.lg,
-  },
-  emptySubtitle: {
-    ...TextStyles.body,
-    color: colors.soft,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-  },
-  header: {
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  facilityName: {
-    ...TextStyles.h2,
-    color: colors.ink,
-  },
-  subtitle: {
-    ...TextStyles.body,
-    color: colors.soft,
-    marginTop: Spacing.xs,
-  },
-  section: {
-    padding: Spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    ...TextStyles.h4,
-    color: colors.ink,
-    marginBottom: Spacing.md,
-  },
-  availabilityCount: {
-    ...TextStyles.caption,
-    color: colors.grass,
-    fontWeight: '600',
-  },
-  courtList: {
-    flexDirection: 'row',
-  },
+  container: { flex: 1, backgroundColor: colors.chalk },
+  scrollView: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalk },
+  loadingText: { marginTop: Spacing.md, ...TextStyles.body, color: colors.inkFaint },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalk, padding: Spacing.xxl },
+  emptyTitle: { ...TextStyles.h3, color: colors.ink, marginTop: Spacing.lg },
+  emptySubtitle: { ...TextStyles.body, color: colors.inkFaint, textAlign: 'center', marginTop: Spacing.sm },
+  header: { padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  facilityName: { ...TextStyles.h2, color: colors.ink },
+  subtitle: { ...TextStyles.body, color: colors.inkFaint, marginTop: Spacing.xs },
+  section: { padding: Spacing.lg },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
+  sectionTitle: { fontFamily: fonts.semibold, ...typeScale.h3, color: colors.ink, marginBottom: Spacing.md },
+  availabilityCount: { fontFamily: fonts.label, fontSize: 11, color: colors.grass },
+  courtList: { flexDirection: 'row' },
   courtCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: Spacing.md,
-    marginRight: Spacing.md,
-    borderWidth: 2,
-    borderColor: colors.border,
-    minWidth: 140,
+    backgroundColor: '#FFF', borderRadius: 12, padding: Spacing.md,
+    marginRight: Spacing.md, borderWidth: 2, borderColor: '#EEE', minWidth: 140,
   },
-  courtCardSelected: {
-    borderColor: colors.grass,
+  courtCardSelected: { borderColor: colors.grass, backgroundColor: colors.chalk },
+  courtCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
+  courtName: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink },
+  courtNameSelected: { color: colors.grass },
+  courtBadge: {
+    backgroundColor: colors.court, borderRadius: 10,
+    minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+  },
+  courtBadgeText: { fontFamily: fonts.label, fontSize: 10, color: '#FFF' },
+  courtSportType: { ...TextStyles.caption, color: colors.inkFaint, marginTop: Spacing.xs },
+  courtPrice: { ...TextStyles.body, color: colors.grass, fontWeight: '600', marginTop: Spacing.xs },
+  calendar: {
+    borderRadius: 12, backgroundColor: '#FFF',
+    shadowColor: colors.ink, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4,
+    elevation: 2, overflow: 'hidden',
+  },
+  // Toggle row
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginHorizontal: Spacing.lg, marginBottom: Spacing.sm,
+    padding: Spacing.md, backgroundColor: '#FFF', borderRadius: 12,
+    borderWidth: 1, borderColor: '#EEE',
+  },
+  toggleLabel: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  toggleText: { fontFamily: fonts.semibold, ...typeScale.body, color: colors.ink },
+  // Slots loading / empty
+  loadingSlotsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
+  loadingSlotsText: { ...TextStyles.body, color: colors.inkFaint },
+  noSlotsContainer: { alignItems: 'center', padding: Spacing.xxl },
+  noSlotsText: { ...TextStyles.body, color: colors.inkFaint, marginTop: Spacing.md, textAlign: 'center' },
+  // Legend
+  legend: { padding: Spacing.lg, backgroundColor: '#FFF', marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, borderRadius: 12 },
+  legendTitle: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink, marginBottom: Spacing.sm },
+  legendItems: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  legendDot: { width: 12, height: 12, borderRadius: 6 },
+  legendText: { ...TextStyles.body, color: colors.ink },
+  // Footer
+  footer: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    padding: Spacing.lg, borderTopWidth: 1, borderTopColor: '#EEE',
     backgroundColor: colors.chalk,
   },
-  courtCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: Spacing.xs,
-  },
-  courtName: {
-    ...TextStyles.bodyLarge,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  courtNameSelected: {
-    color: colors.grass,
-  },
-  courtSportType: {
-    ...TextStyles.caption,
-    color: colors.soft,
-    marginTop: Spacing.xs,
-  },
-  courtPrice: {
-    ...TextStyles.body,
-    color: colors.grass,
-    fontWeight: '600',
-    marginTop: Spacing.xs,
-  },
-  calendar: {
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    overflow: 'hidden',
-  },
-  loadingSlotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.xl,
-    gap: Spacing.md,
-  },
-  loadingSlotsText: {
-    ...TextStyles.body,
-    color: colors.soft,
-  },
-  noSlotsContainer: {
-    alignItems: 'center',
-    padding: Spacing.xxl,
-  },
-  noSlotsText: {
-    ...TextStyles.body,
-    color: colors.soft,
-    marginTop: Spacing.md,
-    textAlign: 'center',
-  },
-  legend: {
-    padding: Spacing.lg,
-    backgroundColor: colors.surface,
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderRadius: 12,
-  },
-  legendTitle: {
-    ...TextStyles.bodyLarge,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: Spacing.sm,
-  },
-  legendItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendText: {
-    ...TextStyles.body,
-    color: colors.ink,
-  },
-  footer: {
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  selectedSlotInfo: {
-    marginBottom: Spacing.md,
-  },
-  selectedSlotLabel: {
-    ...TextStyles.caption,
-    color: colors.soft,
-  },
-  selectedSlotTime: {
-    ...TextStyles.h4,
-    color: colors.ink,
-    marginTop: Spacing.xs,
-  },
-  selectedSlotPrice: {
-    ...TextStyles.body,
-    color: colors.grass,
-    fontWeight: '600',
-    marginTop: Spacing.xs,
-  },
+  footerSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  footerStats: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  footerStatsText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint },
+  footerPrice: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.grass },
   bookButton: {
     ...ComponentStyles.button.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
-  bookButtonText: {
-    ...TextStyles.bodyLarge,
-    fontWeight: '600',
-    color: colors.chalk,
-  },
+  bookButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.chalk },
 });

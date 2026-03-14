@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomUUID } from 'crypto';
 import { prisma } from '../index';
 
 const router = Router();
@@ -255,6 +256,167 @@ router.post('/rentals/:rentalId/request-cancellation', async (req, res) => {
   } catch (error) {
     console.error('Request rental cancellation error:', error);
     res.status(500).json({ error: 'Failed to request cancellation' });
+  }
+});
+
+// Bulk rent multiple time slots in a single transaction
+router.post('/rentals/bulk', async (req, res) => {
+  try {
+    const { userId, slots } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (!slots || !Array.isArray(slots) || slots.length === 0) {
+      return res.status(400).json({ error: 'At least one slot is required' });
+    }
+
+    const slotIds = slots.map((s: any) => s.slotId);
+
+    // Fetch all referenced time slots
+    const timeSlots = await prisma.facilityTimeSlot.findMany({
+      where: { id: { in: slotIds } },
+      include: {
+        court: {
+          include: { facility: true },
+        },
+      },
+    });
+
+    // Build a lookup for validation
+    const slotMap = new Map(timeSlots.map((ts) => [ts.id, ts]));
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const conflicts: any[] = [];
+    const validSlots: any[] = [];
+
+    for (const reqSlot of slots) {
+      const ts = slotMap.get(reqSlot.slotId);
+
+      if (!ts) {
+        conflicts.push({
+          slotId: reqSlot.slotId,
+          courtId: reqSlot.courtId,
+          courtName: 'Unknown',
+          date: null,
+          startTime: null,
+          endTime: null,
+          reason: 'not_found',
+        });
+        continue;
+      }
+
+      // Validate court/facility ownership
+      if (ts.courtId !== reqSlot.courtId || ts.court.facilityId !== reqSlot.facilityId) {
+        conflicts.push({
+          slotId: ts.id,
+          courtId: ts.courtId,
+          courtName: ts.court.name,
+          date: ts.date,
+          startTime: ts.startTime,
+          endTime: ts.endTime,
+          reason: 'invalid_reference',
+        });
+        continue;
+      }
+
+      // Check past date
+      const slotDate = new Date(ts.date);
+      if (slotDate < today) {
+        conflicts.push({
+          slotId: ts.id,
+          courtId: ts.courtId,
+          courtName: ts.court.name,
+          date: ts.date,
+          startTime: ts.startTime,
+          endTime: ts.endTime,
+          reason: 'past_date',
+        });
+        continue;
+      }
+
+      // Check availability
+      if (ts.status !== 'available') {
+        conflicts.push({
+          slotId: ts.id,
+          courtId: ts.courtId,
+          courtName: ts.court.name,
+          date: ts.date,
+          startTime: ts.startTime,
+          endTime: ts.endTime,
+          reason: ts.status,
+        });
+        continue;
+      }
+
+      validSlots.push({ reqSlot, timeSlot: ts });
+    }
+
+    // If any conflicts, return 409 without creating anything
+    if (conflicts.length > 0) {
+      return res.status(409).json({
+        conflicts,
+        availableSlots: validSlots.map((v) => ({
+          slotId: v.timeSlot.id,
+          courtId: v.reqSlot.courtId,
+          facilityId: v.reqSlot.facilityId,
+        })),
+      });
+    }
+
+    // All slots valid — create rentals in a transaction
+    const bookingSessionId = randomUUID();
+
+    const result = await prisma.$transaction(async (tx) => {
+      const rentals = [];
+
+      for (const { timeSlot: ts } of validSlots) {
+        // Update slot status
+        await tx.facilityTimeSlot.update({
+          where: { id: ts.id },
+          data: { status: 'rented' },
+        });
+
+        // Create rental
+        const rental = await tx.facilityRental.create({
+          data: {
+            userId,
+            timeSlotId: ts.id,
+            totalPrice: ts.price,
+            status: 'confirmed',
+            paymentStatus: ts.price > 0 ? 'pending' : 'paid',
+            bookingSessionId,
+          },
+          include: {
+            timeSlot: {
+              include: {
+                court: {
+                  include: { facility: true },
+                },
+              },
+            },
+          },
+        });
+
+        rentals.push(rental);
+      }
+
+      return rentals;
+    });
+
+    const totalPrice = result.reduce((sum, r) => sum + r.totalPrice, 0);
+
+    res.status(201).json({
+      bookingSessionId,
+      rentals: result,
+      totalPrice,
+      slotCount: result.length,
+    });
+  } catch (error) {
+    console.error('Bulk rent error:', error);
+    res.status(500).json({ error: 'Failed to process bulk booking' });
   }
 });
 

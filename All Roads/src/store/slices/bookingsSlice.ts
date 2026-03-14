@@ -61,6 +61,10 @@ const categorizeBookings = (bookings: Booking[]) => {
     if (booking.status === BookingStatus.CANCELLED) {
       return;
     }
+    // Also exclude bookings whose event was cancelled
+    if (booking.event && (booking.event as any).status === 'cancelled') {
+      return;
+    }
     if (booking.status === BookingStatus.COMPLETED) {
       past.push(booking);
     } else if (booking.event && new Date(booking.event.startTime) > now) {

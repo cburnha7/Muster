@@ -291,6 +291,60 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get current user's leagues (leagues they organize or are a member of)
+router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).userId || req.query.userId as string;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Find leagues where user is organizer or has an active membership
+    const [organizedLeagues, memberships] = await Promise.all([
+      prisma.league.findMany({
+        where: { organizerId: userId, isActive: true },
+        select: {
+          id: true, name: true, sportType: true, leagueType: true,
+          isActive: true, imageUrl: true, isCertified: true,
+          memberships: { where: { status: 'active' }, select: { id: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      prisma.leagueMembership.findMany({
+        where: { memberId: userId, status: 'active' },
+        include: {
+          league: {
+            select: {
+              id: true, name: true, sportType: true, leagueType: true,
+              isActive: true, imageUrl: true, isCertified: true, organizerId: true,
+              memberships: { where: { status: 'active' }, select: { id: true } },
+            },
+          },
+        },
+        take: 20,
+      }),
+    ]);
+
+    // Merge and deduplicate
+    const leagueMap = new Map<string, any>();
+    organizedLeagues.forEach(l => {
+      leagueMap.set(l.id, { ...l, memberCount: l.memberships.length, role: 'commissioner' });
+    });
+    memberships.forEach(m => {
+      if (m.league && !leagueMap.has(m.league.id)) {
+        leagueMap.set(m.league.id, { ...m.league, memberCount: m.league.memberships.length, role: 'player' });
+      }
+    });
+
+    const leagues = Array.from(leagueMap.values()).map(({ memberships, ...rest }) => rest);
+    res.json(leagues);
+  } catch (error) {
+    console.error('Get user leagues error:', error);
+    res.status(500).json({ error: 'Failed to fetch user leagues' });
+  }
+});
+
 // Get user profile by ID
 router.get('/:id', async (req, res) => {
   try {
