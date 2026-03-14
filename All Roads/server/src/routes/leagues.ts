@@ -1393,7 +1393,7 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
 router.get('/:id/members', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { page = '1', limit = '50' } = req.query;
+    const { page = '1', limit = '50', includePending } = req.query;
 
     // Fetch league to determine its type
     const league = await prisma.league.findUnique({
@@ -1409,7 +1409,12 @@ router.get('/:id/members', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    const baseWhere = { leagueId: id, status: 'active' as const };
+    // Allow fetching pending members alongside active ones (for commissioner view)
+    const statusFilter = includePending === 'true'
+      ? { status: { in: ['active', 'pending'] as string[] } }
+      : { status: 'active' as const };
+
+    const baseWhere = { leagueId: id, ...statusFilter };
 
     const total = await prisma.leagueMembership.count({ where: baseWhere });
 

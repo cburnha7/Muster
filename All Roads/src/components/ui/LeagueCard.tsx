@@ -67,11 +67,6 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, style }
               <Text style={styles.name} numberOfLines={1}>
                 {league.name}
               </Text>
-              {league.isCertified && (
-                <View style={styles.certifiedBadge}>
-                  <Ionicons name="shield-checkmark" size={16} color={colors.court} />
-                </View>
-              )}
             </View>
             <Text style={styles.season} numberOfLines={1}>
               {seasonText}
@@ -124,14 +119,6 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, style }
         </View>
       </View>
 
-      {league.isCertified && (
-        <View style={styles.certificationInfo}>
-          <Ionicons name="shield-checkmark-outline" size={14} color={colors.court} />
-          <Text style={styles.certificationText}>
-            Certified League
-          </Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 };
@@ -174,12 +161,6 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
   },
-  certifiedBadge: {
-    marginLeft: 8,
-    backgroundColor: '#FFF5E6',
-    borderRadius: 12,
-    padding: 4,
-  },
   season: {
     fontSize: 13,
     color: '#666',
@@ -207,19 +188,5 @@ const styles = StyleSheet.create({
   },
   inactiveText: {
     color: '#999',
-  },
-  certificationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  certificationText: {
-    fontSize: 13,
-    color: colors.court,
-    fontWeight: '600',
-    marginLeft: 6,
   },
 });

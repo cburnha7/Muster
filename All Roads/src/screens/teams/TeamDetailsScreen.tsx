@@ -362,11 +362,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         <View style={styles.leagueCardHeader}>
           <View style={styles.leagueCardTitleRow}>
             <Text style={styles.leagueCardTitle}>{league.name}</Text>
-            {league.isCertified && (
-              <View style={styles.certifiedBadge}>
-                <Text style={styles.certifiedBadgeText}>✓</Text>
-              </View>
-            )}
           </View>
           <Text style={styles.leagueCardSeason}>
             {league.seasonName || `${formatLeagueDate(league.startDate)} - ${formatLeagueDate(league.endDate)}`}
@@ -970,20 +965,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
     flex: 1,
-  },
-  certifiedBadge: {
-    backgroundColor: '#FFF5E6',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  certifiedBadgeText: {
-    fontSize: 14,
-    color: '#E8A030',
-    fontWeight: 'bold',
   },
   leagueCardSeason: {
     fontSize: 13,

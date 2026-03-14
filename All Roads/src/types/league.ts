@@ -15,8 +15,6 @@ export interface League {
   endDate?: Date | string;
   isActive: boolean;
   pointsConfig: PointsConfig;
-  isCertified: boolean;
-  certifiedAt?: Date | string;
   imageUrl?: string;
   organizerId: string;
   organizer?: User;
@@ -33,6 +31,10 @@ export interface League {
   preferredTimeWindowEnd?: string | null;
   seasonGameCount?: number | null;
   scheduleGenerated?: boolean;
+  // Season configuration
+  scheduleFrequency?: 'weekly' | 'monthly';
+  seasonLength?: number | null;
+  autoGenerateMatchups?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -63,6 +65,10 @@ export interface CreateLeagueData {
   preferredTimeWindowStart?: string | null;
   preferredTimeWindowEnd?: string | null;
   seasonGameCount?: number | null;
+  // Season configuration
+  scheduleFrequency?: 'weekly' | 'monthly';
+  seasonLength?: number | null;
+  autoGenerateMatchups?: boolean;
 }
 
 export interface UpdateLeagueData {
@@ -82,11 +88,14 @@ export interface UpdateLeagueData {
   preferredTimeWindowStart?: string | null;
   preferredTimeWindowEnd?: string | null;
   seasonGameCount?: number | null;
+  // Season configuration
+  scheduleFrequency?: 'weekly' | 'monthly';
+  seasonLength?: number | null;
+  autoGenerateMatchups?: boolean;
 }
 
 export interface LeagueFilters {
   sportType?: string;
-  isCertified?: boolean;
   isActive?: boolean;
   search?: string;
 }
@@ -232,29 +241,7 @@ export interface LeagueDocument {
   uploader?: User;
 }
 
-export type DocumentType = 'rules' | 'schedule' | 'other';
-
-export interface CertificationDocument {
-  id: string;
-  leagueId: string;
-  documentType: CertificationType;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  boardMembers?: BoardMember[];
-  uploadedAt: Date | string;
-  approvedAt?: Date | string;
-  uploadedBy: string;
-  uploader?: User;
-}
-
-export type CertificationType = 'bylaws' | 'board_of_directors';
-
-export interface BoardMember {
-  name: string;
-  role: string;
-}
+export type DocumentType = 'rules' | 'insurance' | 'other';
 
 // League event creation types
 export interface CreateLeagueEventData {

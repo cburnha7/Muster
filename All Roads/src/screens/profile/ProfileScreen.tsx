@@ -32,7 +32,6 @@ interface UserLeague {
   leagueType: 'team' | 'pickup';
   isActive: boolean;
   imageUrl?: string;
-  isCertified: boolean;
   memberCount: number;
   role: 'commissioner' | 'player';
 }

@@ -136,7 +136,11 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       {documents.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>League Documents</Text>
-          {documents.map((doc) => (
+          {documents.map((doc) => {
+            const categoryLabel = doc.documentType === 'rules' ? 'League Rules'
+              : doc.documentType === 'insurance' ? 'Insurance Policy'
+              : 'Other';
+            return (
             <View key={doc.id} style={styles.documentCard}>
               <View style={styles.documentInfo}>
                 <View style={styles.documentHeader}>
@@ -144,6 +148,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                   <View style={styles.documentDetails}>
                     <Text style={styles.documentName}>{doc.fileName}</Text>
                     <View style={styles.documentMeta}>
+                      <Text style={styles.documentCategoryLabel}>{categoryLabel}</Text>
+                      <Text style={styles.documentMetaText}> • </Text>
                       <Text style={styles.documentMetaText}>
                         {formatFileSize(doc.fileSize)}
                       </Text>
@@ -163,33 +169,13 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                 <Ionicons name="chevron-forward" size={16} color={colors.grass} />
               </TouchableOpacity>
             </View>
-          ))}
-        </View>
-      )}
-
-      {/* Certification Section */}
-      {league.isCertified && (
-        <View style={styles.section}>
-          <View style={styles.certificationHeader}>
-            <Ionicons name="shield-checkmark" size={24} color={colors.court} />
-            <Text style={styles.sectionTitle}>Certified League</Text>
-          </View>
-          <View style={styles.certificationCard}>
-            <Text style={styles.certificationText}>
-              This league has been certified with official documentation including bylaws
-              and board of directors information.
-            </Text>
-            {league.certifiedAt && (
-              <Text style={styles.certificationDate}>
-                Certified on {formatDate(league.certifiedAt)}
-              </Text>
-            )}
-          </View>
+            );
+          })}
         </View>
       )}
 
       {/* Empty State */}
-      {!league.description && documents.length === 0 && !league.isCertified && (
+      {!league.description && documents.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="information-circle-outline" size={64} color="#CCC" />
           <Text style={styles.emptyText}>No additional information available</Text>
@@ -279,6 +265,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.soft,
   },
+  documentCategoryLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.grass,
+  },
   viewButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -294,30 +285,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.grass,
-  },
-  certificationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  certificationCard: {
-    backgroundColor: '#FFF9E6',
-    borderRadius: 12,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.courtLight,
-  },
-  certificationText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.mid,
-    marginBottom: Spacing.sm,
-  },
-  certificationDate: {
-    fontSize: 13,
-    color: colors.soft,
-    fontStyle: 'italic',
   },
   emptyState: {
     flex: 1,

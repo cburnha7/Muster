@@ -65,6 +65,17 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     (initialData as any)?.seasonGameCount?.toString() || ''
   );
 
+  // Season configuration fields
+  const [scheduleFrequency, setScheduleFrequency] = useState<'weekly' | 'monthly'>(
+    (initialData as any)?.scheduleFrequency || 'weekly'
+  );
+  const [seasonLength, setSeasonLength] = useState(
+    (initialData as any)?.seasonLength?.toString() || ''
+  );
+  const [autoGenerateMatchups, setAutoGenerateMatchups] = useState<boolean>(
+    (initialData as any)?.autoGenerateMatchups ?? true
+  );
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const sportTypeOptions: SelectOption[] = [
@@ -100,11 +111,31 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const handleLeagueTypeChange = (option: SelectOption) => {
     const newType = option.value as 'team' | 'pickup';
     setLeagueType(newType);
-    // Pickup leagues are always public — auto-set and hide visibility selector
     if (newType === 'pickup') {
       setVisibility('public');
     }
   };
+
+  const frequencyOptions: SelectOption[] = [
+    { label: 'Weekly', value: 'weekly' },
+    { label: 'Monthly', value: 'monthly' },
+  ];
+
+  // Compute projected end date from start date + season length + frequency
+  const projectedEndDate = (() => {
+    if (!startDate || !seasonLength) return '';
+    const len = parseInt(seasonLength);
+    if (isNaN(len) || len < 1) return '';
+    const start = new Date(startDate);
+    if (isNaN(start.getTime())) return '';
+    const end = new Date(start);
+    if (scheduleFrequency === 'weekly') {
+      end.setDate(end.getDate() + len * 7);
+    } else {
+      end.setMonth(end.getMonth() + len);
+    }
+    return end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  })();
 
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -210,6 +241,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       preferredTimeWindowStart: timeWindowStart || null,
       preferredTimeWindowEnd: timeWindowEnd || null,
       seasonGameCount: seasonGameCount ? parseInt(seasonGameCount) : null,
+      // Season configuration
+      scheduleFrequency,
+      seasonLength: seasonLength ? parseInt(seasonLength) : null,
+      autoGenerateMatchups,
       ...(isEdit ? {} : {
         leagueType,
         visibility: leagueType === 'pickup' ? 'public' : visibility,
@@ -300,30 +335,71 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Season Information</Text>
+        <Text style={styles.sectionTitle}>Season Configuration</Text>
         
         <FormInput
           label="Season Name"
-          placeholder="e.g., Spring 2024"
+          placeholder="e.g., Spring 2026"
           value={seasonName}
           onChangeText={setSeasonName}
         />
 
         <FormInput
-          label="Start Date"
+          label="Season Start Date"
           placeholder="YYYY-MM-DD"
           value={startDate}
           onChangeText={setStartDate}
           error={errors.startDate}
         />
 
+        <FormSelect
+          label="Schedule Frequency"
+          placeholder="Select frequency"
+          value={scheduleFrequency}
+          options={frequencyOptions}
+          onSelect={(option) => setScheduleFrequency(option.value as 'weekly' | 'monthly')}
+        />
+
         <FormInput
-          label="End Date"
+          label={`Season Length (${scheduleFrequency === 'weekly' ? 'weeks' : 'months'})`}
+          placeholder={scheduleFrequency === 'weekly' ? 'e.g. 12' : 'e.g. 3'}
+          value={seasonLength}
+          onChangeText={setSeasonLength}
+          keyboardType="numeric"
+        />
+
+        {projectedEndDate ? (
+          <View style={styles.projectedEndRow}>
+            <Text style={styles.fieldLabel}>Projected End Date</Text>
+            <Text style={styles.projectedEndValue}>{projectedEndDate}</Text>
+          </View>
+        ) : null}
+
+        <FormInput
+          label="End Date (override)"
           placeholder="YYYY-MM-DD"
           value={endDate}
           onChangeText={setEndDate}
           error={errors.endDate}
         />
+
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleInfo}>
+            <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
+            <Text style={styles.toggleDescription}>
+              Automatically create shell matchup events after registration closes
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
+            onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
+            activeOpacity={0.7}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: autoGenerateMatchups }}
+          >
+            <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -520,5 +596,56 @@ const styles = StyleSheet.create({
   },
   dayChipTextSelected: {
     color: '#FFFFFF',
+  },
+  projectedEndRow: {
+    marginBottom: Spacing.lg,
+  },
+  projectedEndValue: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.grass,
+    marginTop: 4,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  toggleInfo: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  toggleLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  toggleDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  toggle: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleActive: {
+    backgroundColor: colors.grass,
+  },
+  toggleThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end',
   },
 });

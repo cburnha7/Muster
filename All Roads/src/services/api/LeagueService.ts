@@ -8,7 +8,6 @@ import {
   PlayerRanking,
   LeagueMembership,
   LeagueDocument,
-  BoardMember,
   CreateLeagueEventData,
   ConflictResult
 } from '../../types/league';
@@ -138,12 +137,14 @@ export class LeagueService extends BaseApiService {
   async getMembers(
     leagueId: string,
     page: number = 1,
-    limit: number = 50
+    limit: number = 50,
+    includePending: boolean = false
   ): Promise<PaginatedResponse<LeagueMembership>> {
-    const params = { page, limit };
+    const params: any = { page, limit };
+    if (includePending) params.includePending = 'true';
     return this.get<PaginatedResponse<LeagueMembership>>(`/leagues/${leagueId}/members`, {
       params,
-      cacheOptions: { ttl: 30000 } // Cache for 30 seconds
+      cacheOptions: { ttl: 30000 }
     });
   }
 
@@ -194,24 +195,6 @@ export class LeagueService extends BaseApiService {
   }
 
   /**
-   * Certify league
-   */
-  async certifyLeague(
-    leagueId: string,
-    bylawsFile: File | Blob,
-    boardMembers: BoardMember[],
-    userId: string,
-    onProgress?: (progress: number) => void
-  ): Promise<League> {
-    const formData = new FormData();
-    formData.append('bylaws', bylawsFile);
-    formData.append('boardMembers', JSON.stringify(boardMembers));
-    formData.append('userId', userId);
-
-    return this.uploadFile<League>(`/leagues/${leagueId}/certify`, formData, onProgress);
-  }
-
-  /**
    * Search leagues by name
    */
   async searchLeagues(query: string, page: number = 1, limit: number = 20): Promise<PaginatedResponse<League>> {
@@ -223,13 +206,6 @@ export class LeagueService extends BaseApiService {
    */
   async getLeaguesBySport(sportType: string, page: number = 1, limit: number = 20): Promise<PaginatedResponse<League>> {
     return this.getLeagues({ sportType }, page, limit);
-  }
-
-  /**
-   * Get certified leagues
-   */
-  async getCertifiedLeagues(page: number = 1, limit: number = 20): Promise<PaginatedResponse<League>> {
-    return this.getLeagues({ isCertified: true }, page, limit);
   }
 
   /**

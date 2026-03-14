@@ -22,8 +22,8 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const documentTypeOptions: SelectOption[] = [
-    { label: 'Rules Document', value: 'rules' },
-    { label: 'Schedule', value: 'schedule' },
+    { label: 'League Rules', value: 'rules' },
+    { label: 'League Insurance Policy', value: 'insurance' },
     { label: 'Other', value: 'other' },
   ];
 

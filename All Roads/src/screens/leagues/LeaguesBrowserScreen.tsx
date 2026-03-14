@@ -132,7 +132,6 @@ export const LeaguesBrowserScreen: React.FC = () => {
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.sportType) count++;
-    if (filters.isCertified !== undefined) count++;
     if (filters.isActive !== undefined) count++;
     return count;
   };
@@ -297,45 +296,6 @@ export const LeaguesBrowserScreen: React.FC = () => {
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </View>
-            </View>
-
-            {/* Certification Status Filter */}
-            <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>Certification Status</Text>
-              <View style={styles.optionsContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.optionButton,
-                    localFilters.isCertified === true && styles.optionButtonActive,
-                  ]}
-                  onPress={() => {
-                    const newFilters = { ...localFilters };
-                    if (localFilters.isCertified === true) {
-                      delete newFilters.isCertified;
-                    } else {
-                      newFilters.isCertified = true;
-                    }
-                    setLocalFilters(newFilters);
-                  }}
-                >
-                  <Ionicons
-                    name="shield-checkmark"
-                    size={16}
-                    color={
-                      localFilters.isCertified === true ? colors.chalk : colors.court
-                    }
-                    style={styles.optionIcon}
-                  />
-                  <Text
-                    style={[
-                      styles.optionText,
-                      localFilters.isCertified === true && styles.optionTextActive,
-                    ]}
-                  >
-                    Certified Only
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
 
