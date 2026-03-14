@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,18 +10,17 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { debounce } from '../../utils/performance';
 
 // Components
 import { SearchBar, SearchFilters } from '../../components/ui/SearchBar';
-import { EventCard } from '../../components/ui/EventCard';
 import { BookingCard } from '../../components/ui/BookingCard';
 import { FormButton } from '../../components/forms/FormButton';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 
 // Services
-import { authService } from '../../services/api/AuthService';
+import { debriefService } from '../../services/api/DebriefService';
 
 // Context
 import { useAuth } from '../../context/AuthContext';
@@ -29,17 +28,25 @@ import { useAuth } from '../../context/AuthContext';
 // Store
 import { selectUser } from '../../store/slices/authSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
-import { selectHomeScreenEvents } from '../../store/selectors/eventSelectors';
 
 // Theme
 import { colors, Spacing } from '../../theme';
 
 // Types
-import { Event, Booking } from '../../types';
+import { Booking } from '../../types';
 import { HomeStackParamList } from '../../navigation/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
+
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return 'just now';
+  if (diffHours === 1) return '1 hour ago';
+  return `${diffHours} hours ago`;
+}
 
 export function HomeScreen(): JSX.Element {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -50,7 +57,6 @@ export function HomeScreen(): JSX.Element {
   
   // RTK Query hooks
   const { 
-    data: eventsData, 
     isLoading: eventsLoading, 
     error: eventsError,
     refetch: refetchEvents 
@@ -72,20 +78,11 @@ export function HomeScreen(): JSX.Element {
   const [cancelBookingMutation] = useCancelBookingMutation();
 
   // Use selector to get filtered events (max 10 for home screen)
-  const rawEvents = eventsData?.data || [];
   const upcomingBookings = bookingsData?.data || [];
-  
-  // Filter out events that the user has already joined
-  const bookedEventIds = new Set(upcomingBookings.map(b => b.eventId));
-  const nearbyEvents = rawEvents
-    .filter(event => !bookedEventIds.has(event.id))
-    .slice(0, 10);
 
-  console.log('🏠 HomeScreen - Events data:', {
-    rawEventsCount: rawEvents.length,
-    nearbyEventsCount: nearbyEvents.length,
-    eventsLoading,
-  });
+  // Debrief state
+  const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
+  const [debriefLoading, setDebriefLoading] = useState(false);
 
   // Combined loading state
   const isLoading = eventsLoading || bookingsLoading;
@@ -97,20 +94,34 @@ export function HomeScreen(): JSX.Element {
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
+  // Load debrief-eligible events
+  const loadDebriefEvents = useCallback(async () => {
+    try {
+      setDebriefLoading(true);
+      const result = await debriefService.getDebriefEvents();
+      setDebriefEvents(result.data || []);
+    } catch (err) {
+      console.error('Failed to load debrief events:', err);
+      setDebriefEvents([]);
+    } finally {
+      setDebriefLoading(false);
+    }
+  }, []);
+
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchEvents(), refetchBookings()]);
+    await Promise.all([refetchEvents(), refetchBookings(), loadDebriefEvents()]);
     setIsRefreshing(false);
-  }, [refetchEvents, refetchBookings]);
+  }, [refetchEvents, refetchBookings, loadDebriefEvents]);
 
   // Reload data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      console.log('🔄 Home screen focused - refetching data');
       if (!authLoading) {
         refetchEvents();
         refetchBookings();
+        loadDebriefEvents();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authLoading])
@@ -134,9 +145,9 @@ export function HomeScreen(): JSX.Element {
     debouncedSearch(query);
   }, [debouncedSearch]);
 
-  // Handle event press
-  const handleEventPress = useCallback((event: Event) => {
-    navigation.navigate('EventDetails', { eventId: event.id });
+  // Handle debrief press - navigate to debrief screen
+  const handleDebriefPress = useCallback((booking: Booking) => {
+    navigation.navigate('Debrief', { eventId: booking.eventId });
   }, [navigation]);
 
   // Handle booking press - navigate to event details
@@ -267,41 +278,41 @@ export function HomeScreen(): JSX.Element {
           )}
         </View>
 
-        {/* Nearby Events */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nearby Events</Text>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('Events', { screen: 'EventsList' })}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
+        {/* Debrief */}
+        {debriefEvents.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Debrief</Text>
+            </View>
+            {debriefEvents.map((booking) => {
+              const endTime = booking.event?.endTime
+                ? new Date(booking.event.endTime)
+                : null;
+              return (
+                <TouchableOpacity
+                  key={booking.id}
+                  style={styles.debriefCard}
+                  onPress={() => handleDebriefPress(booking)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.debriefCardContent}>
+                    <Ionicons name="chatbubbles-outline" size={24} color={colors.court} />
+                    <View style={styles.debriefCardText}>
+                      <Text style={styles.debriefTitle} numberOfLines={1}>
+                        {booking.event?.title || 'Event'}
+                      </Text>
+                      <Text style={styles.debriefMeta}>
+                        {booking.event?.sportType || ''}
+                        {endTime ? ` · Ended ${formatTimeAgo(endTime)}` : ''}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-          
-          {eventsError ? (
-            <View style={styles.errorState}>
-              <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
-              <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
-            </View>
-          ) : isLoading ? (
-            <Text style={styles.placeholder}>Loading...</Text>
-          ) : nearbyEvents.length > 0 ? (
-            <View>
-              {nearbyEvents.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onPress={handleEventPress}
-                  style={styles.eventCard}
-                />
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyState}>
-              <Ionicons name="location-outline" size={64} color={colors.soft} />
-              <Text style={styles.emptyStateTitle}>No nearby events</Text>
-              <Text style={styles.emptyStateText}>Check back later or expand your search area</Text>
-            </View>
-          )}
-        </View>
+        )}
       </View>
 
       {/* Step Out Modal */}
@@ -378,6 +389,32 @@ const styles = StyleSheet.create({
   eventCard: {
     marginHorizontal: 0,
     marginVertical: Spacing.xs,
+  },
+  
+  // Debrief cards
+  debriefCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  debriefCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  debriefCardText: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  debriefTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  debriefMeta: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
   
   // Empty States

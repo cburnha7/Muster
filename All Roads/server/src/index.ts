@@ -18,6 +18,7 @@ import eligibleLocationsRoutes from './routes/eligible-locations';
 import leagueRoutes from './routes/leagues';
 import matchRoutes from './routes/matches';
 import seasonRoutes from './routes/seasons';
+import debriefRoutes from './routes/debrief';
 
 dotenv.config();
 
@@ -71,6 +72,7 @@ app.use('/api', eligibleLocationsRoutes);
 app.use('/api/leagues', leagueRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/seasons', seasonRoutes);
+app.use('/api/debrief', debriefRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

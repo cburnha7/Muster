@@ -4,6 +4,7 @@ import { BookingsStackParamList } from '../types';
 import { BookingsListScreen } from '../../screens/bookings/BookingsListScreen';
 import { BookingDetailsScreen } from '../../screens/bookings/BookingDetailsScreen';
 import { BookingHistoryScreen } from '../../screens/bookings/BookingHistoryScreen';
+import { DebriefScreen } from '../../screens/debrief/DebriefScreen';
 
 const Stack = createNativeStackNavigator<BookingsStackParamList>();
 
@@ -25,6 +26,10 @@ export function BookingsStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="BookingHistory" 
         component={BookingHistoryScreen}
+      />
+      <Stack.Screen 
+        name="Debrief" 
+        component={DebriefScreen}
       />
     </Stack.Navigator>
   );

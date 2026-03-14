@@ -94,6 +94,13 @@ export const API_ENDPOINTS = {
     CANCEL: (id: string) => `/bookings/${id}/cancel`,
   },
 
+  // Debrief
+  DEBRIEF: {
+    BASE: '/debrief',
+    BY_EVENT: (eventId: string) => `/debrief/${eventId}`,
+    SUBMIT: (eventId: string) => `/debrief/${eventId}/submit`,
+  },
+
   // Search
   SEARCH: {
     BASE: '/search',

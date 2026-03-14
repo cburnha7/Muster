@@ -59,6 +59,7 @@ model User {
   refreshTokens          RefreshToken[]
   passwordResetTokens    PasswordResetToken[]
   teamTransactions       TeamTransaction[]
+  facilityRatings        FacilityRating[]
 
   @@map("users")
 }
@@ -178,6 +179,7 @@ model Facility {
   events            Event[]
   bookings          Booking[]
   reviews           Review[]
+  facilityRatings   FacilityRating[]
   verification      FacilityVerification?
   rateSchedules     FacilityRateSchedule[]
   availabilitySlots FacilityAvailability[]
@@ -287,13 +289,14 @@ model TeamMember {
 }
 
 model Booking {
-  id            String   @id @default(uuid())
-  status        String   @default("confirmed")
-  bookingType   String
-  totalPrice    Float
-  paymentStatus String   @default("pending")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(uuid())
+  status            String   @default("confirmed")
+  bookingType       String
+  totalPrice        Float
+  paymentStatus     String   @default("pending")
+  debriefSubmitted  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Foreign Keys
   userId     String
@@ -328,6 +331,25 @@ model Review {
   facility Facility @relation(fields: [facilityId], references: [id])
 
   @@map("reviews")
+}
+
+model FacilityRating {
+  id        String   @id @default(uuid())
+  rating    Int      // 1-5
+  createdAt DateTime @default(now())
+
+  // Foreign Keys
+  userId     String
+  facilityId String
+  eventId    String
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([userId, facilityId, eventId])
+  @@index([facilityId])
+  @@map("facility_ratings")
 }
 
 model FacilityVerification {

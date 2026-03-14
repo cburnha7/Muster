@@ -126,6 +126,29 @@ export function BookingsListScreen(): JSX.Element {
 
   // Handle booking press
   const handleBookingPress = (booking: Booking) => {
+    // Past or completed bookings go to the Debrief screen
+    if (booking.event && (activeFilter === 'past' || booking.status === BookingStatus.CONFIRMED)) {
+      const endTime = booking.event.endTime ? new Date(booking.event.endTime) : null;
+      const isPast = endTime && endTime < new Date();
+
+      if (isPast) {
+        const hoursSinceEnd = endTime
+          ? (Date.now() - endTime.getTime()) / (1000 * 60 * 60)
+          : Infinity;
+        const withinWindow = hoursSinceEnd <= 24;
+        const alreadySubmitted = booking.debriefSubmitted === true;
+
+        // Within 24h and not submitted → interactive debrief
+        // Otherwise → readonly debrief summary
+        navigation.navigate('Debrief' as never, {
+          eventId: booking.event.id,
+          readonly: !withinWindow || alreadySubmitted,
+        } as never);
+        return;
+      }
+    }
+
+    // Upcoming / other bookings go to event details
     if (booking.event) {
       navigation.navigate('EventDetails' as never, { eventId: booking.event.id } as never);
     } else {

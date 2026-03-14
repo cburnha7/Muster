@@ -40,6 +40,7 @@ export type HomeStackParamList = {
   EditEvent: { eventId: string };
   FacilityDetails: { facilityId: string };
   SearchResults: { query: string; filters?: any };
+  Debrief: { eventId: string; readonly?: boolean };
 };
 
 export type EventsStackParamList = {
@@ -83,6 +84,7 @@ export type BookingsStackParamList = {
   BookingsList: undefined;
   BookingDetails: { bookingId: string };
   BookingHistory: undefined;
+  Debrief: { eventId: string; readonly?: boolean };
 };
 
 export type ProfileStackParamList = {

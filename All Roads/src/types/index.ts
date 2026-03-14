@@ -295,6 +295,7 @@ export interface Booking {
   cancelledAt?: Date;
   cancellationReason?: string;
   refundAmount?: number;
+  debriefSubmitted?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
