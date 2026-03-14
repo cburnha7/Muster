@@ -167,7 +167,7 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.sectionHeaderLeft}>
-            <Ionicons name="football" size={20} color={colors.grass} />
+            <Ionicons name="football" size={24} color={colors.grass} />
             <Text style={styles.sectionTitle}>My Events</Text>
             {myEvents.length > 0 && (
               <View style={styles.countBadge}>
@@ -199,7 +199,7 @@ export function ProfileScreen() {
                     {event.sportType} • {new Date(event.startTime).toLocaleDateString()}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                <Ionicons name="chevron-forward" size={16} color="#666" />
               </TouchableOpacity>
             ))
           ) : (
@@ -218,7 +218,7 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.sectionHeaderLeft}>
-            <Ionicons name="location" size={20} color={colors.grass} />
+            <Ionicons name="location" size={24} color={colors.grass} />
             <Text style={styles.sectionTitle}>My Grounds</Text>
             {myGrounds.length > 0 && (
               <View style={styles.countBadge}>
@@ -249,7 +249,7 @@ export function ProfileScreen() {
                     {facility.sportTypes?.join(', ') || 'Multi-sport'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                <Ionicons name="chevron-forward" size={16} color="#666" />
               </TouchableOpacity>
             ))
           ) : (
@@ -268,7 +268,7 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.sectionHeaderLeft}>
-            <Ionicons name="people" size={20} color={colors.grass} />
+            <Ionicons name="people" size={24} color={colors.grass} />
             <Text style={styles.sectionTitle}>My Rosters</Text>
             {userRosters.length > 0 && (
               <View style={styles.countBadge}>
@@ -300,7 +300,7 @@ export function ProfileScreen() {
                     {roster.sportType} • {roster.members?.length ?? 0} players
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                <Ionicons name="chevron-forward" size={16} color="#666" />
               </TouchableOpacity>
             ))
           ) : (
@@ -319,7 +319,7 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.sectionHeaderLeft}>
-            <Ionicons name="trophy" size={20} color={colors.grass} />
+            <Ionicons name="trophy" size={24} color={colors.grass} />
             <Text style={styles.sectionTitle}>My Leagues</Text>
             {myLeagues.length > 0 && (
               <View style={styles.countBadge}>
@@ -358,7 +358,7 @@ export function ProfileScreen() {
                     {league.sportType} • {league.memberCount ?? 0} {league.leagueType === 'team' ? 'rosters' : 'players'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                <Ionicons name="chevron-forward" size={16} color="#666" />
               </TouchableOpacity>
             ))
           ) : (
@@ -391,15 +391,15 @@ const styles = StyleSheet.create({
   // Profile header
   profileHeader: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
+    padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   avatarRow: {
     flexDirection: 'row',
@@ -462,9 +462,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
     overflow: 'hidden',
   },
   sectionHeader: {
@@ -481,9 +481,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontFamily: fonts.semibold,
-    ...typeScale.body,
-    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
     marginLeft: 8,
   },
   countBadge: {
@@ -517,15 +517,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   listItemTitle: {
-    fontFamily: fonts.semibold,
-    ...typeScale.body,
-    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
     flexShrink: 1,
   },
   listItemSubtitle: {
-    fontFamily: fonts.body,
-    ...typeScale.bodySm,
-    color: colors.inkFaint,
+    fontSize: 14,
+    color: '#666',
     marginTop: 2,
   },
   roleBadge: {

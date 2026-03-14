@@ -68,8 +68,24 @@ export function BookingsListScreen(): JSX.Element {
         return upcomingBookings;
       case 'past':
         return pastBookings;
-      case 'cancelled':
-        return allBookings.filter(booking => booking.status === BookingStatus.CANCELLED);
+      case 'cancelled': {
+        const cancelled = allBookings.filter(booking => booking.status === BookingStatus.CANCELLED);
+        const now = new Date();
+        // Sort: nearest future events first, then past events most-recent-first
+        return cancelled.sort((a, b) => {
+          const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
+          const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+          const aFuture = aTime >= now.getTime();
+          const bFuture = bTime >= now.getTime();
+          // Future events come before past events
+          if (aFuture && !bFuture) return -1;
+          if (!aFuture && bFuture) return 1;
+          // Both future: nearest first (ascending)
+          if (aFuture && bFuture) return aTime - bTime;
+          // Both past: most recent first (descending)
+          return bTime - aTime;
+        });
+      }
       default:
         return allBookings;
     }

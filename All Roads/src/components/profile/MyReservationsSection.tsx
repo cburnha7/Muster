@@ -249,7 +249,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
         activeOpacity={0.7}
       >
         <View style={styles.sectionHeaderLeft}>
-          <Ionicons name="calendar" size={20} color="#3D8C5E" />
+          <Ionicons name="calendar" size={24} color="#3D8C5E" />
           <Text style={styles.sectionTitle}>My Reservations</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{unusedReservations.length}</Text>
@@ -366,14 +366,14 @@ function ReservationRow({ reservation, navigation, formatDate, formatTime, onCre
         >
           <View style={styles.compactCardContent}>
             <View style={styles.compactCardHeader}>
-              <Ionicons name="location" size={20} color="#3D8C5E" />
+              <Ionicons name="location" size={24} color="#3D8C5E" />
               <Text style={styles.compactCardTitle} numberOfLines={1}>{reservation.timeSlot.court.facility.name}</Text>
             </View>
             <Text style={styles.compactCardSubtitle} numberOfLines={1}>
               {reservation.timeSlot.court.name} • {formatDate(reservation.timeSlot.date)}
             </Text>
             <View style={styles.timeContainer}>
-              <Ionicons name="time-outline" size={14} color="#999" />
+              <Ionicons name="time-outline" size={16} color="#666" />
               <Text style={styles.timeText}>
                 {formatTime(reservation.timeSlot.startTime)} - {formatTime(reservation.timeSlot.endTime)}
               </Text>
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginLeft: 8,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   compactCardTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginLeft: 8,
@@ -536,9 +536,9 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   timeText: {
-    fontSize: 12,
-    color: '#999',
-    marginLeft: 4,
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
   },
   actionButtons: {
     flexDirection: 'row',
