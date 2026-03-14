@@ -25,13 +25,13 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors({
+// CORS configuration
+const corsOptions: cors.CorsOptions = {
   origin: [
     'https://muster-ecru.vercel.app',
     'http://localhost:3000',
     'http://localhost:19006',
-    ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [])
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -39,10 +39,13 @@ app.use(cors({
   exposedHeaders: ['X-Request-ID'],
   preflightContinue: false,
   optionsSuccessStatus: 204
-}));
+};
 
-// Handle preflight requests explicitly
-app.options('*', cors());
+// Handle preflight requests explicitly — must come BEFORE other middleware
+app.options('*', cors(corsOptions));
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
