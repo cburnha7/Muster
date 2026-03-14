@@ -24,16 +24,12 @@ router.get('/', async (req, res) => {
     if (userId) {
       where.OR = [
         { isPrivate: false },
-        { isPrivate: null },
         { organizerId: userId as string },
         { invitedUserIds: { has: userId as string } },
       ];
     } else {
       // No user context — only show public events
-      where.OR = [
-        { isPrivate: false },
-        { isPrivate: null },
-      ];
+      where.isPrivate = false;
     }
 
     const [events, total] = await Promise.all([
