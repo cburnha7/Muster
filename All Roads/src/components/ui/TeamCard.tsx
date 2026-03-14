@@ -66,7 +66,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
               {team.name}
             </Text>
             <Text style={styles.captain}>
-              Captain: {team.captain?.firstName} {team.captain?.lastName}
+              Manager: {team.captain?.firstName} {team.captain?.lastName}
             </Text>
           </View>
         </View>

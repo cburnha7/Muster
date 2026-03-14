@@ -54,6 +54,7 @@ model User {
   salutesReceived        Salute[]                @relation("SalutesReceived")
   uploadedDocuments      LeagueDocument[]        @relation("DocumentUploader")
   uploadedCertifications CertificationDocument[] @relation("CertificationUploader")
+  leagueMemberships      LeagueMembership[]
   rentals                FacilityRental[]
   refreshTokens          RefreshToken[]
   passwordResetTokens    PasswordResetToken[]
@@ -89,6 +90,10 @@ model Event {
   eligibilityMinSkillLevel       String?
   eligibilityMaxSkillLevel       String?
   eligibilityIsInviteOnly        Boolean  @default(false)
+  
+  // Private event fields
+  isPrivate                      Boolean  @default(false) // Private events are hidden from non-invited users
+  invitedUserIds                 String[] @default([]) // User IDs explicitly invited to this event
   
   // Invite-only event fields
   minimumPlayerCount             Int?     // Minimum players needed for event to proceed
@@ -220,6 +225,11 @@ model League {
   description String?
   sportType   String
   skillLevel  String
+
+  // League type and visibility
+  leagueType    String  @default("team")   // "team" or "pickup"
+  visibility    String  @default("public")  // "public" or "private"
+  membershipFee Float?                      // Optional fee for joining
 
   // Season management
   seasonId   String?
@@ -619,6 +629,10 @@ model LeagueMembership {
   joinedAt DateTime  @default(now())
   leftAt   DateTime?
 
+  // Polymorphic membership: supports both roster-level and individual-user membership
+  memberType String  @default("roster") // "roster" or "user"
+  memberId   String                     // References Roster ID or User ID based on memberType
+
   // Statistics (cached for performance)
   matchesPlayed  Int @default(0)
   wins           Int @default(0)
@@ -634,18 +648,21 @@ model LeagueMembership {
 
   // Foreign Keys
   leagueId String
-  teamId   String
+  teamId   String?  // Nullable for backward compatibility (roster membership)
   seasonId String?
+  userId   String?  // For individual player membership (pickup leagues)
 
   // Relations
   league League  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   season Season? @relation(fields: [seasonId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
 
-  @@unique([leagueId, teamId, seasonId])
+  @@unique([leagueId, memberType, memberId, seasonId])
   @@index([leagueId])
   @@index([teamId])
   @@index([seasonId])
+  @@index([userId])
   @@map("league_memberships")
 }
 

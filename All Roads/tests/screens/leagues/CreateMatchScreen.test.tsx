@@ -181,7 +181,7 @@ describe('CreateMatchScreen', () => {
   it('navigates back when cancel is pressed', async () => {
     const store = createMockStore();
 
-    const { getByText } = render(
+    const { getAllByText } = render(
       <Provider store={store}>
         <NavigationContainer>
           <CreateMatchScreen />
@@ -196,7 +196,7 @@ describe('CreateMatchScreen', () => {
 
     // Note: In a real test, we would find and press the cancel button
     // For now, we just verify the screen renders
-    expect(getByText('Create Match')).toBeTruthy();
+    expect(getAllByText('Create Match').length).toBeGreaterThanOrEqual(1);
   });
 
   it('loads teams from league members', async () => {

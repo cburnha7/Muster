@@ -6,7 +6,7 @@ const router = Router();
 // Get all events
 router.get('/', async (req, res) => {
   try {
-    const { sportType, skillLevel, status, organizerId, page = '1', limit = '10' } = req.query;
+    const { sportType, skillLevel, status, organizerId, userId, page = '1', limit = '10' } = req.query;
     
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
@@ -19,6 +19,22 @@ router.get('/', async (req, res) => {
     if (skillLevel) where.skillLevel = skillLevel;
     if (status) where.status = status;
     if (organizerId) where.organizerId = organizerId;
+
+    // Filter out private events unless the requesting user is the organizer or invited
+    if (userId) {
+      where.OR = [
+        { isPrivate: false },
+        { isPrivate: null },
+        { organizerId: userId as string },
+        { invitedUserIds: { has: userId as string } },
+      ];
+    } else {
+      // No user context — only show public events
+      where.OR = [
+        { isPrivate: false },
+        { isPrivate: null },
+      ];
+    }
 
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -96,6 +112,18 @@ router.get('/:id', async (req, res) => {
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Enforce private event visibility
+    const requestingUserId = req.query.userId as string | undefined;
+    if (event.isPrivate && requestingUserId) {
+      const isOrganizer = event.organizerId === requestingUserId;
+      const isInvited = event.invitedUserIds?.includes(requestingUserId);
+      if (!isOrganizer && !isInvited) {
+        return res.status(403).json({ error: 'You do not have access to this private event' });
+      }
+    } else if (event.isPrivate && !requestingUserId) {
+      return res.status(403).json({ error: 'You do not have access to this private event' });
     }
 
     res.json(event);
@@ -402,7 +430,7 @@ router.post('/', async (req, res) => {
       const timeSlotIds = eventData.timeSlotIds;
       
       // Clean eventData - remove fields that aren't in the Event model
-      const { rentalIds: _, timeSlotIds: __, eligibility, ...cleanEventData } = eventData;
+      const { rentalIds: _, timeSlotIds: __, eligibility, invitedUserIds, ...cleanEventData } = eventData;
       
       // Transform eligibility object to flat fields if present
       if (eligibility) {
@@ -415,6 +443,14 @@ router.post('/', async (req, res) => {
         cleanEventData.eligibilityRequiredSkillLevel = eligibility.requiredSkillLevel;
         cleanEventData.eligibilityMinSkillLevel = eligibility.minSkillLevel;
         cleanEventData.eligibilityMaxSkillLevel = eligibility.maxSkillLevel;
+      }
+
+      // Store private event data
+      if (eventData.isPrivate !== undefined) {
+        cleanEventData.isPrivate = eventData.isPrivate;
+      }
+      if (invitedUserIds && invitedUserIds.length > 0) {
+        cleanEventData.invitedUserIds = invitedUserIds;
       }
       
       // Create the event
@@ -723,6 +759,16 @@ router.post('/:id/book', async (req, res) => {
     if (event.currentParticipants >= event.maxParticipants) {
       console.log('❌ Event is full');
       return res.status(400).json({ error: 'Event is full' });
+    }
+
+    // Enforce private event access
+    if (event.isPrivate) {
+      const isOrganizer = event.organizerId === userId;
+      const isInvited = event.invitedUserIds?.includes(userId);
+      if (!isOrganizer && !isInvited) {
+        console.log('❌ User not invited to private event');
+        return res.status(403).json({ error: 'You are not invited to this private event' });
+      }
     }
 
     // Check if user already booked

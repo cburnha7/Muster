@@ -4,6 +4,7 @@ import { FormInput } from '../forms/FormInput';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
 import { CreateLeagueData, UpdateLeagueData, SportType, SkillLevel, PointsConfig } from '../../types';
+import { colors, fonts, typeScale, Spacing } from '../../theme';
 
 interface LeagueFormProps {
   initialData?: Partial<CreateLeagueData | UpdateLeagueData>;
@@ -20,6 +21,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   isEdit = false,
   loading = false,
 }) => {
+  const [leagueType, setLeagueType] = useState<'team' | 'pickup'>(
+    (initialData as Partial<CreateLeagueData>)?.leagueType || 'team'
+  );
+  const [visibility, setVisibility] = useState<'public' | 'private'>(
+    (initialData as Partial<CreateLeagueData>)?.visibility || 'public'
+  );
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [sportType, setSportType] = useState(initialData?.sportType || '');
@@ -59,6 +66,25 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'Advanced', value: SkillLevel.ADVANCED },
     { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
   ];
+
+  const leagueTypeOptions: SelectOption[] = [
+    { label: 'Team League', value: 'team' },
+    { label: 'Pickup League', value: 'pickup' },
+  ];
+
+  const visibilityOptions: SelectOption[] = [
+    { label: 'Public', value: 'public' },
+    { label: 'Private', value: 'private' },
+  ];
+
+  const handleLeagueTypeChange = (option: SelectOption) => {
+    const newType = option.value as 'team' | 'pickup';
+    setLeagueType(newType);
+    // Pickup leagues are always public — auto-set and hide visibility selector
+    if (newType === 'pickup') {
+      setVisibility('public');
+    }
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -125,6 +151,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       endDate: endDate ? new Date(endDate) : undefined,
       pointsConfig,
       imageUrl: imageUrl.trim() || undefined,
+      ...(isEdit ? {} : {
+        leagueType,
+        visibility: leagueType === 'pickup' ? 'public' : visibility,
+      }),
     };
 
     try {
@@ -136,6 +166,33 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {!isEdit && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>League Type</Text>
+          <Text style={styles.sectionDescription}>
+            Choose how your league is structured
+          </Text>
+
+          <FormSelect
+            label="League Type *"
+            placeholder="Select league type"
+            value={leagueType}
+            options={leagueTypeOptions}
+            onSelect={handleLeagueTypeChange}
+          />
+
+          {leagueType === 'team' && (
+            <FormSelect
+              label="Visibility"
+              placeholder="Select visibility"
+              value={visibility}
+              options={visibilityOptions}
+              onSelect={(option) => setVisibility(option.value as 'public' | 'private')}
+            />
+          )}
+        </View>
+      )}
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Basic Information</Text>
         
@@ -213,7 +270,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Points System</Text>
         <Text style={styles.sectionDescription}>
-          Configure how many points teams earn for match results
+          Configure how many points rosters earn for match results
         </Text>
         
         <FormInput
@@ -269,28 +326,29 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
   section: {
     backgroundColor: '#FFFFFF',
-    padding: 16,
-    marginBottom: 12,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontFamily: fonts.semibold,
+    ...typeScale.h3,
+    color: colors.ink,
+    marginBottom: Spacing.xs,
   },
   sectionDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+    marginBottom: Spacing.lg,
   },
   actions: {
     flexDirection: 'row',
-    padding: 16,
-    gap: 12,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   actionButton: {
     flex: 1,

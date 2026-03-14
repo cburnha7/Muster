@@ -1,6 +1,34 @@
 // Test setup configuration
-import 'react-native-gesture-handler/jestSetup';
 import '@testing-library/jest-native/extend-expect';
+
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
+// Mock expo-notifications
+jest.mock('expo-notifications', () => ({
+  getPermissionsAsync: jest.fn(),
+  requestPermissionsAsync: jest.fn(),
+  scheduleNotificationAsync: jest.fn(),
+  setNotificationHandler: jest.fn(),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getExpoPushTokenAsync: jest.fn(),
+  setNotificationChannelAsync: jest.fn(),
+}));
+
+// Mock react-native-safe-area-context
+jest.mock('react-native-safe-area-context', () => {
+  const inset = { top: 0, right: 0, bottom: 0, left: 0 };
+  return {
+    SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
+    SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
+    useSafeAreaInsets: () => inset,
+    useSafeAreaFrame: () => ({ x: 0, y: 0, width: 390, height: 844 }),
+    initialWindowMetrics: { insets: inset, frame: { x: 0, y: 0, width: 390, height: 844 } },
+  };
+});
 
 // Mock Expo modules
 jest.mock('expo-constants', () => ({
@@ -18,12 +46,6 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(),
 }));
 
-jest.mock('expo-notifications', () => ({
-  getPermissionsAsync: jest.fn(),
-  requestPermissionsAsync: jest.fn(),
-  scheduleNotificationAsync: jest.fn(),
-}));
-
 // Mock React Navigation
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
@@ -34,6 +56,3 @@ jest.mock('@react-navigation/native', () => ({
     params: {},
   }),
 }));
-
-// Silence the warning: Animated: `useNativeDriver` is not supported
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');

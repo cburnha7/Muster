@@ -51,7 +51,7 @@ export const RecordMatchResultScreen: React.FC = () => {
         if (user?.id && leagueData.organizerId !== user.id) {
           Alert.alert(
             'Access Denied',
-            'Only the league operator can record match results',
+            'Only the league commissioner can record match results',
             [{ text: 'OK', onPress: () => navigation.goBack() }]
           );
           return;

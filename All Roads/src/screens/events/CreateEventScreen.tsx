@@ -22,6 +22,7 @@ import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { CourtSelector } from '../../components/events/CourtSelector';
 import { TimeSlotPicker } from '../../components/events/TimeSlotPicker';
+import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
 
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
@@ -40,6 +41,7 @@ import {
   SkillLevel,
   EventType,
   Facility,
+  User,
 } from '../../types';
 
 interface FormData {
@@ -58,14 +60,10 @@ interface FormData {
   equipment: string;
   rules: string;
   teamIds: string[];
-  // Eligibility fields
-  enableEligibilityRestrictions: boolean;
+  // Privacy & restrictions
+  isPrivate: boolean;
   restrictedToTeams: string[];
-  minAge: string;
-  maxAge: string;
-  requiredSkillLevel: SkillLevel | '';
-  isInviteOnly: boolean;
-  minimumPlayerCount: string; // Minimum players needed for event
+  minimumPlayerCount: string;
 }
 
 interface FormErrors {
@@ -133,13 +131,9 @@ export function CreateEventScreen(): JSX.Element {
     equipment: '',
     rules: '',
     teamIds: [],
-    // Eligibility defaults
-    enableEligibilityRestrictions: false,
+    // Privacy & restrictions
+    isPrivate: false,
     restrictedToTeams: [],
-    minAge: '',
-    maxAge: '',
-    requiredSkillLevel: '',
-    isInviteOnly: false,
     minimumPlayerCount: '',
   });
 
@@ -168,6 +162,9 @@ export function CreateEventScreen(): JSX.Element {
 
   const isTeamBasedEvent = formData.eventType === EventType.GAME || formData.eventType === EventType.PRACTICE;
   const isFromRental = !!rentalId && !!rentalDetails;
+
+  // Invited users state for private events
+  const [invitedUsers, setInvitedUsers] = useState<User[]>([]);
 
   // Form options
   const sportTypeOptions: SelectOption[] = [
@@ -408,6 +405,67 @@ export function CreateEventScreen(): JSX.Element {
     });
   };
 
+  // Handle roster restriction toggle for private events
+  const handleRosterRestrictionToggle = (teamId: string) => {
+    setFormData(prev => {
+      const restrictedTeams = prev.restrictedToTeams.includes(teamId)
+        ? prev.restrictedToTeams.filter(id => id !== teamId)
+        : [...prev.restrictedToTeams, teamId];
+      return { ...prev, restrictedToTeams: restrictedTeams };
+    });
+  };
+
+  // Fetch roster members when restricted rosters change
+  useEffect(() => {
+    if (!formData.isPrivate || formData.restrictedToTeams.length === 0) return;
+
+    const fetchRosterMembers = async () => {
+      try {
+        const allMembers: User[] = [];
+        for (const teamId of formData.restrictedToTeams) {
+          const team = userTeams.find(t => t.id === teamId);
+          if (team) {
+            for (const member of team.members) {
+              if (member.status === 'active' && member.user) {
+                const memberUser = member.user as User;
+                if (!allMembers.some(u => u.id === memberUser.id) && memberUser.id !== user?.id) {
+                  allMembers.push(memberUser);
+                }
+              }
+            }
+          }
+        }
+        // Merge with existing individually-added users (don't remove them)
+        setInvitedUsers(prev => {
+          const merged = [...prev];
+          for (const m of allMembers) {
+            if (!merged.some(u => u.id === m.id)) {
+              merged.push(m);
+            }
+          }
+          return merged;
+        });
+      } catch (error) {
+        console.error('Error fetching roster members:', error);
+      }
+    };
+
+    fetchRosterMembers();
+  }, [formData.restrictedToTeams, formData.isPrivate]);
+
+  // Handle adding an individual person to the invited list
+  const handleAddInvitedUser = async (addedUser: User) => {
+    setInvitedUsers(prev => {
+      if (prev.some(u => u.id === addedUser.id)) return prev;
+      return [...prev, addedUser];
+    });
+  };
+
+  // Handle removing a person from the invited list
+  const handleRemoveInvitedUser = (userId: string) => {
+    setInvitedUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
   // Handle court selection
   const handleCourtSelect = (courtId: string, court: { id: string; name: string; sportType: string }) => {
     setSelectedCourt(court);
@@ -617,19 +675,15 @@ export function CreateEventScreen(): JSX.Element {
       newErrors.price = 'Price must be a valid number (0 or greater)';
     }
 
-    // Minimum player count validation for invite-only events
-    if (formData.isInviteOnly) {
-      if (!formData.minimumPlayerCount) {
-        newErrors.minimumPlayerCount = 'Minimum player count is required for invite-only events';
-      } else {
-        const minPlayers = parseInt(formData.minimumPlayerCount);
-        const maxParticipants = parseInt(formData.maxParticipants);
-        
-        if (isNaN(minPlayers) || minPlayers < 1) {
-          newErrors.minimumPlayerCount = 'Must be a valid number greater than 0';
-        } else if (!isNaN(maxParticipants) && minPlayers > maxParticipants) {
-          newErrors.minimumPlayerCount = 'Cannot exceed maximum participants';
-        }
+    // Minimum player count validation
+    if (formData.minimumPlayerCount) {
+      const minPlayers = parseInt(formData.minimumPlayerCount);
+      const maxParticipants = parseInt(formData.maxParticipants);
+      
+      if (isNaN(minPlayers) || minPlayers < 1) {
+        newErrors.minimumPlayerCount = 'Must be a valid number greater than 0';
+      } else if (!isNaN(maxParticipants) && minPlayers > maxParticipants) {
+        newErrors.minimumPlayerCount = 'Cannot exceed maximum participants';
       }
     }
 
@@ -768,20 +822,19 @@ export function CreateEventScreen(): JSX.Element {
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
         teamIds: isTeamBasedEvent ? formData.teamIds : undefined,
-        eligibility: formData.enableEligibilityRestrictions ? {
-          isInviteOnly: formData.isInviteOnly,
-          minimumPlayerCount: formData.isInviteOnly && formData.minimumPlayerCount 
-            ? parseInt(formData.minimumPlayerCount) 
+        isPrivate: formData.isPrivate,
+        invitedUserIds: formData.isPrivate ? invitedUsers.map(u => u.id) : undefined,
+        eligibility: {
+          isInviteOnly: formData.isPrivate,
+          minimumPlayerCount: formData.minimumPlayerCount
+            ? parseInt(formData.minimumPlayerCount)
             : undefined,
           restrictedToTeams: formData.restrictedToTeams.length > 0 ? formData.restrictedToTeams : undefined,
-          minAge: formData.minAge ? parseInt(formData.minAge) : undefined,
-          maxAge: formData.maxAge ? parseInt(formData.maxAge) : undefined,
-          requiredSkillLevel: formData.requiredSkillLevel ? formData.requiredSkillLevel as SkillLevel : undefined,
+          restrictedToLeagues: undefined,
           minSkillLevel: undefined,
           maxSkillLevel: undefined,
-          restrictedToLeagues: undefined,
-        } : undefined,
-        organizerId: user?.id, // Add organizer ID
+        },
+        organizerId: user?.id,
       };
 
       // Include timeSlotId and rentalId if selected
@@ -1185,7 +1238,7 @@ export function CreateEventScreen(): JSX.Element {
               {teamOptions.length === 0 ? (
                 <View style={styles.noTeamsBox}>
                   <Text style={styles.noTeamsText}>
-                    You need to be a captain or co-captain of a team to create team-based events.
+                    You need to be a manager or co-manager of a roster to create team-based events.
                   </Text>
                 </View>
               ) : (
@@ -1235,91 +1288,58 @@ export function CreateEventScreen(): JSX.Element {
             numberOfLines={3}
           />
 
-          {/* Eligibility Restrictions Section */}
-          <View style={styles.eligibilitySection}>
+          {/* Minimum Player Count */}
+          <FormInput
+            label="Minimum Player Count"
+            placeholder="e.g., 8"
+            value={formData.minimumPlayerCount}
+            onChangeText={(value) => handleInputChange('minimumPlayerCount', value)}
+            error={errors.minimumPlayerCount}
+            keyboardType="numeric"
+          />
+
+          {/* Privacy & Restrictions Section */}
+          <View style={styles.privacySection}>
             <TouchableOpacity
-              style={styles.eligibilityToggle}
-              onPress={() => handleInputChange('enableEligibilityRestrictions', !formData.enableEligibilityRestrictions)}
+              style={styles.privateToggle}
+              onPress={() => {
+                const newValue = !formData.isPrivate;
+                handleInputChange('isPrivate', newValue);
+                if (!newValue) {
+                  // Clear invited users and roster restrictions when toggling off
+                  setInvitedUsers([]);
+                  handleInputChange('restrictedToTeams', []);
+                }
+              }}
             >
-              <Text style={styles.eligibilityToggleLabel}>
-                {formData.enableEligibilityRestrictions ? '✓ ' : ''}
-                Add Eligibility Restrictions
-              </Text>
-              <Text style={styles.eligibilityToggleHint}>
-                Limit who can join this event
+              <View style={styles.privateToggleRow}>
+                <Ionicons
+                  name={formData.isPrivate ? 'lock-closed' : 'lock-open-outline'}
+                  size={20}
+                  color={formData.isPrivate ? colors.grass : colors.inkFaint}
+                />
+                <Text style={styles.privateToggleLabel}>
+                  Private Event
+                </Text>
+                <View style={[styles.toggleSwitch, formData.isPrivate && styles.toggleSwitchOn]}>
+                  <View style={[styles.toggleKnob, formData.isPrivate && styles.toggleKnobOn]} />
+                </View>
+              </View>
+              <Text style={styles.privateToggleHint}>
+                {formData.isPrivate
+                  ? 'Only invited people can see and join this event'
+                  : 'Anyone can see and join this event'}
               </Text>
             </TouchableOpacity>
 
-            {formData.enableEligibilityRestrictions && (
-              <View style={styles.eligibilityOptions}>
-                <TouchableOpacity
-                  style={styles.eligibilityOption}
-                  onPress={() => handleInputChange('isInviteOnly', !formData.isInviteOnly)}
-                >
-                  <Text style={styles.eligibilityOptionText}>
-                    {formData.isInviteOnly ? '✓ ' : '☐ '}
-                    Invite Only
-                  </Text>
-                  <Text style={styles.eligibilityOptionHint}>
-                    Event will not appear in public lists until opened
-                  </Text>
-                </TouchableOpacity>
-
-                {formData.isInviteOnly && (
-                  <View style={styles.inviteOnlyDetails}>
-                    <FormInput
-                      label="Minimum Player Count"
-                      placeholder="e.g., 8"
-                      value={formData.minimumPlayerCount}
-                      onChangeText={(value) => handleInputChange('minimumPlayerCount', value)}
-                      error={errors.minimumPlayerCount}
-                      keyboardType="numeric"
-                      required
-                    />
-                    <View style={styles.inviteOnlyInfoBox}>
-                      <Ionicons name="information-circle-outline" size={20} color={colors.sky} />
-                      <Text style={styles.inviteOnlyInfoText}>
-                        If minimum players aren't reached 2 days before the event, it will automatically open to the public.
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                <View style={styles.ageRestrictions}>
-                  <Text style={styles.sectionLabel}>Age Restrictions</Text>
-                  <View style={styles.ageRow}>
-                    <FormInput
-                      label="Min Age"
-                      placeholder="e.g., 18"
-                      value={formData.minAge}
-                      onChangeText={(value) => handleInputChange('minAge', value)}
-                      keyboardType="numeric"
-                      containerStyle={styles.ageInput}
-                    />
-                    <FormInput
-                      label="Max Age"
-                      placeholder="e.g., 35"
-                      value={formData.maxAge}
-                      onChangeText={(value) => handleInputChange('maxAge', value)}
-                      keyboardType="numeric"
-                      containerStyle={styles.ageInput}
-                    />
-                  </View>
-                </View>
-
-                <FormSelect
-                  label="Required Skill Level (Optional)"
-                  placeholder="Leave empty for any skill level"
-                  value={formData.requiredSkillLevel}
-                  options={skillLevelOptions}
-                  onSelect={(option) => handleSelectChange('requiredSkillLevel', option)}
-                />
-
+            {formData.isPrivate && (
+              <View style={styles.privateOptions}>
+                {/* Restrict to Roster */}
                 {teamOptions.length > 0 && (
-                  <View style={styles.teamRestrictions}>
-                    <Text style={styles.sectionLabel}>Restrict to Specific Teams</Text>
-                    <Text style={styles.sectionHint}>
-                      Only members of selected teams can join
+                  <View style={styles.restrictionCard}>
+                    <Text style={styles.restrictionLabel}>Restrict to Roster</Text>
+                    <Text style={styles.restrictionHint}>
+                      All players of selected rosters will be invited
                     </Text>
                     <View style={styles.teamList}>
                       {teamOptions.map(team => (
@@ -1329,13 +1349,7 @@ export function CreateEventScreen(): JSX.Element {
                             styles.teamItem,
                             formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemSelected,
                           ]}
-                          onPress={() => {
-                            const teamId = team.value.toString();
-                            const restrictedTeams = formData.restrictedToTeams.includes(teamId)
-                              ? formData.restrictedToTeams.filter(id => id !== teamId)
-                              : [...formData.restrictedToTeams, teamId];
-                            handleInputChange('restrictedToTeams', restrictedTeams);
-                          }}
+                          onPress={() => handleRosterRestrictionToggle(team.value.toString())}
                         >
                           <Text
                             style={[
@@ -1349,6 +1363,53 @@ export function CreateEventScreen(): JSX.Element {
                         </TouchableOpacity>
                       ))}
                     </View>
+                  </View>
+                )}
+
+                {/* Add People */}
+                <View style={styles.restrictionCard}>
+                  <Text style={styles.restrictionLabel}>Add People</Text>
+                  <Text style={styles.restrictionHint}>
+                    Search by name or email to invite individuals
+                  </Text>
+                  <AddMemberSearch
+                    onAddMember={handleAddInvitedUser}
+                    existingMemberIds={[
+                      ...invitedUsers.map(u => u.id),
+                      ...(user?.id ? [user.id] : []),
+                    ]}
+                  />
+                </View>
+
+                {/* Invited List */}
+                {invitedUsers.length > 0 && (
+                  <View style={styles.restrictionCard}>
+                    <Text style={styles.restrictionLabel}>
+                      Invited ({invitedUsers.length})
+                    </Text>
+                    {invitedUsers.map(invitedUser => (
+                      <View key={invitedUser.id} style={styles.invitedUserRow}>
+                        <View style={styles.invitedUserInfo}>
+                          <View style={styles.invitedUserAvatar}>
+                            <Text style={styles.invitedUserAvatarText}>
+                              {invitedUser.firstName?.[0] || invitedUser.email?.[0]?.toUpperCase() || '?'}
+                            </Text>
+                          </View>
+                          <View>
+                            <Text style={styles.invitedUserName}>
+                              {invitedUser.firstName} {invitedUser.lastName}
+                            </Text>
+                            <Text style={styles.invitedUserEmail}>{invitedUser.email}</Text>
+                          </View>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleRemoveInvitedUser(invitedUser.id)}
+                          style={styles.removeInvitedButton}
+                        >
+                          <Ionicons name="close-circle" size={22} color={colors.track} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
                   </View>
                 )}
               </View>
@@ -1634,110 +1695,131 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     marginTop: 4,
   },
-  eligibilitySection: {
+  privacySection: {
     marginTop: 24,
     paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: colors.chalk,
   },
-  eligibilityToggle: {
+  privateToggle: {
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
-  eligibilityToggleLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
+  privateToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
-  eligibilityToggleHint: {
-    fontSize: 14,
-    color: '#6B7280',
+  privateToggleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
+    marginLeft: 8,
+    flex: 1,
   },
-  eligibilityOptions: {
+  toggleSwitch: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.chalk,
+    borderWidth: 1,
+    borderColor: colors.inkFaint,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleSwitchOn: {
+    backgroundColor: colors.grass,
+    borderColor: colors.grass,
+  },
+  toggleKnob: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#FFFFFF',
+  },
+  toggleKnobOn: {
+    alignSelf: 'flex-end',
+  },
+  privateToggleHint: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginLeft: 28,
+  },
+  privateOptions: {
     marginTop: 16,
   },
-  eligibilityOption: {
-    padding: 12,
+  restrictionCard: {
+    padding: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     marginBottom: 16,
     shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
-  eligibilityOptionText: {
+  restrictionLabel: {
     fontSize: 16,
-    color: '#374151',
-  },
-  eligibilityOptionHint: {
-    fontSize: 13,
-    color: colors.soft,
-    marginTop: 4,
-  },
-  inviteOnlyDetails: {
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: colors.chalk,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.soft,
-  },
-  inviteOnlyInfoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderLeftWidth: 3,
-    borderLeftColor: colors.sky,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-  },
-  inviteOnlyInfoText: {
-    flex: 1,
-    fontSize: 13,
+    fontWeight: '600',
     color: colors.ink,
-    marginLeft: 8,
-    lineHeight: 18,
+    marginBottom: 4,
   },
-  ageRestrictions: {
-    marginTop: 8,
+  restrictionHint: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginBottom: 12,
+  },
+  invitedUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.chalk,
+  },
+  invitedUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  invitedUserAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.grass,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  invitedUserAvatarText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  invitedUserName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.ink,
+  },
+  invitedUserEmail: {
+    fontSize: 12,
+    color: colors.inkFaint,
+  },
+  removeInvitedButton: {
+    padding: 4,
   },
   sectionLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.ink,
     marginBottom: 8,
-  },
-  sectionHint: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  ageRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  ageInput: {
-    flex: 1,
-    marginRight: 12,
-  },
-  teamRestrictions: {
-    marginTop: 8,
   },
   readOnlyField: {
     marginBottom: 16,
@@ -1775,7 +1857,7 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalk,
     shadowColor: colors.ink,
     shadowOffset: {
       width: 0,

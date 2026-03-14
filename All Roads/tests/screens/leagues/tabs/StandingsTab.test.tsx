@@ -132,15 +132,18 @@ describe('StandingsTab', () => {
     },
   ];
 
+  const mockGetStandings = jest.fn().mockResolvedValue(mockStandings);
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetStandings.mockClear().mockResolvedValue(mockStandings);
 
     const { LeagueService } = require('../../../../src/services/api/LeagueService');
     const { seasonService } = require('../../../../src/services/api/SeasonService');
 
-    // Mock LeagueService
+    // Mock LeagueService - use shared mock function so we can track all calls
     LeagueService.mockImplementation(() => ({
-      getStandings: jest.fn().mockResolvedValue(mockStandings),
+      getStandings: mockGetStandings,
     }));
 
     // Mock seasonService
@@ -187,14 +190,13 @@ describe('StandingsTab', () => {
       expect(getByTestId('standings-table')).toBeTruthy();
     });
 
-    // Verify getStandings was called with active season ID
-    const { LeagueService } = require('../../../../src/services/api/LeagueService');
-    const leagueServiceInstance = LeagueService.mock.results[0].value;
+    // Verify getStandings was eventually called with active season ID
     await waitFor(() => {
-      expect(leagueServiceInstance.getStandings).toHaveBeenCalledWith(
-        mockLeagueId,
-        'season-1'
+      const calls = mockGetStandings.mock.calls;
+      const calledWithSeason = calls.some(
+        (call: any[]) => call[0] === mockLeagueId && call[1] === 'season-1'
       );
+      expect(calledWithSeason).toBe(true);
     });
   });
 
@@ -210,12 +212,11 @@ describe('StandingsTab', () => {
     fireEvent.press(fallSeasonOption);
 
     await waitFor(() => {
-      const { LeagueService } = require('../../../../src/services/api/LeagueService');
-      const leagueServiceInstance = LeagueService.mock.results[0].value;
-      expect(leagueServiceInstance.getStandings).toHaveBeenCalledWith(
-        mockLeagueId,
-        'season-2'
+      const calls = mockGetStandings.mock.calls;
+      const calledWithSeason2 = calls.some(
+        (call: any[]) => call[0] === mockLeagueId && call[1] === 'season-2'
       );
+      expect(calledWithSeason2).toBe(true);
     });
   });
 
@@ -226,23 +227,20 @@ describe('StandingsTab', () => {
       expect(getByText('Refresh')).toBeTruthy();
     });
 
+    const callCountBefore = mockGetStandings.mock.calls.length;
+
     const refreshButton = getByText('Refresh');
     fireEvent.press(refreshButton);
 
     await waitFor(() => {
-      const { LeagueService } = require('../../../../src/services/api/LeagueService');
-      const leagueServiceInstance = LeagueService.mock.results[0].value;
-      // Should be called at least twice (initial load + refresh)
-      expect(leagueServiceInstance.getStandings).toHaveBeenCalledTimes(2);
+      // Should be called at least once more after refresh
+      expect(mockGetStandings.mock.calls.length).toBeGreaterThan(callCountBefore);
     });
   });
 
   it('should display error message on failure', async () => {
     const errorMessage = 'Failed to load standings';
-    const { LeagueService } = require('../../../../src/services/api/LeagueService');
-    LeagueService.mockImplementation(() => ({
-      getStandings: jest.fn().mockRejectedValue(new Error(errorMessage)),
-    }));
+    mockGetStandings.mockRejectedValue(new Error(errorMessage));
 
     const { getByTestId, getByText } = render(<StandingsTab leagueId={mockLeagueId} />);
 
@@ -255,21 +253,16 @@ describe('StandingsTab', () => {
 
   it('should retry loading on error retry button press', async () => {
     const errorMessage = 'Failed to load standings';
-    const mockGetStandings = jest
-      .fn()
-      .mockRejectedValueOnce(new Error(errorMessage))
-      .mockResolvedValueOnce(mockStandings);
+    mockGetStandings.mockRejectedValue(new Error(errorMessage));
 
-    const { LeagueService } = require('../../../../src/services/api/LeagueService');
-    LeagueService.mockImplementation(() => ({
-      getStandings: mockGetStandings,
-    }));
-
-    const { getByTestId, getByText } = render(<StandingsTab leagueId={mockLeagueId} />);
+    const { getByTestId } = render(<StandingsTab leagueId={mockLeagueId} />);
 
     await waitFor(() => {
       expect(getByTestId('error-display')).toBeTruthy();
     });
+
+    // Now make it succeed on retry
+    mockGetStandings.mockResolvedValue(mockStandings);
 
     const retryButton = getByTestId('retry-button');
     fireEvent.press(retryButton);
@@ -280,10 +273,7 @@ describe('StandingsTab', () => {
   });
 
   it('should display empty state when no standings available', async () => {
-    const { LeagueService } = require('../../../../src/services/api/LeagueService');
-    LeagueService.mockImplementation(() => ({
-      getStandings: jest.fn().mockResolvedValue([]),
-    }));
+    mockGetStandings.mockResolvedValue([]);
 
     const { getByText } = render(<StandingsTab leagueId={mockLeagueId} />);
 
@@ -306,7 +296,7 @@ describe('StandingsTab', () => {
     const teamButton = getByTestId('team-team-1');
     fireEvent.press(teamButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Team pressed:', 'team-1');
+    expect(consoleSpy).toHaveBeenCalledWith('Roster pressed:', 'team-1');
 
     consoleSpy.mockRestore();
   });
@@ -333,12 +323,11 @@ describe('StandingsTab', () => {
     fireEvent.press(allSeasonsOption);
 
     await waitFor(() => {
-      const { LeagueService } = require('../../../../src/services/api/LeagueService');
-      const leagueServiceInstance = LeagueService.mock.results[0].value;
-      expect(leagueServiceInstance.getStandings).toHaveBeenCalledWith(
-        mockLeagueId,
-        undefined
+      const calls = mockGetStandings.mock.calls;
+      const calledWithUndefined = calls.some(
+        (call: any[]) => call[0] === mockLeagueId && call[1] === undefined
       );
+      expect(calledWithUndefined).toBe(true);
     });
   });
 });

@@ -249,7 +249,7 @@ describe('MatchesTab', () => {
     });
 
     it('should show all seasons when "All Seasons" selected', async () => {
-      const { getByTestId } = render(
+      const { getAllByTestId, getByTestId } = render(
         <MatchesTab leagueId={mockLeagueId} isOperator={false} />
       );
 
@@ -259,17 +259,17 @@ describe('MatchesTab', () => {
 
       const { matchService } = require('../../../../src/services/api/MatchService');
 
-      // Select "All Seasons"
-      fireEvent.press(getByTestId('select-option-all'));
+      // Select "All Seasons" - there are multiple 'select-option-all' elements
+      // (one for Season filter, one for Status filter), pick the first one (Season)
+      const allOptions = getAllByTestId('select-option-all');
+      fireEvent.press(allOptions[0]);
 
       await waitFor(() => {
-        expect(matchService.getMatches).toHaveBeenCalledWith(
-          expect.objectContaining({
-            leagueId: mockLeagueId,
-          }),
-          1,
-          20
+        const calls = matchService.getMatches.mock.calls;
+        const calledWithoutSeason = calls.some(
+          (call: any[]) => call[0].leagueId === mockLeagueId && !call[0].seasonId
         );
+        expect(calledWithoutSeason).toBe(true);
       });
     });
   });
@@ -371,17 +371,9 @@ describe('MatchesTab', () => {
   describe('Error Handling', () => {
     it('should retry loading matches when retry button pressed', async () => {
       const { matchService } = require('../../../../src/services/api/MatchService');
+      // Reject all calls initially
       matchService.getMatches = jest.fn()
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          data: mockMatches,
-          pagination: {
-            page: 1,
-            limit: 20,
-            total: 2,
-            totalPages: 1,
-          },
-        });
+        .mockRejectedValue(new Error('Network error'));
 
       const { getByTestId } = render(
         <MatchesTab leagueId={mockLeagueId} isOperator={false} />
@@ -389,6 +381,17 @@ describe('MatchesTab', () => {
 
       await waitFor(() => {
         expect(getByTestId('error-display')).toBeTruthy();
+      });
+
+      // Now make it succeed on retry
+      matchService.getMatches = jest.fn().mockResolvedValue({
+        data: mockMatches,
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 2,
+          totalPages: 1,
+        },
       });
 
       fireEvent.press(getByTestId('retry-button'));

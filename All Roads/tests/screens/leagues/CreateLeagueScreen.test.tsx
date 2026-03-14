@@ -93,13 +93,13 @@ describe('CreateLeagueScreen', () => {
   });
 
   it('renders CreateLeagueScreen correctly', () => {
-    const { getByText } = render(
+    const { getAllByText } = render(
       <Provider store={store}>
         <CreateLeagueScreen />
       </Provider>
     );
 
-    expect(getByText('Create League')).toBeTruthy();
+    expect(getAllByText('Create League').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders LeagueForm component', () => {

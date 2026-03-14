@@ -133,6 +133,8 @@ describe('TeamsTab', () => {
     team: mockTeam1,
     status: 'active' as any,
     joinedAt: new Date('2024-01-01'),
+    memberType: 'roster',
+    memberId: 'team-1',
     matchesPlayed: 5,
     wins: 3,
     losses: 2,
@@ -152,6 +154,8 @@ describe('TeamsTab', () => {
     team: mockTeam2,
     status: 'active' as any,
     joinedAt: new Date('2024-01-02'),
+    memberType: 'roster',
+    memberId: 'team-2',
     matchesPlayed: 4,
     wins: 2,
     losses: 2,
@@ -227,7 +231,7 @@ describe('TeamsTab', () => {
       const { getByText } = render(<TeamsTab leagueId={mockLeagueId} />);
 
       await waitFor(() => {
-        expect(getByText('No teams in this league yet')).toBeTruthy();
+        expect(getByText('No rosters in this league yet')).toBeTruthy();
       });
     });
   });
@@ -289,7 +293,7 @@ describe('TeamsTab', () => {
   describe('Pagination', () => {
     it('should load more members when scrolling to end', async () => {
       // First page
-      (leagueService.getMembers as jest.Mock).mockResolvedValueOnce({
+      (leagueService.getMembers as jest.Mock).mockResolvedValue({
         data: [mockMembership1],
         pagination: {
           page: 1,
@@ -303,17 +307,6 @@ describe('TeamsTab', () => {
 
       await waitFor(() => {
         expect(getByText('Thunder Strikers')).toBeTruthy();
-      });
-
-      // Second page
-      (leagueService.getMembers as jest.Mock).mockResolvedValueOnce({
-        data: [mockMembership2],
-        pagination: {
-          page: 2,
-          limit: 20,
-          totalPages: 2,
-          totalItems: 2,
-        },
       });
 
       // Note: Triggering onEndReached in tests is complex

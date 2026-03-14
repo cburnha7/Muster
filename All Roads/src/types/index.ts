@@ -229,6 +229,9 @@ export interface Event {
   participants: Participant[];
   // Eligibility restrictions
   eligibility?: EventEligibility;
+  // Privacy
+  isPrivate?: boolean;
+  invitedUserIds?: string[];
   // League match relation
   matches?: any[]; // Match[] from league types
   // Rental relation
@@ -464,7 +467,10 @@ export interface CreateEventData {
   eventType: EventType;
   teamIds?: string[];
   eligibility?: EventEligibility;
+  isPrivate?: boolean;
+  invitedUserIds?: string[];
   rentalId?: string; // Link to FacilityRental if event is created from a rental
+  organizerId?: string;
 }
 
 export interface UpdateEventData extends Partial<CreateEventData> {

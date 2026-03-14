@@ -71,9 +71,9 @@ export type TeamsStackParamList = {
 
 export type LeaguesStackParamList = {
   LeaguesBrowser: undefined;
-  LeagueDetails: { leagueId: string };
+  LeagueDetails: { leagueId: string; leagueType?: 'team' | 'pickup' };
   CreateLeague: undefined;
-  ManageLeague: { leagueId: string };
+  ManageLeague: { leagueId: string; leagueType?: 'team' | 'pickup' };
   CreateMatch: { leagueId: string; seasonId?: string };
   RecordMatchResult: { matchId: string };
   DocumentViewer: { leagueId: string; documentId: string; documentName?: string };

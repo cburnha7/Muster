@@ -22,6 +22,9 @@ export interface League {
   organizer?: User;
   memberCount?: number;
   matchCount?: number;
+  leagueType: 'team' | 'pickup';
+  visibility: 'public' | 'private';
+  membershipFee?: number;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -42,6 +45,9 @@ export interface CreateLeagueData {
   endDate?: Date | string;
   pointsConfig?: PointsConfig;
   imageUrl?: string;
+  leagueType: 'team' | 'pickup';
+  visibility?: 'public' | 'private';
+  membershipFee?: number;
 }
 
 export interface UpdateLeagueData {
@@ -137,6 +143,10 @@ export interface LeagueMembership {
   status: MembershipStatus;
   joinedAt: Date | string;
   leftAt?: Date | string;
+  memberType: 'roster' | 'user';
+  memberId: string;
+  userId?: string;
+  user?: User;
   matchesPlayed: number;
   wins: number;
   losses: number;
@@ -222,4 +232,27 @@ export type CertificationType = 'bylaws' | 'board_of_directors';
 export interface BoardMember {
   name: string;
   role: string;
+}
+
+// League event creation types
+export interface CreateLeagueEventData {
+  title: string;
+  description: string;
+  startTime: Date;
+  endTime: Date;
+  facilityId?: string;
+  rosterIds?: string[]; // Only for Team Leagues
+}
+
+// Scheduling conflict types
+export interface ConflictResult {
+  hasConflicts: boolean;
+  conflicts: Array<{
+    rosterId: string;
+    rosterName: string;
+    conflictingEventId: string;
+    conflictingEventTitle: string;
+    startTime: Date;
+    endTime: Date;
+  }>;
 }

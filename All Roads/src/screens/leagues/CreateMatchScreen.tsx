@@ -69,7 +69,7 @@ export const CreateMatchScreen: React.FC = () => {
 
     // Check if user is the league operator
     if (league && league.organizerId !== user.id) {
-      Alert.alert('Error', 'Only the league operator can create matches');
+      Alert.alert('Error', 'Only the league commissioner can create matches');
       return;
     }
 

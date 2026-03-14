@@ -301,7 +301,8 @@ describe('PlayersTab', () => {
   });
 
   it('should handle load more', async () => {
-    (leagueService.getPlayerRankings as jest.Mock).mockResolvedValueOnce({
+    // Override to always return hasMore=true for this test
+    (leagueService.getPlayerRankings as jest.Mock).mockResolvedValue({
       data: mockRankings,
       pagination: {
         page: 1,
@@ -331,7 +332,7 @@ describe('PlayersTab', () => {
   });
 
   it('should display error message on failure', async () => {
-    (leagueService.getPlayerRankings as jest.Mock).mockRejectedValueOnce(
+    (leagueService.getPlayerRankings as jest.Mock).mockRejectedValue(
       new Error('Failed to load rankings')
     );
 
@@ -344,22 +345,26 @@ describe('PlayersTab', () => {
   });
 
   it('should retry loading on error retry button press', async () => {
-    (leagueService.getPlayerRankings as jest.Mock)
-      .mockRejectedValueOnce(new Error('Failed to load rankings'))
-      .mockResolvedValueOnce({
-        data: mockRankings,
-        pagination: {
-          page: 1,
-          limit: 50,
-          totalPages: 1,
-          totalItems: mockRankings.length,
-        },
-      });
+    // Reject all calls initially
+    (leagueService.getPlayerRankings as jest.Mock).mockRejectedValue(
+      new Error('Failed to load rankings')
+    );
 
     const { getByTestId } = render(<PlayersTab leagueId={mockLeagueId} />);
 
     await waitFor(() => {
       expect(getByTestId('error-display')).toBeTruthy();
+    });
+
+    // Now make it succeed on retry
+    (leagueService.getPlayerRankings as jest.Mock).mockResolvedValue({
+      data: mockRankings,
+      pagination: {
+        page: 1,
+        limit: 50,
+        totalPages: 1,
+        totalItems: mockRankings.length,
+      },
     });
 
     fireEvent.press(getByTestId('retry-button'));

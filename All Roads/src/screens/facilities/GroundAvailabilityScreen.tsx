@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   calendarContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chalk,
     marginBottom: Spacing.md,
   },
   section: {

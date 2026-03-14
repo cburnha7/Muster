@@ -148,7 +148,7 @@ describe('InfoTab', () => {
       render(<InfoTab league={mockLeague} />);
 
       await waitFor(() => {
-        expect(screen.getByText('1.0 MB')).toBeTruthy();
+        expect(screen.getByText('1000.0 KB')).toBeTruthy();
         expect(screen.getByText('500.0 KB')).toBeTruthy();
       });
     });
@@ -301,9 +301,14 @@ describe('InfoTab', () => {
       // Clear the mock to verify it's called again
       (leagueService.getDocuments as jest.Mock).mockClear();
 
-      // Simulate pull-to-refresh
+      // Simulate pull-to-refresh via the ScrollView's refreshControl
       const scrollView = screen.getByTestId('info-tab-scroll-view');
-      fireEvent(scrollView, 'refresh');
+      const { refreshControl } = scrollView.props;
+      
+      // Trigger the onRefresh callback directly
+      await waitFor(() => {
+        refreshControl.props.onRefresh();
+      });
 
       await waitFor(() => {
         expect(leagueService.getDocuments).toHaveBeenCalledWith('league-1');

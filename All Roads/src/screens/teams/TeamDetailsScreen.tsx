@@ -236,7 +236,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     const roleOptions = [
       { text: 'Cancel', style: 'cancel' as const },
       {
-        text: 'Make Co-Captain',
+        text: 'Make Co-Manager',
         onPress: () => updateMemberRole(member, TeamRole.CO_CAPTAIN),
       },
       {
@@ -301,7 +301,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               {member.user?.firstName} {member.user?.lastName}
             </Text>
             <Text style={styles.memberRole}>
-              {isCaptain ? '👑 Captain' : isCoCaptain ? '⭐ Co-Captain' : 'Player'}
+              {isCaptain ? '👑 Manager' : isCoCaptain ? '⭐ Co-Manager' : 'Player'}
             </Text>
           </View>
         </View>

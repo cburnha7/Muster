@@ -161,7 +161,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
         <View style={styles.form}>
           <Text style={styles.title}>Enter Invite Code</Text>
           <Text style={styles.subtitle}>
-            Enter the invite code shared by the roster captain to join the roster
+            Enter the invite code shared by the roster manager to join the roster
           </Text>
 
           <FormInput
@@ -231,7 +231,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
           <View style={styles.helpSection}>
             <Text style={styles.helpTitle}>Don't have an invite code?</Text>
             <Text style={styles.helpText}>
-              Ask the roster captain to share their invite code with you, or browse
+              Ask the roster manager to share their invite code with you, or browse
               public rosters to join without a code.
             </Text>
             <FormButton

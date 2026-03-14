@@ -5,7 +5,9 @@ import {
   TeamStanding,
   PlayerRanking,
   LeagueDocument,
-  PaginatedResponse
+  LeagueMembership,
+  PaginatedResponse,
+  Event,
 } from '../../types';
 
 // Leagues state interface
@@ -14,6 +16,8 @@ export interface LeaguesState {
   selectedLeague: League | null;
   standings: TeamStanding[];
   playerRankings: PlayerRanking[];
+  joinRequests: LeagueMembership[];
+  upcomingEvents: Event[];
   documents: LeagueDocument[];
   filters: LeagueFilters;
   pagination: {
@@ -36,6 +40,8 @@ const initialState: LeaguesState = {
   selectedLeague: null,
   standings: [],
   playerRankings: [],
+  joinRequests: [],
+  upcomingEvents: [],
   documents: [],
   filters: {},
   pagination: {
@@ -158,6 +164,26 @@ const leaguesSlice = createSlice({
       state.isLoadingRankings = false;
     },
 
+    // Set join requests
+    setJoinRequests: (state, action: PayloadAction<LeagueMembership[]>) => {
+      state.joinRequests = action.payload;
+    },
+
+    // Set upcoming events
+    setUpcomingEvents: (state, action: PayloadAction<Event[]>) => {
+      state.upcomingEvents = action.payload;
+    },
+
+    // Add a single join request
+    addJoinRequest: (state, action: PayloadAction<LeagueMembership>) => {
+      state.joinRequests.push(action.payload);
+    },
+
+    // Remove a join request by id
+    removeJoinRequest: (state, action: PayloadAction<string>) => {
+      state.joinRequests = state.joinRequests.filter(req => req.id !== action.payload);
+    },
+
     // Set documents
     setDocuments: (state, action: PayloadAction<LeagueDocument[]>) => {
       state.documents = action.payload;
@@ -206,6 +232,10 @@ export const {
   setSelectedLeague,
   setStandings,
   setPlayerRankings,
+  setJoinRequests,
+  setUpcomingEvents,
+  addJoinRequest,
+  removeJoinRequest,
   setDocuments,
   addDocument,
   deleteDocument,
@@ -219,6 +249,8 @@ export const selectLeagues = (state: { leagues: LeaguesState }) => state.leagues
 export const selectSelectedLeague = (state: { leagues: LeaguesState }) => state.leagues.selectedLeague;
 export const selectStandings = (state: { leagues: LeaguesState }) => state.leagues.standings;
 export const selectPlayerRankings = (state: { leagues: LeaguesState }) => state.leagues.playerRankings;
+export const selectJoinRequests = (state: { leagues: LeaguesState }) => state.leagues.joinRequests;
+export const selectUpcomingEvents = (state: { leagues: LeaguesState }) => state.leagues.upcomingEvents;
 export const selectDocuments = (state: { leagues: LeaguesState }) => state.leagues.documents;
 export const selectFilters = (state: { leagues: LeaguesState }) => state.leagues.filters;
 export const selectPagination = (state: { leagues: LeaguesState }) => state.leagues.pagination;

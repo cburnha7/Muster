@@ -8,8 +8,11 @@ import {
   PlayerRanking,
   LeagueMembership,
   LeagueDocument,
-  BoardMember
+  BoardMember,
+  CreateLeagueEventData,
+  ConflictResult
 } from '../../types/league';
+import { Event } from '../../types';
 import { PaginatedResponse } from '../../types';
 
 export class LeagueService extends BaseApiService {
@@ -234,6 +237,115 @@ export class LeagueService extends BaseApiService {
    */
   async getActiveLeagues(page: number = 1, limit: number = 20): Promise<PaginatedResponse<League>> {
     return this.getLeagues({ isActive: true }, page, limit);
+  }
+
+  /**
+   * Join league as a roster (Team League — creates pending membership for public leagues)
+   */
+  async joinLeagueAsRoster(leagueId: string, rosterId: string, userId: string): Promise<LeagueMembership> {
+    return this.post<LeagueMembership>(`/leagues/${leagueId}/join`, {
+      rosterId,
+      userId
+    });
+  }
+
+  /**
+   * Join league as an individual user (Pickup League — creates active membership immediately)
+   */
+  async joinLeagueAsUser(leagueId: string, userId: string): Promise<LeagueMembership> {
+    return this.post<LeagueMembership>(`/leagues/${leagueId}/join`, {
+      userId
+    });
+  }
+
+  /**
+   * Step Out of a league (sets membership to withdrawn)
+   */
+  async stepOutOfLeague(leagueId: string, userId: string): Promise<void> {
+    return this.post<void>(`/leagues/${leagueId}/leave`, {
+      userId
+    });
+  }
+
+  /**
+   * Get pending join requests for a league (owner/admin only)
+   */
+  async getJoinRequests(leagueId: string, userId: string): Promise<LeagueMembership[]> {
+    return this.get<LeagueMembership[]>(`/leagues/${leagueId}/join-requests`, {
+      params: { userId }
+    });
+  }
+
+  /**
+   * Approve a pending join request
+   */
+  async approveJoinRequest(leagueId: string, requestId: string, userId: string): Promise<LeagueMembership> {
+    return this.put<LeagueMembership>(`/leagues/${leagueId}/join-requests/${requestId}`, {
+      action: 'approve',
+      userId
+    });
+  }
+
+  /**
+   * Decline a pending join request
+   */
+  async declineJoinRequest(leagueId: string, requestId: string, userId: string): Promise<void> {
+    return this.put<void>(`/leagues/${leagueId}/join-requests/${requestId}`, {
+      action: 'decline',
+      userId
+    });
+  }
+
+  /**
+   * Invite a roster to a private Team League
+   */
+  async inviteRoster(leagueId: string, rosterId: string, userId: string): Promise<LeagueMembership> {
+    return this.post<LeagueMembership>(`/leagues/${leagueId}/invite-roster`, {
+      rosterId,
+      userId
+    });
+  }
+
+  /**
+   * Respond to a league invitation (accept or decline)
+   */
+  async respondToInvitation(leagueId: string, invitationId: string, accept: boolean, userId: string): Promise<void> {
+    return this.put<void>(`/leagues/${leagueId}/invitations/${invitationId}`, {
+      accept,
+      userId
+    });
+  }
+
+  /**
+   * Get upcoming league events
+   */
+  async getLeagueEvents(leagueId: string): Promise<Event[]> {
+    return this.get<Event[]>(`/leagues/${leagueId}/events`, {
+      cacheOptions: { ttl: 30000 } // Cache for 30 seconds
+    });
+  }
+
+  /**
+   * Create a league event with optional roster assignment
+   */
+  async createLeagueEvent(leagueId: string, data: CreateLeagueEventData & { userId: string }): Promise<Event> {
+    return this.post<Event>(`/leagues/${leagueId}/events`, data);
+  }
+
+  /**
+   * Check scheduling conflicts for roster assignments
+   */
+  async checkSchedulingConflicts(
+    leagueId: string,
+    rosterIds: string[],
+    startTime: Date,
+    endTime: Date
+  ): Promise<ConflictResult> {
+    return this.post<ConflictResult>(`/leagues/${leagueId}/events/check-conflicts`, {
+      rosterIds,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
+    });
   }
 }
 

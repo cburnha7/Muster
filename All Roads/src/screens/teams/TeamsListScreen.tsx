@@ -222,7 +222,7 @@ export function TeamsListScreen(): JSX.Element {
           style={styles.addButton} 
           onPress={handleCreateTeam}
         >
-          <Ionicons name="add" size={24} color={colors.grass} />
+          <Ionicons name="add" size={20} color={colors.grass} />
         </TouchableOpacity>
       </View>
 
@@ -296,19 +296,25 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   filterButton: {
-    padding: Spacing.sm,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     backgroundColor: colors.chalk,
     borderWidth: 1,
     borderColor: colors.soft,
     marginRight: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addButton: {
-    padding: Spacing.sm,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     backgroundColor: colors.chalk,
     borderWidth: 1,
     borderColor: colors.soft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

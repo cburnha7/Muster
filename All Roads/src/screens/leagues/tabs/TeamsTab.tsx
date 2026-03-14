@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Text } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, Text, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { TeamCard } from '../../../components/ui/TeamCard';
+import { Ionicons } from '@expo/vector-icons';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { LeagueMembership, Team } from '../../../types';
-import { colors } from '../../../theme';
+import { colors, fonts } from '../../../theme';
 
 interface TeamsTabProps {
   leagueId: string;
@@ -38,19 +38,19 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
       setError(null);
 
       const currentPage = reset ? 1 : page;
-      
+
       const response = await leagueService.getMembers(
         leagueId,
         currentPage,
         20
       );
-      
+
       const newMemberships = reset ? response.data : [...memberships, ...response.data];
       setMemberships(newMemberships);
       setPage(currentPage + 1);
       setHasMore(response.pagination.page < response.pagination.totalPages);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load league members';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load league rosters';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -71,24 +71,64 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
     }
   };
 
-  const handleTeamPress = (team: Team) => {
+  const handleRosterPress = (team: Team) => {
     navigation.navigate('TeamDetails', { teamId: team.id });
   };
 
-  const renderTeamCard = ({ item }: { item: LeagueMembership }) => {
+  /** Format win/loss record; show "0-0" when no completed matches */
+  const formatRecord = (membership: LeagueMembership): string => {
+    const wins = membership.wins ?? 0;
+    const losses = membership.losses ?? 0;
+    return `${wins}-${losses}`;
+  };
+
+  // Only show active memberships (Requirement 7.3)
+  const activeRosterMemberships = memberships.filter(
+    (m) => m.status === 'active' && m.memberType === 'roster'
+  );
+
+  const renderRosterRow = ({ item }: { item: LeagueMembership }) => {
     if (!item.team) return null;
-    
+
+    const playerCount = item.team.members?.length ?? 0;
+    const record = formatRecord(item);
+
     return (
-      <TeamCard
-        team={item.team}
-        onPress={handleTeamPress}
-      />
+      <TouchableOpacity
+        style={styles.rosterRow}
+        onPress={() => handleRosterPress(item.team!)}
+        activeOpacity={0.7}
+      >
+        {/* Roster icon / logo */}
+        {item.team.logo ? (
+          <Image source={{ uri: item.team.logo }} style={styles.rosterLogo} />
+        ) : (
+          <View style={styles.rosterLogoPlaceholder}>
+            <Ionicons name="people" size={20} color={colors.grass} />
+          </View>
+        )}
+
+        {/* Name + player count */}
+        <View style={styles.rosterInfo}>
+          <Text style={styles.rosterName} numberOfLines={1}>
+            {item.team.name}
+          </Text>
+          <Text style={styles.playerCount}>
+            {playerCount} {playerCount === 1 ? 'player' : 'players'}
+          </Text>
+        </View>
+
+        {/* Win / Loss record */}
+        <Text style={styles.record}>{record}</Text>
+
+        <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+      </TouchableOpacity>
     );
   };
 
   const renderEmptyState = () => {
     if (isLoading) return null;
-    
+
     return (
       <View style={styles.emptyState}>
         <Text style={styles.emptyText}>No rosters in this league yet</Text>
@@ -98,7 +138,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 
   const renderFooter = () => {
     if (!isLoading || isRefreshing) return null;
-    
+
     return (
       <View style={styles.footer}>
         <LoadingSpinner />
@@ -117,8 +157,8 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={memberships}
-        renderItem={renderTeamCard}
+        data={activeRosterMemberships}
+        renderItem={renderRosterRow}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -141,10 +181,54 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalk,
   },
   listContent: {
     paddingVertical: 8,
+  },
+  rosterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  rosterLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  rosterLogoPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.chalk,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rosterInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  rosterName: {
+    fontSize: 15,
+    fontFamily: fonts.semibold,
+    color: colors.ink,
+  },
+  playerCount: {
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  record: {
+    fontSize: 15,
+    fontFamily: fonts.label,
+    color: colors.ink,
+    marginRight: 8,
   },
   emptyState: {
     flex: 1,
@@ -153,8 +237,9 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 15,
+    fontFamily: fonts.body,
+    color: colors.inkFaint,
     textAlign: 'center',
   },
   footer: {

@@ -560,8 +560,6 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   loadingSlotsContainer: {
     flexDirection: 'row',

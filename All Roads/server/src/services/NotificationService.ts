@@ -239,6 +239,169 @@ export class NotificationService {
   }
 
   /**
+   * Notify league owner when a roster requests to join a public Team League
+   */
+  static async notifyJoinRequest(leagueId: string, rosterId: string): Promise<void> {
+    try {
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { name: true, organizerId: true }
+      });
+
+      if (!league) return;
+
+      const roster = await prisma.team.findUnique({
+        where: { id: rosterId },
+        select: { name: true }
+      });
+
+      const notification: NotificationTemplate = {
+        title: 'New Join Request',
+        body: `${roster?.name ?? 'A roster'} has requested to join ${league.name}`,
+        data: {
+          type: 'join_request',
+          leagueId,
+          rosterId
+        }
+      };
+
+      console.log('Sending join request notification to league owner', league.organizerId);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending join request notification:', error);
+    }
+  }
+
+  /**
+   * Notify roster owner when their join request is approved or declined
+   */
+  static async notifyJoinRequestDecision(
+    leagueId: string,
+    rosterId: string,
+    action: 'approve' | 'decline'
+  ): Promise<void> {
+    try {
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { name: true }
+      });
+
+      if (!league) return;
+
+      // Find the roster captain (owner)
+      const captain = await prisma.teamMember.findFirst({
+        where: { teamId: rosterId, role: 'captain', status: 'active' },
+        select: { userId: true }
+      });
+
+      if (!captain) return;
+
+      const roster = await prisma.team.findUnique({
+        where: { id: rosterId },
+        select: { name: true }
+      });
+
+      const approved = action === 'approve';
+      const notification: NotificationTemplate = {
+        title: approved ? 'Join Request Approved' : 'Join Request Declined',
+        body: approved
+          ? `${roster?.name ?? 'Your roster'} has been accepted into ${league.name}`
+          : `${roster?.name ?? 'Your roster'}'s request to join ${league.name} was declined`,
+        data: {
+          type: approved ? 'join_request_approved' : 'join_request_declined',
+          leagueId,
+          rosterId
+        }
+      };
+
+      console.log('Sending join request decision notification to roster owner', captain.userId);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending join request decision notification:', error);
+    }
+  }
+
+  /**
+   * Notify roster owner about an invitation to a private Team League
+   */
+  static async notifyRosterInvitation(leagueId: string, rosterId: string): Promise<void> {
+    try {
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { name: true }
+      });
+
+      if (!league) return;
+
+      // Find the roster captain (owner)
+      const captain = await prisma.teamMember.findFirst({
+        where: { teamId: rosterId, role: 'captain', status: 'active' },
+        select: { userId: true }
+      });
+
+      if (!captain) return;
+
+      const notification: NotificationTemplate = {
+        title: 'League Invitation',
+        body: `Your roster has been invited to join ${league.name}`,
+        data: {
+          type: 'league_invitation',
+          leagueId,
+          rosterId
+        }
+      };
+
+      console.log('Sending league invitation notification to roster owner', captain.userId);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending roster invitation notification:', error);
+    }
+  }
+
+  /**
+   * Notify all players of assigned rosters when they are assigned to a Team League event
+   */
+  static async notifyEventRosterAssignment(
+    leagueId: string,
+    eventTitle: string,
+    rosterIds: string[]
+  ): Promise<void> {
+    try {
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { name: true }
+      });
+
+      if (!league) return;
+
+      // Get all players from the assigned rosters
+      const members = await prisma.teamMember.findMany({
+        where: {
+          teamId: { in: rosterIds },
+          status: 'active'
+        },
+        select: { userId: true }
+      });
+
+      const uniqueUserIds = [...new Set(members.map(m => m.userId))];
+
+      const notification: NotificationTemplate = {
+        title: 'New League Event',
+        body: `Your roster has been assigned to "${eventTitle}" in ${league.name}`,
+        data: {
+          type: 'event_roster_assignment',
+          leagueId
+        }
+      };
+
+      console.log('Sending event assignment notification to', uniqueUserIds.length, 'players');
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending event roster assignment notification:', error);
+    }
+  }
+
+  /**
    * Send notification when event is auto-opened to public
    */
   async sendEventAutoOpenedNotification(
