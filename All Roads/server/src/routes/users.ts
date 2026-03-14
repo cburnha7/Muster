@@ -291,6 +291,63 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get current user's events (events they organized)
+router.get('/events', optionalAuthMiddleware, async (req, res) => {
+  try {
+    let userId = req.user?.userId;
+    if (!userId) {
+      userId = req.headers['x-user-id'] as string || req.query.userId as string;
+    }
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { page = '1', limit = '50', status } = req.query;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: any = { organizerId: userId };
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { startTime: 'desc' },
+        include: {
+          facility: {
+            select: {
+              id: true,
+              name: true,
+              street: true,
+              city: true,
+              state: true,
+            },
+          },
+        },
+      }),
+      prisma.event.count({ where }),
+    ]);
+
+    res.json({
+      data: events,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error('Get user events error:', error);
+    res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
 // Get current user's leagues (leagues they organize or are a member of)
 router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
   try {
