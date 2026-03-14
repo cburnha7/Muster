@@ -262,22 +262,18 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Delete related records first, then the team
+    // Note: LeagueMembership and TeamTransaction have onDelete: Cascade
+    // so they are automatically removed when the team is deleted.
     await prisma.$transaction(async (tx) => {
-      // Delete team members
+      // Delete team members (no cascade)
       await tx.teamMember.deleteMany({ where: { teamId: id } });
-      
-      // Delete league memberships
-      await tx.leagueMembership.deleteMany({ where: { teamId: id } });
-      
-      // Delete transactions
-      await tx.teamTransaction.deleteMany({ where: { teamId: id } });
 
-      // Delete matches referencing this team
+      // Delete matches referencing this team (no cascade)
       await tx.match.deleteMany({ 
         where: { OR: [{ homeTeamId: id }, { awayTeamId: id }] } 
       });
 
-      // Delete the team
+      // Delete the team (cascades: leagueMemberships, transactions)
       await tx.team.delete({ where: { id } });
     });
 
