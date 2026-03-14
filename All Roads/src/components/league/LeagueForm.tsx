@@ -660,7 +660,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           {/* Add Rosters — styled to match Create Roster's Add Players section */}
           <View style={styles.addRostersSection}>
             <View style={styles.addRostersHeader}>
-              <Text style={styles.addRostersTitle}>Add Rosters</Text>
+              <Text style={styles.addRostersTitle}>League Rosters</Text>
               {addedRosters.length > 0 && (
                 <View style={styles.rosterCountBadge}>
                   <Text style={styles.rosterCountBadgeText}>{addedRosters.length}</Text>
@@ -668,14 +668,14 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               )}
             </View>
             <Text style={styles.addRostersDescription}>
-              Search for rosters by name and add them to this league.
+              Rosters competing in this league. Search below to add more.
             </Text>
 
             {/* Added Rosters List */}
             {addedRosters.length > 0 && (
               <View style={styles.addedRostersContainer}>
                 <Text style={styles.addedRostersTitle}>
-                  Rosters to Add ({addedRosters.length})
+                  Current Rosters ({addedRosters.length})
                 </Text>
                 {addedRosters.map(item => (
                   <View key={item.id} style={styles.addedRosterItem}>
@@ -715,7 +715,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   setRosterSearchQuery(text);
                   setRosterSearchError(null);
                 }}
-                placeholder="Search by roster name..."
+                placeholder="Add a roster..."
                 placeholderTextColor={colors.inkFaint}
                 returnKeyType="search"
                 onSubmitEditing={handleSearchRosters}

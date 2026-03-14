@@ -462,6 +462,16 @@ export function LeagueDetailsScreen(): React.ReactElement {
             onDelete={handleDeleteLeague}
             isEdit={true}
             loading={isUpdating}
+            initialRosters={
+              members
+                .filter((m) => m.memberType === 'roster' && m.team && (m.status === 'active' || m.status === 'pending'))
+                .map((m) => ({
+                  id: m.team!.id,
+                  name: m.team!.name,
+                  sportType: m.team!.sportType,
+                  memberCount: m.team!.members?.length ?? 0,
+                }))
+            }
           />
         </ScrollView>
       </View>
