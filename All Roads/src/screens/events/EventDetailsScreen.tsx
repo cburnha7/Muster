@@ -911,6 +911,24 @@ export function EventDetailsScreen(): JSX.Element {
           </View>
 
           <View style={styles.detailRow}>
+            <Ionicons name="hourglass-outline" size={20} color="#666" />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>Duration</Text>
+              <Text style={styles.detailValue}>
+                {(() => {
+                  const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
+                  const totalMinutes = Math.round(ms / 60000);
+                  const hours = Math.floor(totalMinutes / 60);
+                  const minutes = totalMinutes % 60;
+                  if (hours === 0) return `${minutes}min`;
+                  if (minutes === 0) return `${hours}h`;
+                  return `${hours}h ${minutes}min`;
+                })()}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.detailRow}>
             <Ionicons name="location-outline" size={20} color="#666" />
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Location</Text>

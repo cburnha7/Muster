@@ -140,6 +140,21 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         </View>
 
         <View style={styles.detailRow}>
+          <Ionicons name="hourglass-outline" size={16} color="#666" />
+          <Text style={styles.detailText}>
+            {(() => {
+              const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
+              const totalMinutes = Math.round(ms / 60000);
+              const hours = Math.floor(totalMinutes / 60);
+              const minutes = totalMinutes % 60;
+              if (hours === 0) return `${minutes}min`;
+              if (minutes === 0) return `${hours}h`;
+              return `${hours}h ${minutes}min`;
+            })()}
+          </Text>
+        </View>
+
+        <View style={styles.detailRow}>
           <Ionicons name="location-outline" size={16} color="#666" />
           <Text style={styles.detailText} numberOfLines={1}>
             {event.facility?.name || 'Location TBD'}
