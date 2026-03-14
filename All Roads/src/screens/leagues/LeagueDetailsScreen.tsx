@@ -31,8 +31,6 @@ interface LeagueEvent extends Event {
   scheduledStatus?: string;
 }
 
-const MAX_UPCOMING_EVENTS = 3;
-
 // Import tab components
 import { StandingsTab } from './tabs/StandingsTab';
 import { MatchesTab } from './tabs/MatchesTab';
@@ -54,11 +52,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [league, setLeague] = useState<League | null>(null);
   const [members, setMembers] = useState<LeagueMembership[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<LeagueEvent[]>([]);
-  const [joinRequests, setJoinRequests] = useState<LeagueMembership[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
-  const [joinRequestActionId, setJoinRequestActionId] = useState<string | null>(null);
-  const [joinRequestError, setJoinRequestError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('standings');
@@ -83,22 +78,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
       setLeague(typedLeague);
       setMembers(membersResponse.data || []);
       setUpcomingEvents((eventsData as LeagueEvent[]) || []);
-
-      // Load join requests for public team leagues when user is commissioner
-      if (
-        typedLeague.leagueType === 'team' &&
-        typedLeague.visibility === 'public' &&
-        currentUser?.id === typedLeague.organizerId
-      ) {
-        try {
-          const requests = await svc.getJoinRequests(leagueId, currentUser.id);
-          setJoinRequests(requests || []);
-        } catch {
-          setJoinRequests([]);
-        }
-      } else {
-        setJoinRequests([]);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load league');
     } finally {
@@ -155,16 +134,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const formatEventDate = (date: Date | string) => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  };
-
-  const formatEventTime = (date: Date | string) => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  };
-
   // ── Commissioner actions ────────────────────────────────────────
   const handleUpdateLeague = async (data: UpdateLeagueData) => {
     if (!currentUser?.id) return;
@@ -195,48 +164,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
             navigation.goBack();
           } catch (err) {
             Alert.alert('Error', err instanceof Error ? err.message : 'Failed to delete league');
-          } finally {
-            setIsActionLoading(false);
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleRemoveRoster = (memberId: string, rosterName: string) => {
-    Alert.alert('Remove Roster', `Remove ${rosterName} from this league?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove', style: 'destructive',
-        onPress: async () => {
-          try {
-            if (!currentUser?.id) return;
-            await leagueService.leaveLeague(leagueId, memberId, currentUser.id);
-            // Optimistic update
-            setMembers((prev) => prev.filter((m) => m.memberId !== memberId));
-          } catch (err) {
-            Alert.alert('Error', err instanceof Error ? err.message : 'Failed to remove roster');
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleGenerateSchedule = async () => {
-    if (!league || !currentUser) return;
-    Alert.alert('Generate Schedule', 'This will create shell events for all roster matchups. Continue?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Generate',
-        onPress: async () => {
-          try {
-            setIsActionLoading(true);
-            const svc = new LeagueService();
-            await svc.generateSchedule(league.id, currentUser.id);
-            Alert.alert('Schedule Generated', 'Shell events have been created.');
-            await loadLeague(true);
-          } catch (err) {
-            Alert.alert('Error', err instanceof Error ? err.message : 'Failed to generate schedule');
           } finally {
             setIsActionLoading(false);
           }
@@ -295,44 +222,26 @@ export function LeagueDetailsScreen(): React.ReactElement {
     ]);
   };
 
-  // ── Join request handlers (commissioner) ────────────────────────
-  const handleApproveRequest = async (requestId: string) => {
-    if (!currentUser?.id) return;
+  // ── Non-commissioner roster/invitation actions ───────────────────
+  const handleAddRosterToLeague = async (roster: Team) => {
+    if (!currentUser?.id || !league) return;
     try {
-      setJoinRequestActionId(requestId);
-      setJoinRequestError(null);
-      const approved = await leagueService.approveJoinRequest(leagueId, requestId, currentUser.id);
-      // Optimistic: move from requests to members
-      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-      setMembers((prev) => [...prev, { ...approved, status: 'active' } as LeagueMembership]);
+      setIsActionLoading(true);
+      const newMembership = await leagueService.joinLeagueAsRoster(league.id, roster.id, currentUser.id);
+      setMembers((prev) => [...prev, newMembership as LeagueMembership]);
+      Alert.alert('Roster Added', `"${roster.name}" has been added to the league.`);
     } catch (err) {
-      setJoinRequestError(err instanceof Error ? err.message : 'Failed to approve request');
+      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to add roster');
     } finally {
-      setJoinRequestActionId(null);
+      setIsActionLoading(false);
     }
   };
 
-  const handleDeclineRequest = async (requestId: string) => {
-    if (!currentUser?.id) return;
-    try {
-      setJoinRequestActionId(requestId);
-      setJoinRequestError(null);
-      await leagueService.declineJoinRequest(leagueId, requestId, currentUser.id);
-      setJoinRequests((prev) => prev.filter((r) => r.id !== requestId));
-    } catch (err) {
-      setJoinRequestError(err instanceof Error ? err.message : 'Failed to decline request');
-    } finally {
-      setJoinRequestActionId(null);
-    }
-  };
-
-  // ── Invitation confirmation (roster owner) ──────────────────────
   const handleConfirmInvitation = async (membership: LeagueMembership) => {
     if (!currentUser?.id) return;
     try {
       setIsActionLoading(true);
       await leagueService.respondToInvitation(leagueId, membership.id, true, currentUser.id);
-      // Optimistic: flip pending → active
       setMembers((prev) =>
         prev.map((m) => (m.id === membership.id ? { ...m, status: 'active' as const } : m))
       );
@@ -366,326 +275,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
     ]);
   };
 
-  // ── Add roster to league (invited user) ─────────────────────────
-  const handleAddRosterToLeague = async (roster: Team) => {
-    if (!currentUser?.id || !league) return;
-    try {
-      setIsActionLoading(true);
-      const newMembership = await leagueService.joinLeagueAsRoster(league.id, roster.id, currentUser.id);
-      setMembers((prev) => [...prev, newMembership as LeagueMembership]);
-      Alert.alert('Roster Added', `"${roster.name}" has been added to the league.`);
-    } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to add roster');
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  // ── Navigation handlers ─────────────────────────────────────────
-  const handleEventPress = (event: LeagueEvent) => {
-    if (isOperator && event.scheduledStatus === 'unscheduled') {
-      (navigation as any).navigate('EditEvent', {
-        eventId: event.id,
-        leagueId: league?.id,
-        sportType: league?.sportType,
-        assignedRosters: event.assignedRosters,
-      });
-    } else {
-      (navigation as any).navigate('EventDetails', { eventId: event.id });
-    }
-  };
-
   // ── Render helpers ──────────────────────────────────────────────
-
-  const renderJoinRequestQueue = () => {
-    if (!isOperator || joinRequests.length === 0) return null;
-    return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Join Requests</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{joinRequests.length}</Text>
-          </View>
-        </View>
-        {joinRequestError && (
-          <View style={styles.errorRow}>
-            <Ionicons name="alert-circle" size={16} color={colors.track} />
-            <Text style={styles.errorRowText}>{joinRequestError}</Text>
-          </View>
-        )}
-        {joinRequests.map((req) => (
-          <View key={req.id} style={styles.requestItem}>
-            <View style={styles.requestInfo}>
-              <Text style={styles.requestName}>
-                {req.memberType === 'roster'
-                  ? (req as any).team?.name || 'Unknown Roster'
-                  : (req as any).user?.name || 'Unknown Player'}
-              </Text>
-              <Text style={styles.requestMeta}>
-                {req.memberType === 'roster' ? 'Roster' : 'Player'} • Requested {formatDate(req.createdAt)}
-              </Text>
-            </View>
-            <View style={styles.requestActions}>
-              <TouchableOpacity
-                style={styles.approveBtn}
-                onPress={() => handleApproveRequest(req.id)}
-                disabled={joinRequestActionId === req.id}
-                accessibilityRole="button"
-                accessibilityLabel="Approve"
-              >
-                <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineBtn}
-                onPress={() => handleDeclineRequest(req.id)}
-                disabled={joinRequestActionId === req.id}
-                accessibilityRole="button"
-                accessibilityLabel="Decline"
-              >
-                <Ionicons name="close" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const renderRosterSection = () => {
-    const rosterMembers = members.filter((m) => m.memberType === 'roster');
-    const playerMembers = members.filter((m) => m.memberType === 'user');
-    const allMembers = isTeamLeague ? rosterMembers : playerMembers;
-
-    return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {isTeamLeague ? 'League Rosters' : 'League Players'}
-          </Text>
-          <Text style={styles.countText}>{allMembers.length}</Text>
-        </View>
-        {allMembers.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={40} color={colors.inkFaint} />
-            <Text style={styles.emptyText}>
-              {isTeamLeague ? 'No rosters have joined yet' : 'No players have joined yet'}
-            </Text>
-          </View>
-        ) : (
-          allMembers.map((m) => {
-            const name = m.memberType === 'roster'
-              ? (m as any).team?.name || 'Unknown Roster'
-              : (m as any).user?.name || 'Unknown Player';
-            const isPending = m.status === 'pending';
-            const canConfirm = isPending && m.memberType === 'roster' &&
-              userOwnedRosters.some((r) => r.id === m.memberId);
-
-            return (
-              <View key={m.id} style={styles.memberItem}>
-                <View style={styles.memberInfo}>
-                  <Text style={styles.memberName}>{name}</Text>
-                  <View style={styles.memberMeta}>
-                    <View style={[styles.statusBadge, isPending ? styles.statusPending : styles.statusActive]}>
-                      <Text style={[styles.statusText, isPending ? styles.statusTextPending : styles.statusTextActive]}>
-                        {isPending ? 'Pending' : 'Joined'}
-                      </Text>
-                    </View>
-                    {!isPending && (
-                      <Text style={styles.memberStats}>
-                        {m.matchesPlayed} matches • {m.points} pts
-                      </Text>
-                    )}
-                  </View>
-                </View>
-                {/* Commissioner can remove */}
-                {isOperator && (
-                  <TouchableOpacity
-                    style={styles.removeBtn}
-                    onPress={() => handleRemoveRoster(m.memberId, name)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${name}`}
-                  >
-                    <Ionicons name="close-circle" size={22} color={colors.track} />
-                  </TouchableOpacity>
-                )}
-                {/* Roster owner can confirm pending invitation */}
-                {canConfirm && !isOperator && (
-                  <View style={styles.confirmActions}>
-                    <TouchableOpacity
-                      style={styles.confirmBtn}
-                      onPress={() => handleConfirmInvitation(m)}
-                      disabled={isActionLoading}
-                      accessibilityRole="button"
-                      accessibilityLabel="Confirm invitation"
-                    >
-                      <Text style={styles.confirmBtnText}>Confirm</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.declineBtnSmall}
-                      onPress={() => handleDeclineInvitation(m)}
-                      disabled={isActionLoading}
-                      accessibilityRole="button"
-                      accessibilityLabel="Decline invitation"
-                    >
-                      <Text style={styles.declineBtnSmallText}>Decline</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            );
-          })
-        )}
-      </View>
-    );
-  };
-
-  const renderUpcomingEvents = () => {
-    const registrationClosed = league?.registrationCloseDate
-      ? new Date(league.registrationCloseDate) < new Date()
-      : false;
-
-    // Hide events section entirely until registration closes
-    if (!registrationClosed) {
-      if (!isOperator) return null;
-      // Commissioner sees a locked notice
-      return (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Events</Text>
-          </View>
-          <View style={styles.emptyState}>
-            <Ionicons name="lock-closed-outline" size={40} color={colors.inkFaint} />
-            <Text style={styles.emptyText}>
-              Events are locked until registration closes
-              {league?.registrationCloseDate
-                ? ` on ${formatDate(league.registrationCloseDate)}`
-                : ''}
-            </Text>
-          </View>
-        </View>
-      );
-    }
-
-    if (upcomingEvents.length === 0 && !isOperator) return null;
-
-    const showGenerateBtn = isOperator && !league?.scheduleGenerated && league?.autoGenerateMatchups !== false;
-    const shellEvents = upcomingEvents.filter((e) => e.scheduledStatus === 'unscheduled');
-    const scheduledEvents = upcomingEvents.filter((e) => e.scheduledStatus !== 'unscheduled');
-
-    return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Events</Text>
-          <Text style={styles.countText}>{upcomingEvents.length}</Text>
-        </View>
-
-        {showGenerateBtn && (
-          <TouchableOpacity
-            style={styles.generateBtn}
-            onPress={handleGenerateSchedule}
-            disabled={isActionLoading}
-            accessibilityRole="button"
-            accessibilityLabel="Generate schedule"
-          >
-            <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.generateBtnText}>Generate Schedule</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Shell matchups for commissioner */}
-        {isOperator && shellEvents.length > 0 && (
-          <View style={styles.matchupList}>
-            <Text style={styles.matchupLabel}>UNSCHEDULED MATCHUPS</Text>
-            {shellEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={styles.matchupCard}
-                onPress={() => handleEventPress(event)}
-                accessibilityRole="button"
-                accessibilityLabel={`Schedule ${event.title}`}
-              >
-                <View style={styles.matchupInfo}>
-                  <Text style={styles.matchupTitle}>{event.title}</Text>
-                  <Text style={styles.matchupRosters}>
-                    {event.assignedRosters?.map((r) => r.name).join(' vs ') || 'TBD'}
-                  </Text>
-                </View>
-                <View style={styles.unscheduledBadge}>
-                  <Text style={styles.unscheduledText}>Schedule</Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.court} />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Scheduled events */}
-        {scheduledEvents.slice(0, MAX_UPCOMING_EVENTS).map((event) => (
-          <TouchableOpacity
-            key={event.id}
-            style={styles.eventCard}
-            onPress={() => handleEventPress(event)}
-            accessibilityRole="button"
-            accessibilityLabel={event.title}
-          >
-            <View style={styles.eventDateCol}>
-              <Text style={styles.eventDay}>{formatEventDate(event.startTime)}</Text>
-              <Text style={styles.eventTime}>{formatEventTime(event.startTime)}</Text>
-            </View>
-            <View style={styles.eventDetails}>
-              <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
-              {event.assignedRosters && event.assignedRosters.length > 0 && (
-                <Text style={styles.eventRosters} numberOfLines={1}>
-                  {event.assignedRosters.map((r) => r.name).join(' vs ')}
-                </Text>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
-          </TouchableOpacity>
-        ))}
-
-        {upcomingEvents.length === 0 && (
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={40} color={colors.inkFaint} />
-            <Text style={styles.emptyText}>No events yet</Text>
-          </View>
-        )}
-
-        {/* Commissioner event actions */}
-        {isOperator && (
-          <View style={styles.eventActions}>
-            <TouchableOpacity
-              style={styles.createEventBtn}
-              onPress={() => (navigation as any).navigate('CreateEvent', {
-                leagueId: league?.id,
-                sportType: league?.sportType,
-                assignedRosters: members
-                  .filter((m) => m.memberType === 'roster' && m.status === 'active')
-                  .map((m) => ({ id: m.memberId, name: (m as any).team?.name || 'Roster' })),
-              })}
-              accessibilityRole="button"
-              accessibilityLabel="Create new event"
-            >
-              <Ionicons name="add-circle-outline" size={18} color={colors.grass} />
-              <Text style={styles.createEventBtnText}>Create New Event</Text>
-            </TouchableOpacity>
-
-            {league?.autoGenerateMatchups && shellEvents.length > 0 && (
-              <TouchableOpacity
-                style={styles.viewMatchupsBtn}
-                onPress={() => setActiveTab('matches' as TabKey)}
-                accessibilityRole="button"
-                accessibilityLabel="View auto-generated matchups"
-              >
-                <Ionicons name="list-outline" size={18} color={colors.court} />
-                <Text style={styles.viewMatchupsBtnText}>View Auto-Generated Matchups</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-      </View>
-    );
-  };
 
   const renderAddRosterOption = () => {
     // Show for invited users who have eligible rosters to add
@@ -873,15 +463,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
             isEdit={true}
             loading={isUpdating}
           />
-
-          {/* Join request queue */}
-          {renderJoinRequestQueue()}
-
-          {/* League rosters / players */}
-          {renderRosterSection()}
-
-          {/* Upcoming events & shell matchups */}
-          {renderUpcomingEvents()}
         </ScrollView>
       </View>
     );

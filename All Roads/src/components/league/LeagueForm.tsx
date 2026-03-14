@@ -493,14 +493,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           />
 
           <FormInput
-            label="League Logo URL"
-            placeholder="https://example.com/logo.png"
-            value={imageUrl}
-            onChangeText={setImageUrl}
-            keyboardType="url"
-          />
-
-          <FormInput
             label="Season Name"
             placeholder="e.g., Spring 2026"
             value={seasonName}
@@ -547,22 +539,25 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </Text>
           </View>
 
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleInfo}>
-              <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
-              <Text style={styles.toggleDescription}>
-                Automatically create shell matchup events after registration closes
-              </Text>
+          {/* Auto-Generate Matchups — own card section */}
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleInfo}>
+                <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
+                <Text style={styles.toggleDescription}>
+                  Automatically create shell matchup events after registration closes
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
+                onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
+                activeOpacity={0.7}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: autoGenerateMatchups }}
+              >
+                <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
-              onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
-              activeOpacity={0.7}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: autoGenerateMatchups }}
-            >
-              <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
-            </TouchableOpacity>
           </View>
 
           <FormInput
@@ -662,91 +657,124 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </>
           )}
 
-          {/* Add Rosters — inline in the flat form */}
-          <Text style={styles.fieldLabel}>Add Rosters</Text>
-          <View style={styles.searchRow}>
-            <TextInput
-              style={styles.searchInput}
-              value={rosterSearchQuery}
-              onChangeText={(text) => {
-                setRosterSearchQuery(text);
-                setRosterSearchError(null);
-              }}
-              placeholder="Search rosters by name"
-              placeholderTextColor={colors.inkFaint}
-              returnKeyType="search"
-              onSubmitEditing={handleSearchRosters}
-              accessibilityLabel="Search rosters by name"
-            />
-            <TouchableOpacity
-              style={[styles.searchButton, (!rosterSearchQuery.trim() || isSearchingRosters) && styles.searchButtonDisabled]}
-              onPress={handleSearchRosters}
-              disabled={!rosterSearchQuery.trim() || isSearchingRosters}
-              accessibilityRole="button"
-              accessibilityLabel="Search"
-            >
-              {isSearchingRosters ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Ionicons name="search" size={20} color="#FFFFFF" />
+          {/* Add Rosters — styled to match Create Roster's Add Players section */}
+          <View style={styles.addRostersSection}>
+            <View style={styles.addRostersHeader}>
+              <Text style={styles.addRostersTitle}>Add Rosters</Text>
+              {addedRosters.length > 0 && (
+                <View style={styles.rosterCountBadge}>
+                  <Text style={styles.rosterCountBadgeText}>{addedRosters.length}</Text>
+                </View>
               )}
-            </TouchableOpacity>
-          </View>
-
-          {rosterSearchError && (
-            <View style={styles.searchErrorRow}>
-              <Ionicons name="alert-circle" size={16} color={colors.track} />
-              <Text style={styles.searchErrorText}>{rosterSearchError}</Text>
             </View>
-          )}
+            <Text style={styles.addRostersDescription}>
+              Search for rosters by name and add them to this league.
+            </Text>
 
-          {rosterSearchResults.length > 0 && (
-            <View style={styles.searchResults}>
-              {rosterSearchResults.map(r => (
-                <View key={r.id} style={styles.searchResultItem}>
-                  <View style={styles.searchResultInfo}>
-                    <Text style={styles.searchResultName}>{r.name}</Text>
-                    {r.sportType && (
-                      <Text style={styles.searchResultMeta}>
-                        {r.sportType} • {r.memberCount ?? 0} players
-                      </Text>
-                    )}
+            {/* Added Rosters List */}
+            {addedRosters.length > 0 && (
+              <View style={styles.addedRostersContainer}>
+                <Text style={styles.addedRostersTitle}>
+                  Rosters to Add ({addedRosters.length})
+                </Text>
+                {addedRosters.map(item => (
+                  <View key={item.id} style={styles.addedRosterItem}>
+                    <View style={styles.addedRosterInfo}>
+                      <View style={styles.addedRosterIcon}>
+                        <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
+                      </View>
+                      <View style={styles.addedRosterDetails}>
+                        <Text style={styles.addedRosterName}>{item.name}</Text>
+                        {item.sportType && (
+                          <Text style={styles.addedRosterMeta}>
+                            {item.sportType} • {item.memberCount ?? 0} players
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveRoster(item.id)}
+                      style={styles.removeRosterBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${item.name}`}
+                    >
+                      <Ionicons name="close-circle" size={24} color={colors.track} />
+                    </TouchableOpacity>
                   </View>
+                ))}
+              </View>
+            )}
+
+            {/* Search Input */}
+            <View style={styles.rosterSearchContainer}>
+              <Ionicons name="search" size={20} color={colors.inkFaint} style={styles.rosterSearchIcon} />
+              <TextInput
+                style={styles.rosterSearchInput}
+                value={rosterSearchQuery}
+                onChangeText={(text) => {
+                  setRosterSearchQuery(text);
+                  setRosterSearchError(null);
+                }}
+                placeholder="Search by roster name..."
+                placeholderTextColor={colors.inkFaint}
+                returnKeyType="search"
+                onSubmitEditing={handleSearchRosters}
+                autoCapitalize="none"
+                autoCorrect={false}
+                accessibilityLabel="Search rosters by name"
+              />
+              {isSearchingRosters && (
+                <ActivityIndicator size="small" color={colors.grass} style={styles.rosterSearchSpinner} />
+              )}
+            </View>
+
+            {rosterSearchError && (
+              <View style={styles.searchErrorRow}>
+                <Ionicons name="alert-circle" size={16} color={colors.track} />
+                <Text style={styles.searchErrorText}>{rosterSearchError}</Text>
+              </View>
+            )}
+
+            {rosterSearchResults.length > 0 && (
+              <View style={styles.rosterResultsContainer}>
+                <Text style={styles.rosterResultsHeader}>
+                  {rosterSearchResults.length} roster{rosterSearchResults.length !== 1 ? 's' : ''} found
+                </Text>
+                {rosterSearchResults.map(r => (
                   <TouchableOpacity
-                    style={styles.addItemBtn}
+                    key={r.id}
+                    style={styles.rosterResultItem}
                     onPress={() => handleAddRoster(r)}
                     accessibilityRole="button"
                     accessibilityLabel={`Add ${r.name}`}
                   >
-                    <Ionicons name="add" size={18} color="#FFFFFF" />
+                    <View style={styles.rosterResultInfo}>
+                      <View style={styles.rosterResultIcon}>
+                        <Ionicons name="shield-outline" size={16} color="#FFFFFF" />
+                      </View>
+                      <View style={styles.rosterResultDetails}>
+                        <Text style={styles.rosterResultName}>{r.name}</Text>
+                        {r.sportType && (
+                          <Text style={styles.rosterResultMeta}>
+                            {r.sportType} • {r.memberCount ?? 0} players
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    <Ionicons name="add-circle" size={24} color={colors.grass} />
                   </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
+                ))}
+              </View>
+            )}
 
-          {rosterSearchResults.length === 0 && rosterSearchQuery.trim() && !isSearchingRosters && !rosterSearchError && (
-            <Text style={styles.noResults}>No results for "{rosterSearchQuery.trim()}"</Text>
-          )}
-
-          {addedRosters.length > 0 && (
-            <View style={styles.addedList}>
-              <Text style={styles.addedListLabel}>Added Rosters ({addedRosters.length})</Text>
-              {addedRosters.map(item => (
-                <View key={item.id} style={styles.addedItem}>
-                  <Text style={styles.addedItemName}>{item.name}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveRoster(item.id)}
-                    style={styles.removeItemBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${item.name}`}
-                  >
-                    <Ionicons name="close-circle" size={22} color={colors.track} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
+            {!isSearchingRosters && rosterSearchQuery.trim().length >= 2 && rosterSearchResults.length === 0 && !rosterSearchError && (
+              <View style={styles.rosterNoResults}>
+                <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
+                <Text style={styles.rosterNoResultsText}>No rosters found</Text>
+                <Text style={styles.rosterNoResultsHint}>Try a different roster name</Text>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -898,13 +926,19 @@ const styles = StyleSheet.create({
     color: colors.grass,
     marginTop: 4,
   },
-  // Toggle
+  // Toggle card
+  toggleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
   },
   toggleInfo: {
     flex: 1,
@@ -969,39 +1003,121 @@ const styles = StyleSheet.create({
   dayChipTextSelected: {
     color: '#FFFFFF',
   },
-  // Search section styles
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
+  // Add Rosters section — matches Create Roster's Add Players pattern
+  addRostersSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    gap: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: '#FAFAFA',
   },
-  searchButton: {
+  addRostersHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  addRostersTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.ink,
+  },
+  rosterCountBadge: {
     backgroundColor: colors.grass,
-    borderRadius: 8,
-    width: 44,
-    height: 44,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
   },
-  searchButtonDisabled: {
-    opacity: 0.5,
+  rosterCountBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: '#FFFFFF',
+  },
+  addRostersDescription: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    lineHeight: 20,
+  },
+  addedRostersContainer: {
+    gap: 8,
+  },
+  addedRostersTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.ink,
+  },
+  addedRosterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.chalk,
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.grass + '40',
+  },
+  addedRosterInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  addedRosterIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.grass,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  addedRosterDetails: {
+    flex: 1,
+  },
+  addedRosterName: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 2,
+  },
+  addedRosterMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+  },
+  removeRosterBtn: {
+    padding: 4,
+  },
+  rosterSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.chalk,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  rosterSearchIcon: {
+    marginRight: 8,
+  },
+  rosterSearchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: fonts.body,
+    color: colors.ink,
+    paddingVertical: 4,
+  },
+  rosterSearchSpinner: {
+    marginLeft: 8,
   },
   searchErrorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
     padding: 10,
     backgroundColor: '#FEF2F2',
     borderRadius: 8,
@@ -1013,82 +1129,67 @@ const styles = StyleSheet.create({
     color: colors.track,
     flex: 1,
   },
-  searchResults: {
-    marginTop: 12,
+  rosterResultsContainer: {
+    gap: 8,
   },
-  searchResultItem: {
+  rosterResultsHeader: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.inkFaint,
+  },
+  rosterResultItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    marginBottom: 6,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  searchResultInfo: {
+  rosterResultInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  rosterResultIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.inkFaint,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
-  searchResultName: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.ink,
+  rosterResultDetails: {
+    flex: 1,
   },
-  searchResultMeta: {
+  rosterResultName: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 2,
+  },
+  rosterResultMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
     color: colors.inkFaint,
-    marginTop: 2,
   },
-  addItemBtn: {
-    backgroundColor: colors.grass,
-    borderRadius: 8,
-    width: 34,
-    height: 34,
+  rosterNoResults: {
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 8,
   },
-  noResults: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.inkFaint,
-    marginTop: 12,
-    textAlign: 'center',
-    paddingVertical: 8,
-  },
-  addedList: {
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingTop: 12,
-  },
-  addedListLabel: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    color: colors.ink,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  addedItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#EDF7F0',
-    borderRadius: 8,
-    marginBottom: 6,
-  },
-  addedItemName: {
+  rosterNoResultsText: {
     fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.ink,
-    flex: 1,
+    fontSize: 16,
+    color: colors.inkFaint,
   },
-  removeItemBtn: {
-    padding: 4,
+  rosterNoResultsHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    textAlign: 'center',
   },
   // Bottom action bar — horizontal row matching EditEventScreen
   actions: {

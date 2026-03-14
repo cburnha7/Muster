@@ -212,7 +212,7 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
     } else if (status === 'past') {
       where.status = { not: 'cancelled' };
       where.OR = [
-        { event: { startTime: { lt: new Date() } } },
+        { event: { endTime: { lt: new Date() } } },
         { event: { status: 'cancelled' } },
       ];
     } else if (status === 'cancelled') {
