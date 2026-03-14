@@ -16,7 +16,6 @@ import { useAuth } from '../../context/AuthContext';
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { FormButton } from '../../components/forms/FormButton';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
 
@@ -38,6 +37,7 @@ import {
   selectBookingsError,
 } from '../../store/slices/bookingsSlice';
 import { Booking, BookingStatus } from '../../types';
+import { colors, Spacing } from '../../theme';
 
 type BookingFilter = 'all' | 'upcoming' | 'past' | 'cancelled';
 
@@ -79,9 +79,7 @@ export function BookingsListScreen(): JSX.Element {
 
   // Load bookings
   const loadBookings = useCallback(async (isRefresh = false, isLoadMore = false) => {
-    // Don't load if not authenticated
     if (!isAuthenticated || !user) {
-      console.log('BookingsListScreen: Not authenticated, skipping load');
       return;
     }
 
@@ -111,9 +109,7 @@ export function BookingsListScreen(): JSX.Element {
         dispatch(setBookings(response));
       }
     } catch (err: any) {
-      // If session expired, don't show error — AuthContext will handle redirect
       if (err?.code === 'SESSION_EXPIRED') {
-        console.log('BookingsListScreen: Session expired, deferring to auth handler');
         return;
       }
 
@@ -139,31 +135,28 @@ export function BookingsListScreen(): JSX.Element {
 
   // Handle cancel booking
   const handleCancelBooking = (booking: Booking) => {
-      if (!booking.event) {
-        Alert.alert('Error', 'Event information not available');
-        return;
-      }
-
-      // Create a mock user object for validation
-      const mockUser = { id: booking.userId } as any;
-
-      // Validate cancellation
-      const BookingValidationService = require('../../services/booking').BookingValidationService;
-      const validationResult = BookingValidationService.validateCancellation(
-        booking.event,
-        mockUser,
-        booking.status
-      );
-
-      if (!validationResult.canBook) {
-        Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
-        return;
-      }
-
-      // Show the modal
-      setSelectedBooking(booking);
-      setShowStepOutModal(true);
+    if (!booking.event) {
+      Alert.alert('Error', 'Event information not available');
+      return;
     }
+
+    const mockUser = { id: booking.userId } as any;
+
+    const BookingValidationService = require('../../services/booking').BookingValidationService;
+    const validationResult = BookingValidationService.validateCancellation(
+      booking.event,
+      mockUser,
+      booking.status
+    );
+
+    if (!validationResult.canBook) {
+      Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
+      return;
+    }
+
+    setSelectedBooking(booking);
+    setShowStepOutModal(true);
+  };
 
   const confirmCancelBooking = async () => {
     if (!selectedBooking || !selectedBooking.event) {
@@ -178,11 +171,8 @@ export function BookingsListScreen(): JSX.Element {
         cancellationReason: 'Cancelled by user',
       }));
 
-      // Close modal and clear selection
       setShowStepOutModal(false);
       setSelectedBooking(null);
-
-      // Reload bookings
       await loadBookings(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking';
@@ -197,26 +187,22 @@ export function BookingsListScreen(): JSX.Element {
     setActiveFilter(filter);
   };
 
-  // Reload bookings when filter changes
   useEffect(() => {
     if (isAuthenticated && user) {
       loadBookings();
     }
   }, [activeFilter]);
 
-  // Load more bookings (pagination)
   const loadMoreBookings = () => {
     if (!isLoadingMore && pagination.page < pagination.totalPages) {
       loadBookings(false, true);
     }
   };
 
-  // Refresh bookings
   const onRefresh = () => {
     loadBookings(true);
   };
 
-  // Load bookings on screen focus or filter change
   useFocusEffect(
     useCallback(() => {
       if (isAuthenticated && user) {
@@ -230,7 +216,7 @@ export function BookingsListScreen(): JSX.Element {
     return (
       <View style={styles.container}>
         <View style={styles.emptyState}>
-          <Ionicons name="log-in-outline" size={64} color="#E0E0E0" />
+          <Ionicons name="log-in-outline" size={64} color={colors.inkFaint} />
           <Text style={styles.emptyTitle}>Not Logged In</Text>
           <Text style={styles.emptySubtitle}>Please log in to view your bookings</Text>
           <TouchableOpacity 
@@ -244,7 +230,6 @@ export function BookingsListScreen(): JSX.Element {
     );
   }
 
-  // Render booking item
   const renderBookingItem = useCallback(({ item }: { item: Booking }) => (
     <BookingCard
       booking={item}
@@ -257,7 +242,7 @@ export function BookingsListScreen(): JSX.Element {
 
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
-      length: 150, // Approximate height of BookingCard
+      length: 150,
       offset: 150 * index,
       index,
     }),
@@ -266,11 +251,11 @@ export function BookingsListScreen(): JSX.Element {
 
   // Render filter tabs
   const renderFilterTabs = () => {
-    const filters: { key: BookingFilter; label: string; count?: number }[] = [
-      { key: 'upcoming', label: 'Upcoming', count: upcomingBookings.length },
-      { key: 'past', label: 'Past', count: pastBookings.length },
-      { key: 'cancelled', label: 'Cancelled', count: allBookings.filter(b => b.status === BookingStatus.CANCELLED).length },
-      { key: 'all', label: 'All', count: allBookings.filter(b => b.status !== BookingStatus.CANCELLED).length },
+    const filters: { key: BookingFilter; label: string }[] = [
+      { key: 'upcoming', label: 'Upcoming' },
+      { key: 'past', label: 'Past' },
+      { key: 'cancelled', label: 'Cancelled' },
+      { key: 'all', label: 'All' },
     ];
 
     return (
@@ -292,11 +277,6 @@ export function BookingsListScreen(): JSX.Element {
             >
               {filter.label}
             </Text>
-            {filter.count !== undefined && filter.count > 0 && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{filter.count}</Text>
-              </View>
-            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -308,29 +288,13 @@ export function BookingsListScreen(): JSX.Element {
     const getEmptyMessage = () => {
       switch (activeFilter) {
         case 'upcoming':
-          return {
-            title: 'No Upcoming Bookings',
-            subtitle: 'Join an event to see it here',
-            icon: 'calendar-outline',
-          };
+          return { title: 'No Upcoming Bookings', subtitle: 'Join an event to see it here', icon: 'calendar-outline' };
         case 'past':
-          return {
-            title: 'No Past Bookings',
-            subtitle: 'Your completed bookings will appear here',
-            icon: 'time-outline',
-          };
+          return { title: 'No Past Bookings', subtitle: 'Your completed bookings will appear here', icon: 'time-outline' };
         case 'cancelled':
-          return {
-            title: 'No Cancelled Bookings',
-            subtitle: 'Cancelled bookings will appear here',
-            icon: 'close-circle-outline',
-          };
+          return { title: 'No Cancelled Bookings', subtitle: 'Cancelled bookings will appear here', icon: 'close-circle-outline' };
         default:
-          return {
-            title: 'No Bookings Yet',
-            subtitle: 'Start joining events to see them here',
-            icon: 'calendar-outline',
-          };
+          return { title: 'No Bookings Yet', subtitle: 'Start joining events to see them here', icon: 'calendar-outline' };
       }
     };
 
@@ -338,7 +302,7 @@ export function BookingsListScreen(): JSX.Element {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name={emptyState.icon as any} size={64} color="#E0E0E0" />
+        <Ionicons name={emptyState.icon as any} size={64} color={colors.inkFaint} />
         <Text style={styles.emptyTitle}>{emptyState.title}</Text>
         <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
         {activeFilter === 'upcoming' && (
@@ -353,7 +317,6 @@ export function BookingsListScreen(): JSX.Element {
     );
   };
 
-  // Render footer (for loading more)
   const renderFooter = () => {
     if (!isLoadingMore) return null;
     return (
@@ -366,10 +329,7 @@ export function BookingsListScreen(): JSX.Element {
   if (error && filteredBookings.length === 0) {
     return (
       <View style={styles.container}>
-        <ErrorDisplay
-          message={error}
-          onRetry={() => loadBookings()}
-        />
+        <ErrorDisplay message={error} onRetry={() => loadBookings()} />
       </View>
     );
   }
@@ -386,15 +346,15 @@ export function BookingsListScreen(): JSX.Element {
           renderItem={renderBookingItem}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
-          contentContainerStyle={filteredBookings.length === 0 ? styles.emptyContainer : undefined}
+          contentContainerStyle={filteredBookings.length === 0 ? styles.emptyContainer : styles.listContent}
           ListEmptyComponent={renderEmptyState}
           ListFooterComponent={renderFooter}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#3D8C5E"
-              colors={['#3D8C5E']}
+              tintColor={colors.grass}
+              colors={[colors.grass]}
             />
           }
           onEndReached={loadMoreBookings}
@@ -408,14 +368,10 @@ export function BookingsListScreen(): JSX.Element {
         />
       )}
 
-      {/* Step Out Modal */}
       <StepOutModal
         visible={showStepOutModal}
         eventTitle={selectedBooking?.event?.title || 'Event'}
-        onCancel={() => {
-          setShowStepOutModal(false);
-          setSelectedBooking(null);
-        }}
+        onCancel={() => { setShowStepOutModal(false); setSelectedBooking(null); }}
         onConfirm={confirmCancelBooking}
       />
     </View>
@@ -425,79 +381,68 @@ export function BookingsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F4EE',
+    backgroundColor: colors.chalk,
   },
   filterTabs: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.chalk,
   },
   filterTab: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
     borderRadius: 20,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   activeFilterTab: {
-    backgroundColor: '#3D8C5E',
+    backgroundColor: colors.grass,
   },
   filterTabText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.inkFaint,
+    fontWeight: '500',
   },
   activeFilterTabText: {
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  filterBadge: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 4,
-    minWidth: 20,
-    alignItems: 'center',
-  },
-  filterBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
   emptyContainer: {
     flexGrow: 1,
+  },
+  listContent: {
+    paddingBottom: 80,
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 48,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
+    color: colors.ink,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#999',
+    color: colors.inkFaint,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
   },
   browseButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#3D8C5E',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: colors.grass,
     borderRadius: 8,
   },
   browseButtonText: {
@@ -506,7 +451,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   footer: {
-    paddingVertical: 16,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
   },
 });

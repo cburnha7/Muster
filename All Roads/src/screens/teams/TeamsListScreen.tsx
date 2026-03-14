@@ -16,7 +16,6 @@ import { SearchBar } from '../../components/ui/SearchBar';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
 import { teamService } from '../../services/api/TeamService';
 import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
 import {
@@ -213,16 +212,11 @@ export function TeamsListScreen(): JSX.Element {
           onPress={() => setShowFilters(!showFilters)}
         >
           <Ionicons 
-            name="options-outline" 
-            size={20} 
-            color={Object.keys(filters).length > 0 ? colors.grass : colors.ink} 
+            name="filter" 
+            size={24} 
+            color={colors.grass} 
           />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={handleCreateTeam}
-        >
-          <Ionicons name="add" size={20} color={colors.grass} />
+          {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
 
@@ -232,7 +226,7 @@ export function TeamsListScreen(): JSX.Element {
             <Text style={styles.filtersTitle}>Filters</Text>
             {/* Add filter options here */}
             <TouchableOpacity
-              style={styles.filterButton}
+              style={styles.filterChip}
               onPress={() => handleFilterChange('hasOpenSlots', !filters.hasOpenSlots)}
             >
               <Text style={styles.filterButtonText}>
@@ -263,11 +257,10 @@ export function TeamsListScreen(): JSX.Element {
         />
       </View>
 
-      <FloatingActionButton
-        icon="add"
-        onPress={handleCreateTeam}
-        label="Create Roster"
-      />
+      {/* FAB */}
+      <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
+        <Ionicons name="add" size={28} color={colors.chalk} />
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.joinButton}
@@ -287,41 +280,32 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    padding: Spacing.lg,
     backgroundColor: colors.chalk,
+    gap: Spacing.sm,
   },
   searchBar: {
     flex: 1,
-    marginRight: Spacing.md,
   },
   filterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
-    marginRight: Spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: Spacing.sm,
+    position: 'relative',
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
-    alignItems: 'center',
-    justifyContent: 'center',
+  filterBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.track,
   },
   content: {
     flex: 1,
   },
   listContent: {
     padding: Spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   emptyState: {
     flex: 1,
@@ -370,7 +354,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginBottom: Spacing.md,
   },
-  filterButton: {
+  filterChip: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     backgroundColor: colors.chalk,
@@ -383,9 +367,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
   },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.grass,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
   joinButton: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 84,
     right: 16,
     backgroundColor: colors.grass,
     paddingHorizontal: Spacing.lg,

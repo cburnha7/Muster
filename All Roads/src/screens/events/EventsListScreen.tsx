@@ -353,16 +353,11 @@ export function EventsListScreen(): JSX.Element {
           onPress={() => setShowFilters(true)}
         >
           <Ionicons
-            name="options-outline"
-            size={20}
-            color={Object.keys(customFilters).length > 0 ? colors.grass : colors.ink}
+            name="filter"
+            size={24}
+            color={Object.keys(customFilters).length > 0 ? colors.grass : colors.grass}
           />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleCreateEvent}
-        >
-          <Ionicons name="add" size={24} color={colors.grass} />
+          {Object.keys(customFilters).length > 0 && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
 
@@ -380,7 +375,7 @@ export function EventsListScreen(): JSX.Element {
           renderItem={renderEventItem}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
-          contentContainerStyle={availableEvents.length === 0 ? styles.emptyContainer : undefined}
+          contentContainerStyle={availableEvents.length === 0 ? styles.emptyContainer : styles.listContent}
           ListEmptyComponent={renderEmptyState}
           ListFooterComponent={renderFooter}
           refreshControl={
@@ -401,6 +396,11 @@ export function EventsListScreen(): JSX.Element {
           windowSize={getOptimalWindowSize()}
         />
       )}
+
+      {/* FAB */}
+      <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
+        <Ionicons name="add" size={28} color={colors.chalk} />
+      </TouchableOpacity>
 
       {showFilters && (
         <View style={styles.filtersOverlay}>
@@ -433,20 +433,38 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     padding: Spacing.sm,
-    borderRadius: 8,
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
+    position: 'relative',
   },
-  addButton: {
-    padding: Spacing.sm,
-    borderRadius: 8,
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
+  filterBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.track,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.grass,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   emptyContainer: {
     flexGrow: 1,
+  },
+  listContent: {
+    paddingBottom: 80,
   },
   emptyState: {
     flex: 1,

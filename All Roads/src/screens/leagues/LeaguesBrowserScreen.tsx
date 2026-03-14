@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
 import { SearchBar } from '../../components/ui/SearchBar';
-import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
 import { colors, Spacing } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import {
@@ -208,44 +207,18 @@ export const LeaguesBrowserScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <SearchBar
-        placeholder="Search leagues..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        onSearch={handleSearch}
-      />
-
-      {/* Filter Bar */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterButton, activeFiltersCount > 0 && styles.filterButtonActive]}
-          onPress={() => setShowFilterModal(true)}
-        >
-          <Ionicons
-            name="filter-outline"
-            size={20}
-            color={activeFiltersCount > 0 ? colors.chalk : colors.ink}
-          />
-          <Text
-            style={[
-              styles.filterButtonText,
-              activeFiltersCount > 0 && styles.filterButtonTextActive,
-            ]}
-          >
-            Filters
-          </Text>
-          {activeFiltersCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleCreateLeague}
-        >
-          <Ionicons name="add" size={20} color={colors.grass} />
+      {/* Search Header */}
+      <View style={styles.header}>
+        <SearchBar
+          placeholder="Search leagues..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSearch={handleSearch}
+          style={styles.searchBar}
+        />
+        <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilterModal(true)}>
+          <Ionicons name="filter" size={24} color={colors.grass} />
+          {activeFiltersCount > 0 && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
 
@@ -269,12 +242,10 @@ export const LeaguesBrowserScreen: React.FC = () => {
         ListFooterComponent={renderFooter}
       />
 
-      {/* Create League FAB */}
-      <FloatingActionButton
-        icon="add"
-        onPress={handleCreateLeague}
-        backgroundColor={colors.grass}
-      />
+      {/* FAB */}
+      <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
+        <Ionicons name="add" size={28} color={colors.chalk} />
+      </TouchableOpacity>
 
       {/* Filter Modal */}
       <Modal
@@ -440,54 +411,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.chalk,
   },
-  filterContainer: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    padding: Spacing.lg,
+    backgroundColor: colors.chalk,
+    gap: Spacing.sm,
+  },
+  searchBar: {
+    flex: 1,
   },
   filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
-    borderRadius: 8,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  filterButtonActive: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
-  },
-  filterButtonText: {
-    fontSize: 14,
-    color: colors.ink,
-    marginLeft: Spacing.sm,
-    fontWeight: '500',
-  },
-  filterButtonTextActive: {
-    color: colors.chalk,
+    padding: Spacing.sm,
+    position: 'relative',
   },
   filterBadge: {
-    backgroundColor: colors.court,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: Spacing.sm,
-  },
-  filterBadgeText: {
-    color: colors.chalk,
-    fontSize: 12,
-    fontWeight: '600',
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.track,
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   footerLoader: {
     paddingVertical: Spacing.lg,
@@ -537,15 +486,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
-    alignItems: 'center',
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.grass,
     justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.ink,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   errorContainer: {
     flex: 1,
