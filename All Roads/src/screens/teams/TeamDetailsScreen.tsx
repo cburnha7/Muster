@@ -663,13 +663,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                 title="Edit Roster"
                 onPress={handleEditTeam}
               />
-              <FormButton
-                title="Delete Roster"
-                onPress={handleDeleteTeam}
-                variant="danger"
-              />
             </>
           )}
+
+          {/* Delete visible to anyone temporarily for cleanup */}
+          <FormButton
+            title="Delete Roster"
+            onPress={handleDeleteTeam}
+            variant="danger"
+          />
         </View>
       </ScrollView>
     </View>

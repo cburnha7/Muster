@@ -159,6 +159,7 @@ router.get('/:id/leagues', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { initialMemberIds, isPublic, ...rest } = req.body;
+    const creatorId = req.headers['x-user-id'] as string | undefined;
 
     // Map frontend isPublic to DB isPrivate, and ensure description has a value
     const teamData = {
@@ -172,20 +173,39 @@ router.post('/', async (req, res) => {
       data: teamData,
     });
 
+    // Add the creator as captain
+    if (creatorId) {
+      await prisma.teamMember.create({
+        data: {
+          teamId: team.id,
+          userId: creatorId,
+          role: 'captain',
+          status: 'active',
+          joinedAt: new Date(),
+        },
+      });
+    }
+
     // Add initial members if provided
     if (initialMemberIds && Array.isArray(initialMemberIds) && initialMemberIds.length > 0) {
       console.log(`Adding ${initialMemberIds.length} initial members to team ${team.id}`);
       
-      // Create team members for each user
-      await prisma.teamMember.createMany({
-        data: initialMemberIds.map((userId: string) => ({
-          teamId: team.id,
-          userId,
-          role: 'member',
-          status: 'active',
-          joinedAt: new Date(),
-        })),
-      });
+      // Filter out the creator if they're in the list (already added as captain)
+      const memberIds = creatorId 
+        ? initialMemberIds.filter((id: string) => id !== creatorId)
+        : initialMemberIds;
+
+      if (memberIds.length > 0) {
+        await prisma.teamMember.createMany({
+          data: memberIds.map((userId: string) => ({
+            teamId: team.id,
+            userId,
+            role: 'member',
+            status: 'active',
+            joinedAt: new Date(),
+          })),
+        });
+      }
 
       console.log(`Successfully added ${initialMemberIds.length} members to team ${team.id}`);
     }
