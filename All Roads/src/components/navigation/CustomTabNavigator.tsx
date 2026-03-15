@@ -69,7 +69,7 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         iconName = focused ? 'people' : 'people-outline';
         break;
       case 'Bookings':
-        iconName = focused ? 'bookmark' : 'bookmark-outline';
+        iconName = focused ? 'calendar' : 'calendar-outline';
         break;
       case 'Profile':
         iconName = focused ? 'person' : 'person-outline';
@@ -151,7 +151,7 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         name="Bookings" 
         component={BookingsStackNavigator}
         options={{
-          tabBarLabel: 'Bookings',
+          tabBarLabel: 'Schedule',
         }}
       />
       <Tab.Screen 

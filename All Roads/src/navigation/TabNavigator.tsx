@@ -76,7 +76,7 @@ export function TabNavigator(): JSX.Element {
         iconName = focused ? 'trophy' : 'trophy-outline';
         break;
       case 'Bookings':
-        iconName = focused ? 'bookmark' : 'bookmark-outline';
+        iconName = focused ? 'calendar' : 'calendar-outline';
         break;
       case 'Profile':
         iconName = focused ? 'person' : 'person-outline';
@@ -195,7 +195,7 @@ export function TabNavigator(): JSX.Element {
         name="Bookings" 
         component={BookingsStackNavigator}
         options={{
-          tabBarLabel: 'Bookings',
+          tabBarLabel: 'Schedule',
         }}
       />
       <Tab.Screen 

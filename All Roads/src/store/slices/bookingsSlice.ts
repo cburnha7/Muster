@@ -67,8 +67,16 @@ const categorizeBookings = (bookings: Booking[]) => {
     }
     if (booking.status === BookingStatus.COMPLETED) {
       past.push(booking);
-    } else if (booking.event && new Date(booking.event.startTime) > now) {
-      upcoming.push(booking);
+    } else if (booking.event) {
+      const startTime = new Date(booking.event.startTime);
+      const endTime = booking.event.endTime ? new Date(booking.event.endTime) : null;
+      const hasEnded = endTime ? endTime < now : startTime < now;
+      if (hasEnded) {
+        past.push(booking);
+      } else {
+        // Not started yet OR currently live — both go to upcoming
+        upcoming.push(booking);
+      }
     } else {
       past.push(booking);
     }

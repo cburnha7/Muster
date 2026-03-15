@@ -257,7 +257,7 @@ export function BookingsListScreen(): JSX.Element {
         <View style={styles.emptyState}>
           <Ionicons name="log-in-outline" size={64} color={colors.inkFaint} />
           <Text style={styles.emptyTitle}>Not Logged In</Text>
-          <Text style={styles.emptySubtitle}>Please log in to view your bookings</Text>
+          <Text style={styles.emptySubtitle}>Please log in to view your schedule</Text>
           <TouchableOpacity 
             style={styles.browseButton}
             onPress={() => navigation.navigate('Auth' as never)}
@@ -327,13 +327,13 @@ export function BookingsListScreen(): JSX.Element {
     const getEmptyMessage = () => {
       switch (activeFilter) {
         case 'upcoming':
-          return { title: 'No Upcoming Bookings', subtitle: 'Join an event to see it here', icon: 'calendar-outline' };
+          return { title: 'No Upcoming Events', subtitle: 'Join an event to see it here', icon: 'calendar-outline' };
         case 'past':
-          return { title: 'No Past Bookings', subtitle: 'Your completed bookings will appear here', icon: 'time-outline' };
+          return { title: 'No Past Events', subtitle: 'Your completed events will appear here', icon: 'time-outline' };
         case 'cancelled':
-          return { title: 'No Cancelled Bookings', subtitle: 'Cancelled bookings will appear here', icon: 'close-circle-outline' };
+          return { title: 'No Cancelled Events', subtitle: 'Cancelled events will appear here', icon: 'close-circle-outline' };
         default:
-          return { title: 'No Bookings Yet', subtitle: 'Start joining events to see them here', icon: 'calendar-outline' };
+          return { title: 'Nothing Scheduled', subtitle: 'Start joining events to see them here', icon: 'calendar-outline' };
       }
     };
 

@@ -39,6 +39,15 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                    booking.event &&
                    new Date(booking.event.startTime) > new Date();
 
+  // Determine if the event is currently live
+  const isLive = (() => {
+    if (!booking.event) return false;
+    const now = new Date();
+    const start = new Date(booking.event.startTime);
+    const end = booking.event.endTime ? new Date(booking.event.endTime) : null;
+    return start <= now && (!end || end > now);
+  })();
+
   return (
     <TouchableOpacity
       style={[styles.container, style]}
@@ -48,9 +57,17 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     >
       {/* Header: title + location */}
       <View style={styles.header}>
-        <Text style={styles.eventTitle} numberOfLines={1}>
-          {booking.event?.title || 'Event Details'}
-        </Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.eventTitle} numberOfLines={1}>
+            {booking.event?.title || 'Event Details'}
+          </Text>
+          {isLive && (
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.details}>
@@ -163,10 +180,38 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 8,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   eventTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.ink,
+    flex: 1,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FDECEC',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 5,
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.track,
+  },
+  liveText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.track,
+    letterSpacing: 0.5,
   },
   details: {
     marginBottom: 12,
