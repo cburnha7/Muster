@@ -245,6 +245,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   // ── Player management ──
   const handleRemoveMember = (member: TeamMember) => {
+    const isPending = member.status === MemberStatus.PENDING;
+    
     const removeMember = async () => {
       try {
         await teamService.removeFromTeam(teamId, member.userId);
@@ -261,6 +263,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         Alert.alert('Error', err.message || 'Failed to remove player.');
       }
     };
+
+    // For pending invites, remove immediately without confirmation
+    if (isPending) {
+      removeMember();
+      return;
+    }
 
     Alert.alert(
       'Remove Player',
