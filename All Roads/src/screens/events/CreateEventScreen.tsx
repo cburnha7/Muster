@@ -31,6 +31,7 @@ import { useSelector } from 'react-redux';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { useAuth } from '../../context/AuthContext';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { loggingService } from '../../services/LoggingService';
 import {
   calendarTheme,
   formatDateForCalendar,
@@ -741,6 +742,11 @@ export function CreateEventScreen(): JSX.Element {
       }
     }
 
+    // Log each validation failure
+    Object.entries(newErrors).forEach(([field, msg]) => {
+      if (msg) loggingService.logValidation('CreateEventScreen', field, 'invalid', msg);
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -758,6 +764,7 @@ export function CreateEventScreen(): JSX.Element {
       return;
     }
 
+    loggingService.logButton('Create Event', 'CreateEventScreen');
     console.log('Validation passed, creating event...');
 
     try {

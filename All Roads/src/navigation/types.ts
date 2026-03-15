@@ -65,14 +65,14 @@ export type FacilitiesStackParamList = {
 
 export type TeamsStackParamList = {
   TeamsList: undefined;
-  TeamDetails: { teamId: string };
+  TeamDetails: { teamId: string; readOnly?: boolean };
   CreateTeam: undefined;
   JoinTeam: { inviteCode?: string };
 };
 
 export type LeaguesStackParamList = {
   LeaguesBrowser: undefined;
-  LeagueDetails: { leagueId: string; leagueType?: 'team' | 'pickup' };
+  LeagueDetails: { leagueId: string; leagueType?: 'team' | 'pickup'; readOnly?: boolean };
   CreateLeague: undefined;
   ManageLeague: { leagueId: string; leagueType?: 'team' | 'pickup' };
   CreateMatch: { leagueId: string; seasonId?: string };

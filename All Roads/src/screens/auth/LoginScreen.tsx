@@ -22,7 +22,7 @@ import SSOService from '../../services/auth/SSOService';
 import { loginUser, loginWithSSO } from '../../store/slices/authSlice';
 import { ErrorMessages, SuccessMessages } from '../../constants/errorMessages';
 import { colors } from '../../theme';
-
+import { loggingService } from '../../services/LoggingService';
 export function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation();
@@ -56,10 +56,12 @@ export function LoginScreen() {
 
     if (!username.trim()) {
       newErrors.username = ErrorMessages.validation.credentials.required;
+      loggingService.logValidation('LoginScreen', 'username', 'required', ErrorMessages.validation.credentials.required);
     }
 
     if (!password) {
       newErrors.password = ErrorMessages.validation.credentials.passwordRequired;
+      loggingService.logValidation('LoginScreen', 'password', 'required', ErrorMessages.validation.credentials.passwordRequired);
     }
 
     setErrors(newErrors);
@@ -72,6 +74,8 @@ export function LoginScreen() {
     if (!validateForm()) {
       return;
     }
+
+    loggingService.logButton('Sign In', 'LoginScreen');
 
     setIsLoading(true);
 
@@ -108,6 +112,7 @@ export function LoginScreen() {
   };
 
   const handleSSOLogin = async (provider: 'apple' | 'google') => {
+    loggingService.logButton(`SSO Sign In (${provider})`, 'LoginScreen');
     setSsoLoading(provider);
     setErrors({});
 

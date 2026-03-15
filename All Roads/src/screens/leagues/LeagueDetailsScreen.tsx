@@ -24,6 +24,7 @@ import { League, LeagueMembership } from '../../types/league';
 import { colors, fonts } from '../../theme';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
+import { loggingService } from '../../services/LoggingService';
 
 /** Shape returned by GET /api/leagues/:id/events */
 interface LeagueEvent extends Event {
@@ -43,7 +44,7 @@ type TabKey = 'standings' | 'matches' | 'players' | 'teams' | 'info';
 export function LeagueDetailsScreen(): React.ReactElement {
   const navigation = useNavigation();
   const route = useRoute();
-  const { leagueId } = (route.params as any) || {};
+  const { leagueId, readOnly } = (route.params as any) || {};
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -89,7 +90,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   useFocusEffect(useCallback(() => { loadLeague(); }, [loadLeague]));
 
   // ── Derived state ───────────────────────────────────────────────
-  const isOperator = league ? currentUser?.id === league.organizerId : false;
+  const isOperator = league ? (currentUser?.id === league.organizerId && !readOnly) : false;
   const isTeamLeague = league?.leagueType === 'team';
 
   const activeMembers = members.filter((m) => m.status === 'active' || m.status === 'pending');
@@ -137,6 +138,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Commissioner actions ────────────────────────────────────────
   const handleUpdateLeague = async (data: UpdateLeagueData) => {
     if (!currentUser?.id) return;
+    loggingService.logButton('Update League', 'LeagueDetailsScreen', { leagueId });
     try {
       setIsUpdating(true);
       await leagueService.updateLeague(leagueId, data, currentUser.id);
@@ -152,6 +154,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleDeleteLeague = () => {
     if (!currentUser?.id || !league) return;
+    loggingService.logButton('Delete League', 'LeagueDetailsScreen', { leagueId });
     Alert.alert('Delete League', `Are you sure you want to delete "${league.name}"? This cannot be undone.`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -175,6 +178,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Non-commissioner actions ────────────────────────────────────
   const handleJoinTeamLeague = async () => {
     if (!league || !currentUser || eligibleRosters.length === 0) return;
+    loggingService.logButton('Join Up (Roster)', 'LeagueDetailsScreen', { leagueId });
     const roster = eligibleRosters[0]!;
     try {
       setIsActionLoading(true);
@@ -190,6 +194,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleJoinPickupLeague = async () => {
     if (!league || !currentUser) return;
+    loggingService.logButton('Join Up (Pickup)', 'LeagueDetailsScreen', { leagueId });
     try {
       setIsActionLoading(true);
       await leagueService.joinLeagueAsUser(league.id, currentUser.id);
@@ -203,6 +208,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleStepOut = async () => {
     if (!league || !currentUser) return;
+    loggingService.logButton('Step Out', 'LeagueDetailsScreen', { leagueId });
     Alert.alert('Step Out', 'Are you sure you want to leave this league?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -246,6 +252,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
         prev.map((m) => (m.id === membership.id ? { ...m, status: 'active' as const } : m))
       );
       Alert.alert('Confirmed', 'Your roster has joined the league.');
+      if (readOnly) {
+        navigation.goBack();
+      }
     } catch (err) {
       Alert.alert('Error', err instanceof Error ? err.message : 'Failed to confirm invitation');
     } finally {
@@ -278,6 +287,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Render helpers ──────────────────────────────────────────────
 
   const renderAddRosterOption = () => {
+    // Hide in readOnly mode
+    if (readOnly) return null;
     // Show for invited users who have eligible rosters to add
     if (isOperator || !isTeamLeague || eligibleRosters.length === 0) return null;
     // Only show if user has some connection to the league (pending invitation or active member)
@@ -308,6 +319,23 @@ export function LeagueDetailsScreen(): React.ReactElement {
   };
 
   const renderActionBar = () => {
+    // In readOnly mode, show Join Up for pending roster invitations
+    if (readOnly && pendingUserRosterInvitations.length > 0) {
+      return (
+        <View style={styles.actionBar}>
+          <TouchableOpacity
+            style={styles.joinBtn}
+            onPress={() => handleConfirmInvitation(pendingUserRosterInvitations[0]!)}
+            disabled={isActionLoading}
+            accessibilityRole="button"
+            accessibilityLabel="Join Up"
+          >
+            <Text style={styles.joinBtnText}>Join Up</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     if (isOperator) return null;
     if (!isAuthenticated || !currentUser) return null;
 
@@ -577,8 +605,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
           )}
         </View>
 
-        {/* Pending roster invitations for roster owners */}
-        {pendingUserRosterInvitations.length > 0 && (
+        {/* Pending roster invitations for roster owners — hidden in readOnly since bottom bar handles it */}
+        {!readOnly && pendingUserRosterInvitations.length > 0 && (
           <View style={styles.invitationBanner}>
             <Ionicons name="mail-outline" size={20} color={colors.court} />
             <View style={styles.invitationBannerContent}>
@@ -596,9 +624,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
                         onPress={() => handleConfirmInvitation(inv)}
                         disabled={isActionLoading}
                         accessibilityRole="button"
-                        accessibilityLabel={`Confirm ${rosterName}`}
+                        accessibilityLabel={`Join Up ${rosterName}`}
                       >
-                        <Text style={styles.confirmBtnText}>Confirm</Text>
+                        <Text style={styles.confirmBtnText}>Join Up</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.declineBtnSmall}

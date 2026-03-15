@@ -22,7 +22,7 @@ import { teamService } from '../../services/api/TeamService';
 import { addTeam, joinTeam } from '../../store/slices/teamsSlice';
 import { SportType, SkillLevel, CreateTeamData, User } from '../../types';
 import { colors } from '../../theme';
-
+import { loggingService } from '../../services/LoggingService';
 export function CreateTeamScreen(): JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -72,20 +72,26 @@ export function CreateTeamScreen(): JSX.Element {
 
     if (!formData.name.trim()) {
       newErrors.name = 'Roster name is required';
+      loggingService.logValidation('CreateTeamScreen', 'name', 'required', 'Roster name is required');
     } else if (formData.name.length < 3) {
       newErrors.name = 'Roster name must be at least 3 characters';
+      loggingService.logValidation('CreateTeamScreen', 'name', 'minLength', 'Roster name must be at least 3 characters');
     } else if (formData.name.length > 50) {
       newErrors.name = 'Roster name must be less than 50 characters';
+      loggingService.logValidation('CreateTeamScreen', 'name', 'maxLength', 'Roster name must be less than 50 characters');
     }
 
     if (formData.description && formData.description.length > 500) {
       newErrors.description = 'Description must be less than 500 characters';
+      loggingService.logValidation('CreateTeamScreen', 'description', 'maxLength', 'Description must be less than 500 characters');
     }
 
     if (formData.maxMembers < 2) {
       newErrors.maxMembers = 'Roster must allow at least 2 players';
+      loggingService.logValidation('CreateTeamScreen', 'maxMembers', 'min', 'Roster must allow at least 2 players');
     } else if (formData.maxMembers > 100) {
       newErrors.maxMembers = 'Maximum players cannot exceed 100';
+      loggingService.logValidation('CreateTeamScreen', 'maxMembers', 'max', 'Maximum players cannot exceed 100');
     }
 
     setErrors(newErrors);
@@ -96,6 +102,8 @@ export function CreateTeamScreen(): JSX.Element {
     if (!validateForm()) {
       return;
     }
+
+    loggingService.logButton('Create Roster', 'CreateTeamScreen');
 
     setIsLoading(true);
 

@@ -22,6 +22,7 @@ import { courtService } from '../../services/api/CourtService';
 import { addFacility } from '../../store/slices/facilitiesSlice';
 import { SportType, CreateFacilityData, Facility } from '../../types';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { loggingService } from '../../services/LoggingService';
 
 // Global flag to prevent multiple submissions
 let isCreatingFacility = false;
@@ -220,6 +221,11 @@ export function CreateFacilityScreen(): JSX.Element {
       newErrors.sportTypes = 'Select at least one sport type';
     }
 
+    // Log each validation failure
+    Object.entries(newErrors).forEach(([field, msg]) => {
+      loggingService.logValidation('CreateFacilityScreen', field, 'required', msg);
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -323,6 +329,7 @@ export function CreateFacilityScreen(): JSX.Element {
 
     try {
       console.log(`🔒 [${timestamp}] Setting all flags to true`);
+      loggingService.logButton('Create Ground', 'CreateFacilityScreen');
       setIsSubmitting(true);
       isSubmittingRef.current = true;
       isCreatingFacility = true;

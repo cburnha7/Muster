@@ -16,6 +16,7 @@ import { FormButton } from '../forms/FormButton';
 import { CreateLeagueData, UpdateLeagueData, SportType, SkillLevel, PointsConfig, Team } from '../../types';
 import { teamService } from '../../services/api/TeamService';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { loggingService } from '../../services/LoggingService';
 
 interface AddedRoster {
   id: string;
@@ -375,6 +376,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     setErrors(newErrors);
+
+    // Log each validation failure
+    Object.entries(newErrors).forEach(([field, msg]) => {
+      loggingService.logValidation('LeagueForm', field, 'invalid', msg);
+    });
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -383,6 +390,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       Alert.alert('Validation Error', 'Please fix the errors before submitting');
       return;
     }
+
+    loggingService.logButton(isEdit ? 'Update League' : 'Create League', 'LeagueForm');
 
     const pointsConfig: PointsConfig = trackStandings ? {
       win: parseInt(winPoints),

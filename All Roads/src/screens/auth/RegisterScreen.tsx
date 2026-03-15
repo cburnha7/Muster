@@ -19,6 +19,7 @@ import {
   getPasswordStrengthLabel,
   getAuthErrorMessage 
 } from '../../services/auth/authUtils';
+import { loggingService } from '../../services/LoggingService';
 
 export interface RegisterScreenProps {
   onNavigateToLogin: () => void;
@@ -85,6 +86,11 @@ export function RegisterScreen({
       }
     }
 
+    // Log validation failures
+    Object.entries(errors).forEach(([field, msg]) => {
+      if (msg) loggingService.logValidation('RegisterScreen', field, 'invalid', msg);
+    });
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -95,6 +101,8 @@ export function RegisterScreen({
     if (!validateForm()) {
       return;
     }
+
+    loggingService.logButton('Create Account', 'RegisterScreen');
 
     try {
       await register(formData);

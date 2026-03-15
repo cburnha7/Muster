@@ -7,6 +7,7 @@ import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error';
 import { crashReportingService, performanceMonitoringService } from './src/services/monitoring';
+import { loggingService } from './src/services/LoggingService';
 
 export default function App(): JSX.Element {
   useEffect(() => {
@@ -14,9 +15,11 @@ export default function App(): JSX.Element {
     const initializeMonitoring = async () => {
       await crashReportingService.initialize();
       await performanceMonitoringService.initialize();
+      loggingService.initialize();
     };
 
     initializeMonitoring();
+    return () => loggingService.destroy();
   }, []);
 
   return (

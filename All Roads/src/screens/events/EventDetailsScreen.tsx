@@ -30,7 +30,7 @@ import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
 import { colors } from '../../theme';
-import {
+import { loggingService } from '../../services/LoggingService';import {
   Event,
   SportType,
   SkillLevel,
@@ -159,6 +159,7 @@ export function EventDetailsScreen(): JSX.Element {
 
   // Handle booking
   const handleBookEvent = async () => {
+    loggingService.logButton('Join Up', 'EventDetailsScreen', { eventId: event?.id });
     console.log('🎯 handleBookEvent called');
     console.log('📋 Event:', event?.id, event?.title);
     console.log('👤 Current user:', currentUser?.id, currentUser?.email);
@@ -301,6 +302,7 @@ export function EventDetailsScreen(): JSX.Element {
     if (!event || !currentUser) {
       return;
     }
+    loggingService.logButton('Step Out', 'EventDetailsScreen', { eventId: event.id });
 
     const userBooking = participants.find(p => p.userId === currentUser.id);
     
@@ -457,6 +459,7 @@ export function EventDetailsScreen(): JSX.Element {
   // Handle submit salutes
   const handleSubmitSalutes = async () => {
     if (!event || salutedParticipants.size === 0) return;
+    loggingService.logButton('Submit Salutes', 'EventDetailsScreen', { eventId: event.id });
 
     Alert.alert(
       'Submit Salutes',

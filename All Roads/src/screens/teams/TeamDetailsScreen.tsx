@@ -39,9 +39,9 @@ import { selectUser } from '../../store/slices/authSlice';
 import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, Event } from '../../types';
 import { League } from '../../types/league';
 import { colors } from '../../theme';
-
+import { loggingService } from '../../services/LoggingService';
 interface TeamDetailsScreenProps {
-  route: { params: { teamId: string } };
+  route: { params: { teamId: string; readOnly?: boolean } };
 }
 
 const sportTypeOptions = [
@@ -70,7 +70,7 @@ const visibilityOptions = [
 ];
 
 export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Element {
-  const { teamId } = route.params;
+  const { teamId, readOnly } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const currentUser = useSelector(selectUser);
@@ -105,7 +105,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   );
   const currentMember = team?.members?.find((m) => m.userId === currentUser?.id);
   const isCaptain = currentMember?.role === TeamRole.CAPTAIN;
-  const canManageTeam = isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN;
+  const canManageTeam = !readOnly && (isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN);
+  const isPendingInvite = team?.members?.some(
+    (m) => m.userId === currentUser?.id && m.status === MemberStatus.PENDING
+  );
 
   const activeMembers = team?.members?.filter((m) => m.status === MemberStatus.ACTIVE) || [];
   const pendingMembers = team?.members?.filter((m) => m.status === MemberStatus.PENDING) || [];
@@ -176,13 +179,31 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   // ── Form validation ──
   const validateForm = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!formName.trim()) errs.name = 'Roster name is required';
-    else if (formName.length < 3) errs.name = 'Roster name must be at least 3 characters';
-    else if (formName.length > 50) errs.name = 'Roster name must be less than 50 characters';
-    if (formDescription && formDescription.length > 500) errs.description = 'Description must be less than 500 characters';
+    if (!formName.trim()) {
+      errs.name = 'Roster name is required';
+      loggingService.logValidation('TeamDetailsScreen', 'name', 'required', 'Roster name is required');
+    }
+    else if (formName.length < 3) {
+      errs.name = 'Roster name must be at least 3 characters';
+      loggingService.logValidation('TeamDetailsScreen', 'name', 'minLength', 'Roster name must be at least 3 characters');
+    }
+    else if (formName.length > 50) {
+      errs.name = 'Roster name must be less than 50 characters';
+      loggingService.logValidation('TeamDetailsScreen', 'name', 'maxLength', 'Roster name must be less than 50 characters');
+    }
+    if (formDescription && formDescription.length > 500) {
+      errs.description = 'Description must be less than 500 characters';
+      loggingService.logValidation('TeamDetailsScreen', 'description', 'maxLength', 'Description must be less than 500 characters');
+    }
     const maxNum = parseInt(formMaxMembers, 10);
-    if (isNaN(maxNum) || maxNum < 2) errs.maxMembers = 'Roster must allow at least 2 players';
-    else if (maxNum > 100) errs.maxMembers = 'Maximum players cannot exceed 100';
+    if (isNaN(maxNum) || maxNum < 2) {
+      errs.maxMembers = 'Roster must allow at least 2 players';
+      loggingService.logValidation('TeamDetailsScreen', 'maxMembers', 'min', 'Roster must allow at least 2 players');
+    }
+    else if (maxNum > 100) {
+      errs.maxMembers = 'Maximum players cannot exceed 100';
+      loggingService.logValidation('TeamDetailsScreen', 'maxMembers', 'max', 'Maximum players cannot exceed 100');
+    }
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -190,6 +211,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   // ── Update roster ──
   const handleUpdateTeam = async () => {
     if (!validateForm()) return;
+    loggingService.logButton('Update Roster', 'TeamDetailsScreen');
     setIsSaving(true);
     try {
       const updates = {
@@ -212,11 +234,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   // ── Join / Leave / Delete ──
   const handleJoinTeam = async () => {
+    loggingService.logButton('Join Up', 'TeamDetailsScreen', { teamId });
     try {
       await teamService.joinTeam(teamId);
       dispatch(joinTeamAction(team!));
       await loadTeamDetails();
       Alert.alert('Success', 'You joined the roster.');
+      if (readOnly) {
+        navigation.goBack();
+      }
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to join roster.');
     }
@@ -234,6 +260,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   };
 
   const handleDeleteTeam = async () => {
+    loggingService.logButton('Delete Roster', 'TeamDetailsScreen', { teamId });
     try {
       await teamService.deleteTeam(teamId);
       dispatch(removeTeam(teamId));
@@ -545,7 +572,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                   <TouchableOpacity
                     key={league.id}
                     style={[styles.listCard, isPending && styles.listCardPending]}
-                    onPress={() => (navigation as any).navigate('LeagueDetails', { leagueId: league.id })}
+                    onPress={() => (navigation as any).navigate('LeagueDetails', { leagueId: league.id, readOnly: readOnly && isPending })}
                   >
                     <View style={styles.listCardContent}>
                       <Ionicons name="trophy-outline" size={20} color={isPending ? colors.court : colors.grass} />
@@ -595,7 +622,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
           {/* ── Action Buttons ── */}
           <View style={styles.actionsSection}>
-            {canManageTeam && (
+            {readOnly && isPendingInvite && (
+              <FormButton
+                title="Join Up"
+                onPress={handleJoinTeam}
+                leftIcon="add-circle-outline"
+              />
+            )}
+
+            {!readOnly && canManageTeam && (
               <FormButton
                 title={isSaving ? 'Saving...' : 'Update Roster'}
                 onPress={handleUpdateTeam}
@@ -604,7 +639,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               />
             )}
 
-            {!isMember && !currentMember && (
+            {!readOnly && !isMember && !currentMember && (
               <FormButton
                 title="Join Up"
                 onPress={handleJoinTeam}
@@ -612,7 +647,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               />
             )}
 
-            {isMember && !isCaptain && (
+            {!readOnly && isMember && !isCaptain && (
               <FormButton
                 title="Step Out"
                 onPress={() => setShowLeaveModal(true)}
@@ -621,7 +656,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               />
             )}
 
-            {isCaptain && (
+            {!readOnly && isCaptain && (
               <FormButton
                 title="Delete Roster"
                 onPress={() => setShowDeleteModal(true)}

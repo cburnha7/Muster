@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { userService } from '../../services/api/UserService';
+import { loggingService } from '../../services/LoggingService';
 
 export function SettingsScreen(): JSX.Element {
   const navigation = useNavigation();
@@ -46,6 +47,7 @@ export function SettingsScreen(): JSX.Element {
   };
 
   const handleDeleteAccount = () => {
+    loggingService.logButton('Delete Account', 'SettingsScreen');
     Alert.alert(
       'Delete Account',
       'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.',

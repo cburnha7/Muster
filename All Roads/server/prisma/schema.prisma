@@ -891,3 +891,18 @@ model TeamTransaction {
   @@index([createdAt])
   @@map("team_transactions")
 }
+
+model AppLog {
+  id        String   @id @default(uuid())
+  logType   String   // "validation", "button", "error", "api_error"
+  message   String
+  userId    String?
+  screen    String?
+  metadata  Json?    // field, rule, buttonName, errorCode, etc.
+  createdAt DateTime @default(now())
+
+  @@index([logType])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("app_logs")
+}

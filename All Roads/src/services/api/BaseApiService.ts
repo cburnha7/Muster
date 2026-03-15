@@ -9,6 +9,7 @@ import { authService } from '../auth/AuthService';
 import TokenStorage from '../auth/TokenStorage';
 import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
+import { loggingService } from '../LoggingService';
 
 export interface ApiServiceConfig {
   baseURL: string;
@@ -165,6 +166,15 @@ export class BaseApiService {
 
         // Transform error to our standard format
         const apiError = this.transformError(error);
+
+        // Log to structured logging service
+        loggingService.logApiError(
+          error.config?.url || 'unknown',
+          error.config?.method?.toUpperCase() || 'UNKNOWN',
+          error.response?.status,
+          apiError.message,
+        );
+
         return Promise.reject(apiError);
       }
     );

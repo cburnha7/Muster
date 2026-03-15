@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { loggingService } from '../../services/LoggingService';
 import ValidationService from '../../services/auth/ValidationService';
 import { resetPassword } from '../../store/slices/authSlice';
 
@@ -109,13 +110,17 @@ export const ResetPasswordScreen: React.FC = () => {
 
     if (passwordError) {
       updateError('newPassword', passwordError);
+      loggingService.logValidation('ResetPasswordScreen', 'newPassword', 'invalid', passwordError);
       return;
     }
 
     if (confirmError) {
       updateError('confirmPassword', confirmError);
+      loggingService.logValidation('ResetPasswordScreen', 'confirmPassword', 'mismatch', confirmError);
       return;
     }
+
+    loggingService.logButton('Reset Password', 'ResetPasswordScreen');
 
     if (!state.resetToken) {
       updateError('general', 'Invalid reset link. Please request a new password reset.');

@@ -22,6 +22,7 @@ import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { updateEvent } from '../../store/slices/eventsSlice';
 import { colors, Spacing } from '../../theme';
+import { loggingService } from '../../services/LoggingService';
 import {
   Event,
   UpdateEventData,
@@ -277,6 +278,11 @@ export function EditEventScreen(): JSX.Element {
       }
     }
 
+    // Log each validation failure
+    Object.entries(newErrors).forEach(([field, msg]) => {
+      if (msg) loggingService.logValidation('EditEventScreen', field, 'invalid', msg);
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -287,6 +293,7 @@ export function EditEventScreen(): JSX.Element {
       return;
     }
 
+    loggingService.logButton('Save Changes', 'EditEventScreen');
     try {
       setIsLoading(true);
 
@@ -325,6 +332,7 @@ export function EditEventScreen(): JSX.Element {
   // Handle delete
   const handleDelete = () => {
     if (!event) return;
+    loggingService.logButton('Delete Event', 'EditEventScreen');
 
     Alert.alert(
       'Delete Event',

@@ -19,6 +19,7 @@ import { colors } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { registerUser, registerWithSSO } from '../../store/slices/authSlice';
+import { loggingService } from '../../services/LoggingService';
 
 interface RegistrationState {
   firstName: string;
@@ -114,6 +115,11 @@ export const RegistrationScreen: React.FC = () => {
       agreedToTerms: state.agreedToTerms,
     });
 
+    // Log each validation failure
+    Object.entries(errors).forEach(([field, msg]) => {
+      if (msg) loggingService.logValidation('RegistrationScreen', field, 'invalid', msg);
+    });
+
     setState((prev) => ({ ...prev, errors }));
     return Object.keys(errors).length === 0;
   };
@@ -122,6 +128,8 @@ export const RegistrationScreen: React.FC = () => {
     if (!validateForm()) {
       return;
     }
+
+    loggingService.logButton('Create Account', 'RegistrationScreen');
 
     updateField('isLoading', true);
     updateError('general', undefined);

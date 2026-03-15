@@ -18,7 +18,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect } from '../../components/forms/FormSelect';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { validateEmail, validatePhoneNumber } from '../../utils/validation';
+import { loggingService } from '../../services/LoggingService';import { validateEmail, validatePhoneNumber } from '../../utils/validation';
 
 const SPORT_OPTIONS = [
   { label: 'Basketball', value: 'basketball' },
@@ -105,6 +105,11 @@ export function EditProfileScreen(): JSX.Element {
       newErrors.phoneNumber = 'Invalid phone number format';
     }
 
+    // Log each validation failure
+    Object.entries(newErrors).forEach(([field, msg]) => {
+      loggingService.logValidation('EditProfileScreen', field, 'invalid', msg);
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -175,6 +180,7 @@ export function EditProfileScreen(): JSX.Element {
       return;
     }
 
+    loggingService.logButton('Save Changes', 'EditProfileScreen');
     try {
       setSaving(true);
       const updates: UpdateProfileData = {

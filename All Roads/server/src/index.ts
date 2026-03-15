@@ -20,6 +20,7 @@ import matchRoutes from './routes/matches';
 import seasonRoutes from './routes/seasons';
 import debriefRoutes from './routes/debrief';
 import searchRoutes from './routes/search';
+import logRoutes from './routes/logs';
 
 dotenv.config();
 
@@ -75,10 +76,33 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/seasons', seasonRoutes);
 app.use('/api/debrief', debriefRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/logs', logRoutes);
 
 // Error handling
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
+
+  // Log to app_logs table
+  try {
+    const userId = (req as any).user?.userId || req.headers['x-user-id'] as string || null;
+    await prisma.appLog.create({
+      data: {
+        logType: 'error',
+        message: (err.message || 'Internal server error').substring(0, 2000),
+        userId,
+        screen: req.headers['x-screen'] as string || null,
+        metadata: {
+          method: req.method,
+          url: req.originalUrl,
+          status: err.status || 500,
+          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        },
+      },
+    });
+  } catch (logErr) {
+    console.error('Failed to write error log:', logErr);
+  }
+
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),

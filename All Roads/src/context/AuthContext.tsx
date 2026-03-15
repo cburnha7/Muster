@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
 import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser, clearAuth } from '../store/slices/authSlice';
+import { loggingService } from '../services/LoggingService';
 
 interface AuthContextType {
   user: User | null;
@@ -74,6 +75,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Sync authService with Redux user for mock auth
   useEffect(() => {
+    // Keep logging service in sync with current user
+    loggingService.setUserId(reduxUser?.id ?? null);
+
     if (reduxUser && process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
       authService.switchMockUser(
         reduxUser.id,

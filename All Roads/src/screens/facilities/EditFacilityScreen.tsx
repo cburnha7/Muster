@@ -24,6 +24,7 @@ import { courtService } from '../../services/api/CourtService';
 import { updateFacility, removeFacility } from '../../store/slices/facilitiesSlice';
 import { SportType, CreateFacilityData, Facility } from '../../types';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { loggingService } from '../../services/LoggingService';
 
 interface CourtFormData {
   id: string;
@@ -307,6 +308,11 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       newErrors.sportTypes = 'Select at least one sport type';
     }
 
+    // Log each validation failure
+    Object.entries(newErrors).forEach(([field, msg]) => {
+      loggingService.logValidation('EditFacilityScreen', field, 'required', msg);
+    });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -316,6 +322,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       Alert.alert('Validation Error', 'Please fill in all required fields');
       return;
     }
+
+    loggingService.logButton('Save Changes', 'EditFacilityScreen');
 
     try {
       setIsSubmitting(true);
@@ -394,6 +402,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   };
 
   const handleDelete = () => {
+    loggingService.logButton('Delete Ground', 'EditFacilityScreen');
     setShowDeleteModal(true);
   };
 

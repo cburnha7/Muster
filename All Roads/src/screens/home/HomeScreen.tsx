@@ -90,7 +90,6 @@ export function HomeScreen(): JSX.Element {
   const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
   const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   // Live events — derived from bookings where now is between start and end
   const [now, setNow] = useState(() => new Date());
@@ -170,19 +169,13 @@ export function HomeScreen(): JSX.Element {
     }
   }, []);
 
-  // Accept roster invitation
-  const handleAcceptRoster = useCallback(async (inv: RosterInvitation) => {
-    setAcceptingId(inv.id);
-    try {
-      await userService.acceptRosterInvitation(inv.rosterId);
-      Alert.alert('Joined', `You joined ${inv.rosterName}`);
-      loadInvitations();
-    } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to join roster');
-    } finally {
-      setAcceptingId(null);
-    }
-  }, [loadInvitations]);
+  // Navigate to read-only roster details for roster invitation
+  const handleRosterInvitationPress = useCallback((inv: RosterInvitation) => {
+    (navigation as any).navigate('Teams', {
+      screen: 'TeamDetails',
+      params: { teamId: inv.rosterId, readOnly: true },
+    });
+  }, [navigation]);
 
   // Navigate to roster details for league invitation
   const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
@@ -443,7 +436,12 @@ export function HomeScreen(): JSX.Element {
 
           {/* Roster invitations */}
           {rosterInvitations.map((inv) => (
-            <View key={inv.id} style={styles.inviteCard}>
+            <TouchableOpacity
+              key={inv.id}
+              style={styles.inviteCard}
+              onPress={() => handleRosterInvitationPress(inv)}
+              activeOpacity={0.7}
+            >
               <View style={styles.inviteIconWrap}>
                 <Ionicons name="shield-outline" size={22} color={colors.chalk} />
               </View>
@@ -453,17 +451,11 @@ export function HomeScreen(): JSX.Element {
                   {inv.sportType ? `${inv.sportType} · ` : ''}{inv.playerCount} players
                 </Text>
               </View>
-              <TouchableOpacity
-                style={styles.joinUpButton}
-                onPress={() => handleAcceptRoster(inv)}
-                disabled={acceptingId === inv.id}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.joinUpButtonText}>
-                  {acceptingId === inv.id ? '...' : 'Join Up'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.pendingBadge}>
+                <Text style={styles.pendingBadgeText}>Pending</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+            </TouchableOpacity>
           ))}
 
           {/* League invitations */}
@@ -729,19 +721,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.inkFaint,
     marginTop: 2,
-  },
-  joinUpButton: {
-    backgroundColor: colors.grass,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  joinUpButtonText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.chalk,
   },
   pendingBadge: {
     backgroundColor: colors.courtLight,
