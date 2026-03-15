@@ -646,8 +646,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             onChangeText={setTimeWindowEnd}
             error={errors.timeWindowEnd}
           />
-            </>
-          )}
 
           {/* Add Rosters — styled to match Create Roster's Add Players section */}
           <View style={styles.addRostersSection}>
