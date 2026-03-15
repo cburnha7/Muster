@@ -627,27 +627,6 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           )}
         </View>
 
-        {/* Pricing */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ground Pricing</Text>
-          <Text style={styles.sectionSubtitle}>
-            Pricing is set individually for each court/field. Optionally set a whole ground rental rate.
-          </Text>
-
-          <FormInput
-            label="Whole Ground Rental ($)"
-            value={formData.pricing?.wholeFacilityRate?.toString() || ''}
-            onChangeText={(value) =>
-              updateNestedField('pricing', 'wholeFacilityRate', value ? parseFloat(value) : 0)
-            }
-            placeholder="0.00"
-            keyboardType="decimal-pad"
-          />
-          <Text style={styles.helperText}>
-            Optional: Price to rent the entire ground (all courts at once)
-          </Text>
-        </View>
-
         {/* Submit Button */}
         <View style={styles.buttonContainer}>
           <FormButton

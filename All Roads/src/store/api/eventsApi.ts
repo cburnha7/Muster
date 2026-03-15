@@ -25,13 +25,9 @@ const baseQuery = fetchBaseQuery({
     
     // Send X-User-Id header as fallback authentication
     // This allows the backend to identify the user even if the JWT is expired
-    try {
-      const currentUser = await TokenStorage.getUser();
-      if (currentUser?.id) {
-        headers.set('X-User-Id', currentUser.id);
-      }
-    } catch (e) {
-      // Ignore storage errors
+    const userId = (getState() as RootState).auth.user?.id;
+    if (userId) {
+      headers.set('X-User-Id', userId);
     }
     
     headers.set('content-type', 'application/json');
