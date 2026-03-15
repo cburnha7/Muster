@@ -297,6 +297,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       await loadTeamDetails();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to invite player.');
+      throw err; // Re-throw so AddMemberSearch knows it failed
     }
   };
 
@@ -331,7 +332,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               </Text>
               {isPending && (
                 <View style={styles.pendingBadge}>
-                  <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
+                  <Text style={styles.pendingBadgeText}>✉️ Invited</Text>
                 </View>
               )}
             </View>
@@ -468,7 +469,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           {canManageTeam && (
             <View style={styles.addMembersSection}>
               <View style={styles.addMembersHeader}>
-                <Text style={styles.addMembersTitle}>Invites</Text>
+                <Text style={styles.addMembersTitle}>Invite Players</Text>
                 {!formIsPublic && (
                   <View style={styles.privateBadge}>
                     <Text style={styles.privateBadgeText}>🔒 Private</Text>
@@ -476,23 +477,26 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                 )}
               </View>
               <Text style={styles.addMembersDescription}>
-                Search for players and invite them to your roster.
+                Search for players and invite them to your roster. They must accept the invite before they appear on the confirmed players list.
               </Text>
-
-              {/* Pending invites list */}
-              {pendingMembers.length > 0 && (
-                <View style={styles.pendingMembersContainer}>
-                  <Text style={styles.pendingMembersTitle}>
-                    Pending Invites ({pendingMembers.length})
-                  </Text>
-                  {pendingMembers.map((m) => renderMember(m, true))}
-                </View>
-              )}
 
               <AddMemberSearch
                 onAddMember={handleAddMemberDirectly}
                 existingMemberIds={allMemberIds}
               />
+            </View>
+          )}
+
+          {/* ── Invited (pending) players ── */}
+          {pendingMembers.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Invited ({pendingMembers.length})
+              </Text>
+              <Text style={styles.invitedDescription}>
+                These players have been invited but haven't joined yet.
+              </Text>
+              {pendingMembers.map((m) => renderMember(m, true))}
             </View>
           )}
 
@@ -507,16 +511,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               activeMembers.map((m) => renderMember(m, false))
             )}
           </View>
-
-          {/* ── Pending invites (read-only for non-managers) ── */}
-          {!canManageTeam && pendingMembers.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Pending Invites ({pendingMembers.length})
-              </Text>
-              {pendingMembers.map((m) => renderMember(m, true))}
-            </View>
-          )}
 
           {/* ── Leagues ── */}
           {leagues.length > 0 && (
@@ -795,6 +789,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 16,
+  },
+  invitedDescription: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginBottom: 8,
   },
   // List cards (leagues / events)
   listCard: {

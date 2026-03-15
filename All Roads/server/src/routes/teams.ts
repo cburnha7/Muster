@@ -72,6 +72,8 @@ router.get('/:id', async (req, res) => {
                 id: true,
                 firstName: true,
                 lastName: true,
+                email: true,
+                profileImage: true,
               },
             },
           },
@@ -117,7 +119,7 @@ router.put('/:id', async (req, res) => {
         members: {
           include: {
             user: {
-              select: { id: true, firstName: true, lastName: true },
+              select: { id: true, firstName: true, lastName: true, email: true, profileImage: true },
             },
           },
         },
