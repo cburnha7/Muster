@@ -255,6 +255,9 @@ model League {
   seasonGameCount          Int?
   scheduleGenerated        Boolean    @default(false)
   trackStandings           Boolean    @default(true)
+  seasonLength             Int?
+  scheduleFrequency        String?    // "weekly" or "monthly"
+  autoGenerateMatchups     Boolean    @default(false)
 
   // Certification
   isCertified Boolean   @default(false)

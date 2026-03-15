@@ -153,17 +153,17 @@ export function TabNavigator(): JSX.Element {
         })}
       />
       <Tab.Screen 
-        name="Leagues" 
-        component={LeaguesStackNavigator}
-        options={{
-          tabBarLabel: 'Leagues',
-        }}
-      />
-      <Tab.Screen 
         name="Teams" 
         component={TeamsStackNavigator}
         options={{
           tabBarLabel: 'Rosters',
+        }}
+      />
+      <Tab.Screen 
+        name="Leagues" 
+        component={LeaguesStackNavigator}
+        options={{
+          tabBarLabel: 'Leagues',
         }}
       />
       <Tab.Screen 

@@ -129,7 +129,7 @@ export const ManageLeagueScreen: React.FC = () => {
   const loadMembers = async () => {
     try {
       setIsLoadingMembers(true);
-      const response = await leagueService.getMembers(leagueId);
+      const response = await leagueService.getMembers(leagueId, 1, 100, true);
       setMembers(response.data || []);
     } catch (err) {
       console.error('Failed to load members:', err);
@@ -150,14 +150,7 @@ export const ManageLeagueScreen: React.FC = () => {
       const updatedLeague = await leagueService.updateLeague(leagueId, data, user.id);
       setLeague(updatedLeague);
 
-      Alert.alert('Success', 'League updated successfully!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            (navigation as any).navigate('LeaguesBrowser');
-          },
-        },
-      ]);
+      (navigation as any).replace('LeaguesBrowser');
     } catch (error) {
       throw error;
     } finally {
@@ -280,6 +273,14 @@ export const ManageLeagueScreen: React.FC = () => {
             loading={isUpdating}
             initialRosters={members
               .filter((m) => m.memberType === 'roster' && m.status === 'active')
+              .map((m) => ({
+                id: m.memberId,
+                name: (m as any).team?.name || 'Unknown Roster',
+                sportType: (m as any).team?.sportType,
+                memberCount: (m as any).team?.playerCount ?? (m as any).team?._count?.members ?? 0,
+              }))}
+            initialInvitedRosters={members
+              .filter((m) => m.memberType === 'roster' && m.status === 'pending')
               .map((m) => ({
                 id: m.memberId,
                 name: (m as any).team?.name || 'Unknown Roster',

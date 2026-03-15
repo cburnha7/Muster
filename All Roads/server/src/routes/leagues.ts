@@ -369,7 +369,11 @@ router.put('/:id', async (req: Request, res: Response) => {
       preferredTimeWindowEnd,
       seasonGameCount,
       rosterIds,
-      trackStandings
+      invitedRosterIds,
+      trackStandings,
+      seasonLength,
+      scheduleFrequency,
+      autoGenerateMatchups
     } = req.body;
 
     // Check if league exists and user is operator
@@ -435,7 +439,10 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(preferredTimeWindowStart !== undefined && { preferredTimeWindowStart }),
         ...(preferredTimeWindowEnd !== undefined && { preferredTimeWindowEnd }),
         ...(seasonGameCount !== undefined && { seasonGameCount }),
-        ...(trackStandings !== undefined && { trackStandings })
+        ...(trackStandings !== undefined && { trackStandings }),
+        ...(seasonLength !== undefined && { seasonLength }),
+        ...(scheduleFrequency !== undefined && { scheduleFrequency }),
+        ...(autoGenerateMatchups !== undefined && { autoGenerateMatchups }),
       },
       include: {
         organizer: {
@@ -452,22 +459,21 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     // Sync roster memberships if rosterIds provided
     if (Array.isArray(rosterIds)) {
-      // Get current active/pending memberships
-      const currentMemberships = await prisma.leagueMembership.findMany({
-        where: { leagueId: id, memberType: 'roster', status: { in: ['active', 'pending'] } },
+      // Get current active memberships
+      const currentActiveMemberships = await prisma.leagueMembership.findMany({
+        where: { leagueId: id, memberType: 'roster', status: 'active' },
         select: { id: true, memberId: true },
       });
-      const currentRosterIds = currentMemberships.map((m: any) => m.memberId);
+      const currentActiveRosterIds = currentActiveMemberships.map((m: any) => m.memberId);
 
-      // Rosters to add (not already in league)
-      const toAdd = rosterIds.filter((rid: string) => !currentRosterIds.includes(rid));
-      // Rosters to remove (in league but not in submitted list)
-      const toRemove = currentMemberships.filter((m: any) => !rosterIds.includes(m.memberId));
+      // Rosters to add as active (not already active in league)
+      const toAddActive = rosterIds.filter((rid: string) => !currentActiveRosterIds.includes(rid));
+      // Active rosters to remove (in league but not in submitted list)
+      const toRemoveActive = currentActiveMemberships.filter((m: any) => !rosterIds.includes(m.memberId));
 
-      // Add new rosters
-      if (toAdd.length > 0) {
+      if (toAddActive.length > 0) {
         await prisma.leagueMembership.createMany({
-          data: toAdd.map((rid: string) => ({
+          data: toAddActive.map((rid: string) => ({
             leagueId: id,
             memberId: rid,
             teamId: rid,
@@ -483,10 +489,47 @@ router.put('/:id', async (req: Request, res: Response) => {
         });
       }
 
-      // Remove rosters no longer in the list
-      if (toRemove.length > 0) {
+      if (toRemoveActive.length > 0) {
         await prisma.leagueMembership.deleteMany({
-          where: { id: { in: toRemove.map((m: any) => m.id) } },
+          where: { id: { in: toRemoveActive.map((m: any) => m.id) } },
+        });
+      }
+    }
+
+    // Sync invited (pending) roster memberships if invitedRosterIds provided
+    if (Array.isArray(invitedRosterIds)) {
+      const currentPendingMemberships = await prisma.leagueMembership.findMany({
+        where: { leagueId: id, memberType: 'roster', status: 'pending' },
+        select: { id: true, memberId: true },
+      });
+      const currentPendingRosterIds = currentPendingMemberships.map((m: any) => m.memberId);
+
+      // Rosters to invite (not already pending)
+      const toInvite = invitedRosterIds.filter((rid: string) => !currentPendingRosterIds.includes(rid));
+      // Pending rosters to remove (no longer in invited list)
+      const toRemovePending = currentPendingMemberships.filter((m: any) => !invitedRosterIds.includes(m.memberId));
+
+      if (toInvite.length > 0) {
+        await prisma.leagueMembership.createMany({
+          data: toInvite.map((rid: string) => ({
+            leagueId: id,
+            memberId: rid,
+            teamId: rid,
+            memberType: 'roster',
+            status: 'pending',
+            matchesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            points: 0,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      if (toRemovePending.length > 0) {
+        await prisma.leagueMembership.deleteMany({
+          where: { id: { in: toRemovePending.map((m: any) => m.id) } },
         });
       }
     }

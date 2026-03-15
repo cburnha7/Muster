@@ -35,6 +35,7 @@ export interface League {
   scheduleFrequency?: 'weekly' | 'monthly';
   seasonLength?: number | null;
   autoGenerateMatchups?: boolean;
+  trackStandings?: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -69,6 +70,7 @@ export interface CreateLeagueData {
   scheduleFrequency?: 'weekly' | 'monthly';
   seasonLength?: number | null;
   autoGenerateMatchups?: boolean;
+  trackStandings?: boolean;
 }
 
 export interface UpdateLeagueData {
@@ -92,6 +94,7 @@ export interface UpdateLeagueData {
   scheduleFrequency?: 'weekly' | 'monthly';
   seasonLength?: number | null;
   autoGenerateMatchups?: boolean;
+  trackStandings?: boolean;
 }
 
 export interface LeagueFilters {

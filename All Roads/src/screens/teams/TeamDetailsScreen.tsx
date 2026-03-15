@@ -244,29 +244,33 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   };
 
   // ── Player management ──
-  const handleRemoveMember = (member: TeamMember) => {
+  const handleRemoveMember = async (member: TeamMember) => {
     const isPending = member.status === MemberStatus.PENDING;
-    
+
     const removeMember = async () => {
+      // Optimistic update — remove from UI immediately
+      const previousTeam = team;
+      setTeam(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: prev.members.filter(m => m.userId !== member.userId),
+        };
+      });
+
       try {
         await teamService.removeFromTeam(teamId, member.userId);
         dispatch(removeTeamMember({ teamId, memberId: member.userId }));
-        // Update team state directly for instant UI feedback
-        setTeam(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            members: prev.members.filter(m => m.userId !== member.userId),
-          };
-        });
       } catch (err: any) {
+        // Revert on failure
+        setTeam(previousTeam);
         Alert.alert('Error', err.message || 'Failed to remove player.');
       }
     };
 
     // For pending invites, remove immediately without confirmation
     if (isPending) {
-      removeMember();
+      await removeMember();
       return;
     }
 

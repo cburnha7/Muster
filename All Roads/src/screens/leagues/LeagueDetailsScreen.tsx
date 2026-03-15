@@ -139,9 +139,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!currentUser?.id) return;
     try {
       setIsUpdating(true);
-      const updated = await leagueService.updateLeague(leagueId, data, currentUser.id);
-      setLeague(updated as any as League);
+      await leagueService.updateLeague(leagueId, data, currentUser.id);
       Alert.alert('Success', 'League updated successfully');
+      (navigation as any).replace('LeaguesBrowser');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to update league';
       Alert.alert('Error', msg);
@@ -464,7 +464,17 @@ export function LeagueDetailsScreen(): React.ReactElement {
             loading={isUpdating}
             initialRosters={
               members
-                .filter((m) => m.memberType === 'roster' && m.team && (m.status === 'active' || m.status === 'pending'))
+                .filter((m) => m.memberType === 'roster' && m.team && m.status === 'active')
+                .map((m) => ({
+                  id: m.team!.id,
+                  name: m.team!.name,
+                  sportType: m.team!.sportType,
+                  memberCount: m.team!.members?.length ?? 0,
+                }))
+            }
+            initialInvitedRosters={
+              members
+                .filter((m) => m.memberType === 'roster' && m.team && m.status === 'pending')
                 .map((m) => ({
                   id: m.team!.id,
                   name: m.team!.name,

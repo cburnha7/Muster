@@ -22,6 +22,7 @@ interface AddedRoster {
   name: string;
   sportType?: string;
   memberCount?: number;
+  status?: 'active' | 'pending';
 }
 
 interface LeagueFormProps {
@@ -32,6 +33,7 @@ interface LeagueFormProps {
   isEdit?: boolean;
   loading?: boolean;
   initialRosters?: AddedRoster[];
+  initialInvitedRosters?: AddedRoster[];
 }
 
 export const LeagueForm: React.FC<LeagueFormProps> = ({
@@ -42,6 +44,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   isEdit = false,
   loading = false,
   initialRosters = [],
+  initialInvitedRosters = [],
 }) => {
   const [leagueType, setLeagueType] = useState<'team' | 'pickup'>(
     (initialData as Partial<CreateLeagueData>)?.leagueType || 'team'
@@ -128,6 +131,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
   // Add Rosters state
   const [addedRosters, setAddedRosters] = useState<AddedRoster[]>(initialRosters);
+  const [invitedRosters, setInvitedRosters] = useState<AddedRoster[]>(initialInvitedRosters);
   const [rosterSearchQuery, setRosterSearchQuery] = useState('');
   const [rosterSearchResults, setRosterSearchResults] = useState<AddedRoster[]>([]);
   const [isSearchingRosters, setIsSearchingRosters] = useState(false);
@@ -139,6 +143,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       setAddedRosters(initialRosters);
     }
   }, [initialRosters]);
+
+  // Sync initialInvitedRosters when they arrive asynchronously
+  useEffect(() => {
+    if (initialInvitedRosters.length > 0) {
+      setInvitedRosters(initialInvitedRosters);
+    }
+  }, [initialInvitedRosters]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -255,38 +266,55 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // ── Roster search ───────────────────────────────────────────────
-  const handleSearchRosters = useCallback(async () => {
+  // ── Roster search (debounced, like player search) ─────────────
+  useEffect(() => {
     const query = rosterSearchQuery.trim();
-    if (!query) return;
-    setIsSearchingRosters(true);
-    setRosterSearchError(null);
-    try {
-      const result = await teamService.searchTeams(query);
-      const results = (result.results || []).map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        sportType: r.sportType,
-        memberCount: r.members?.length ?? 0,
-      }));
-      // Filter out already-added rosters
-      const addedIds = new Set(addedRosters.map(r => r.id));
-      setRosterSearchResults(results.filter((r: AddedRoster) => !addedIds.has(r.id)));
-    } catch (err) {
-      setRosterSearchError(err instanceof Error ? err.message : 'Failed to search rosters');
+    if (query.length < 2) {
       setRosterSearchResults([]);
-    } finally {
-      setIsSearchingRosters(false);
+      return;
     }
-  }, [rosterSearchQuery, addedRosters]);
+    const timeout = setTimeout(async () => {
+      setIsSearchingRosters(true);
+      setRosterSearchError(null);
+      try {
+        const result = await teamService.searchTeams(query);
+        const results = (result.results || []).map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          sportType: r.sportType,
+          memberCount: r.members?.length ?? 0,
+        }));
+        // Filter out already-added and already-invited rosters
+        const existingIds = new Set([
+          ...addedRosters.map(r => r.id),
+          ...invitedRosters.map(r => r.id),
+        ]);
+        setRosterSearchResults(results.filter((r: AddedRoster) => !existingIds.has(r.id)));
+      } catch (err) {
+        setRosterSearchError(err instanceof Error ? err.message : 'Failed to search rosters');
+        setRosterSearchResults([]);
+      } finally {
+        setIsSearchingRosters(false);
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [rosterSearchQuery, addedRosters, invitedRosters]);
 
   const handleAddRoster = (roster: AddedRoster) => {
-    setAddedRosters(prev => [...prev, roster]);
+    // New rosters go to the invited list (pending state)
+    setInvitedRosters(prev => [...prev, { ...roster, status: 'pending' }]);
     setRosterSearchResults(prev => prev.filter(r => r.id !== roster.id));
+    if (rosterSearchResults.length === 1) {
+      setRosterSearchQuery('');
+    }
   };
 
   const handleRemoveRoster = (rosterId: string) => {
     setAddedRosters(prev => prev.filter(r => r.id !== rosterId));
+  };
+
+  const handleRemoveInvitedRoster = (rosterId: string) => {
+    setInvitedRosters(prev => prev.filter(r => r.id !== rosterId));
   };
 
   // ── Validation ──────────────────────────────────────────────────
@@ -384,6 +412,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       trackStandings,
       // Include added rosters for the parent to handle
       rosterIds: addedRosters.map(r => r.id),
+      invitedRosterIds: invitedRosters.map(r => r.id),
       ...(isEdit ? {} : {
         leagueType,
         visibility: leagueType === 'pickup' ? 'public' : visibility,
@@ -721,25 +750,22 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             error={errors.timeWindowEnd}
           />
 
-          {/* Add Rosters — styled to match Create Roster's Add Players section */}
+          {/* League Rosters — split into Rosters (confirmed) and Invited (pending) */}
           <View style={styles.addRostersSection}>
             <View style={styles.addRostersHeader}>
               <Text style={styles.addRostersTitle}>League Rosters</Text>
-              {addedRosters.length > 0 && (
+              {(addedRosters.length + invitedRosters.length) > 0 && (
                 <View style={styles.rosterCountBadge}>
-                  <Text style={styles.rosterCountBadgeText}>{addedRosters.length}</Text>
+                  <Text style={styles.rosterCountBadgeText}>{addedRosters.length + invitedRosters.length}</Text>
                 </View>
               )}
             </View>
-            <Text style={styles.addRostersDescription}>
-              Rosters competing in this league. Search below to add more.
-            </Text>
 
-            {/* Added Rosters List */}
+            {/* Confirmed Rosters */}
             {addedRosters.length > 0 && (
               <View style={styles.addedRostersContainer}>
                 <Text style={styles.addedRostersTitle}>
-                  Current Rosters ({addedRosters.length})
+                  Rosters ({addedRosters.length})
                 </Text>
                 {addedRosters.map(item => (
                   <View key={item.id} style={styles.addedRosterItem}>
@@ -769,6 +795,42 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
             )}
 
+            {/* Invited Rosters (pending confirmation) */}
+            {invitedRosters.length > 0 && (
+              <View style={styles.addedRostersContainer}>
+                <Text style={styles.invitedRostersTitle}>
+                  Invited ({invitedRosters.length})
+                </Text>
+                {invitedRosters.map(item => (
+                  <View key={item.id} style={styles.invitedRosterItem}>
+                    <View style={styles.addedRosterInfo}>
+                      <View style={styles.invitedRosterIcon}>
+                        <Ionicons name="time-outline" size={18} color="#FFFFFF" />
+                      </View>
+                      <View style={styles.addedRosterDetails}>
+                        <Text style={styles.addedRosterName}>{item.name}</Text>
+                        <Text style={styles.invitedRosterStatus}>Pending confirmation</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveInvitedRoster(item.id)}
+                      style={styles.removeRosterBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove invitation for ${item.name}`}
+                    >
+                      <Ionicons name="close-circle" size={24} color={colors.track} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {addedRosters.length === 0 && invitedRosters.length === 0 && (
+              <Text style={styles.addRostersDescription}>
+                Search below to invite rosters to this league.
+              </Text>
+            )}
+
             {/* Search Input */}
             <View style={styles.rosterSearchContainer}>
               <Ionicons name="search" size={20} color={colors.inkFaint} style={styles.rosterSearchIcon} />
@@ -779,10 +841,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   setRosterSearchQuery(text);
                   setRosterSearchError(null);
                 }}
-                placeholder="Add a roster..."
+                placeholder="Search rosters by name..."
                 placeholderTextColor={colors.inkFaint}
-                returnKeyType="search"
-                onSubmitEditing={handleSearchRosters}
                 autoCapitalize="none"
                 autoCorrect={false}
                 accessibilityLabel="Search rosters by name"
@@ -791,6 +851,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 <ActivityIndicator size="small" color={colors.grass} style={styles.rosterSearchSpinner} />
               )}
             </View>
+
+            {rosterSearchQuery.trim().length > 0 && rosterSearchQuery.trim().length < 2 && (
+              <Text style={styles.searchHint}>Type at least 2 characters to search</Text>
+            )}
 
             {rosterSearchError && (
               <View style={styles.searchErrorRow}>
@@ -1266,6 +1330,45 @@ const styles = StyleSheet.create({
   },
   removeRosterBtn: {
     padding: 4,
+  },
+  // Invited roster styles
+  invitedRostersTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.court,
+  },
+  invitedRosterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF8EE',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.courtLight,
+  },
+  invitedRosterIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.court,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  invitedRosterStatus: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.court,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  searchHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    fontStyle: 'italic',
   },
   rosterSearchContainer: {
     flexDirection: 'row',
