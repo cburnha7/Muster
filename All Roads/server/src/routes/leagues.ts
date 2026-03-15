@@ -118,7 +118,7 @@ router.get('/:id', async (req: Request, res: Response) => {
           }
         },
         memberships: {
-          where: { status: 'active' },
+          where: { status: { in: ['active', 'pending'] } },
           include: {
             team: {
               select: {

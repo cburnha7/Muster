@@ -534,27 +534,39 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           </View>
 
           {/* ── Leagues ── */}
-          {leagues.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Leagues ({leagues.length})</Text>
-              {leagues.map((league: any) => (
-                <TouchableOpacity
-                  key={league.id}
-                  style={styles.listCard}
-                  onPress={() => (navigation as any).navigate('LeagueDetails', { leagueId: league.id })}
-                >
-                  <View style={styles.listCardContent}>
-                    <Ionicons name="trophy-outline" size={20} color={colors.court} />
-                    <View style={styles.listCardText}>
-                      <Text style={styles.listCardTitle}>{league.name}</Text>
-                      <Text style={styles.listCardSub}>{league.sportType}</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Leagues ({leagues.length})</Text>
+            {leagues.length === 0 ? (
+              <Text style={styles.emptyText}>Not part of any leagues yet.</Text>
+            ) : (
+              leagues.map((league: any) => {
+                const isPending = league.membership?.status === 'pending';
+                return (
+                  <TouchableOpacity
+                    key={league.id}
+                    style={[styles.listCard, isPending && styles.listCardPending]}
+                    onPress={() => (navigation as any).navigate('LeagueDetails', { leagueId: league.id })}
+                  >
+                    <View style={styles.listCardContent}>
+                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.court : colors.grass} />
+                      <View style={styles.listCardText}>
+                        <Text style={styles.listCardTitle}>{league.name}</Text>
+                        <Text style={styles.listCardSub}>{league.sportType}</Text>
+                      </View>
                     </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+                    <View style={styles.listCardRight}>
+                      {isPending && (
+                        <View style={styles.pendingLeagueBadge}>
+                          <Text style={styles.pendingLeagueBadgeText}>Pending</Text>
+                        </View>
+                      )}
+                      <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </View>
 
           {/* ── Upcoming Events ── */}
           {events.length > 0 && (
@@ -870,6 +882,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.inkFaint,
     marginTop: 2,
+  },
+  listCardPending: {
+    borderColor: colors.courtLight,
+    backgroundColor: '#FFF8EE',
+  },
+  listCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pendingLeagueBadge: {
+    backgroundColor: colors.courtLight,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  pendingLeagueBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.ink,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   // Actions
   actionsSection: {

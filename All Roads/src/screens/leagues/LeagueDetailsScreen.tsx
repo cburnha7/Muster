@@ -454,6 +454,46 @@ export function LeagueDetailsScreen(): React.ReactElement {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
         >
+          {/* Pending roster invitations the commissioner can confirm (their own rosters) */}
+          {pendingUserRosterInvitations.length > 0 && (
+            <View style={styles.commissionerInviteBanner}>
+              <Ionicons name="mail-outline" size={20} color={colors.court} />
+              <View style={styles.invitationBannerContent}>
+                <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
+                {pendingUserRosterInvitations.map((inv) => {
+                  const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
+                  return (
+                    <View key={inv.id} style={styles.invitationRow}>
+                      <Text style={styles.invitationText}>
+                        {rosterName} has been invited to this league
+                      </Text>
+                      <View style={styles.invitationActions}>
+                        <TouchableOpacity
+                          style={styles.confirmBtn}
+                          onPress={() => handleConfirmInvitation(inv)}
+                          disabled={isActionLoading}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Join Up ${rosterName}`}
+                        >
+                          <Text style={styles.confirmBtnText}>Join Up</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.declineBtnSmall}
+                          onPress={() => handleDeclineInvitation(inv)}
+                          disabled={isActionLoading}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Decline ${rosterName}`}
+                        >
+                          <Text style={styles.declineBtnSmallText}>Decline</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           {/* League edit form — includes Delete/Cancel/Save at bottom */}
           <LeagueForm
             initialData={league}
@@ -788,6 +828,10 @@ const styles = StyleSheet.create({
   },
   // Invitation banner
   invitationBanner: {
+    flexDirection: 'row', backgroundColor: '#FFF8EE', paddingHorizontal: 16, paddingVertical: 14,
+    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.court,
+  },
+  commissionerInviteBanner: {
     flexDirection: 'row', backgroundColor: '#FFF8EE', paddingHorizontal: 16, paddingVertical: 14,
     marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.court,
   },

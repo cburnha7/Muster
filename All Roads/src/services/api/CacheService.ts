@@ -88,6 +88,18 @@ export class CacheService {
   }
 
   /**
+   * Clear all cache entries whose key contains the given substring
+   */
+  clearBySubstring(substring: string): void {
+    const sanitized = substring.replace(/[^a-zA-Z0-9._-]/g, '_');
+    for (const key of this.memoryCache.keys()) {
+      if (key.includes(sanitized)) {
+        this.memoryCache.delete(key);
+      }
+    }
+  }
+
+  /**
    * Clear all cache data
    */
   async clear(): Promise<void> {

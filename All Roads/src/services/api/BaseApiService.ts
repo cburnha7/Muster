@@ -408,12 +408,14 @@ export class BaseApiService {
    * Invalidate cache entries related to a URL
    */
   private async invalidateRelatedCache(url: string): Promise<void> {
-    // This is a simple implementation - in a real app you might want more sophisticated cache invalidation
-    const baseResource = url.split('/')[1]; // Get the base resource (e.g., 'events', 'facilities')
+    // Extract the base resource from the URL (e.g., '/leagues/123' → 'leagues')
+    const parts = url.split('/').filter(Boolean);
+    const baseResource = parts[0];
     if (baseResource) {
-      // Clear cache entries that start with the base resource
-      // Note: This is a simplified approach - you might want to implement more granular invalidation
-      console.log(`🗑️ Invalidating cache for resource: ${baseResource}`);
+      this.cache.clearBySubstring(baseResource);
+      if (this.config.enableLogging) {
+        console.log(`🗑️ Invalidated cache for resource: ${baseResource}`);
+      }
     }
   }
 

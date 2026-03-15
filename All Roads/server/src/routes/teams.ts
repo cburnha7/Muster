@@ -148,11 +148,11 @@ router.get('/:id/leagues', async (req, res) => {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    // Get all league memberships for this team
+    // Get all league memberships for this team (active and pending)
     const memberships = await prisma.leagueMembership.findMany({
       where: {
         teamId: id,
-        status: 'active',
+        status: { in: ['active', 'pending'] },
       },
       include: {
         league: {
