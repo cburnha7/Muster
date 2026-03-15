@@ -600,11 +600,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
           ) : null}
           <View style={styles.headerStats}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{activeMembers.length}</Text>
-              <Text style={styles.statLabel}>{isTeamLeague ? 'Rosters' : 'Players'}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
               <Text style={styles.statValue}>{upcomingEvents.length}</Text>
               <Text style={styles.statLabel}>Events</Text>
             </View>
@@ -620,6 +615,92 @@ export function LeagueDetailsScreen(): React.ReactElement {
             </Text>
           )}
         </View>
+
+        {/* Invited Rosters (pending) */}
+        {isTeamLeague && members.filter((m) => m.status === 'pending' && m.memberType === 'roster').length > 0 && (
+          <View style={styles.rosterListSection}>
+            <Text style={styles.rosterListTitle}>
+              Invited ({members.filter((m) => m.status === 'pending' && m.memberType === 'roster').length})
+            </Text>
+            <Text style={styles.rosterListSubtext}>
+              These rosters have been invited but haven't joined yet.
+            </Text>
+            {members
+              .filter((m) => m.status === 'pending' && m.memberType === 'roster')
+              .map((m) => (
+                <View key={m.id} style={styles.rosterListItem}>
+                  <View style={styles.rosterListIcon}>
+                    <Ionicons name="shield-outline" size={18} color={colors.court} />
+                  </View>
+                  <View style={styles.rosterListInfo}>
+                    <Text style={styles.rosterListName} numberOfLines={1}>
+                      {m.team?.name || 'Unknown Roster'}
+                    </Text>
+                    <View style={styles.rosterListMeta}>
+                      <View style={styles.invitedBadge}>
+                        <Text style={styles.invitedBadgeText}>✉️ Invited</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))}
+          </View>
+        )}
+
+        {/* Confirmed Rosters (active) */}
+        {isTeamLeague && (
+          <View style={styles.rosterListSection}>
+            <Text style={styles.rosterListTitle}>
+              Rosters ({members.filter((m) => m.status === 'active' && m.memberType === 'roster').length})
+            </Text>
+            {members.filter((m) => m.status === 'active' && m.memberType === 'roster').length === 0 ? (
+              <Text style={styles.rosterListEmpty}>No confirmed rosters yet.</Text>
+            ) : (
+              members
+                .filter((m) => m.status === 'active' && m.memberType === 'roster')
+                .map((m) => (
+                  <View key={m.id} style={styles.rosterListItem}>
+                    <View style={[styles.rosterListIcon, { backgroundColor: '#EDF7F0' }]}>
+                      <Ionicons name="shield-outline" size={18} color={colors.grass} />
+                    </View>
+                    <View style={styles.rosterListInfo}>
+                      <Text style={styles.rosterListName} numberOfLines={1}>
+                        {m.team?.name || 'Unknown Roster'}
+                      </Text>
+                      <Text style={styles.rosterListPlayerCount}>
+                        {m.team?.members?.length ?? 0} players
+                      </Text>
+                    </View>
+                  </View>
+                ))
+            )}
+          </View>
+        )}
+
+        {/* Pickup league: show player list inline */}
+        {!isTeamLeague && (
+          <View style={styles.rosterListSection}>
+            <Text style={styles.rosterListTitle}>
+              Players ({members.filter((m) => m.status === 'active' && m.memberType === 'user').length})
+            </Text>
+            {members.filter((m) => m.status === 'active' && m.memberType === 'user').length === 0 ? (
+              <Text style={styles.rosterListEmpty}>No players yet.</Text>
+            ) : (
+              members
+                .filter((m) => m.status === 'active' && m.memberType === 'user')
+                .map((m) => (
+                  <View key={m.id} style={styles.rosterListItem}>
+                    <View style={[styles.rosterListIcon, { backgroundColor: '#EDF7F0' }]}>
+                      <Ionicons name="person" size={18} color={colors.grass} />
+                    </View>
+                    <Text style={styles.rosterListName} numberOfLines={1}>
+                      {m.user ? `${m.user.firstName ?? ''} ${m.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown'}
+                    </Text>
+                  </View>
+                ))
+            )}
+          </View>
+        )}
 
         {/* Pending roster invitations for roster owners — hidden in readOnly since bottom bar handles it */}
         {!readOnly && pendingUserRosterInvitations.length > 0 && (
@@ -884,4 +965,40 @@ const styles = StyleSheet.create({
   invitationRow: { marginBottom: 8 },
   invitationText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink, marginBottom: 6 },
   invitationActions: { flexDirection: 'row', gap: 8 },
+  // Roster list sections (non-commissioner view)
+  rosterListSection: {
+    backgroundColor: '#FFFFFF', borderRadius: 12, marginHorizontal: 16, marginBottom: 12,
+    padding: 16, gap: 8,
+  },
+  rosterListTitle: {
+    fontFamily: fonts.semibold, fontSize: 16, color: colors.ink, marginBottom: 4,
+  },
+  rosterListSubtext: {
+    fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginBottom: 4,
+  },
+  rosterListEmpty: {
+    fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint, paddingVertical: 8,
+  },
+  rosterListItem: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
+    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+  },
+  rosterListIcon: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: `${colors.court}18`,
+    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+  },
+  rosterListInfo: { flex: 1 },
+  rosterListName: {
+    fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, flex: 1,
+  },
+  rosterListPlayerCount: {
+    fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2,
+  },
+  rosterListMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  invitedBadge: {
+    backgroundColor: `${colors.court}18`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8,
+  },
+  invitedBadgeText: {
+    fontFamily: fonts.label, fontSize: 11, color: colors.court,
+  },
 });
