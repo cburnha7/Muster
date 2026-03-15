@@ -153,19 +153,6 @@ export function TabNavigator(): JSX.Element {
         })}
       />
       <Tab.Screen 
-        name="Facilities" 
-        component={FacilitiesStackNavigator}
-        options={{
-          tabBarLabel: 'Grounds',
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            // Reset the Facilities stack to the list screen when tab is pressed
-            navigation.navigate('Facilities', { screen: 'FacilitiesList' });
-          },
-        })}
-      />
-      <Tab.Screen 
         name="Leagues" 
         component={LeaguesStackNavigator}
         options={{
@@ -178,6 +165,19 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Rosters',
         }}
+      />
+      <Tab.Screen 
+        name="Facilities" 
+        component={FacilitiesStackNavigator}
+        options={{
+          tabBarLabel: 'Grounds',
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Reset the Facilities stack to the list screen when tab is pressed
+            navigation.navigate('Facilities', { screen: 'FacilitiesList' });
+          },
+        })}
       />
       <Tab.Screen 
         name="Bookings" 

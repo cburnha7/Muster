@@ -245,24 +245,29 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   // ── Player management ──
   const handleRemoveMember = (member: TeamMember) => {
+    const removeMember = async () => {
+      try {
+        await teamService.removeFromTeam(teamId, member.userId);
+        dispatch(removeTeamMember({ teamId, memberId: member.userId }));
+        // Update team state directly for instant UI feedback
+        setTeam(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            members: prev.members.filter(m => m.userId !== member.userId),
+          };
+        });
+      } catch (err: any) {
+        Alert.alert('Error', err.message || 'Failed to remove player.');
+      }
+    };
+
     Alert.alert(
       'Remove Player',
       `Remove ${member.user?.firstName || 'this player'} from the roster?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await teamService.removeFromTeam(teamId, member.userId);
-              dispatch(removeTeamMember({ teamId, memberId: member.userId }));
-              await loadTeamDetails();
-            } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to remove player.');
-            }
-          },
-        },
+        { text: 'Remove', style: 'destructive', onPress: removeMember },
       ]
     );
   };
@@ -293,11 +298,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   const handleAddMemberDirectly = async (user: User) => {
     try {
-      await teamService.addMemberDirectly(teamId, user.id);
-      await loadTeamDetails();
+      const newMember = await teamService.addMemberDirectly(teamId, user.id);
+      // Update team state directly for instant UI feedback
+      setTeam(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: [...prev.members, { ...newMember, user }],
+        };
+      });
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to invite player.');
-      throw err; // Re-throw so AddMemberSearch knows it failed
+      throw err;
     }
   };
 
@@ -339,16 +351,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             <Text style={styles.memberRole}>{roleLabel}</Text>
           </View>
         </View>
-        {canManageTeam && !isCurrentUser && (
+        {canManageTeam && !isCurrentUser && isPending && (
           <View style={styles.memberActions}>
-            {!isPending && (
-              <TouchableOpacity
-                style={styles.roleButton}
-                onPress={() => handleChangeRole(member)}
-              >
-                <Ionicons name="shield-outline" size={18} color={colors.sky} />
-              </TouchableOpacity>
-            )}
             <TouchableOpacity
               style={styles.removeButton}
               onPress={() => handleRemoveMember(member)}
