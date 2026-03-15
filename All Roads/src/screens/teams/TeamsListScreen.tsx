@@ -1,116 +1,73 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   RefreshControl,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { teamService } from '../../services/api/TeamService';
-import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
-import {
-  setTeams,
-  appendTeams,
-  setLoading,
-  setLoadingMore,
-  setError,
-  setFilters,
-  selectTeams,
-  selectTeamsLoading,
-  selectTeamsLoadingMore,
-  selectTeamsError,
-  selectTeamFilters,
-  selectTeamsPagination,
-} from '../../store/slices/teamsSlice';
-import { Team, SportType, SkillLevel } from '../../types';
+import { userService } from '../../services/api/UserService';
+import { Team } from '../../types';
 
-export function TeamsListScreen(): JSX.Element {
+interface Section {
+  title: string;
+  data: Team[];
+  emptyMessage: string;
+}
+
+export function TeamsListScreen() {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
 
-  const teams = useSelector(selectTeams);
-  const isLoading = useSelector(selectTeamsLoading);
-  const isLoadingMore = useSelector(selectTeamsLoadingMore);
-  const error = useSelector(selectTeamsError);
-  const filters = useSelector(selectTeamFilters);
-  const pagination = useSelector(selectTeamsPagination);
-
-  const [searchQuery, setSearchQuery] = useState('');
+  const [myRosters, setMyRosters] = useState<Team[]>([]);
+  const [publicRosters, setPublicRosters] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    loadTeams();
-  }, [filters]);
-
-  const loadTeams = async (page: number = 1) => {
+  const loadData = useCallback(async () => {
     try {
-      if (page === 1) {
-        dispatch(setLoading(true));
-      } else {
-        dispatch(setLoadingMore(true));
-      }
+      const [myRes, allRes] = await Promise.all([
+        userService.getUserTeams(),
+        teamService.getTeams({}, { page: 1, limit: 100 }),
+      ]);
 
-      const response = await teamService.getTeams(filters, {
-        page,
-        limit: pagination.limit,
-      });
+      const myTeams = myRes?.data ?? [];
+      const myTeamIds = new Set(myTeams.map((t) => t.id));
 
-      if (page === 1) {
-        dispatch(setTeams(response));
-      } else {
-        dispatch(appendTeams(response));
-      }
+      setMyRosters(myTeams);
+      // Public rosters: public, user is not a member, exclude private
+      setPublicRosters(
+        (allRes?.data ?? []).filter((t) => t.isPublic && !myTeamIds.has(t.id))
+      );
     } catch (err: any) {
-      console.error('Error loading teams:', err);
-      dispatch(setError(err.message || 'Failed to load teams'));
+      console.error('Error loading rosters:', err);
+      setError(err.message || 'Failed to load rosters');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
+  const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    await loadTeams(1);
-    setRefreshing(false);
-  };
-
-  const handleLoadMore = () => {
-    if (!isLoadingMore && pagination.page < pagination.totalPages) {
-      loadTeams(pagination.page + 1);
-    }
-  };
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    
-    if (query.trim()) {
-      try {
-        dispatch(setLoading(true));
-        const response = await teamService.searchTeams(query, filters, {
-          page: 1,
-          limit: pagination.limit,
-        });
-        dispatch(setTeams({
-          data: response.results,
-          pagination: response.pagination,
-        }));
-      } catch (err: any) {
-        console.error('Error searching teams:', err);
-        dispatch(setError(err.message || 'Failed to search teams'));
-      }
-    } else {
-      loadTeams(1);
-    }
-  };
+    loadData();
+  }, [loadData]);
 
   const handleTeamPress = (team: Team) => {
     (navigation as any).navigate('TeamDetails', { teamId: team.id });
@@ -124,75 +81,60 @@ export function TeamsListScreen(): JSX.Element {
     (navigation as any).navigate('JoinTeam');
   };
 
-  const handleFilterChange = (filterType: string, value: any) => {
-    dispatch(setFilters({
-      ...filters,
-      [filterType]: value,
-    }));
-  };
-
-  const renderTeamItem = useCallback(({ item }: { item: Team }) => (
-    <TeamCard team={item} onPress={() => handleTeamPress(item)} />
-  ), [handleTeamPress]);
-
-  const keyExtractor = useCallback((item: Team) => item.id, []);
-
-  const getItemLayout = useCallback(
-    (_: any, index: number) => ({
-      length: 140, // Approximate height of TeamCard
-      offset: 140 * index,
-      index,
-    }),
-    []
-  );
-
-  const renderEmptyState = () => {
-    if (isLoading) {
-      return null;
+  const handleSearch = useCallback(async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      loadData();
+      return;
     }
-
-    return (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyStateTitle}>No teams found</Text>
-        <Text style={styles.emptyStateText}>
-          {searchQuery
-            ? 'Try adjusting your search or filters'
-            : 'Be the first to create a roster!'}
-        </Text>
-        <TouchableOpacity style={styles.emptyStateButton} onPress={handleCreateTeam}>
-          <Text style={styles.emptyStateButtonText}>Create Roster</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const renderFooter = () => {
-    if (!isLoadingMore) {
-      return null;
+    try {
+      setLoading(true);
+      const response = await teamService.searchTeams(query, {}, { page: 1, limit: 50 });
+      const myRes = await userService.getUserTeams();
+      const myTeamIds = new Set((myRes?.data ?? []).map((t) => t.id));
+      const results = response.results ?? [];
+      setMyRosters((myRes?.data ?? []).filter((t) =>
+        t.name.toLowerCase().includes(query.toLowerCase())
+      ));
+      setPublicRosters(results.filter((t) => t.isPublic && !myTeamIds.has(t.id)));
+    } catch (err: any) {
+      setError(err.message || 'Search failed');
+    } finally {
+      setLoading(false);
     }
+  }, [loadData]);
 
-    return (
-      <View style={styles.footerLoader}>
-        <LoadingSpinner size="small" />
-      </View>
-    );
+  const filterBySearch = (teams: Team[]) => {
+    if (!searchQuery.trim()) return teams;
+    const q = searchQuery.toLowerCase();
+    return teams.filter((t) => t.name.toLowerCase().includes(q));
   };
 
-  if (error && !teams.length) {
+  const sections: Section[] = [
+    {
+      title: 'My Rosters',
+      data: filterBySearch(myRosters),
+      emptyMessage: searchQuery ? 'No matching rosters' : 'You haven\'t joined any rosters yet',
+    },
+    {
+      title: 'Public Rosters',
+      data: filterBySearch(publicRosters),
+      emptyMessage: searchQuery ? 'No matching public rosters' : 'No public rosters available',
+    },
+  ];
+
+  if (error && !myRosters.length && !publicRosters.length) {
     return (
       <View style={styles.container}>
-        <ErrorDisplay
-          message={error}
-          onRetry={() => loadTeams(1)}
-        />
+        <ErrorDisplay message={error} onRetry={loadData} />
       </View>
     );
   }
 
-  if (isLoading && !refreshing && !teams.length) {
+  if (loading && !refreshing && !myRosters.length && !publicRosters.length) {
     return (
       <View style={styles.container}>
-        <LoadingSpinner message="Loading rosters..." />
+        <LoadingSpinner />
       </View>
     );
   }
@@ -207,65 +149,42 @@ export function TeamsListScreen(): JSX.Element {
           placeholder="Search rosters..."
           style={styles.searchBar}
         />
-        <TouchableOpacity 
-          style={styles.filterButton} 
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Ionicons 
-            name="filter" 
-            size={24} 
-            color={colors.grass} 
-          />
-          {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
-        </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        {showFilters && (
-          <View style={styles.filtersContainer}>
-            <Text style={styles.filtersTitle}>Filters</Text>
-            {/* Add filter options here */}
-            <TouchableOpacity
-              style={styles.filterChip}
-              onPress={() => handleFilterChange('hasOpenSlots', !filters.hasOpenSlots)}
-            >
-              <Text style={styles.filterButtonText}>
-                {filters.hasOpenSlots ? '✓ ' : ''}Open Slots Only
-              </Text>
-            </TouchableOpacity>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TeamCard team={item} onPress={() => handleTeamPress(item)} />
+        )}
+        renderSectionHeader={({ section }) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{section.data.length}</Text>
+            </View>
           </View>
         )}
-
-        <FlatList
-          data={teams}
-          renderItem={renderTeamItem}
-          keyExtractor={keyExtractor}
-          getItemLayout={getItemLayout}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          ListEmptyComponent={renderEmptyState}
-          ListFooterComponent={renderFooter}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={getOptimalBatchSize()}
-          updateCellsBatchingPeriod={50}
-          initialNumToRender={getOptimalBatchSize()}
-          windowSize={getOptimalWindowSize()}
-        />
-      </View>
+        renderSectionFooter={({ section }) =>
+          section.data.length === 0 ? (
+            <View style={styles.emptySection}>
+              <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
+            </View>
+          ) : null
+        }
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
+        }
+        stickySectionHeadersEnabled={false}
+      />
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
         <Ionicons name="add" size={28} color={colors.chalk} />
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.joinButton}
-        onPress={handleJoinTeam}
-      >
+      <TouchableOpacity style={styles.joinButton} onPress={handleJoinTeam}>
         <Text style={styles.joinButtonText}>Join with Code</Text>
       </TouchableOpacity>
     </View>
@@ -287,85 +206,43 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1,
   },
-  filterButton: {
-    padding: Spacing.sm,
-    position: 'relative',
-  },
-  filterBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.track,
-  },
-  content: {
-    flex: 1,
-  },
   listContent: {
-    padding: Spacing.lg,
-    paddingBottom: 80,
+    paddingBottom: 100,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.xl,
-    marginTop: 60,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    backgroundColor: colors.chalk,
   },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
     color: colors.ink,
-    marginBottom: Spacing.sm,
   },
-  emptyStateText: {
-    fontSize: 16,
-    color: colors.soft,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: Spacing.xl,
+  countBadge: {
+    backgroundColor: `${colors.grass}20`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginLeft: 8,
   },
-  emptyStateButton: {
-    backgroundColor: colors.grass,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: 8,
+  countBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.grass,
   },
-  emptyStateButtonText: {
-    color: colors.chalk,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footerLoader: {
-    paddingVertical: Spacing.lg,
+  emptySection: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
   },
-  filtersContainer: {
-    backgroundColor: colors.chalk,
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.soft,
-  },
-  filtersTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: Spacing.md,
-  },
-  filterChip: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    backgroundColor: colors.chalk,
-    borderWidth: 1,
-    borderColor: colors.soft,
-    borderRadius: 6,
-    marginBottom: Spacing.sm,
-  },
-  filterButtonText: {
+  emptySectionText: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.inkFaint,
   },
   fab: {
     position: 'absolute',
@@ -398,8 +275,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   joinButtonText: {
+    fontFamily: fonts.ui,
     color: colors.chalk,
     fontSize: 14,
-    fontWeight: '600',
   },
 });

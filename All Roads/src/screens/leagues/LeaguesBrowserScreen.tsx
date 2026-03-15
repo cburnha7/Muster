@@ -1,207 +1,141 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   StyleSheet,
   RefreshControl,
-  ActivityIndicator,
   TouchableOpacity,
   Modal,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
 import { SearchBar } from '../../components/ui/SearchBar';
-import { colors, Spacing } from '../../theme';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { colors, fonts, Spacing } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
-import {
-  setLeagues,
-  appendLeagues,
-  setLoading,
-  setLoadingMore,
-  setError,
-  setFilters,
-  clearFilters,
-  selectLeagues,
-  selectIsLoading,
-  selectIsLoadingMore,
-  selectError,
-  selectFilters,
-  selectPagination,
-} from '../../store/slices/leaguesSlice';
+import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
-import { League, LeagueFilters, SportType } from '../../types';
+import { SportType } from '../../types';
+
+// Use a flexible type since data comes from multiple API sources with different shapes
+type LeagueItem = any;
+
+interface Section {
+  title: string;
+  data: LeagueItem[];
+  emptyMessage: string;
+}
 
 export const LeaguesBrowserScreen: React.FC = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
-
-  // Redux state
-  const leagues = useSelector(selectLeagues);
   const currentUser = useSelector(selectUser);
-  const isLoading = useSelector(selectIsLoading);
-  const isLoadingMore = useSelector(selectIsLoadingMore);
-  const error = useSelector(selectError);
-  const filters = useSelector(selectFilters);
-  const pagination = useSelector(selectPagination);
 
-  // Local state
+  const [myLeagues, setMyLeagues] = useState<LeagueItem[]>([]);
+  const [publicLeagues, setPublicLeagues] = useState<LeagueItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [localFilters, setLocalFilters] = useState<LeagueFilters>(filters);
+  const [sportFilter, setSportFilter] = useState<string | undefined>();
+  const [activeFilter, setActiveFilter] = useState<boolean | undefined>();
 
-  // Load leagues on mount and when filters change
-  useEffect(() => {
-    loadLeagues(true);
-  }, [filters]);
-
-  // Load leagues function
-  const loadLeagues = async (refresh: boolean = false) => {
+  const loadData = useCallback(async () => {
     try {
-      if (refresh) {
-        dispatch(setLoading(true));
-      } else {
-        dispatch(setLoadingMore(true));
-      }
+      const [myRes, allRes] = await Promise.all([
+        userService.getUserLeagues(),
+        leagueService.getLeagues({}, 1, 100),
+      ]);
 
-      const page = refresh ? 1 : pagination.page + 1;
-      const queryFilters: LeagueFilters = { ...filters };
-      if (searchQuery) {
-        queryFilters.search = searchQuery;
-      }
+      const myLeagueList: LeagueItem[] = myRes ?? [];
+      const myLeagueIds = new Set(myLeagueList.map((l: any) => l.id));
 
-      const response = await leagueService.getLeagues(
-        queryFilters,
-        page,
-        pagination.limit
+      setMyLeagues(myLeagueList);
+      // Public leagues: visibility is public, user is not already a member
+      setPublicLeagues(
+        (allRes?.data ?? []).filter(
+          (l: any) => (l.visibility === 'public' || !l.visibility) && !myLeagueIds.has(l.id)
+        )
       );
-
-      if (refresh) {
-        dispatch(setLeagues(response));
-      } else {
-        dispatch(appendLeagues(response));
-      }
     } catch (err: any) {
-      dispatch(setError(err.message || 'Failed to load leagues'));
+      console.error('Error loading leagues:', err);
+      setError(err.message || 'Failed to load leagues');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
 
-  // Handle refresh
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
   const handleRefresh = useCallback(() => {
-    loadLeagues(true);
-  }, [filters, searchQuery]);
+    setRefreshing(true);
+    loadData();
+  }, [loadData]);
 
-  // Handle load more (infinite scroll)
-  const handleLoadMore = useCallback(() => {
-    if (!isLoadingMore && pagination.page < pagination.totalPages) {
-      loadLeagues(false);
-    }
-  }, [isLoadingMore, pagination]);
-
-  // Handle search
-  const handleSearch = useCallback(() => {
-    loadLeagues(true);
-  }, [searchQuery, filters]);
-
-  // Handle filter apply
-  const handleFilterApply = () => {
-    dispatch(setFilters(localFilters));
-    setShowFilterModal(false);
-  };
-
-  // Handle filter reset
-  const handleFilterReset = () => {
-    const resetFilters: LeagueFilters = {};
-    setLocalFilters(resetFilters);
-    dispatch(clearFilters());
-    setShowFilterModal(false);
-  };
-
-  // Handle league press
-  const handleLeaguePress = (league: League) => {
+  const handleLeaguePress = (league: LeagueItem) => {
     (navigation as any).navigate('LeagueDetails', { leagueId: league.id });
   };
 
-  // Handle create league
   const handleCreateLeague = () => {
     (navigation as any).navigate('CreateLeague');
   };
 
-  // Get active filters count
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (filters.sportType) count++;
-    if (filters.isActive !== undefined) count++;
-    return count;
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const applyFilters = (leagues: LeagueItem[]) => {
+    let filtered = leagues;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((l) => l.name.toLowerCase().includes(q));
+    }
+    if (sportFilter) {
+      filtered = filtered.filter((l) => l.sportType === sportFilter);
+    }
+    if (activeFilter !== undefined) {
+      filtered = filtered.filter((l) => l.isActive === activeFilter);
+    }
+    return filtered;
   };
 
-  const activeFiltersCount = getActiveFiltersCount();
+  const sections: Section[] = [
+    {
+      title: 'My Leagues',
+      data: applyFilters(myLeagues),
+      emptyMessage: searchQuery ? 'No matching leagues' : 'You\'re not part of any leagues yet',
+    },
+    {
+      title: 'Public Leagues',
+      data: applyFilters(publicLeagues),
+      emptyMessage: searchQuery ? 'No matching public leagues' : 'No public leagues available',
+    },
+  ];
 
-  // Render league item
-  const renderLeagueItem = ({ item }: { item: League }) => (
-    <LeagueCard league={item} onPress={handleLeaguePress} isOwner={item.organizerId === currentUser?.id} />
-  );
+  const activeFiltersCount = (sportFilter ? 1 : 0) + (activeFilter !== undefined ? 1 : 0);
 
-  // Render empty state
-  const renderEmptyState = () => {
-    if (isLoading) return null;
-
+  if (error && !myLeagues.length && !publicLeagues.length) {
     return (
-      <View style={styles.emptyContainer}>
-        <Ionicons name="trophy-outline" size={64} color={colors.soft} />
-        <Text style={styles.emptyTitle}>No Leagues Found</Text>
-        <Text style={styles.emptyText}>
-          {searchQuery || activeFiltersCount > 0
-            ? 'Try adjusting your search or filters'
-            : 'Be the first to create a league!'}
-        </Text>
-        {(searchQuery || activeFiltersCount > 0) && (
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={() => {
-              setSearchQuery('');
-              dispatch(clearFilters());
-            }}
-          >
-            <Text style={styles.clearButtonText}>Clear Search & Filters</Text>
-          </TouchableOpacity>
-        )}
-        {!searchQuery && activeFiltersCount === 0 && (
-          <TouchableOpacity
-            style={styles.createLeagueButton}
-            onPress={handleCreateLeague}
-          >
-            <Text style={styles.createLeagueButtonText}>Create League</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.container}>
+        <ErrorDisplay message={error} onRetry={loadData} />
       </View>
     );
-  };
+  }
 
-  // Render footer (loading indicator for pagination)
-  const renderFooter = () => {
-    if (!isLoadingMore) return null;
-
+  if (loading && !refreshing && !myLeagues.length && !publicLeagues.length) {
     return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={colors.grass} />
-      </View>
-    );
-  };
-
-  // Render error state
-  if (error && !isLoading && leagues.length === 0) {
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={64} color={colors.track} />
-        <Text style={styles.errorTitle}>Oops!</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <LoadingSpinner />
       </View>
     );
   }
@@ -223,24 +157,36 @@ export const LeaguesBrowserScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Leagues List */}
-      <FlatList
-        data={leagues}
-        renderItem={renderLeagueItem}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <LeagueCard
+            league={item}
+            onPress={handleLeaguePress}
+            isOwner={item.organizerId === currentUser?.id}
+          />
+        )}
+        renderSectionHeader={({ section }) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{section.data.length}</Text>
+            </View>
+          </View>
+        )}
+        renderSectionFooter={({ section }) =>
+          section.data.length === 0 ? (
+            <View style={styles.emptySection}>
+              <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
+            </View>
+          ) : null
+        }
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={handleRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
         }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={renderEmptyState}
-        ListFooterComponent={renderFooter}
+        stickySectionHeadersEnabled={false}
       />
 
       {/* FAB */}
@@ -261,104 +207,47 @@ export const LeaguesBrowserScreen: React.FC = () => {
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Filters</Text>
-            <TouchableOpacity onPress={handleFilterReset}>
+            <TouchableOpacity onPress={() => { setSportFilter(undefined); setActiveFilter(undefined); setShowFilterModal(false); }}>
               <Text style={styles.resetText}>Reset</Text>
             </TouchableOpacity>
           </View>
-
           <ScrollView style={styles.modalContent}>
-            {/* Sport Type Filter */}
             <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>Sport Type</Text>
+              <Text style={styles.filterSectionTitle}>Sport Type</Text>
               <View style={styles.optionsContainer}>
                 {Object.values(SportType).map((sport) => (
                   <TouchableOpacity
                     key={sport}
-                    style={[
-                      styles.optionButton,
-                      localFilters.sportType === sport && styles.optionButtonActive,
-                    ]}
-                    onPress={() => {
-                      const newFilters = { ...localFilters };
-                      if (localFilters.sportType === sport) {
-                        delete newFilters.sportType;
-                      } else {
-                        newFilters.sportType = sport;
-                      }
-                      setLocalFilters(newFilters);
-                    }}
+                    style={[styles.optionButton, sportFilter === sport && styles.optionButtonActive]}
+                    onPress={() => setSportFilter(sportFilter === sport ? undefined : sport)}
                   >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        localFilters.sportType === sport && styles.optionTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.optionText, sportFilter === sport && styles.optionTextActive]}>
                       {sport.charAt(0).toUpperCase() + sport.slice(1)}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
-
-            {/* Season Status Filter */}
             <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>Season Status</Text>
+              <Text style={styles.filterSectionTitle}>Status</Text>
               <View style={styles.optionsContainer}>
                 <TouchableOpacity
-                  style={[
-                    styles.optionButton,
-                    localFilters.isActive === true && styles.optionButtonActive,
-                  ]}
-                  onPress={() => {
-                    const newFilters = { ...localFilters };
-                    if (localFilters.isActive === true) {
-                      delete newFilters.isActive;
-                    } else {
-                      newFilters.isActive = true;
-                    }
-                    setLocalFilters(newFilters);
-                  }}
+                  style={[styles.optionButton, activeFilter === true && styles.optionButtonActive]}
+                  onPress={() => setActiveFilter(activeFilter === true ? undefined : true)}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      localFilters.isActive === true && styles.optionTextActive,
-                    ]}
-                  >
-                    Active Only
-                  </Text>
+                  <Text style={[styles.optionText, activeFilter === true && styles.optionTextActive]}>Active</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.optionButton,
-                    localFilters.isActive === false && styles.optionButtonActive,
-                  ]}
-                  onPress={() => {
-                    const newFilters = { ...localFilters };
-                    if (localFilters.isActive === false) {
-                      delete newFilters.isActive;
-                    } else {
-                      newFilters.isActive = false;
-                    }
-                    setLocalFilters(newFilters);
-                  }}
+                  style={[styles.optionButton, activeFilter === false && styles.optionButtonActive]}
+                  onPress={() => setActiveFilter(activeFilter === false ? undefined : false)}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      localFilters.isActive === false && styles.optionTextActive,
-                    ]}
-                  >
-                    Inactive Only
-                  </Text>
+                  <Text style={[styles.optionText, activeFilter === false && styles.optionTextActive]}>Inactive</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </ScrollView>
-
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.applyButton} onPress={handleFilterApply}>
+            <TouchableOpacity style={styles.applyButton} onPress={() => setShowFilterModal(false)}>
               <Text style={styles.applyText}>Apply Filters</Text>
             </TouchableOpacity>
           </View>
@@ -398,55 +287,42 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 80,
+    paddingBottom: 100,
   },
-  footerLoader: {
-    paddingVertical: Spacing.lg,
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xxl,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.ink,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.soft,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  clearButton: {
-    marginTop: Spacing.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
-    borderRadius: 8,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    backgroundColor: colors.chalk,
   },
-  clearButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.chalk,
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.ink,
   },
-  createLeagueButton: {
-    marginTop: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
-    borderRadius: 8,
+  countBadge: {
+    backgroundColor: `${colors.grass}20`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginLeft: 8,
   },
-  createLeagueButtonText: {
-    color: colors.chalk,
-    fontSize: 16,
-    fontWeight: '600',
+  countBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.grass,
+  },
+  emptySection: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
+    alignItems: 'center',
+  },
+  emptySectionText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
   },
   fab: {
     position: 'absolute',
@@ -459,45 +335,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    backgroundColor: colors.chalk,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.ink,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.soft,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: Spacing.lg,
-  },
-  retryButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.chalk,
   },
   modalContainer: {
     flex: 1,
@@ -510,18 +351,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.soft,
+    borderBottomColor: colors.inkFaint,
   },
   cancelText: {
+    fontFamily: fonts.body,
     fontSize: 16,
     color: colors.sky,
   },
   modalTitle: {
+    fontFamily: fonts.heading,
     fontSize: 18,
-    fontWeight: '600',
     color: colors.ink,
   },
   resetText: {
+    fontFamily: fonts.body,
     fontSize: 16,
     color: colors.track,
   },
@@ -532,11 +375,13 @@ const styles = StyleSheet.create({
   filterSection: {
     marginVertical: Spacing.lg,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  filterSectionTitle: {
+    fontFamily: fonts.label,
+    fontSize: 14,
     color: colors.ink,
     marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -544,35 +389,30 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.chalk,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.soft,
+    borderColor: colors.inkFaint,
+    backgroundColor: colors.chalk,
   },
   optionButtonActive: {
     backgroundColor: colors.grass,
     borderColor: colors.grass,
   },
-  optionIcon: {
-    marginRight: Spacing.xs,
-  },
   optionText: {
+    fontFamily: fonts.body,
     fontSize: 14,
     color: colors.ink,
   },
   optionTextActive: {
     color: colors.chalk,
-    fontWeight: '500',
   },
   modalFooter: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.soft,
+    borderTopColor: colors.inkFaint,
   },
   applyButton: {
     backgroundColor: colors.grass,
@@ -581,8 +421,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyText: {
+    fontFamily: fonts.ui,
     color: colors.chalk,
     fontSize: 16,
-    fontWeight: '600',
   },
 });

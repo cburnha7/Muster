@@ -445,6 +445,59 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get current user's teams (teams the user is an active member of)
+router.get('/teams', optionalAuthMiddleware, async (req, res) => {
+  try {
+    let userId = req.user?.userId;
+    if (!userId) {
+      userId = req.headers['x-user-id'] as string || req.query.userId as string;
+    }
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId, status: 'active' },
+      include: {
+        team: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { joinedAt: 'desc' },
+    });
+
+    const teams = memberships.map((m) => {
+      const { isPrivate, ...rest } = m.team;
+      return { ...rest, isPublic: !isPrivate };
+    });
+
+    res.json({
+      data: teams,
+      pagination: {
+        page: 1,
+        limit: teams.length,
+        total: teams.length,
+        totalPages: 1,
+      },
+    });
+  } catch (error) {
+    console.error('Get user teams error:', error);
+    res.status(500).json({ error: 'Failed to fetch user teams' });
+  }
+});
+
 // Get current user's leagues (leagues they organize or are a member of)
 router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -453,17 +506,23 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
-    // Find leagues where user is organizer or has an active membership
-    const [organizedLeagues, memberships] = await Promise.all([
+    // Find teams the user is an active member of
+    const userTeamIds = (await prisma.teamMember.findMany({
+      where: { userId, status: 'active' },
+      select: { teamId: true },
+    })).map(t => t.teamId);
+
+    // Find leagues where user is organizer, direct member, or roster member
+    const [organizedLeagues, directMemberships, rosterMemberships] = await Promise.all([
       prisma.league.findMany({
-        where: { organizerId: userId, isActive: true },
+        where: { organizerId: userId },
         select: {
           id: true, name: true, sportType: true, leagueType: true,
           isActive: true, imageUrl: true, isCertified: true,
           memberships: { where: { status: 'active' }, select: { id: true } },
         },
         orderBy: { createdAt: 'desc' },
-        take: 20,
+        take: 50,
       }),
       prisma.leagueMembership.findMany({
         where: { memberId: userId, status: 'active' },
@@ -476,8 +535,23 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
             },
           },
         },
-        take: 20,
+        take: 50,
       }),
+      userTeamIds.length > 0
+        ? prisma.leagueMembership.findMany({
+            where: { memberId: { in: userTeamIds }, memberType: 'roster', status: 'active' },
+            include: {
+              league: {
+                select: {
+                  id: true, name: true, sportType: true, leagueType: true,
+                  isActive: true, imageUrl: true, isCertified: true, organizerId: true,
+                  memberships: { where: { status: 'active' }, select: { id: true } },
+                },
+              },
+            },
+            take: 50,
+          })
+        : Promise.resolve([]),
     ]);
 
     // Merge and deduplicate
@@ -485,7 +559,12 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
     organizedLeagues.forEach(l => {
       leagueMap.set(l.id, { ...l, memberCount: l.memberships.length, role: 'commissioner' });
     });
-    memberships.forEach(m => {
+    directMemberships.forEach(m => {
+      if (m.league && !leagueMap.has(m.league.id)) {
+        leagueMap.set(m.league.id, { ...m.league, memberCount: m.league.memberships.length, role: 'player' });
+      }
+    });
+    rosterMemberships.forEach(m => {
       if (m.league && !leagueMap.has(m.league.id)) {
         leagueMap.set(m.league.id, { ...m.league, memberCount: m.league.memberships.length, role: 'player' });
       }

@@ -22,8 +22,6 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
-import { useSelector } from 'react-redux';
-import { selectUserTeams } from '../../store/slices/teamsSlice';
 
 interface UserLeague {
   id: string;
@@ -39,11 +37,11 @@ interface UserLeague {
 export function ProfileScreen() {
   const navigation = useNavigation();
   const { user: authUser, logout } = useAuth();
-  const userRosters = useSelector(selectUserTeams) as Team[];
 
   const [myGrounds, setMyGrounds] = useState<Facility[]>([]);
   const [myEvents, setMyEvents] = useState<Event[]>([]);
   const [myLeagues, setMyLeagues] = useState<UserLeague[]>([]);
+  const [ownedRosters, setOwnedRosters] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +55,11 @@ export function ProfileScreen() {
   const loadData = useCallback(async () => {
     if (!authUser?.id) return;
     try {
-      const [groundsRes, eventsRes, leaguesRes] = await Promise.allSettled([
+      const [groundsRes, eventsRes, leaguesRes, rostersRes] = await Promise.allSettled([
         facilityService.getFacilitiesByOwner(authUser.id),
         userService.getUserEvents(),
         userService.getUserLeagues(),
+        userService.getUserTeams(),
       ]);
 
       if (groundsRes.status === 'fulfilled') {
@@ -71,6 +70,13 @@ export function ProfileScreen() {
       }
       if (leaguesRes.status === 'fulfilled') {
         setMyLeagues(leaguesRes.value ?? []);
+      }
+      if (rostersRes.status === 'fulfilled') {
+        // Only show rosters the user owns (captainId matches)
+        const allRosters = rostersRes.value?.data ?? [];
+        setOwnedRosters(
+          allRosters.filter((r: Team) => r.captainId === authUser.id)
+        );
       }
     } catch (err) {
       console.error('Profile load error:', err);
@@ -269,9 +275,9 @@ export function ProfileScreen() {
           <View style={styles.sectionHeaderLeft}>
             <Ionicons name="people" size={24} color={colors.grass} />
             <Text style={styles.sectionTitle}>My Rosters</Text>
-            {userRosters.length > 0 && (
+            {ownedRosters.length > 0 && (
               <View style={styles.countBadge}>
-                <Text style={styles.countBadgeText}>{userRosters.length}</Text>
+                <Text style={styles.countBadgeText}>{ownedRosters.length}</Text>
               </View>
             )}
           </View>
@@ -282,31 +288,37 @@ export function ProfileScreen() {
           />
         </TouchableOpacity>
         {rostersExpanded && (
-          userRosters.length > 0 ? (
-            userRosters.map((roster) => (
-              <TouchableOpacity
-                key={roster.id}
-                style={styles.listItem}
-                onPress={() => (navigation as any).navigate('Teams', {
-                  screen: 'TeamDetails',
-                  params: { teamId: roster.id },
-                })}
-                activeOpacity={0.7}
-              >
-                <View style={styles.listItemContent}>
-                  <Text style={styles.listItemTitle} numberOfLines={1}>{roster.name}</Text>
-                  <Text style={styles.listItemSubtitle} numberOfLines={1}>
-                    {roster.sportType} • {roster.members?.length ?? 0} players
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#666" />
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No rosters yet</Text>
+          <>
+            <View style={styles.infoBanner}>
+              <Ionicons name="information-circle-outline" size={16} color={colors.sky} />
+              <Text style={styles.infoBannerText}>Only rosters you own are shown here</Text>
             </View>
-          )
+            {ownedRosters.length > 0 ? (
+              ownedRosters.map((roster) => (
+                <TouchableOpacity
+                  key={roster.id}
+                  style={styles.listItem}
+                  onPress={() => (navigation as any).navigate('Teams', {
+                    screen: 'TeamDetails',
+                    params: { teamId: roster.id },
+                  })}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.listItemContent}>
+                    <Text style={styles.listItemTitle} numberOfLines={1}>{roster.name}</Text>
+                    <Text style={styles.listItemSubtitle} numberOfLines={1}>
+                      {roster.sportType} • {roster.members?.length ?? 0} players
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>You don't own any rosters yet</Text>
+              </View>
+            )}
+          </>
         )}
       </View>
 
@@ -546,6 +558,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     ...typeScale.bodySm,
     color: colors.inkFaint,
+  },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: `${colors.sky}12`,
+    gap: 6,
+  },
+  infoBannerText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.sky,
+    flex: 1,
   },
   // Logout
   logoutButton: {
