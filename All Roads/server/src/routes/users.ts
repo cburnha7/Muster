@@ -501,9 +501,12 @@ router.get('/teams', optionalAuthMiddleware, async (req, res) => {
 // Get current user's leagues (leagues they organize or are a member of)
 router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
   try {
-    const userId = (req as any).userId || req.query.userId as string;
+    let userId = req.user?.userId;
     if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
+      userId = req.headers['x-user-id'] as string || req.query.userId as string;
+    }
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     // Find teams the user is an active member of

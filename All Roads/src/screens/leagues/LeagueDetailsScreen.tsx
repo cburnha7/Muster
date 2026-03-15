@@ -133,6 +133,17 @@ export function LeagueDetailsScreen(): React.ReactElement {
     }
   };
 
+  const formatSkillLevel = (level?: string): string => {
+    if (!level) return 'Open';
+    switch (level.toLowerCase()) {
+      case 'beginner': return 'Beginner';
+      case 'intermediate': return 'Intermediate';
+      case 'advanced': return 'Advanced';
+      case 'all_levels': return 'All Levels';
+      default: return level.charAt(0).toUpperCase() + level.slice(1).replace(/_/g, ' ');
+    }
+  };
+
   const formatDate = (date?: Date | string) => {
     if (!date) return 'TBD';
     const d = typeof date === 'string' ? new Date(date) : date;
@@ -599,7 +610,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{league.skillLevel || 'Open'}</Text>
+              <Text style={styles.statValue}>{formatSkillLevel(league.skillLevel)}</Text>
               <Text style={styles.statLabel}>Skill</Text>
             </View>
           </View>
