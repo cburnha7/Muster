@@ -198,7 +198,9 @@ router.post('/', async (req: Request, res: Response) => {
       preferredGameDays,
       preferredTimeWindowStart,
       preferredTimeWindowEnd,
-      seasonGameCount
+      seasonGameCount,
+      rosterIds,
+      trackStandings
     } = req.body;
 
     // Validate required fields
@@ -301,7 +303,8 @@ router.post('/', async (req: Request, res: Response) => {
         ...(preferredGameDays && { preferredGameDays }),
         ...(preferredTimeWindowStart && { preferredTimeWindowStart }),
         ...(preferredTimeWindowEnd && { preferredTimeWindowEnd }),
-        ...(seasonGameCount !== undefined && seasonGameCount !== null && { seasonGameCount })
+        ...(seasonGameCount !== undefined && seasonGameCount !== null && { seasonGameCount }),
+        ...(trackStandings !== undefined && { trackStandings })
       },
       include: {
         organizer: {
@@ -315,6 +318,25 @@ router.post('/', async (req: Request, res: Response) => {
         }
       }
     });
+
+    // Create roster memberships if rosterIds provided
+    if (Array.isArray(rosterIds) && rosterIds.length > 0) {
+      await prisma.leagueMembership.createMany({
+        data: rosterIds.map((rid: string) => ({
+          leagueId: league.id,
+          memberId: rid,
+          teamId: rid,
+          memberType: 'roster',
+          status: 'active',
+          matchesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          points: 0,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     res.status(201).json(league);
   } catch (error) {
@@ -345,7 +367,9 @@ router.put('/:id', async (req: Request, res: Response) => {
       preferredGameDays,
       preferredTimeWindowStart,
       preferredTimeWindowEnd,
-      seasonGameCount
+      seasonGameCount,
+      rosterIds,
+      trackStandings
     } = req.body;
 
     // Check if league exists and user is operator
@@ -410,7 +434,8 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(preferredGameDays !== undefined && { preferredGameDays }),
         ...(preferredTimeWindowStart !== undefined && { preferredTimeWindowStart }),
         ...(preferredTimeWindowEnd !== undefined && { preferredTimeWindowEnd }),
-        ...(seasonGameCount !== undefined && { seasonGameCount })
+        ...(seasonGameCount !== undefined && { seasonGameCount }),
+        ...(trackStandings !== undefined && { trackStandings })
       },
       include: {
         organizer: {
@@ -424,6 +449,47 @@ router.put('/:id', async (req: Request, res: Response) => {
         }
       }
     });
+
+    // Sync roster memberships if rosterIds provided
+    if (Array.isArray(rosterIds)) {
+      // Get current active/pending memberships
+      const currentMemberships = await prisma.leagueMembership.findMany({
+        where: { leagueId: id, memberType: 'roster', status: { in: ['active', 'pending'] } },
+        select: { id: true, memberId: true },
+      });
+      const currentRosterIds = currentMemberships.map((m: any) => m.memberId);
+
+      // Rosters to add (not already in league)
+      const toAdd = rosterIds.filter((rid: string) => !currentRosterIds.includes(rid));
+      // Rosters to remove (in league but not in submitted list)
+      const toRemove = currentMemberships.filter((m: any) => !rosterIds.includes(m.memberId));
+
+      // Add new rosters
+      if (toAdd.length > 0) {
+        await prisma.leagueMembership.createMany({
+          data: toAdd.map((rid: string) => ({
+            leagueId: id,
+            memberId: rid,
+            teamId: rid,
+            memberType: 'roster',
+            status: 'active',
+            matchesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            points: 0,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      // Remove rosters no longer in the list
+      if (toRemove.length > 0) {
+        await prisma.leagueMembership.deleteMany({
+          where: { id: { in: toRemove.map((m: any) => m.id) } },
+        });
+      }
+    }
 
     res.json(league);
   } catch (error) {

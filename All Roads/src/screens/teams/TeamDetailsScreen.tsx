@@ -280,6 +280,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const renderMember = (member: TeamMember) => {
     const isCaptain = member.role === TeamRole.CAPTAIN;
     const isCoCaptain = member.role === TeamRole.CO_CAPTAIN;
+    const isPending = member.status === MemberStatus.PENDING;
 
     return (
       <View key={member.userId} style={styles.memberItem}>
@@ -301,19 +302,21 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               {member.user?.firstName} {member.user?.lastName}
             </Text>
             <Text style={styles.memberRole}>
-              {isCaptain ? '👑 Manager' : isCoCaptain ? '⭐ Co-Manager' : 'Player'}
+              {isPending ? '⏳ Pending' : isCaptain ? '👑 Manager' : isCoCaptain ? '⭐ Co-Manager' : 'Player'}
             </Text>
           </View>
         </View>
 
         {canManageTeam && !isCaptain && (
           <View style={styles.memberActions}>
-            <TouchableOpacity
-              style={styles.memberActionButton}
-              onPress={() => handleChangeRole(member)}
-            >
-              <Text style={styles.memberActionText}>Role</Text>
-            </TouchableOpacity>
+            {!isPending && (
+              <TouchableOpacity
+                style={styles.memberActionButton}
+                onPress={() => handleChangeRole(member)}
+              >
+                <Text style={styles.memberActionText}>Role</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[styles.memberActionButton, styles.memberActionButtonDanger]}
               onPress={() => handleRemoveMember(member)}
@@ -402,6 +405,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   }
 
   const activeMembers = team.members.filter(m => m.status === MemberStatus.ACTIVE);
+  const pendingMembers = team.members.filter(m => m.status === MemberStatus.PENDING);
   const availableSlots = team.maxMembers - activeMembers.length;
 
   return (
@@ -482,16 +486,17 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
         {/* Members Section */}
         <View style={styles.membersContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              Players ({activeMembers.length}/{team.maxMembers})
-            </Text>
-            {availableSlots > 0 && (
-              <Text style={styles.availableSlots}>{availableSlots} slots available</Text>
-            )}
-          </View>
-
-          {activeMembers.map(renderMember)}
+          {/* Invites List — pending members */}
+          {pendingMembers.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  Invites ({pendingMembers.length})
+                </Text>
+              </View>
+              {pendingMembers.map(renderMember)}
+            </>
+          )}
 
           {/* Add Member Search - Only for private rosters with owner/admin access */}
           {(() => {
@@ -516,9 +521,25 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               </Text>
               <AddMemberSearch
                 onAddMember={handleAddMemberDirectly}
-                existingMemberIds={activeMembers.map(m => m.userId)}
+                existingMemberIds={[...activeMembers, ...pendingMembers].map(m => m.userId)}
               />
             </View>
+          )}
+
+          {/* Players List — active members */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              Players ({activeMembers.length}/{team.maxMembers})
+            </Text>
+            {availableSlots > 0 && (
+              <Text style={styles.availableSlots}>{availableSlots} slots available</Text>
+            )}
+          </View>
+
+          {activeMembers.length > 0 ? (
+            activeMembers.map(renderMember)
+          ) : (
+            <Text style={styles.emptyPlayersText}>No players have joined yet</Text>
           )}
         </View>
 
@@ -866,6 +887,13 @@ const styles = StyleSheet.create({
   },
   memberActionTextDanger: {
     color: '#DC2626',
+  },
+  emptyPlayersText: {
+    fontSize: 14,
+    color: colors.inkFaint,
+    textAlign: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   actions: {
     padding: 20,

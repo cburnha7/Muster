@@ -76,9 +76,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [minimumRosterSize, setMinimumRosterSize] = useState(
     (initialData as any)?.minimumRosterSize?.toString() || ''
   );
-  const [registrationCloseDate, setRegistrationCloseDate] = useState(
-    (initialData as any)?.registrationCloseDate?.toString() || ''
-  );
   const [preferredGameDays, setPreferredGameDays] = useState<number[]>(
     (initialData as any)?.preferredGameDays || []
   );
@@ -102,6 +99,25 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [autoGenerateMatchups, setAutoGenerateMatchups] = useState<boolean>(
     (initialData as any)?.autoGenerateMatchups ?? true
   );
+
+  // Track Standings toggle
+  const [trackStandings, setTrackStandings] = useState<boolean>(
+    (initialData as any)?.trackStandings ?? true
+  );
+
+  // Registration Cutoff calendar state
+  const [registrationCutoffDate, setRegistrationCutoffDate] = useState<Date | null>(() => {
+    if ((initialData as any)?.registrationCloseDate) {
+      const d = new Date((initialData as any).registrationCloseDate);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  });
+  const [showCutoffCalendar, setShowCutoffCalendar] = useState(false);
+  const [cutoffCalendarMonth, setCutoffCalendarMonth] = useState<Date>(() => {
+    if (registrationCutoffDate) return new Date(registrationCutoffDate.getFullYear(), registrationCutoffDate.getMonth(), 1);
+    return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  });
 
   // Calendar picker state
   const [showCalendar, setShowCalendar] = useState(false);
@@ -199,6 +215,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
   const calendarMonthLabel = calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  // Cutoff calendar helpers
+  const handleSelectCutoffDate = (day: number) => {
+    const selected = new Date(cutoffCalendarMonth.getFullYear(), cutoffCalendarMonth.getMonth(), day);
+    setRegistrationCutoffDate(selected);
+    setShowCutoffCalendar(false);
+  };
+
+  const goToCutoffPrevMonth = () => {
+    setCutoffCalendarMonth(new Date(cutoffCalendarMonth.getFullYear(), cutoffCalendarMonth.getMonth() - 1, 1));
+  };
+
+  const goToCutoffNextMonth = () => {
+    setCutoffCalendarMonth(new Date(cutoffCalendarMonth.getFullYear(), cutoffCalendarMonth.getMonth() + 1, 1));
+  };
+
+  const cutoffCalendarMonthLabel = cutoffCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
   // ── Projected end date ──────────────────────────────────────────
   const projectedEndDate = (() => {
     if (!startDate || !seasonLength) return '';
@@ -278,14 +311,16 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     const draw = parseInt(drawPoints);
     const loss = parseInt(lossPoints);
 
-    if (isNaN(win) || win < 0) {
-      newErrors.winPoints = 'Win points must be a non-negative number';
-    }
-    if (isNaN(draw) || draw < 0) {
-      newErrors.drawPoints = 'Draw points must be a non-negative number';
-    }
-    if (isNaN(loss) || loss < 0) {
-      newErrors.lossPoints = 'Loss points must be a non-negative number';
+    if (trackStandings) {
+      if (isNaN(win) || win < 0) {
+        newErrors.winPoints = 'Win points must be a non-negative number';
+      }
+      if (isNaN(draw) || draw < 0) {
+        newErrors.drawPoints = 'Draw points must be a non-negative number';
+      }
+      if (isNaN(loss) || loss < 0) {
+        newErrors.lossPoints = 'Loss points must be a non-negative number';
+      }
     }
 
     const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -321,11 +356,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       return;
     }
 
-    const pointsConfig: PointsConfig = {
+    const pointsConfig: PointsConfig = trackStandings ? {
       win: parseInt(winPoints),
       draw: parseInt(drawPoints),
       loss: parseInt(lossPoints),
-    };
+    } : { win: 0, draw: 0, loss: 0 };
 
     const formData: CreateLeagueData | UpdateLeagueData = {
       name: name.trim(),
@@ -338,7 +373,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       pointsConfig,
       imageUrl: imageUrl.trim() || undefined,
       minimumRosterSize: minimumRosterSize ? parseInt(minimumRosterSize) : null,
-      registrationCloseDate: registrationCloseDate ? new Date(registrationCloseDate) : null,
+      registrationCloseDate: registrationCutoffDate || null,
       preferredGameDays: preferredGameDays.length > 0 ? preferredGameDays : undefined,
       preferredTimeWindowStart: timeWindowStart || null,
       preferredTimeWindowEnd: timeWindowEnd || null,
@@ -346,6 +381,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       scheduleFrequency,
       seasonLength: seasonLength ? parseInt(seasonLength) : null,
       autoGenerateMatchups,
+      trackStandings,
       // Include added rosters for the parent to handle
       rosterIds: addedRosters.map(r => r.id),
       ...(isEdit ? {} : {
@@ -414,6 +450,78 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     isTodayDate && !isSelected && styles.calendarDayToday,
                   ]}
                   onPress={() => handleSelectDate(day)}
+                  accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
+                  accessibilityRole="button"
+                >
+                  <Text style={[
+                    styles.calendarDayText,
+                    isSelected && styles.calendarDayTextSelected,
+                    isTodayDate && !isSelected && styles.calendarDayTextToday,
+                  ]}>
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  // ── Cutoff Calendar renderer ────────────────────────────────────
+  const renderCutoffCalendar = () => {
+    const year = cutoffCalendarMonth.getFullYear();
+    const month = cutoffCalendarMonth.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    const weeks: (number | null)[][] = [];
+    let currentWeek: (number | null)[] = Array(firstDay).fill(null);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) currentWeek.push(null);
+      weeks.push(currentWeek);
+    }
+
+    return (
+      <View style={styles.calendar}>
+        <View style={styles.calendarHeader}>
+          <TouchableOpacity onPress={goToCutoffPrevMonth} style={styles.calendarNav} accessibilityLabel="Previous month">
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+          </TouchableOpacity>
+          <Text style={styles.calendarMonthLabel}>{cutoffCalendarMonthLabel}</Text>
+          <TouchableOpacity onPress={goToCutoffNextMonth} style={styles.calendarNav} accessibilityLabel="Next month">
+            <Ionicons name="chevron-forward" size={20} color={colors.ink} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.calendarDayHeaders}>
+          {dayLabels.map(d => (
+            <Text key={d} style={styles.calendarDayHeader}>{d}</Text>
+          ))}
+        </View>
+        {weeks.map((week, wi) => (
+          <View key={wi} style={styles.calendarWeek}>
+            {week.map((day, di) => {
+              if (day === null) return <View key={di} style={styles.calendarDayCell} />;
+              const cellDate = new Date(year, month, day);
+              const isSelected = registrationCutoffDate ? isSameDay(cellDate, registrationCutoffDate) : false;
+              const isTodayDate = isToday(cellDate);
+              return (
+                <TouchableOpacity
+                  key={di}
+                  style={[
+                    styles.calendarDayCell,
+                    isSelected && styles.calendarDaySelected,
+                    isTodayDate && !isSelected && styles.calendarDayToday,
+                  ]}
+                  onPress={() => handleSelectCutoffDate(day)}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
                   accessibilityRole="button"
                 >
@@ -548,33 +656,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
           {/* Auto-Generate Matchups — moved below, before buttons */}
 
-          <FormInput
-            label="Points for Win"
-            placeholder="3"
-            value={winPoints}
-            onChangeText={setWinPoints}
-            keyboardType="numeric"
-            error={errors.winPoints}
-          />
-
-          <FormInput
-            label="Points for Draw"
-            placeholder="1"
-            value={drawPoints}
-            onChangeText={setDrawPoints}
-            keyboardType="numeric"
-            error={errors.drawPoints}
-          />
-
-          <FormInput
-            label="Points for Loss"
-            placeholder="0"
-            value={lossPoints}
-            onChangeText={setLossPoints}
-            keyboardType="numeric"
-            error={errors.lossPoints}
-          />
-
           {/* Schedule Configuration — team leagues only */}
           {leagueType === 'team' && (
             <>
@@ -585,13 +666,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 onChangeText={setMinimumRosterSize}
                 keyboardType="numeric"
                 error={errors.minimumRosterSize}
-              />
-
-              <FormInput
-                label="Registration Close Date"
-                placeholder="YYYY-MM-DD"
-                value={registrationCloseDate}
-                onChangeText={setRegistrationCloseDate}
               />
 
               <FormInput
@@ -765,6 +839,82 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
             )}
           </View>
+
+          {/* Registration Cutoff Date */}
+          <Text style={styles.fieldLabel}>Registration Cutoff</Text>
+          <Text style={styles.cutoffDescription}>
+            After this date, no more rosters can join. Game scheduling and any registration fee transactions will be triggered.
+          </Text>
+          <TouchableOpacity
+            style={styles.datePickerTrigger}
+            onPress={() => setShowCutoffCalendar(!showCutoffCalendar)}
+            accessibilityRole="button"
+            accessibilityLabel="Select registration cutoff date"
+          >
+            <Ionicons name="lock-closed-outline" size={20} color={colors.court} />
+            <Text style={[styles.datePickerText, !registrationCutoffDate && styles.datePickerPlaceholder]}>
+              {registrationCutoffDate ? formatDateDisplay(registrationCutoffDate) : 'Select a cutoff date'}
+            </Text>
+            <Ionicons name={showCutoffCalendar ? 'chevron-up' : 'chevron-down'} size={18} color={colors.inkFaint} />
+          </TouchableOpacity>
+          {showCutoffCalendar && renderCutoffCalendar()}
+          {registrationCutoffDate && (
+            <TouchableOpacity onPress={() => setRegistrationCutoffDate(null)} style={styles.clearDateBtn}>
+              <Ionicons name="close-circle" size={16} color={colors.track} />
+              <Text style={styles.clearDateText}>Clear cutoff date</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Track Standings Toggle */}
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleInfo}>
+                <Text style={styles.toggleLabel}>Track Standings</Text>
+                <Text style={styles.toggleDescription}>
+                  Record wins, draws, and losses to maintain a league standings table
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.toggle, trackStandings && styles.toggleActive]}
+                onPress={() => setTrackStandings(!trackStandings)}
+                activeOpacity={0.7}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: trackStandings }}
+              >
+                <View style={[styles.toggleThumb, trackStandings && styles.toggleThumbActive]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Points Configuration — only when tracking standings */}
+          {trackStandings && (
+            <View style={styles.pointsSection}>
+              <FormInput
+                label="Points for Win"
+                placeholder="3"
+                value={winPoints}
+                onChangeText={setWinPoints}
+                keyboardType="numeric"
+                error={errors.winPoints}
+              />
+              <FormInput
+                label="Points for Draw"
+                placeholder="1"
+                value={drawPoints}
+                onChangeText={setDrawPoints}
+                keyboardType="numeric"
+                error={errors.drawPoints}
+              />
+              <FormInput
+                label="Points for Loss"
+                placeholder="0"
+                value={lossPoints}
+                onChangeText={setLossPoints}
+                keyboardType="numeric"
+                error={errors.lossPoints}
+              />
+            </View>
+          )}
 
           {/* Auto-Generate Matchups */}
           <View style={styles.toggleCard}>
@@ -975,6 +1125,30 @@ const styles = StyleSheet.create({
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
+  },
+  // Points section (under Track Standings toggle)
+  pointsSection: {
+    marginBottom: Spacing.sm,
+  },
+  // Registration cutoff
+  cutoffDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginBottom: Spacing.sm,
+    lineHeight: 18,
+  },
+  clearDateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: -8,
+    marginBottom: Spacing.md,
+  },
+  clearDateText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.track,
   },
   // Day chips
   dayChipsRow: {

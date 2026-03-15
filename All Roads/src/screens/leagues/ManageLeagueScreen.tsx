@@ -154,11 +154,7 @@ export const ManageLeagueScreen: React.FC = () => {
         {
           text: 'OK',
           onPress: () => {
-            // Navigate back to LeagueDetailsScreen with leagueType context
-            (navigation as any).navigate('LeagueDetails', {
-              leagueId,
-              leagueType: updatedLeague.leagueType,
-            });
+            (navigation as any).navigate('LeaguesBrowser');
           },
         },
       ]);

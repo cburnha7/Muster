@@ -322,6 +322,30 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Remove a member from a roster
+router.delete('/:id/members/:userId', async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+
+    const membership = await prisma.teamMember.findUnique({
+      where: { userId_teamId: { userId, teamId: id } },
+    });
+
+    if (!membership) {
+      return res.status(404).json({ error: 'Player not found in this roster' });
+    }
+
+    await prisma.teamMember.delete({
+      where: { id: membership.id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Remove member error:', error);
+    res.status(500).json({ error: 'Failed to remove player from roster' });
+  }
+});
+
 // Join team
 router.post('/:id/join', async (req, res) => {
   try {

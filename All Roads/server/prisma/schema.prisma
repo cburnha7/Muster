@@ -254,6 +254,7 @@ model League {
   preferredTimeWindowEnd   String?    // HH:MM format
   seasonGameCount          Int?
   scheduleGenerated        Boolean    @default(false)
+  trackStandings           Boolean    @default(true)
 
   // Certification
   isCertified Boolean   @default(false)
