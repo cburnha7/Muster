@@ -92,6 +92,46 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Update team
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, sportType, skillLevel, maxMembers, isPublic } = req.body;
+
+    const existing = await prisma.team.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const team = await prisma.team.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(sportType !== undefined && { sportType }),
+        ...(skillLevel !== undefined && { skillLevel }),
+        ...(maxMembers !== undefined && { maxMembers }),
+        ...(isPublic !== undefined && { isPrivate: !isPublic }),
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+        },
+      },
+    });
+
+    const { isPrivate, ...rest } = team;
+    res.json({ ...rest, isPublic: !isPrivate });
+  } catch (error) {
+    console.error('Update team error:', error);
+    res.status(500).json({ error: 'Failed to update team' });
+  }
+});
+
 // Get leagues for a team
 router.get('/:id/leagues', async (req, res) => {
   try {

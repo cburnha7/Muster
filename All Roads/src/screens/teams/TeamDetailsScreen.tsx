@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,23 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { FormInput } from '../../components/forms/FormInput';
+import { FormSelect } from '../../components/forms/FormSelect';
 import { FormButton } from '../../components/forms/FormButton';
 import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { teamService } from '../../services/api/TeamService';
-import { leagueService } from '../../services/api/LeagueService';
 import {
   setSelectedTeam,
   updateTeam,
@@ -26,186 +33,218 @@ import {
   removeTeamMember,
   updateTeamMemberRole,
 } from '../../store/slices/teamsSlice';
-import { selectSelectedTeam, selectUserTeams } from '../../store/slices/teamsSlice';
+import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { selectUser } from '../../store/slices/authSlice';
-import { Team, TeamMember, TeamRole, MemberStatus, User } from '../../types';
+import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, Event } from '../../types';
 import { League } from '../../types/league';
 import { colors } from '../../theme';
-import { ConfirmModal } from '../../components/ui/ConfirmModal';
 
 interface TeamDetailsScreenProps {
-  route: {
-    params: {
-      teamId: string;
-    };
-  };
+  route: { params: { teamId: string } };
 }
+
+const sportTypeOptions = [
+  { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Other', value: SportType.OTHER },
+];
+
+const skillLevelOptions = [
+  { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
+  { label: 'Beginner', value: SkillLevel.BEGINNER },
+  { label: 'Intermediate', value: SkillLevel.INTERMEDIATE },
+  { label: 'Advanced', value: SkillLevel.ADVANCED },
+];
+
+const visibilityOptions = [
+  { label: 'Public (Anyone can find and join)', value: true },
+  { label: 'Private (Invite only)', value: false },
+];
 
 export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Element {
   const { teamId } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
-
-  const selectedTeam = useSelector(selectSelectedTeam);
-  const userTeams = useSelector(selectUserTeams);
   const currentUser = useSelector(selectUser);
 
+  // Loading / error state
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isJoining, setIsJoining] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
-  const [leagues, setLeagues] = useState<League[]>([]);
-  const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form state
+  const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formSportType, setFormSportType] = useState<SportType>(SportType.BASKETBALL);
+  const [formSkillLevel, setFormSkillLevel] = useState<SkillLevel>(SkillLevel.ALL_LEVELS);
+  const [formMaxMembers, setFormMaxMembers] = useState('10');
+  const [formIsPublic, setFormIsPublic] = useState(true);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Related data
+  const [leagues, setLeagues] = useState<any[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+
+  // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
-  const isUserMember = userTeams.some(t => t.id === teamId);
-  // Check if user exists in the roster's member list (covers invited/added players)
-  const isInRosterMembers = team?.members.some(m => m.userId === currentUser?.id) ?? false;
-  const userMember = team?.members.find(m => m.userId === currentUser?.id && m.status === MemberStatus.ACTIVE);
-  const isUserCaptain = userMember?.role === TeamRole.CAPTAIN;
-  const isUserCoCaptain = userMember?.role === TeamRole.CO_CAPTAIN;
-  const canManageTeam = isUserCaptain || isUserCoCaptain;
-  // Show Join Up only if: public roster, OR user is already in the member list (invited by captain)
-  const canSeeJoinButton = !isUserMember && !isInRosterMembers ? (team?.isPublic ?? false) : false;
+  // Derived state
+  const isMember = team?.members?.some(
+    (m) => m.userId === currentUser?.id && m.status === MemberStatus.ACTIVE
+  );
+  const currentMember = team?.members?.find((m) => m.userId === currentUser?.id);
+  const isCaptain = currentMember?.role === TeamRole.CAPTAIN;
+  const canManageTeam = isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN;
 
+  const activeMembers = team?.members?.filter((m) => m.status === MemberStatus.ACTIVE) || [];
+  const pendingMembers = team?.members?.filter((m) => m.status === MemberStatus.PENDING) || [];
+  const allMemberIds = team?.members?.map((m) => m.userId) || [];
+
+  // Sync form state when team loads
   useEffect(() => {
-    loadTeamDetails();
-    loadTeamLeagues();
-    loadTeamEvents();
-  }, [teamId]);
+    if (team) {
+      setFormName(team.name || '');
+      setFormDescription(team.description || '');
+      setFormSportType(team.sportType || SportType.BASKETBALL);
+      setFormSkillLevel(team.skillLevel || SkillLevel.ALL_LEVELS);
+      setFormMaxMembers(String(team.maxMembers || 10));
+      setFormIsPublic(team.isPublic ?? true);
+    }
+  }, [team]);
 
-  const loadTeamDetails = async (showLoading = true) => {
+  const loadTeamDetails = useCallback(async () => {
     try {
-      if (showLoading) {
-        setIsLoading(true);
-      }
-      setError(null);
       const teamData = await teamService.getTeam(teamId);
       setTeam(teamData);
       dispatch(setSelectedTeam(teamData));
+      setError(null);
     } catch (err: any) {
-      console.error('Error loading team details:', err);
-      setError(err.message || 'Failed to load team details');
-    } finally {
-      setIsLoading(false);
+      console.error('Error loading roster details:', err);
+      setError(err.message || 'Failed to load roster details');
     }
-  };
+  }, [teamId, dispatch]);
 
-  const loadTeamLeagues = async () => {
+  const loadTeamLeagues = useCallback(async () => {
     try {
-      setIsLoadingLeagues(true);
-      const teamLeagues = await teamService.getTeamLeagues(teamId);
-      setLeagues(teamLeagues);
-    } catch (err: any) {
-      console.error('Error loading team leagues:', err);
-      setLeagues([]);
-    } finally {
-      setIsLoadingLeagues(false);
+      const data = await teamService.getTeamLeagues(teamId);
+      setLeagues(data);
+    } catch (err) {
+      console.error('Error loading roster leagues:', err);
     }
-  };
+  }, [teamId]);
 
-  const loadTeamEvents = async () => {
+  const loadTeamEvents = useCallback(async () => {
     try {
-      setIsLoadingEvents(true);
-      const events = await teamService.getTeamEvents(teamId);
-      setUpcomingEvents(Array.isArray(events) ? events : []);
+      const data = await teamService.getTeamEvents(teamId);
+      setEvents(data);
+    } catch (err) {
+      console.error('Error loading roster events:', err);
+    }
+  }, [teamId]);
+
+  // Initial load
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      const load = async () => {
+        setIsLoading(true);
+        await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents()]);
+        if (isMounted) setIsLoading(false);
+      };
+      load();
+      return () => { isMounted = false; };
+    }, [loadTeamDetails, loadTeamLeagues, loadTeamEvents])
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents()]);
+    setIsRefreshing(false);
+  };
+
+  // ── Form validation ──
+  const validateForm = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!formName.trim()) errs.name = 'Roster name is required';
+    else if (formName.length < 3) errs.name = 'Roster name must be at least 3 characters';
+    else if (formName.length > 50) errs.name = 'Roster name must be less than 50 characters';
+    if (formDescription && formDescription.length > 500) errs.description = 'Description must be less than 500 characters';
+    const maxNum = parseInt(formMaxMembers, 10);
+    if (isNaN(maxNum) || maxNum < 2) errs.maxMembers = 'Roster must allow at least 2 players';
+    else if (maxNum > 100) errs.maxMembers = 'Maximum players cannot exceed 100';
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  // ── Update roster ──
+  const handleUpdateTeam = async () => {
+    if (!validateForm()) return;
+    setIsSaving(true);
+    try {
+      const updates = {
+        name: formName.trim(),
+        description: formDescription.trim(),
+        sportType: formSportType,
+        skillLevel: formSkillLevel,
+        maxMembers: parseInt(formMaxMembers, 10),
+        isPublic: formIsPublic,
+      };
+      const updated = await teamService.updateTeam(teamId, updates);
+      setTeam(updated);
+      dispatch(updateTeam(updated));
+      Alert.alert('Success', 'Roster updated successfully.');
     } catch (err: any) {
-      console.error('Error loading team events:', err);
-      setUpcomingEvents([]);
+      Alert.alert('Error', err.message || 'Failed to update roster.');
     } finally {
-      setIsLoadingEvents(false);
+      setIsSaving(false);
     }
   };
 
+  // ── Join / Leave / Delete ──
   const handleJoinTeam = async () => {
-    if (!team) return;
-
-    Alert.alert(
-      'Join Roster',
-      `Do you want to join ${team.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Join Up',
-          onPress: async () => {
-            try {
-              setIsJoining(true);
-              await teamService.joinTeam(teamId);
-              const updatedTeam = await teamService.getTeam(teamId);
-              setTeam(updatedTeam);
-              dispatch(joinTeamAction(updatedTeam));
-              Alert.alert('Success', 'You have joined the roster!');
-            } catch (err: any) {
-              console.error('Error joining roster:', err);
-              Alert.alert('Error', err.message || 'Failed to join roster');
-            } finally {
-              setIsJoining(false);
-            }
-          },
-        },
-      ]
-    );
+    try {
+      await teamService.joinTeam(teamId);
+      dispatch(joinTeamAction(team!));
+      await loadTeamDetails();
+      Alert.alert('Success', 'You joined the roster.');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to join roster.');
+    }
   };
 
   const handleLeaveTeam = async () => {
-    if (!team) return;
-
-    Alert.alert(
-      'Leave Roster',
-      `Are you sure you want to leave ${team.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: "I'm Out",
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsLeaving(true);
-              await teamService.leaveTeam(teamId);
-              dispatch(leaveTeamAction(teamId));
-              Alert.alert('Success', 'You have left the roster', [
-                { text: 'OK', onPress: () => navigation.goBack() },
-              ]);
-            } catch (err: any) {
-              console.error('Error leaving roster:', err);
-              Alert.alert('Error', err.message || 'Failed to leave roster');
-            } finally {
-              setIsLeaving(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleEditTeam = () => {
-    navigation.goBack();
-  };
-
-  const handleDeleteTeam = () => {
-    if (!team) return;
-    setShowDeleteModal(true);
-  };
-
-  const confirmDeleteTeam = async () => {
     try {
-      await teamService.deleteTeam(teamId);
-      dispatch(removeTeam(teamId));
-      setShowDeleteModal(false);
-      navigation.goBack();
+      await teamService.leaveTeam(teamId);
+      dispatch(leaveTeamAction(teamId));
+      await loadTeamDetails();
+      Alert.alert('Done', 'You stepped out of the roster.');
     } catch (err: any) {
-      console.error('Error deleting roster:', err);
-      setShowDeleteModal(false);
-      Alert.alert('Error', err.message || 'Failed to delete roster');
+      Alert.alert('Error', err.message || 'Failed to step out.');
     }
   };
 
-  const handleRemoveMember = async (member: TeamMember) => {
-    if (!team) return;
+  const handleDeleteTeam = async () => {
+    try {
+      await teamService.deleteTeam(teamId);
+      dispatch(removeTeam(teamId));
+      (navigation as any).replace('TeamsList');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to delete roster.');
+    }
+  };
 
+  // ── Player management ──
+  const handleRemoveMember = (member: TeamMember) => {
     Alert.alert(
       'Remove Player',
       `Remove ${member.user?.firstName || 'this player'} from the roster?`,
@@ -217,12 +256,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           onPress: async () => {
             try {
               await teamService.removeFromTeam(teamId, member.userId);
-              dispatch(removeTeamMember({ teamId, userId: member.userId }));
-              await loadTeamDetails(false); // Silent refresh
-              Alert.alert('Success', 'Player removed from roster');
+              dispatch(removeTeamMember({ teamId, memberId: member.userId }));
+              await loadTeamDetails();
             } catch (err: any) {
-              console.error('Error removing member:', err);
-              Alert.alert('Error', err.message || 'Failed to remove player');
+              Alert.alert('Error', err.message || 'Failed to remove player.');
             }
           },
         },
@@ -230,100 +267,92 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     );
   };
 
-  const handleChangeRole = async (member: TeamMember) => {
-    if (!team) return;
-
-    const roleOptions = [
-      { text: 'Cancel', style: 'cancel' as const },
-      {
-        text: 'Make Co-Manager',
-        onPress: () => updateMemberRole(member, TeamRole.CO_CAPTAIN),
-      },
-      {
-        text: 'Make Player',
-        onPress: () => updateMemberRole(member, TeamRole.MEMBER),
-      },
-    ];
-
-    Alert.alert('Change Role', 'Select new role:', roleOptions);
-  };
-
-  const updateMemberRole = async (member: TeamMember, newRole: TeamRole) => {
-    try {
-      await teamService.updateMemberRole(teamId, member.userId, newRole);
-      dispatch(updateTeamMemberRole({ teamId, userId: member.userId, role: newRole }));
-      await loadTeamDetails(false);
-      Alert.alert('Success', 'Player role updated');
-    } catch (err: any) {
-      console.error('Error updating member role:', err);
-      Alert.alert('Error', err.message || 'Failed to update player role');
-    }
+  const handleChangeRole = (member: TeamMember) => {
+    const newRole = member.role === TeamRole.CO_CAPTAIN ? TeamRole.MEMBER : TeamRole.CO_CAPTAIN;
+    const roleLabel = newRole === TeamRole.CO_CAPTAIN ? 'Co-Captain' : 'Player';
+    Alert.alert(
+      'Change Role',
+      `Set ${member.user?.firstName || 'this player'} as ${roleLabel}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            try {
+              await teamService.updateMemberRole(teamId, member.userId, newRole);
+              dispatch(updateTeamMemberRole({ teamId, memberId: member.userId, role: newRole }));
+              await loadTeamDetails();
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to update role.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleAddMemberDirectly = async (user: User) => {
-    if (!team) return;
-
     try {
       await teamService.addMemberDirectly(teamId, user.id);
-      await loadTeamDetails(false); // Silent refresh to update member list
-      Alert.alert(
-        'Player Added',
-        `${user.firstName} ${user.lastName} has been added to the roster and will receive a notification.`
-      );
+      await loadTeamDetails();
     } catch (err: any) {
-      console.error('Error adding player:', err);
-      Alert.alert('Error', err.message || 'Failed to add player to roster');
-      throw err; // Re-throw to let AddMemberSearch handle it
+      Alert.alert('Error', err.message || 'Failed to invite player.');
     }
   };
 
-  const renderMember = (member: TeamMember) => {
-    const isCaptain = member.role === TeamRole.CAPTAIN;
-    const isCoCaptain = member.role === TeamRole.CO_CAPTAIN;
-    const isPending = member.status === MemberStatus.PENDING;
+  // ── Render helpers ──
+  const renderMember = (member: TeamMember, isPending: boolean) => {
+    const user = member.user;
+    const isCurrentUser = member.userId === currentUser?.id;
+    const roleLabel =
+      member.role === TeamRole.CAPTAIN
+        ? 'Captain'
+        : member.role === TeamRole.CO_CAPTAIN
+        ? 'Co-Captain'
+        : 'Player';
 
     return (
       <View key={member.userId} style={styles.memberItem}>
         <View style={styles.memberInfo}>
-          {member.user?.profileImage ? (
-            <Image
-              source={{ uri: member.user.profileImage }}
-              style={styles.memberAvatar}
-            />
+          {user?.profileImage ? (
+            <Image source={{ uri: user.profileImage }} style={styles.memberAvatar} />
           ) : (
             <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
               <Text style={styles.memberAvatarText}>
-                {member.user?.firstName?.[0] || '?'}
+                {user?.firstName?.[0] || '?'}
               </Text>
             </View>
           )}
           <View style={styles.memberDetails}>
-            <Text style={styles.memberName}>
-              {member.user?.firstName} {member.user?.lastName}
-            </Text>
-            <Text style={styles.memberRole}>
-              {isPending ? '⏳ Pending' : isCaptain ? '👑 Manager' : isCoCaptain ? '⭐ Co-Manager' : 'Player'}
-            </Text>
+            <View style={styles.memberNameRow}>
+              <Text style={styles.memberName}>
+                {user?.firstName} {user?.lastName}
+                {isCurrentUser ? ' (You)' : ''}
+              </Text>
+              {isPending && (
+                <View style={styles.pendingBadge}>
+                  <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.memberRole}>{roleLabel}</Text>
           </View>
         </View>
-
-        {canManageTeam && !isCaptain && (
+        {canManageTeam && !isCurrentUser && (
           <View style={styles.memberActions}>
             {!isPending && (
               <TouchableOpacity
-                style={styles.memberActionButton}
+                style={styles.roleButton}
                 onPress={() => handleChangeRole(member)}
               >
-                <Text style={styles.memberActionText}>Role</Text>
+                <Ionicons name="shield-outline" size={18} color={colors.sky} />
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={[styles.memberActionButton, styles.memberActionButtonDanger]}
+              style={styles.removeButton}
               onPress={() => handleRemoveMember(member)}
             >
-              <Text style={[styles.memberActionText, styles.memberActionTextDanger]}>
-                Remove
-              </Text>
+              <Ionicons name="close-circle" size={22} color={colors.track} />
             </TouchableOpacity>
           </View>
         )}
@@ -331,473 +360,330 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     );
   };
 
-  const handleNavigateToLeague = (leagueId: string) => {
-    (navigation as any).navigate('Leagues', {
-      screen: 'LeagueDetails',
-      params: { leagueId },
-    });
-  };
-
-  const handleNavigateToEvent = (eventId: string) => {
-    (navigation as any).navigate('Events', {
-      screen: 'EventDetails',
-      params: { eventId },
-    });
-  };
-
-  const formatLeagueDate = (date?: Date | string) => {
-    if (!date) return 'TBD';
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const renderLeagueCard = (league: League) => {
-    return (
-      <TouchableOpacity
-        key={league.id}
-        style={styles.leagueCard}
-        onPress={() => handleNavigateToLeague(league.id)}
-      >
-        <View style={styles.leagueCardHeader}>
-          <View style={styles.leagueCardTitleRow}>
-            <Text style={styles.leagueCardTitle}>{league.name}</Text>
-          </View>
-          <Text style={styles.leagueCardSeason}>
-            {league.seasonName || `${formatLeagueDate(league.startDate)} - ${formatLeagueDate(league.endDate)}`}
-          </Text>
-        </View>
-        <View style={styles.leagueCardFooter}>
-          <Text style={styles.leagueCardMeta}>🏀 {league.sportType}</Text>
-          <Text style={[
-            styles.leagueCardStatus,
-            { color: league.isActive ? colors.grass : colors.soft }
-          ]}>
-            {league.isActive ? 'Active' : 'Inactive'}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
+  // ── Loading / Error states ──
   if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ScreenHeader title="Roster Details" showBack onBackPress={() => navigation.goBack()} />
-        <LoadingSpinner message="Loading roster..." />
-      </View>
-    );
+    return <LoadingSpinner message="Loading roster..." />;
   }
 
   if (error || !team) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Roster Details" showBack onBackPress={() => navigation.goBack()} />
-        <ErrorDisplay
-          message={error || 'Roster not found'}
-          onRetry={loadTeamDetails}
-        />
+        <ScreenHeader title="Roster" showBack onBackPress={() => navigation.goBack()} />
+        <ErrorDisplay message={error || 'Roster not found'} onRetry={loadTeamDetails} />
       </View>
     );
   }
 
-  const activeMembers = team.members.filter(m => m.status === MemberStatus.ACTIVE);
-  const pendingMembers = team.members.filter(m => m.status === MemberStatus.PENDING);
-  const availableSlots = team.maxMembers - activeMembers.length;
-
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <ScreenHeader
-        title={team.name}
+        title={canManageTeam ? 'Edit Roster' : 'Roster Details'}
         showBack
         onBackPress={() => navigation.goBack()}
-        rightAction={
-          canManageTeam
-            ? {
-                icon: 'edit',
-                onPress: handleEditTeam,
-              }
-            : undefined
-        }
       />
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        {/* Team Header */}
-        <View style={styles.header}>
-          {team.logo ? (
-            <Image source={{ uri: team.logo }} style={styles.teamLogo} />
-          ) : (
-            <View style={[styles.teamLogo, styles.teamLogoPlaceholder]}>
-              <Text style={styles.teamLogoText}>{team.name[0]}</Text>
-            </View>
-          )}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
+        }
+      >
+        <View style={styles.form}>
+          {/* ── Roster Information ── */}
+          <Text style={styles.sectionTitle}>Roster Information</Text>
 
-          <Text style={styles.teamName}>{team.name}</Text>
-          
-          <View style={styles.teamMeta}>
-            <Text style={styles.teamMetaItem}>🏀 {team.sportType}</Text>
-            <Text style={styles.teamMetaItem}>📊 {team.skillLevel}</Text>
-            <Text style={styles.teamMetaItem}>
-              👥 {activeMembers.length}/{team.maxMembers}
+          <FormInput
+            label="Roster Name *"
+            value={formName}
+            onChangeText={setFormName}
+            placeholder="Enter roster name"
+            error={formErrors.name}
+            maxLength={50}
+            editable={canManageTeam}
+          />
+
+          <FormInput
+            label="Description"
+            value={formDescription}
+            onChangeText={setFormDescription}
+            placeholder="Tell others about your roster"
+            multiline
+            numberOfLines={4}
+            error={formErrors.description}
+            maxLength={500}
+            editable={canManageTeam}
+          />
+
+          <FormSelect
+            label="Sport Type *"
+            value={formSportType}
+            onValueChange={(v) => setFormSportType(v as SportType)}
+            options={sportTypeOptions}
+            disabled={!canManageTeam}
+          />
+
+          <FormSelect
+            label="Skill Level *"
+            value={formSkillLevel}
+            onValueChange={(v) => setFormSkillLevel(v as SkillLevel)}
+            options={skillLevelOptions}
+            disabled={!canManageTeam}
+          />
+
+          <FormInput
+            label="Maximum Players *"
+            value={formMaxMembers}
+            onChangeText={(v) => {
+              const num = parseInt(v, 10);
+              if (!isNaN(num) || v === '') setFormMaxMembers(v === '' ? '' : String(num));
+            }}
+            placeholder="Enter maximum number of players"
+            keyboardType="numeric"
+            error={formErrors.maxMembers}
+            editable={canManageTeam}
+          />
+
+          <FormSelect
+            label="Roster Visibility *"
+            value={formIsPublic}
+            onValueChange={(v) => setFormIsPublic(v as boolean)}
+            options={visibilityOptions}
+            disabled={!canManageTeam}
+          />
+
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              {formIsPublic
+                ? '🌐 Public rosters can be discovered and joined by anyone'
+                : '🔒 Private rosters require an invite code to join'}
             </Text>
           </View>
 
-          {team.description && (
-            <Text style={styles.teamDescription}>{team.description}</Text>
-          )}
-        </View>
-
-        {/* Team Stats */}
-        {team.stats && (
-          <View style={styles.statsContainer}>
-            <Text style={styles.sectionTitle}>Roster Statistics</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{team.stats?.gamesPlayed || 0}</Text>
-                <Text style={styles.statLabel}>Games Played</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{team.stats?.gamesWon || 0}</Text>
-                <Text style={styles.statLabel}>Wins</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{team.stats?.gamesLost || 0}</Text>
-                <Text style={styles.statLabel}>Losses</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>
-                  {team.stats?.winRate ? (team.stats.winRate * 100).toFixed(0) : 0}%
-                </Text>
-                <Text style={styles.statLabel}>Win Rate</Text>
-              </View>
-            </View>
-            
-            <TouchableOpacity
-              style={styles.viewMoreButton}
-              onPress={() => Alert.alert('Roster Stats', 'Detailed statistics coming soon')}
-            >
-              <Text style={styles.viewMoreText}>View Detailed Statistics →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Members Section */}
-        <View style={styles.membersContainer}>
-          {/* Invites List — pending members */}
-          {pendingMembers.length > 0 && (
-            <>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>
-                  Invites ({pendingMembers.length})
-                </Text>
-              </View>
-              {pendingMembers.map(renderMember)}
-            </>
-          )}
-
-          {/* Add Member Search - Only for private rosters with owner/admin access */}
-          {canManageTeam && availableSlots > 0 && (
-            <View style={styles.addMemberSection}>
-              <View style={styles.addMemberHeader}>
-                <Text style={styles.addMemberTitle}>Invites</Text>
-                {!team.isPublic && (
+          {/* ── Invites Section (managers only) ── */}
+          {canManageTeam && (
+            <View style={styles.addMembersSection}>
+              <View style={styles.addMembersHeader}>
+                <Text style={styles.addMembersTitle}>Invites</Text>
+                {!formIsPublic && (
                   <View style={styles.privateBadge}>
                     <Text style={styles.privateBadgeText}>🔒 Private</Text>
                   </View>
                 )}
               </View>
-              <Text style={styles.addMemberDescription}>
-                Search for existing users and add them to your roster. They will receive a notification.
+              <Text style={styles.addMembersDescription}>
+                Search for players and invite them to your roster.
               </Text>
+
+              {/* Pending invites list */}
+              {pendingMembers.length > 0 && (
+                <View style={styles.pendingMembersContainer}>
+                  <Text style={styles.pendingMembersTitle}>
+                    Pending Invites ({pendingMembers.length})
+                  </Text>
+                  {pendingMembers.map((m) => renderMember(m, true))}
+                </View>
+              )}
+
               <AddMemberSearch
                 onAddMember={handleAddMemberDirectly}
-                existingMemberIds={[...activeMembers, ...pendingMembers].map(m => m.userId)}
+                existingMemberIds={allMemberIds}
               />
             </View>
           )}
 
-          {/* Players List — active members */}
-          <View style={styles.sectionHeader}>
+          {/* ── Confirmed Players ── */}
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              Players ({activeMembers.length}/{team.maxMembers})
+              Players ({activeMembers.length})
             </Text>
-            {availableSlots > 0 && (
-              <Text style={styles.availableSlots}>{availableSlots} slots available</Text>
-            )}
-          </View>
-
-          {activeMembers.length > 0 ? (
-            activeMembers.map(renderMember)
-          ) : (
-            <Text style={styles.emptyPlayersText}>No players have joined yet</Text>
-          )}
-        </View>
-
-        {/* Leagues Section */}
-        <View style={styles.leaguesContainer}>
-          <Text style={styles.sectionTitle}>
-            Leagues {leagues.length > 0 && `(${leagues.length})`}
-          </Text>
-          
-          {isLoadingLeagues ? (
-            <View style={styles.leaguesLoading}>
-              <Text style={styles.leaguesLoadingText}>Loading leagues...</Text>
-            </View>
-          ) : leagues.length > 0 ? (
-            <View style={styles.leaguesList}>
-              {leagues.map(renderLeagueCard)}
-            </View>
-          ) : (
-            <View style={styles.noLeagues}>
-              <Text style={styles.noLeaguesText}>
-                This roster is not participating in any leagues yet.
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Upcoming Events Section */}
-        {(isUserMember || isInRosterMembers) && (
-          <View style={styles.eventsContainer}>
-            <Text style={styles.sectionTitle}>
-              Upcoming Events {upcomingEvents.length > 0 && `(${upcomingEvents.length})`}
-            </Text>
-
-            {isLoadingEvents ? (
-              <View style={styles.eventsLoading}>
-                <Text style={styles.eventsLoadingText}>Loading events...</Text>
-              </View>
-            ) : upcomingEvents.length > 0 ? (
-              <View style={styles.eventsList}>
-                {upcomingEvents.map((event) => {
-                  const startDate = new Date(event.startTime);
-                  return (
-                    <TouchableOpacity
-                      key={event.id}
-                      style={styles.eventCard}
-                      onPress={() => handleNavigateToEvent(event.id)}
-                    >
-                      <View style={styles.eventCardDate}>
-                        <Text style={styles.eventCardMonth}>
-                          {startDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
-                        </Text>
-                        <Text style={styles.eventCardDay}>
-                          {startDate.getDate()}
-                        </Text>
-                      </View>
-                      <View style={styles.eventCardInfo}>
-                        <Text style={styles.eventCardTitle} numberOfLines={1}>{event.title}</Text>
-                        <Text style={styles.eventCardTime}>
-                          {startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                        </Text>
-                        {event.facility && (
-                          <Text style={styles.eventCardLocation} numberOfLines={1}>
-                            📍 {event.facility.name}
-                          </Text>
-                        )}
-                      </View>
-                      <Text style={styles.eventCardChevron}>›</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+            {activeMembers.length === 0 ? (
+              <Text style={styles.emptyText}>No confirmed players yet.</Text>
             ) : (
-              <View style={styles.noEvents}>
-                <Text style={styles.noEventsText}>
-                  No upcoming events for this roster.
-                </Text>
-              </View>
+              activeMembers.map((m) => renderMember(m, false))
             )}
           </View>
-        )}
 
-        {/* Action Buttons */}
-        <View style={styles.actions}>
-          {canSeeJoinButton && availableSlots > 0 && (
-            <FormButton
-              title="Join Up"
-              onPress={handleJoinTeam}
-              disabled={isJoining}
-            />
+          {/* ── Pending invites (read-only for non-managers) ── */}
+          {!canManageTeam && pendingMembers.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Pending Invites ({pendingMembers.length})
+              </Text>
+              {pendingMembers.map((m) => renderMember(m, true))}
+            </View>
           )}
 
-          {isUserMember && !isUserCaptain && (
-            <FormButton
-              title="Leave Roster"
-              onPress={handleLeaveTeam}
-              variant="secondary"
-              disabled={isLeaving}
-            />
+          {/* ── Leagues ── */}
+          {leagues.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Leagues ({leagues.length})</Text>
+              {leagues.map((league: any) => (
+                <TouchableOpacity
+                  key={league.id}
+                  style={styles.listCard}
+                  onPress={() => (navigation as any).navigate('LeagueDetails', { leagueId: league.id })}
+                >
+                  <View style={styles.listCardContent}>
+                    <Ionicons name="trophy-outline" size={20} color={colors.court} />
+                    <View style={styles.listCardText}>
+                      <Text style={styles.listCardTitle}>{league.name}</Text>
+                      <Text style={styles.listCardSub}>{league.sportType}</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
+            </View>
           )}
 
-          {isUserCaptain && (
-            <>
+          {/* ── Upcoming Events ── */}
+          {events.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Upcoming Events ({events.length})</Text>
+              {events.map((event) => (
+                <TouchableOpacity
+                  key={event.id}
+                  style={styles.listCard}
+                  onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
+                >
+                  <View style={styles.listCardContent}>
+                    <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+                    <View style={styles.listCardText}>
+                      <Text style={styles.listCardTitle}>{event.title}</Text>
+                      <Text style={styles.listCardSub}>
+                        {new Date(event.startTime).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* ── Action Buttons ── */}
+          <View style={styles.actionsSection}>
+            {canManageTeam && (
               <FormButton
-                title="Update Roster"
-                onPress={handleEditTeam}
+                title={isSaving ? 'Saving...' : 'Update Roster'}
+                onPress={handleUpdateTeam}
+                disabled={isSaving}
+                loading={isSaving}
               />
-            </>
-          )}
+            )}
 
-          {/* Delete visible to anyone temporarily for cleanup */}
-          <FormButton
-            title="Delete Roster"
-            onPress={handleDeleteTeam}
-            variant="danger"
-          />
+            {!isMember && !currentMember && (
+              <FormButton
+                title="Join Up"
+                onPress={handleJoinTeam}
+                leftIcon="add-circle-outline"
+              />
+            )}
+
+            {isMember && !isCaptain && (
+              <FormButton
+                title="Step Out"
+                onPress={() => setShowLeaveModal(true)}
+                variant="outline"
+                leftIcon="exit-outline"
+              />
+            )}
+
+            {isCaptain && (
+              <FormButton
+                title="Delete Roster"
+                onPress={() => setShowDeleteModal(true)}
+                variant="danger"
+                leftIcon="trash-outline"
+              />
+            )}
+          </View>
         </View>
       </ScrollView>
 
+      {/* ── Modals ── */}
       <ConfirmModal
         visible={showDeleteModal}
         title="Delete Roster"
-        message={`Are you sure you want to delete ${team.name}? This action cannot be undone.`}
+        message="This will permanently delete the roster and remove all players. This cannot be undone."
         icon="trash-outline"
         variant="danger"
         confirmText="Delete"
+        cancelText="Cancel"
         onCancel={() => setShowDeleteModal(false)}
-        onConfirm={confirmDeleteTeam}
+        onConfirm={handleDeleteTeam}
       />
-    </View>
+
+      <ConfirmModal
+        visible={showLeaveModal}
+        title="Step Out"
+        message="Are you sure you want to step out of this roster?"
+        icon="exit-outline"
+        confirmText="Step Out"
+        cancelText="Cancel"
+        onCancel={() => setShowLeaveModal(false)}
+        onConfirm={handleLeaveTeam}
+      />
+    </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalk,
   },
-  content: {
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingBottom: 40,
   },
-  header: {
-    backgroundColor: '#FFFFFF',
+  form: {
     padding: 20,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  teamLogo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 12,
-  },
-  teamLogoPlaceholder: {
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  teamLogoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  teamName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  teamMeta: {
-    flexDirection: 'row',
     gap: 16,
-    marginBottom: 12,
-  },
-  teamMetaItem: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  teamDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  statsContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginTop: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 16,
+    color: colors.ink,
+    marginBottom: 8,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  statItem: {
-    flex: 1,
-    minWidth: '40%',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#F9FAFB',
+  infoBox: {
+    backgroundColor: colors.courtLight + '20',
     borderRadius: 8,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  viewMoreButton: {
-    marginTop: 16,
     padding: 12,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    alignItems: 'center',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.courtLight + '40',
   },
-  viewMoreText: {
+  infoText: {
     fontSize: 14,
-    color: '#3B82F6',
-    fontWeight: '600',
+    color: colors.ink,
+    lineHeight: 20,
   },
-  membersContainer: {
+  // Invites / Add members section
+  addMembersSection: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginTop: 12,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  availableSlots: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '500',
-  },
-  addMemberSection: {
-    marginTop: 24,
-    paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
     gap: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  addMemberHeader: {
+  addMembersHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  addMemberTitle: {
+  addMembersTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.ink,
@@ -813,18 +699,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.court,
   },
-  addMemberDescription: {
+  addMembersDescription: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     lineHeight: 20,
   },
+  pendingMembersContainer: {
+    gap: 8,
+  },
+  pendingMembersTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  // Member items
   memberItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 8,
   },
   memberInfo: {
     flexDirection: 'row',
@@ -838,252 +736,100 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   memberAvatarPlaceholder: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.grass,
     justifyContent: 'center',
     alignItems: 'center',
   },
   memberAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#FFFFFF',
   },
   memberDetails: {
     flex: 1,
   },
+  memberNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   memberName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1F2937',
-    marginBottom: 2,
+    color: colors.ink,
   },
   memberRole: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  pendingBadge: {
+    backgroundColor: colors.courtLight + '30',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  pendingBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.court,
   },
   memberActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  memberActionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 6,
+  roleButton: {
+    padding: 4,
   },
-  memberActionButtonDanger: {
-    backgroundColor: '#FEE2E2',
+  removeButton: {
+    padding: 4,
   },
-  memberActionText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#374151',
+  // Section
+  section: {
+    marginTop: 8,
   },
-  memberActionTextDanger: {
-    color: '#DC2626',
-  },
-  emptyPlayersText: {
+  emptyText: {
     fontSize: 14,
     color: colors.inkFaint,
+    fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
   },
-  actions: {
-    padding: 20,
-    gap: 12,
-  },
-  inviteContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginTop: 12,
-    gap: 16,
-  },
-  inviteCodeBox: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  inviteCodeLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  inviteCode: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    letterSpacing: 2,
-    marginBottom: 8,
-  },
-  inviteCodeExpiry: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 12,
-  },
-  inviteActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  inviteActionButton: {
-    flex: 1,
-    backgroundColor: '#3B82F6',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  inviteActionText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  noInviteCode: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 8,
-    padding: 16,
-    gap: 12,
-  },
-  noInviteCodeText: {
-    fontSize: 14,
-    color: '#92400E',
-    lineHeight: 20,
-  },
-  leaguesContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginTop: 12,
-  },
-  leaguesLoading: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  leaguesLoadingText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  leaguesList: {
-    gap: 12,
-  },
-  leagueCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  leagueCardHeader: {
-    marginBottom: 12,
-  },
-  leagueCardTitleRow: {
+  // List cards (leagues / events)
+  listCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-  },
-  leagueCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    flex: 1,
-  },
-  leagueCardSeason: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  leagueCardFooter: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  leagueCardMeta: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  leagueCardStatus: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  noLeagues: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  noLeaguesText: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  eventsContainer: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginTop: 12,
-  },
-  eventsLoading: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  eventsLoadingText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  eventsList: {
-    gap: 10,
-  },
-  eventCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.chalk,
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    marginBottom: 8,
   },
-  eventCardDate: {
+  listCardContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    marginRight: 14,
-  },
-  eventCardMonth: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.grass,
-    letterSpacing: 1,
-  },
-  eventCardDay: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.ink,
-  },
-  eventCardInfo: {
     flex: 1,
-    gap: 2,
+    gap: 12,
   },
-  eventCardTitle: {
+  listCardText: {
+    flex: 1,
+  },
+  listCardTitle: {
     fontSize: 15,
     fontWeight: '600',
     color: colors.ink,
   },
-  eventCardTime: {
+  listCardSub: {
     fontSize: 13,
     color: colors.inkFaint,
+    marginTop: 2,
   },
-  eventCardLocation: {
-    fontSize: 13,
-    color: colors.inkFaint,
-  },
-  eventCardChevron: {
-    fontSize: 22,
-    color: '#D1D5DB',
-    marginLeft: 8,
-  },
-  noEvents: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  noEventsText: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
+  // Actions
+  actionsSection: {
+    marginTop: 16,
+    gap: 12,
   },
 });
