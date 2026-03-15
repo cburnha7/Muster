@@ -32,6 +32,7 @@ import {
   selectFilters,
   selectPagination,
 } from '../../store/slices/leaguesSlice';
+import { selectUser } from '../../store/slices/authSlice';
 import { League, LeagueFilters, SportType } from '../../types';
 
 export const LeaguesBrowserScreen: React.FC = () => {
@@ -40,6 +41,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
 
   // Redux state
   const leagues = useSelector(selectLeagues);
+  const currentUser = useSelector(selectUser);
   const isLoading = useSelector(selectIsLoading);
   const isLoadingMore = useSelector(selectIsLoadingMore);
   const error = useSelector(selectError);
@@ -140,7 +142,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
 
   // Render league item
   const renderLeagueItem = ({ item }: { item: League }) => (
-    <LeagueCard league={item} onPress={handleLeaguePress} />
+    <LeagueCard league={item} onPress={handleLeaguePress} isOwner={item.organizerId === currentUser?.id} />
   );
 
   // Render empty state

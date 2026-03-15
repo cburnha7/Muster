@@ -330,9 +330,10 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
       invitedAt: m.joinedAt,
     }));
 
-    // 2. Pending league invitations for rosters the user captains
+    // 2. Pending league invitations for rosters the user owns (captain only)
+    // Only the roster Manager/Owner can see and respond to league invitations
     const captainedTeamIds = await prisma.teamMember.findMany({
-      where: { userId, status: 'active', role: { in: ['captain', 'co_captain'] } },
+      where: { userId, status: 'active', role: 'captain' },
       select: { teamId: true },
     });
     const teamIds = captainedTeamIds.map((t) => t.teamId);

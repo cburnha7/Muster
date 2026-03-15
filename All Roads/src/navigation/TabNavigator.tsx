@@ -132,6 +132,12 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Home',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Home', { screen: 'HomeScreen' });
+          },
+        })}
       />
       <Tab.Screen 
         name="Events" 
@@ -165,6 +171,12 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Leagues',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Leagues', { screen: 'LeaguesBrowser' });
+          },
+        })}
       />
       <Tab.Screen 
         name="Facilities" 

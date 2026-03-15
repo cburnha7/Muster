@@ -438,7 +438,45 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         }
       >
         <View style={styles.form}>
-          {/* ── Roster Information ── */}
+          {/* ── Read-only Roster Header (non-managers and readOnly mode) ── */}
+          {!canManageTeam && (
+            <View style={styles.readOnlyHeader}>
+              <View style={styles.readOnlyHeaderTop}>
+                <View style={styles.readOnlySportBadge}>
+                  <Ionicons name="shield-outline" size={22} color={colors.grass} />
+                </View>
+                <View style={styles.readOnlyHeaderInfo}>
+                  <Text style={styles.readOnlyName}>{team.name}</Text>
+                  <Text style={styles.readOnlyMeta}>
+                    {team.sportType ? team.sportType.charAt(0).toUpperCase() + team.sportType.slice(1) : ''} • {team.skillLevel || 'All Levels'}
+                  </Text>
+                </View>
+              </View>
+              {team.description ? (
+                <Text style={styles.readOnlyDescription}>{team.description}</Text>
+              ) : null}
+              <View style={styles.readOnlyStats}>
+                <View style={styles.readOnlyStatItem}>
+                  <Text style={styles.readOnlyStatValue}>{activeMembers.length}</Text>
+                  <Text style={styles.readOnlyStatLabel}>Players</Text>
+                </View>
+                <View style={styles.readOnlyStatDivider} />
+                <View style={styles.readOnlyStatItem}>
+                  <Text style={styles.readOnlyStatValue}>{team.maxMembers || '—'}</Text>
+                  <Text style={styles.readOnlyStatLabel}>Max</Text>
+                </View>
+                <View style={styles.readOnlyStatDivider} />
+                <View style={styles.readOnlyStatItem}>
+                  <Text style={styles.readOnlyStatValue}>{formIsPublic ? 'Public' : 'Private'}</Text>
+                  <Text style={styles.readOnlyStatLabel}>Visibility</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* ── Editable Roster Information (managers only) ── */}
+          {canManageTeam && (
+            <>
           <Text style={styles.sectionTitle}>Roster Information</Text>
 
           <FormInput
@@ -507,6 +545,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               disabled={!canManageTeam}
             />
           </View>
+            </>
+          )}
 
           {/* ── Invites Section (managers only) ── */}
           {canManageTeam && (
@@ -944,5 +984,73 @@ const styles = StyleSheet.create({
   actionsSection: {
     marginTop: 16,
     gap: 12,
+  },
+  // Read-only header
+  readOnlyHeader: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  readOnlyHeaderTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  readOnlySportBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EDF7F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  readOnlyHeaderInfo: {
+    flex: 1,
+  },
+  readOnlyName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  readOnlyMeta: {
+    fontSize: 14,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  readOnlyDescription: {
+    fontSize: 15,
+    color: colors.ink,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  readOnlyStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.chalk,
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  readOnlyStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  readOnlyStatValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  readOnlyStatLabel: {
+    fontSize: 12,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  readOnlyStatDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#E5E7EB',
   },
 });

@@ -203,8 +203,7 @@ export function HomeScreen(): JSX.Element {
         loadDebriefEvents();
         loadInvitations();
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authLoading])
+    }, [authLoading, refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations])
   );
 
   // Handle search with debouncing for better performance

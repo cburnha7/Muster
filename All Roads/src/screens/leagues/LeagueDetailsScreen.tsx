@@ -19,7 +19,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { LeagueService } from '../../services/api/LeagueService';
 import { leagueService } from '../../services/api/LeagueService';
-import { SportType, Team, Event, UpdateLeagueData } from '../../types';
+import { SportType, Team, Event, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
 import { colors, fonts } from '../../theme';
 import { RootState } from '../../store/store';
@@ -102,11 +102,15 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const rosterIdsInLeague = new Set(
     activeMembers.filter((m) => m.memberType === 'roster').map((m) => m.memberId)
   );
-  const userOwnedRosters = (userRosters || []).filter((r) => r.captainId === currentUser?.id);
+  const userOwnedRosters = (userRosters || []).filter((r) =>
+    r.captainId === currentUser?.id ||
+    r.members?.some((m) => m.userId === currentUser?.id && m.role === TeamRole.CAPTAIN)
+  );
   const eligibleRosters = userOwnedRosters.filter((r) => !rosterIdsInLeague.has(r.id));
   const hasEligibleRoster = eligibleRosters.length > 0;
 
   // Check if user has a pending roster invitation they can confirm
+  // Only the roster Manager/Owner (captainId) can confirm league invitations
   const pendingUserRosterInvitations = members.filter(
     (m) => m.status === 'pending' && m.memberType === 'roster' &&
       userOwnedRosters.some((r) => r.id === m.memberId)
@@ -401,8 +405,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
       {([
         { key: 'standings' as TabKey, label: 'Standings', icon: 'trophy-outline' },
         { key: 'matches' as TabKey, label: 'Matches', icon: 'football-outline' },
-        { key: 'players' as TabKey, label: 'Players', icon: 'people-outline' },
-        ...(isTeamLeague ? [{ key: 'teams' as TabKey, label: 'Rosters', icon: 'shield-outline' }] : []),
+        ...(isTeamLeague
+          ? [{ key: 'teams' as TabKey, label: 'Rosters', icon: 'shield-outline' }]
+          : [{ key: 'players' as TabKey, label: 'Players', icon: 'people-outline' }]),
         { key: 'info' as TabKey, label: 'Info', icon: 'information-circle-outline' },
       ] as Array<{ key: TabKey; label: string; icon: string }>).map((tab) => (
         <TouchableOpacity

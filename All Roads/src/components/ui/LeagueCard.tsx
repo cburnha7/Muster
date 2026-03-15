@@ -7,10 +7,11 @@ import { colors } from '../../theme';
 interface LeagueCardProps {
   league: League;
   onPress?: (league: League) => void;
+  isOwner?: boolean;
   style?: any;
 }
 
-export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, style }) => {
+export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner, style }) => {
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
       case SportType.BASKETBALL:
@@ -67,6 +68,11 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, style }
               <Text style={styles.name} numberOfLines={1}>
                 {league.name}
               </Text>
+              {isOwner && (
+                <View style={styles.ownerBadge}>
+                  <Text style={styles.ownerBadgeText}>Owner</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.season} numberOfLines={1}>
               {seasonText}
@@ -154,12 +160,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
+    gap: 8,
   },
   name: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
     flex: 1,
+  },
+  ownerBadge: {
+    backgroundColor: colors.grass + '18',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  ownerBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.grass,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   season: {
     fontSize: 13,
