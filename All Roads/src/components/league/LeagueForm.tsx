@@ -546,26 +546,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </Text>
           </View>
 
-          {/* Auto-Generate Matchups — own card section */}
-          <View style={styles.toggleCard}>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleInfo}>
-                <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
-                <Text style={styles.toggleDescription}>
-                  Automatically create shell matchup events after registration closes
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
-                onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
-                activeOpacity={0.7}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: autoGenerateMatchups }}
-              >
-                <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
-              </TouchableOpacity>
-            </View>
-          </View>
+          {/* Auto-Generate Matchups — moved below, before buttons */}
 
           <FormInput
             label="Points for Win"
@@ -613,46 +594,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 onChangeText={setRegistrationCloseDate}
               />
 
-              <Text style={styles.fieldLabel}>Preferred Game Days</Text>
-              <View style={styles.dayChipsRow}>
-                {dayLabels.map((label, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={[
-                      styles.dayChip,
-                      preferredGameDays.includes(idx) && styles.dayChipSelected,
-                    ]}
-                    onPress={() => toggleGameDay(idx)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.dayChipText,
-                        preferredGameDays.includes(idx) && styles.dayChipTextSelected,
-                      ]}
-                    >
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <FormInput
-                label="Time Window Start"
-                placeholder="HH:MM (e.g. 18:00)"
-                value={timeWindowStart}
-                onChangeText={setTimeWindowStart}
-                error={errors.timeWindowStart}
-              />
-
-              <FormInput
-                label="Time Window End"
-                placeholder="HH:MM (e.g. 21:00)"
-                value={timeWindowEnd}
-                onChangeText={setTimeWindowEnd}
-                error={errors.timeWindowEnd}
-              />
-
               <FormInput
                 label="Season Game Count"
                 placeholder="Total games per roster"
@@ -661,6 +602,50 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 keyboardType="numeric"
                 error={errors.seasonGameCount}
               />
+            </>
+          )}
+
+          {/* Game Day */}
+          <Text style={styles.fieldLabel}>Game Day</Text>
+          <View style={styles.dayChipsRow}>
+            {dayLabels.map((label, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.dayChip,
+                  preferredGameDays.includes(idx) && styles.dayChipSelected,
+                ]}
+                onPress={() => toggleGameDay(idx)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.dayChipText,
+                    preferredGameDays.includes(idx) && styles.dayChipTextSelected,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Time Range */}
+          <FormInput
+            label="Time Range Start"
+            placeholder="HH:MM (e.g. 09:00)"
+            value={timeWindowStart}
+            onChangeText={setTimeWindowStart}
+            error={errors.timeWindowStart}
+          />
+
+          <FormInput
+            label="Time Range End"
+            placeholder="HH:MM (e.g. 15:00)"
+            value={timeWindowEnd}
+            onChangeText={setTimeWindowEnd}
+            error={errors.timeWindowEnd}
+          />
             </>
           )}
 
@@ -782,37 +767,47 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
             )}
           </View>
+
+          {/* Auto-Generate Matchups */}
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleInfo}>
+                <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
+                <Text style={styles.toggleDescription}>
+                  Automatically create shell matchup events after registration closes
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
+                onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
+                activeOpacity={0.7}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: autoGenerateMatchups }}
+              >
+                <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Buttons — vertically stacked, matching Roster edit screen */}
+          <View style={styles.buttonStack}>
+            <FormButton
+              title={isEdit ? 'Update League' : 'Create League'}
+              onPress={handleSubmit}
+              loading={loading}
+              disabled={loading}
+            />
+            {isEdit && onDelete && (
+              <FormButton
+                title="Delete League"
+                variant="danger"
+                onPress={onDelete}
+                disabled={loading}
+              />
+            )}
+          </View>
         </View>
       </ScrollView>
-
-      {/* Fixed bottom action bar — horizontal row matching EditEventScreen */}
-      <View style={styles.actions}>
-        {isEdit && onDelete && (
-          <FormButton
-            title="Delete"
-            variant="danger"
-            onPress={onDelete}
-            style={styles.deleteButton}
-            disabled={loading}
-          />
-        )}
-        {onCancel && (
-          <FormButton
-            title="Cancel"
-            variant="outline"
-            onPress={onCancel}
-            style={styles.actionButton}
-            disabled={loading}
-          />
-        )}
-        <FormButton
-          title={isEdit ? 'Save Changes' : 'Create League'}
-          onPress={handleSubmit}
-          style={styles.actionButton}
-          loading={loading}
-          disabled={loading}
-        />
-      </View>
     </View>
   );
 };
@@ -939,6 +934,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
+    marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
@@ -1198,28 +1194,9 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     textAlign: 'center',
   },
-  // Bottom action bar — horizontal row matching EditEventScreen
-  actions: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  deleteButton: {
-    marginRight: 8,
-  },
-  actionButton: {
-    flex: 1,
-    marginHorizontal: 4,
+  // Vertically stacked buttons — matching Roster edit screen
+  buttonStack: {
+    marginTop: Spacing.lg,
+    gap: 12,
   },
 });

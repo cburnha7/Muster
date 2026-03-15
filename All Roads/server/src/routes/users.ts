@@ -291,6 +291,102 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get current user's pending invitations (roster + league)
+router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
+  try {
+    let userId = req.user?.userId;
+    if (!userId) {
+      userId = req.headers['x-user-id'] as string || req.query.userId as string;
+    }
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // 1. Pending roster invitations — user was added to a team with status 'pending'
+    const pendingRosterMemberships = await prisma.teamMember.findMany({
+      where: { userId, status: 'pending' },
+      include: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+            sportType: true,
+            imageUrl: true,
+            _count: { select: { members: true } },
+          },
+        },
+      },
+      orderBy: { joinedAt: 'desc' },
+    });
+
+    const rosterInvitations = pendingRosterMemberships.map((m) => ({
+      id: m.id,
+      type: 'roster' as const,
+      rosterId: m.teamId,
+      rosterName: m.team.name,
+      sportType: m.team.sportType,
+      imageUrl: m.team.imageUrl,
+      playerCount: m.team._count.members,
+      invitedAt: m.joinedAt,
+    }));
+
+    // 2. Pending league invitations for rosters the user captains
+    const captainedTeamIds = await prisma.teamMember.findMany({
+      where: { userId, status: 'active', role: { in: ['captain', 'co_captain'] } },
+      select: { teamId: true },
+    });
+    const teamIds = captainedTeamIds.map((t) => t.teamId);
+
+    let leagueInvitations: any[] = [];
+    if (teamIds.length > 0) {
+      const pendingLeagueMemberships = await prisma.leagueMembership.findMany({
+        where: {
+          memberType: 'roster',
+          memberId: { in: teamIds },
+          status: 'pending',
+        },
+        include: {
+          league: {
+            select: {
+              id: true,
+              name: true,
+              sportType: true,
+              imageUrl: true,
+              leagueType: true,
+            },
+          },
+          team: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { joinedAt: 'desc' },
+      });
+
+      leagueInvitations = pendingLeagueMemberships.map((m) => ({
+        id: m.id,
+        type: 'league' as const,
+        leagueId: m.league.id,
+        leagueName: m.league.name,
+        sportType: m.league.sportType,
+        imageUrl: m.league.imageUrl,
+        leagueType: m.league.leagueType,
+        rosterId: m.team?.id,
+        rosterName: m.team?.name,
+        invitedAt: m.joinedAt,
+      }));
+    }
+
+    res.json({
+      rosterInvitations,
+      leagueInvitations,
+      total: rosterInvitations.length + leagueInvitations.length,
+    });
+  } catch (error) {
+    console.error('Get user invitations error:', error);
+    res.status(500).json({ error: 'Failed to fetch invitations' });
+  }
+});
+
 // Get current user's events (events they organized)
 router.get('/events', optionalAuthMiddleware, async (req, res) => {
   try {

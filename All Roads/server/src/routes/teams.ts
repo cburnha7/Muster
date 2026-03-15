@@ -179,7 +179,7 @@ router.get('/:id/events', async (req, res) => {
       },
       include: {
         facility: {
-          select: { id: true, name: true, address: true },
+          select: { id: true, name: true, street: true, city: true, state: true },
         },
       },
       orderBy: { startTime: 'asc' },
@@ -457,7 +457,7 @@ router.post('/:id/add-member', async (req, res) => {
     if (existing) {
       member = await prisma.teamMember.update({
         where: { id: existing.id },
-        data: { status: 'active', joinedAt: new Date() },
+        data: { status: 'pending', joinedAt: new Date() },
         include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
       });
     } else {
@@ -466,7 +466,7 @@ router.post('/:id/add-member', async (req, res) => {
           teamId: id,
           userId,
           role: 'member',
-          status: 'active',
+          status: 'pending',
           joinedAt: new Date(),
         },
         include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },

@@ -22,6 +22,7 @@ import { StepOutModal } from '../../components/bookings/StepOutModal';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
+import { userService, RosterInvitation, LeagueInvitation } from '../../services/api/UserService';
 
 // Context
 import { useAuth } from '../../context/AuthContext';
@@ -31,7 +32,7 @@ import { selectUser } from '../../store/slices/authSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
 
 // Theme
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 
 // Types
 import { Booking } from '../../types';
@@ -84,6 +85,12 @@ export function HomeScreen(): JSX.Element {
   // Debrief state
   const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
   const [debriefLoading, setDebriefLoading] = useState(false);
+
+  // Invitations state
+  const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
+  const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   // Live events — derived from bookings where now is between start and end
   const [now, setNow] = useState(() => new Date());
@@ -149,12 +156,50 @@ export function HomeScreen(): JSX.Element {
     }
   }, []);
 
+  // Load pending invitations
+  const loadInvitations = useCallback(async () => {
+    try {
+      setInvitationsLoading(true);
+      const result = await userService.getInvitations();
+      setRosterInvitations(result.rosterInvitations || []);
+      setLeagueInvitations(result.leagueInvitations || []);
+    } catch (err) {
+      console.error('Failed to load invitations:', err);
+    } finally {
+      setInvitationsLoading(false);
+    }
+  }, []);
+
+  // Accept roster invitation
+  const handleAcceptRoster = useCallback(async (inv: RosterInvitation) => {
+    setAcceptingId(inv.id);
+    try {
+      await userService.acceptRosterInvitation(inv.rosterId);
+      Alert.alert('Joined', `You joined ${inv.rosterName}`);
+      loadInvitations();
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to join roster');
+    } finally {
+      setAcceptingId(null);
+    }
+  }, [loadInvitations]);
+
+  // Navigate to roster details for league invitation
+  const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
+    if (inv.rosterId) {
+      (navigation as any).navigate('Teams', {
+        screen: 'TeamDetails',
+        params: { teamId: inv.rosterId },
+      });
+    }
+  }, [navigation]);
+
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchEvents(), refetchBookings(), loadDebriefEvents()]);
+    await Promise.all([refetchEvents(), refetchBookings(), loadDebriefEvents(), loadInvitations()]);
     setIsRefreshing(false);
-  }, [refetchEvents, refetchBookings, loadDebriefEvents]);
+  }, [refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations]);
 
   // Reload data when screen comes into focus
   useFocusEffect(
@@ -163,6 +208,7 @@ export function HomeScreen(): JSX.Element {
         refetchEvents();
         refetchBookings();
         loadDebriefEvents();
+        loadInvitations();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authLoading])
@@ -383,6 +429,69 @@ export function HomeScreen(): JSX.Element {
         )}
       </View>
 
+      {/* Invitations */}
+      {(rosterInvitations.length > 0 || leagueInvitations.length > 0) && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Invitations</Text>
+            <View style={styles.inviteBadge}>
+              <Text style={styles.inviteBadgeText}>
+                {rosterInvitations.length + leagueInvitations.length}
+              </Text>
+            </View>
+          </View>
+
+          {/* Roster invitations */}
+          {rosterInvitations.map((inv) => (
+            <View key={inv.id} style={styles.inviteCard}>
+              <View style={styles.inviteIconWrap}>
+                <Ionicons name="shield-outline" size={22} color={colors.chalk} />
+              </View>
+              <View style={styles.inviteInfo}>
+                <Text style={styles.inviteName} numberOfLines={1}>{inv.rosterName}</Text>
+                <Text style={styles.inviteMeta}>
+                  {inv.sportType ? `${inv.sportType} · ` : ''}{inv.playerCount} players
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.joinUpButton}
+                onPress={() => handleAcceptRoster(inv)}
+                disabled={acceptingId === inv.id}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.joinUpButtonText}>
+                  {acceptingId === inv.id ? '...' : 'Join Up'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+
+          {/* League invitations */}
+          {leagueInvitations.map((inv) => (
+            <TouchableOpacity
+              key={inv.id}
+              style={styles.inviteCard}
+              onPress={() => handleLeagueInvitationPress(inv)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.inviteIconWrap, { backgroundColor: colors.court }]}>
+                <Ionicons name="trophy-outline" size={22} color={colors.chalk} />
+              </View>
+              <View style={styles.inviteInfo}>
+                <Text style={styles.inviteName} numberOfLines={1}>{inv.leagueName}</Text>
+                <Text style={styles.inviteMeta}>
+                  {inv.rosterName ? `via ${inv.rosterName} · ` : ''}{inv.sportType || 'League'}
+                </Text>
+              </View>
+              <View style={styles.pendingBadge}>
+                <Text style={styles.pendingBadgeText}>Pending</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       {/* Step Out Modal */}
       <StepOutModal
         visible={stepOutModalVisible}
@@ -572,5 +681,80 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.md,
     lineHeight: 24,
+  },
+  // Invitations
+  inviteBadge: {
+    backgroundColor: colors.court,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  inviteBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.chalk,
+    fontWeight: '700',
+  },
+  inviteCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  inviteIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.grass,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  inviteInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  inviteName: {
+    fontFamily: fonts.ui,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  inviteMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  joinUpButton: {
+    backgroundColor: colors.grass,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  joinUpButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.chalk,
+  },
+  pendingBadge: {
+    backgroundColor: colors.courtLight,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginRight: 8,
+  },
+  pendingBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.ink,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

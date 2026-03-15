@@ -307,6 +307,55 @@ export class UserService extends BaseApiService {
     const params = { query };
     return this.get<User[]>(`${API_ENDPOINTS.USERS.BASE}/search`, { params });
   }
+
+  /**
+   * Get pending invitations (roster + league)
+   */
+  async getInvitations(): Promise<{
+    rosterInvitations: RosterInvitation[];
+    leagueInvitations: LeagueInvitation[];
+    total: number;
+  }> {
+    return this.get(`${API_ENDPOINTS.USERS.BASE}/invitations`);
+  }
+
+  /**
+   * Accept a roster invitation (join the roster)
+   */
+  async acceptRosterInvitation(rosterId: string): Promise<any> {
+    return this.post(`/teams/${rosterId}/join`, {});
+  }
+
+  /**
+   * Decline a roster invitation
+   */
+  async declineRosterInvitation(rosterId: string): Promise<void> {
+    return this.post(`/teams/${rosterId}/leave`, {});
+  }
+}
+
+export interface RosterInvitation {
+  id: string;
+  type: 'roster';
+  rosterId: string;
+  rosterName: string;
+  sportType?: string;
+  imageUrl?: string;
+  playerCount: number;
+  invitedAt: string;
+}
+
+export interface LeagueInvitation {
+  id: string;
+  type: 'league';
+  leagueId: string;
+  leagueName: string;
+  sportType?: string;
+  imageUrl?: string;
+  leagueType: string;
+  rosterId?: string;
+  rosterName?: string;
+  invitedAt: string;
 }
 
 // Create and export singleton instance

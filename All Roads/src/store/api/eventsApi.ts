@@ -23,15 +23,15 @@ const baseQuery = fetchBaseQuery({
       headers.set('authorization', `Bearer ${token}`);
     }
     
-    // DEVELOPMENT: Send X-User-Id header for mock authentication
-    if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
-      // Import authService to get current user
-      const { authService } = require('../../services/auth/AuthService');
-      const currentUser = authService.getCurrentUser();
+    // Send X-User-Id header as fallback authentication
+    // This allows the backend to identify the user even if the JWT is expired
+    try {
+      const currentUser = await TokenStorage.getUser();
       if (currentUser?.id) {
         headers.set('X-User-Id', currentUser.id);
-        console.log('🔑 Setting X-User-Id header:', currentUser.id);
       }
+    } catch (e) {
+      // Ignore storage errors
     }
     
     headers.set('content-type', 'application/json');
