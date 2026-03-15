@@ -572,7 +572,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                   <TouchableOpacity
                     key={league.id}
                     style={[styles.listCard, isPending && styles.listCardPending]}
-                    onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: readOnly && isPending } })}
+                    onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: true } })}
                   >
                     <View style={styles.listCardContent}>
                       <Ionicons name="trophy-outline" size={20} color={isPending ? colors.court : colors.grass} />

@@ -139,16 +139,20 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [rosterSearchError, setRosterSearchError] = useState<string | null>(null);
 
   // Sync initialRosters when they arrive asynchronously (e.g. after API fetch)
+  const rostersInitialized = React.useRef(false);
   useEffect(() => {
-    if (initialRosters.length > 0) {
+    if (initialRosters.length > 0 && !rostersInitialized.current) {
       setAddedRosters(initialRosters);
+      rostersInitialized.current = true;
     }
   }, [initialRosters]);
 
   // Sync initialInvitedRosters when they arrive asynchronously
+  const invitedRostersInitialized = React.useRef(false);
   useEffect(() => {
-    if (initialInvitedRosters.length > 0) {
+    if (initialInvitedRosters.length > 0 && !invitedRostersInitialized.current) {
       setInvitedRosters(initialInvitedRosters);
+      invitedRostersInitialized.current = true;
     }
   }, [initialInvitedRosters]);
 
