@@ -499,25 +499,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           )}
 
           {/* Add Member Search - Only for private rosters with owner/admin access */}
-          {(() => {
-            console.log('🔍 Add Member Section Check:', {
-              isPublic: team.isPublic,
-              canManageTeam,
-              availableSlots,
-              shouldShow: !team.isPublic && canManageTeam && availableSlots > 0
-            });
-            return null;
-          })()}
-          {!team.isPublic && canManageTeam && availableSlots > 0 && (
+          {canManageTeam && availableSlots > 0 && (
             <View style={styles.addMemberSection}>
               <View style={styles.addMemberHeader}>
-                <Text style={styles.addMemberTitle}>Add Players</Text>
-                <View style={styles.privateBadge}>
-                  <Text style={styles.privateBadgeText}>🔒 Private</Text>
-                </View>
+                <Text style={styles.addMemberTitle}>Invites</Text>
+                {!team.isPublic && (
+                  <View style={styles.privateBadge}>
+                    <Text style={styles.privateBadgeText}>🔒 Private</Text>
+                  </View>
+                )}
               </View>
               <Text style={styles.addMemberDescription}>
-                Search for existing users and add them directly to your roster. They will be notified immediately.
+                Search for existing users and add them to your roster. They will receive a notification.
               </Text>
               <AddMemberSearch
                 onAddMember={handleAddMemberDirectly}

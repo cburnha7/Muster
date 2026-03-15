@@ -123,9 +123,7 @@ export function CreateTeamScreen(): JSX.Element {
           {
             text: 'OK',
             onPress: () => {
-              navigation.goBack();
-              // Navigate to roster details
-              (navigation as any).navigate('TeamDetails', { teamId: newTeam.id });
+              (navigation as any).replace('TeamDetails', { teamId: newTeam.id });
             },
           },
         ]
@@ -258,7 +256,7 @@ export function CreateTeamScreen(): JSX.Element {
           {!formData.isPublic && (
             <View style={styles.addMembersSection}>
               <View style={styles.addMembersHeader}>
-                <Text style={styles.addMembersTitle}>Add Players</Text>
+                <Text style={styles.addMembersTitle}>Invites</Text>
                 <View style={styles.privateBadge}>
                   <Text style={styles.privateBadgeText}>🔒 Private</Text>
                 </View>
