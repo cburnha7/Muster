@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   RefreshControl,
+  Switch,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -200,9 +201,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         isPublic: formIsPublic,
       };
       const updated = await teamService.updateTeam(teamId, updates);
-      setTeam(updated);
       dispatch(updateTeam(updated));
-      Alert.alert('Success', 'Roster updated successfully.');
+      (navigation as any).replace('TeamsList');
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update roster.');
     } finally {
@@ -449,20 +449,20 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             editable={canManageTeam}
           />
 
-          <FormSelect
-            label="Roster Visibility *"
-            value={formIsPublic}
-            onValueChange={(v) => setFormIsPublic(v as boolean)}
-            options={visibilityOptions}
-            disabled={!canManageTeam}
-          />
-
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              {formIsPublic
-                ? '🌐 Public rosters can be discovered and joined by anyone'
-                : '🔒 Private rosters require an invite code to join'}
-            </Text>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleInfo}>
+              <Text style={styles.toggleLabel}>Public Roster</Text>
+              <Text style={styles.toggleDescription}>
+                {formIsPublic ? 'Anyone can find and join' : 'Invite only'}
+              </Text>
+            </View>
+            <Switch
+              value={formIsPublic}
+              onValueChange={(v) => setFormIsPublic(v)}
+              trackColor={{ false: '#D1D5DB', true: colors.grassLight }}
+              thumbColor={formIsPublic ? colors.grass : '#F4F4F5'}
+              disabled={!canManageTeam}
+            />
           </View>
 
           {/* ── Invites Section (managers only) ── */}
@@ -470,15 +470,20 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             <View style={styles.addMembersSection}>
               <View style={styles.addMembersHeader}>
                 <Text style={styles.addMembersTitle}>Invite Players</Text>
-                {!formIsPublic && (
-                  <View style={styles.privateBadge}>
-                    <Text style={styles.privateBadgeText}>🔒 Private</Text>
-                  </View>
-                )}
               </View>
               <Text style={styles.addMembersDescription}>
-                Search for players and invite them to your roster. They must accept the invite before they appear on the confirmed players list.
+                Search for players and invite them to your roster. They must accept before appearing on the confirmed players list.
               </Text>
+
+              {/* Invited list inside the invite card */}
+              {pendingMembers.length > 0 && (
+                <View style={styles.pendingMembersContainer}>
+                  <Text style={styles.pendingMembersTitle}>
+                    Invited ({pendingMembers.length})
+                  </Text>
+                  {pendingMembers.map((m) => renderMember(m, true))}
+                </View>
+              )}
 
               <AddMemberSearch
                 onAddMember={handleAddMemberDirectly}
@@ -487,8 +492,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             </View>
           )}
 
-          {/* ── Invited (pending) players ── */}
-          {pendingMembers.length > 0 && (
+          {/* Invited list for non-managers (read-only) */}
+          {!canManageTeam && pendingMembers.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
                 Invited ({pendingMembers.length})
@@ -661,6 +666,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     lineHeight: 20,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  toggleInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  toggleDescription: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
   // Invites / Add members section
   addMembersSection: {

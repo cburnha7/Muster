@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
   Image,
+  Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
@@ -111,23 +112,8 @@ export function CreateTeamScreen(): JSX.Element {
       dispatch(addTeam(newTeam));
       dispatch(joinTeam(newTeam)); // Add to user's teams
 
-      const memberCount = pendingMembers.length;
-      const successMessage = memberCount > 0
-        ? `Roster created successfully with ${memberCount} player${memberCount !== 1 ? 's' : ''}!`
-        : 'Roster created successfully!';
-
-      Alert.alert(
-        'Success',
-        successMessage,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              (navigation as any).replace('TeamDetails', { teamId: newTeam.id });
-            },
-          },
-        ]
-      );
+      // Navigate back to roster list immediately
+      (navigation as any).replace('TeamsList');
     } catch (error: any) {
       console.error('Error creating roster:', error);
       Alert.alert(
@@ -237,30 +223,26 @@ export function CreateTeamScreen(): JSX.Element {
             error={errors.maxMembers}
           />
 
-          <FormSelect
-            label="Roster Visibility *"
-            value={formData.isPublic}
-            onValueChange={(value) => updateFormData('isPublic', value)}
-            options={visibilityOptions}
-          />
-
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              {formData.isPublic
-                ? '🌐 Public rosters can be discovered and joined by anyone'
-                : '🔒 Private rosters require an invite code to join'}
-            </Text>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleInfo}>
+              <Text style={styles.toggleLabel}>Public Roster</Text>
+              <Text style={styles.toggleDescription}>
+                {formData.isPublic ? 'Anyone can find and join' : 'Invite only'}
+              </Text>
+            </View>
+            <Switch
+              value={formData.isPublic}
+              onValueChange={(value) => updateFormData('isPublic', value)}
+              trackColor={{ false: '#D1D5DB', true: colors.grassLight }}
+              thumbColor={formData.isPublic ? colors.grass : '#F4F4F5'}
+            />
           </View>
 
-          {/* Add Players Section - Only show for private rosters */}
-          {!formData.isPublic && (
-            <View style={styles.addMembersSection}>
-              <View style={styles.addMembersHeader}>
-                <Text style={styles.addMembersTitle}>Invites</Text>
-                <View style={styles.privateBadge}>
-                  <Text style={styles.privateBadgeText}>🔒 Private</Text>
-                </View>
-              </View>
+          {/* Invites Section */}
+          <View style={styles.addMembersSection}>
+            <View style={styles.addMembersHeader}>
+              <Text style={styles.addMembersTitle}>Invites</Text>
+            </View>
               <Text style={styles.addMembersDescription}>
                 Search for existing users and add them to your roster. They will be added when you create the roster.
               </Text>
@@ -269,7 +251,7 @@ export function CreateTeamScreen(): JSX.Element {
               {pendingMembers.length > 0 && (
                 <View style={styles.pendingMembersContainer}>
                   <Text style={styles.pendingMembersTitle}>
-                    Players to Add ({pendingMembers.length})
+                    Invited ({pendingMembers.length})
                   </Text>
                   {pendingMembers.map((member) => (
                     <View key={member.id} style={styles.pendingMemberItem}>
@@ -310,7 +292,6 @@ export function CreateTeamScreen(): JSX.Element {
                 existingMemberIds={pendingMembers.map(m => m.id)}
               />
             </View>
-          )}
 
           <FormButton
             title="Create Roster"
@@ -363,6 +344,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     lineHeight: 20,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  toggleInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  toggleDescription: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
   addMembersSection: {
     backgroundColor: '#FFFFFF',
