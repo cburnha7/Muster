@@ -59,6 +59,7 @@ export function EventsListScreen(): JSX.Element {
   } = useGetEventsQuery({
     filters: activeFilters,
     pagination: { page: 1, limit: 20 },
+    ...(currentUser?.id ? { userId: currentUser.id } : {}),
   });
 
   const { 

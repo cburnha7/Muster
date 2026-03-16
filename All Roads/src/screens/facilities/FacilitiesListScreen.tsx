@@ -364,7 +364,7 @@ export function FacilitiesListScreen(): JSX.Element {
         />
       ) : (
         <FlatList
-          data={facilities}
+          data={[...facilities].sort((a, b) => a.name.localeCompare(b.name))}
           renderItem={renderFacilityItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}

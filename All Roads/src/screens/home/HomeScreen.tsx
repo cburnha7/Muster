@@ -67,6 +67,7 @@ export function HomeScreen(): JSX.Element {
   } = useGetEventsQuery({
     filters: DEFAULT_EVENT_FILTERS,
     pagination: { page: 1, limit: 20 },
+    userId: user?.id,
   });
 
   const { 

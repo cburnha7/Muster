@@ -98,8 +98,9 @@ export const eventsApi = createApi({
     getEvents: builder.query<PaginatedResponse<Event>, {
       filters?: EventFilters;
       pagination?: PaginationParams;
+      userId?: string;
     }>({
-      query: ({ filters = {}, pagination = { page: 1, limit: 20 } }) => ({
+      query: ({ filters = {}, pagination = { page: 1, limit: 20 }, userId }) => ({
         url: '/events',
         params: {
           ...filters,
@@ -107,6 +108,7 @@ export const eventsApi = createApi({
           // Convert Date objects to ISO strings if present
           startDate: filters.startDate?.toISOString(),
           endDate: filters.endDate?.toISOString(),
+          ...(userId ? { userId } : {}),
         },
       }),
       providesTags: (result) =>

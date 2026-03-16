@@ -115,12 +115,12 @@ export function TeamsListScreen() {
   const sections: Section[] = [
     {
       title: 'My Rosters',
-      data: filterBySearch(myRosters),
+      data: filterBySearch(myRosters).sort((a, b) => a.name.localeCompare(b.name)),
       emptyMessage: searchQuery ? 'No matching rosters' : 'You haven\'t joined any rosters yet',
     },
     {
       title: 'Public Rosters',
-      data: filterBySearch(publicRosters),
+      data: filterBySearch(publicRosters).sort((a, b) => a.name.localeCompare(b.name)),
       emptyMessage: searchQuery ? 'No matching public rosters' : 'No public rosters available',
     },
   ];

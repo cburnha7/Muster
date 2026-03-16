@@ -70,11 +70,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
     try {
       if (isRefresh) {
         setRefreshing(true);
-        cacheService.clearBySubstring('users');
-        cacheService.clearBySubstring('leagues');
       } else {
         setIsLoading(true);
       }
+      // Always clear caches to ensure fresh data (especially for invitation flows)
+      cacheService.clearBySubstring('users');
+      cacheService.clearBySubstring('leagues');
       setError(null);
 
       const svc = new LeagueService();
@@ -111,19 +112,32 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const rosterIdsInLeague = new Set(
     activeMembers.filter((m) => m.memberType === 'roster').map((m) => m.memberId)
   );
-  const userOwnedRosters = ((userRosters?.length ? userRosters : fetchedUserRosters) || []).filter((r: Team) =>
+  const allRostersSource = fetchedUserRosters.length ? fetchedUserRosters : (userRosters || []);
+  const userOwnedRosters = allRostersSource.filter((r: any) =>
+    r.currentUserRole === TeamRole.CAPTAIN ||
     r.captainId === currentUser?.id ||
-    r.members?.some((m) => m.userId === currentUser?.id && m.role === TeamRole.CAPTAIN)
+    r.members?.some((m: any) => m.userId === currentUser?.id && m.role === TeamRole.CAPTAIN)
   );
+
   const eligibleRosters = userOwnedRosters.filter((r) => !rosterIdsInLeague.has(r.id));
   const hasEligibleRoster = eligibleRosters.length > 0;
 
   // Check if user has a pending roster invitation they can confirm
   // Only the roster Manager/Owner (captainId) can confirm league invitations
-  const pendingUserRosterInvitations = members.filter(
+  // Use both members state (from getMembers) and league.memberships (from getLeagueById) for robustness
+  const leagueMembershipsData: any[] = (league as any)?.memberships || [];
+  const pendingFromMembers = members.filter(
     (m) => m.status === 'pending' && m.memberType === 'roster' &&
       userOwnedRosters.some((r) => r.id === m.memberId)
   );
+  const pendingFromLeague = leagueMembershipsData.filter(
+    (m: any) => m.status === 'pending' && m.memberType === 'roster' &&
+      userOwnedRosters.some((r: Team) => r.id === m.memberId)
+  );
+  // Prefer members state (has full data), fall back to league.memberships
+  const pendingUserRosterInvitations = pendingFromMembers.length > 0
+    ? pendingFromMembers
+    : pendingFromLeague;
 
   // ── Helpers ─────────────────────────────────────────────────────
   const getSportIcon = (sportType: string) => {
@@ -381,8 +395,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
   };
 
   const renderActionBar = () => {
-    // In readOnly mode, show Join Up for pending roster invitations
-    if (readOnly && pendingUserRosterInvitations.length > 0) {
+    // Show Join Up + Decline for pending roster invitations (works in both readOnly and normal mode)
+    if (pendingUserRosterInvitations.length > 0) {
       return (
         <View style={styles.actionBar}>
           <TouchableOpacity
@@ -394,9 +408,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
           >
             <Text style={styles.joinBtnText}>Join Up</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.stepOutBtn, { marginTop: 8 }]}
+            onPress={() => handleDeclineInvitation(pendingUserRosterInvitations[0]!)}
+            disabled={isActionLoading}
+            accessibilityRole="button"
+            accessibilityLabel="Decline invitation"
+          >
+            <Text style={styles.stepOutBtnText}>Decline</Text>
+          </TouchableOpacity>
         </View>
       );
     }
+
+    if (readOnly) return null;
 
     if (isOperator) return null;
     if (!isAuthenticated || !currentUser) return null;

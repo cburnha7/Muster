@@ -520,7 +520,7 @@ router.get('/teams', optionalAuthMiddleware, async (req, res) => {
 
     const teams = memberships.map((m) => {
       const { isPrivate, ...rest } = m.team;
-      return { ...rest, isPublic: !isPrivate };
+      return { ...rest, isPublic: !isPrivate, currentUserRole: m.role };
     });
 
     res.json({
