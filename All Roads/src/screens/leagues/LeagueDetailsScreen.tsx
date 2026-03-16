@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Platform,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -176,24 +177,39 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const handleDeleteLeague = () => {
     if (!currentUser?.id || !league) return;
     loggingService.logButton('Delete League', 'LeagueDetailsScreen', { leagueId });
-    Alert.alert('Delete League', `Are you sure you want to delete "${league.name}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsActionLoading(true);
-            await leagueService.deleteLeague(leagueId, currentUser.id);
-            Alert.alert('Deleted', 'League has been deleted');
-            navigation.goBack();
-          } catch (err) {
-            Alert.alert('Error', err instanceof Error ? err.message : 'Failed to delete league');
-          } finally {
-            setIsActionLoading(false);
-          }
-        },
-      },
-    ]);
+
+    const doDelete = async () => {
+      try {
+        setIsActionLoading(true);
+        await leagueService.deleteLeague(leagueId, currentUser.id);
+        if (Platform.OS === 'web') {
+          window.alert('League has been deleted');
+        } else {
+          Alert.alert('Deleted', 'League has been deleted');
+        }
+        navigation.goBack();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to delete league';
+        if (Platform.OS === 'web') {
+          window.alert(msg);
+        } else {
+          Alert.alert('Error', msg);
+        }
+      } finally {
+        setIsActionLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to delete "${league.name}"? This cannot be undone.`)) {
+        doDelete();
+      }
+    } else {
+      Alert.alert('Delete League', `Are you sure you want to delete "${league.name}"? This cannot be undone.`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: doDelete },
+      ]);
+    }
   };
 
   // ── Non-commissioner actions ────────────────────────────────────
@@ -230,26 +246,36 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const handleStepOut = async () => {
     if (!league || !currentUser) return;
     loggingService.logButton('Step Out', 'LeagueDetailsScreen', { leagueId });
-    Alert.alert('Step Out', 'Are you sure you want to leave this league?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Step Out', style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsActionLoading(true);
-            await leagueService.stepOutOfLeague(league.id, currentUser.id);
-            // Force-clear all league and user caches so refetch gets fresh data
-            cacheService.clearBySubstring('leagues');
-            cacheService.clearBySubstring('users');
-            await loadLeague(true);
-          } catch (err) {
-            Alert.alert('Error', err instanceof Error ? err.message : 'Failed to leave league');
-          } finally {
-            setIsActionLoading(false);
-          }
-        },
-      },
-    ]);
+
+    const doStepOut = async () => {
+      try {
+        setIsActionLoading(true);
+        await leagueService.stepOutOfLeague(league.id, currentUser.id);
+        // Force-clear all league and user caches so refetch gets fresh data
+        cacheService.clearBySubstring('leagues');
+        cacheService.clearBySubstring('users');
+        await loadLeague(true);
+      } catch (err) {
+        if (Platform.OS === 'web') {
+          window.alert(err instanceof Error ? err.message : 'Failed to leave league');
+        } else {
+          Alert.alert('Error', err instanceof Error ? err.message : 'Failed to leave league');
+        }
+      } finally {
+        setIsActionLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to step out of this league?')) {
+        await doStepOut();
+      }
+    } else {
+      Alert.alert('Step Out', 'Are you sure you want to leave this league?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Step Out', style: 'destructive', onPress: doStepOut },
+      ]);
+    }
   };
 
   // ── Non-commissioner roster/invitation actions ───────────────────
@@ -289,25 +315,35 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleDeclineInvitation = async (membership: LeagueMembership) => {
     if (!currentUser?.id) return;
-    Alert.alert('Decline Invitation', 'Are you sure you want to decline this league invitation?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Decline',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsActionLoading(true);
-            await leagueService.respondToInvitation(leagueId, membership.id, false, currentUser.id);
-            cacheService.clearBySubstring('users');
-            setMembers((prev) => prev.filter((m) => m.id !== membership.id));
-          } catch (err) {
-            Alert.alert('Error', err instanceof Error ? err.message : 'Failed to decline invitation');
-          } finally {
-            setIsActionLoading(false);
-          }
-        },
-      },
-    ]);
+
+    const doDecline = async () => {
+      try {
+        setIsActionLoading(true);
+        await leagueService.respondToInvitation(leagueId, membership.id, false, currentUser.id);
+        cacheService.clearBySubstring('users');
+        setMembers((prev) => prev.filter((m) => m.id !== membership.id));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to decline invitation';
+        if (Platform.OS === 'web') {
+          window.alert(msg);
+        } else {
+          Alert.alert('Error', msg);
+        }
+      } finally {
+        setIsActionLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to decline this league invitation?')) {
+        await doDecline();
+      }
+    } else {
+      Alert.alert('Decline Invitation', 'Are you sure you want to decline this league invitation?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Decline', style: 'destructive', onPress: doDecline },
+      ]);
+    }
   };
 
   // ── Render helpers ──────────────────────────────────────────────
