@@ -406,7 +406,7 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
-// Get current user's events (events they organized)
+// Get current user's events (organized + confirmed participant)
 router.get('/events', optionalAuthMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
@@ -420,17 +420,39 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
     const { page = '1', limit = '50', status } = req.query;
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
 
-    const where: any = { organizerId: userId };
+    // 1. Events user organized
+    const organizedWhere: any = { organizerId: userId };
     if (status && status !== 'all') {
-      where.status = status;
+      organizedWhere.status = status;
     }
+
+    // 2. Events user is a confirmed participant in (has a confirmed booking)
+    const participantBookings = await prisma.booking.findMany({
+      where: {
+        userId,
+        status: 'confirmed',
+      },
+      select: { eventId: true },
+    });
+    const participantEventIds = participantBookings
+      .map(b => b.eventId)
+      .filter((id): id is string => id !== null);
+
+    // Build combined query: organized OR confirmed participant
+    const combinedWhere: any = {
+      OR: [
+        organizedWhere,
+        ...(participantEventIds.length > 0
+          ? [{ id: { in: participantEventIds }, ...(status && status !== 'all' ? { status } : {}) }]
+          : []),
+      ],
+    };
 
     const [events, total] = await Promise.all([
       prisma.event.findMany({
-        where,
-        skip,
+        where: combinedWhere,
+        skip: (pageNum - 1) * limitNum,
         take: limitNum,
         orderBy: { startTime: 'desc' },
         include: {
@@ -445,7 +467,7 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
           },
         },
       }),
-      prisma.event.count({ where }),
+      prisma.event.count({ where: combinedWhere }),
     ]);
 
     res.json({

@@ -10,9 +10,10 @@ interface EventCardProps {
   onPress?: (event: Event) => void;
   style?: any;
   compact?: boolean;
+  isHost?: boolean | undefined;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, compact = false }) => {
+export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, compact = false, isHost }) => {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -88,6 +89,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           </Text>
         </View>
         <View style={styles.headerBadges}>
+          {isHost && (
+            <View style={styles.hostBadge}>
+              <Ionicons name="star" size={10} color="#FFFFFF" />
+              <Text style={styles.hostBadgeText}>Host</Text>
+            </View>
+          )}
           {isInviteOnly && (
             <View style={styles.inviteOnlyBadge}>
               <Ionicons name="lock-closed" size={12} color={colors.court} />
@@ -381,5 +388,19 @@ const styles = StyleSheet.create({
     color: colors.sky,
     marginLeft: 6,
     fontWeight: '600',
+  },
+  hostBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8A030',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4,
+  },
+  hostBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });

@@ -30,6 +30,8 @@ import { useAuth } from '../../context/AuthContext';
 // Store
 import { selectUser } from '../../store/slices/authSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import { userService as bookingUserService } from '../../services/api/UserService';
+import { BookingStatus } from '../../types';
 
 // Theme
 import { colors, fonts, Spacing } from '../../theme';
@@ -76,6 +78,15 @@ export function HomeScreen(): JSX.Element {
     pagination: { page: 1, limit: 100 },
   });
 
+  // Also fetch all bookings for the schedule tabs
+  const {
+    data: allBookingsData,
+    isLoading: allBookingsLoading,
+    refetch: refetchAllBookings,
+  } = useGetUserBookingsQuery({
+    pagination: { page: 1, limit: 200 },
+  });
+
   // RTK Query mutations
   const [cancelBookingMutation] = useCancelBookingMutation();
 
@@ -90,6 +101,10 @@ export function HomeScreen(): JSX.Element {
   const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
   const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
+
+  // Schedule tab filter
+  type ScheduleFilter = 'upcoming' | 'live' | 'past' | 'cancelled';
+  const [scheduleFilter, setScheduleFilter] = useState<ScheduleFilter>('upcoming');
 
   // Live events — derived from bookings where now is between start and end
   const [now, setNow] = useState(() => new Date());
@@ -130,6 +145,59 @@ export function HomeScreen(): JSX.Element {
     () => upcomingBookings.filter((b) => !liveIds.has(b.id)),
     [upcomingBookings, liveIds]
   );
+
+  // Schedule tab bookings — derived from allBookingsData
+  const allBookingsList = useMemo(() => allBookingsData?.data || [], [allBookingsData]);
+
+  const scheduleBookings = useMemo(() => {
+    const t = now.getTime();
+    switch (scheduleFilter) {
+      case 'live':
+        return allBookingsList.filter((b) => {
+          if (!b.event?.startTime || !b.event?.endTime) return false;
+          if (b.status !== BookingStatus.CONFIRMED) return false;
+          const start = new Date(b.event.startTime).getTime();
+          const end = new Date(b.event.endTime).getTime();
+          return t >= start && t < end;
+        });
+      case 'upcoming':
+        return allBookingsList.filter((b) => {
+          if (b.status === BookingStatus.CANCELLED) return false;
+          if (b.status === BookingStatus.COMPLETED) return false;
+          if (!b.event) return false;
+          const endTime = b.event.endTime ? new Date(b.event.endTime).getTime() : null;
+          const startTime = new Date(b.event.startTime).getTime();
+          const hasEnded = endTime ? endTime < t : startTime < t;
+          if (hasEnded) return false;
+          // Exclude currently live
+          const isLiveNow = t >= startTime && endTime && t < endTime;
+          return !isLiveNow;
+        });
+      case 'past':
+        return allBookingsList.filter((b) => {
+          if (b.status === BookingStatus.CANCELLED) return false;
+          if (b.status === BookingStatus.COMPLETED) return true;
+          if (!b.event) return false;
+          const endTime = b.event.endTime ? new Date(b.event.endTime).getTime() : null;
+          const startTime = new Date(b.event.startTime).getTime();
+          return endTime ? endTime < t : startTime < t;
+        }).sort((a, b) => {
+          const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
+          const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+          return bTime - aTime; // most recent first
+        });
+      case 'cancelled':
+        return allBookingsList
+          .filter((b) => b.status === BookingStatus.CANCELLED)
+          .sort((a, b) => {
+            const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
+            const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+            return bTime - aTime;
+          });
+      default:
+        return [];
+    }
+  }, [allBookingsList, scheduleFilter, now]);
 
   // Combined loading state
   const isLoading = eventsLoading || bookingsLoading;
@@ -188,9 +256,9 @@ export function HomeScreen(): JSX.Element {
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchEvents(), refetchBookings(), loadDebriefEvents(), loadInvitations()]);
+    await Promise.all([refetchEvents(), refetchBookings(), refetchAllBookings(), loadDebriefEvents(), loadInvitations()]);
     setIsRefreshing(false);
-  }, [refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations]);
+  }, [refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations]);
 
   // Reload data when screen comes into focus
   useFocusEffect(
@@ -198,10 +266,11 @@ export function HomeScreen(): JSX.Element {
       if (!authLoading) {
         refetchEvents();
         refetchBookings();
+        refetchAllBookings();
         loadDebriefEvents();
         loadInvitations();
       }
-    }, [authLoading, refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations])
+    }, [authLoading, refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations])
   );
 
   // Handle search with debouncing for better performance
@@ -312,72 +381,93 @@ export function HomeScreen(): JSX.Element {
           style={styles.searchBar}
         />
 
-        {/* Live Events — only shown when there are events in progress */}
-        {liveBookings.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.liveSectionTitleRow}>
-                <Animated.View style={[styles.liveDot, { opacity: pulseAnim }]} />
-                <Text style={styles.sectionTitle}>Live Now</Text>
-              </View>
-            </View>
-            {liveBookings.map((booking) => (
-              <View key={booking.id}>
-                <View style={styles.liveBadgeRow}>
-                  <View style={styles.liveBadge}>
-                    <View style={styles.liveBadgeDot} />
-                    <Text style={styles.liveBadgeText}>LIVE</Text>
-                  </View>
-                </View>
-                <BookingCard
-                  booking={booking}
-                  onPress={handleBookingPress}
-                  style={[styles.bookingCard, styles.liveCard]}
-                />
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Upcoming Bookings */}
+        {/* Schedule */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
+            <Text style={styles.sectionTitle}>Schedule</Text>
             <TouchableOpacity onPress={() => (navigation as any).navigate('Bookings', { screen: 'BookingsList' })}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          
-          {eventsError ? (
-            <View style={styles.errorState}>
-              <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
-              <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
-            </View>
-          ) : isLoading ? (
+
+          {/* Schedule filter tabs */}
+          <View style={styles.scheduleFilterTabs}>
+            {([
+              { key: 'upcoming' as ScheduleFilter, label: 'Upcoming' },
+              { key: 'live' as ScheduleFilter, label: 'Live' },
+              { key: 'past' as ScheduleFilter, label: 'Past' },
+              { key: 'cancelled' as ScheduleFilter, label: 'Cancelled' },
+            ]).map((tab) => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[
+                  styles.scheduleFilterTab,
+                  scheduleFilter === tab.key && styles.scheduleFilterTabActive,
+                ]}
+                onPress={() => setScheduleFilter(tab.key)}
+              >
+                {tab.key === 'live' && liveBookings.length > 0 && (
+                  <Animated.View style={[styles.liveTabDot, { opacity: pulseAnim }]} />
+                )}
+                <Text
+                  style={[
+                    styles.scheduleFilterTabText,
+                    scheduleFilter === tab.key && styles.scheduleFilterTabTextActive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {allBookingsLoading && scheduleBookings.length === 0 ? (
             <Text style={styles.placeholder}>Loading...</Text>
-          ) : upcomingOnly.length > 0 ? (
+          ) : scheduleBookings.length > 0 ? (
             <View>
-              {upcomingOnly.slice(0, 3).map((booking) => (
+              {scheduleBookings.slice(0, 5).map((booking) => (
                 <BookingCard
                   key={booking.id}
                   booking={booking}
                   onPress={handleBookingPress}
-                  onCancel={handleStepOut}
+                  onCancel={
+                    booking.status === BookingStatus.CONFIRMED &&
+                    booking.event &&
+                    new Date(booking.event.startTime) > new Date()
+                      ? () => handleStepOut(booking)
+                      : undefined
+                  }
+                  hidePrice={scheduleFilter === 'past'}
                   style={styles.bookingCard}
                 />
               ))}
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={64} color={colors.soft} />
-              <Text style={styles.emptyStateTitle}>No upcoming bookings</Text>
-              <Text style={styles.emptyStateText}>Join up for your next sports activity!</Text>
-              <TouchableOpacity 
-                style={styles.emptyStateButtonStyle}
-                onPress={() => (navigation as any).navigate('Events', { screen: 'EventsList' })}
-              >
-                <Text style={styles.emptyStateButtonText}>Find Events</Text>
-              </TouchableOpacity>
+              <Ionicons
+                name={
+                  scheduleFilter === 'upcoming' ? 'calendar-outline' :
+                  scheduleFilter === 'live' ? 'radio-outline' :
+                  scheduleFilter === 'past' ? 'time-outline' :
+                  'close-circle-outline'
+                }
+                size={48}
+                color={colors.inkFaint}
+              />
+              <Text style={styles.emptyStateTitle}>
+                {scheduleFilter === 'upcoming' ? 'No upcoming events' :
+                 scheduleFilter === 'live' ? 'Nothing live right now' :
+                 scheduleFilter === 'past' ? 'No past events' :
+                 'No cancelled events'}
+              </Text>
+              {scheduleFilter === 'upcoming' && (
+                <TouchableOpacity 
+                  style={styles.emptyStateButtonStyle}
+                  onPress={() => (navigation as any).navigate('Events', { screen: 'EventsList' })}
+                >
+                  <Text style={styles.emptyStateButtonText}>Find Events</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -552,47 +642,41 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     marginVertical: Spacing.xs,
   },
-  liveCard: {
-    borderWidth: 1,
-    borderColor: colors.grass + '40',
+
+  // Schedule filter tabs
+  scheduleFilterTabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.chalk,
+    marginBottom: Spacing.md,
+    gap: 4,
   },
-  liveSectionTitleRow: {
+  scheduleFilterTab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    gap: 4,
   },
-  liveDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  scheduleFilterTabActive: {
     backgroundColor: colors.grass,
   },
-  liveBadgeRow: {
-    marginBottom: 4,
-    marginLeft: 4,
+  scheduleFilterTabText: {
+    fontFamily: fonts.ui,
+    fontSize: 12,
+    color: colors.inkFaint,
   },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.grass + '15',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 5,
+  scheduleFilterTabTextActive: {
+    color: colors.chalk,
   },
-  liveBadgeDot: {
+  liveTabDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: colors.grass,
   },
-  liveBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.grass,
-    letterSpacing: 1,
-  },
+
   eventCard: {
     marginHorizontal: 0,
     marginVertical: Spacing.xs,

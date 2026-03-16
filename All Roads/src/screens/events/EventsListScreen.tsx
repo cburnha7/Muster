@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   RefreshControl,
   TouchableOpacity,
   Alert,
@@ -23,7 +23,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
 import { useGetEventsQuery, useGetUserBookingsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
@@ -95,10 +95,39 @@ export function EventsListScreen(): JSX.Element {
   // Filter out events that the user has already joined
   const availableEvents = rawEvents.filter(event => !bookedEventIds.has(event.id));
 
+  // Split into My Events (user is organizer) and Public Events
+  const myEvents = rawEvents.filter(event => event.organizerId === currentUser?.id);
+  const publicEvents = rawEvents.filter(
+    event => event.organizerId !== currentUser?.id && !bookedEventIds.has(event.id)
+  );
+
+  // All events for map view
+  const allDisplayEvents = [...myEvents, ...publicEvents];
+
+  interface EventSection {
+    title: string;
+    data: Event[];
+    emptyMessage: string;
+  }
+
+  const sections: EventSection[] = [
+    {
+      title: 'My Events',
+      data: myEvents,
+      emptyMessage: 'You haven\'t created any events yet',
+    },
+    {
+      title: 'Public Events',
+      data: publicEvents,
+      emptyMessage: searchQuery ? 'No matching events' : 'No public events available',
+    },
+  ];
+
   console.log('📊 EventsListScreen - Events data:', {
     hasCustomFilters,
     rawEventsCount: rawEvents.length,
-    availableEventsCount: availableEvents.length,
+    myEventsCount: myEvents.length,
+    publicEventsCount: publicEvents.length,
     eventsLoading,
     eventsError,
   });
@@ -236,6 +265,7 @@ export function EventsListScreen(): JSX.Element {
     <EventCard
       event={item}
       onPress={handleEventPress}
+      isHost={item.organizerId === currentUser?.id ? true : undefined}
     />
   );
 

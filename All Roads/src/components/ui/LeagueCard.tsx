@@ -70,7 +70,8 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
               </Text>
               {isOwner && (
                 <View style={styles.ownerBadge}>
-                  <Text style={styles.ownerBadgeText}>Owner</Text>
+                  <Ionicons name="star" size={10} color="#FFFFFF" />
+                  <Text style={styles.ownerBadgeText}>Commissioner</Text>
                 </View>
               )}
             </View>
@@ -169,17 +170,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   ownerBadge: {
-    backgroundColor: colors.grass + '18',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8A030',
     borderRadius: 10,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
+    gap: 4,
   },
   ownerBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    color: colors.grass,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
   },
   season: {
     fontSize: 13,

@@ -798,13 +798,13 @@ export function CreateEventScreen(): JSX.Element {
           throw new Error('Invalid time values');
         }
         
-        // Create date in local timezone — slot times represent local times
-        startDateTime = new Date(year, month, day, hours, minutes, 0, 0);
+        // Create date in UTC — slot times are stored as UTC on the server
+        startDateTime = new Date(Date.UTC(year, month, day, hours, minutes, 0, 0));
         
         console.log('First slot date string:', firstSlot.date);
         console.log('Extracted date components:', { year, month: month + 1, day });
         console.log('Time:', { hours, minutes });
-        console.log('Created local datetime:', startDateTime.toISOString());
+        console.log('Created UTC datetime:', startDateTime.toISOString());
       } else {
         // Manual date/time entry
         startDateTime = new Date(formData.startDate!);
