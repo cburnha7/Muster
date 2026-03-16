@@ -251,7 +251,7 @@ export function EventsListScreen(): JSX.Element {
   );
 
   const renderFooter = () => {
-    if (!isLoadingMore) return null;
+    if (!eventsLoading) return null;
     return (
       <View style={styles.footer}>
         <ActivityIndicator size="small" color={colors.grass} />
@@ -259,7 +259,7 @@ export function EventsListScreen(): JSX.Element {
     );
   };
 
-  if (error && rawEvents.length === 0) {
+  if (eventsError && rawEvents.length === 0) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
