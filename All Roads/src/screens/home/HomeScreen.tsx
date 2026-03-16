@@ -177,6 +177,7 @@ export function HomeScreen(): JSX.Element {
       case 'past':
         return allBookingsList.filter((b) => {
           if (b.status === BookingStatus.CANCELLED) return false;
+          if (b.event?.status === 'cancelled') return false;
           if (b.status === BookingStatus.COMPLETED) return true;
           if (!b.event) return false;
           const endTime = b.event.endTime ? new Date(b.event.endTime).getTime() : null;
@@ -189,7 +190,7 @@ export function HomeScreen(): JSX.Element {
         });
       case 'cancelled':
         return allBookingsList
-          .filter((b) => b.status === BookingStatus.CANCELLED)
+          .filter((b) => b.status === BookingStatus.CANCELLED || b.event?.status === 'cancelled')
           .sort((a, b) => {
             const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
             const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
