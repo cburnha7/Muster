@@ -60,7 +60,6 @@ interface FormData {
   skillLevel: SkillLevel | '';
   equipment: string;
   rules: string;
-  teamIds: string[];
   // Privacy & restrictions
   isPrivate: boolean;
   restrictedToTeams: string[];
@@ -131,7 +130,6 @@ export function CreateEventScreen(): JSX.Element {
     skillLevel: '',
     equipment: '',
     rules: '',
-    teamIds: [],
     // Privacy & restrictions
     isPrivate: false,
     restrictedToTeams: [],
@@ -161,7 +159,7 @@ export function CreateEventScreen(): JSX.Element {
     rentalId: string | null;
   }>>([]);
 
-  const isTeamBasedEvent = formData.eventType === EventType.GAME || formData.eventType === EventType.PRACTICE;
+
   const isFromRental = !!rentalId && !!rentalDetails;
 
   // Invited users state for private events
@@ -394,16 +392,6 @@ export function CreateEventScreen(): JSX.Element {
   // Handle select change
   const handleSelectChange = (field: keyof FormData, option: SelectOption) => {
     handleInputChange(field, option.value.toString());
-  };
-
-  // Handle team selection toggle
-  const handleTeamToggle = (teamId: string) => {
-    setFormData(prev => {
-      const teamIds = prev.teamIds.includes(teamId)
-        ? prev.teamIds.filter(id => id !== teamId)
-        : [...prev.teamIds, teamId];
-      return { ...prev, teamIds };
-    });
   };
 
   // Handle roster restriction toggle for private events
@@ -828,7 +816,6 @@ export function CreateEventScreen(): JSX.Element {
         equipment: formData.equipment.split(',').map(item => item.trim()).filter(Boolean),
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
-        teamIds: isTeamBasedEvent ? formData.teamIds : undefined,
         isPrivate: formData.isPrivate,
         invitedUserIds: formData.isPrivate ? invitedUsers.map(u => u.id) : undefined,
         eligibility: {
@@ -1231,54 +1218,6 @@ export function CreateEventScreen(): JSX.Element {
             required
           />
 
-          {isTeamBasedEvent && (
-            <View style={styles.teamSelection}>
-              <Text style={styles.teamSelectionLabel}>
-                Select Teams {errors.teamIds && <Text style={styles.errorText}>*</Text>}
-              </Text>
-              <Text style={styles.teamSelectionHint}>
-                {formData.eventType === EventType.GAME
-                  ? 'Select teams to participate in the game'
-                  : 'Select your team for this event'}
-              </Text>
-              
-              {teamOptions.length === 0 ? (
-                <View style={styles.noTeamsBox}>
-                  <Text style={styles.noTeamsText}>
-                    You need to be a manager or co-manager of a roster to create team-based events.
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.teamList}>
-                  {teamOptions.map(team => (
-                    <TouchableOpacity
-                      key={team.value}
-                      style={[
-                        styles.teamItem,
-                        formData.teamIds.includes(team.value.toString()) && styles.teamItemSelected,
-                      ]}
-                      onPress={() => handleTeamToggle(team.value.toString())}
-                    >
-                      <Text
-                        style={[
-                          styles.teamItemText,
-                          formData.teamIds.includes(team.value.toString()) && styles.teamItemTextSelected,
-                        ]}
-                      >
-                        {formData.teamIds.includes(team.value.toString()) ? '✓ ' : ''}
-                        {team.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-              
-              {errors.teamIds && (
-                <Text style={styles.errorText}>{errors.teamIds}</Text>
-              )}
-            </View>
-          )}
-
           <FormInput
             label="Equipment Needed"
             placeholder="e.g., Basketball, Water bottle (comma separated)"
@@ -1632,20 +1571,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
-  teamSelection: {
-    marginTop: 16,
-  },
-  teamSelectionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  teamSelectionHint: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 12,
-  },
   teamList: {
     // gap removed - use marginBottom on teamItem instead
   },
@@ -1675,27 +1600,6 @@ const styles = StyleSheet.create({
   teamItemTextSelected: {
     color: colors.grass,
     fontWeight: '600',
-  },
-  noTeamsBox: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    marginTop: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.court,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  noTeamsText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
   },
   errorText: {
     fontSize: 14,
