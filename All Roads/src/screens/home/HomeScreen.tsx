@@ -177,11 +177,11 @@ export function HomeScreen(): JSX.Element {
     });
   }, [navigation]);
 
-  // Navigate to league details for league invitation (readOnly so captain can Join Up)
+  // Navigate to roster details for league invitation — captain confirms from their roster context
   const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
-    (navigation as any).navigate('Leagues', {
-      screen: 'LeagueDetails',
-      params: { leagueId: inv.leagueId, readOnly: true },
+    (navigation as any).navigate('Teams', {
+      screen: 'TeamDetails',
+      params: { teamId: inv.rosterId, readOnly: true },
     });
   }, [navigation]);
 

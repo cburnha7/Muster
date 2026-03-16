@@ -65,8 +65,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const loadLeague = useCallback(async (isRefresh = false) => {
     if (!leagueId) return;
     try {
-      if (isRefresh) setRefreshing(true);
-      else setIsLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+        // Clear league cache so we get fresh data from the server
+        cacheService.clearBySubstring('leagues');
+      } else {
+        setIsLoading(true);
+      }
       setError(null);
 
       const svc = new LeagueService();
@@ -233,6 +238,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
           try {
             setIsActionLoading(true);
             await leagueService.stepOutOfLeague(league.id, currentUser.id);
+            // Force-clear all league and user caches so refetch gets fresh data
+            cacheService.clearBySubstring('leagues');
+            cacheService.clearBySubstring('users');
             await loadLeague(true);
           } catch (err) {
             Alert.alert('Error', err instanceof Error ? err.message : 'Failed to leave league');
@@ -596,9 +604,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const ReadOnlyField = ({ label, value }: { label: string; value: string }) => (
     <View style={styles.roField}>
       <Text style={styles.roFieldLabel}>{label}</Text>
-      <View style={styles.roFieldValueBox}>
-        <Text style={styles.roFieldValue}>{value || '—'}</Text>
-      </View>
+      <Text style={styles.roFieldValue}>{value || '—'}</Text>
     </View>
   );
 
@@ -697,23 +703,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
               <ReadOnlyField label="Points for Loss" value={String(league.pointsConfig.loss)} />
             </View>
           )}
-
-          {/* Auto-Generate Matchups — display only */}
-          <View style={styles.roToggleCard}>
-            <View style={styles.roToggleRow}>
-              <View style={styles.roToggleInfo}>
-                <Text style={styles.roToggleLabel}>Auto-Generate Matchups</Text>
-                <Text style={styles.roToggleDescription}>
-                  Automatically create shell matchup events after registration closes
-                </Text>
-              </View>
-              <View style={[styles.roTogglePill, league.autoGenerateMatchups !== false && styles.roTogglePillActive]}>
-                <Text style={[styles.roTogglePillText, league.autoGenerateMatchups !== false && styles.roTogglePillTextActive]}>
-                  {league.autoGenerateMatchups !== false ? 'On' : 'Off'}
-                </Text>
-              </View>
-            </View>
-          </View>
 
           {/* Standings table — if tracking standings */}
           {league.trackStandings !== false && (
@@ -1030,6 +1019,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   roFieldValueBox: {
+    // kept for backwards compat but no longer used by ReadOnlyField
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 8,
@@ -1041,6 +1031,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.ink,
+    marginTop: 2,
   },
   roProjectedEndRow: {
     marginBottom: 16,
