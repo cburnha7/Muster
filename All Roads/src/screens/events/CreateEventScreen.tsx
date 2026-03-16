@@ -63,6 +63,8 @@ interface FormData {
   // Privacy & restrictions
   isPrivate: boolean;
   restrictedToTeams: string[];
+  homeRosterId: string;
+  awayRosterId: string;
   minimumPlayerCount: string;
 }
 
@@ -133,6 +135,8 @@ export function CreateEventScreen(): JSX.Element {
     // Privacy & restrictions
     isPrivate: false,
     restrictedToTeams: [],
+    homeRosterId: '',
+    awayRosterId: '',
     minimumPlayerCount: '',
   });
 
@@ -161,8 +165,9 @@ export function CreateEventScreen(): JSX.Element {
 
 
   const isFromRental = !!rentalId && !!rentalDetails;
+  const isGameEvent = formData.eventType === EventType.GAME;
 
-  // Invited users state for private events
+  // Invited users state
   const [invitedUsers, setInvitedUsers] = useState<User[]>([]);
 
   // Form options
@@ -394,7 +399,7 @@ export function CreateEventScreen(): JSX.Element {
     handleInputChange(field, option.value.toString());
   };
 
-  // Handle roster restriction toggle for private events
+  // Handle roster selection toggle
   const handleRosterRestrictionToggle = (teamId: string) => {
     setFormData(prev => {
       const restrictedTeams = prev.restrictedToTeams.includes(teamId)
@@ -404,9 +409,9 @@ export function CreateEventScreen(): JSX.Element {
     });
   };
 
-  // Fetch roster members when restricted rosters change
+  // Fetch roster players when selected rosters change
   useEffect(() => {
-    if (!formData.isPrivate || formData.restrictedToTeams.length === 0) return;
+    if (formData.restrictedToTeams.length === 0) return;
 
     const fetchRosterMembers = async () => {
       try {
@@ -435,12 +440,12 @@ export function CreateEventScreen(): JSX.Element {
           return merged;
         });
       } catch (error) {
-        console.error('Error fetching roster members:', error);
+        console.error('Error fetching roster players:', error);
       }
     };
 
     fetchRosterMembers();
-  }, [formData.restrictedToTeams, formData.isPrivate]);
+  }, [formData.restrictedToTeams]);
 
   // Handle adding an individual person to the invited list
   const handleAddInvitedUser = async (addedUser: User) => {
@@ -817,7 +822,9 @@ export function CreateEventScreen(): JSX.Element {
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
         isPrivate: formData.isPrivate,
-        invitedUserIds: formData.isPrivate ? invitedUsers.map(u => u.id) : undefined,
+        invitedUserIds: invitedUsers.length > 0 ? invitedUsers.map(u => u.id) : undefined,
+        homeRosterId: isGameEvent && formData.homeRosterId ? formData.homeRosterId : undefined,
+        awayRosterId: isGameEvent && formData.awayRosterId ? formData.awayRosterId : undefined,
         eligibility: {
           isInviteOnly: formData.isPrivate,
           minimumPlayerCount: formData.minimumPlayerCount
@@ -1251,11 +1258,6 @@ export function CreateEventScreen(): JSX.Element {
               onPress={() => {
                 const newValue = !formData.isPrivate;
                 handleInputChange('isPrivate', newValue);
-                if (!newValue) {
-                  // Clear invited users and roster restrictions when toggling off
-                  setInvitedUsers([]);
-                  handleInputChange('restrictedToTeams', []);
-                }
               }}
             >
               <View style={styles.privateToggleRow}>
@@ -1273,94 +1275,124 @@ export function CreateEventScreen(): JSX.Element {
               </View>
               <Text style={styles.privateToggleHint}>
                 {formData.isPrivate
-                  ? 'Only invited people can see and join this event'
-                  : 'Anyone can see and join this event'}
+                  ? 'Only invited rosters and people can join'
+                  : 'Open for anyone to join'}
               </Text>
             </TouchableOpacity>
 
             {formData.isPrivate && (
-              <View style={styles.privateOptions}>
-                {/* Restrict to Roster */}
-                {teamOptions.length > 0 && (
-                  <View style={styles.restrictionCard}>
-                    <Text style={styles.restrictionLabel}>Restrict to Roster</Text>
-                    <Text style={styles.restrictionHint}>
-                      All players of selected rosters will be invited
-                    </Text>
-                    <View style={styles.teamList}>
-                      {teamOptions.map(team => (
-                        <TouchableOpacity
-                          key={team.value}
-                          style={[
-                            styles.teamItem,
-                            formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemSelected,
-                          ]}
-                          onPress={() => handleRosterRestrictionToggle(team.value.toString())}
-                        >
-                          <Text
-                            style={[
-                              styles.teamItemText,
-                              formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemTextSelected,
-                            ]}
-                          >
-                            {formData.restrictedToTeams.includes(team.value.toString()) ? '✓ ' : ''}
-                            {team.label}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {/* Add People */}
-                <View style={styles.restrictionCard}>
-                  <Text style={styles.restrictionLabel}>Add People</Text>
-                  <Text style={styles.restrictionHint}>
-                    Search by name or email to invite individuals
-                  </Text>
-                  <AddMemberSearch
-                    onAddMember={handleAddInvitedUser}
-                    existingMemberIds={[
-                      ...invitedUsers.map(u => u.id),
-                      ...(user?.id ? [user.id] : []),
-                    ]}
-                  />
-                </View>
-
-                {/* Invited List */}
-                {invitedUsers.length > 0 && (
-                  <View style={styles.restrictionCard}>
-                    <Text style={styles.restrictionLabel}>
-                      Invited ({invitedUsers.length})
-                    </Text>
-                    {invitedUsers.map(invitedUser => (
-                      <View key={invitedUser.id} style={styles.invitedUserRow}>
-                        <View style={styles.invitedUserInfo}>
-                          <View style={styles.invitedUserAvatar}>
-                            <Text style={styles.invitedUserAvatarText}>
-                              {invitedUser.firstName?.[0] || invitedUser.email?.[0]?.toUpperCase() || '?'}
-                            </Text>
-                          </View>
-                          <View>
-                            <Text style={styles.invitedUserName}>
-                              {invitedUser.firstName} {invitedUser.lastName}
-                            </Text>
-                            <Text style={styles.invitedUserEmail}>{invitedUser.email}</Text>
-                          </View>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => handleRemoveInvitedUser(invitedUser.id)}
-                          style={styles.removeInvitedButton}
-                        >
-                          <Ionicons name="close-circle" size={22} color={colors.track} />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
+              <Text style={styles.privateToggleNote}>
+                Only invited rosters and people can see and join this event
+              </Text>
             )}
           </View>
+
+          {/* Roster Selection - Game: Home/Away, Other: Multi-select invite */}
+          {isGameEvent ? (
+            teamOptions.length > 0 ? (
+              <View style={styles.gameRosterSection}>
+                <Text style={styles.restrictionLabel}>Match Rosters</Text>
+                <FormSelect
+                  label="Home Roster"
+                  placeholder="Select home roster"
+                  value={formData.homeRosterId}
+                  options={[
+                    { label: 'None', value: '' },
+                    ...teamOptions.filter(t => t.value.toString() !== formData.awayRosterId),
+                  ]}
+                  onSelect={(option) => handleInputChange('homeRosterId', option.value.toString())}
+                />
+                <FormSelect
+                  label="Away Roster"
+                  placeholder="Select away roster"
+                  value={formData.awayRosterId}
+                  options={[
+                    { label: 'None', value: '' },
+                    ...teamOptions.filter(t => t.value.toString() !== formData.homeRosterId),
+                  ]}
+                  onSelect={(option) => handleInputChange('awayRosterId', option.value.toString())}
+                />
+              </View>
+            ) : null
+          ) : (
+            teamOptions.length > 0 ? (
+              <View style={styles.restrictionCard}>
+                <Text style={styles.restrictionLabel}>Invite Rosters</Text>
+                <Text style={styles.restrictionHint}>
+                  All players of selected rosters will be invited
+                </Text>
+                <View style={styles.teamList}>
+                  {teamOptions.map(team => (
+                    <TouchableOpacity
+                      key={team.value}
+                      style={[
+                        styles.teamItem,
+                        formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemSelected,
+                      ]}
+                      onPress={() => handleRosterRestrictionToggle(team.value.toString())}
+                    >
+                      <Text
+                        style={[
+                          styles.teamItemText,
+                          formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemTextSelected,
+                        ]}
+                      >
+                        {formData.restrictedToTeams.includes(team.value.toString()) ? '✓ ' : ''}
+                        {team.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ) : null
+          )}
+
+          {/* Add People */}
+          <View style={styles.restrictionCard}>
+            <Text style={styles.restrictionLabel}>Add People</Text>
+            <Text style={styles.restrictionHint}>
+              Search by name or email to invite individuals
+            </Text>
+            <AddMemberSearch
+              onAddMember={handleAddInvitedUser}
+              existingMemberIds={[
+                ...invitedUsers.map(u => u.id),
+                ...(user?.id ? [user.id] : []),
+              ]}
+            />
+          </View>
+
+          {/* Invited List */}
+          {invitedUsers.length > 0 && (
+            <View style={styles.restrictionCard}>
+              <Text style={styles.restrictionLabel}>
+                Invited ({invitedUsers.length})
+              </Text>
+              {invitedUsers.map(invitedUser => (
+                <View key={invitedUser.id} style={styles.invitedUserRow}>
+                  <View style={styles.invitedUserInfo}>
+                    <View style={styles.invitedUserAvatar}>
+                      <Text style={styles.invitedUserAvatarText}>
+                        {invitedUser.firstName?.[0] || invitedUser.email?.[0]?.toUpperCase() || '?'}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={styles.invitedUserName}>
+                        {invitedUser.firstName} {invitedUser.lastName}
+                      </Text>
+                      <Text style={styles.invitedUserEmail}>{invitedUser.email}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveInvitedUser(invitedUser.id)}
+                    style={styles.removeInvitedButton}
+                  >
+                    <Ionicons name="close-circle" size={22} color={colors.track} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
 
           <FormButton
             title="Create Event"
@@ -1662,8 +1694,15 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     marginLeft: 28,
   },
-  privateOptions: {
-    marginTop: 16,
+  privateToggleNote: {
+    fontSize: 13,
+    color: colors.grass,
+    marginLeft: 28,
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  gameRosterSection: {
+    marginBottom: 16,
   },
   restrictionCard: {
     padding: 16,
