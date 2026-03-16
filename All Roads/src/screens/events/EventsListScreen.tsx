@@ -95,13 +95,9 @@ export function EventsListScreen(): JSX.Element {
   ];
 
   const isLoading = eventsLoading || bookingsLoading;
-  // Split into My Events (user is organizer OR confirmed participant) and Public Events
-  const myEvents = rawEvents.filter(
-    event => event.organizerId === currentUser?.id || bookedEventIds.has(event.id)
-  );
-  const publicEvents = rawEvents.filter(
-    event => event.organizerId !== currentUser?.id && !bookedEventIds.has(event.id)
-  );(navigation as any).navigate('CreateEvent');
+
+  const handleCreateEvent = () => {
+    (navigation as any).navigate('CreateEvent');
   };
 
   const sportTypeOptions: SelectOption[] = [
