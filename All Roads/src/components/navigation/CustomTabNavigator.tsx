@@ -9,7 +9,6 @@ import { HomeStackNavigator } from '../../navigation/stacks/HomeStackNavigator';
 import { EventsStackNavigator } from '../../navigation/stacks/EventsStackNavigator';
 import { FacilitiesStackNavigator } from '../../navigation/stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from '../../navigation/stacks/TeamsStackNavigator';
-import { BookingsStackNavigator } from '../../navigation/stacks/BookingsStackNavigator';
 import { ProfileStackNavigator } from '../../navigation/stacks/ProfileStackNavigator';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -67,9 +66,6 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         break;
       case 'Teams':
         iconName = focused ? 'people' : 'people-outline';
-        break;
-      case 'Bookings':
-        iconName = focused ? 'calendar' : 'calendar-outline';
         break;
       case 'Profile':
         iconName = focused ? 'person' : 'person-outline';
@@ -145,13 +141,6 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         component={TeamsStackNavigator}
         options={{
           tabBarLabel: 'Rosters',
-        }}
-      />
-      <Tab.Screen 
-        name="Bookings" 
-        component={BookingsStackNavigator}
-        options={{
-          tabBarLabel: 'Schedule',
         }}
       />
       <Tab.Screen 

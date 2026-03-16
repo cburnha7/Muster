@@ -561,7 +561,7 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
         where: { organizerId: userId },
         select: {
           id: true, name: true, sportType: true, leagueType: true,
-          isActive: true, imageUrl: true, isCertified: true,
+          isActive: true, imageUrl: true, isCertified: true, organizerId: true,
           memberships: { where: { status: 'active' }, select: { id: true } },
         },
         orderBy: { createdAt: 'desc' },

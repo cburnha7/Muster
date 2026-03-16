@@ -29,7 +29,6 @@ export type MainTabParamList = {
   Facilities: NavigatorScreenParams<FacilitiesStackParamList>;
   Teams: NavigatorScreenParams<TeamsStackParamList>;
   Leagues: NavigatorScreenParams<LeaguesStackParamList>;
-  Bookings: NavigatorScreenParams<BookingsStackParamList>;
   Profile: NavigatorScreenParams<ProfileStackParamList>;
 };
 

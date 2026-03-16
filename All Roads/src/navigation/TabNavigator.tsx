@@ -13,7 +13,6 @@ import { EventsStackNavigator } from './stacks/EventsStackNavigator';
 import { FacilitiesStackNavigator } from './stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from './stacks/TeamsStackNavigator';
 import { LeaguesStackNavigator } from './stacks/LeaguesStackNavigator';
-import { BookingsStackNavigator } from './stacks/BookingsStackNavigator';
 import { ProfileStackNavigator } from './stacks/ProfileStackNavigator';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -74,9 +73,6 @@ export function TabNavigator(): JSX.Element {
         break;
       case 'Leagues':
         iconName = focused ? 'trophy' : 'trophy-outline';
-        break;
-      case 'Bookings':
-        iconName = focused ? 'calendar' : 'calendar-outline';
         break;
       case 'Profile':
         iconName = focused ? 'person' : 'person-outline';
@@ -190,13 +186,6 @@ export function TabNavigator(): JSX.Element {
             navigation.navigate('Facilities', { screen: 'FacilitiesList' });
           },
         })}
-      />
-      <Tab.Screen 
-        name="Bookings" 
-        component={BookingsStackNavigator}
-        options={{
-          tabBarLabel: 'Schedule',
-        }}
       />
       <Tab.Screen 
         name="Profile" 

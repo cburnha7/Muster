@@ -385,9 +385,6 @@ export function HomeScreen(): JSX.Element {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Schedule</Text>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('Bookings', { screen: 'BookingsList' })}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
           </View>
 
           {/* Schedule filter tabs */}
@@ -425,7 +422,7 @@ export function HomeScreen(): JSX.Element {
             <Text style={styles.placeholder}>Loading...</Text>
           ) : scheduleBookings.length > 0 ? (
             <View>
-              {scheduleBookings.slice(0, 5).map((booking) => (
+              {scheduleBookings.map((booking) => (
                 <BookingCard
                   key={booking.id}
                   booking={booking}
