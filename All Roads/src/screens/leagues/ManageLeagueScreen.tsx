@@ -40,8 +40,8 @@ export const ManageLeagueScreen: React.FC = () => {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
 
-  const isTeamLeague = league?.leagueType === 'team';
-  const isPrivateTeamLeague = isTeamLeague && league?.visibility === 'private';
+  // All leagues are now roster-based
+  const isPrivateLeague = league?.visibility === 'private';
 
   // Get roster IDs already in the league (any status) to filter search results
   const existingRosterIds = members.map((m) => m.memberId);
@@ -338,8 +338,8 @@ export const ManageLeagueScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Roster Search & Invitation — Private Team Leagues only */}
-        {isPrivateTeamLeague && (
+        {/* Roster Search & Invitation — Private Leagues only */}
+        {isPrivateLeague && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Rosters</Text>
             <Text style={styles.sectionDescription}>

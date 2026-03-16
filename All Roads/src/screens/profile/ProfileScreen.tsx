@@ -27,7 +27,6 @@ interface UserLeague {
   id: string;
   name: string;
   sportType: string;
-  leagueType: 'team' | 'pickup';
   isActive: boolean;
   imageUrl?: string;
   memberCount: number;
@@ -352,7 +351,7 @@ export function ProfileScreen() {
                 style={styles.listItem}
                 onPress={() => (navigation as any).navigate('Leagues', {
                   screen: 'LeagueDetails',
-                  params: { leagueId: league.id, leagueType: league.leagueType },
+                  params: { leagueId: league.id },
                 })}
                 activeOpacity={0.7}
               >
@@ -366,7 +365,7 @@ export function ProfileScreen() {
                     )}
                   </View>
                   <Text style={styles.listItemSubtitle} numberOfLines={1}>
-                    {league.sportType} • {league.memberCount ?? 0} {league.leagueType === 'team' ? 'rosters' : 'players'}
+                    {league.sportType} • {league.memberCount ?? 0} rosters
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#666" />

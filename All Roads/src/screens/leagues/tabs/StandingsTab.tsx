@@ -1,34 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, RefreshControl, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StandingsTable } from '../../../components/league/StandingsTable';
-import { PlayerRankingsTable } from '../../../components/league/PlayerRankingsTable';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { LeagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
-import { TeamStanding, PlayerRanking, Season } from '../../../types';
+import { TeamStanding, Season } from '../../../types';
 import { colors } from '../../../theme';
 
 interface StandingsTabProps {
   leagueId: string;
-  leagueType?: 'team' | 'pickup';
 }
 
-export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId, leagueType }) => {
+export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
   const [standings, setStandings] = useState<TeamStanding[]>([]);
-  const [playerRankings, setPlayerRankings] = useState<PlayerRanking[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rankingsPage, setRankingsPage] = useState(1);
-  const [hasMoreRankings, setHasMoreRankings] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const isPickup = leagueType === 'pickup';
 
   useEffect(() => {
     loadSeasons();
@@ -38,7 +30,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId, leagueType
     if (seasons.length > 0 || selectedSeasonId === undefined) {
       loadStandings();
     }
-  }, [leagueId, selectedSeasonId, leagueType]);
+  }, [leagueId, selectedSeasonId]);
 
   const loadSeasons = async () => {
     try {
@@ -66,16 +58,8 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId, leagueType
       setError(null);
 
       const leagueService = new LeagueService();
-
-      if (isPickup) {
-        const response = await leagueService.getPlayerRankings(leagueId, selectedSeasonId);
-        setPlayerRankings(response.data);
-        setHasMoreRankings(response.data.length < response.pagination.total);
-        setRankingsPage(1);
-      } else {
-        const data = await leagueService.getStandings(leagueId, selectedSeasonId);
-        setStandings(data);
-      }
+      const data = await leagueService.getStandings(leagueId, selectedSeasonId);
+      setStandings(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load standings';
       setError(errorMessage);
@@ -84,24 +68,6 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId, leagueType
       setIsRefreshing(false);
     }
   };
-
-  const handleLoadMoreRankings = useCallback(async () => {
-    if (isLoadingMore || !hasMoreRankings) return;
-
-    try {
-      setIsLoadingMore(true);
-      const nextPage = rankingsPage + 1;
-      const leagueService = new LeagueService();
-      const response = await leagueService.getPlayerRankings(leagueId, selectedSeasonId, 'performanceScore', nextPage);
-      setPlayerRankings(prev => [...prev, ...response.data]);
-      setRankingsPage(nextPage);
-      setHasMoreRankings(response.data.length > 0 && playerRankings.length + response.data.length < response.pagination.total);
-    } catch (err) {
-      console.error('Failed to load more rankings:', err);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, hasMoreRankings, rankingsPage, leagueId, selectedSeasonId, playerRankings.length]);
 
   const handleRefresh = () => {
     loadStandings(true);
@@ -114,11 +80,6 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId, leagueType
   const handleTeamPress = (teamId: string) => {
     // TODO: Navigate to roster details
     console.log('Roster pressed:', teamId);
-  };
-
-  const handlePlayerPress = (playerId: string) => {
-    // TODO: Navigate to player profile
-    console.log('Player pressed:', playerId);
   };
 
   const seasonOptions: SelectOption[] = [
@@ -138,31 +99,6 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId, leagueType
   }
 
   const renderContent = () => {
-    if (isPickup) {
-      if (playerRankings.length > 0) {
-        return (
-          <PlayerRankingsTable
-            rankings={playerRankings}
-            onPlayerPress={handlePlayerPress}
-            onLoadMore={handleLoadMoreRankings}
-            hasMore={hasMoreRankings}
-            loading={isLoadingMore}
-          />
-        );
-      }
-
-      return (
-        <View style={styles.emptyState}>
-          <Ionicons name="people-outline" size={64} color="#CCC" />
-          <Text style={styles.emptyText}>No player rankings available</Text>
-          <Text style={styles.emptySubtext}>
-            Rankings will appear once matches are played
-          </Text>
-        </View>
-      );
-    }
-
-    // Team league standings
     if (standings.length > 0) {
       return (
         <StandingsTable

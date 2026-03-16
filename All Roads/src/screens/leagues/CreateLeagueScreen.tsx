@@ -39,10 +39,9 @@ export const CreateLeagueScreen: React.FC = () => {
           {
             text: 'OK',
             onPress: () => {
-              // Navigate to league details with leagueType context
+              // Navigate to league details
               navigation.navigate('LeagueDetails' as never, {
                 leagueId: newLeague.id,
-                leagueType: newLeague.leagueType,
               } as never);
             },
           },

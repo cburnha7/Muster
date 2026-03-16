@@ -47,9 +47,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   initialRosters = [],
   initialInvitedRosters = [],
 }) => {
-  const [leagueType, setLeagueType] = useState<'team' | 'pickup'>(
-    (initialData as Partial<CreateLeagueData>)?.leagueType || 'team'
-  );
   const [visibility, setVisibility] = useState<'public' | 'private'>(
     (initialData as Partial<CreateLeagueData>)?.visibility || 'public'
   );
@@ -178,11 +175,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
   ];
 
-  const leagueTypeOptions: SelectOption[] = [
-    { label: 'Team League', value: 'team' },
-    { label: 'Pickup League', value: 'pickup' },
-  ];
-
   const visibilityOptions: SelectOption[] = [
     { label: 'Public', value: 'public' },
     { label: 'Private', value: 'private' },
@@ -192,14 +184,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'Weekly', value: 'weekly' },
     { label: 'Monthly', value: 'monthly' },
   ];
-
-  const handleLeagueTypeChange = (option: SelectOption) => {
-    const newType = option.value as 'team' | 'pickup';
-    setLeagueType(newType);
-    if (newType === 'pickup') {
-      setVisibility('public');
-    }
-  };
 
   // ── Calendar helpers ────────────────────────────────────────────
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -427,8 +411,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       rosterIds: addedRosters.map(r => r.id),
       invitedRosterIds: invitedRosters.map(r => r.id),
       ...(isEdit ? {} : {
-        leagueType,
-        visibility: leagueType === 'pickup' ? 'public' : visibility,
+        leagueType: 'team',
+        visibility,
       }),
     } as any;
 
@@ -593,25 +577,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       >
         <View style={styles.form}>
           {!isEdit && (
-            <>
-              <FormSelect
-                label="League Type *"
-                placeholder="Select league type"
-                value={leagueType}
-                options={leagueTypeOptions}
-                onSelect={handleLeagueTypeChange}
-              />
-
-              {leagueType === 'team' && (
-                <FormSelect
-                  label="Visibility"
-                  placeholder="Select visibility"
-                  value={visibility}
-                  options={visibilityOptions}
-                  onSelect={(option) => setVisibility(option.value as 'public' | 'private')}
-                />
-              )}
-            </>
+            <FormSelect
+              label="Visibility"
+              placeholder="Select visibility"
+              value={visibility}
+              options={visibilityOptions}
+              onSelect={(option) => setVisibility(option.value as 'public' | 'private')}
+            />
           )}
 
           <FormInput
@@ -696,30 +668,24 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </Text>
           </View>
 
-          {/* Auto-Generate Matchups — moved below, before buttons */}
+          {/* Schedule Configuration */}
+          <FormInput
+            label="Minimum Roster Size"
+            placeholder="e.g. 5"
+            value={minimumRosterSize}
+            onChangeText={setMinimumRosterSize}
+            keyboardType="numeric"
+            error={errors.minimumRosterSize}
+          />
 
-          {/* Schedule Configuration — team leagues only */}
-          {leagueType === 'team' && (
-            <>
-              <FormInput
-                label="Minimum Roster Size"
-                placeholder="e.g. 5"
-                value={minimumRosterSize}
-                onChangeText={setMinimumRosterSize}
-                keyboardType="numeric"
-                error={errors.minimumRosterSize}
-              />
-
-              <FormInput
-                label="Season Game Count"
-                placeholder="Total games per roster"
-                value={seasonGameCount}
-                onChangeText={setSeasonGameCount}
-                keyboardType="numeric"
-                error={errors.seasonGameCount}
-              />
-            </>
-          )}
+          <FormInput
+            label="Season Game Count"
+            placeholder="Total games per roster"
+            value={seasonGameCount}
+            onChangeText={setSeasonGameCount}
+            keyboardType="numeric"
+            error={errors.seasonGameCount}
+          />
 
           {/* Game Day */}
           <Text style={styles.fieldLabel}>Game Day</Text>

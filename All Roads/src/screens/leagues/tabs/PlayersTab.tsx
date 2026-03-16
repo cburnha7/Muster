@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, FlatList, RefreshControl, Text, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { PlayerRankingsTable } from '../../../components/league/PlayerRankingsTable';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
@@ -8,177 +7,17 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { leagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { PlayerRanking, Season } from '../../../types';
-import { LeagueMembership } from '../../../types/league';
-import { colors, fonts } from '../../../theme';
+import { colors } from '../../../theme';
 
 interface PlayersTabProps {
   leagueId: string;
-  leagueType?: 'team' | 'pickup';
 }
 
-export const PlayersTab: React.FC<PlayersTabProps> = ({ leagueId, leagueType }) => {
-  // If pickup league, show individual player list from memberships
-  if (leagueType === 'pickup') {
-    return <PickupPlayersList leagueId={leagueId} />;
-  }
-
-  // Default: show player rankings (team league or unknown)
+export const PlayersTab: React.FC<PlayersTabProps> = ({ leagueId }) => {
   return <PlayerRankingsView leagueId={leagueId} />;
 };
 
-// ── Pickup League: Individual player list from active memberships ──
-const PickupPlayersList: React.FC<{ leagueId: string }> = ({ leagueId }) => {
-  const [memberships, setMemberships] = useState<LeagueMembership[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadMembers();
-  }, [leagueId]);
-
-  const loadMembers = async (forceRefresh = false) => {
-    try {
-      if (forceRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
-      setError(null);
-
-      const response = await leagueService.getMembers(leagueId, 1, 100);
-      setMemberships(response.data || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load players';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    loadMembers(true);
-  };
-
-  // Only show active memberships (Requirement 7.3)
-  const activePlayers = memberships.filter(
-    (m) => m.status === 'active' && m.memberType === 'user'
-  );
-
-  const renderPlayerRow = ({ item }: { item: LeagueMembership }) => {
-    const user = item.user;
-    const displayName = user
-      ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown Player'
-      : 'Unknown Player';
-
-    return (
-      <View style={pickupStyles.playerRow}>
-        {user?.profileImage ? (
-          <Image source={{ uri: user.profileImage }} style={pickupStyles.avatar} />
-        ) : (
-          <View style={pickupStyles.avatarPlaceholder}>
-            <Ionicons name="person" size={18} color={colors.grass} />
-          </View>
-        )}
-        <Text style={pickupStyles.playerName} numberOfLines={1}>
-          {displayName}
-        </Text>
-      </View>
-    );
-  };
-
-  const renderEmptyState = () => {
-    if (isLoading) return null;
-    return (
-      <View style={pickupStyles.emptyState}>
-        <Text style={pickupStyles.emptyText}>No players in this league yet</Text>
-      </View>
-    );
-  };
-
-  if (isLoading && !isRefreshing && memberships.length === 0) {
-    return <LoadingSpinner />;
-  }
-
-  if (error && !isRefreshing && memberships.length === 0) {
-    return <ErrorDisplay message={error} onRetry={() => loadMembers()} />;
-  }
-
-  return (
-    <View style={pickupStyles.container}>
-      <FlatList
-        data={activePlayers}
-        renderItem={renderPlayerRow}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={pickupStyles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
-          />
-        }
-        ListEmptyComponent={renderEmptyState}
-      />
-    </View>
-  );
-};
-
-const pickupStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.chalk,
-  },
-  listContent: {
-    paddingVertical: 8,
-  },
-  playerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  avatarPlaceholder: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.chalk,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playerName: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 15,
-    fontFamily: fonts.semibold,
-    color: colors.ink,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 48,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: fonts.body,
-    color: colors.inkFaint,
-    textAlign: 'center',
-  },
-});
-
-// ── Team League: Player rankings view (original behavior) ──
+// ── Player rankings view ──
 const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
   const [rankings, setRankings] = useState<PlayerRanking[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);

@@ -72,9 +72,9 @@ export type TeamsStackParamList = {
 
 export type LeaguesStackParamList = {
   LeaguesBrowser: undefined;
-  LeagueDetails: { leagueId: string; leagueType?: 'team' | 'pickup'; readOnly?: boolean };
+  LeagueDetails: { leagueId: string; readOnly?: boolean };
   CreateLeague: undefined;
-  ManageLeague: { leagueId: string; leagueType?: 'team' | 'pickup' };
+  ManageLeague: { leagueId: string };
   CreateMatch: { leagueId: string; seasonId?: string };
   RecordMatchResult: { matchId: string };
   DocumentViewer: { leagueId: string; documentId: string; documentName?: string };

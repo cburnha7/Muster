@@ -101,13 +101,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   // ── Derived state ───────────────────────────────────────────────
   const isOperator = league ? (currentUser?.id === league.organizerId && !readOnly) : false;
-  const isTeamLeague = league?.leagueType === 'team';
 
   const activeMembers = members.filter((m) => m.status === 'active' || m.status === 'pending');
-  const userPickupMembership = members.find(
-    (m) => m.memberType === 'user' && m.memberId === currentUser?.id && m.status === 'active'
-  );
-  const isPickupParticipant = !!userPickupMembership;
 
   const rosterIdsInLeague = new Set(
     activeMembers.filter((m) => m.memberType === 'roster').map((m) => m.memberId)
@@ -227,20 +222,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
       await loadLeague(true);
     } catch (err) {
       Alert.alert('Error', err instanceof Error ? err.message : 'Failed to send join request');
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleJoinPickupLeague = async () => {
-    if (!league || !currentUser) return;
-    loggingService.logButton('Join Up (Pickup)', 'LeagueDetailsScreen', { leagueId });
-    try {
-      setIsActionLoading(true);
-      await leagueService.joinLeagueAsUser(league.id, currentUser.id);
-      await loadLeague(true);
-    } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to join league');
     } finally {
       setIsActionLoading(false);
     }
@@ -368,13 +349,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const renderAddRosterOption = () => {
     // Hide in readOnly mode
     if (readOnly) return null;
-    // Show for invited users who have eligible rosters to add
-    if (isOperator || !isTeamLeague || eligibleRosters.length === 0) return null;
+    if (isOperator || eligibleRosters.length === 0) return null;
     // Only show if user has some connection to the league (pending invitation or active member)
-    const userHasConnection = members.some(
-      (m) => m.memberType === 'user' && m.memberId === currentUser?.id
-    ) || pendingUserRosterInvitations.length > 0;
-    if (!userHasConnection && !isPickupParticipant) return null;
+    const userHasConnection = pendingUserRosterInvitations.length > 0 ||
+      members.some((m) => m.memberType === 'roster' && userOwnedRosters.some((r) => r.id === m.memberId));
+    if (!userHasConnection) return null;
 
     return (
       <View style={styles.section}>
@@ -418,39 +397,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (isOperator) return null;
     if (!isAuthenticated || !currentUser) return null;
 
-    // Pickup league: show Join Up / We're Out
-    if (!isTeamLeague) {
-      if (isPickupParticipant) {
-        return (
-          <View style={styles.actionBar}>
-            <TouchableOpacity
-              style={styles.stepOutBtn}
-              onPress={() => handleStepOut()}
-              disabled={isActionLoading}
-              accessibilityRole="button"
-              accessibilityLabel="We're Out of league"
-            >
-              <Text style={styles.stepOutBtnText}>We're Out</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      }
-      return (
-        <View style={styles.actionBar}>
-          <TouchableOpacity
-            style={styles.joinBtn}
-            onPress={handleJoinPickupLeague}
-            disabled={isActionLoading}
-            accessibilityRole="button"
-            accessibilityLabel="Join Up"
-          >
-            <Text style={styles.joinBtnText}>Join Up</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    // Team league: show We're Out if user's roster is active in the league, otherwise Join Up
+    // Show We're Out if user's roster is active in the league
     const userActiveRosterInLeague = members.find(
       (m) => m.memberType === 'roster' && m.status === 'active' &&
         userOwnedRosters.some((r) => r.id === m.memberId)
@@ -472,7 +419,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
       );
     }
 
-    // Team league: show Join Up if user has eligible roster
+    // Show Join Up if user has eligible roster not yet in the league
     if (hasEligibleRoster) {
       const userRosterInLeague = members.some(
         (m) => m.memberType === 'roster' && userOwnedRosters.some((r) => r.id === m.memberId)
@@ -485,7 +432,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
               onPress={handleJoinTeamLeague}
               disabled={isActionLoading}
               accessibilityRole="button"
-              accessibilityLabel="Join Up with roster"
+              accessibilityLabel="Join Up"
             >
               <Text style={styles.joinBtnText}>Join Up</Text>
             </TouchableOpacity>
@@ -502,9 +449,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
       {([
         { key: 'standings' as TabKey, label: 'Standings', icon: 'trophy-outline' },
         { key: 'matches' as TabKey, label: 'Matches', icon: 'football-outline' },
-        ...(isTeamLeague
-          ? [{ key: 'teams' as TabKey, label: 'Rosters', icon: 'shield-outline' }]
-          : [{ key: 'players' as TabKey, label: 'Players', icon: 'people-outline' }]),
+        { key: 'teams' as TabKey, label: 'Rosters', icon: 'shield-outline' },
         { key: 'info' as TabKey, label: 'Info', icon: 'information-circle-outline' },
       ] as Array<{ key: TabKey; label: string; icon: string }>).map((tab) => (
         <TouchableOpacity
@@ -532,11 +477,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!league) return null;
     switch (activeTab) {
       case 'standings':
-        return <StandingsTab leagueId={leagueId} leagueType={league.leagueType} />;
+        return <StandingsTab leagueId={leagueId} />;
       case 'matches':
         return <MatchesTab leagueId={leagueId} isOperator={isOperator} />;
       case 'players':
-        return <PlayersTab leagueId={leagueId} leagueType={league.leagueType} />;
+        return <PlayersTab leagueId={leagueId} />;
       case 'teams':
         return <TeamsTab leagueId={leagueId} />;
       case 'info':
@@ -700,11 +645,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
       >
         <View style={styles.roForm}>
-          {/* League Type + Visibility */}
-          <ReadOnlyField label="League Type" value={league.leagueType === 'team' ? 'Roster League' : 'Pickup League'} />
-          {league.leagueType === 'team' && (
-            <ReadOnlyField label="Visibility" value={league.visibility === 'public' ? 'Public' : 'Private'} />
-          )}
+          {/* Visibility */}
+          <ReadOnlyField label="Visibility" value={league.visibility === 'public' ? 'Public' : 'Private'} />
 
           {/* Core fields */}
           <ReadOnlyField label="League Name" value={league.name} />
@@ -733,13 +675,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
             </Text>
           </View>
 
-          {/* Team league schedule fields */}
-          {isTeamLeague && (
-            <>
-              <ReadOnlyField label="Minimum Roster Size" value={league.minimumRosterSize != null ? String(league.minimumRosterSize) : ''} />
-              <ReadOnlyField label="Season Game Count" value={league.seasonGameCount != null ? String(league.seasonGameCount) : ''} />
-            </>
-          )}
+          {/* Schedule fields */}
+          <ReadOnlyField label="Minimum Roster Size" value={league.minimumRosterSize != null ? String(league.minimumRosterSize) : ''} />
+          <ReadOnlyField label="Season Game Count" value={league.seasonGameCount != null ? String(league.seasonGameCount) : ''} />
 
           {/* Game Day */}
           <Text style={styles.roFieldLabel}>Game Day</Text>
@@ -761,9 +699,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Registration Cutoff */}
           <ReadOnlyField label="Registration Cutoff" value={league.registrationCloseDate ? formatDate(league.registrationCloseDate) : ''} />
 
-          {/* Roster Lists — team leagues only */}
-          {isTeamLeague && (
-            <>
+          {/* Roster Lists */}
               {/* Invited Rosters */}
               {invitedRostersList.length > 0 && (
                 <View style={styles.roRosterSection}>
@@ -832,8 +768,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
                   <Text style={styles.roRosterEmpty}>No rosters yet.</Text>
                 )}
               </View>
-            </>
-          )}
 
           {/* Track Standings — display only */}
           <View style={styles.roToggleCard}>
@@ -864,7 +798,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Standings table — if tracking standings */}
           {league.trackStandings !== false && (
             <View style={styles.roStandingsSection}>
-              <StandingsTab leagueId={leagueId} leagueType={league.leagueType} />
+              <StandingsTab leagueId={leagueId} />
             </View>
           )}
 

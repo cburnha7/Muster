@@ -226,15 +226,6 @@ export class LeagueService extends BaseApiService {
   }
 
   /**
-   * Join league as an individual user (Pickup League — creates active membership immediately)
-   */
-  async joinLeagueAsUser(leagueId: string, userId: string): Promise<LeagueMembership> {
-    return this.post<LeagueMembership>(`/leagues/${leagueId}/join`, {
-      userId
-    });
-  }
-
-  /**
    * Step Out of a league (sets membership to withdrawn)
    */
   async stepOutOfLeague(leagueId: string, userId: string, teamId?: string): Promise<void> {
