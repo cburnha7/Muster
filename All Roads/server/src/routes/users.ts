@@ -217,7 +217,7 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
       ];
     } else if (status === 'cancelled') {
       where.status = 'cancelled';
-    } else if (status) {
+    } else if (status && status !== 'all') {
       where.status = status;
     }
 

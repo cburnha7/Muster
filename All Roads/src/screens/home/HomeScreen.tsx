@@ -84,6 +84,7 @@ export function HomeScreen(): JSX.Element {
     isLoading: allBookingsLoading,
     refetch: refetchAllBookings,
   } = useGetUserBookingsQuery({
+    status: 'all',
     pagination: { page: 1, limit: 200 },
   });
 
