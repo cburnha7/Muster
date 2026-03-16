@@ -448,7 +448,7 @@ router.post('/rentals/bulk', async (req, res) => {
       }
 
       return rentals;
-    });
+    }, { maxWait: 10000, timeout: 30000 });
 
     const totalPrice = result.reduce((sum, r) => sum + r.totalPrice, 0);
 

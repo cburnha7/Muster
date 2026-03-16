@@ -831,45 +831,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
             </View>
           )}
 
-          {/* Pending roster invitations for roster owners */}
-          {pendingUserRosterInvitations.length > 0 && (
-            <View style={styles.invitationBanner}>
-              <Ionicons name="mail-outline" size={20} color={colors.court} />
-              <View style={styles.invitationBannerContent}>
-                <Text style={styles.invitationBannerTitle}>Roster Invitation</Text>
-                {pendingUserRosterInvitations.map((inv) => {
-                  const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
-                  return (
-                    <View key={inv.id} style={styles.invitationRow}>
-                      <Text style={styles.invitationText}>
-                        {rosterName} has been invited to this league
-                      </Text>
-                      <View style={styles.invitationActions}>
-                        <TouchableOpacity
-                          style={styles.confirmBtn}
-                          onPress={() => handleConfirmInvitation(inv)}
-                          disabled={isActionLoading}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Join Up ${rosterName}`}
-                        >
-                          <Text style={styles.confirmBtnText}>Join Up</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.declineBtnSmall}
-                          onPress={() => handleDeclineInvitation(inv)}
-                          disabled={isActionLoading}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Decline ${rosterName}`}
-                        >
-                          <Text style={styles.declineBtnSmallText}>Decline</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
         </View>
       </ScrollView>
 

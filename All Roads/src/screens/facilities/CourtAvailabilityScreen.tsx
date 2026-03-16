@@ -70,7 +70,7 @@ export function CourtAvailabilityScreen() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [markedDates, setMarkedDates] = useState<any>({});
 
-  // Selection cart — persists across court/date changes
+  // Selection cart Ã¢â‚¬â€ persists across court/date changes
   const [selectionCart, setSelectionCart] = useState<Map<string, CartSlot>>(new Map());
 
   // Whole day toggle
@@ -163,12 +163,12 @@ export function CourtAvailabilityScreen() {
 
   const handleDateSelect = (day: DateData) => {
     setSelectedDate(day.dateString);
-    // Cart persists — no clearing
+    // Cart persists Ã¢â‚¬â€ no clearing
   };
 
   const handleCourtSelect = (court: Court) => {
     setSelectedCourt(court);
-    // Cart persists — no clearing
+    // Cart persists Ã¢â‚¬â€ no clearing
   };
 
   const addSlotToCart = useCallback((slot: TimeSlot) => {
@@ -273,23 +273,11 @@ export function CourtAvailabilityScreen() {
       });
 
       if (response.status === 201) {
-        const data = await response.json();
         setShowConfirmation(false);
         setSelectionCart(new Map());
 
-        // Reload current view
-        if (selectedCourt) {
-          await loadAvailability(selectedCourt.id, selectedDate);
-        }
-
-        Alert.alert(
-          'Booking Confirmed',
-          `${data.slotCount} slot${data.slotCount !== 1 ? 's' : ''} booked for $${data.totalPrice.toFixed(2)}.`,
-          [
-            { text: 'View My Rentals', onPress: () => navigation.navigate('MyRentals') },
-            { text: 'Continue', style: 'cancel' },
-          ]
-        );
+        // Navigate to Profile tab to show the new reservations
+        (navigation as any).navigate('Profile', { screen: 'ProfileScreen' });
       } else if (response.status === 409) {
         const data = await response.json();
         setShowConfirmation(false);
@@ -489,8 +477,8 @@ export function CourtAvailabilityScreen() {
               <Ionicons name="cart" size={18} color={colors.grass} />
               <Text style={styles.footerStatsText}>
                 {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''}
-                {cartCourtCount > 1 ? ` · ${cartCourtCount} courts` : ''}
-                {cartDayCount > 1 ? ` · ${cartDayCount} days` : ''}
+                {cartCourtCount > 1 ? ` Ã‚Â· ${cartCourtCount} courts` : ''}
+                {cartDayCount > 1 ? ` Ã‚Â· ${cartDayCount} days` : ''}
               </Text>
             </View>
             <Text style={styles.footerPrice}>${cartTotal.toFixed(2)}</Text>
