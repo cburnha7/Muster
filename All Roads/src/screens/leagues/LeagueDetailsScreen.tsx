@@ -622,23 +622,23 @@ export function LeagueDetailsScreen(): React.ReactElement {
             isEdit={true}
             loading={isUpdating}
             initialRosters={
-              members
-                .filter((m) => m.memberType === 'roster' && m.team && m.status === 'active')
-                .map((m) => ({
-                  id: m.team!.id,
-                  name: m.team!.name,
-                  sportType: m.team!.sportType,
-                  memberCount: m.team!.members?.length ?? 0,
+              ((league as any).memberships || [])
+                .filter((m: any) => m.memberType === 'roster' && m.team && m.status === 'active')
+                .map((m: any) => ({
+                  id: m.team.id,
+                  name: m.team.name,
+                  sportType: m.team.sportType,
+                  memberCount: m.team._count?.members ?? m.team.members?.length ?? 0,
                 }))
             }
             initialInvitedRosters={
-              members
-                .filter((m) => m.memberType === 'roster' && m.team && m.status === 'pending')
-                .map((m) => ({
-                  id: m.team!.id,
-                  name: m.team!.name,
-                  sportType: m.team!.sportType,
-                  memberCount: m.team!.members?.length ?? 0,
+              ((league as any).memberships || [])
+                .filter((m: any) => m.memberType === 'roster' && m.team && m.status === 'pending')
+                .map((m: any) => ({
+                  id: m.team.id,
+                  name: m.team.name,
+                  sportType: m.team.sportType,
+                  memberCount: m.team._count?.members ?? m.team.members?.length ?? 0,
                 }))
             }
           />
@@ -650,10 +650,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Non-commissioner view ───────────────────────────────────────
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Derive roster lists for the read-only view
-  const rosterMembers = members.filter((m) => m.memberType === 'roster');
-  const confirmedRosters = rosterMembers.filter((m) => m.status === 'active');
-  const invitedRostersList = rosterMembers.filter((m) => m.status === 'pending');
+  // Derive roster lists from the league object's memberships (included in GET /leagues/:id)
+  const leagueMemberships = (league as any)?.memberships || [];
+  const rosterMemberships = leagueMemberships.filter((m: any) => m.memberType === 'roster');
+  const confirmedRosters = rosterMemberships.filter((m: any) => m.status === 'active');
+  const invitedRostersList = rosterMemberships.filter((m: any) => m.status === 'pending');
 
   const projectedEndDate = (() => {
     if (!league?.startDate || !league?.seasonLength) return '';
@@ -754,12 +755,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
               <View style={styles.roRosterSection}>
                 <Text style={styles.roRosterSectionTitle}>Confirmed ({confirmedRosters.length})</Text>
                 {confirmedRosters.length > 0 ? (
-                  confirmedRosters.map((m) => {
-                    const team = m.team as any;
+                  confirmedRosters.map((m: any) => {
+                    const team = m.team;
                     const name = team?.name || m.memberId;
                     const sport = team?.sportType || '';
-                    const isPrivate = team?.isPrivate === true || team?.isPublic === false;
-                    const playerCount = team?.playerCount ?? team?.members?.length ?? 0;
+                    const isPrivate = team?.isPrivate === true;
+                    const playerCount = team?._count?.members ?? 0;
                     return (
                       <View key={m.id} style={styles.roRosterItem}>
                         <View style={styles.roRosterIcon}>
@@ -789,12 +790,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
               <View style={styles.roRosterSection}>
                 <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRostersList.length})</Text>
                 {invitedRostersList.length > 0 ? (
-                  invitedRostersList.map((m) => {
-                    const team = m.team as any;
+                  invitedRostersList.map((m: any) => {
+                    const team = m.team;
                     const name = team?.name || m.memberId;
                     const sport = team?.sportType || '';
-                    const isPrivate = team?.isPrivate === true || team?.isPublic === false;
-                    const playerCount = team?.playerCount ?? team?.members?.length ?? 0;
+                    const isPrivate = team?.isPrivate === true;
+                    const playerCount = team?._count?.members ?? 0;
                     return (
                       <View key={m.id} style={styles.roRosterItem}>
                         <View style={[styles.roRosterIcon, { backgroundColor: colors.court }]}>

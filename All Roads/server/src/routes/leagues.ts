@@ -125,7 +125,11 @@ router.get('/:id', async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 imageUrl: true,
-                sportType: true
+                sportType: true,
+                isPrivate: true,
+                _count: {
+                  select: { members: true }
+                }
               }
             },
             user: {
@@ -472,21 +476,45 @@ router.put('/:id', async (req: Request, res: Response) => {
       const toRemoveActive = currentActiveMemberships.filter((m: any) => !rosterIds.includes(m.memberId));
 
       if (toAddActive.length > 0) {
-        await prisma.leagueMembership.createMany({
-          data: toAddActive.map((rid: string) => ({
+        // Check if any of these rosters already have a pending membership — promote them
+        const existingPending = await prisma.leagueMembership.findMany({
+          where: {
             leagueId: id,
-            memberId: rid,
-            teamId: rid,
             memberType: 'roster',
-            status: 'active',
-            matchesPlayed: 0,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            points: 0,
-          })),
-          skipDuplicates: true,
+            memberId: { in: toAddActive },
+            status: 'pending',
+          },
+          select: { id: true, memberId: true },
         });
+        const pendingRosterIds = new Set(existingPending.map((m: any) => m.memberId));
+
+        // Promote pending → active
+        if (existingPending.length > 0) {
+          await prisma.leagueMembership.updateMany({
+            where: { id: { in: existingPending.map((m: any) => m.id) } },
+            data: { status: 'active' },
+          });
+        }
+
+        // Create new memberships only for rosters that don't already have any membership
+        const trulyNew = toAddActive.filter((rid: string) => !pendingRosterIds.has(rid));
+        if (trulyNew.length > 0) {
+          await prisma.leagueMembership.createMany({
+            data: trulyNew.map((rid: string) => ({
+              leagueId: id,
+              memberId: rid,
+              teamId: rid,
+              memberType: 'roster',
+              status: 'active',
+              matchesPlayed: 0,
+              wins: 0,
+              losses: 0,
+              draws: 0,
+              points: 0,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
 
       if (toRemoveActive.length > 0) {

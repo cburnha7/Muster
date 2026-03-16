@@ -363,7 +363,25 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
         orderBy: { joinedAt: 'desc' },
       });
 
-      leagueInvitations = pendingLeagueMemberships.map((m) => ({
+      // Exclude pending invitations where the roster already has an active membership
+      // in the same league (handles duplicate membership data)
+      const activeLeagueMemberships = await prisma.leagueMembership.findMany({
+        where: {
+          memberType: 'roster',
+          memberId: { in: teamIds },
+          status: 'active',
+        },
+        select: { leagueId: true, memberId: true },
+      });
+      const activeKeys = new Set(
+        activeLeagueMemberships.map((m) => `${m.leagueId}:${m.memberId}`)
+      );
+
+      const filteredPending = pendingLeagueMemberships.filter(
+        (m) => !activeKeys.has(`${m.leagueId}:${m.memberId}`)
+      );
+
+      leagueInvitations = filteredPending.map((m) => ({
         id: m.id,
         type: 'league' as const,
         leagueId: m.league.id,
