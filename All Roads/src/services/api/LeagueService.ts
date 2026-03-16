@@ -42,9 +42,9 @@ export class LeagueService extends BaseApiService {
   /**
    * Get league by ID
    */
-  async getLeagueById(id: string): Promise<League> {
+  async getLeagueById(id: string, skipCache: boolean = false): Promise<League> {
     return this.get<League>(`/leagues/${id}`, {
-      cacheOptions: { ttl: 30000 } // Cache for 30 seconds
+      cacheOptions: skipCache ? { skipCache: true } : { ttl: 30000 }
     });
   }
 

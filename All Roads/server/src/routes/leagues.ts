@@ -173,6 +173,49 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'League not found' });
     }
 
+    // Cleanup: remove stale pending memberships where an active one already exists
+    // This handles duplicate data from previous roster sync bugs
+    const activeMemberIds = league.memberships
+      .filter((m: any) => m.status === 'active' && m.memberType === 'roster')
+      .map((m: any) => m.memberId);
+
+    if (activeMemberIds.length > 0) {
+      const stalePending = league.memberships.filter(
+        (m: any) => m.status === 'pending' && m.memberType === 'roster' && activeMemberIds.includes(m.memberId)
+      );
+      if (stalePending.length > 0) {
+        await prisma.leagueMembership.deleteMany({
+          where: { id: { in: stalePending.map((m: any) => m.id) } },
+        });
+        // Remove from response too
+        league.memberships = league.memberships.filter(
+          (m: any) => !stalePending.some((s: any) => s.id === m.id)
+        );
+      }
+    }
+
+    // Also cleanup duplicate pending memberships for the same roster (NULL seasonId duplicates)
+    const pendingRosterMemberships = league.memberships.filter(
+      (m: any) => m.status === 'pending' && m.memberType === 'roster'
+    );
+    const seenPendingRosterIds = new Set<string>();
+    const duplicatePendingIds: string[] = [];
+    for (const m of pendingRosterMemberships) {
+      if (seenPendingRosterIds.has(m.memberId)) {
+        duplicatePendingIds.push(m.id);
+      } else {
+        seenPendingRosterIds.add(m.memberId);
+      }
+    }
+    if (duplicatePendingIds.length > 0) {
+      await prisma.leagueMembership.deleteMany({
+        where: { id: { in: duplicatePendingIds } },
+      });
+      league.memberships = league.memberships.filter(
+        (m: any) => !duplicatePendingIds.includes(m.id)
+      );
+    }
+
     res.json(league);
   } catch (error) {
     console.error('Error fetching league:', error);
@@ -1372,6 +1415,17 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
           return updatedMembership;
         });
 
+        // Clean up any other pending duplicates for the same roster+league
+        await prisma.leagueMembership.deleteMany({
+          where: {
+            leagueId: id,
+            memberType: 'roster',
+            memberId: membership.memberId,
+            status: 'pending',
+            id: { not: invitationId },
+          },
+        });
+
         return res.json(result);
       }
 
@@ -1389,6 +1443,18 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
             }
           }
         }
+      });
+
+      // Clean up any other pending duplicates for the same roster+league
+      // (handles NULL seasonId duplicates from the unique constraint)
+      await prisma.leagueMembership.deleteMany({
+        where: {
+          leagueId: id,
+          memberType: 'roster',
+          memberId: membership.memberId,
+          status: 'pending',
+          id: { not: invitationId },
+        },
       });
 
       return res.json(updatedMembership);

@@ -66,11 +66,10 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const loadLeague = useCallback(async (isRefresh = false) => {
     if (!leagueId) return;
     try {
-      // Always clear league cache to ensure fresh data (especially for roster lists)
-      cacheService.clearBySubstring('leagues');
       if (isRefresh) {
         setRefreshing(true);
         cacheService.clearBySubstring('users');
+        cacheService.clearBySubstring('leagues');
       } else {
         setIsLoading(true);
       }
@@ -78,7 +77,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
       const svc = new LeagueService();
       const [leagueData, membersResponse, eventsData] = await Promise.all([
-        svc.getLeagueById(leagueId),
+        svc.getLeagueById(leagueId, true),
         svc.getMembers(leagueId, 1, 100, true), // includePending for commissioner
         svc.getLeagueEvents(leagueId),
       ]);
@@ -650,11 +649,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Non-commissioner view ───────────────────────────────────────
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Derive roster lists from the league object's memberships (included in GET /leagues/:id)
-  const leagueMemberships = (league as any)?.memberships || [];
-  const rosterMemberships = leagueMemberships.filter((m: any) => m.memberType === 'roster');
-  const confirmedRosters = rosterMemberships.filter((m: any) => m.status === 'active');
-  const invitedRostersList = rosterMemberships.filter((m: any) => m.status === 'pending');
+  // Derive roster lists — prefer league.memberships (from GET /leagues/:id), fall back to members state
+  const leagueMemberships: any[] = (league as any)?.memberships || [];
+  const allRosterData = leagueMemberships.length > 0
+    ? leagueMemberships.filter((m: any) => m.memberType === 'roster')
+    : members.filter((m) => m.memberType === 'roster');
+  const confirmedRosters = allRosterData.filter((m: any) => m.status === 'active');
+  const invitedRostersList = allRosterData.filter((m: any) => m.status === 'pending');
 
   const projectedEndDate = (() => {
     if (!league?.startDate || !league?.seasonLength) return '';
@@ -751,16 +752,50 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Roster Lists — team leagues only */}
           {isTeamLeague && (
             <>
+              {/* Invited Rosters */}
+              {invitedRostersList.length > 0 && (
+                <View style={styles.roRosterSection}>
+                  <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRostersList.length})</Text>
+                  <Text style={styles.roRosterDescription}>These rosters have been invited but haven't joined yet.</Text>
+                  {invitedRostersList.map((m: any) => {
+                    const team = m.team;
+                    const name = team?.name || m.memberId;
+                    const sport = team?.sportType || '';
+                    const isPrivate = team?.isPrivate === true;
+                    const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
+                    return (
+                      <View key={m.id} style={styles.roRosterItem}>
+                        <View style={[styles.roRosterIcon, { backgroundColor: colors.court }]}>
+                          <Ionicons name="time-outline" size={18} color="#FFFFFF" />
+                        </View>
+                        <View style={styles.roRosterInfo}>
+                          <Text style={styles.roRosterName}>{name}</Text>
+                          <Text style={styles.roRosterMeta}>
+                            {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : ''}
+                            {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
+                          </Text>
+                        </View>
+                        <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
+                          <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
+                            {isPrivate ? 'Private' : 'Public'}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
               {/* Confirmed Rosters */}
               <View style={styles.roRosterSection}>
-                <Text style={styles.roRosterSectionTitle}>Confirmed ({confirmedRosters.length})</Text>
+                <Text style={styles.roRosterSectionTitle}>Rosters ({confirmedRosters.length})</Text>
                 {confirmedRosters.length > 0 ? (
                   confirmedRosters.map((m: any) => {
                     const team = m.team;
                     const name = team?.name || m.memberId;
                     const sport = team?.sportType || '';
                     const isPrivate = team?.isPrivate === true;
-                    const playerCount = team?._count?.members ?? 0;
+                    const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
                     return (
                       <View key={m.id} style={styles.roRosterItem}>
                         <View style={styles.roRosterIcon}>
@@ -782,42 +817,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
                     );
                   })
                 ) : (
-                  <Text style={styles.roRosterEmpty}>No confirmed rosters yet</Text>
-                )}
-              </View>
-
-              {/* Invited Rosters */}
-              <View style={styles.roRosterSection}>
-                <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRostersList.length})</Text>
-                {invitedRostersList.length > 0 ? (
-                  invitedRostersList.map((m: any) => {
-                    const team = m.team;
-                    const name = team?.name || m.memberId;
-                    const sport = team?.sportType || '';
-                    const isPrivate = team?.isPrivate === true;
-                    const playerCount = team?._count?.members ?? 0;
-                    return (
-                      <View key={m.id} style={styles.roRosterItem}>
-                        <View style={[styles.roRosterIcon, { backgroundColor: colors.court }]}>
-                          <Ionicons name="time-outline" size={18} color="#FFFFFF" />
-                        </View>
-                        <View style={styles.roRosterInfo}>
-                          <Text style={styles.roRosterName}>{name}</Text>
-                          <Text style={styles.roRosterMeta}>
-                            {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : ''}
-                            {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
-                          </Text>
-                        </View>
-                        <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
-                          <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
-                            {isPrivate ? 'Private' : 'Public'}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })
-                ) : (
-                  <Text style={styles.roRosterEmpty}>No pending invitations</Text>
+                  <Text style={styles.roRosterEmpty}>No rosters yet.</Text>
                 )}
               </View>
             </>
@@ -1287,6 +1287,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 16,
     color: colors.court,
+    marginBottom: 4,
+  },
+  roRosterDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
     marginBottom: 12,
   },
   roRosterItem: {
