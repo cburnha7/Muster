@@ -1540,6 +1540,7 @@ router.get('/:id/members', async (req: Request, res: Response) => {
               name: true,
               imageUrl: true,
               sportType: true,
+              isPrivate: true,
               _count: {
                 select: { members: true }
               }
@@ -1560,6 +1561,7 @@ router.get('/:id/members', async (req: Request, res: Response) => {
           name: m.team.name,
           imageUrl: m.team.imageUrl,
           sportType: m.team.sportType,
+          isPrivate: m.team.isPrivate,
           playerCount: m.team._count.members
         } : null,
         stats: {

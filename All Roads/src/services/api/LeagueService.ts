@@ -237,9 +237,10 @@ export class LeagueService extends BaseApiService {
   /**
    * Step Out of a league (sets membership to withdrawn)
    */
-  async stepOutOfLeague(leagueId: string, userId: string): Promise<void> {
+  async stepOutOfLeague(leagueId: string, userId: string, teamId?: string): Promise<void> {
     return this.post<void>(`/leagues/${leagueId}/leave`, {
-      userId
+      userId,
+      ...(teamId && { teamId }),
     });
   }
 

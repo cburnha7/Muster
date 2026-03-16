@@ -243,14 +243,14 @@ export function LeagueDetailsScreen(): React.ReactElement {
     }
   };
 
-  const handleStepOut = async () => {
+  const handleStepOut = async (teamId?: string) => {
     if (!league || !currentUser) return;
-    loggingService.logButton('Step Out', 'LeagueDetailsScreen', { leagueId });
+    loggingService.logButton('We\'re Out', 'LeagueDetailsScreen', { leagueId, teamId });
 
     const doStepOut = async () => {
       try {
         setIsActionLoading(true);
-        await leagueService.stepOutOfLeague(league.id, currentUser.id);
+        await leagueService.stepOutOfLeague(league.id, currentUser.id, teamId);
         // Force-clear all league and user caches so refetch gets fresh data
         cacheService.clearBySubstring('leagues');
         cacheService.clearBySubstring('users');
@@ -267,13 +267,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to step out of this league?')) {
+      if (window.confirm('Are you sure you want to leave this league?')) {
         await doStepOut();
       }
     } else {
-      Alert.alert('Step Out', 'Are you sure you want to leave this league?', [
+      Alert.alert('We\'re Out', 'Are you sure you want to leave this league?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Step Out', style: 'destructive', onPress: doStepOut },
+        { text: 'We\'re Out', style: 'destructive', onPress: doStepOut },
       ]);
     }
   };
@@ -401,19 +401,19 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (isOperator) return null;
     if (!isAuthenticated || !currentUser) return null;
 
-    // Pickup league: show Join Up / Step Out
+    // Pickup league: show Join Up / We're Out
     if (!isTeamLeague) {
       if (isPickupParticipant) {
         return (
           <View style={styles.actionBar}>
             <TouchableOpacity
               style={styles.stepOutBtn}
-              onPress={handleStepOut}
+              onPress={() => handleStepOut()}
               disabled={isActionLoading}
               accessibilityRole="button"
-              accessibilityLabel="Step Out of league"
+              accessibilityLabel="We're Out of league"
             >
-              <Text style={styles.stepOutBtnText}>Step Out</Text>
+              <Text style={styles.stepOutBtnText}>We're Out</Text>
             </TouchableOpacity>
           </View>
         );
@@ -428,6 +428,28 @@ export function LeagueDetailsScreen(): React.ReactElement {
             accessibilityLabel="Join Up"
           >
             <Text style={styles.joinBtnText}>Join Up</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // Team league: show We're Out if user's roster is active in the league, otherwise Join Up
+    const userActiveRosterInLeague = members.find(
+      (m) => m.memberType === 'roster' && m.status === 'active' &&
+        userOwnedRosters.some((r) => r.id === m.memberId)
+    );
+
+    if (userActiveRosterInLeague) {
+      return (
+        <View style={styles.actionBar}>
+          <TouchableOpacity
+            style={styles.stepOutBtn}
+            onPress={() => handleStepOut(userActiveRosterInLeague.memberId)}
+            disabled={isActionLoading}
+            accessibilityRole="button"
+            accessibilityLabel="We're Out of league"
+          >
+            <Text style={styles.stepOutBtnText}>We're Out</Text>
           </TouchableOpacity>
         </View>
       );
@@ -713,6 +735,65 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
           {/* Registration Cutoff */}
           <ReadOnlyField label="Registration Cutoff" value={league.registrationCloseDate ? formatDate(league.registrationCloseDate) : ''} />
+
+          {/* Roster Lists — team leagues only */}
+          {isTeamLeague && (() => {
+            const confirmedRosters = members.filter(
+              (m) => m.memberType === 'roster' && m.status === 'active' && m.team
+            );
+            const invitedRosters = members.filter(
+              (m) => m.memberType === 'roster' && m.status === 'pending' && m.team
+            );
+
+            const RosterRow = ({ m }: { m: LeagueMembership }) => {
+              const team = m.team!;
+              const isPrivate = (team as any).isPrivate === true || (team as any).isPublic === false;
+              const playerCount = (team as any).playerCount ?? (team as any).members?.length ?? 0;
+              return (
+                <View style={styles.roRosterItem}>
+                  <View style={styles.roRosterIcon}>
+                    <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.roRosterInfo}>
+                    <Text style={styles.roRosterName}>{team.name}</Text>
+                    <Text style={styles.roRosterMeta}>
+                      {team.sportType ? team.sportType.charAt(0).toUpperCase() + team.sportType.slice(1).replace(/_/g, ' ') : ''}
+                      {!isPrivate ? ` · ${playerCount} players` : ''}
+                    </Text>
+                  </View>
+                  <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
+                    <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
+                      {isPrivate ? 'Private' : 'Public'}
+                    </Text>
+                  </View>
+                </View>
+              );
+            };
+
+            return (
+              <>
+                {/* Confirmed Rosters */}
+                <View style={styles.roRosterSection}>
+                  <Text style={styles.roRosterSectionTitle}>Confirmed ({confirmedRosters.length})</Text>
+                  {confirmedRosters.length > 0 ? (
+                    confirmedRosters.map((m) => <RosterRow key={m.id} m={m} />)
+                  ) : (
+                    <Text style={styles.roRosterEmpty}>No confirmed rosters yet</Text>
+                  )}
+                </View>
+
+                {/* Invited Rosters */}
+                <View style={styles.roRosterSection}>
+                  <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRosters.length})</Text>
+                  {invitedRosters.length > 0 ? (
+                    invitedRosters.map((m) => <RosterRow key={m.id} m={m} />)
+                  ) : (
+                    <Text style={styles.roRosterEmpty}>No pending invitations</Text>
+                  )}
+                </View>
+              </>
+            );
+          })()}
 
           {/* Track Standings — display only */}
           <View style={styles.roToggleCard}>
@@ -1158,5 +1239,82 @@ const styles = StyleSheet.create({
   roStandingsSection: {
     marginTop: 8,
     marginBottom: 16,
+  },
+  // Roster list styles (read-only view)
+  roRosterSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  roRosterSectionTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.grass,
+    marginBottom: 12,
+  },
+  roRosterSectionTitleInvited: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.court,
+    marginBottom: 12,
+  },
+  roRosterItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  roRosterIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.grass,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginRight: 12,
+  },
+  roRosterInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  roRosterName: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  roRosterMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  roRosterEmpty: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    paddingVertical: 8,
+  },
+  roVisibilityBadge: {
+    backgroundColor: '#EDF7F0',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  roVisibilityBadgePrivate: {
+    backgroundColor: '#F5F0F0',
+  },
+  roVisibilityText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.grass,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  roVisibilityTextPrivate: {
+    color: colors.inkFaint,
   },
 });
