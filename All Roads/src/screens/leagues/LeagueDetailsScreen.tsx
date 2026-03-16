@@ -644,6 +644,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Non-commissioner view ───────────────────────────────────────
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Derive roster lists for the read-only view
+  const rosterMembers = members.filter((m) => m.memberType === 'roster');
+  const confirmedRosters = rosterMembers.filter((m) => m.status === 'active');
+  const invitedRostersList = rosterMembers.filter((m) => m.status === 'pending');
+
   const projectedEndDate = (() => {
     if (!league?.startDate || !league?.seasonLength) return '';
     const len = typeof league.seasonLength === 'number' ? league.seasonLength : parseInt(String(league.seasonLength));
@@ -737,63 +742,79 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <ReadOnlyField label="Registration Cutoff" value={league.registrationCloseDate ? formatDate(league.registrationCloseDate) : ''} />
 
           {/* Roster Lists — team leagues only */}
-          {isTeamLeague && (() => {
-            const confirmedRosters = members.filter(
-              (m) => m.memberType === 'roster' && m.status === 'active' && m.team
-            );
-            const invitedRosters = members.filter(
-              (m) => m.memberType === 'roster' && m.status === 'pending' && m.team
-            );
+          {isTeamLeague && (
+            <>
+              {/* Confirmed Rosters */}
+              <View style={styles.roRosterSection}>
+                <Text style={styles.roRosterSectionTitle}>Confirmed ({confirmedRosters.length})</Text>
+                {confirmedRosters.length > 0 ? (
+                  confirmedRosters.map((m) => {
+                    const team = m.team as any;
+                    const name = team?.name || m.memberId;
+                    const sport = team?.sportType || '';
+                    const isPrivate = team?.isPrivate === true || team?.isPublic === false;
+                    const playerCount = team?.playerCount ?? team?.members?.length ?? 0;
+                    return (
+                      <View key={m.id} style={styles.roRosterItem}>
+                        <View style={styles.roRosterIcon}>
+                          <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
+                        </View>
+                        <View style={styles.roRosterInfo}>
+                          <Text style={styles.roRosterName}>{name}</Text>
+                          <Text style={styles.roRosterMeta}>
+                            {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : ''}
+                            {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
+                          </Text>
+                        </View>
+                        <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
+                          <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
+                            {isPrivate ? 'Private' : 'Public'}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })
+                ) : (
+                  <Text style={styles.roRosterEmpty}>No confirmed rosters yet</Text>
+                )}
+              </View>
 
-            const RosterRow = ({ m }: { m: LeagueMembership }) => {
-              const team = m.team!;
-              const isPrivate = (team as any).isPrivate === true || (team as any).isPublic === false;
-              const playerCount = (team as any).playerCount ?? (team as any).members?.length ?? 0;
-              return (
-                <View style={styles.roRosterItem}>
-                  <View style={styles.roRosterIcon}>
-                    <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.roRosterInfo}>
-                    <Text style={styles.roRosterName}>{team.name}</Text>
-                    <Text style={styles.roRosterMeta}>
-                      {team.sportType ? team.sportType.charAt(0).toUpperCase() + team.sportType.slice(1).replace(/_/g, ' ') : ''}
-                      {!isPrivate ? ` · ${playerCount} players` : ''}
-                    </Text>
-                  </View>
-                  <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
-                    <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
-                      {isPrivate ? 'Private' : 'Public'}
-                    </Text>
-                  </View>
-                </View>
-              );
-            };
-
-            return (
-              <>
-                {/* Confirmed Rosters */}
-                <View style={styles.roRosterSection}>
-                  <Text style={styles.roRosterSectionTitle}>Confirmed ({confirmedRosters.length})</Text>
-                  {confirmedRosters.length > 0 ? (
-                    confirmedRosters.map((m) => <RosterRow key={m.id} m={m} />)
-                  ) : (
-                    <Text style={styles.roRosterEmpty}>No confirmed rosters yet</Text>
-                  )}
-                </View>
-
-                {/* Invited Rosters */}
-                <View style={styles.roRosterSection}>
-                  <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRosters.length})</Text>
-                  {invitedRosters.length > 0 ? (
-                    invitedRosters.map((m) => <RosterRow key={m.id} m={m} />)
-                  ) : (
-                    <Text style={styles.roRosterEmpty}>No pending invitations</Text>
-                  )}
-                </View>
-              </>
-            );
-          })()}
+              {/* Invited Rosters */}
+              <View style={styles.roRosterSection}>
+                <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRostersList.length})</Text>
+                {invitedRostersList.length > 0 ? (
+                  invitedRostersList.map((m) => {
+                    const team = m.team as any;
+                    const name = team?.name || m.memberId;
+                    const sport = team?.sportType || '';
+                    const isPrivate = team?.isPrivate === true || team?.isPublic === false;
+                    const playerCount = team?.playerCount ?? team?.members?.length ?? 0;
+                    return (
+                      <View key={m.id} style={styles.roRosterItem}>
+                        <View style={[styles.roRosterIcon, { backgroundColor: colors.court }]}>
+                          <Ionicons name="time-outline" size={18} color="#FFFFFF" />
+                        </View>
+                        <View style={styles.roRosterInfo}>
+                          <Text style={styles.roRosterName}>{name}</Text>
+                          <Text style={styles.roRosterMeta}>
+                            {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : ''}
+                            {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
+                          </Text>
+                        </View>
+                        <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
+                          <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
+                            {isPrivate ? 'Private' : 'Public'}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })
+                ) : (
+                  <Text style={styles.roRosterEmpty}>No pending invitations</Text>
+                )}
+              </View>
+            </>
+          )}
 
           {/* Track Standings — display only */}
           <View style={styles.roToggleCard}>
