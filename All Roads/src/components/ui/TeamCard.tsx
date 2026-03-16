@@ -8,9 +8,10 @@ interface TeamCardProps {
   onPress?: (team: Team) => void;
   style?: any;
   compact?: boolean;
+  currentUserId?: string | undefined;
 }
 
-export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compact = false }) => {
+export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compact = false, currentUserId }) => {
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
       case SportType.BASKETBALL:
@@ -42,6 +43,13 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
   const availableSlots = team.maxMembers - team.members.length;
   const isFull = availableSlots <= 0;
 
+  const isManager = currentUserId && (
+    team.captainId === currentUserId ||
+    team.members.some(
+      (m) => m.userId === currentUserId && (m.role === 'captain' || m.role === 'co_captain') && m.status === 'active'
+    )
+  );
+
   return (
     <TouchableOpacity
       style={[styles.container, style]}
@@ -62,9 +70,17 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
             </View>
           )}
           <View style={styles.nameContainer}>
-            <Text style={styles.name} numberOfLines={1}>
-              {team.name}
-            </Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>
+                {team.name}
+              </Text>
+              {isManager && (
+                <View style={styles.managerBadge}>
+                  <Ionicons name="star" size={10} color="#FFFFFF" />
+                  <Text style={styles.managerBadgeText}>Manager</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.captain}>
               Manager: {team.captain?.firstName} {team.captain?.lastName}
             </Text>
@@ -198,10 +214,30 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   name: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+    flexShrink: 1,
+  },
+  managerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8A030',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4,
+  },
+  managerBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
   captain: {
     fontSize: 12,

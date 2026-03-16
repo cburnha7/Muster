@@ -63,7 +63,7 @@ router.get('/', async (req: Request, res: Response) => {
           }
         },
         memberships: {
-          where: { status: 'active' },
+          where: { status: 'active', memberType: 'roster' },
           select: { id: true }
         },
         matches: {

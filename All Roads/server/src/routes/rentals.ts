@@ -43,6 +43,14 @@ router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', async 
       return res.status(400).json({ error: 'Time slot is not available' });
     }
 
+    // Check for existing rental record (orphaned data guard)
+    const existingRental = await prisma.facilityRental.findUnique({
+      where: { timeSlotId: slotId },
+    });
+    if (existingRental && existingRental.status !== 'cancelled') {
+      return res.status(400).json({ error: 'Time slot already has an active rental' });
+    }
+
     // Check if slot is in the past
     // Note: Date is stored at midnight UTC, time is in local facility time
     // We'll be lenient and only reject if the date itself is in the past
@@ -369,6 +377,42 @@ router.post('/rentals/bulk', async (req, res) => {
     // All slots valid — create rentals in a transaction
     const bookingSessionId = randomUUID();
 
+    // Check for existing rentals (orphaned data) before transaction
+    const existingRentals = await prisma.facilityRental.findMany({
+      where: {
+        timeSlotId: { in: validSlots.map((v) => v.timeSlot.id) },
+        status: { not: 'cancelled' },
+      },
+      select: { timeSlotId: true },
+    });
+
+    if (existingRentals.length > 0) {
+      // Some slots already have rental records — treat as conflicts
+      const existingSlotIds = new Set(existingRentals.map((r) => r.timeSlotId));
+      const orphanConflicts = validSlots
+        .filter((v) => existingSlotIds.has(v.timeSlot.id))
+        .map((v) => ({
+          slotId: v.timeSlot.id,
+          courtId: v.timeSlot.courtId,
+          courtName: v.timeSlot.court.name,
+          date: v.timeSlot.date,
+          startTime: v.timeSlot.startTime,
+          endTime: v.timeSlot.endTime,
+          reason: 'already_rented',
+        }));
+
+      const stillValid = validSlots.filter((v) => !existingSlotIds.has(v.timeSlot.id));
+
+      return res.status(409).json({
+        conflicts: orphanConflicts,
+        availableSlots: stillValid.map((v) => ({
+          slotId: v.timeSlot.id,
+          courtId: v.reqSlot.courtId,
+          facilityId: v.reqSlot.facilityId,
+        })),
+      });
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const rentals = [];
 
@@ -416,7 +460,8 @@ router.post('/rentals/bulk', async (req, res) => {
     });
   } catch (error) {
     console.error('Bulk rent error:', error);
-    res.status(500).json({ error: 'Failed to process bulk booking' });
+    const message = error instanceof Error ? error.message : 'Failed to process bulk booking';
+    res.status(500).json({ error: message });
   }
 });
 

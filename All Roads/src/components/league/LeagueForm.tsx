@@ -729,56 +729,56 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             error={errors.timeWindowEnd}
           />
 
-          {/* League Rosters — split into Rosters (confirmed) and Invited (pending) */}
+          {/* Confirmed Rosters — displayed outside the invite card */}
+          {addedRosters.length > 0 && (
+            <View style={styles.confirmedRostersSection}>
+              <Text style={styles.confirmedRostersTitle}>
+                Rosters ({addedRosters.length})
+              </Text>
+              {addedRosters.map(item => (
+                <View key={item.id} style={styles.addedRosterItem}>
+                  <View style={styles.addedRosterInfo}>
+                    <View style={styles.addedRosterIcon}>
+                      <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
+                    </View>
+                    <View style={styles.addedRosterDetails}>
+                      <Text style={styles.addedRosterName}>{item.name}</Text>
+                      {item.sportType && (
+                        <Text style={styles.addedRosterMeta}>
+                          {item.sportType} • {item.memberCount ?? 0} players
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveRoster(item.id)}
+                    style={styles.removeRosterBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${item.name}`}
+                  >
+                    <Ionicons name="close-circle" size={24} color={colors.track} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Invite Rosters — card with invited list and search */}
           <View style={styles.addRostersSection}>
             <View style={styles.addRostersHeader}>
-              <Text style={styles.addRostersTitle}>League Rosters</Text>
-              {(addedRosters.length + invitedRosters.length) > 0 && (
+              <Text style={styles.addRostersTitle}>Invite Rosters</Text>
+              {invitedRosters.length > 0 && (
                 <View style={styles.rosterCountBadge}>
-                  <Text style={styles.rosterCountBadgeText}>{addedRosters.length + invitedRosters.length}</Text>
+                  <Text style={styles.rosterCountBadgeText}>{invitedRosters.length}</Text>
                 </View>
               )}
             </View>
-
-            {/* Confirmed Rosters */}
-            {addedRosters.length > 0 && (
-              <View style={styles.addedRostersContainer}>
-                <Text style={styles.addedRostersTitle}>
-                  Rosters ({addedRosters.length})
-                </Text>
-                {addedRosters.map(item => (
-                  <View key={item.id} style={styles.addedRosterItem}>
-                    <View style={styles.addedRosterInfo}>
-                      <View style={styles.addedRosterIcon}>
-                        <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
-                      </View>
-                      <View style={styles.addedRosterDetails}>
-                        <Text style={styles.addedRosterName}>{item.name}</Text>
-                        {item.sportType && (
-                          <Text style={styles.addedRosterMeta}>
-                            {item.sportType} • {item.memberCount ?? 0} players
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveRoster(item.id)}
-                      style={styles.removeRosterBtn}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Remove ${item.name}`}
-                    >
-                      <Ionicons name="close-circle" size={24} color={colors.track} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
 
             {/* Invited Rosters (pending confirmation) */}
             {invitedRosters.length > 0 && (
               <View style={styles.addedRostersContainer}>
                 <Text style={styles.invitedRostersTitle}>
-                  Invited ({invitedRosters.length})
+                  Pending ({invitedRosters.length})
                 </Text>
                 {invitedRosters.map(item => (
                   <View key={item.id} style={styles.invitedRosterItem}>
@@ -804,7 +804,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
             )}
 
-            {addedRosters.length === 0 && invitedRosters.length === 0 && (
+            {invitedRosters.length === 0 && (
               <Text style={styles.addRostersDescription}>
                 Search below to invite rosters to this league.
               </Text>
@@ -1220,6 +1220,17 @@ const styles = StyleSheet.create({
   },
   dayChipTextSelected: {
     color: '#FFFFFF',
+  },
+  // Confirmed Rosters section — displayed above the invite card
+  confirmedRostersSection: {
+    gap: 8,
+    marginBottom: Spacing.md,
+  },
+  confirmedRostersTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 4,
   },
   // Add Rosters section — matches Create Roster's Add Players pattern
   addRostersSection: {

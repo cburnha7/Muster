@@ -17,6 +17,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { teamService } from '../../services/api/TeamService';
 import { userService } from '../../services/api/UserService';
 import { Team } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface Section {
   title: string;
@@ -26,6 +27,7 @@ interface Section {
 
 export function TeamsListScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
 
   const [myRosters, setMyRosters] = useState<Team[]>([]);
   const [publicRosters, setPublicRosters] = useState<Team[]>([]);
@@ -155,7 +157,7 @@ export function TeamsListScreen() {
         sections={sections}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TeamCard team={item} onPress={() => handleTeamPress(item)} />
+          <TeamCard team={item} onPress={() => handleTeamPress(item)} currentUserId={user?.id ?? undefined} />
         )}
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>

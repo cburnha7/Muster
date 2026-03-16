@@ -25,6 +25,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { teamService } from '../../services/api/TeamService';
+import { cacheService } from '../../services/api/CacheService';
 import {
   setSelectedTeam,
   updateTeam,
@@ -238,6 +239,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     try {
       await teamService.joinTeam(teamId);
       dispatch(joinTeamAction(team!));
+      // Clear cache so HomeScreen refreshes invitations
+      cacheService.clearBySubstring('users');
+      cacheService.clearBySubstring('teams');
       await loadTeamDetails();
       Alert.alert('Success', 'You joined the roster.');
       if (readOnly) {
@@ -245,6 +249,42 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       }
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to join roster.');
+    }
+  };
+
+  const handleDeclineInvitation = async () => {
+    loggingService.logButton('Decline Invitation', 'TeamDetailsScreen', { teamId });
+
+    const doDecline = async () => {
+      try {
+        await teamService.leaveTeam(teamId);
+        // Clear cache so HomeScreen refreshes invitations
+        cacheService.clearBySubstring('users');
+        cacheService.clearBySubstring('teams');
+        navigation.goBack();
+      } catch (err: any) {
+        const msg = err.message || 'Failed to decline invitation.';
+        if (Platform.OS === 'web') {
+          window.alert(msg);
+        } else {
+          Alert.alert('Error', msg);
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to decline this roster invitation?')) {
+        await doDecline();
+      }
+    } else {
+      Alert.alert(
+        'Decline Invitation',
+        'Are you sure you want to decline this roster invitation?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Decline', style: 'destructive', onPress: doDecline },
+        ]
+      );
     }
   };
 
@@ -438,6 +478,21 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         }
       >
         <View style={styles.form}>
+          {/* ── Invitation Banner (when user has pending invite) ── */}
+          {isPendingInvite && (
+            <View style={styles.invitationBanner}>
+              <View style={styles.invitationBannerIcon}>
+                <Ionicons name="mail-outline" size={24} color={colors.court} />
+              </View>
+              <View style={styles.invitationBannerContent}>
+                <Text style={styles.invitationBannerTitle}>You've been invited!</Text>
+                <Text style={styles.invitationBannerText}>
+                  You've been invited to join this roster. Review the details below and decide if you'd like to join up.
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* ── Read-only Roster Header (non-managers and readOnly mode) ── */}
           {!canManageTeam && (
             <View style={styles.readOnlyHeader}>
@@ -663,11 +718,19 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           {/* ── Action Buttons ── */}
           <View style={styles.actionsSection}>
             {readOnly && isPendingInvite && (
-              <FormButton
-                title="Join Up"
-                onPress={handleJoinTeam}
-                leftIcon="add-circle-outline"
-              />
+              <>
+                <FormButton
+                  title="Join Up"
+                  onPress={handleJoinTeam}
+                  leftIcon="add-circle-outline"
+                />
+                <FormButton
+                  title="Decline"
+                  onPress={handleDeclineInvitation}
+                  variant="outline"
+                  leftIcon="close-circle-outline"
+                />
+              </>
             )}
 
             {!readOnly && canManageTeam && (
@@ -756,6 +819,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.ink,
     marginBottom: 8,
+  },
+  // Invitation banner
+  invitationBanner: {
+    flexDirection: 'row',
+    backgroundColor: colors.courtLight + '20',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.courtLight + '40',
+    gap: 12,
+  },
+  invitationBannerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.courtLight + '30',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  invitationBannerContent: {
+    flex: 1,
+  },
+  invitationBannerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.ink,
+    marginBottom: 4,
+  },
+  invitationBannerText: {
+    fontSize: 14,
+    color: colors.inkFaint,
+    lineHeight: 20,
   },
   infoBox: {
     backgroundColor: colors.courtLight + '20',
