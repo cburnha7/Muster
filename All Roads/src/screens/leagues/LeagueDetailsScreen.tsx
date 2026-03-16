@@ -20,6 +20,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { LeagueService } from '../../services/api/LeagueService';
 import { leagueService } from '../../services/api/LeagueService';
+import { userService } from '../../services/api/UserService';
 import { cacheService } from '../../services/api/CacheService';
 import { SportType, Team, Event, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
@@ -55,6 +56,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [league, setLeague] = useState<League | null>(null);
   const [members, setMembers] = useState<LeagueMembership[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<LeagueEvent[]>([]);
+  const [fetchedUserRosters, setFetchedUserRosters] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,10 +78,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
       setError(null);
 
       const svc = new LeagueService();
-      const [leagueData, membersResponse, eventsData] = await Promise.all([
+      const [leagueData, membersResponse, eventsData, userTeamsRes] = await Promise.all([
         svc.getLeagueById(leagueId, true),
         svc.getMembers(leagueId, 1, 100, true), // includePending for commissioner
         svc.getLeagueEvents(leagueId),
+        currentUser?.id ? userService.getUserTeams() : Promise.resolve({ data: [] }),
       ]);
 
       const typedLeague = leagueData as any as League;
@@ -89,6 +92,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
       const membersData = (membersResponse as any).data || membersResponse.data || [];
       setMembers(Array.isArray(membersData) ? membersData : []);
       setUpcomingEvents((eventsData as LeagueEvent[]) || []);
+      setFetchedUserRosters((userTeamsRes as any)?.data ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load league');
     } finally {
@@ -107,7 +111,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const rosterIdsInLeague = new Set(
     activeMembers.filter((m) => m.memberType === 'roster').map((m) => m.memberId)
   );
-  const userOwnedRosters = (userRosters || []).filter((r) =>
+  const userOwnedRosters = ((userRosters?.length ? userRosters : fetchedUserRosters) || []).filter((r: Team) =>
     r.captainId === currentUser?.id ||
     r.members?.some((m) => m.userId === currentUser?.id && m.role === TeamRole.CAPTAIN)
   );
