@@ -173,6 +173,10 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'League not found' });
     }
 
+    console.log('[GET League] Memberships before cleanup:', league.memberships.map((m: any) => ({
+      id: m.id, memberId: m.memberId, memberType: m.memberType, status: m.status, teamName: m.team?.name
+    })));
+
     // Cleanup: remove stale pending memberships where an active one already exists
     // This handles duplicate data from previous roster sync bugs
     const activeMemberIds = league.memberships
@@ -215,6 +219,10 @@ router.get('/:id', async (req: Request, res: Response) => {
         (m: any) => !duplicatePendingIds.includes(m.id)
       );
     }
+
+    console.log('[GET League] Memberships after cleanup:', league.memberships.map((m: any) => ({
+      id: m.id, memberId: m.memberId, memberType: m.memberType, status: m.status, teamName: m.team?.name
+    })));
 
     res.json(league);
   } catch (error) {
@@ -1321,6 +1329,8 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
     const { id, invitationId } = req.params;
     const { accept, userId } = req.body;
 
+    console.log('[Invitation] Processing invitation response:', { leagueId: id, invitationId, accept, userId });
+
     if (!userId) {
       return res.status(400).json({ error: 'Missing required field: userId' });
     }
@@ -1364,8 +1374,11 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
     });
 
     if (!membership) {
+      console.log('[Invitation] Membership not found for:', { invitationId, leagueId: id });
       return res.status(404).json({ error: 'Invitation not found' });
     }
+
+    console.log('[Invitation] Found membership:', { id: membership.id, memberId: membership.memberId, status: membership.status, memberType: membership.memberType });
 
     // Verify the user is the roster owner (captain)
     const isCaptain = membership.team?.members?.some(m => m.userId === userId);
@@ -1456,6 +1469,8 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
           id: { not: invitationId },
         },
       });
+
+      console.log('[Invitation] Successfully activated membership:', { id: updatedMembership.id, status: updatedMembership.status });
 
       return res.json(updatedMembership);
     }

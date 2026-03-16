@@ -300,18 +300,30 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!currentUser?.id) return;
     try {
       setIsActionLoading(true);
-      await leagueService.respondToInvitation(leagueId, membership.id, true, currentUser.id);
+      console.log('[ConfirmInvitation] Sending:', { leagueId, membershipId: membership.id, memberType: membership.memberType, memberId: membership.memberId, userId: currentUser.id });
+      const result = await leagueService.respondToInvitation(leagueId, membership.id, true, currentUser.id);
+      console.log('[ConfirmInvitation] Response:', JSON.stringify(result));
       // Invalidate both users and leagues cache so home screen invitations and league data refetch fresh
       cacheService.clearBySubstring('users');
       cacheService.clearBySubstring('leagues');
       // Reload league data from server to get the real updated state
       await loadLeague(true);
-      Alert.alert('Joined', 'Your roster has joined the league.');
+      if (Platform.OS === 'web') {
+        window.alert('Your roster has joined the league.');
+      } else {
+        Alert.alert('Joined', 'Your roster has joined the league.');
+      }
       if (readOnly) {
         navigation.goBack();
       }
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to confirm invitation');
+      console.error('[ConfirmInvitation] Error:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to confirm invitation';
+      if (Platform.OS === 'web') {
+        window.alert(msg);
+      } else {
+        Alert.alert('Error', msg);
+      }
     } finally {
       setIsActionLoading(false);
     }
