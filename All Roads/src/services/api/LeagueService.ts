@@ -144,7 +144,7 @@ export class LeagueService extends BaseApiService {
     if (includePending) params.includePending = 'true';
     return this.get<PaginatedResponse<LeagueMembership>>(`/leagues/${leagueId}/members`, {
       params,
-      cacheOptions: { ttl: 30000 }
+      cacheOptions: { ttl: 5000 } // Short TTL to keep roster lists fresh
     });
   }
 

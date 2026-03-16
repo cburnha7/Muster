@@ -316,7 +316,9 @@ export class UserService extends BaseApiService {
     leagueInvitations: LeagueInvitation[];
     total: number;
   }> {
-    return this.get(`${API_ENDPOINTS.USERS.BASE}/invitations`);
+    return this.get(`${API_ENDPOINTS.USERS.BASE}/invitations`, {
+      cacheOptions: { skipCache: true }
+    });
   }
 
   /**

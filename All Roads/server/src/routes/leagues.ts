@@ -896,6 +896,11 @@ router.post('/:id/join', async (req: Request, res: Response) => {
       return res.status(201).json(membership);
     } else {
       // Pickup league: direct user join (immediately active)
+      // Reject individual user joins for team leagues (should never reach here, but guard anyway)
+      if (league.leagueType === 'team') {
+        return res.status(400).json({ error: 'Team leagues require a rosterId to join' });
+      }
+
       if (!userId) {
         return res.status(400).json({ error: 'Missing required field: userId' });
       }

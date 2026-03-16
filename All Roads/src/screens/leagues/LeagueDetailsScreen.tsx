@@ -66,10 +66,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const loadLeague = useCallback(async (isRefresh = false) => {
     if (!leagueId) return;
     try {
+      // Always clear league cache to ensure fresh data (especially for roster lists)
+      cacheService.clearBySubstring('leagues');
       if (isRefresh) {
         setRefreshing(true);
-        // Clear league cache so we get fresh data from the server
-        cacheService.clearBySubstring('leagues');
+        cacheService.clearBySubstring('users');
       } else {
         setIsLoading(true);
       }
@@ -84,7 +85,10 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
       const typedLeague = leagueData as any as League;
       setLeague(typedLeague);
-      setMembers(membersResponse.data || []);
+
+      // membersResponse is { leagueType, data, pagination } — extract the data array
+      const membersData = (membersResponse as any).data || membersResponse.data || [];
+      setMembers(Array.isArray(membersData) ? membersData : []);
       setUpcomingEvents((eventsData as LeagueEvent[]) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load league');
@@ -298,11 +302,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
     try {
       setIsActionLoading(true);
       await leagueService.respondToInvitation(leagueId, membership.id, true, currentUser.id);
-      // Invalidate users cache so home screen invitations refetch fresh
+      // Invalidate both users and leagues cache so home screen invitations and league data refetch fresh
       cacheService.clearBySubstring('users');
+      cacheService.clearBySubstring('leagues');
       // Reload league data from server to get the real updated state
       await loadLeague(true);
-      Alert.alert('Confirmed', 'Your roster has joined the league.');
+      Alert.alert('Joined', 'Your roster has joined the league.');
       if (readOnly) {
         navigation.goBack();
       }
@@ -321,6 +326,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
         setIsActionLoading(true);
         await leagueService.respondToInvitation(leagueId, membership.id, false, currentUser.id);
         cacheService.clearBySubstring('users');
+        cacheService.clearBySubstring('leagues');
         setMembers((prev) => prev.filter((m) => m.id !== membership.id));
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to decline invitation';
