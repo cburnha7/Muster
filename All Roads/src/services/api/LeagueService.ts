@@ -285,8 +285,8 @@ export class LeagueService extends BaseApiService {
   /**
    * Respond to a league invitation (accept or decline)
    */
-  async respondToInvitation(leagueId: string, invitationId: string, accept: boolean, userId: string): Promise<void> {
-    return this.put<void>(`/leagues/${leagueId}/invitations/${invitationId}`, {
+  async respondToInvitation(leagueId: string, invitationId: string, accept: boolean, userId: string): Promise<any> {
+    return this.put<any>(`/leagues/${leagueId}/invitations/${invitationId}`, {
       accept,
       userId
     });

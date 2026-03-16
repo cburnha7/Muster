@@ -177,14 +177,12 @@ export function HomeScreen(): JSX.Element {
     });
   }, [navigation]);
 
-  // Navigate to roster details for league invitation
+  // Navigate to league details for league invitation (readOnly so captain can Join Up)
   const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
-    if (inv.rosterId) {
-      (navigation as any).navigate('Teams', {
-        screen: 'TeamDetails',
-        params: { teamId: inv.rosterId },
-      });
-    }
+    (navigation as any).navigate('Leagues', {
+      screen: 'LeagueDetails',
+      params: { leagueId: inv.leagueId, readOnly: true },
+    });
   }, [navigation]);
 
   // Refresh data

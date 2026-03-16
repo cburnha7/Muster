@@ -19,6 +19,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { LeagueService } from '../../services/api/LeagueService';
 import { leagueService } from '../../services/api/LeagueService';
+import { cacheService } from '../../services/api/CacheService';
 import { SportType, Team, Event, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
 import { colors, fonts } from '../../theme';
@@ -263,9 +264,10 @@ export function LeagueDetailsScreen(): React.ReactElement {
     try {
       setIsActionLoading(true);
       await leagueService.respondToInvitation(leagueId, membership.id, true, currentUser.id);
-      setMembers((prev) =>
-        prev.map((m) => (m.id === membership.id ? { ...m, status: 'active' as const } : m))
-      );
+      // Invalidate users cache so home screen invitations refetch fresh
+      cacheService.clearBySubstring('users');
+      // Reload league data from server to get the real updated state
+      await loadLeague(true);
       Alert.alert('Confirmed', 'Your roster has joined the league.');
       if (readOnly) {
         navigation.goBack();
@@ -288,6 +290,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           try {
             setIsActionLoading(true);
             await leagueService.respondToInvitation(leagueId, membership.id, false, currentUser.id);
+            cacheService.clearBySubstring('users');
             setMembers((prev) => prev.filter((m) => m.id !== membership.id));
           } catch (err) {
             Alert.alert('Error', err instanceof Error ? err.message : 'Failed to decline invitation');
@@ -573,6 +576,32 @@ export function LeagueDetailsScreen(): React.ReactElement {
   }
 
   // ── Non-commissioner view ───────────────────────────────────────
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const projectedEndDate = (() => {
+    if (!league?.startDate || !league?.seasonLength) return '';
+    const len = typeof league.seasonLength === 'number' ? league.seasonLength : parseInt(String(league.seasonLength));
+    if (isNaN(len) || len < 1) return '';
+    const start = new Date(league.startDate as any);
+    if (isNaN(start.getTime())) return '';
+    const end = new Date(start);
+    if (league.scheduleFrequency === 'monthly') {
+      end.setMonth(end.getMonth() + len);
+    } else {
+      end.setDate(end.getDate() + len * 7);
+    }
+    return end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  })();
+
+  const ReadOnlyField = ({ label, value }: { label: string; value: string }) => (
+    <View style={styles.roField}>
+      <Text style={styles.roFieldLabel}>{label}</Text>
+      <View style={styles.roFieldValueBox}>
+        <Text style={styles.roFieldValue}>{value || '—'}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <ScreenHeader title={league.name} leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
@@ -581,176 +610,161 @@ export function LeagueDetailsScreen(): React.ReactElement {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
       >
-        {/* Read-only league header */}
-        <View style={styles.leagueHeader}>
-          <View style={styles.headerTop}>
-            <View style={styles.sportBadge}>
-              <Ionicons name={getSportIcon(league.sportType) as any} size={20} color={colors.grass} />
-            </View>
-            <View style={styles.headerTitleArea}>
-              <Text style={styles.leagueName}>{league.name}</Text>
-              <Text style={styles.leagueType}>
-                {league.leagueType === 'team' ? 'Roster League' : 'Pickup League'} •{' '}
-                {league.visibility === 'public' ? 'Public' : 'Private'}
-              </Text>
-            </View>
-          </View>
-          {league.description ? (
-            <Text style={styles.leagueDescription}>{league.description}</Text>
-          ) : null}
-          <View style={styles.headerStats}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{upcomingEvents.length}</Text>
-              <Text style={styles.statLabel}>Events</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{formatSkillLevel(league.skillLevel)}</Text>
-              <Text style={styles.statLabel}>Skill</Text>
-            </View>
-          </View>
-          {league.startDate && (
-            <Text style={styles.headerDates}>
-              {formatDate(league.startDate)} – {formatDate(league.endDate)}
-            </Text>
+        <View style={styles.roForm}>
+          {/* League Type + Visibility */}
+          <ReadOnlyField label="League Type" value={league.leagueType === 'team' ? 'Roster League' : 'Pickup League'} />
+          {league.leagueType === 'team' && (
+            <ReadOnlyField label="Visibility" value={league.visibility === 'public' ? 'Public' : 'Private'} />
           )}
-        </View>
 
-        {/* Invited Rosters (pending) */}
-        {isTeamLeague && members.filter((m) => m.status === 'pending' && m.memberType === 'roster').length > 0 && (
-          <View style={styles.rosterListSection}>
-            <Text style={styles.rosterListTitle}>
-              Invited ({members.filter((m) => m.status === 'pending' && m.memberType === 'roster').length})
+          {/* Core fields */}
+          <ReadOnlyField label="League Name" value={league.name} />
+          <ReadOnlyField label="Description" value={league.description || ''} />
+          <ReadOnlyField label="Sport Type" value={league.sportType ? league.sportType.charAt(0).toUpperCase() + league.sportType.slice(1).replace(/_/g, ' ') : ''} />
+          <ReadOnlyField label="Skill Level" value={formatSkillLevel(league.skillLevel)} />
+          <ReadOnlyField label="Season Name" value={league.seasonName || ''} />
+
+          {/* Season Start Date */}
+          <ReadOnlyField label="Season Start Date" value={formatDate(league.startDate)} />
+
+          {/* Schedule Frequency */}
+          <ReadOnlyField label="Schedule Frequency" value={league.scheduleFrequency ? league.scheduleFrequency.charAt(0).toUpperCase() + league.scheduleFrequency.slice(1) : '—'} />
+
+          {/* Season Length */}
+          <ReadOnlyField
+            label={`Season Length${league.scheduleFrequency ? ` (${league.scheduleFrequency === 'weekly' ? 'weeks' : 'months'})` : ''}`}
+            value={league.seasonLength != null ? String(league.seasonLength) : ''}
+          />
+
+          {/* Projected End Date */}
+          <View style={styles.roProjectedEndRow}>
+            <Text style={styles.roFieldLabel}>Projected End Date</Text>
+            <Text style={styles.roProjectedEndValue}>
+              {projectedEndDate || 'Not available'}
             </Text>
-            <Text style={styles.rosterListSubtext}>
-              These rosters have been invited but haven't joined yet.
-            </Text>
-            {members
-              .filter((m) => m.status === 'pending' && m.memberType === 'roster')
-              .map((m) => (
-                <View key={m.id} style={styles.rosterListItem}>
-                  <View style={styles.rosterListIcon}>
-                    <Ionicons name="shield-outline" size={18} color={colors.court} />
-                  </View>
-                  <View style={styles.rosterListInfo}>
-                    <Text style={styles.rosterListName} numberOfLines={1}>
-                      {m.team?.name || 'Unknown Roster'}
-                    </Text>
-                    <View style={styles.rosterListMeta}>
-                      <View style={styles.invitedBadge}>
-                        <Text style={styles.invitedBadgeText}>✉️ Invited</Text>
+          </View>
+
+          {/* Team league schedule fields */}
+          {isTeamLeague && (
+            <>
+              <ReadOnlyField label="Minimum Roster Size" value={league.minimumRosterSize != null ? String(league.minimumRosterSize) : ''} />
+              <ReadOnlyField label="Season Game Count" value={league.seasonGameCount != null ? String(league.seasonGameCount) : ''} />
+            </>
+          )}
+
+          {/* Game Day */}
+          <Text style={styles.roFieldLabel}>Game Day</Text>
+          <View style={styles.roDayChipsRow}>
+            {dayLabels.map((label, idx) => {
+              const isSelected = league.preferredGameDays?.includes(idx);
+              return (
+                <View key={idx} style={[styles.roDayChip, isSelected && styles.roDayChipSelected]}>
+                  <Text style={[styles.roDayChipText, isSelected && styles.roDayChipTextSelected]}>{label}</Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Time Range */}
+          <ReadOnlyField label="Time Range Start" value={league.preferredTimeWindowStart || ''} />
+          <ReadOnlyField label="Time Range End" value={league.preferredTimeWindowEnd || ''} />
+
+          {/* Registration Cutoff */}
+          <ReadOnlyField label="Registration Cutoff" value={league.registrationCloseDate ? formatDate(league.registrationCloseDate) : ''} />
+
+          {/* Track Standings — display only */}
+          <View style={styles.roToggleCard}>
+            <View style={styles.roToggleRow}>
+              <View style={styles.roToggleInfo}>
+                <Text style={styles.roToggleLabel}>Track Standings</Text>
+                <Text style={styles.roToggleDescription}>
+                  Record wins, draws, and losses to maintain a league standings table
+                </Text>
+              </View>
+              <View style={[styles.roTogglePill, league.trackStandings !== false && styles.roTogglePillActive]}>
+                <Text style={[styles.roTogglePillText, league.trackStandings !== false && styles.roTogglePillTextActive]}>
+                  {league.trackStandings !== false ? 'On' : 'Off'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Points Config — only when tracking standings */}
+          {league.trackStandings !== false && league.pointsConfig && (
+            <View style={styles.roPointsSection}>
+              <ReadOnlyField label="Points for Win" value={String(league.pointsConfig.win)} />
+              <ReadOnlyField label="Points for Draw" value={String(league.pointsConfig.draw)} />
+              <ReadOnlyField label="Points for Loss" value={String(league.pointsConfig.loss)} />
+            </View>
+          )}
+
+          {/* Auto-Generate Matchups — display only */}
+          <View style={styles.roToggleCard}>
+            <View style={styles.roToggleRow}>
+              <View style={styles.roToggleInfo}>
+                <Text style={styles.roToggleLabel}>Auto-Generate Matchups</Text>
+                <Text style={styles.roToggleDescription}>
+                  Automatically create shell matchup events after registration closes
+                </Text>
+              </View>
+              <View style={[styles.roTogglePill, league.autoGenerateMatchups !== false && styles.roTogglePillActive]}>
+                <Text style={[styles.roTogglePillText, league.autoGenerateMatchups !== false && styles.roTogglePillTextActive]}>
+                  {league.autoGenerateMatchups !== false ? 'On' : 'Off'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Standings table — if tracking standings */}
+          {league.trackStandings !== false && (
+            <View style={styles.roStandingsSection}>
+              <StandingsTab leagueId={leagueId} leagueType={league.leagueType} />
+            </View>
+          )}
+
+          {/* Pending roster invitations for roster owners */}
+          {pendingUserRosterInvitations.length > 0 && (
+            <View style={styles.invitationBanner}>
+              <Ionicons name="mail-outline" size={20} color={colors.court} />
+              <View style={styles.invitationBannerContent}>
+                <Text style={styles.invitationBannerTitle}>Roster Invitation</Text>
+                {pendingUserRosterInvitations.map((inv) => {
+                  const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
+                  return (
+                    <View key={inv.id} style={styles.invitationRow}>
+                      <Text style={styles.invitationText}>
+                        {rosterName} has been invited to this league
+                      </Text>
+                      <View style={styles.invitationActions}>
+                        <TouchableOpacity
+                          style={styles.confirmBtn}
+                          onPress={() => handleConfirmInvitation(inv)}
+                          disabled={isActionLoading}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Join Up ${rosterName}`}
+                        >
+                          <Text style={styles.confirmBtnText}>Join Up</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.declineBtnSmall}
+                          onPress={() => handleDeclineInvitation(inv)}
+                          disabled={isActionLoading}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Decline ${rosterName}`}
+                        >
+                          <Text style={styles.declineBtnSmallText}>Decline</Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
-                  </View>
-                </View>
-              ))}
-          </View>
-        )}
-
-        {/* Confirmed Rosters (active) */}
-        {isTeamLeague && (
-          <View style={styles.rosterListSection}>
-            <Text style={styles.rosterListTitle}>
-              Rosters ({members.filter((m) => m.status === 'active' && m.memberType === 'roster').length})
-            </Text>
-            {members.filter((m) => m.status === 'active' && m.memberType === 'roster').length === 0 ? (
-              <Text style={styles.rosterListEmpty}>No confirmed rosters yet.</Text>
-            ) : (
-              members
-                .filter((m) => m.status === 'active' && m.memberType === 'roster')
-                .map((m) => (
-                  <View key={m.id} style={styles.rosterListItem}>
-                    <View style={[styles.rosterListIcon, { backgroundColor: '#EDF7F0' }]}>
-                      <Ionicons name="shield-outline" size={18} color={colors.grass} />
-                    </View>
-                    <View style={styles.rosterListInfo}>
-                      <Text style={styles.rosterListName} numberOfLines={1}>
-                        {m.team?.name || 'Unknown Roster'}
-                      </Text>
-                      <Text style={styles.rosterListPlayerCount}>
-                        {m.team?.members?.length ?? 0} players
-                      </Text>
-                    </View>
-                  </View>
-                ))
-            )}
-          </View>
-        )}
-
-        {/* Pickup league: show player list inline */}
-        {!isTeamLeague && (
-          <View style={styles.rosterListSection}>
-            <Text style={styles.rosterListTitle}>
-              Players ({members.filter((m) => m.status === 'active' && m.memberType === 'user').length})
-            </Text>
-            {members.filter((m) => m.status === 'active' && m.memberType === 'user').length === 0 ? (
-              <Text style={styles.rosterListEmpty}>No players yet.</Text>
-            ) : (
-              members
-                .filter((m) => m.status === 'active' && m.memberType === 'user')
-                .map((m) => (
-                  <View key={m.id} style={styles.rosterListItem}>
-                    <View style={[styles.rosterListIcon, { backgroundColor: '#EDF7F0' }]}>
-                      <Ionicons name="person" size={18} color={colors.grass} />
-                    </View>
-                    <Text style={styles.rosterListName} numberOfLines={1}>
-                      {m.user ? `${m.user.firstName ?? ''} ${m.user.lastName ?? ''}`.trim() || 'Unknown' : 'Unknown'}
-                    </Text>
-                  </View>
-                ))
-            )}
-          </View>
-        )}
-
-        {/* Pending roster invitations for roster owners — hidden in readOnly since bottom bar handles it */}
-        {!readOnly && pendingUserRosterInvitations.length > 0 && (
-          <View style={styles.invitationBanner}>
-            <Ionicons name="mail-outline" size={20} color={colors.court} />
-            <View style={styles.invitationBannerContent}>
-              <Text style={styles.invitationBannerTitle}>Roster Invitation</Text>
-              {pendingUserRosterInvitations.map((inv) => {
-                const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
-                return (
-                  <View key={inv.id} style={styles.invitationRow}>
-                    <Text style={styles.invitationText}>
-                      {rosterName} has been invited to this league
-                    </Text>
-                    <View style={styles.invitationActions}>
-                      <TouchableOpacity
-                        style={styles.confirmBtn}
-                        onPress={() => handleConfirmInvitation(inv)}
-                        disabled={isActionLoading}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Join Up ${rosterName}`}
-                      >
-                        <Text style={styles.confirmBtnText}>Join Up</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.declineBtnSmall}
-                        onPress={() => handleDeclineInvitation(inv)}
-                        disabled={isActionLoading}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Decline ${rosterName}`}
-                      >
-                        <Text style={styles.declineBtnSmallText}>Decline</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              })}
+                  );
+                })}
+              </View>
             </View>
-          </View>
-        )}
-
-        {/* Add roster option for invited users */}
-        {renderAddRosterOption()}
-
-        {/* Tabs */}
-        {renderTabBar()}
-        {renderTabContent()}
+          )}
+        </View>
       </ScrollView>
 
-      {/* Bottom action bar */}
+      {/* Bottom action bar — Join Up for pending invitations */}
       {renderActionBar()}
     </View>
   );
@@ -1000,5 +1014,122 @@ const styles = StyleSheet.create({
   },
   invitedBadgeText: {
     fontFamily: fonts.label, fontSize: 11, color: colors.court,
+  },
+  // ── Read-only form styles (non-commissioner view) ───────────────
+  roForm: {
+    padding: 16,
+  },
+  roField: {
+    marginBottom: 16,
+  },
+  roFieldLabel: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.ink,
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  roFieldValueBox: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAFA',
+  },
+  roFieldValue: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  roProjectedEndRow: {
+    marginBottom: 16,
+  },
+  roProjectedEndValue: {
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.grass,
+    marginTop: 4,
+  },
+  roDayChipsRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 4,
+    marginBottom: 16,
+    marginTop: 4,
+  },
+  roDayChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  roDayChipSelected: {
+    backgroundColor: colors.grass,
+    borderColor: colors.grass,
+  },
+  roDayChipText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    fontWeight: '600' as const,
+  },
+  roDayChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  roToggleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  roToggleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+  },
+  roToggleInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  roToggleLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  roToggleDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
+  roTogglePill: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: '#E0E0E0',
+  },
+  roTogglePillActive: {
+    backgroundColor: colors.grass,
+  },
+  roTogglePillText: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.inkFaint,
+  },
+  roTogglePillTextActive: {
+    color: '#FFFFFF',
+  },
+  roPointsSection: {
+    marginBottom: 8,
+  },
+  roStandingsSection: {
+    marginTop: 8,
+    marginBottom: 16,
   },
 });
