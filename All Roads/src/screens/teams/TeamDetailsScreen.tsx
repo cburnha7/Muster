@@ -25,6 +25,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { teamService } from '../../services/api/TeamService';
+import { playerDuesService, PlayerDuesStatusItem } from '../../services/api/PlayerDuesService';
 import { cacheService } from '../../services/api/CacheService';
 import {
   setSelectedTeam,
@@ -40,6 +41,7 @@ import { selectUser } from '../../store/slices/authSlice';
 import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, Event } from '../../types';
 import { League } from '../../types/league';
 import { colors } from '../../theme';
+import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
 import { loggingService } from '../../services/LoggingService';
 interface TeamDetailsScreenProps {
   route: { params: { teamId: string; readOnly?: boolean } };
@@ -95,6 +97,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   // Related data
   const [leagues, setLeagues] = useState<any[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+
+  // Dues status (visible to roster manager)
+  const [playerDuesMap, setPlayerDuesMap] = useState<Map<string, DuesStatus>>(new Map());
+  const [duesAmount, setDuesAmount] = useState<number | null>(null);
+  const [activeSeason, setActiveSeason] = useState<any>(null);
 
   // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -157,23 +164,57 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     }
   }, [teamId]);
 
+  const loadPlayerDuesStatus = useCallback(async () => {
+    try {
+      // Find the active season for any league this roster belongs to
+      const leagueData = await teamService.getTeamLeagues(teamId);
+      if (!leagueData || leagueData.length === 0) return;
+
+      // Look for a league with an active season that has dues
+      for (const league of leagueData) {
+        const seasons = league.seasons || [];
+        const active = seasons.find((s: any) => s.isActive && s.duesAmount && s.duesAmount > 0);
+        if (active) {
+          setActiveSeason(active);
+          const result = await playerDuesService.getRosterStatus(teamId, active.id);
+          setDuesAmount(result.duesAmount);
+          const map = new Map<string, DuesStatus>();
+          for (const p of result.players) {
+            if (p.paid) {
+              map.set(p.playerId, 'paid');
+            } else if (p.paymentStatus === 'pending') {
+              map.set(p.playerId, 'pending');
+            } else {
+              map.set(p.playerId, 'unpaid');
+            }
+          }
+          setPlayerDuesMap(map);
+          break;
+        }
+      }
+    } catch (err) {
+      // Dues status is supplementary — don't block the screen on failure
+      console.error('Error loading player dues status:', err);
+    }
+  }, [teamId]);
+
   // Initial load
   useFocusEffect(
     useCallback(() => {
       let isMounted = true;
       const load = async () => {
         setIsLoading(true);
-        await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents()]);
+        await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents(), loadPlayerDuesStatus()]);
         if (isMounted) setIsLoading(false);
       };
       load();
       return () => { isMounted = false; };
-    }, [loadTeamDetails, loadTeamLeagues, loadTeamEvents])
+    }, [loadTeamDetails, loadTeamLeagues, loadTeamEvents, loadPlayerDuesStatus])
   );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents()]);
+    await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents(), loadPlayerDuesStatus()]);
     setIsRefreshing(false);
   };
 
@@ -235,7 +276,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
   // ── Join / Leave / Delete ──
   const handleJoinTeam = async () => {
-    loggingService.logButton('Join Up', 'TeamDetailsScreen', { teamId });
+    loggingService.logButton('Join', 'TeamDetailsScreen', { teamId });
     try {
       await teamService.joinTeam(teamId);
       dispatch(joinTeamAction(team!));
@@ -293,9 +334,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       await teamService.leaveTeam(teamId);
       dispatch(leaveTeamAction(teamId));
       await loadTeamDetails();
-      Alert.alert('Done', 'You stepped out of the roster.');
+      Alert.alert('Done', 'You have left the roster.');
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to step out.');
+      Alert.alert('Error', err.message || 'Failed to leave roster.');
     }
   };
 
@@ -426,6 +467,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                   <Text style={styles.pendingBadgeText}>✉️ Invited</Text>
                 </View>
               )}
+              {!isPending && canManageTeam && duesAmount != null && playerDuesMap.size > 0 && (
+                <DuesStatusBadge status={playerDuesMap.get(member.userId) ?? 'unpaid'} />
+              )}
             </View>
             <Text style={styles.memberRole}>{roleLabel}</Text>
           </View>
@@ -487,7 +531,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               <View style={styles.invitationBannerContent}>
                 <Text style={styles.invitationBannerTitle}>You've been invited!</Text>
                 <Text style={styles.invitationBannerText}>
-                  You've been invited to join this roster. Review the details below and decide if you'd like to join up.
+                  You've been invited to join this roster. Review the details below and decide if you'd like to join.
                 </Text>
               </View>
             </View>
@@ -648,6 +692,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             <Text style={styles.sectionTitle}>
               Players ({activeMembers.length})
             </Text>
+            {canManageTeam && duesAmount != null && playerDuesMap.size > 0 && (
+              <View style={styles.duesSummaryBanner}>
+                <Ionicons name="cash-outline" size={16} color={colors.grass} />
+                <Text style={styles.duesSummaryText}>
+                  Season dues: ${(duesAmount / 100).toFixed(2)} · {
+                    Array.from(playerDuesMap.values()).filter(s => s === 'paid').length
+                  }/{playerDuesMap.size} paid
+                </Text>
+              </View>
+            )}
             {activeMembers.length === 0 ? (
               <Text style={styles.emptyText}>No confirmed players yet.</Text>
             ) : (
@@ -720,7 +774,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             {readOnly && isPendingInvite && (
               <>
                 <FormButton
-                  title="Join Up"
+                  title="Confirm"
                   onPress={handleJoinTeam}
                   leftIcon="add-circle-outline"
                 />
@@ -744,7 +798,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
             {!readOnly && !isMember && !currentMember && (
               <FormButton
-                title="Join Up"
+                title="Join"
                 onPress={handleJoinTeam}
                 leftIcon="add-circle-outline"
               />
@@ -752,9 +806,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
             {!readOnly && isMember && !isCaptain && (
               <FormButton
-                title="Step Out"
+                title="Leave"
                 onPress={() => setShowLeaveModal(true)}
-                variant="outline"
+                variant="muted"
                 leftIcon="exit-outline"
               />
             )}
@@ -786,10 +840,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
       <ConfirmModal
         visible={showLeaveModal}
-        title="Step Out"
-        message="Are you sure you want to step out of this roster?"
+        title="Leave"
+        message="Are you sure you want to leave this roster?"
         icon="exit-outline"
-        confirmText="Step Out"
+        confirmText="Leave"
         cancelText="Cancel"
         onCancel={() => setShowLeaveModal(false)}
         onConfirm={handleLeaveTeam}
@@ -1016,6 +1070,20 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 16,
+  },
+  duesSummaryBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EDF7F0',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+  },
+  duesSummaryText: {
+    fontSize: 13,
+    color: colors.grass,
+    fontWeight: '600',
   },
   invitedDescription: {
     fontSize: 13,

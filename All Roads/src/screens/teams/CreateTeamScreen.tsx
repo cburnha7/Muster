@@ -12,20 +12,28 @@ import {
   Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { FormInput, FormSelect, FormButton } from '../../components/forms';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
+import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { teamService } from '../../services/api/TeamService';
-import { addTeam, joinTeam } from '../../store/slices/teamsSlice';
+import { addTeam, joinTeam, selectUserTeams } from '../../store/slices/teamsSlice';
+import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { SportType, SkillLevel, CreateTeamData, User } from '../../types';
+import { SubscriptionPlan } from '../../types/subscription';
 import { colors } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 export function CreateTeamScreen(): JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const userTeams = useSelector(selectUserTeams);
+  const { allowed: rosterAllowed, requiredPlan } = useFeatureGate('create_roster');
+
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [upsellPlan, setUpsellPlan] = useState<SubscriptionPlan>('roster');
 
   const [formData, setFormData] = useState<CreateTeamData>({
     name: '',
@@ -103,6 +111,13 @@ export function CreateTeamScreen(): JSX.Element {
       return;
     }
 
+    // Gate: 2nd+ roster requires roster plan
+    if (userTeams.length >= 1 && !rosterAllowed) {
+      setUpsellPlan(requiredPlan);
+      setShowUpsell(true);
+      return;
+    }
+
     loggingService.logButton('Create Roster', 'CreateTeamScreen');
 
     setIsLoading(true);
@@ -165,6 +180,7 @@ export function CreateTeamScreen(): JSX.Element {
   }
 
   return (
+    <>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -316,6 +332,17 @@ export function CreateTeamScreen(): JSX.Element {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+
+      <UpsellModal
+        visible={showUpsell}
+        requiredPlan={upsellPlan}
+        onClose={() => setShowUpsell(false)}
+        onUpgrade={() => {
+          setShowUpsell(false);
+          // TODO: Navigate to subscription/checkout screen
+        }}
+      />
+    </>
   );
 }
 

@@ -10,6 +10,10 @@
 import cron from 'node-cron';
 import { TimeSlotMaintenanceJob } from './TimeSlotMaintenanceJob';
 import { InviteOnlyEventAutoOpenJob } from './InviteOnlyEventAutoOpenJob';
+import { processExpiredConfirmations } from './away-confirmation';
+import { processEventCutoffs } from './event-cutoff';
+import { processCaptureWindowRenewals } from './capture-window';
+import { processNightlyRatings } from './nightly-ratings';
 
 /**
  * Initialize all cron jobs
@@ -74,6 +78,117 @@ export function initializeCronJobs() {
     } catch (error: any) {
       console.error('❌ Invite-only auto-open job failed', { error: error.message });
       // TODO: Send alert to on-call engineer
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Away Confirmation Expiry Job - Every hour
+  cron.schedule('0 * * * *', async () => {
+    console.log('🔄 Starting away confirmation expiry job');
+
+    try {
+      const metrics = await processExpiredConfirmations();
+
+      console.log('✅ Away confirmation expiry completed', {
+        matchesChecked: metrics.matchesChecked,
+        matchesLapsed: metrics.matchesLapsed,
+        strikesRecorded: metrics.strikesRecorded,
+        notificationsSent: metrics.notificationsSent,
+        duration: `${metrics.duration}ms`,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some matches had errors during away confirmation processing', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Away confirmation expiry job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Public Event Cutoff Job - Every 15 minutes
+  cron.schedule('*/15 * * * *', async () => {
+    console.log('🔄 Starting public event cutoff job');
+
+    try {
+      const metrics = await processEventCutoffs();
+
+      console.log('✅ Public event cutoff completed', {
+        bookingsChecked: metrics.bookingsChecked,
+        bookingsCancelled: metrics.bookingsCancelled,
+        refundsIssued: metrics.refundsIssued,
+        intentsCancelled: metrics.intentsCancelled,
+        notificationsSent: metrics.notificationsSent,
+        duration: `${metrics.duration}ms`,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some bookings had errors during event cutoff processing', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Public event cutoff job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Capture Window Renewal Job - Daily at 02:00 UTC
+  cron.schedule('0 2 * * *', async () => {
+    console.log('🔄 Starting capture window renewal job');
+
+    try {
+      const metrics = await processCaptureWindowRenewals();
+
+      console.log('✅ Capture window renewal completed', {
+        bookingsChecked: metrics.bookingsChecked,
+        intentsRenewed: metrics.intentsRenewed,
+        renewalsFailed: metrics.renewalsFailed,
+        duration: `${metrics.duration}ms`,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some bookings had errors during capture window renewal', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Capture window renewal job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Nightly Ratings Recalculation Job - Daily at 03:00 UTC (after debrief windows close)
+  cron.schedule('0 3 * * *', async () => {
+    console.log('🔄 Starting nightly ratings recalculation job');
+
+    try {
+      const metrics = await processNightlyRatings();
+
+      console.log('✅ Nightly ratings recalculation completed', {
+        usersProcessed: metrics.usersProcessed,
+        ratingsUpdated: metrics.ratingsUpdated,
+        percentilesUpdated: metrics.percentilesUpdated,
+        duration: `${metrics.duration}ms`,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some users had errors during rating recalculation', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Nightly ratings recalculation job failed', { error: error.message });
     }
   }, {
     timezone: 'UTC',

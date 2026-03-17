@@ -12,7 +12,7 @@ import { colors } from '../../theme';
 interface FormButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'muted' | 'danger';
   size?: 'small' | 'medium' | 'large';
   loading?: boolean;
   disabled?: boolean;
@@ -47,6 +47,9 @@ export const FormButton: React.FC<FormButtonProps> = ({
       case 'outline':
         baseStyle.push(styles.outline);
         break;
+      case 'muted':
+        baseStyle.push(styles.muted);
+        break;
       case 'danger':
         baseStyle.push(styles.danger);
         break;
@@ -72,6 +75,9 @@ export const FormButton: React.FC<FormButtonProps> = ({
       case 'outline':
         baseStyle.push(styles.outlineText);
         break;
+      case 'muted':
+        baseStyle.push(styles.mutedText);
+        break;
       case 'danger':
         baseStyle.push(styles.dangerText);
         break;
@@ -95,6 +101,8 @@ export const FormButton: React.FC<FormButtonProps> = ({
         return colors.ink;
       case 'outline':
         return colors.grass;
+      case 'muted':
+        return colors.ink;
       default:
         return '#FFFFFF';
     }
@@ -221,6 +229,15 @@ const styles = StyleSheet.create({
   },
   outlineText: {
     color: colors.grass,
+  },
+  
+  muted: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.inkFaint,
+  },
+  mutedText: {
+    color: colors.ink,
   },
   
   danger: {

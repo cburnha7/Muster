@@ -21,8 +21,52 @@ import seasonRoutes from './routes/seasons';
 import debriefRoutes from './routes/debrief';
 import searchRoutes from './routes/search';
 import logRoutes from './routes/logs';
+import subscriptionRoutes from './routes/subscriptions';
+import stripeWebhookRoutes from './routes/stripe-webhooks';
+import connectOnboardingRoutes from './routes/connect-onboarding';
+import stripeConnectUserRoutes from './routes/stripe-connect-user';
+import gameChallengeRoutes from './routes/game-challenges';
+import publicEventRoutes from './routes/public-events';
+import playerDuesRoutes from './routes/player-dues';
+import leagueDuesRoutes from './routes/league-dues';
 
 dotenv.config();
+
+/**
+ * Validate critical Stripe Connect environment variables on startup.
+ * Logs warnings for missing vars — does not crash the server.
+ */
+function validateStripeEnv(): void {
+  const requiredVars = [
+    { name: 'STRIPE_SECRET_KEY', hint: 'Required for all Stripe API calls' },
+    { name: 'STRIPE_WEBHOOK_SECRET', hint: 'Required for webhook signature verification' },
+    { name: 'PLATFORM_FEE_RATE', hint: 'Required for application fee calculation (e.g. 0.05 for 5%)' },
+  ];
+
+  const missing: string[] = [];
+
+  for (const { name, hint } of requiredVars) {
+    if (!process.env[name]) {
+      missing.push(name);
+      console.warn(`⚠️  Missing env var: ${name} — ${hint}`);
+    }
+  }
+
+  if (process.env.PLATFORM_FEE_RATE) {
+    const rate = parseFloat(process.env.PLATFORM_FEE_RATE);
+    if (isNaN(rate) || rate < 0 || rate > 1) {
+      console.warn('⚠️  PLATFORM_FEE_RATE must be a number between 0 and 1 (e.g. 0.05 for 5%)');
+    }
+  }
+
+  if (missing.length > 0) {
+    console.warn(`⚠️  ${missing.length} Stripe env var(s) not set — payment features will not work. See server/.env.example for details.`);
+  } else {
+    console.log('✅ Stripe environment variables configured');
+  }
+}
+
+validateStripeEnv();
 
 const app = express();
 const prisma = new PrismaClient();
@@ -49,6 +93,9 @@ app.options('*', cors(corsOptions));
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Stripe webhooks need raw body for signature verification — must come before express.json()
+app.use('/api/stripe/webhooks', express.raw({ type: 'application/json' }), stripeWebhookRoutes);
 
 app.use(express.json());
 
@@ -77,6 +124,13 @@ app.use('/api/seasons', seasonRoutes);
 app.use('/api/debrief', debriefRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/connect', connectOnboardingRoutes);
+app.use('/api/stripe/connect', stripeConnectUserRoutes);
+app.use('/api/game-challenges', gameChallengeRoutes);
+app.use('/api/public-events', publicEventRoutes);
+app.use('/api/player-dues', playerDuesRoutes);
+app.use('/api/league-dues', leagueDuesRoutes);
 
 // Error handling
 app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

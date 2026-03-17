@@ -23,6 +23,11 @@ export interface League {
   leagueType: 'team' | 'pickup';
   visibility: 'public' | 'private';
   membershipFee?: number;
+  // League format
+  leagueFormat?: 'season' | 'season_with_playoffs' | 'tournament';
+  playoffTeamCount?: number | null;
+  eliminationFormat?: 'single_elimination' | 'double_elimination' | null;
+  gameFrequency?: 'all_at_once' | 'weekly' | 'monthly' | null;
   // Schedule management
   minimumRosterSize?: number | null;
   registrationCloseDate?: Date | string | null;
@@ -59,6 +64,11 @@ export interface CreateLeagueData {
   leagueType: 'team' | 'pickup';
   visibility?: 'public' | 'private';
   membershipFee?: number;
+  // League format
+  leagueFormat?: 'season' | 'season_with_playoffs' | 'tournament';
+  playoffTeamCount?: number | null;
+  eliminationFormat?: 'single_elimination' | 'double_elimination' | null;
+  gameFrequency?: 'all_at_once' | 'weekly' | 'monthly' | null;
   // Schedule management
   minimumRosterSize?: number | null;
   registrationCloseDate?: Date | string | null;
@@ -83,6 +93,11 @@ export interface UpdateLeagueData {
   pointsConfig?: PointsConfig;
   imageUrl?: string;
   isActive?: boolean;
+  // League format
+  leagueFormat?: 'season' | 'season_with_playoffs' | 'tournament';
+  playoffTeamCount?: number | null;
+  eliminationFormat?: 'single_elimination' | 'double_elimination' | null;
+  gameFrequency?: 'all_at_once' | 'weekly' | 'monthly' | null;
   // Schedule management
   minimumRosterSize?: number | null;
   registrationCloseDate?: Date | string | null;
@@ -254,6 +269,23 @@ export interface CreateLeagueEventData {
   endTime: Date;
   facilityId?: string;
   rosterIds?: string[]; // Only for Team Leagues
+}
+
+// League transaction types (financial ledger)
+export interface LeagueTransaction {
+  id: string;
+  leagueId: string;
+  seasonId: string;
+  type: 'dues_received' | 'court_cost' | 'refund';
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  rosterId?: string | null;
+  facilityId?: string | null;
+  rentalId?: string | null;
+  matchId?: string | null;
+  stripePaymentId?: string | null;
+  createdAt: Date | string;
 }
 
 // Scheduling conflict types

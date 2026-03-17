@@ -4,7 +4,7 @@ import { persistStore, persistReducer, createTransform } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import { eventsApi } from './api/eventsApi';
-import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice } from './slices';
+import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice, subscriptionSlice } from './slices';
 
 // Transform to handle cache expiration and selective persistence
 const cacheTransform = createTransform(
@@ -41,7 +41,7 @@ const cacheTransform = createTransform(
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth', 'events', 'facilities', 'teams', 'bookings', 'leagues', 'matches'], // Only persist these slices
+  whitelist: ['auth', 'events', 'facilities', 'teams', 'bookings', 'leagues', 'matches', 'subscription'], // Only persist these slices
   blacklist: ['api', 'eventsApi'], // Don't persist RTK Query cache
   transforms: [cacheTransform],
   // Throttle writes to storage
@@ -57,6 +57,7 @@ const rootReducer = combineReducers({
   bookings: bookingsSlice,
   leagues: leaguesSlice,
   matches: matchesSlice,
+  subscription: subscriptionSlice,
   api: api.reducer,
   eventsApi: eventsApi.reducer,
 });

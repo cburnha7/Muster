@@ -59,6 +59,7 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/facilities/${id}`,
     EVENTS: (id: string) => `/facilities/${id}/events`,
     IMAGES: (id: string) => `/facilities/${id}/images`,
+    CANCELLATION_POLICY: (id: string) => `/facilities/${id}/cancellation-policy`,
     NEARBY: '/facilities/nearby',
   },
 

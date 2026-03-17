@@ -8,11 +8,19 @@ import {
   PlayerRanking,
   LeagueMembership,
   LeagueDocument,
+  LeagueTransaction,
   CreateLeagueEventData,
   ConflictResult
 } from '../../types/league';
 import { Event } from '../../types';
 import { PaginatedResponse } from '../../types';
+
+export interface RosterStrikeData {
+  rosterId: string;
+  rosterName: string;
+  rosterImageUrl: string | null;
+  strikeCount: number;
+}
 
 export class LeagueService extends BaseApiService {
   constructor() {
@@ -322,6 +330,41 @@ export class LeagueService extends BaseApiService {
   async generateSchedule(leagueId: string, userId: string): Promise<{ message: string; eventsCreated: number }> {
     return this.post<{ message: string; eventsCreated: number }>(`/leagues/${leagueId}/generate-schedule`, {
       userId
+    });
+  }
+
+  /**
+   * Get strike counts per roster for a season (commissioner only)
+   */
+  async getSeasonStrikes(
+    leagueId: string,
+    seasonId: string,
+    userId?: string
+  ): Promise<RosterStrikeData[]> {
+    const params: any = {};
+    if (userId) params.userId = userId;
+    return this.get<RosterStrikeData[]>(
+      `/leagues/${leagueId}/seasons/${seasonId}/strikes`,
+      { params }
+    );
+  }
+
+  /**
+   * Remove a roster from a league (commissioner only)
+   */
+  async removeMembership(leagueId: string, membershipId: string, userId: string): Promise<{ message: string; removedMembershipId: string; rosterId: string }> {
+    return this.delete<{ message: string; removedMembershipId: string; rosterId: string }>(
+      `/leagues/${leagueId}/memberships/${membershipId}`,
+      { data: { userId } }
+    );
+  }
+
+  /**
+   * Get league financial ledger for a season
+   */
+  async getLedger(leagueId: string, seasonId: string): Promise<{ transactions: LeagueTransaction[] }> {
+    return this.get<{ transactions: LeagueTransaction[] }>(`/leagues/${leagueId}/ledger`, {
+      params: { seasonId },
     });
   }
 }

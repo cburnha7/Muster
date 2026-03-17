@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
 import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser, clearAuth } from '../store/slices/authSlice';
+import { fetchSubscription, clearSubscription } from '../store/slices/subscriptionSlice';
 import { loggingService } from '../services/LoggingService';
 
 interface AuthContextType {
@@ -78,6 +79,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Keep logging service in sync with current user
     loggingService.setUserId(reduxUser?.id ?? null);
 
+    // Hydrate subscription state when user is available
+    if (reduxUser?.id) {
+      dispatch(fetchSubscription(reduxUser.id) as any);
+    }
+
     if (reduxUser && process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
       authService.switchMockUser(
         reduxUser.id,
@@ -100,6 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Dispatch Redux action to clear auth state
       dispatch(clearAuth());
+      dispatch(clearSubscription());
       
       console.log('AuthContext: Logout complete');
     } catch (error) {

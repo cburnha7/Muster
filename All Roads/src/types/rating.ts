@@ -11,12 +11,28 @@
 
 export interface PlayerRating {
   userId: string;
-  currentRating: number; // Current overall rating
-  pickupRating: number; // Rating for pickup games (last 20 games)
-  leagueRating: number; // Rating for league games (current season)
+  currentRating: number;
+  pickupRating: number;
+  leagueRating: number;
   totalGamesPlayed: number;
   pickupGamesPlayed: number;
   leagueGamesPlayed: number;
+  lastUpdated: Date;
+}
+
+export interface PlayerSportRating {
+  sportType: string;
+  bracketRating: number;
+  overallRating: number;
+  bracketPercentile: number | null;
+  overallPercentile: number | null;
+  ageBracket: string | null;
+  bracketEventCount: number;
+  overallEventCount: number;
+  // Legacy
+  rating: number;
+  percentile: number | null;
+  gamesPlayed: number;
   lastUpdated: Date;
 }
 
@@ -30,7 +46,7 @@ export interface GameParticipation {
   gameRating: number; // The game's overall rating
   participantCount: number;
   playedAt: Date;
-  eventType: 'game' | 'practice' | 'pickup' | 'camp'; // Game/Practice use season-based, Pickup uses last 20
+  eventType: 'game' | 'practice' | 'pickup' | 'tournament'; // Game/Practice use season-based, Pickup uses last 20
   seasonId?: string; // For game/practice events
 }
 
@@ -59,7 +75,7 @@ export interface RatingSnapshot {
   rating: number;
   gamesPlayed: number;
   timestamp: Date;
-  eventType: 'game' | 'practice' | 'pickup' | 'camp';
+  eventType: 'game' | 'practice' | 'pickup' | 'tournament';
 }
 
 // Constants

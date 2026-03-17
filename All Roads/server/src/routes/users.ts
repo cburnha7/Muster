@@ -173,6 +173,45 @@ router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get sport ratings for a user (own profile or another user's)
+router.get('/sport-ratings/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const ratings = await prisma.playerSportRating.findMany({
+      where: {
+        userId,
+        OR: [
+          { bracketEventCount: { gt: 0 } },
+          { overallEventCount: { gt: 0 } },
+          { gamesPlayed: { gt: 0 } },
+        ],
+      },
+      select: {
+        sportType: true,
+        bracketRating: true,
+        overallRating: true,
+        bracketPercentile: true,
+        overallPercentile: true,
+        ageBracket: true,
+        bracketEventCount: true,
+        overallEventCount: true,
+        // Legacy fields
+        rating: true,
+        percentile: true,
+        gamesPlayed: true,
+        lastUpdated: true,
+      },
+      orderBy: { overallRating: 'desc' },
+    });
+
+    res.json(ratings);
+  } catch (error) {
+    console.error('Get sport ratings error:', error);
+    res.status(500).json({ error: 'Failed to fetch sport ratings' });
+  }
+});
+
 // Get current user bookings
 router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
   try {

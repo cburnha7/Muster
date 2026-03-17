@@ -45,20 +45,65 @@ export type HomeStackParamList = {
 export type EventsStackParamList = {
   EventsList: undefined;
   EventDetails: { eventId: string };
-  CreateEvent: { rentalId?: string };
-  EditEvent: { eventId: string };
+  CreateEvent: {
+    rentalId?: string;
+    fromReservation?: boolean;
+    facilityId?: string;
+    facilityName?: string;
+    courtId?: string;
+    courtName?: string;
+    courtSportType?: string;
+    timeSlotId?: string;
+    reservedDate?: string;
+    reservedStartTime?: string;
+    reservedEndTime?: string;
+  };
+  EditEvent: {
+    eventId: string;
+    fromBooking?: boolean;
+    facilityId?: string;
+    facilityName?: string;
+    courtId?: string;
+    courtName?: string;
+    courtSportType?: string;
+    timeSlotId?: string;
+    reservedDate?: string;
+    reservedStartTime?: string;
+    reservedEndTime?: string;
+  };
 };
 
 export type FacilitiesStackParamList = {
-  FacilitiesList: undefined;
-  FacilityDetails: { facilityId: string };
+  FacilitiesList: {
+    eventDate?: string;
+    eventStartTime?: string;
+    returnTo?: 'CreateEvent' | 'EditEvent';
+    returnParams?: Record<string, any>;
+  } | undefined;
+  FacilityDetails: {
+    facilityId: string;
+    eventDate?: string;
+    eventStartTime?: string;
+    returnTo?: 'CreateEvent' | 'EditEvent';
+    returnParams?: Record<string, any>;
+  };
   CreateFacility: undefined;
   EditFacility: { facilityId: string };
   ManageGround: { facilityId: string; facilityName: string };
   AddCourt: { facilityId: string };
   FacilityMapEditor: { facilityId: string; facilityName: string; currentMapUrl?: string };
   GroundAvailability: { facilityId: string; facilityName: string };
-  CourtAvailability: { facilityId: string; facilityName: string; courtId?: string };
+  CourtAvailability: {
+    facilityId: string;
+    facilityName: string;
+    courtId?: string;
+    /** When navigating from event create/edit, pass event context */
+    eventDate?: string;
+    eventStartTime?: string;
+    returnTo?: 'CreateEvent' | 'EditEvent';
+    returnParams?: Record<string, any>;
+  };
+  CancellationPolicy: { facilityId: string };
   MyRentals: undefined;
 };
 
@@ -67,6 +112,10 @@ export type TeamsStackParamList = {
   TeamDetails: { teamId: string; readOnly?: boolean };
   CreateTeam: undefined;
   JoinTeam: { inviteCode?: string };
+  CreateGameChallenge: { challengerRosterId: string };
+  AcceptGameChallenge: { bookingId: string };
+  CreatePublicEvent: { rosterId: string };
+  PayPlayerDues: { rosterId: string; seasonId: string };
 };
 
 export type LeaguesStackParamList = {
@@ -76,7 +125,9 @@ export type LeaguesStackParamList = {
   ManageLeague: { leagueId: string };
   CreateMatch: { leagueId: string; seasonId?: string };
   RecordMatchResult: { matchId: string };
+  AssignFacility: { matchId: string };
   DocumentViewer: { leagueId: string; documentId: string; documentName?: string };
+  PayLeagueDues: { rosterId: string; leagueId: string; seasonId: string };
 };
 
 export type BookingsStackParamList = {

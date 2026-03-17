@@ -12,15 +12,18 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
+import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
-import { addFacility } from '../../store/slices/facilitiesSlice';
+import { addFacility, selectFacilities } from '../../store/slices/facilitiesSlice';
+import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { SportType, CreateFacilityData, Facility } from '../../types';
+import { SubscriptionPlan } from '../../types/subscription';
 import { colors, Spacing, TextStyles } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
@@ -47,6 +50,12 @@ export function CreateFacilityScreen(): JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
+  const allFacilities = useSelector(selectFacilities);
+  const userFacilityCount = allFacilities.filter(f => f.ownerId === user?.id).length;
+  const { allowed: basicAllowed, requiredPlan: basicPlan } = useFeatureGate('facility_basic');
+  const { allowed: proAllowed, requiredPlan: proPlan } = useFeatureGate('facility_pro');
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [upsellPlan, setUpsellPlan] = useState<SubscriptionPlan>('facility_basic');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = React.useRef(false);
@@ -327,6 +336,18 @@ export function CreateFacilityScreen(): JSX.Element {
       return;
     }
 
+    // Gate: creating any facility requires facility_basic plan
+    // 4th+ facility requires facility_pro plan
+    if (userFacilityCount >= 3 && !proAllowed) {
+      setUpsellPlan(proPlan);
+      setShowUpsell(true);
+      return;
+    } else if (!basicAllowed) {
+      setUpsellPlan(basicPlan);
+      setShowUpsell(true);
+      return;
+    }
+
     try {
       console.log(`🔒 [${timestamp}] Setting all flags to true`);
       loggingService.logButton('Create Ground', 'CreateFacilityScreen');
@@ -375,6 +396,7 @@ export function CreateFacilityScreen(): JSX.Element {
   };
 
   return (
+    <>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -871,6 +893,17 @@ export function CreateFacilityScreen(): JSX.Element {
         </View>
       </Modal>
     </KeyboardAvoidingView>
+
+      <UpsellModal
+        visible={showUpsell}
+        requiredPlan={upsellPlan}
+        onClose={() => setShowUpsell(false)}
+        onUpgrade={() => {
+          setShowUpsell(false);
+          // TODO: Navigate to subscription/checkout screen
+        }}
+      />
+    </>
   );
 }
 

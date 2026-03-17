@@ -11,6 +11,7 @@ import { FacilityMapEditorScreen } from '../../screens/facilities/FacilityMapEdi
 import { GroundAvailabilityScreen } from '../../screens/facilities/GroundAvailabilityScreen';
 import { CourtAvailabilityScreen } from '../../screens/facilities/CourtAvailabilityScreen';
 import { MyRentalsScreen } from '../../screens/facilities/MyRentalsScreen';
+import { CancellationPolicyScreen } from '../../screens/facilities/CancellationPolicyScreen';
 
 const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
 
@@ -69,6 +70,10 @@ export function FacilitiesStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="MyRentals" 
         component={MyRentalsScreen}
+      />
+      <Stack.Screen
+        name="CancellationPolicy"
+        component={CancellationPolicyScreen}
       />
     </Stack.Navigator>
   );

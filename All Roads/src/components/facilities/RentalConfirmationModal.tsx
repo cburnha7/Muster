@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,15 +6,18 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles, ComponentStyles } from '../../theme';
+import { CancellationPolicyDisplay } from './CancellationPolicyDisplay';
+import type { PenaltyDestination } from '../../types';
 import { formatTime12, parseCalendarDate, calculateDuration, formatDuration } from '../../utils/calendarUtils';
 
 interface RentalConfirmationModalProps {
   visible: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (policyAcknowledgedAt?: string) => void;
   facilityName: string;
   courtName: string;
   date: string;
@@ -22,6 +25,11 @@ interface RentalConfirmationModalProps {
   endTime: string;
   price: number;
   slotCount?: number;
+  cancellationPolicy?: {
+    noticeWindowHours: number;
+    teamPenaltyPct: number;
+    penaltyDestination: PenaltyDestination;
+  };
 }
 
 export function RentalConfirmationModal({
@@ -35,6 +43,7 @@ export function RentalConfirmationModal({
   endTime,
   price,
   slotCount = 1,
+  cancellationPolicy,
 }: RentalConfirmationModalProps) {
   const dateObj = parseCalendarDate(date);
   const formattedDate = dateObj.toLocaleDateString('en-US', {
@@ -46,6 +55,20 @@ export function RentalConfirmationModal({
 
   const duration = calculateDuration(startTime, endTime);
   const formattedDuration = formatDuration(duration);
+
+  const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
+
+  const requiresAcknowledgement = !!cancellationPolicy;
+
+  const handleConfirm = () => {
+    if (requiresAcknowledgement) {
+      onConfirm(new Date().toISOString());
+    } else {
+      onConfirm();
+    }
+  };
+
+  const isConfirmDisabled = requiresAcknowledgement && !policyAcknowledged;
 
   return (
     <Modal
@@ -134,13 +157,47 @@ export function RentalConfirmationModal({
               </View>
             </View>
 
-            {/* Important Notice */}
-            <View style={styles.noticeContainer}>
-              <Ionicons name="information-circle" size={20} color={colors.court} />
-              <Text style={styles.noticeText}>
-                Cancellations must be made at least 2 hours before the start time for a full refund.
-              </Text>
-            </View>
+            {/* Cancellation Policy */}
+            {cancellationPolicy ? (
+              <View style={styles.policyContainer}>
+                <CancellationPolicyDisplay
+                  noticeWindowHours={cancellationPolicy.noticeWindowHours}
+                  teamPenaltyPct={cancellationPolicy.teamPenaltyPct}
+                  penaltyDestination={cancellationPolicy.penaltyDestination}
+                />
+
+                {/* Policy Acknowledgement */}
+                <Pressable
+                  style={styles.acknowledgementRow}
+                  onPress={() => setPolicyAcknowledged(!policyAcknowledged)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: policyAcknowledged }}
+                  accessibilityLabel="Acknowledge cancellation policy"
+                  testID="policy-acknowledgement-checkbox"
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      policyAcknowledged && styles.checkboxChecked,
+                    ]}
+                  >
+                    {policyAcknowledged && (
+                      <Ionicons name="checkmark" size={14} color={colors.chalk} />
+                    )}
+                  </View>
+                  <Text style={styles.acknowledgementText}>
+                    I acknowledge and accept the facility's cancellation policy
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.noticeContainer}>
+                <Ionicons name="information-circle" size={20} color={colors.court} />
+                <Text style={styles.noticeText}>
+                  Cancellations must be made at least 2 hours before the start time for a full refund.
+                </Text>
+              </View>
+            )}
 
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
@@ -152,13 +209,27 @@ export function RentalConfirmationModal({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={onConfirm}
+                style={[
+                  styles.confirmButton,
+                  isConfirmDisabled && styles.confirmButtonDisabled,
+                ]}
+                onPress={handleConfirm}
+                disabled={isConfirmDisabled}
+                testID="confirm-booking-button"
               >
-                <Text style={styles.confirmButtonText}>
+                <Text
+                  style={[
+                    styles.confirmButtonText,
+                    isConfirmDisabled && styles.confirmButtonTextDisabled,
+                  ]}
+                >
                   Confirm {slotCount > 1 ? `${slotCount} Bookings` : 'Booking'}
                 </Text>
-                <Ionicons name="checkmark-circle" size={20} color={colors.chalk} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={isConfirmDisabled ? colors.inkFaint : colors.chalk}
+                />
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -264,6 +335,9 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.court,
   },
+  policyContainer: {
+    marginHorizontal: Spacing.lg,
+  },
   noticeText: {
     flex: 1,
     ...TextStyles.caption,
@@ -298,5 +372,39 @@ const styles = StyleSheet.create({
     ...TextStyles.bodyLarge,
     fontWeight: '600',
     color: colors.chalk,
+  },
+  confirmButtonDisabled: {
+    backgroundColor: colors.inkFaint,
+    opacity: 0.6,
+  },
+  confirmButtonTextDisabled: {
+    color: colors.chalk,
+  },
+  acknowledgementRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.inkFaint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.grass,
+    borderColor: colors.grass,
+  },
+  acknowledgementText: {
+    ...TextStyles.caption,
+    color: colors.ink,
+    flex: 1,
+    lineHeight: 18,
   },
 });

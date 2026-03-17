@@ -162,7 +162,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
         </View>
         {team.isPublic && !isFull && (
           <View style={styles.joinButton}>
-            <Text style={styles.joinText}>Join Up</Text>
+            <Text style={styles.joinText}>Join</Text>
           </View>
         )}
       </View>

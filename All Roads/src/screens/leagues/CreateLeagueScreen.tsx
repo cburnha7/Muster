@@ -4,10 +4,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { LeagueForm } from '../../components/league/LeagueForm';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
+import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { leagueService } from '../../services/api/LeagueService';
 import { addLeague } from '../../store/slices/leaguesSlice';
 import { selectUser } from '../../store/slices/authSlice';
+import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { CreateLeagueData, League } from '../../types';
+import { SubscriptionPlan } from '../../types/subscription';
 import { colors } from '../../theme';
 
 export const CreateLeagueScreen: React.FC = () => {
@@ -15,10 +18,18 @@ export const CreateLeagueScreen: React.FC = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const [loading, setLoading] = useState(false);
+  const { allowed: leagueAllowed, requiredPlan } = useFeatureGate('create_league');
+  const [showUpsell, setShowUpsell] = useState(false);
 
   const handleSubmit = async (data: CreateLeagueData) => {
     if (!user?.id) {
       Alert.alert('Error', 'You must be logged in to create a league');
+      return;
+    }
+
+    // Gate: creating a league requires league plan
+    if (!leagueAllowed) {
+      setShowUpsell(true);
       return;
     }
 
@@ -71,6 +82,15 @@ export const CreateLeagueScreen: React.FC = () => {
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         loading={loading}
+      />
+      <UpsellModal
+        visible={showUpsell}
+        requiredPlan={requiredPlan}
+        onClose={() => setShowUpsell(false)}
+        onUpgrade={() => {
+          setShowUpsell(false);
+          // TODO: Navigate to subscription/checkout screen
+        }}
       />
     </View>
   );

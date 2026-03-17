@@ -114,7 +114,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         )}
       </View>
 
-      {/* Footer: capacity, price, payment status, I'm Out */}
+      {/* Footer: capacity, price, payment status, Leave */}
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
           {booking.event && (
@@ -140,7 +140,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelText}>I'm Out</Text>
+            <Text style={styles.cancelText}>Leave</Text>
           </TouchableOpacity>
         )}
       </View>

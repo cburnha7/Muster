@@ -225,6 +225,8 @@ router.get('/authorized/for-events', async (req, res) => {
           },
         },
       },
+      // Cancellation policy fields (noticeWindowHours, teamPenaltyPct, penaltyDestination)
+      // are included by default since we use include (not select)
     });
 
     // Normalize today's date to midnight UTC for comparison
@@ -285,12 +287,20 @@ router.get('/authorized/for-events', async (req, res) => {
         .map(f => ({ ...f, isOwned: false, hasRentals: true })),
     ];
 
-    // Mark facilities that are both owned and have rentals
+    // Mark facilities that are both owned and have rentals,
+    // and flag whether they have a cancellation policy set (required for booking flows)
     const facilitiesWithBoth = allFacilities.map(f => {
+      const hasCancellationPolicy =
+        f.noticeWindowHours !== null &&
+        f.teamPenaltyPct !== null &&
+        f.penaltyDestination !== null;
+
+      const base = { ...f, hasCancellationPolicy };
+
       if (f.isOwned && rentalFacilityIds.has(f.id)) {
-        return { ...f, hasRentals: true };
+        return { ...base, hasRentals: true };
       }
-      return f;
+      return base;
     });
 
     res.json({
@@ -501,6 +511,20 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'No users found. Please create a user first.' });
       }
       facilityOwnerId = firstUser.id;
+    }
+
+    // Plan gate: facility creation requires facility_basic; 4th+ requires facility_pro
+    const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
+    const existingFacilityCount = await prisma.facility.count({ where: { ownerId: facilityOwnerId } });
+    const sub = await prisma.subscription.findUnique({ where: { userId: facilityOwnerId }, select: { plan: true, status: true } });
+    const userPlan = sub?.plan || 'free';
+    const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
+    const userPlanIndex = PLAN_HIERARCHY.indexOf(userPlan);
+
+    if (existingFacilityCount >= 3 && (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))) {
+      return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_pro', currentPlan: userPlan });
+    } else if (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')) {
+      return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_basic', currentPlan: userPlan });
     }
 
     const facility = await prisma.facility.create({
@@ -1164,5 +1188,118 @@ router.delete('/:id/map', async (req, res) => {
     res.status(500).json({ 
       error: error.message || 'Failed to delete facility map' 
     });
+  }
+});
+
+// ============================================================================
+// CANCELLATION POLICY ROUTES
+// ============================================================================
+
+const VALID_PENALTY_DESTINATIONS = ['facility', 'opposing_team', 'split'];
+
+// Get cancellation policy for a facility
+router.get('/:id/cancellation-policy', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const facility = await prisma.facility.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        noticeWindowHours: true,
+        teamPenaltyPct: true,
+        penaltyDestination: true,
+        policyVersion: true,
+      },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    const hasPolicy =
+      facility.noticeWindowHours !== null &&
+      facility.teamPenaltyPct !== null &&
+      facility.penaltyDestination !== null;
+
+    res.json({
+      hasPolicy,
+      noticeWindowHours: facility.noticeWindowHours,
+      teamPenaltyPct: facility.teamPenaltyPct,
+      penaltyDestination: facility.penaltyDestination,
+      policyVersion: facility.policyVersion,
+    });
+  } catch (error) {
+    console.error('Get cancellation policy error:', error);
+    res.status(500).json({ error: 'Failed to fetch cancellation policy' });
+  }
+});
+
+// Update cancellation policy for a facility
+router.put('/:id/cancellation-policy', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { noticeWindowHours, teamPenaltyPct, penaltyDestination } = req.body;
+
+    // Validate all fields present
+    if (noticeWindowHours === undefined || noticeWindowHours === null) {
+      return res.status(400).json({ error: 'noticeWindowHours is required' });
+    }
+    if (teamPenaltyPct === undefined || teamPenaltyPct === null) {
+      return res.status(400).json({ error: 'teamPenaltyPct is required' });
+    }
+    if (!penaltyDestination) {
+      return res.status(400).json({ error: 'penaltyDestination is required' });
+    }
+
+    // Validate types and ranges
+    if (!Number.isInteger(noticeWindowHours) || noticeWindowHours < 0) {
+      return res.status(400).json({ error: 'noticeWindowHours must be a non-negative integer' });
+    }
+    if (!Number.isInteger(teamPenaltyPct) || teamPenaltyPct < 0 || teamPenaltyPct > 100) {
+      return res.status(400).json({ error: 'teamPenaltyPct must be an integer between 0 and 100' });
+    }
+    if (!VALID_PENALTY_DESTINATIONS.includes(penaltyDestination)) {
+      return res.status(400).json({
+        error: `penaltyDestination must be one of: ${VALID_PENALTY_DESTINATIONS.join(', ')}`,
+      });
+    }
+
+    // Check facility exists
+    const facility = await prisma.facility.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    const policyVersion = new Date().toISOString();
+
+    const updated = await prisma.facility.update({
+      where: { id },
+      data: {
+        noticeWindowHours,
+        teamPenaltyPct,
+        penaltyDestination,
+        policyVersion,
+      },
+      select: {
+        id: true,
+        noticeWindowHours: true,
+        teamPenaltyPct: true,
+        penaltyDestination: true,
+        policyVersion: true,
+      },
+    });
+
+    res.json({
+      ...updated,
+      hasPolicy: true,
+    });
+  } catch (error) {
+    console.error('Update cancellation policy error:', error);
+    res.status(500).json({ error: 'Failed to update cancellation policy' });
   }
 });

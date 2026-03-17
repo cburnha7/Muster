@@ -128,12 +128,12 @@ export function BookingDetailsScreen(): JSX.Element {
     }
 
     Alert.alert(
-      "I'm Out",
+      "Leave",
       alertMessage,
       [
-        { text: 'Stay In', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "I'm Out",
+          text: "Leave",
           style: 'destructive',
           onPress: confirmCancelBooking,
         },
@@ -178,7 +178,7 @@ export function BookingDetailsScreen(): JSX.Element {
       );
 
       Alert.alert(
-        'Stepped Out',
+        'Left Event',
         confirmationMessage,
         [{ text: 'OK' }]
       );
@@ -534,8 +534,8 @@ export function BookingDetailsScreen(): JSX.Element {
         
         {canCancel && (
           <FormButton
-            title="I'm Out"
-            variant="outline"
+            title="Leave"
+            variant="muted"
             onPress={handleCancelBooking}
             loading={isCancelling}
             disabled={isCancelling}

@@ -402,6 +402,376 @@ export class NotificationService {
   }
 
   /**
+   * Notify the home roster manager that they need to book a facility for a free league game.
+   * In free leagues, the home roster manager is the booking host.
+   */
+  static async notifyHomeManagerBookFacility(matchId: string): Promise<void> {
+    try {
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: {
+          league: {
+            select: {
+              name: true,
+              sportType: true,
+            }
+          },
+          homeTeam: {
+            select: {
+              id: true,
+              name: true,
+              members: {
+                where: { role: 'captain', status: 'active' },
+                select: { userId: true }
+              }
+            }
+          },
+          awayTeam: {
+            select: {
+              id: true,
+              name: true,
+            }
+          }
+        }
+      });
+
+      if (!match) return;
+
+      // Find the home roster manager (captain)
+      const homeManagerUserIds = match.homeTeam.members.map(m => m.userId);
+
+      if (homeManagerUserIds.length === 0) {
+        console.warn(`No manager found for home roster ${match.homeTeam.id} — cannot send facility booking notification`);
+        return;
+      }
+
+      const scheduledDate = match.scheduledAt.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      const notification: NotificationTemplate = {
+        title: 'Facility Needed',
+        body: `Your roster ${match.homeTeam.name} is home vs ${match.awayTeam.name} on ${scheduledDate} in ${match.league.name}. Book a facility and assign the rental to this game.`,
+        data: {
+          type: 'home_book_facility',
+          matchId: match.id,
+          leagueId: match.leagueId,
+          homeTeamId: match.homeTeam.id,
+          awayTeamId: match.awayTeam.id,
+        }
+      };
+
+      console.log('Sending facility booking notification to home roster manager(s)', homeManagerUserIds);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending home manager facility booking notification:', error);
+    }
+  }
+
+  /**
+   * Notify the away roster manager that they need to confirm a free league game.
+   * Includes venue details, game date/time, opponent roster name, and 48h deadline.
+   */
+  static async notifyAwayManagerConfirmation(
+    matchId: string,
+    venueDetails: {
+      facilityName: string;
+      courtName: string;
+      facilityAddress: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+    },
+    confirmationDeadline: Date
+  ): Promise<void> {
+    try {
+      const match = await prisma.match.findUnique({
+        where: { id: matchId },
+        include: {
+          league: {
+            select: {
+              name: true,
+            }
+          },
+          homeTeam: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
+          awayTeam: {
+            select: {
+              id: true,
+              name: true,
+              members: {
+                where: { role: 'captain', status: 'active' },
+                select: { userId: true }
+              }
+            }
+          }
+        }
+      });
+
+      if (!match) return;
+
+      const awayManagerUserIds = match.awayTeam.members.map(m => m.userId);
+
+      if (awayManagerUserIds.length === 0) {
+        console.warn(`No manager found for away roster ${match.awayTeam.id} — cannot send confirmation request`);
+        return;
+      }
+
+      const deadlineStr = confirmationDeadline.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+      const notification: NotificationTemplate = {
+        title: 'Confirm Game',
+        body: `${match.homeTeam.name} has booked ${venueDetails.facilityName} (${venueDetails.courtName}) for your game on ${venueDetails.date}, ${venueDetails.startTime}–${venueDetails.endTime}. Confirm by ${deadlineStr} or the game will lapse.`,
+        data: {
+          type: 'away_confirm_game',
+          matchId: match.id,
+          leagueId: match.leagueId,
+          homeTeamId: match.homeTeam.id,
+          awayTeamId: match.awayTeam.id,
+          facilityName: venueDetails.facilityName,
+          courtName: venueDetails.courtName,
+          facilityAddress: venueDetails.facilityAddress,
+          date: venueDetails.date,
+          startTime: venueDetails.startTime,
+          endTime: venueDetails.endTime,
+          confirmationDeadline: confirmationDeadline.toISOString(),
+        }
+      };
+
+      console.log('Sending away confirmation request to roster manager(s)', awayManagerUserIds);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending away manager confirmation notification:', error);
+    }
+  }
+
+  /**
+   * Notify the league commissioner when a roster reaches the strike threshold (3+)
+   * in a season. Surfaces the option to remove the roster from the league.
+   */
+  static async notifyCommissionerStrikeThreshold(
+    rosterId: string,
+    seasonId: string,
+    strikeCount: number
+  ): Promise<void> {
+    try {
+      const roster = await prisma.team.findUnique({
+        where: { id: rosterId },
+        select: { id: true, name: true },
+      });
+
+      if (!roster) return;
+
+      const season = await prisma.season.findUnique({
+        where: { id: seasonId },
+        include: {
+          league: {
+            select: { id: true, name: true, organizerId: true },
+          },
+        },
+      });
+
+      if (!season || !season.league) return;
+
+      const notification: NotificationTemplate = {
+        title: 'Roster Strike Threshold Reached',
+        body: `${roster.name} has reached ${strikeCount} strikes in ${season.league.name} (${season.name}). You may remove this roster from the league.`,
+        data: {
+          type: 'strike_threshold_reached',
+          rosterId: roster.id,
+          rosterName: roster.name,
+          seasonId: season.id,
+          leagueId: season.league.id,
+          strikeCount,
+        },
+      };
+
+      console.log(
+        `Sending strike threshold notification to commissioner ${season.league.organizerId}`
+      );
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending strike threshold notification:', error);
+    }
+  }
+
+
+  /**
+   * Notify the roster manager when their roster's balance status transitions to 'low'.
+   * Sent as a push notification to prompt the manager to top up their account.
+   */
+  static async notifyLowBalance(
+    rosterId: string,
+    rosterName: string,
+  ): Promise<void> {
+    try {
+      const captain = await prisma.teamMember.findFirst({
+        where: { teamId: rosterId, role: 'captain', status: 'active' },
+        select: { userId: true },
+      });
+
+      if (!captain) {
+        console.warn(`No manager found for roster ${rosterId} — cannot send low balance notification`);
+        return;
+      }
+
+      const notification: NotificationTemplate = {
+        title: 'Low Balance',
+        body: `${rosterName}'s balance is running low. Top up to avoid being blocked from upcoming games.`,
+        data: {
+          type: 'low_balance',
+          rosterId,
+          rosterName,
+        },
+      };
+
+      await NotificationService.queueNotification([captain.userId], notification);
+
+      console.log(`Sending low balance notification for roster ${rosterName} to manager ${captain.userId}`);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending low balance notification:', error);
+    }
+  }
+
+  /**
+   * Notify the roster manager when their roster's balance status transitions to 'blocked'.
+   * Includes the exact top-up amount required to return to a usable state.
+   */
+  static async notifyBlockedBalance(
+    rosterId: string,
+    rosterName: string,
+    topUpAmount: number,
+  ): Promise<void> {
+    try {
+      const captain = await prisma.teamMember.findFirst({
+        where: { teamId: rosterId, role: 'captain', status: 'active' },
+        select: { userId: true },
+      });
+
+      if (!captain) {
+        console.warn(`No manager found for roster ${rosterId} — cannot send blocked balance notification`);
+        return;
+      }
+
+      const formattedAmount = `$${topUpAmount.toFixed(2)}`;
+
+      const notification: NotificationTemplate = {
+        title: 'Balance Blocked',
+        body: `${rosterName} is blocked from games. Top up at least ${formattedAmount} to resume scheduling.`,
+        data: {
+          type: 'blocked_balance',
+          rosterId,
+          rosterName,
+          topUpAmount,
+        },
+      };
+
+      await NotificationService.queueNotification([captain.userId], notification);
+
+      console.log(`Sending blocked balance notification for roster ${rosterName} to manager ${captain.userId}`);
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending blocked balance notification:', error);
+    }
+  }
+
+  /**
+   * Notify both roster managers and the league commissioner when a booking
+   * transitions to 'payment_hold' because a capture-window re-authorization
+   * failed (manager balance now insufficient).
+   */
+  static async notifyPaymentHold(
+    bookingId: string,
+    failedParticipantRosterId: string,
+  ): Promise<void> {
+    try {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          participants: {
+            select: {
+              rosterId: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      if (!booking) return;
+
+      // Collect all roster manager user IDs from participants
+      const rosterIds = [...new Set(booking.participants.map((p) => p.rosterId))];
+      const captains = await prisma.teamMember.findMany({
+        where: {
+          teamId: { in: rosterIds },
+          role: 'captain',
+          status: 'active',
+        },
+        select: { userId: true, teamId: true },
+      });
+
+      const managerUserIds = captains.map((c) => c.userId);
+
+      // Find the commissioner if this booking is linked to a league match
+      let commissionerUserId: string | null = null;
+      if (booking.rentalId) {
+        const match = await prisma.match.findFirst({
+          where: { rentalId: booking.rentalId },
+          select: {
+            league: {
+              select: { organizerId: true },
+            },
+          },
+        });
+        commissionerUserId = match?.league?.organizerId ?? null;
+      }
+
+      const failedRoster = await prisma.team.findUnique({
+        where: { id: failedParticipantRosterId },
+        select: { name: true },
+      });
+
+      const notification: NotificationTemplate = {
+        title: 'Payment Hold',
+        body: `Booking ${bookingId} is on hold — re-authorization failed for ${failedRoster?.name ?? 'a roster'}. The manager's balance may be insufficient.`,
+        data: {
+          type: 'payment_hold',
+          bookingId,
+          failedRosterId: failedParticipantRosterId,
+        },
+      };
+
+      const allRecipients = [...new Set([
+        ...managerUserIds,
+        ...(commissionerUserId ? [commissionerUserId] : []),
+      ])];
+
+      await NotificationService.queueNotification(allRecipients, notification);
+
+      console.log(
+        `[payment-hold] Notifying ${allRecipients.length} user(s) about booking ${bookingId} payment hold`,
+      );
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending payment hold notification:', error);
+    }
+  }
+
+
+  /**
    * Send notification when event is auto-opened to public
    */
   async sendEventAutoOpenedNotification(

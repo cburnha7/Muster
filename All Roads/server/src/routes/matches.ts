@@ -1,8 +1,10 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../index';
+import { NotificationService } from '../services/NotificationService';
+import { checkBalance } from '../services/balance';
+import { recordLeagueTransaction } from '../services/league-ledger';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/matches - Get all matches with filtering and pagination
 router.get('/', async (req: Request, res: Response) => {
@@ -196,7 +198,8 @@ router.post('/', async (req: Request, res: Response) => {
       scheduledAt,
       eventId,
       notes,
-      userId
+      userId,
+      courtCost
     } = req.body;
 
     // Validate required fields
@@ -260,6 +263,21 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
+    // Paid league: require courtCost and verify league balance covers it
+    if (league.pricingType === 'paid') {
+      if (courtCost === undefined || courtCost === null) {
+        return res.status(400).json({ error: 'courtCost is required for paid league games' });
+      }
+
+      const balanceResult = await checkBalance(leagueId, courtCost);
+      if (!balanceResult.sufficient) {
+        return res.status(400).json({
+          error: 'Insufficient league balance',
+          shortfall: balanceResult.shortfall,
+        });
+      }
+    }
+
     // Create match
     const match = await prisma.match.create({
       data: {
@@ -276,7 +294,8 @@ router.post('/', async (req: Request, res: Response) => {
           select: {
             id: true,
             name: true,
-            sportType: true
+            sportType: true,
+            pricingType: true
           }
         },
         homeTeam: {
@@ -295,6 +314,14 @@ router.post('/', async (req: Request, res: Response) => {
         }
       }
     });
+
+    // In a free league, the home roster manager is the booking host.
+    // Notify them that they need to book a facility and assign the rental to this game.
+    if (league.pricingType === 'free') {
+      NotificationService.notifyHomeManagerBookFacility(match.id).catch(err =>
+        console.error('Failed to send home manager facility notification:', err)
+      );
+    }
 
     res.status(201).json(match);
   } catch (error) {
@@ -403,6 +430,256 @@ router.delete('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error deleting match:', error);
     res.status(500).json({ error: 'Failed to delete match' });
+  }
+});
+
+// PATCH /api/matches/:id/rental - Assign a facility rental to a match
+// Used by the home roster manager to link their confirmed rental to a free league game
+router.patch('/:id/rental', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { rentalId, userId } = req.body;
+
+    if (!rentalId) {
+      return res.status(400).json({ error: 'Missing required field: rentalId' });
+    }
+
+    // Fetch match with league info
+    const existingMatch = await prisma.match.findUnique({
+      where: { id },
+      include: {
+        league: {
+          select: {
+            id: true,
+            pricingType: true,
+            organizerId: true,
+          }
+        },
+        homeTeam: {
+          select: {
+            id: true,
+            members: {
+              where: { role: 'captain', status: 'active' },
+              select: { userId: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!existingMatch) {
+      return res.status(404).json({ error: 'Match not found' });
+    }
+
+    // Only the home roster manager can assign a rental in a free league
+    const homeManagerIds = existingMatch.homeTeam.members.map(m => m.userId);
+    const isHomeManager = userId && homeManagerIds.includes(userId);
+    const isCommissioner = userId && existingMatch.league.organizerId === userId;
+
+    if (!isHomeManager && !isCommissioner) {
+      return res.status(403).json({ error: 'Only the home roster manager or league commissioner can assign a rental to this game' });
+    }
+
+    // Verify the rental exists and belongs to the requesting user
+    const rental = await prisma.facilityRental.findUnique({
+      where: { id: rentalId },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        totalPrice: true,
+        timeSlot: {
+          select: {
+            court: {
+              select: {
+                facility: {
+                  select: { id: true }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!rental) {
+      return res.status(404).json({ error: 'Rental not found' });
+    }
+
+    if (rental.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Only confirmed rentals can be assigned to a game' });
+    }
+
+    // Branch on league pricing type:
+    // - Paid league: commissioner books facility, game is confirmed immediately (no away confirmation needed)
+    // - Free league: home manager books facility, away manager must confirm within 48h
+    const isPaidLeague = existingMatch.league.pricingType === 'paid';
+
+    const updateData: any = { rentalId };
+
+    if (isPaidLeague) {
+      // Paid league: confirm immediately — the league is paying, no away confirmation needed
+      updateData.status = 'confirmed';
+    } else {
+      // Free league: set to pending_away_confirm with 48h deadline
+      const confirmationDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      updateData.status = 'pending_away_confirm';
+      updateData.confirmationDeadline = confirmationDeadline;
+    }
+
+    const match = await prisma.match.update({
+      where: { id },
+      data: updateData,
+      include: {
+        league: {
+          select: { id: true, name: true, sportType: true }
+        },
+        homeTeam: {
+          select: { id: true, name: true, imageUrl: true }
+        },
+        awayTeam: {
+          select: { id: true, name: true, imageUrl: true }
+        },
+        rental: {
+          select: {
+            id: true,
+            status: true,
+            totalPrice: true,
+            timeSlot: {
+              select: {
+                date: true,
+                startTime: true,
+                endTime: true,
+                court: {
+                  select: {
+                    name: true,
+                    facility: {
+                      select: { id: true, name: true, street: true, city: true }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Record court cost in the league ledger for paid leagues
+    if (isPaidLeague && existingMatch.seasonId && rental) {
+      const courtCost = rental.totalPrice;
+      const facilityId = rental.timeSlot?.court?.facility?.id;
+
+      recordLeagueTransaction({
+        leagueId: existingMatch.league.id,
+        seasonId: existingMatch.seasonId,
+        type: 'court_cost',
+        amount: -courtCost,
+        description: `Court cost for ${match.homeTeam.name} vs ${match.awayTeam.name}`,
+        facilityId: facilityId ?? undefined,
+        rentalId: rental.id,
+        matchId: id as string,
+      }).catch(err =>
+        console.error('Failed to record league ledger transaction:', err)
+      );
+    }
+
+    // Only send away confirmation notification for free leagues
+    if (!isPaidLeague && match.rental?.timeSlot?.court) {
+      const { court } = match.rental.timeSlot;
+      const venueDetails = {
+        facilityName: court.facility.name,
+        courtName: court.name,
+        facilityAddress: `${court.facility.street}, ${court.facility.city}`,
+        date: match.rental.timeSlot.date instanceof Date
+          ? match.rental.timeSlot.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+          : String(match.rental.timeSlot.date),
+        startTime: match.rental.timeSlot.startTime,
+        endTime: match.rental.timeSlot.endTime,
+      };
+
+      const confirmationDeadline = updateData.confirmationDeadline;
+      NotificationService.notifyAwayManagerConfirmation(match.id, venueDetails, confirmationDeadline).catch(err =>
+        console.error('Failed to send away manager confirmation notification:', err)
+      );
+    }
+
+    res.json(match);
+  } catch (error) {
+    console.error('Error assigning rental to match:', error);
+    res.status(500).json({ error: 'Failed to assign rental to match' });
+  }
+});
+
+// PATCH /api/matches/:id/confirm - Away roster manager confirms a free league game
+router.patch('/:id/confirm', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required field: userId' });
+    }
+
+    // Fetch match with away roster members
+    const existingMatch = await prisma.match.findUnique({
+      where: { id },
+      include: {
+        awayTeam: {
+          select: {
+            id: true,
+            members: {
+              where: { role: 'captain', status: 'active' },
+              select: { userId: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!existingMatch) {
+      return res.status(404).json({ error: 'Match not found' });
+    }
+
+    // Match must be in pending_away_confirm status
+    if (existingMatch.status !== 'pending_away_confirm') {
+      return res.status(400).json({ error: 'Match is not awaiting away roster confirmation' });
+    }
+
+    // Verify the requesting user is the away roster manager (captain)
+    const awayManagerIds = existingMatch.awayTeam.members.map((m: { userId: string }) => m.userId);
+    if (!awayManagerIds.includes(userId)) {
+      return res.status(403).json({ error: 'Only the away roster manager can confirm this game' });
+    }
+
+    // Verify the confirmation deadline hasn't passed
+    if (existingMatch.confirmationDeadline && new Date() > existingMatch.confirmationDeadline) {
+      return res.status(400).json({ error: 'Confirmation deadline has passed' });
+    }
+
+    // Update match status to confirmed
+    const match = await prisma.match.update({
+      where: { id },
+      data: {
+        status: 'confirmed',
+      },
+      include: {
+        league: {
+          select: { id: true, name: true, sportType: true }
+        },
+        homeTeam: {
+          select: { id: true, name: true, imageUrl: true }
+        },
+        awayTeam: {
+          select: { id: true, name: true, imageUrl: true }
+        }
+      }
+    });
+
+    res.json(match);
+  } catch (error) {
+    console.error('Error confirming match:', error);
+    res.status(500).json({ error: 'Failed to confirm match' });
   }
 });
 

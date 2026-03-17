@@ -9,6 +9,8 @@ import {
   PaginatedResponse,
   PaginationParams,
   SearchResult,
+  CancellationPolicy,
+  CancellationPolicyResponse,
 } from '../../types';
 
 export class FacilityService extends BaseApiService {
@@ -307,6 +309,27 @@ export class FacilityService extends BaseApiService {
   }> {
     const params = { userId };
     return this.get(`${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/available-slots`, { params });
+  }
+  /**
+   * Get cancellation policy for a facility
+   */
+  async getCancellationPolicy(facilityId: string): Promise<CancellationPolicyResponse> {
+    return this.get<CancellationPolicyResponse>(
+      API_ENDPOINTS.FACILITIES.CANCELLATION_POLICY(facilityId)
+    );
+  }
+
+  /**
+   * Update cancellation policy for a facility
+   */
+  async updateCancellationPolicy(
+    facilityId: string,
+    policy: Omit<CancellationPolicy, 'policyVersion'>
+  ): Promise<CancellationPolicyResponse & { id: string }> {
+    return this.put<CancellationPolicyResponse & { id: string }>(
+      API_ENDPOINTS.FACILITIES.CANCELLATION_POLICY(facilityId),
+      policy
+    );
   }
 }
 

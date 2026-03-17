@@ -57,7 +57,7 @@ export class PlayerRatingService {
    */
   static calculatePlayerRating(
     gameParticipations: GameParticipation[],
-    eventType: 'game' | 'practice' | 'pickup' | 'camp'
+    eventType: 'game' | 'practice' | 'pickup' | 'tournament'
   ): number {
     if (gameParticipations.length === 0) {
       return RATING_CONSTANTS.DEFAULT_RATING;
@@ -99,7 +99,7 @@ export class PlayerRatingService {
     eventId: string,
     participants: Array<{ userId: string; currentRating: number }>,
     votes: PlayerVote[],
-    eventType: 'game' | 'practice' | 'pickup' | 'camp',
+    eventType: 'game' | 'practice' | 'pickup' | 'tournament',
     seasonId?: string
   ): Promise<GameRatingCalculation> {
     // Step 1: Calculate game rating
@@ -146,7 +146,7 @@ export class PlayerRatingService {
     participants: Array<{ userId: string }>,
     calculation: GameRatingCalculation,
     votes: PlayerVote[],
-    eventType: 'game' | 'practice' | 'pickup' | 'camp',
+    eventType: 'game' | 'practice' | 'pickup' | 'tournament',
     playedAt: Date,
     seasonId?: string
   ): Omit<GameParticipation, 'id' | 'createdAt' | 'updatedAt'>[] {

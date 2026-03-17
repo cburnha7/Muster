@@ -50,6 +50,18 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [visibility, setVisibility] = useState<'public' | 'private'>(
     (initialData as Partial<CreateLeagueData>)?.visibility || 'public'
   );
+  const [leagueFormat, setLeagueFormat] = useState<'season' | 'season_with_playoffs' | 'tournament' | ''>(
+    (initialData as any)?.leagueFormat || ''
+  );
+  const [playoffTeamCount, setPlayoffTeamCount] = useState(
+    (initialData as any)?.playoffTeamCount?.toString() || ''
+  );
+  const [eliminationFormat, setEliminationFormat] = useState<string>(
+    (initialData as any)?.eliminationFormat || ''
+  );
+  const [gameFrequency, setGameFrequency] = useState<string>(
+    (initialData as any)?.gameFrequency || ''
+  );
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [sportType, setSportType] = useState(initialData?.sportType || '');
@@ -185,6 +197,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'Monthly', value: 'monthly' },
   ];
 
+  const leagueFormatOptions: SelectOption[] = [
+    { label: 'Season', value: 'season' },
+    { label: 'Season with Playoffs', value: 'season_with_playoffs' },
+    { label: 'Tournament', value: 'tournament' },
+  ];
+
+  const gameFrequencyOptions: SelectOption[] = [
+    { label: 'All at Once', value: 'all_at_once' },
+    { label: 'Weekly', value: 'weekly' },
+    { label: 'Monthly', value: 'monthly' },
+  ];
+
+  const eliminationFormatOptions: SelectOption[] = [
+    { label: 'Single Elimination', value: 'single_elimination' },
+    { label: 'Double Elimination', value: 'double_elimination' },
+  ];
+
   // ── Calendar helpers ────────────────────────────────────────────
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -234,7 +263,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
   // ── Projected end date ──────────────────────────────────────────
   const projectedEndDate = (() => {
-    if (!startDate || !seasonLength) return '';
+    if (!startDate) return '';
+    // For tournament format, use gameFrequency to estimate
+    if (leagueFormat === 'tournament') {
+      if (!gameFrequency) return '';
+      const rounds = 4; // default bracket estimate
+      const end = new Date(startDate);
+      if (gameFrequency === 'weekly') {
+        end.setDate(end.getDate() + rounds * 7);
+      } else if (gameFrequency === 'monthly') {
+        end.setMonth(end.getMonth() + rounds);
+      } else {
+        // all_at_once — estimate a few days
+        end.setDate(end.getDate() + Math.max(rounds, 3));
+      }
+      return end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    if (!seasonLength) return '';
     const len = parseInt(seasonLength);
     if (isNaN(len) || len < 1) return '';
     const end = new Date(startDate);
@@ -253,6 +298,18 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     setPreferredGameDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
     );
+  };
+
+  // ── Format change handler ──────────────────────────────────────
+  const handleFormatChange = (format: string) => {
+    setLeagueFormat(format as any);
+    // Clear format-specific fields but retain shared fields
+    setPlayoffTeamCount('');
+    setEliminationFormat('');
+    if (format === 'tournament') {
+      setSeasonLength('');
+      setSeasonGameCount('');
+    }
   };
 
   // ── Roster search (debounced, like player search) ─────────────
@@ -309,6 +366,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   // ── Validation ──────────────────────────────────────────────────
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    if (!leagueFormat) {
+      newErrors.leagueFormat = 'League format is required';
+    }
 
     if (!name.trim()) {
       newErrors.name = 'League name is required';
@@ -407,6 +468,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       seasonLength: seasonLength ? parseInt(seasonLength) : null,
       autoGenerateMatchups,
       trackStandings,
+      leagueFormat: leagueFormat || undefined,
+      playoffTeamCount: playoffTeamCount ? parseInt(playoffTeamCount) : null,
+      eliminationFormat: eliminationFormat || null,
+      gameFrequency: gameFrequency || null,
       // Include added rosters for the parent to handle
       rosterIds: addedRosters.map(r => r.id),
       invitedRosterIds: invitedRosters.map(r => r.id),
@@ -586,6 +651,27 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             />
           )}
 
+          {/* League Format Selector — required before other fields */}
+          <FormSelect
+            label="League Format *"
+            placeholder="Select league format"
+            value={leagueFormat}
+            options={leagueFormatOptions}
+            onSelect={(option) => handleFormatChange(option.value as string)}
+            error={errors.leagueFormat}
+          />
+
+          {!leagueFormat && (
+            <View style={styles.formatHint}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.inkFaint} />
+              <Text style={styles.formatHintText}>
+                Select a league format to configure the rest of the league settings.
+              </Text>
+            </View>
+          )}
+
+          {!!leagueFormat && (
+          <>
           <FormInput
             label="League Name *"
             placeholder="Enter league name"
@@ -644,31 +730,85 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           </TouchableOpacity>
           {showCalendar && renderCalendar()}
 
+          {/* ── Format-specific fields ── */}
+
+          {/* Game Frequency — all formats */}
           <FormSelect
-            label="Schedule Frequency"
+            label="Game Frequency"
             placeholder="Select frequency"
-            value={scheduleFrequency}
-            options={frequencyOptions}
-            onSelect={(option) => setScheduleFrequency(option.value as 'weekly' | 'monthly')}
+            value={gameFrequency || (leagueFormat === 'tournament' ? '' : scheduleFrequency)}
+            options={gameFrequencyOptions}
+            onSelect={(option) => {
+              setGameFrequency(option.value as string);
+              if (option.value === 'weekly' || option.value === 'monthly') {
+                setScheduleFrequency(option.value as 'weekly' | 'monthly');
+              }
+            }}
           />
 
-          <FormInput
-            label={`Season Length (${scheduleFrequency === 'weekly' ? 'weeks' : 'months'})`}
-            placeholder={scheduleFrequency === 'weekly' ? 'e.g. 12' : 'e.g. 3'}
-            value={seasonLength}
-            onChangeText={setSeasonLength}
-            keyboardType="numeric"
-          />
+          {/* Season Length — Season and Season with Playoffs only */}
+          {(leagueFormat === 'season' || leagueFormat === 'season_with_playoffs') && (
+            <FormInput
+              label={`Season Length (${scheduleFrequency === 'monthly' ? 'months' : 'weeks'})`}
+              placeholder={scheduleFrequency === 'monthly' ? 'e.g. 3' : 'e.g. 12'}
+              value={seasonLength}
+              onChangeText={setSeasonLength}
+              keyboardType="numeric"
+            />
+          )}
+
+          {/* Number of Games per Roster — Season and Season with Playoffs only */}
+          {(leagueFormat === 'season' || leagueFormat === 'season_with_playoffs') && (
+            <FormInput
+              label="Number of Games per Roster"
+              placeholder="Total games per roster"
+              value={seasonGameCount}
+              onChangeText={setSeasonGameCount}
+              keyboardType="numeric"
+              error={errors.seasonGameCount}
+            />
+          )}
+
+          {/* Playoff fields — Season with Playoffs only */}
+          {leagueFormat === 'season_with_playoffs' && (
+            <>
+              <FormInput
+                label="Number of Playoff Rosters"
+                placeholder="e.g. 4"
+                value={playoffTeamCount}
+                onChangeText={setPlayoffTeamCount}
+                keyboardType="numeric"
+              />
+              <FormSelect
+                label="Playoff Format"
+                placeholder="Select elimination format"
+                value={eliminationFormat}
+                options={eliminationFormatOptions}
+                onSelect={(option) => setEliminationFormat(option.value as string)}
+              />
+            </>
+          )}
+
+          {/* Tournament fields */}
+          {leagueFormat === 'tournament' && (
+            <FormSelect
+              label="Elimination Format"
+              placeholder="Select elimination format"
+              value={eliminationFormat}
+              options={eliminationFormatOptions}
+              onSelect={(option) => setEliminationFormat(option.value as string)}
+            />
+          )}
 
           {/* Projected End Date — read-only */}
           <View style={styles.projectedEndRow}>
             <Text style={styles.fieldLabel}>Projected End Date</Text>
             <Text style={styles.projectedEndValue}>
-              {projectedEndDate || 'Set start date and season length'}
+              {projectedEndDate || (leagueFormat === 'tournament' ? 'Set start date and game frequency' : 'Set start date and season length')}
             </Text>
           </View>
 
-          {/* Schedule Configuration */}
+          {/* Minimum Roster Size */}
           <FormInput
             label="Minimum Roster Size"
             placeholder="e.g. 5"
@@ -676,15 +816,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             onChangeText={setMinimumRosterSize}
             keyboardType="numeric"
             error={errors.minimumRosterSize}
-          />
-
-          <FormInput
-            label="Season Game Count"
-            placeholder="Total games per roster"
-            value={seasonGameCount}
-            onChangeText={setSeasonGameCount}
-            keyboardType="numeric"
-            error={errors.seasonGameCount}
           />
 
           {/* Game Day */}
@@ -980,6 +1111,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </View>
           </View>
 
+          </>
+          )}
+
           {/* Buttons — vertically stacked, matching Roster edit screen */}
           <View style={styles.buttonStack}>
             <FormButton
@@ -1004,6 +1138,21 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 };
 
 const styles = StyleSheet.create({
+  formatHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.chalk,
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+  formatHintText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    lineHeight: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.chalk,

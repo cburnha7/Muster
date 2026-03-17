@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { calculateAvgCourtCost } from '../services/balance';
+import { calculateSuggestedDues } from '../services/suggested-dues';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -77,6 +79,42 @@ router.get('/', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching seasons:', error);
     res.status(500).json({ error: 'Failed to fetch seasons' });
+  }
+});
+
+// GET /api/seasons/suggested-dues - Calculate suggested minimum dues for a paid season
+router.get('/suggested-dues', async (req: Request, res: Response) => {
+  try {
+    const { sportType, gamesPerTeam, rosterCount } = req.query;
+
+    if (!sportType || !gamesPerTeam || !rosterCount) {
+      return res.status(400).json({
+        error: 'Missing required query parameters: sportType, gamesPerTeam, rosterCount',
+      });
+    }
+
+    const gamesNum = parseInt(gamesPerTeam as string, 10);
+    const rosterNum = parseInt(rosterCount as string, 10);
+
+    if (isNaN(gamesNum) || gamesNum <= 0) {
+      return res.status(400).json({ error: 'gamesPerTeam must be a positive integer' });
+    }
+    if (isNaN(rosterNum) || rosterNum <= 0) {
+      return res.status(400).json({ error: 'rosterCount must be a positive integer' });
+    }
+
+    const avgCourtCost = await calculateAvgCourtCost(sportType as string);
+    const suggestedDues = calculateSuggestedDues(gamesNum, avgCourtCost, rosterNum);
+
+    res.json({
+      avgCourtCost,
+      gamesPerTeam: gamesNum,
+      rosterCount: rosterNum,
+      suggestedMinDues: suggestedDues,
+    });
+  } catch (error) {
+    console.error('Error calculating suggested dues:', error);
+    res.status(500).json({ error: 'Failed to calculate suggested dues' });
   }
 });
 

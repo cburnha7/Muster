@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../index';
+import { optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -236,10 +237,26 @@ router.get('/:id/events', async (req, res) => {
 });
 
 // Create team
-router.post('/', async (req, res) => {
+router.post('/', optionalAuthMiddleware, async (req, res) => {
   try {
     const { initialMemberIds, isPublic, ...rest } = req.body;
-    const creatorId = req.headers['x-user-id'] as string | undefined;
+    const creatorId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
+
+    // Plan gate: 2nd+ roster requires 'roster' plan
+    if (creatorId) {
+      const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
+      const existingRosterCount = await prisma.teamMember.count({
+        where: { userId: creatorId, role: 'captain', status: 'active' },
+      });
+      if (existingRosterCount >= 1) {
+        const sub = await prisma.subscription.findUnique({ where: { userId: creatorId }, select: { plan: true, status: true } });
+        const userPlan = sub?.plan || 'free';
+        const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
+        if (!isActive || PLAN_HIERARCHY.indexOf(userPlan) < PLAN_HIERARCHY.indexOf('roster')) {
+          return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'roster', currentPlan: userPlan });
+        }
+      }
+    }
 
     // Map frontend isPublic to DB isPrivate, and ensure description has a value
     const teamData = {

@@ -120,7 +120,6 @@ export function EditEventScreen(): JSX.Element {
     { label: 'Game', value: EventType.GAME },
     { label: 'Practice', value: EventType.PRACTICE },
     { label: 'Pickup', value: EventType.PICKUP },
-    { label: 'Camp', value: EventType.CAMP },
   ];
 
   const statusOptions: SelectOption[] = [

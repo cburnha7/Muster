@@ -128,6 +128,17 @@ export class MatchService extends BaseApiService {
   ): Promise<PaginatedResponse<Match>> {
     return this.getMatches({ leagueId, status: 'completed' }, page, limit);
   }
+
+  /**
+   * Assign a facility rental to a match
+   */
+  async assignRental(matchId: string, rentalId: string, userId: string): Promise<Match> {
+    return this.patch<Match>(`/matches/${matchId}/rental`, {
+      rentalId,
+      userId,
+    });
+  }
+
 }
 
 // Export singleton instance

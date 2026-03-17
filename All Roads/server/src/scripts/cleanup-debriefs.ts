@@ -310,7 +310,77 @@ async function main() {
   }
 
   // ---------------------------------------------------------------
-  // 6. Summary
+  // 6. Recalculate per-sport ratings and percentiles
+  // ---------------------------------------------------------------
+  console.log('Recalculating per-sport ratings and percentiles...');
+
+  // Build per-sport ratings from GameParticipation + Event.sportType
+  const allParticipations = await prisma.gameParticipation.findMany({
+    where: { gameScore: { gt: 0 } },
+    select: {
+      userId: true,
+      gameScore: true,
+      event: { select: { sportType: true } },
+    },
+  });
+
+  // Group by userId + sportType
+  const sportMap = new Map<string, { total: number; count: number }>();
+  for (const p of allParticipations) {
+    const key = `${p.userId}::${p.event.sportType}`;
+    const entry = sportMap.get(key) || { total: 0, count: 0 };
+    entry.total += p.gameScore;
+    entry.count += 1;
+    sportMap.set(key, entry);
+  }
+
+  // Upsert per-sport ratings
+  for (const [key, { total, count }] of sportMap) {
+    const [userId, sportType] = key.split('::');
+    const rating = count > 0 ? total / count : 1.0;
+
+    await prisma.playerSportRating.upsert({
+      where: { userId_sportType: { userId, sportType } },
+      create: { userId, sportType, rating, gamesPlayed: count, lastUpdated: new Date() },
+      update: { rating, gamesPlayed: count, lastUpdated: new Date() },
+    });
+  }
+
+  // Recalculate percentiles per sport
+  const allSportRatings = await prisma.playerSportRating.findMany({
+    where: { gamesPlayed: { gt: 0 } },
+    select: { id: true, sportType: true, rating: true },
+  });
+
+  // Group by sport
+  const bySport = new Map<string, Array<{ id: string; rating: number }>>();
+  for (const r of allSportRatings) {
+    const list = bySport.get(r.sportType) || [];
+    list.push({ id: r.id, rating: r.rating });
+    bySport.set(r.sportType, list);
+  }
+
+  let percentileUpdates = 0;
+  for (const [sport, entries] of bySport) {
+    // Sort ascending by rating
+    entries.sort((a, b) => a.rating - b.rating);
+    const total = entries.length;
+
+    for (let i = 0; i < entries.length; i++) {
+      // Percentile = % of players this user is better than
+      const percentile = ((i + 1) / total) * 100;
+      await prisma.playerSportRating.update({
+        where: { id: entries[i].id },
+        data: { percentile },
+      });
+      percentileUpdates++;
+    }
+  }
+
+  console.log(`Updated ${sportMap.size} sport rating(s), ${percentileUpdates} percentile(s) across ${bySport.size} sport(s).`);
+
+  // ---------------------------------------------------------------
+  // 7. Summary
   // ---------------------------------------------------------------
   console.log('\n=== Recalculation Summary ===');
   console.log(`Total events processed: ${logs.length}`);

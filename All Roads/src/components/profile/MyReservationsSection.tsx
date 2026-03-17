@@ -22,6 +22,7 @@ interface Reservation {
   usedForEventId: string | null;
   cancellationStatus: string | null;
   bookingSessionId: string | null;
+  recurringGroupId: string | null;
   timeSlot: {
     id: string;
     date: string;
@@ -265,13 +266,18 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
       {isExpanded && (
         <>
           {(() => {
-            // Group by bookingSessionId
-            const groups: { key: string; items: typeof unusedReservations }[] = [];
+            // Group by recurringGroupId first, then bookingSessionId, then singles
+            const groups: { key: string; type: 'recurring' | 'session' | 'single'; items: typeof unusedReservations }[] = [];
+            const recurringMap = new Map<string, typeof unusedReservations>();
             const sessionMap = new Map<string, typeof unusedReservations>();
             const singles: typeof unusedReservations = [];
 
             for (const r of unusedReservations) {
-              if (r.bookingSessionId) {
+              if (r.recurringGroupId) {
+                const existing = recurringMap.get(r.recurringGroupId) || [];
+                existing.push(r);
+                recurringMap.set(r.recurringGroupId, existing);
+              } else if (r.bookingSessionId) {
                 const existing = sessionMap.get(r.bookingSessionId) || [];
                 existing.push(r);
                 sessionMap.set(r.bookingSessionId, existing);
@@ -280,28 +286,51 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
               }
             }
 
+            // Add recurring groups
+            for (const [groupId, items] of recurringMap) {
+              groups.push({ key: groupId, type: 'recurring', items });
+            }
             // Add session groups
             for (const [sessionId, items] of sessionMap) {
-              groups.push({ key: sessionId, items });
+              groups.push({ key: sessionId, type: 'session', items });
             }
             // Add singles
             for (const r of singles) {
-              groups.push({ key: r.id, items: [r] });
+              groups.push({ key: r.id, type: 'single', items: [r] });
             }
 
-            return groups.map((group) =>
-              group.items.length > 1 ? (
-                <SessionGroup
-                  key={group.key}
-                  sessionId={group.key}
-                  reservations={group.items}
-                  navigation={navigation}
-                  formatDate={formatDate}
-                  formatTime={formatTime}
-                  onCreateEvent={handleCreateEvent}
-                  onCancelReservation={handleCancelReservation}
-                />
-              ) : (
+            return groups.map((group) => {
+              if (group.type === 'recurring') {
+                return (
+                  <RecurringSeriesGroup
+                    key={group.key}
+                    groupId={group.key}
+                    reservations={group.items}
+                    userId={userId}
+                    navigation={navigation}
+                    formatDate={formatDate}
+                    formatTime={formatTime}
+                    onCreateEvent={handleCreateEvent}
+                    onCancelReservation={handleCancelReservation}
+                    onSeriesCancelled={loadReservations}
+                  />
+                );
+              }
+              if (group.items.length > 1) {
+                return (
+                  <SessionGroup
+                    key={group.key}
+                    sessionId={group.key}
+                    reservations={group.items}
+                    navigation={navigation}
+                    formatDate={formatDate}
+                    formatTime={formatTime}
+                    onCreateEvent={handleCreateEvent}
+                    onCancelReservation={handleCancelReservation}
+                  />
+                );
+              }
+              return (
                 <ReservationRow
                   key={group.key}
                   reservation={group.items[0]!}
@@ -311,8 +340,8 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                   onCreateEvent={handleCreateEvent}
                   onCancelReservation={handleCancelReservation}
                 />
-              )
-            );
+              );
+            });
           })()}
         </>
       )}
@@ -439,6 +468,112 @@ function SessionGroup({ sessionId, reservations, navigation, formatDate, formatT
           onCancelReservation={onCancelReservation}
         />
       ))}
+    </View>
+  );
+}
+
+interface RecurringSeriesGroupProps {
+  groupId: string;
+  reservations: Reservation[];
+  userId: string;
+  navigation: any;
+  formatDate: (d: string | undefined) => string;
+  formatTime: (t: string | undefined) => string;
+  onCreateEvent: (r: Reservation) => void;
+  onCancelReservation: (r: Reservation) => void;
+  onSeriesCancelled: () => void;
+}
+
+function RecurringSeriesGroup({
+  groupId,
+  reservations,
+  userId,
+  navigation,
+  formatDate,
+  formatTime,
+  onCreateEvent,
+  onCancelReservation,
+  onSeriesCancelled,
+}: RecurringSeriesGroupProps) {
+  const [expanded, setExpanded] = React.useState(false);
+  const [cancelling, setCancelling] = React.useState(false);
+  const totalPrice = reservations.reduce((sum, r) => sum + r.totalPrice, 0);
+
+  const handleCancelSeries = () => {
+    Alert.alert(
+      'Cancel Recurring Series',
+      `Cancel all ${reservations.length} remaining reservations in this series?`,
+      [
+        { text: 'Keep', style: 'cancel' },
+        {
+          text: 'Cancel Series',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setCancelling(true);
+              const url = `${process.env.EXPO_PUBLIC_API_URL}/rentals/recurring/${groupId}`;
+              const response = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+              });
+              if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to cancel series');
+              }
+              const data = await response.json();
+              Alert.alert('Series Cancelled', data.message);
+              onSeriesCancelled();
+            } catch (error) {
+              const msg = error instanceof Error ? error.message : 'Failed to cancel series';
+              Alert.alert('Error', msg);
+            } finally {
+              setCancelling(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <View style={styles.sessionGroup}>
+      <TouchableOpacity style={styles.sessionHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
+        <View style={styles.sessionHeaderLeft}>
+          <Ionicons name="repeat" size={18} color="#3D8C5E" />
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <Text style={styles.sessionTitle}>Recurring · {reservations.length} slots</Text>
+            <Text style={styles.sessionSubtitle}>${totalPrice.toFixed(2)} total</Text>
+          </View>
+        </View>
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#999" />
+      </TouchableOpacity>
+      {expanded && (
+        <>
+          {reservations.map((r) => (
+            <ReservationRow
+              key={r.id}
+              reservation={r}
+              navigation={navigation}
+              formatDate={formatDate}
+              formatTime={formatTime}
+              onCreateEvent={onCreateEvent}
+              onCancelReservation={onCancelReservation}
+            />
+          ))}
+          <TouchableOpacity
+            style={styles.cancelSeriesButton}
+            onPress={handleCancelSeries}
+            activeOpacity={0.7}
+            disabled={cancelling}
+          >
+            <Ionicons name="close-circle" size={16} color="#FF3B30" />
+            <Text style={styles.cancelSeriesText}>
+              {cancelling ? 'Cancelling...' : 'Cancel Entire Series'}
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }
@@ -628,5 +763,21 @@ const styles = StyleSheet.create({
     color: '#3D8C5E',
     fontWeight: '600',
     marginTop: 1,
+  },
+  cancelSeriesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#FF3B3008',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    gap: 6,
+  },
+  cancelSeriesText: {
+    fontSize: 13,
+    color: '#FF3B30',
+    fontWeight: '700',
   },
 });

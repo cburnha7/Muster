@@ -20,11 +20,15 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { LeagueService } from '../../services/api/LeagueService';
 import { leagueService } from '../../services/api/LeagueService';
+import { leagueDuesService, RosterDuesStatusItem } from '../../services/api/LeagueDuesService';
 import { userService } from '../../services/api/UserService';
 import { cacheService } from '../../services/api/CacheService';
 import { SportType, Team, Event, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
 import { colors, fonts } from '../../theme';
+import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
+import { BalanceStatusBadge, BalanceStatus } from '../../components/dues/BalanceStatusBadge';
+import { LeagueLedger } from '../../components/league/LeagueLedger';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { loggingService } from '../../services/LoggingService';
@@ -64,6 +68,14 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<TabKey>('standings');
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Roster dues status (for paid leagues — visible to commissioner)
+  const [rosterDuesMap, setRosterDuesMap] = useState<Map<string, boolean>>(new Map());
+  const [leagueDuesAmount, setLeagueDuesAmount] = useState<number | null>(null);
+  const [leaguePricingType, setLeaguePricingType] = useState<string>('free');
+
+  // Balance status per roster (visible to commissioner)
+  const [rosterBalanceMap, setRosterBalanceMap] = useState<Map<string, BalanceStatus>>(new Map());
+
   // ── Data loading ────────────────────────────────────────────────
   const loadLeague = useCallback(async (isRefresh = false) => {
     if (!leagueId) return;
@@ -94,6 +106,49 @@ export function LeagueDetailsScreen(): React.ReactElement {
       setMembers(Array.isArray(membersData) ? membersData : []);
       setUpcomingEvents((eventsData as LeagueEvent[]) || []);
       setFetchedUserRosters((userTeamsRes as any)?.data ?? []);
+
+      // Load roster dues status for paid leagues
+      try {
+        const leagueAny = typedLeague as any;
+        if (leagueAny.pricingType === 'paid' && leagueAny.seasons?.length > 0) {
+          const activeSeason = leagueAny.seasons.find((s: any) => s.isActive);
+          if (activeSeason) {
+            const duesResult = await leagueDuesService.getLeagueRosterStatus(leagueId, activeSeason.id);
+            setLeaguePricingType(duesResult.pricingType);
+            setLeagueDuesAmount(duesResult.duesAmount);
+            const map = new Map<string, boolean>();
+            for (const r of duesResult.rosters) {
+              map.set(r.rosterId, r.paid);
+            }
+            setRosterDuesMap(map);
+          }
+        }
+      } catch {
+        // Dues status is supplementary — don't block the screen
+      }
+
+      // Load balance status per roster (for commissioner view)
+      try {
+        const leagueAny = typedLeague as any;
+        const activeSeason = leagueAny.seasons?.find((s: any) => s.isActive);
+        const avgCourtCost = activeSeason?.avgCourtCost;
+        if (avgCourtCost && avgCourtCost > 0) {
+          const rosterMembers = (Array.isArray(membersData) ? membersData : [])
+            .filter((m: any) => m.memberType === 'roster' && m.status === 'active');
+          const balanceMap = new Map<string, BalanceStatus>();
+          for (const m of rosterMembers) {
+            const rosterId = m.team?.id || m.memberId;
+            // Derive balance status from avgCourtCost thresholds on the client side
+            // In a real implementation this would call an API endpoint
+            // For now, default to 'funded' — the server-side recalculation (task 10.5)
+            // will provide actual statuses via an API
+            balanceMap.set(rosterId, 'funded');
+          }
+          setRosterBalanceMap(balanceMap);
+        }
+      } catch {
+        // Balance status is supplementary — don't block the screen
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load league');
     } finally {
@@ -231,7 +286,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Non-commissioner actions ────────────────────────────────────
   const handleJoinTeamLeague = async () => {
     if (!league || !currentUser || eligibleRosters.length === 0) return;
-    loggingService.logButton('Join Up (Roster)', 'LeagueDetailsScreen', { leagueId });
+    loggingService.logButton('Join (Roster)', 'LeagueDetailsScreen', { leagueId });
     const roster = eligibleRosters[0]!;
     try {
       setIsActionLoading(true);
@@ -247,7 +302,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleStepOut = async (teamId?: string) => {
     if (!league || !currentUser) return;
-    loggingService.logButton('We\'re Out', 'LeagueDetailsScreen', { leagueId, teamId });
+    loggingService.logButton('Leave', 'LeagueDetailsScreen', { leagueId, teamId });
 
     const doStepOut = async () => {
       try {
@@ -273,9 +328,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
         await doStepOut();
       }
     } else {
-      Alert.alert('We\'re Out', 'Are you sure you want to leave this league?', [
+      Alert.alert('Leave', 'Are you sure you want to leave this league?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'We\'re Out', style: 'destructive', onPress: doStepOut },
+        { text: 'Leave', style: 'destructive', onPress: doStepOut },
       ]);
     }
   };
@@ -404,9 +459,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
             onPress={() => handleConfirmInvitation(pendingUserRosterInvitations[0]!)}
             disabled={isActionLoading}
             accessibilityRole="button"
-            accessibilityLabel="Join Up"
+            accessibilityLabel="Confirm"
           >
-            <Text style={styles.joinBtnText}>Join Up</Text>
+            <Text style={styles.joinBtnText}>Confirm</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.stepOutBtn, { marginTop: 8 }]}
@@ -440,9 +495,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
             onPress={() => handleStepOut(userActiveRosterInLeague.memberId)}
             disabled={isActionLoading}
             accessibilityRole="button"
-            accessibilityLabel="We're Out of league"
+            accessibilityLabel="Leave league"
           >
-            <Text style={styles.stepOutBtnText}>We're Out</Text>
+            <Text style={styles.stepOutBtnText}>Leave</Text>
           </TouchableOpacity>
         </View>
       );
@@ -461,9 +516,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
               onPress={handleJoinTeamLeague}
               disabled={isActionLoading}
               accessibilityRole="button"
-              accessibilityLabel="Join Up"
+              accessibilityLabel="Join"
             >
-              <Text style={styles.joinBtnText}>Join Up</Text>
+              <Text style={styles.joinBtnText}>Join</Text>
             </TouchableOpacity>
           </View>
         );
@@ -577,9 +632,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
                           onPress={() => handleConfirmInvitation(inv)}
                           disabled={isActionLoading}
                           accessibilityRole="button"
-                          accessibilityLabel={`Join Up ${rosterName}`}
+                          accessibilityLabel={`Confirm ${rosterName}`}
                         >
-                          <Text style={styles.confirmBtnText}>Join Up</Text>
+                          <Text style={styles.confirmBtnText}>Confirm</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.declineBtnSmall}
@@ -627,6 +682,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 }))
             }
           />
+
+          {/* League financial ledger — visible to commissioner for paid leagues */}
+          {(() => {
+            const leagueAny = league as any;
+            const activeSeason = leagueAny.seasons?.find((s: any) => s.isActive);
+            if (leagueAny.pricingType === 'paid' && activeSeason) {
+              return (
+                <View style={styles.ledgerSection}>
+                  <LeagueLedger leagueId={leagueId} seasonId={activeSeason.id} />
+                </View>
+              );
+            }
+            return null;
+          })()}
         </ScrollView>
       </View>
     );
@@ -677,6 +746,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Visibility */}
           <ReadOnlyField label="Visibility" value={league.visibility === 'public' ? 'Public' : 'Private'} />
 
+          {/* League Format */}
+          <ReadOnlyField label="League Format" value={
+            (league as any).leagueFormat === 'season' ? 'Season' :
+            (league as any).leagueFormat === 'season_with_playoffs' ? 'Season with Playoffs' :
+            (league as any).leagueFormat === 'tournament' ? 'Tournament' : '—'
+          } />
+
           {/* Core fields */}
           <ReadOnlyField label="League Name" value={league.name} />
           <ReadOnlyField label="Description" value={league.description || ''} />
@@ -687,14 +763,45 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Season Start Date */}
           <ReadOnlyField label="Season Start Date" value={formatDate(league.startDate)} />
 
-          {/* Schedule Frequency */}
-          <ReadOnlyField label="Schedule Frequency" value={league.scheduleFrequency ? league.scheduleFrequency.charAt(0).toUpperCase() + league.scheduleFrequency.slice(1) : '—'} />
+          {/* Game Frequency */}
+          <ReadOnlyField label="Game Frequency" value={
+            (league as any).gameFrequency === 'all_at_once' ? 'All at Once' :
+            (league as any).gameFrequency === 'weekly' ? 'Weekly' :
+            (league as any).gameFrequency === 'monthly' ? 'Monthly' :
+            league.scheduleFrequency ? league.scheduleFrequency.charAt(0).toUpperCase() + league.scheduleFrequency.slice(1) : '—'
+          } />
 
-          {/* Season Length */}
-          <ReadOnlyField
-            label={`Season Length${league.scheduleFrequency ? ` (${league.scheduleFrequency === 'weekly' ? 'weeks' : 'months'})` : ''}`}
-            value={league.seasonLength != null ? String(league.seasonLength) : ''}
-          />
+          {/* Season Length — Season and Season with Playoffs only */}
+          {((league as any).leagueFormat === 'season' || (league as any).leagueFormat === 'season_with_playoffs') && (
+            <ReadOnlyField
+              label={`Season Length${league.scheduleFrequency ? ` (${league.scheduleFrequency === 'weekly' ? 'weeks' : 'months'})` : ''}`}
+              value={league.seasonLength != null ? String(league.seasonLength) : ''}
+            />
+          )}
+
+          {/* Number of Games per Roster — Season and Season with Playoffs only */}
+          {((league as any).leagueFormat === 'season' || (league as any).leagueFormat === 'season_with_playoffs') && (
+            <ReadOnlyField label="Games per Roster" value={league.seasonGameCount != null ? String(league.seasonGameCount) : ''} />
+          )}
+
+          {/* Playoff fields — Season with Playoffs only */}
+          {(league as any).leagueFormat === 'season_with_playoffs' && (
+            <>
+              <ReadOnlyField label="Playoff Rosters" value={(league as any).playoffTeamCount != null ? String((league as any).playoffTeamCount) : '—'} />
+              <ReadOnlyField label="Playoff Format" value={
+                (league as any).eliminationFormat === 'single_elimination' ? 'Single Elimination' :
+                (league as any).eliminationFormat === 'double_elimination' ? 'Double Elimination' : '—'
+              } />
+            </>
+          )}
+
+          {/* Tournament fields */}
+          {(league as any).leagueFormat === 'tournament' && (
+            <ReadOnlyField label="Elimination Format" value={
+              (league as any).eliminationFormat === 'single_elimination' ? 'Single Elimination' :
+              (league as any).eliminationFormat === 'double_elimination' ? 'Double Elimination' : '—'
+            } />
+          )}
 
           {/* Projected End Date */}
           <View style={styles.roProjectedEndRow}>
@@ -706,7 +813,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
           {/* Schedule fields */}
           <ReadOnlyField label="Minimum Roster Size" value={league.minimumRosterSize != null ? String(league.minimumRosterSize) : ''} />
-          <ReadOnlyField label="Season Game Count" value={league.seasonGameCount != null ? String(league.seasonGameCount) : ''} />
 
           {/* Game Day */}
           <Text style={styles.roFieldLabel}>Game Day</Text>
@@ -766,6 +872,16 @@ export function LeagueDetailsScreen(): React.ReactElement {
               {/* Confirmed Rosters */}
               <View style={styles.roRosterSection}>
                 <Text style={styles.roRosterSectionTitle}>Rosters ({confirmedRosters.length})</Text>
+                {leaguePricingType === 'paid' && leagueDuesAmount != null && rosterDuesMap.size > 0 && (
+                  <View style={styles.roDuesSummary}>
+                    <Ionicons name="cash-outline" size={14} color={colors.grass} />
+                    <Text style={styles.roDuesSummaryText}>
+                      Season dues: ${(leagueDuesAmount / 100).toFixed(2)} · {
+                        Array.from(rosterDuesMap.values()).filter(Boolean).length
+                      }/{rosterDuesMap.size} paid
+                    </Text>
+                  </View>
+                )}
                 {confirmedRosters.length > 0 ? (
                   confirmedRosters.map((m: any) => {
                     const team = m.team;
@@ -773,6 +889,10 @@ export function LeagueDetailsScreen(): React.ReactElement {
                     const sport = team?.sportType || '';
                     const isPrivate = team?.isPrivate === true;
                     const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
+                    const rosterId = team?.id || m.memberId;
+                    const hasDuesData = leaguePricingType === 'paid' && rosterDuesMap.size > 0;
+                    const rosterPaid = rosterDuesMap.get(rosterId);
+                    const balanceStatus = rosterBalanceMap.get(rosterId);
                     return (
                       <View key={m.id} style={styles.roRosterItem}>
                         <View style={styles.roRosterIcon}>
@@ -785,10 +905,19 @@ export function LeagueDetailsScreen(): React.ReactElement {
                             {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
                           </Text>
                         </View>
-                        <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
-                          <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
-                            {isPrivate ? 'Private' : 'Public'}
-                          </Text>
+                        <View style={styles.roBadgeRow}>
+                          {balanceStatus && (
+                            <BalanceStatusBadge status={balanceStatus} compact={hasDuesData} />
+                          )}
+                          {hasDuesData ? (
+                            <DuesStatusBadge status={rosterPaid ? 'paid' : 'unpaid'} />
+                          ) : !balanceStatus ? (
+                            <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
+                              <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
+                                {isPrivate ? 'Private' : 'Public'}
+                              </Text>
+                            </View>
+                          ) : null}
                         </View>
                       </View>
                     );
@@ -843,6 +972,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.chalk },
   scrollView: { flex: 1 },
+  ledgerSection: { paddingHorizontal: 16, paddingBottom: 24 },
   formSection: { backgroundColor: '#FFFFFF', marginBottom: 12 },
   section: { backgroundColor: '#FFFFFF', marginBottom: 12, paddingBottom: 12 },
   sectionHeader: {
@@ -996,10 +1126,10 @@ const styles = StyleSheet.create({
   },
   joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
   stepOutBtn: {
-    borderWidth: 2, borderColor: colors.track, borderRadius: 12, paddingVertical: 14,
+    borderWidth: 2, borderColor: colors.inkFaint, borderRadius: 12, paddingVertical: 14,
     alignItems: 'center',
   },
-  stepOutBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.track },
+  stepOutBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.ink },
   // Commissioner action buttons
   commissionerActions: {
     paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 32,
@@ -1267,6 +1397,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.inkFaint,
     paddingVertical: 8,
+  },
+  roDuesSummary: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    backgroundColor: '#EDF7F0',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+  },
+  roDuesSummaryText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.grass,
+    fontWeight: '600' as const,
+  },
+  roBadgeRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
   },
   roVisibilityBadge: {
     backgroundColor: '#EDF7F0',

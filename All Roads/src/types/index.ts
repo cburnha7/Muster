@@ -38,7 +38,7 @@ export enum EventType {
   GAME = 'game',
   PRACTICE = 'practice',
   PICKUP = 'pickup',
-  CAMP = 'camp',
+  TOURNAMENT = 'tournament',
 }
 
 export enum BookingStatus {
@@ -101,6 +101,7 @@ export interface User {
   dateOfBirth?: Date;
   preferredSports: SportType[];
   notificationPreferences: NotificationPreferences;
+  stripeAccountId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -152,6 +153,11 @@ export interface Facility {
   reviewCount: number;
   // Status
   isActive: boolean;
+  // Cancellation Policy
+  noticeWindowHours?: number | null;
+  teamPenaltyPct?: number | null;
+  penaltyDestination?: 'facility' | 'opposing_team' | 'split' | null;
+  policyVersion?: string | null;
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -191,6 +197,19 @@ export interface OperatingHours {
 export interface TimeSlot {
   open: string; // HH:mm format
   close: string; // HH:mm format
+}
+
+export type PenaltyDestination = 'facility' | 'opposing_team' | 'split';
+
+export interface CancellationPolicy {
+  noticeWindowHours: number;
+  teamPenaltyPct: number;
+  penaltyDestination: PenaltyDestination;
+  policyVersion: string;
+}
+
+export interface CancellationPolicyResponse extends CancellationPolicy {
+  hasPolicy: boolean;
 }
 
 export interface FacilityPricing {

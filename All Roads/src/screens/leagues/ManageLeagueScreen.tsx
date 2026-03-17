@@ -7,10 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LeagueForm } from '../../components/league/LeagueForm';
 import { DocumentUploadForm } from '../../components/league/DocumentUploadForm';
+import { StrikeIndicator } from '../../components/league/StrikeIndicator';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { leagueService } from '../../services/api/LeagueService';
+import { RosterStrikeData } from '../../services/api/LeagueService';
 import { teamService } from '../../services/api/TeamService';
 import { selectUser } from '../../store/slices/authSlice';
 import { League, UpdateLeagueData, DocumentType, LeagueMembership } from '../../types/league';
@@ -39,6 +41,9 @@ export const ManageLeagueScreen: React.FC = () => {
   const [invitingRosterId, setInvitingRosterId] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+
+  // Strike data for the active season
+  const [strikeData, setStrikeData] = useState<Map<string, number>>(new Map());
 
   // All leagues are now roster-based
   const isPrivateLeague = league?.visibility === 'private';
@@ -117,6 +122,9 @@ export const ManageLeagueScreen: React.FC = () => {
       // Verify user is the league operator
       if (user?.id && data.organizerId !== user.id) {
         setError('You do not have permission to manage this league');
+      } else {
+        // Load strike data for the active season
+        loadStrikes(data);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load league';
@@ -135,6 +143,32 @@ export const ManageLeagueScreen: React.FC = () => {
       console.error('Failed to load members:', err);
     } finally {
       setIsLoadingMembers(false);
+    }
+  };
+
+  const loadStrikes = async (leagueData?: League | null) => {
+    try {
+      const target = leagueData ?? league;
+      if (!target) return;
+
+      // Find the active season for this league
+      const seasons = (target as any).seasons as Array<{ id: string; isActive: boolean }> | undefined;
+      const activeSeason = seasons?.find((s) => s.isActive);
+      if (!activeSeason) return;
+
+      const strikes = await leagueService.getSeasonStrikes(
+        leagueId,
+        activeSeason.id,
+        user?.id
+      );
+
+      const map = new Map<string, number>();
+      for (const s of strikes) {
+        map.set(s.rosterId, s.strikeCount);
+      }
+      setStrikeData(map);
+    } catch (err) {
+      console.error('Failed to load strike data:', err);
     }
   };
 
@@ -322,6 +356,14 @@ export const ManageLeagueScreen: React.FC = () => {
                     <Text style={styles.teamStats}>
                       {membership.matchesPlayed} matches • {membership.points} points
                     </Text>
+                    <StrikeIndicator
+                      strikeCount={strikeData.get(membership.memberId) ?? 0}
+                      rosterName={(membership as any).team?.name || 'Unknown Roster'}
+                      onRemoveRoster={() => handleRemoveTeam(
+                        membership.teamId,
+                        (membership as any).team?.name || 'this roster'
+                      )}
+                    />
                   </View>
                   <TouchableOpacity
                     style={styles.removeButton}

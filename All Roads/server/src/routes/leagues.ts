@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { NotificationService } from '../services/NotificationService';
 import { ScheduleGeneratorService } from '../services/ScheduleGeneratorService';
+import { optionalAuthMiddleware } from '../middleware/auth';
+import { requirePlan } from '../middleware/subscription';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -224,7 +226,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/leagues - Create new league
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Request, res: Response) => {
   try {
     const {
       name,
@@ -247,7 +249,11 @@ router.post('/', async (req: Request, res: Response) => {
       preferredTimeWindowEnd,
       seasonGameCount,
       rosterIds,
-      trackStandings
+      trackStandings,
+      leagueFormat,
+      playoffTeamCount,
+      eliminationFormat,
+      gameFrequency,
     } = req.body;
 
     // Validate required fields
@@ -339,7 +345,11 @@ router.post('/', async (req: Request, res: Response) => {
         ...(preferredTimeWindowStart && { preferredTimeWindowStart }),
         ...(preferredTimeWindowEnd && { preferredTimeWindowEnd }),
         ...(seasonGameCount !== undefined && seasonGameCount !== null && { seasonGameCount }),
-        ...(trackStandings !== undefined && { trackStandings })
+        ...(trackStandings !== undefined && { trackStandings }),
+        ...(leagueFormat && { leagueFormat }),
+        ...(playoffTeamCount !== undefined && playoffTeamCount !== null && { playoffTeamCount }),
+        ...(eliminationFormat && { eliminationFormat }),
+        ...(gameFrequency && { gameFrequency }),
       },
       include: {
         organizer: {
@@ -408,7 +418,11 @@ router.put('/:id', async (req: Request, res: Response) => {
       trackStandings,
       seasonLength,
       scheduleFrequency,
-      autoGenerateMatchups
+      autoGenerateMatchups,
+      leagueFormat,
+      playoffTeamCount,
+      eliminationFormat,
+      gameFrequency,
     } = req.body;
 
     // Check if league exists and user is operator
@@ -470,6 +484,10 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(seasonLength !== undefined && { seasonLength }),
         ...(scheduleFrequency !== undefined && { scheduleFrequency }),
         ...(autoGenerateMatchups !== undefined && { autoGenerateMatchups }),
+        ...(leagueFormat !== undefined && { leagueFormat }),
+        ...(playoffTeamCount !== undefined && { playoffTeamCount }),
+        ...(eliminationFormat !== undefined && { eliminationFormat }),
+        ...(gameFrequency !== undefined && { gameFrequency }),
       },
       include: {
         organizer: {
@@ -2144,5 +2162,166 @@ router.post('/:id/generate-schedule', async (req: Request, res: Response) => {
     console.error('Error generating schedule:', error);
     const msg = error instanceof Error ? error.message : 'Failed to generate schedule';
     res.status(500).json({ error: msg });
+  }
+});
+
+// GET /api/leagues/:leagueId/seasons/:seasonId/strikes — Strike counts per roster for a season
+router.get('/:leagueId/seasons/:seasonId/strikes', async (req: Request, res: Response) => {
+  try {
+    const { leagueId, seasonId } = req.params;
+    const { userId } = req.query;
+
+    // Verify league exists and caller is the commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, organizerId: true },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    if (userId && league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can view strike data' });
+    }
+
+    // Verify season belongs to this league
+    const season = await prisma.season.findFirst({
+      where: { id: seasonId, leagueId },
+    });
+
+    if (!season) {
+      return res.status(404).json({ error: 'Season not found for this league' });
+    }
+
+    // Get the latest strike record per roster (highest count = current total)
+    const strikes = await prisma.rosterStrike.findMany({
+      where: { seasonId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        roster: {
+          select: { id: true, name: true, imageUrl: true },
+        },
+      },
+    });
+
+    // Aggregate: take the max count per roster
+    const rosterStrikeMap = new Map<string, { rosterId: string; rosterName: string; rosterImageUrl: string | null; strikeCount: number; strikes: typeof strikes }>();
+
+    for (const strike of strikes) {
+      const existing = rosterStrikeMap.get(strike.rosterId);
+      if (!existing || strike.count > existing.strikeCount) {
+        rosterStrikeMap.set(strike.rosterId, {
+          rosterId: strike.rosterId,
+          rosterName: strike.roster.name,
+          rosterImageUrl: strike.roster.imageUrl,
+          strikeCount: strike.count,
+          strikes: [],
+        });
+      }
+      rosterStrikeMap.get(strike.rosterId)!.strikes.push(strike);
+    }
+
+    const result = Array.from(rosterStrikeMap.values()).sort(
+      (a, b) => b.strikeCount - a.strikeCount,
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching strikes:', error);
+    res.status(500).json({ error: 'Failed to fetch strike data' });
+  }
+});
+
+// DELETE /api/leagues/:leagueId/memberships/:membershipId — Remove a roster from a league (commissioner only)
+router.delete('/:leagueId/memberships/:membershipId', async (req: Request, res: Response) => {
+  try {
+    const { leagueId, membershipId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required field: userId' });
+    }
+
+    // Verify league exists and caller is the commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, organizerId: true, name: true },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can remove rosters' });
+    }
+
+    // Find the membership
+    const membership = await prisma.leagueMembership.findFirst({
+      where: { id: membershipId, leagueId },
+      include: {
+        team: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!membership) {
+      return res.status(404).json({ error: 'Membership not found' });
+    }
+
+    // Remove the membership
+    await prisma.leagueMembership.delete({
+      where: { id: membershipId },
+    });
+
+    res.json({
+      message: `${membership.team?.name ?? 'Roster'} has been removed from ${league.name}`,
+      removedMembershipId: membershipId,
+      rosterId: membership.memberId,
+    });
+  } catch (error) {
+    console.error('Error removing roster from league:', error);
+    res.status(500).json({ error: 'Failed to remove roster from league' });
+  }
+});
+
+// GET /api/leagues/:id/ledger - Get league financial ledger for a season
+router.get('/:id/ledger', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { seasonId } = req.query;
+
+    if (!seasonId || typeof seasonId !== 'string') {
+      return res.status(400).json({ error: 'Missing required query parameter: seasonId' });
+    }
+
+    // Verify league exists
+    const league = await prisma.league.findUnique({
+      where: { id },
+      select: { id: true, organizerId: true },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    // Verify season exists and belongs to this league
+    const season = await prisma.season.findFirst({
+      where: { id: seasonId as string, leagueId: id },
+      select: { id: true },
+    });
+
+    if (!season) {
+      return res.status(404).json({ error: 'Season not found for this league' });
+    }
+
+    // Fetch all transactions ordered by date ascending via service
+    const { getLeagueLedger } = require('../services/league-ledger');
+    const transactions = await getLeagueLedger(id, seasonId as string);
+
+    res.json({ transactions });
+  } catch (error) {
+    console.error('Error fetching league ledger:', error);
+    res.status(500).json({ error: 'Failed to fetch league ledger' });
   }
 });

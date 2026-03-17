@@ -17,6 +17,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { EventCard } from '../../components/ui/EventCard';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
+import { CancellationPolicyDisplay } from '../../components/facilities/CancellationPolicyDisplay';
 import { facilityService } from '../../services/api/FacilityService';
 import {
   setSelectedFacility,
@@ -415,6 +416,19 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
           <Text style={styles.bookButtonText}>Book a Court</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Cancellation Policy */}
+      {selectedFacility.noticeWindowHours != null &&
+        selectedFacility.teamPenaltyPct != null &&
+        selectedFacility.penaltyDestination != null && (
+          <View style={styles.section}>
+            <CancellationPolicyDisplay
+              noticeWindowHours={selectedFacility.noticeWindowHours}
+              teamPenaltyPct={selectedFacility.teamPenaltyPct}
+              penaltyDestination={selectedFacility.penaltyDestination}
+            />
+          </View>
+        )}
 
       {/* Access Instructions */}
       {selectedFacility.accessInstructions && (

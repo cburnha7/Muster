@@ -6,3 +6,5 @@ export { BlockTimeSlotModal } from './BlockTimeSlotModal';
 export { CourtListManager } from './CourtListManager';
 export { EditCourtModal } from './EditCourtModal';
 export { MapImageUploader } from './MapImageUploader';
+export { CancellationPolicyDisplay } from './CancellationPolicyDisplay';
+export type { CancellationPolicyDisplayProps } from './CancellationPolicyDisplay';

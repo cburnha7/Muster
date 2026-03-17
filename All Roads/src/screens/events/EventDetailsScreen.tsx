@@ -159,7 +159,7 @@ export function EventDetailsScreen(): JSX.Element {
 
   // Handle booking
   const handleBookEvent = async () => {
-    loggingService.logButton('Join Up', 'EventDetailsScreen', { eventId: event?.id });
+    loggingService.logButton('Join', 'EventDetailsScreen', { eventId: event?.id });
     console.log('≡ƒÄ» handleBookEvent called');
     console.log('≡ƒôï Event:', event?.id, event?.title);
     console.log('≡ƒæñ Current user:', currentUser?.id, currentUser?.email);
@@ -177,7 +177,7 @@ export function EventDetailsScreen(): JSX.Element {
     
     if (!validationResult.canBook) {
       console.log('Γ¥î Cannot book:', validationResult.reason);
-      Alert.alert('Cannot Join Up', validationResult.reason || 'Booking not allowed');
+      Alert.alert('Cannot Join', validationResult.reason || 'Booking not allowed');
       return;
     }
 
@@ -302,7 +302,7 @@ export function EventDetailsScreen(): JSX.Element {
     if (!event || !currentUser) {
       return;
     }
-    loggingService.logButton('Step Out', 'EventDetailsScreen', { eventId: event.id });
+    loggingService.logButton('Leave', 'EventDetailsScreen', { eventId: event.id });
 
     const userBooking = participants.find(p => p.userId === currentUser.id);
     
@@ -1067,15 +1067,15 @@ export function EventDetailsScreen(): JSX.Element {
           />
         ) : isUserBooked ? (
           <FormButton
-            title="I'm Out"
-            variant="outline"
+            title="Leave"
+            variant="muted"
             onPress={handleCancelBooking}
             loading={isBooking}
             disabled={isBooking}
           />
         ) : canBook ? (
           <FormButton
-            title={`Join Up${event.price > 0 ? ` - $${event.price}` : ''}`}
+            title={`Join${event.price > 0 ? ` - ${event.price}` : ''}`}
             onPress={handleBookEvent}
             loading={isBooking}
             disabled={isBooking}

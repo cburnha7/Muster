@@ -30,6 +30,8 @@ import type { TimeSlot } from '../../components/facilities/TimeSlotGrid';
 import type { CartSlot } from '../../components/facilities/BulkBookingConfirmationModal';
 import type { ConflictSlot } from '../../components/facilities/BookingConflictModal';
 import { useAuth } from '../../context/AuthContext';
+import { RecurringBookingToggle, RecurringConfig } from '../../components/bookings/RecurringBookingToggle';
+import { RecurringConflictsModal } from '../../components/bookings/RecurringConflictsModal';
 
 type CourtAvailabilityScreenNavigationProp = NativeStackNavigationProp<
   FacilitiesStackParamList,
@@ -60,9 +62,11 @@ export function CourtAvailabilityScreen() {
   const route = useRoute<CourtAvailabilityScreenRouteProp>();
   const { user } = useAuth();
 
-  const { facilityId, facilityName, courtId } = route.params;
+  const { facilityId, facilityName, courtId, eventDate, eventStartTime, returnTo, returnParams } = route.params;
 
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(
+    eventDate || formatDateForCalendar(new Date())
+  );
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
   const [courts, setCourts] = useState<Court[]>([]);
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
@@ -82,6 +86,16 @@ export function CourtAvailabilityScreen() {
   const [conflicts, setConflicts] = useState<ConflictSlot[]>([]);
   const [availableSlotsAfterConflict, setAvailableSlotsAfterConflict] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Recurring booking state
+  const [recurringConfig, setRecurringConfig] = useState<RecurringConfig>({
+    enabled: false,
+    frequency: 'weekly',
+    endDate: null,
+  });
+  const [showRecurringConflicts, setShowRecurringConflicts] = useState(false);
+  const [recurringConflicts, setRecurringConflicts] = useState<any[]>([]);
+  const [recurringAvailableCount, setRecurringAvailableCount] = useState(0);
 
   // Clear cart on unmount
   useEffect(() => {
@@ -255,6 +269,35 @@ export function CourtAvailabilityScreen() {
     }
   };
 
+  /**
+   * After a successful booking, navigate back to the event screen (if returnTo is set)
+   * or to the Profile tab.
+   */
+  const navigateAfterBooking = (rental?: any) => {
+    if (returnTo && rental) {
+      const ts = rental.timeSlot;
+      const bookingParams = {
+        fromReservation: true,
+        facilityId: ts?.court?.facility?.id || facilityId,
+        facilityName: ts?.court?.facility?.name || facilityName,
+        courtId: ts?.court?.id,
+        courtName: ts?.court?.name,
+        courtSportType: ts?.court?.sportType,
+        timeSlotId: ts?.id,
+        reservedDate: ts?.date,
+        reservedStartTime: ts?.startTime,
+        reservedEndTime: ts?.endTime,
+        ...(returnParams || {}),
+      };
+      (navigation as any).navigate('Events', {
+        screen: returnTo,
+        params: bookingParams,
+      });
+    } else {
+      (navigation as any).navigate('Profile', { screen: 'ProfileScreen' });
+    }
+  };
+
   const handleConfirmBulkBooking = async () => {
     if (cartSlots.length === 0 || !user) return;
     setSubmitting(true);
@@ -276,8 +319,8 @@ export function CourtAvailabilityScreen() {
         setShowConfirmation(false);
         setSelectionCart(new Map());
 
-        // Navigate to Profile tab to show the new reservations
-        (navigation as any).navigate('Profile', { screen: 'ProfileScreen' });
+        const data = await response.json();
+        navigateAfterBooking(data.rentals?.[0]);
       } else if (response.status === 409) {
         const data = await response.json();
         setShowConfirmation(false);
@@ -313,6 +356,61 @@ export function CourtAvailabilityScreen() {
       setShowConfirmation(true);
     }, 100);
   };
+
+  // ─── Recurring booking flow ───────────────────────────────────────
+  const handleRecurringBooking = async (skipConflicts = false) => {
+    if (cartSlots.length !== 1 || !user || !selectedCourt || !recurringConfig.endDate) return;
+    setSubmitting(true);
+
+    try {
+      const slot = cartSlots[0]!;
+      // Find the original time slot data to get start/end times
+      const slotData = availabilityData?.slots.find((s) => s.id === slot.slotId);
+      if (!slotData) throw new Error('Slot data not found');
+
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/rentals/recurring`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          courtId: slot.courtId,
+          facilityId: slot.facilityId,
+          slotStartTime: slotData.startTime,
+          slotEndTime: slotData.endTime,
+          frequency: recurringConfig.frequency,
+          startDate: selectedDate,
+          endDate: recurringConfig.endDate.toISOString().split('T')[0],
+          skipConflicts,
+        }),
+      });
+
+      if (response.status === 201) {
+        setShowConfirmation(false);
+        setShowRecurringConflicts(false);
+        setSelectionCart(new Map());
+        setRecurringConfig({ enabled: false, frequency: 'weekly', endDate: null });
+
+        const data = await response.json();
+        navigateAfterBooking(data.rentals?.[0]);
+      } else if (response.status === 409) {
+        const data = await response.json();
+        setShowConfirmation(false);
+        setRecurringConflicts(data.conflicts);
+        setRecurringAvailableCount(data.availableCount);
+        setShowRecurringConflicts(true);
+      } else {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Recurring booking failed');
+      }
+    } catch (error: any) {
+      console.error('Recurring booking error:', error);
+      Alert.alert('Booking Failed', error.message || 'Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const isRecurringReady = recurringConfig.enabled && cartSlots.length === 1 && recurringConfig.endDate !== null;
 
   if (loading) {
     return (
@@ -465,6 +563,25 @@ export function CourtAvailabilityScreen() {
           </View>
         </View>
 
+        {/* Recurring Booking Toggle — shown when exactly 1 slot is selected */}
+        {cartSlots.length === 1 && selectedCourt && (
+          <View style={{ paddingHorizontal: Spacing.lg }}>
+            <RecurringBookingToggle
+              value={recurringConfig}
+              onChange={setRecurringConfig}
+              minEndDate={(() => {
+                const d = new Date(selectedDate + 'T00:00:00Z');
+                if (recurringConfig.frequency === 'weekly') {
+                  d.setUTCDate(d.getUTCDate() + 7);
+                } else {
+                  d.setUTCMonth(d.getUTCMonth() + 1);
+                }
+                return d;
+              })()}
+            />
+          </View>
+        )}
+
         {/* Spacer for footer */}
         {cartSlots.length > 0 && <View style={{ height: 120 }} />}
       </ScrollView>
@@ -485,10 +602,18 @@ export function CourtAvailabilityScreen() {
           </View>
           <TouchableOpacity
             style={styles.bookButton}
-            onPress={() => setShowConfirmation(true)}
+            onPress={() => {
+              if (isRecurringReady) {
+                handleRecurringBooking(false);
+              } else {
+                setShowConfirmation(true);
+              }
+            }}
           >
             <Text style={styles.bookButtonText}>
-              Book {cartSlots.length} Slot{cartSlots.length !== 1 ? 's' : ''}
+              {isRecurringReady
+                ? `Book Recurring ${recurringConfig.frequency === 'weekly' ? 'Weekly' : 'Monthly'}`
+                : `Book ${cartSlots.length} Slot${cartSlots.length !== 1 ? 's' : ''}`}
             </Text>
             <Ionicons name="arrow-forward" size={20} color={colors.chalk} />
           </TouchableOpacity>
@@ -513,6 +638,15 @@ export function CourtAvailabilityScreen() {
         conflicts={conflicts}
         availableCount={availableSlotsAfterConflict.length}
         loading={submitting}
+      />
+
+      {/* Recurring Conflicts Modal */}
+      <RecurringConflictsModal
+        visible={showRecurringConflicts}
+        conflicts={recurringConflicts}
+        availableCount={recurringAvailableCount}
+        onSkipAndConfirm={() => handleRecurringBooking(true)}
+        onCancel={() => setShowRecurringConflicts(false)}
       />
     </View>
   );

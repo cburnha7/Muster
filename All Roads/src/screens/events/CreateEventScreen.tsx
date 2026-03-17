@@ -195,7 +195,6 @@ export function CreateEventScreen(): JSX.Element {
     { label: 'Game', value: EventType.GAME },
     { label: 'Practice', value: EventType.PRACTICE },
     { label: 'Pickup', value: EventType.PICKUP },
-    { label: 'Camp', value: EventType.CAMP },
   ];
 
   const durationOptions: SelectOption[] = [
@@ -643,17 +642,20 @@ export function CreateEventScreen(): JSX.Element {
       newErrors.duration = 'Duration is required';
     }
 
-    if (!formData.maxParticipants) {
-      newErrors.maxParticipants = 'Max participants is required';
-    } else {
-      const maxParticipants = parseInt(formData.maxParticipants);
-      if (isNaN(maxParticipants) || maxParticipants < 1) {
-        newErrors.maxParticipants = 'Must be a valid number greater than 0';
+    if (!isGameEvent) {
+      if (!formData.maxParticipants) {
+        newErrors.maxParticipants = 'Max participants is required';
+      } else {
+        const maxParticipants = parseInt(formData.maxParticipants);
+        if (isNaN(maxParticipants) || maxParticipants < 1) {
+          newErrors.maxParticipants = 'Must be a valid number greater than 0';
+        }
       }
     }
 
     if (!formData.skillLevel) {
-      newErrors.skillLevel = 'Skill level is required';
+      // Skill level validation disabled for now
+      // newErrors.skillLevel = 'Skill level is required';
     }
 
     if (!formData.eventType) {
@@ -1000,6 +1002,31 @@ export function CreateEventScreen(): JSX.Element {
             disabled={isFromReservation}
           />
 
+          {/* Book Court Time — navigate to Grounds search with event context */}
+          {!isFromReservation && (
+            <TouchableOpacity
+              style={styles.bookCourtButton}
+              onPress={() => {
+                const eventDateStr = formData.startDate
+                  ? formatDateForCalendar(formData.startDate)
+                  : undefined;
+                (navigation as any).navigate('Facilities', {
+                  screen: 'FacilitiesList',
+                  params: {
+                    eventDate: eventDateStr,
+                    eventStartTime: formData.startTime || undefined,
+                    returnTo: 'CreateEvent',
+                  },
+                });
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+              <Text style={styles.bookCourtText}>Book Court Time</Text>
+              <Ionicons name="arrow-forward" size={16} color={colors.grass} />
+            </TouchableOpacity>
+          )}
+
           {/* Court Selector - Show after ground is selected */}
           {formData.facilityId && !isFromReservation && user && (
             <CourtSelector
@@ -1192,18 +1219,32 @@ export function CreateEventScreen(): JSX.Element {
             </>
           )}
 
-          <View style={styles.numberRow}>
-            <FormInput
-              label="Max Participants"
-              placeholder="e.g., 10"
-              value={formData.maxParticipants}
-              onChangeText={(value) => handleInputChange('maxParticipants', value)}
-              error={errors.maxParticipants}
-              keyboardType="numeric"
-              containerStyle={styles.numberInput}
-              required
-            />
+          {!isGameEvent && (
+            <View style={styles.numberRow}>
+              <FormInput
+                label="Max Participants"
+                placeholder="e.g., 10"
+                value={formData.maxParticipants}
+                onChangeText={(value) => handleInputChange('maxParticipants', value)}
+                error={errors.maxParticipants}
+                keyboardType="numeric"
+                containerStyle={styles.numberInput}
+                required
+              />
 
+              <FormInput
+                label="Price (USD)"
+                placeholder="0.00"
+                value={formData.price}
+                onChangeText={(value) => handleInputChange('price', value)}
+                error={errors.price}
+                keyboardType="decimal-pad"
+                containerStyle={styles.numberInput}
+              />
+            </View>
+          )}
+
+          {isGameEvent && (
             <FormInput
               label="Price (USD)"
               placeholder="0.00"
@@ -1211,10 +1252,10 @@ export function CreateEventScreen(): JSX.Element {
               onChangeText={(value) => handleInputChange('price', value)}
               error={errors.price}
               keyboardType="decimal-pad"
-              containerStyle={styles.numberInput}
             />
-          </View>
+          )}
 
+          {/* Skill Level - hidden for now
           <FormSelect
             label="Skill Level"
             placeholder="Select skill level"
@@ -1224,6 +1265,7 @@ export function CreateEventScreen(): JSX.Element {
             error={errors.skillLevel}
             required
           />
+          */}
 
           <FormInput
             label="Equipment Needed"
@@ -1241,15 +1283,17 @@ export function CreateEventScreen(): JSX.Element {
             numberOfLines={3}
           />
 
-          {/* Minimum Player Count */}
-          <FormInput
-            label="Minimum Player Count"
-            placeholder="e.g., 8"
-            value={formData.minimumPlayerCount}
-            onChangeText={(value) => handleInputChange('minimumPlayerCount', value)}
-            error={errors.minimumPlayerCount}
-            keyboardType="numeric"
-          />
+          {/* Minimum Player Count - hidden for games */}
+          {!isGameEvent && (
+            <FormInput
+              label="Minimum Player Count"
+              placeholder="e.g., 8"
+              value={formData.minimumPlayerCount}
+              onChangeText={(value) => handleInputChange('minimumPlayerCount', value)}
+              error={errors.minimumPlayerCount}
+              keyboardType="numeric"
+            />
+          )}
 
           {/* Privacy & Restrictions Section */}
           <View style={styles.privacySection}>
@@ -1287,7 +1331,7 @@ export function CreateEventScreen(): JSX.Element {
             )}
           </View>
 
-          {/* Roster Selection - Game: Home/Away, Other: Multi-select invite */}
+          {/* Roster Selection - Game: Home/Away, Tournament: Multi-select rosters, Other: Invite rosters + people */}
           {isGameEvent ? (
             teamOptions.length > 0 ? (
               <View style={styles.gameRosterSection}>
@@ -1347,51 +1391,55 @@ export function CreateEventScreen(): JSX.Element {
             ) : null
           )}
 
-          {/* Add People */}
-          <View style={styles.restrictionCard}>
-            <Text style={styles.restrictionLabel}>Add People</Text>
-            <Text style={styles.restrictionHint}>
-              Search by name or email to invite individuals
-            </Text>
-            <AddMemberSearch
-              onAddMember={handleAddInvitedUser}
-              existingMemberIds={[
-                ...invitedUsers.map(u => u.id),
-                ...(user?.id ? [user.id] : []),
-              ]}
-            />
-          </View>
+          {/* Add People - hidden for games */}
+          {!isGameEvent && (
+            <>
+              <View style={styles.restrictionCard}>
+                <Text style={styles.restrictionLabel}>Add People</Text>
+                <Text style={styles.restrictionHint}>
+                  Search by name or email to invite individuals
+                </Text>
+                <AddMemberSearch
+                  onAddMember={handleAddInvitedUser}
+                  existingMemberIds={[
+                    ...invitedUsers.map(u => u.id),
+                    ...(user?.id ? [user.id] : []),
+                  ]}
+                />
+              </View>
 
-          {/* Invited List */}
-          {invitedUsers.length > 0 && (
-            <View style={styles.restrictionCard}>
-              <Text style={styles.restrictionLabel}>
-                Invited ({invitedUsers.length})
-              </Text>
-              {invitedUsers.map(invitedUser => (
-                <View key={invitedUser.id} style={styles.invitedUserRow}>
-                  <View style={styles.invitedUserInfo}>
-                    <View style={styles.invitedUserAvatar}>
-                      <Text style={styles.invitedUserAvatarText}>
-                        {invitedUser.firstName?.[0] || invitedUser.email?.[0]?.toUpperCase() || '?'}
-                      </Text>
+              {/* Invited List */}
+              {invitedUsers.length > 0 && (
+                <View style={styles.restrictionCard}>
+                  <Text style={styles.restrictionLabel}>
+                    Invited ({invitedUsers.length})
+                  </Text>
+                  {invitedUsers.map(invitedUser => (
+                    <View key={invitedUser.id} style={styles.invitedUserRow}>
+                      <View style={styles.invitedUserInfo}>
+                        <View style={styles.invitedUserAvatar}>
+                          <Text style={styles.invitedUserAvatarText}>
+                            {invitedUser.firstName?.[0] || invitedUser.email?.[0]?.toUpperCase() || '?'}
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={styles.invitedUserName}>
+                            {invitedUser.firstName} {invitedUser.lastName}
+                          </Text>
+                          <Text style={styles.invitedUserEmail}>{invitedUser.email}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => handleRemoveInvitedUser(invitedUser.id)}
+                        style={styles.removeInvitedButton}
+                      >
+                        <Ionicons name="close-circle" size={22} color={colors.track} />
+                      </TouchableOpacity>
                     </View>
-                    <View>
-                      <Text style={styles.invitedUserName}>
-                        {invitedUser.firstName} {invitedUser.lastName}
-                      </Text>
-                      <Text style={styles.invitedUserEmail}>{invitedUser.email}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveInvitedUser(invitedUser.id)}
-                    style={styles.removeInvitedButton}
-                  >
-                    <Ionicons name="close-circle" size={22} color={colors.track} />
-                  </TouchableOpacity>
+                  ))}
                 </View>
-              ))}
-            </View>
+              )}
+            </>
           )}
 
           <FormButton

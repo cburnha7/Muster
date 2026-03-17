@@ -100,6 +100,10 @@ export function ManageGroundScreen() {
     });
   };
 
+  const handleCancellationPolicy = () => {
+    navigation.navigate('CancellationPolicy', { facilityId });
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -159,6 +163,17 @@ export function ManageGroundScreen() {
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Edit Facility Map</Text>
               <Text style={styles.actionDescription}>Upload or update facility layout map</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={handleCancellationPolicy}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="shield-checkmark-outline" size={24} color={colors.track} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Cancellation Policy</Text>
+              <Text style={styles.actionDescription}>Required before your ground can accept bookings</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.soft} />
           </TouchableOpacity>
