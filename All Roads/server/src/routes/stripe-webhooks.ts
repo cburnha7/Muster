@@ -8,11 +8,20 @@
 import { Router, Request, Response } from 'express';
 import Stripe from 'stripe';
 import { prisma } from '../index';
+import { getStripe } from '../services/stripe-connect';
 
 const router = Router();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
+// Use the shared lazy-initialised Stripe client so the server can boot
+// even when STRIPE_SECRET_KEY is not set.
+const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    const instance = getStripe();
+    if (!instance) {
+      throw new Error('Stripe is not configured — set STRIPE_SECRET_KEY env var');
+    }
+    return (instance as any)[prop];
+  },
 });
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';

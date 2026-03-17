@@ -11,8 +11,36 @@ import Stripe from 'stripe';
 // Shared Stripe client
 // ---------------------------------------------------------------------------
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
+let _stripe: Stripe | null = null;
+
+/**
+ * Lazy-initialised Stripe client. Returns null when STRIPE_SECRET_KEY is not
+ * set so the server can still boot (non-payment routes keep working).
+ */
+export function getStripe(): Stripe | null {
+  if (_stripe) return _stripe;
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    console.warn('⚠️  Stripe client unavailable — STRIPE_SECRET_KEY not set');
+    return null;
+  }
+  _stripe = new Stripe(key, { apiVersion: '2024-12-18.acacia' });
+  return _stripe;
+}
+
+/**
+ * Backward-compatible export — code that imports `stripe` directly will get a
+ * proxy that lazily resolves the real client on first property access. This
+ * avoids the top-level crash while keeping existing call-sites working.
+ */
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    const instance = getStripe();
+    if (!instance) {
+      throw new Error('Stripe is not configured — set STRIPE_SECRET_KEY env var');
+    }
+    return (instance as any)[prop];
+  },
 });
 
 // ---------------------------------------------------------------------------
