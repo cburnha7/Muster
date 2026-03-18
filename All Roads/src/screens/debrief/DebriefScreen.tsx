@@ -250,8 +250,8 @@ export function DebriefScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.chalk },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalk },
+  container: { flex: 1, backgroundColor: colors.chalkWarm },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalkWarm },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.lg,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderTopWidth: 1,
     borderTopColor: '#FFFFFF',
   },

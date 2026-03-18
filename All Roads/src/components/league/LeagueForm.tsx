@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FormInput } from '../forms/FormInput';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
+import { TimePickerInput } from '../forms/TimePickerInput';
 import { CreateLeagueData, UpdateLeagueData, SportType, SkillLevel, PointsConfig, Team } from '../../types';
 import { teamService } from '../../services/api/TeamService';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
@@ -864,19 +865,17 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           </View>
 
           {/* Time Range */}
-          <FormInput
+          <TimePickerInput
             label="Time Range Start"
-            placeholder="HH:MM (e.g. 09:00)"
             value={timeWindowStart}
-            onChangeText={setTimeWindowStart}
+            onChange={setTimeWindowStart}
             error={errors.timeWindowStart}
           />
 
-          <FormInput
+          <TimePickerInput
             label="Time Range End"
-            placeholder="HH:MM (e.g. 15:00)"
             value={timeWindowEnd}
-            onChangeText={setTimeWindowEnd}
+            onChange={setTimeWindowEnd}
             error={errors.timeWindowEnd}
           />
 

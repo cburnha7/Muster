@@ -260,13 +260,13 @@ export const LeaguesBrowserScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -295,11 +295,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 18,
+    fontSize: 24,
     color: colors.ink,
   },
   countBadge: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.inkFaint,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   optionButtonActive: {
     backgroundColor: colors.grass,

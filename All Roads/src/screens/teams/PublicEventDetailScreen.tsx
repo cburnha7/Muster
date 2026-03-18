@@ -212,7 +212,7 @@ export const PublicEventDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   centered: {
     flex: 1,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     marginVertical: Spacing.sm,
   },
   statsRow: {
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.md,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderTopWidth: 1,
     borderTopColor: colors.chalk,
   },

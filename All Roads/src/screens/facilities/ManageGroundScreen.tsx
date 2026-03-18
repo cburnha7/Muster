@@ -216,7 +216,7 @@ export function ManageGroundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,

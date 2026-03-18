@@ -17,6 +17,7 @@ import { EventCard } from '../../components/ui/EventCard';
 import { FacilityCard } from '../../components/ui/FacilityCard';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { colors } from '../../theme';
 
 interface DiscoveryScreenProps {
   navigation: any;
@@ -327,13 +328,13 @@ export function DiscoveryScreen({ navigation }: DiscoveryScreenProps): JSX.Eleme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   loadingText: {
     marginTop: 16,

@@ -910,7 +910,7 @@ export function CreateFacilityScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1123,7 +1123,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1149,7 +1149,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   duplicateCard: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,

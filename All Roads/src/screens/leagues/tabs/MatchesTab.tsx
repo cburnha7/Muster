@@ -286,7 +286,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalkWarm,
   },
   controls: {
     paddingHorizontal: 16,

@@ -15,7 +15,8 @@ export const colors = {
   trackLight: '#E88585', // error hover
 
   // ── Neutrals ──────────────────────────────────
-  chalk:      '#F7F4EE', // light background
+  chalk:      '#F7F4EE', // light background (legacy)
+  chalkWarm:  '#EEEBE3', // app background — new global default
   ink:        '#1C2320', // dark background / primary text
   inkMid:     '#2A3430', // card backgrounds (dark mode)
   inkSoft:    '#3A4440', // secondary dark surface

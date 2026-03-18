@@ -352,7 +352,7 @@ export function DependentFormScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   flex: {
     flex: 1,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   loadingContent: {
     flex: 1,

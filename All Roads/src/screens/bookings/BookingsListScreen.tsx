@@ -420,7 +420,7 @@ export function BookingsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   filterTabs: {
     flexDirection: 'row',

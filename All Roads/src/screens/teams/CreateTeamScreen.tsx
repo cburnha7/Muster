@@ -349,7 +349,7 @@ export function CreateTeamScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,

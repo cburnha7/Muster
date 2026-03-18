@@ -15,6 +15,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
+import { TimePickerInput } from '../../components/forms/TimePickerInput';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
@@ -475,11 +476,10 @@ export function EditEventScreen(): JSX.Element {
               required
             />
 
-            <FormInput
+            <TimePickerInput
               label="Start Time"
-              placeholder="HH:MM"
               value={formData.startTime}
-              onChangeText={(value) => handleInputChange('startTime', value)}
+              onChange={(value) => handleInputChange('startTime', value)}
               error={errors.startTime}
               containerStyle={styles.timeInput}
               required
@@ -497,11 +497,10 @@ export function EditEventScreen(): JSX.Element {
               required
             />
 
-            <FormInput
+            <TimePickerInput
               label="End Time"
-              placeholder="HH:MM"
               value={formData.endTime}
-              onChangeText={(value) => handleInputChange('endTime', value)}
+              onChange={(value) => handleInputChange('endTime', value)}
               error={errors.endTime}
               containerStyle={styles.timeInput}
               required
@@ -616,7 +615,7 @@ export function EditEventScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,

@@ -463,7 +463,7 @@ export const RegistrationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,

@@ -17,6 +17,7 @@ import { TeamCard } from '../../components/ui/TeamCard';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
+import { colors } from '../../theme';
 
 interface SearchResultsScreenProps {
   route: {
@@ -325,7 +326,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   header: {
     paddingHorizontal: 16,

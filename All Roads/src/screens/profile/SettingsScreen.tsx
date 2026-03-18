@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { userService } from '../../services/api/UserService';
 import { loggingService } from '../../services/LoggingService';
+import { colors } from '../../theme';
 
 export function SettingsScreen(): JSX.Element {
   const navigation = useNavigation();
@@ -190,7 +191,7 @@ export function SettingsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   section: {
     backgroundColor: '#FFFFFF',

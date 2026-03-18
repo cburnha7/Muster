@@ -653,11 +653,11 @@ export function CourtAvailabilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.chalk },
+  container: { flex: 1, backgroundColor: colors.chalkWarm },
   scrollView: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalk },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalkWarm },
   loadingText: { marginTop: Spacing.md, ...TextStyles.body, color: colors.inkFaint },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalk, padding: Spacing.xxl },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalkWarm, padding: Spacing.xxl },
   emptyTitle: { ...TextStyles.h3, color: colors.ink, marginTop: Spacing.lg },
   emptySubtitle: { ...TextStyles.body, color: colors.inkFaint, textAlign: 'center', marginTop: Spacing.sm },
   header: { padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: '#EEE' },
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', borderRadius: 12, padding: Spacing.md,
     marginRight: Spacing.md, borderWidth: 2, borderColor: '#EEE', minWidth: 140,
   },
-  courtCardSelected: { borderColor: colors.grass, backgroundColor: colors.chalk },
+  courtCardSelected: { borderColor: colors.grass, backgroundColor: colors.chalkWarm },
   courtCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
   courtName: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink },
   courtNameSelected: { color: colors.grass },
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: Spacing.lg, borderTopWidth: 1, borderTopColor: '#EEE',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   footerSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   footerStats: { flexDirection: 'row', alignItems: 'center', gap: 6 },

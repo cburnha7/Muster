@@ -196,13 +196,13 @@ export function TeamsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -217,11 +217,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 18,
+    fontSize: 24,
     color: colors.ink,
   },
   countBadge: {

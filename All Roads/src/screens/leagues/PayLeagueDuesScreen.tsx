@@ -219,7 +219,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   centered: {
     flex: 1,

@@ -122,22 +122,22 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   content: {
     paddingBottom: 24,
   },
   profileHeader: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.5)',
     padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
   },
   avatarRow: {
     flexDirection: 'row',
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     alignItems: 'center',
     justifyContent: 'center',
   },

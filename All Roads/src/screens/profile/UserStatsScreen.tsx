@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { userService } from '../../services/api/UserService';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { colors } from '../../theme';
 
 interface UserStats {
   totalBookings: number;
@@ -202,7 +203,7 @@ export function UserStatsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   section: {
     backgroundColor: '#FFFFFF',
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
     minWidth: '45%',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
     borderRadius: 8,
   },
   statValue: {
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
   achievementCard: {
     flexDirection: 'row',
     padding: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
     borderRadius: 8,
   },
   achievementIcon: {

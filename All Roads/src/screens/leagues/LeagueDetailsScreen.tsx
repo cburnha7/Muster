@@ -970,7 +970,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.chalk },
+  container: { flex: 1, backgroundColor: colors.chalkWarm },
   scrollView: { flex: 1 },
   ledgerSection: { paddingHorizontal: 16, paddingBottom: 24 },
   formSection: { backgroundColor: '#FFFFFF', marginBottom: 12 },
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
   },
   sectionTitle: {
-    fontFamily: fonts.semibold, fontSize: 18, color: colors.ink,
+    fontFamily: fonts.heading, fontSize: 24, color: colors.ink,
   },
   sectionSubtext: {
     fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint,
@@ -1156,7 +1156,7 @@ const styles = StyleSheet.create({
   },
   headerStats: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.chalk, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
+    backgroundColor: colors.chalkWarm, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontFamily: fonts.semibold, fontSize: 18, color: colors.ink },

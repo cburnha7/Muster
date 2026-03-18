@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { FormInput } from '../forms/FormInput';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
+import { TimePickerInput } from '../forms/TimePickerInput';
 import { CreateMatchData, Team, Event } from '../../types';
 
 interface MatchFormProps {
@@ -139,12 +140,12 @@ export const MatchForm: React.FC<MatchFormProps> = ({
           error={errors.scheduledDate}
         />
 
-        <FormInput
+        <TimePickerInput
           label="Match Time *"
-          placeholder="HH:MM (24-hour format)"
           value={scheduledTime}
-          onChangeText={setScheduledTime}
+          onChange={setScheduledTime}
           error={errors.scheduledTime}
+          required
         />
       </View>
 

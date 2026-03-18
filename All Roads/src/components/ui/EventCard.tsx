@@ -83,6 +83,34 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
       onPress={() => onPress?.(event)}
       activeOpacity={0.7}
     >
+      {/* Bubble stack — top-right, vertical */}
+      <View style={styles.bubbleStack}>
+        {isHost && (
+          <View style={styles.hostBadge}>
+            <Ionicons name="star" size={10} color="#FFFFFF" />
+            <Text style={styles.hostBadgeText}>Host</Text>
+          </View>
+        )}
+        {isInviteOnly && (
+          <View style={styles.inviteOnlyBadge}>
+            <Ionicons name="lock-closed" size={12} color={colors.court} />
+            <Text style={styles.inviteOnlyText}>Invite Only</Text>
+          </View>
+        )}
+        {event.minPlayerRating != null && event.minPlayerRating > 0 && (
+          <View
+            style={[
+              styles.skillBadge,
+              { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
+            ]}
+          >
+            <Text style={styles.skillText}>
+              {event.minPlayerRating}+ RATING
+            </Text>
+          </View>
+        )}
+      </View>
+
       <View style={styles.header}>
         <View style={styles.sportInfo}>
           <Ionicons
@@ -93,32 +121,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           <Text style={styles.title} numberOfLines={1}>
             {event.title}
           </Text>
-        </View>
-        <View style={styles.headerBadges}>
-          {isHost && (
-            <View style={styles.hostBadge}>
-              <Ionicons name="star" size={10} color="#FFFFFF" />
-              <Text style={styles.hostBadgeText}>Host</Text>
-            </View>
-          )}
-          {isInviteOnly && (
-            <View style={styles.inviteOnlyBadge}>
-              <Ionicons name="lock-closed" size={12} color={colors.court} />
-              <Text style={styles.inviteOnlyText}>Invite Only</Text>
-            </View>
-          )}
-          {event.minPlayerRating != null && event.minPlayerRating > 0 && (
-            <View
-              style={[
-                styles.skillBadge,
-                { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
-              ]}
-            >
-              <Text style={styles.skillText}>
-                {event.minPlayerRating}+ RATING
-              </Text>
-            </View>
-          )}
         </View>
       </View>
 
@@ -223,6 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
+    paddingRight: 90,
     marginVertical: 8,
     marginHorizontal: 16,
     shadowColor: '#000',
@@ -233,6 +236,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    position: 'relative' as const,
+  },
+  bubbleStack: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    alignItems: 'flex-end' as const,
+    gap: 4,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -251,11 +263,6 @@ const styles = StyleSheet.create({
     color: '#333',
     marginLeft: 8,
     flex: 1,
-  },
-  headerBadges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   participantsTracker: {
     flexDirection: 'row',

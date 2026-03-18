@@ -29,7 +29,7 @@ import { setSelectedEvent, updateEventParticipants, removeEvent } from '../../st
 import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 import { loggingService } from '../../services/LoggingService';import {
   Event,
   SportType,
@@ -1204,7 +1204,7 @@ export function EventDetailsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -1213,10 +1213,16 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    marginHorizontal: 16,
+    marginTop: 12,
   },
   titleRow: {
     flexDirection: 'row',
@@ -1245,11 +1251,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   leagueSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
     marginTop: 12,
+    marginHorizontal: 16,
     padding: 16,
     borderLeftWidth: 4,
     borderLeftColor: colors.court,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
   },
   leagueBadge: {
     flexDirection: 'row',
@@ -1326,14 +1339,21 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
     marginTop: 12,
+    marginHorizontal: 16,
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.ink,
     marginBottom: 12,
   },
   description: {

@@ -19,6 +19,7 @@ import { FormSelect } from '../../components/forms/FormSelect';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { loggingService } from '../../services/LoggingService';import { validateEmail, validatePhoneNumber } from '../../utils/validation';
+import { colors } from '../../theme';
 
 const SPORT_OPTIONS = [
   { label: 'Basketball', value: 'basketball' },
@@ -331,7 +332,7 @@ export function EditProfileScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   content: {
     padding: 16,

@@ -228,7 +228,7 @@ export function VotePlayersScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,

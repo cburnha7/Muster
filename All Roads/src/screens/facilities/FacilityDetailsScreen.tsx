@@ -24,7 +24,7 @@ import {
   removeFacility,
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 import { Event, SportType, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 
@@ -512,7 +512,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   content: {
     paddingBottom: Spacing.lg,
@@ -526,10 +526,16 @@ const styles = StyleSheet.create({
     height: 250,
   },
   header: {
-    backgroundColor: colors.chalk,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
     padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.soft,
+    marginHorizontal: 16,
+    marginTop: 12,
   },
   headerTop: {
     flexDirection: 'row',
@@ -582,13 +588,20 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   section: {
-    backgroundColor: colors.chalk,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
     padding: Spacing.lg,
     marginTop: Spacing.sm,
+    marginHorizontal: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontFamily: fonts.heading,
+    fontSize: 24,
     color: colors.ink,
     marginBottom: Spacing.md,
   },
@@ -781,7 +794,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '95%',
     height: '90%',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -792,7 +805,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.soft,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   modalTitle: {
     fontSize: 18,

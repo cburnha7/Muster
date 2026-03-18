@@ -170,7 +170,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalkWarm,
   },
   controls: {
     flexDirection: 'row',

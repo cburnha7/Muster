@@ -832,7 +832,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1088,7 +1088,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
@@ -1118,7 +1118,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelDeleteButton: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   cancelDeleteButtonText: {
     ...TextStyles.body,

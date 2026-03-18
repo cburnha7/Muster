@@ -287,7 +287,7 @@ export function DependentProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 18,
+    fontSize: 24,
     color: colors.ink,
     marginBottom: Spacing.sm,
   },

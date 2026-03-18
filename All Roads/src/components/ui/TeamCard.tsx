@@ -63,6 +63,26 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
       onPress={() => onPress?.(team)}
       activeOpacity={0.7}
     >
+      {/* Bubble stack — top-right, vertical */}
+      <View style={styles.bubbleStack}>
+        {isManager && (
+          <View style={styles.managerBadge}>
+            <Ionicons name="star" size={10} color="#FFFFFF" />
+            <Text style={styles.managerBadgeText}>Manager</Text>
+          </View>
+        )}
+        <View
+          style={[
+            styles.skillBadge,
+            { backgroundColor: getSkillLevelColor(team.skillLevel) },
+          ]}
+        >
+          <Text style={styles.skillText}>
+            {team.skillLevel.replace('_', ' ').toUpperCase()}
+          </Text>
+        </View>
+      </View>
+
       <View style={styles.header}>
         <View style={styles.teamInfo}>
           {team.logo ? (
@@ -77,31 +97,13 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
             </View>
           )}
           <View style={styles.nameContainer}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>
-                {team.name}
-              </Text>
-              {isManager && (
-                <View style={styles.managerBadge}>
-                  <Ionicons name="star" size={10} color="#FFFFFF" />
-                  <Text style={styles.managerBadgeText}>Manager</Text>
-                </View>
-              )}
-            </View>
+            <Text style={styles.name} numberOfLines={1}>
+              {team.name}
+            </Text>
             <Text style={styles.captain}>
               Manager: {team.captain?.firstName} {team.captain?.lastName}
             </Text>
           </View>
-        </View>
-        <View
-          style={[
-            styles.skillBadge,
-            { backgroundColor: getSkillLevelColor(team.skillLevel) },
-          ]}
-        >
-          <Text style={styles.skillText}>
-            {team.skillLevel.replace('_', ' ').toUpperCase()}
-          </Text>
         </View>
       </View>
 
@@ -188,6 +190,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
+    paddingRight: 90,
     marginVertical: 8,
     marginHorizontal: 16,
     shadowColor: '#000',
@@ -198,6 +201,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    position: 'relative' as const,
+  },
+  bubbleStack: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    alignItems: 'flex-end' as const,
+    gap: 4,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -226,11 +238,6 @@ const styles = StyleSheet.create({
   nameContainer: {
     marginLeft: 12,
     flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   name: {
     fontSize: 18,

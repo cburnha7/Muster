@@ -20,6 +20,7 @@ import {
   getAuthErrorMessage 
 } from '../../services/auth/authUtils';
 import { loggingService } from '../../services/LoggingService';
+import { colors } from '../../theme';
 
 export interface RegisterScreenProps {
   onNavigateToLogin: () => void;
@@ -379,7 +380,7 @@ export function RegisterScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.chalkWarm,
   },
   scrollContent: {
     flexGrow: 1,

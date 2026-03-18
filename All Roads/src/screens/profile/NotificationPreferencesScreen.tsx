@@ -13,6 +13,7 @@ import { NotificationPreferences } from '../../types';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { colors } from '../../theme';
 
 export function NotificationPreferencesScreen(): JSX.Element {
   const [loading, setLoading] = useState(true);
@@ -181,7 +182,7 @@ export function NotificationPreferencesScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   content: {
     padding: 16,

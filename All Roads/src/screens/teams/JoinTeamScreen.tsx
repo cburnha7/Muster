@@ -17,6 +17,7 @@ import { TeamCard } from '../../components/ui/TeamCard';
 import { teamService } from '../../services/api/TeamService';
 import { joinTeam } from '../../store/slices/teamsSlice';
 import { Team } from '../../types';
+import { colors } from '../../theme';
 
 interface JoinTeamScreenProps {
   route: {
@@ -251,7 +252,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   content: {
     flex: 1,

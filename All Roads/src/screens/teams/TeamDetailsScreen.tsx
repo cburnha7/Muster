@@ -40,7 +40,7 @@ import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { selectUser } from '../../store/slices/authSlice';
 import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, Event } from '../../types';
 import { League } from '../../types/league';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
 import { loggingService } from '../../services/LoggingService';
 interface TeamDetailsScreenProps {
@@ -856,7 +856,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -869,8 +869,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontFamily: fonts.heading,
+    fontSize: 24,
     color: colors.ink,
     marginBottom: 8,
   },
@@ -1193,7 +1193,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderRadius: 12,
     paddingVertical: 12,
   },

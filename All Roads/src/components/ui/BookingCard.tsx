@@ -55,18 +55,22 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       activeOpacity={0.7}
       disabled={!onPress}
     >
+      {/* Bubble stack — top-right, vertical */}
+      {isLive && (
+        <View style={styles.bubbleStack}>
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>LIVE</Text>
+          </View>
+        </View>
+      )}
+
       {/* Header: title + location */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.eventTitle} numberOfLines={1}>
             {booking.event?.title || 'Event Details'}
           </Text>
-          {isLive && (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
-          )}
         </View>
       </View>
 
@@ -169,6 +173,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
+    paddingRight: 90,
     marginVertical: 8,
     marginHorizontal: 16,
     shadowColor: '#000',
@@ -176,6 +181,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    position: 'relative' as const,
+  },
+  bubbleStack: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    alignItems: 'flex-end' as const,
+    gap: 4,
+    zIndex: 1,
   },
   header: {
     marginBottom: 8,

@@ -11,6 +11,7 @@ import {
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, fonts } from '../../theme';
 
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
@@ -550,7 +551,7 @@ export function BookingDetailsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -559,14 +560,21 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
     marginTop: 12,
+    marginHorizontal: 16,
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.ink,
     marginBottom: 12,
   },
   statusHeader: {

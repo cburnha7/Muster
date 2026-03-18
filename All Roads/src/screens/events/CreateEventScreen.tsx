@@ -19,6 +19,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
+import { TimePickerInput } from '../../components/forms/TimePickerInput';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { CourtSelector } from '../../components/events/CourtSelector';
 import { TimeSlotPicker } from '../../components/events/TimeSlotPicker';
@@ -1160,11 +1161,10 @@ export function CreateEventScreen(): JSX.Element {
               {!selectedCourt && !isFromReservation && (
                 <View style={styles.dateTimeRow}>
                   <View style={styles.timeInput}>
-                    <FormInput
+                    <TimePickerInput
                       label="Start Time"
-                      placeholder="HH:MM (e.g., 14:30)"
                       value={formData.startTime}
-                      onChangeText={(value) => handleInputChange('startTime', value)}
+                      onChange={(value) => handleInputChange('startTime', value)}
                       error={errors.startTime}
                       containerStyle={styles.timeInputInner}
                       required
@@ -1464,7 +1464,7 @@ export function CreateEventScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   scrollView: {
     flex: 1,
@@ -1511,7 +1511,7 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   disabledField: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     opacity: 0.7,
   },
   disabledText: {
@@ -1718,7 +1718,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderWidth: 1,
     borderColor: colors.inkFaint,
     justifyContent: 'center',
@@ -1869,7 +1869,7 @@ const styles = StyleSheet.create({
   calendarLegend: {
     marginTop: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderRadius: 8,
   },
   legendItem: {

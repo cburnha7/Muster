@@ -402,13 +402,13 @@ export function FacilitiesListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.chalkWarm,
     borderWidth: 1,
     borderColor: colors.inkFaint,
   },
