@@ -127,6 +127,12 @@ export function EventDetailsScreen(): JSX.Element {
   // Check if event is in the past
   const isPastEvent = event && new Date(event.endTime) < new Date();
 
+  // Check if event is currently live (started but not ended)
+  const isLive = event && new Date(event.startTime) <= new Date() && new Date(event.endTime) > new Date();
+
+  // Only upcoming events allow edit/delete/join/leave actions
+  const isUpcoming = event && !isPastEvent && !isLive && event.status !== EventStatus.CANCELLED;
+
   // Check if user is already booked
   const isUserBooked = participants.some(
     participant => participant.userId === currentUser?.id
@@ -632,7 +638,7 @@ export function EventDetailsScreen(): JSX.Element {
         showBack={true}
         onBackPress={() => (navigation as any).navigate('Home', { screen: 'HomeScreen' })}
         rightComponent={
-          isOrganizer ? (
+          isUpcoming && isOrganizer ? (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TouchableOpacity
                 onPress={handleEditEvent}
@@ -1073,9 +1079,21 @@ export function EventDetailsScreen(): JSX.Element {
             disabled={true}
             onPress={() => {}}
           />
+        ) : isPastEvent ? (
+          <FormButton
+            title="Event Ended"
+            disabled={true}
+            onPress={() => {}}
+          />
+        ) : isLive ? (
+          <FormButton
+            title="In Progress"
+            disabled={true}
+            onPress={() => {}}
+          />
         ) : isUserBooked ? (
           <FormButton
-            title="Leave"
+            title="Step Out"
             variant="muted"
             onPress={handleCancelBooking}
             loading={isBooking}
@@ -1083,7 +1101,7 @@ export function EventDetailsScreen(): JSX.Element {
           />
         ) : canBook ? (
           <FormButton
-            title={`Join${event.price > 0 ? ` - ${event.price}` : ''}`}
+            title={`Join Up${event.price > 0 ? ` - ${event.price}` : ''}`}
             onPress={handleBookEvent}
             loading={isBooking}
             disabled={isBooking}
@@ -1094,7 +1112,7 @@ export function EventDetailsScreen(): JSX.Element {
               isUserBooked ? 'Already Joined' :
               event.status !== EventStatus.ACTIVE ? 'Event Not Available' :
               availableSpots <= 0 ? 'Event Full' :
-              'Cannot Join'
+              'Cannot Join Up'
             }
             disabled={true}
             onPress={() => {}}

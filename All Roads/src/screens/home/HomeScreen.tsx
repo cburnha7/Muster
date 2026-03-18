@@ -298,8 +298,8 @@ export function HomeScreen() {
   }
 
   const scheduleFilters: { key: ScheduleFilter; label: string; count?: number }[] = [
-    { key: 'live', label: 'Live', count: liveBookings.length },
     { key: 'upcoming', label: 'Upcoming' },
+    { key: 'live', label: 'Live', count: liveBookings.length },
     { key: 'past', label: 'Past' },
     { key: 'cancelled', label: 'Cancelled' },
   ];

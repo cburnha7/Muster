@@ -93,8 +93,11 @@ export function ProfileScreen() {
         </View>
       </View>
 
-      {/* Sport Ratings */}
-      {authUser?.id && <SportRatingsSection userId={authUser.id} />}
+      {/* Dependents */}
+      <DependentsSection />
+
+      {/* My Reservations */}
+      {authUser?.id && <MyReservationsSection userId={authUser.id} />}
 
       {/* User Payment Account */}
       {authUser?.id && <UserConnectSection userId={authUser.id} />}
@@ -102,11 +105,19 @@ export function ProfileScreen() {
       {/* Stripe Connect Accounts (entity-level) */}
       {authUser?.id && <ConnectAccountsSection userId={authUser.id} />}
 
-      {/* My Reservations */}
-      {authUser?.id && <MyReservationsSection userId={authUser.id} />}
+      {/* Sport Ratings */}
+      {authUser?.id && <SportRatingsSection userId={authUser.id} />}
 
-      {/* Dependents */}
-      <DependentsSection />
+      {/* Redeem Code */}
+      <TouchableOpacity
+        style={styles.redeemRow}
+        onPress={() => (navigation as any).navigate('RedeemCode')}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="gift-outline" size={20} color={colors.grass} />
+        <Text style={styles.redeemText}>Redeem Code</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+      </TouchableOpacity>
 
       {/* Log Out */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
@@ -209,5 +220,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.track,
     marginLeft: 8,
+  },
+  redeemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  redeemText: {
+    flex: 1,
+    fontFamily: fonts.ui,
+    fontSize: 15,
+    color: colors.ink,
+    marginLeft: 10,
   },
 });

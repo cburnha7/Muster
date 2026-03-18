@@ -343,6 +343,24 @@ export const api = createApi({
       }),
       invalidatesTags: ['Booking', 'Event'],
     }),
+
+    // Promo code endpoints
+    validatePromoCode: builder.mutation<{ valid: boolean; trialDurationDays?: number; error?: string }, { code: string }>({
+      query: (body) => ({
+        url: '/promo-codes/validate',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    redeemPromoCode: builder.mutation<any, { code: string; selectedTier: string }>({
+      query: (body) => ({
+        url: '/promo-codes/redeem',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
 });
 
@@ -384,4 +402,8 @@ export const {
   // Booking hooks
   useGetUserBookingsQuery,
   useCancelBookingMutation,
+
+  // Promo code hooks
+  useValidatePromoCodeMutation,
+  useRedeemPromoCodeMutation,
 } = api;

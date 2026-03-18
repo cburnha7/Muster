@@ -145,6 +145,7 @@ export type ProfileStackParamList = {
   DependentForm: { dependentId?: string };
   DependentProfile: { dependentId: string };
   TransferAccount: { dependentId: string };
+  RedeemCode: undefined;
 };
 
 // Navigation Props Types

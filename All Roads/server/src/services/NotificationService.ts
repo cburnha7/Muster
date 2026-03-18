@@ -844,6 +844,67 @@ export class NotificationService {
   }
 
   /**
+   * Send notification when a user's trial expires in 7 days
+   */
+  static async notifyTrialExpiring7d(
+    userId: string,
+    trialTier: string,
+    expiryDate: Date,
+  ): Promise<void> {
+    try {
+      const notification: NotificationTemplate = {
+        title: 'Trial Expiring Soon',
+        body: `Your ${trialTier} trial expires in 7 days on ${expiryDate.toLocaleDateString()}. Subscribe now to keep your tier.`,
+        data: {
+          type: 'trial_expiring_7d',
+          trialTier,
+          expiryDate: expiryDate.toISOString(),
+        },
+      };
+
+      await NotificationService.queueNotification([userId], notification);
+
+      console.log(
+        `[trial-expiry] Sending 7-day expiry notification for user ${userId} (tier: ${trialTier}, expires: ${expiryDate.toISOString()})`,
+      );
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending trial expiring 7d notification:', error);
+    }
+  }
+
+  /**
+   * Send notification when a user's trial expires in 1 day
+   */
+  static async notifyTrialExpiring1d(
+    userId: string,
+    trialTier: string,
+    expiryDate: Date,
+  ): Promise<void> {
+    try {
+      const notification: NotificationTemplate = {
+        title: 'Trial Expires Tomorrow',
+        body: `Your ${trialTier} trial expires tomorrow on ${expiryDate.toLocaleDateString()}. Subscribe now to keep your tier.`,
+        data: {
+          type: 'trial_expiring_1d',
+          trialTier,
+          expiryDate: expiryDate.toISOString(),
+        },
+      };
+
+      await NotificationService.queueNotification([userId], notification);
+
+      console.log(
+        `[trial-expiry] Sending 1-day expiry notification for user ${userId} (tier: ${trialTier}, expires: ${expiryDate.toISOString()})`,
+      );
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending trial expiring 1d notification:', error);
+    }
+  }
+
+
+  /**
    * Check user notification preferences before sending
    */
   private static async shouldSendNotification(userId: string, notificationType: string): Promise<boolean> {

@@ -14,6 +14,7 @@ import { processExpiredConfirmations } from './away-confirmation';
 import { processEventCutoffs } from './event-cutoff';
 import { processCaptureWindowRenewals } from './capture-window';
 import { processNightlyRatings } from './nightly-ratings';
+import { processTrialExpiry } from './trial-expiry';
 
 /**
  * Initialize all cron jobs
@@ -189,6 +190,34 @@ export function initializeCronJobs() {
       }
     } catch (error: any) {
       console.error('❌ Nightly ratings recalculation job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Trial Expiry Job - Daily at 04:00 UTC
+  cron.schedule('0 4 * * *', async () => {
+    console.log('🔄 Starting trial expiry job');
+
+    try {
+      const metrics = await processTrialExpiry();
+
+      console.log('✅ Trial expiry completed', {
+        usersChecked: metrics.usersChecked,
+        trialsExpired: metrics.trialsExpired,
+        notificationsSent7d: metrics.notificationsSent7d,
+        notificationsSent1d: metrics.notificationsSent1d,
+        duration: `${metrics.duration}ms`,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some users had errors during trial expiry processing', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Trial expiry job failed', { error: error.message });
     }
   }, {
     timezone: 'UTC',

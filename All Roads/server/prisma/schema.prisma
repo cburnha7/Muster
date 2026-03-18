@@ -44,6 +44,12 @@ model User {
   guardianId               String?
   transferNotificationSent Boolean  @default(false)
 
+  // Trial fields
+  trialTier       String?
+  trialExpiry     DateTime?
+  trialNotified7d Boolean  @default(false)
+  trialNotified1d Boolean  @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -70,6 +76,8 @@ model User {
   sportRatings           PlayerSportRating[]
   subscription           Subscription?
   playerDuesPayments     PlayerDuesPayment[]    @relation("PlayerDuesPayments")
+  promoCodesCreated      PromoCode[]            @relation("AdminPromoCodes")
+  redemptions            PromoCodeRedemption[]  @relation("UserRedemptions")
 
   // Self-referential relation for guardian/dependent accounts
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
@@ -1168,4 +1176,32 @@ model PlayerDuesPayment {
   @@index([seasonId])
   @@index([paymentStatus])
   @@map("player_dues_payments")
+}
+
+model PromoCode {
+  id                String   @id @default(uuid())
+  code              String   @unique
+  trialDurationDays Int      @default(30)
+  createdAt         DateTime @default(now())
+  createdByAdminId  String
+
+  createdByAdmin User                  @relation("AdminPromoCodes", fields: [createdByAdminId], references: [id])
+  redemptions    PromoCodeRedemption[]
+
+  @@map("promo_codes")
+}
+
+model PromoCodeRedemption {
+  id           String   @id @default(uuid())
+  userId       String
+  promoCodeId  String
+  selectedTier String
+  redeemedAt   DateTime @default(now())
+
+  user      User      @relation("UserRedemptions", fields: [userId], references: [id])
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+
+  @@index([userId])
+  @@index([promoCodeId])
+  @@map("promo_code_redemptions")
 }
