@@ -423,7 +423,29 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       } as never);
     } catch (err: any) {
       console.error('❌ Delete error:', err);
-      Alert.alert('Error', err.message || 'Failed to delete ground');
+      setShowDeleteModal(false);
+      const details = err.details || {};
+      if (details.rentals?.length) {
+        const lines = details.rentals.map((r: any) => {
+          const date = r.date ? new Date(r.date).toLocaleDateString() : 'Unknown date';
+          return `• ${r.court} — ${date} (${r.user})`;
+        });
+        Alert.alert(
+          'Future Rentals Found',
+          `Cancel these rentals before deleting this ground:\n\n${lines.join('\n')}`,
+        );
+      } else if (details.events?.length) {
+        const lines = details.events.map((e: any) => {
+          const date = e.startTime ? new Date(e.startTime).toLocaleDateString() : 'Unknown date';
+          return `• ${e.title || 'Untitled'} — ${date}`;
+        });
+        Alert.alert(
+          'Future Events Found',
+          `Cancel these events before deleting this ground:\n\n${lines.join('\n')}`,
+        );
+      } else {
+        Alert.alert('Error', err.message || 'Failed to delete ground');
+      }
       setIsSubmitting(false);
     }
   };

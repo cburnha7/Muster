@@ -108,13 +108,33 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
             try {
               await facilityService.deleteFacility(facilityId);
               dispatch(removeFacility(facilityId));
-              // Navigate back with refresh parameter to force list reload
               navigation.navigate('Facilities' as never, { 
                 screen: 'FacilitiesList',
                 params: { refresh: Date.now() }
               } as never);
             } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to delete ground');
+              const details = err.details || {};
+              if (details.rentals?.length) {
+                const lines = details.rentals.map((r: any) => {
+                  const date = r.date ? new Date(r.date).toLocaleDateString() : 'Unknown date';
+                  return `• ${r.court} — ${date} (${r.user})`;
+                });
+                Alert.alert(
+                  'Future Rentals Found',
+                  `Cancel these rentals before deleting this ground:\n\n${lines.join('\n')}`,
+                );
+              } else if (details.events?.length) {
+                const lines = details.events.map((e: any) => {
+                  const date = e.startTime ? new Date(e.startTime).toLocaleDateString() : 'Unknown date';
+                  return `• ${e.title || 'Untitled'} — ${date}`;
+                });
+                Alert.alert(
+                  'Future Events Found',
+                  `Cancel these events before deleting this ground:\n\n${lines.join('\n')}`,
+                );
+              } else {
+                Alert.alert('Error', err.message || 'Failed to delete ground');
+              }
             }
           },
         },

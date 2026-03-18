@@ -713,7 +713,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Check for future rentals
-    const futureRentals = await prisma.facilityRental.count({
+    const futureRentalsList = await prisma.facilityRental.findMany({
       where: {
         timeSlot: {
           court: {
@@ -723,25 +723,61 @@ router.delete('/:id', async (req, res) => {
         },
         status: 'confirmed',
       },
+      select: {
+        id: true,
+        timeSlot: {
+          select: {
+            date: true,
+            startTime: true,
+            endTime: true,
+            court: { select: { name: true } },
+          },
+        },
+        user: { select: { username: true } },
+      },
+      orderBy: { timeSlot: { date: 'asc' } },
+      take: 20,
     });
 
-    if (futureRentals > 0) {
+    if (futureRentalsList.length > 0) {
       return res.status(400).json({
         error: 'Cannot delete ground with future rentals. Cancel all rentals first.',
+        rentals: futureRentalsList.map((r: any) => ({
+          id: r.id,
+          court: r.timeSlot?.court?.name || 'Unknown court',
+          date: r.timeSlot?.date,
+          startTime: r.timeSlot?.startTime,
+          endTime: r.timeSlot?.endTime,
+          user: r.user?.username || 'Unknown',
+        })),
       });
     }
 
     // Check for future events
-    const futureEvents = await prisma.event.count({
+    const futureEventsList = await prisma.event.findMany({
       where: {
         facilityId: id,
         startTime: { gte: new Date() },
       },
+      select: {
+        id: true,
+        title: true,
+        startTime: true,
+        endTime: true,
+      },
+      orderBy: { startTime: 'asc' },
+      take: 20,
     });
 
-    if (futureEvents > 0) {
+    if (futureEventsList.length > 0) {
       return res.status(400).json({
         error: 'Cannot delete ground with future events. Cancel all events first.',
+        events: futureEventsList.map((e: any) => ({
+          id: e.id,
+          title: e.title,
+          startTime: e.startTime,
+          endTime: e.endTime,
+        })),
       });
     }
 
