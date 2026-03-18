@@ -496,6 +496,8 @@ export interface CreateEventData {
   invitedUserIds?: string[];
   rentalId?: string; // Link to FacilityRental if event is created from a rental
   organizerId?: string;
+  homeRosterId?: string; // Home roster for game events
+  awayRosterId?: string; // Away roster for game events
 }
 
 export interface UpdateEventData extends Partial<CreateEventData> {

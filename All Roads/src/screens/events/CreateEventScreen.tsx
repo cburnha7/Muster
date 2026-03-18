@@ -24,12 +24,11 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { CourtSelector } from '../../components/events/CourtSelector';
 import { TimeSlotPicker } from '../../components/events/TimeSlotPicker';
 import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
+import { RosterSearchSection, RosterSearchResult } from '../../components/events/RosterSearchSection';
 
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { addEvent } from '../../store/slices/eventsSlice';
-import { useSelector } from 'react-redux';
-import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { useAuth } from '../../context/AuthContext';
 import { colors, Spacing, TextStyles } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
@@ -66,8 +65,6 @@ interface FormData {
   isPrivate: boolean;
   genderRestriction: string;
   restrictedToTeams: string[];
-  homeRosterId: string;
-  awayRosterId: string;
   minimumPlayerCount: string;
 }
 
@@ -98,7 +95,6 @@ export function CreateEventScreen(): JSX.Element {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
-  const userTeams = useSelector(selectUserTeams);
   const { user } = useAuth();
 
   // Get params from route - either rentalId (old way) or fromReservation (new way)
@@ -140,8 +136,6 @@ export function CreateEventScreen(): JSX.Element {
     isPrivate: false,
     genderRestriction: '',
     restrictedToTeams: [],
-    homeRosterId: '',
-    awayRosterId: '',
     minimumPlayerCount: '',
   });
 
@@ -174,6 +168,10 @@ export function CreateEventScreen(): JSX.Element {
 
   // Invited users state
   const [invitedUsers, setInvitedUsers] = useState<User[]>([]);
+
+  // Roster search state
+  const [selectedRosters, setSelectedRosters] = useState<RosterSearchResult[]>([]);
+  const [homeRosterId, setHomeRosterId] = useState<string | null>(null);
 
   // Form options
   const sportTypeOptions: SelectOption[] = [
@@ -370,17 +368,6 @@ export function CreateEventScreen(): JSX.Element {
     value: facility?.id || '',
   }));
 
-  // Get team options (only teams user is captain/co-captain of)
-  const teamOptions: SelectOption[] = userTeams
-    .filter(team => {
-      const userMember = team.members.find(m => m.status === 'active');
-      return userMember && (userMember.role === 'captain' || userMember.role === 'co_captain');
-    })
-    .map(team => ({
-      label: team.name,
-      value: team.id,
-    }));
-
   // Handle input change
   const handleInputChange = (field: keyof FormData, value: string | string[] | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -395,54 +382,6 @@ export function CreateEventScreen(): JSX.Element {
   const handleSelectChange = (field: keyof FormData, option: SelectOption) => {
     handleInputChange(field, option.value.toString());
   };
-
-  // Handle roster selection toggle
-  const handleRosterRestrictionToggle = (teamId: string) => {
-    setFormData(prev => {
-      const restrictedTeams = prev.restrictedToTeams.includes(teamId)
-        ? prev.restrictedToTeams.filter(id => id !== teamId)
-        : [...prev.restrictedToTeams, teamId];
-      return { ...prev, restrictedToTeams: restrictedTeams };
-    });
-  };
-
-  // Fetch roster players when selected rosters change
-  useEffect(() => {
-    if (formData.restrictedToTeams.length === 0) return;
-
-    const fetchRosterMembers = async () => {
-      try {
-        const allMembers: User[] = [];
-        for (const teamId of formData.restrictedToTeams) {
-          const team = userTeams.find(t => t.id === teamId);
-          if (team) {
-            for (const member of team.members) {
-              if (member.status === 'active' && member.user) {
-                const memberUser = member.user as User;
-                if (!allMembers.some(u => u.id === memberUser.id) && memberUser.id !== user?.id) {
-                  allMembers.push(memberUser);
-                }
-              }
-            }
-          }
-        }
-        // Merge with existing individually-added users (don't remove them)
-        setInvitedUsers(prev => {
-          const merged = [...prev];
-          for (const m of allMembers) {
-            if (!merged.some(u => u.id === m.id)) {
-              merged.push(m);
-            }
-          }
-          return merged;
-        });
-      } catch (error) {
-        console.error('Error fetching roster players:', error);
-      }
-    };
-
-    fetchRosterMembers();
-  }, [formData.restrictedToTeams]);
 
   // Handle adding an individual person to the invited list
   const handleAddInvitedUser = async (addedUser: User) => {
@@ -831,21 +770,38 @@ export function CreateEventScreen(): JSX.Element {
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
         isPrivate: formData.isPrivate,
-        invitedUserIds: invitedUsers.length > 0 ? invitedUsers.map(u => u.id) : undefined,
-        homeRosterId: isGameEvent && formData.homeRosterId ? formData.homeRosterId : undefined,
-        awayRosterId: isGameEvent && formData.awayRosterId ? formData.awayRosterId : undefined,
         eligibility: {
           isInviteOnly: formData.isPrivate,
           minimumPlayerCount: formData.minimumPlayerCount
             ? parseInt(formData.minimumPlayerCount)
             : undefined,
-          restrictedToTeams: formData.restrictedToTeams.length > 0 ? formData.restrictedToTeams : undefined,
           restrictedToLeagues: undefined,
           minSkillLevel: undefined,
           maxSkillLevel: undefined,
         },
         organizerId: user?.id,
       };
+
+      // Map roster selection into the submission payload by event type
+      if (isGameEvent && selectedRosters.length === 2) {
+        // Game with 2 rosters: derive home/away from Home tag, restrict to both
+        const away = selectedRosters.find(r => r.id !== homeRosterId);
+        eventData.homeRosterId = homeRosterId || undefined;
+        eventData.awayRosterId = away?.id || undefined;
+        eventData.eligibility!.restrictedToTeams = selectedRosters.map(r => r.id);
+      } else if (isGameEvent && selectedRosters.length === 1) {
+        // Game with 1 roster: no home/away yet, just restrict
+        eventData.eligibility!.restrictedToTeams = selectedRosters.map(r => r.id);
+      } else if (!isGameEvent && selectedRosters.length > 0) {
+        // Pickup/practice: restrict to selected rosters, include expanded players
+        eventData.eligibility!.restrictedToTeams = selectedRosters.map(r => r.id);
+        eventData.invitedUserIds = invitedUsers.length > 0 ? invitedUsers.map(u => u.id) : undefined;
+      }
+
+      // For non-game events with no rosters but manually invited users
+      if (!isGameEvent && selectedRosters.length === 0 && invitedUsers.length > 0) {
+        eventData.invitedUserIds = invitedUsers.map(u => u.id);
+      }
 
       // Include timeSlotId and rentalId if selected
       // For multiple slots, collect all rental IDs
@@ -1353,65 +1309,22 @@ export function CreateEventScreen(): JSX.Element {
             )}
           </View>
 
-          {/* Roster Selection - Game: Home/Away, Tournament: Multi-select rosters, Other: Invite rosters + people */}
-          {isGameEvent ? (
-            teamOptions.length > 0 ? (
-              <View style={styles.gameRosterSection}>
-                <Text style={styles.restrictionLabel}>Match Rosters</Text>
-                <FormSelect
-                  label="Home Roster"
-                  placeholder="Select home roster"
-                  value={formData.homeRosterId}
-                  options={[
-                    { label: 'None', value: '' },
-                    ...teamOptions.filter(t => t.value.toString() !== formData.awayRosterId),
-                  ]}
-                  onSelect={(option) => handleInputChange('homeRosterId', option.value.toString())}
-                />
-                <FormSelect
-                  label="Away Roster"
-                  placeholder="Select away roster"
-                  value={formData.awayRosterId}
-                  options={[
-                    { label: 'None', value: '' },
-                    ...teamOptions.filter(t => t.value.toString() !== formData.homeRosterId),
-                  ]}
-                  onSelect={(option) => handleInputChange('awayRosterId', option.value.toString())}
-                />
-              </View>
-            ) : null
-          ) : (
-            teamOptions.length > 0 ? (
-              <View style={styles.restrictionCard}>
-                <Text style={styles.restrictionLabel}>Invite Rosters</Text>
-                <Text style={styles.restrictionHint}>
-                  All players of selected rosters will be invited
-                </Text>
-                <View style={styles.teamList}>
-                  {teamOptions.map(team => (
-                    <TouchableOpacity
-                      key={team.value}
-                      style={[
-                        styles.teamItem,
-                        formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemSelected,
-                      ]}
-                      onPress={() => handleRosterRestrictionToggle(team.value.toString())}
-                    >
-                      <Text
-                        style={[
-                          styles.teamItemText,
-                          formData.restrictedToTeams.includes(team.value.toString()) && styles.teamItemTextSelected,
-                        ]}
-                      >
-                        {formData.restrictedToTeams.includes(team.value.toString()) ? '✓ ' : ''}
-                        {team.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            ) : null
-          )}
+          {/* Roster Selection — unified search for all event types */}
+          <RosterSearchSection
+            eventType={formData.eventType}
+            selectedRosters={selectedRosters}
+            homeRosterId={homeRosterId}
+            onRostersChange={setSelectedRosters}
+            onHomeRosterChange={setHomeRosterId}
+            onRosterPlayersLoaded={(players) => {
+              // Merge into invitedUsers for pickup/practice
+              setInvitedUsers(prev => {
+                const existingIds = new Set(prev.map(u => u.id));
+                const newPlayers = players.filter(p => !existingIds.has(p.id));
+                return [...prev, ...newPlayers];
+              });
+            }}
+          />
 
           {/* Add People - hidden for games */}
           {!isGameEvent && (
@@ -1462,6 +1375,25 @@ export function CreateEventScreen(): JSX.Element {
                 </View>
               )}
             </>
+          )}
+
+          {/* Game event — show selected roster names in invited section */}
+          {isGameEvent && selectedRosters.length > 0 && (
+            <View style={styles.restrictionCard}>
+              <Text style={styles.restrictionLabel}>
+                Rosters ({selectedRosters.length})
+              </Text>
+              {selectedRosters.map(roster => (
+                <View key={roster.id} style={styles.invitedUserRow}>
+                  <View style={styles.invitedUserInfo}>
+                    <View style={styles.invitedUserAvatar}>
+                      <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.invitedUserName}>{roster.name}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           )}
 
           <FormButton
@@ -1673,9 +1605,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
-  teamList: {
-    // gap removed - use marginBottom on teamItem instead
-  },
   teamItem: {
     padding: 12,
     backgroundColor: '#FFFFFF',
@@ -1770,9 +1699,6 @@ const styles = StyleSheet.create({
     marginLeft: 28,
     marginTop: 4,
     fontWeight: '600',
-  },
-  gameRosterSection: {
-    marginBottom: 16,
   },
   restrictionCard: {
     padding: 16,

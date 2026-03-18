@@ -225,6 +225,16 @@ router.post('/', async (req, res) => {
       organizerId: req.body.organizerId || defaultOrganizer.id,
     };
 
+    // Validate game events have at most 2 rosters
+    if (eventData.eventType === 'game') {
+      const rosterIds = eventData.eligibility?.restrictedToTeams || [];
+      if (rosterIds.length > 2) {
+        return res.status(400).json({ 
+          error: 'Game events can have a maximum of two rosters.' 
+        });
+      }
+    }
+
     const organizerId = eventData.organizerId;
     console.log('Organizer ID:', organizerId);
 
@@ -533,7 +543,7 @@ router.put('/:id', async (req, res) => {
     // Verify the event exists and check organizer
     const existing = await prisma.event.findUnique({
       where: { id },
-      select: { organizerId: true, scheduledStatus: true, facilityId: true },
+      select: { organizerId: true, scheduledStatus: true, facilityId: true, eventType: true },
     });
 
     if (!existing) {
@@ -549,6 +559,17 @@ router.put('/:id', async (req, res) => {
 
     // Don't allow overwriting organizerId
     const { organizerId, ...updateData } = req.body;
+
+    // Validate game events have at most 2 rosters
+    const effectiveEventType = req.body.eventType || existing.eventType;
+    if (effectiveEventType === 'game') {
+      const rosterIds = req.body.eligibility?.restrictedToTeams || [];
+      if (rosterIds.length > 2) {
+        return res.status(400).json({ 
+          error: 'Game events can have a maximum of two rosters.' 
+        });
+      }
+    }
 
     // If facility is being assigned to an unscheduled shell event, mark it as scheduled
     const isAssigningFacility = updateData.facilityId && !existing.facilityId && existing.scheduledStatus === 'unscheduled';

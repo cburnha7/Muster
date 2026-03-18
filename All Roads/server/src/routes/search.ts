@@ -32,6 +32,7 @@ router.get('/teams', async (req, res) => {
         skip,
         take,
         include: {
+          _count: { select: { members: true } },
           members: {
             include: {
               user: {
@@ -49,8 +50,13 @@ router.get('/teams', async (req, res) => {
       prisma.team.count({ where }),
     ]);
 
+    const results = teams.map(({ _count, ...team }) => ({
+      ...team,
+      memberCount: _count.members,
+    }));
+
     res.json({
-      results: teams,
+      results,
       total,
       page: parseInt(page as string),
       limit: parseInt(limit as string),
