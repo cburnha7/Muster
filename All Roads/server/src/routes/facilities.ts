@@ -11,6 +11,7 @@ import {
   processMapImage,
   deleteImageFiles 
 } from '../services/ImageUploadService';
+import { isValidPolicyHours } from '../services/cancellation-window';
 
 const router = Router();
 const timeSlotGenerator = new TimeSlotGeneratorService();
@@ -493,12 +494,20 @@ router.post('/', async (req, res) => {
       longitude = 0,
       ownerId,
       hoursOfOperation = [],
+      cancellationPolicyHours,
     } = req.body;
 
     // Validate required fields
     if (!name || !sportTypes || !street || !city || !state || !zipCode) {
       return res.status(400).json({ 
         error: 'Missing required fields: name, sportTypes, street, city, state, zipCode' 
+      });
+    }
+
+    // Validate cancellation policy hours if provided
+    if (cancellationPolicyHours !== undefined && !isValidPolicyHours(cancellationPolicyHours)) {
+      return res.status(400).json({
+        error: 'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
       });
     }
 
@@ -557,6 +566,7 @@ router.post('/', async (req, res) => {
         latitude,
         longitude,
         ownerId: facilityOwnerId,
+        ...(cancellationPolicyHours !== undefined && { cancellationPolicyHours }),
       },
     });
 
@@ -593,6 +603,13 @@ router.put('/:id', async (req, res) => {
     const { hoursOfOperation, slotIncrementMinutes, ...updateData } = req.body;
 
     // TODO: Add authorization check - only owner can update
+
+    // Validate cancellation policy hours if provided
+    if (updateData.cancellationPolicyHours !== undefined && !isValidPolicyHours(updateData.cancellationPolicyHours)) {
+      return res.status(400).json({
+        error: 'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
+      });
+    }
 
     // Check if slot increment is changing
     let incrementChanged = false;

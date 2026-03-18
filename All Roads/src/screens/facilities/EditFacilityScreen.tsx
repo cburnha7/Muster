@@ -19,6 +19,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
+import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
 import { updateFacility, removeFacility } from '../../store/slices/facilitiesSlice';
@@ -89,6 +90,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       wholeFacilityRate: 0,
       currency: 'USD',
     },
+    cancellationPolicyHours: null,
   });
 
   const [newCourt, setNewCourt] = useState<CourtFormData>({
@@ -146,6 +148,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           wholeFacilityRate: facility.pricePerHour || 0,
           currency: 'USD',
         },
+        cancellationPolicyHours: facility.cancellationPolicyHours ?? null,
       });
       
       // Prepopulate courts
@@ -344,6 +347,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         contactWebsite: formData.contactInfo?.website || '',
         pricePerHour: formData.pricing?.wholeFacilityRate || 0,
         hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
+        cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
       };
 
       const updatedFacility = await facilityService.updateFacility(facilityId, facilityData as any);
@@ -656,6 +660,14 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               </TouchableOpacity>
             ))
           )}
+        </View>
+
+        {/* Cancellation Policy */}
+        <View style={styles.section}>
+          <CancellationPolicyPicker
+            value={formData.cancellationPolicyHours ?? null}
+            onChange={(val) => updateField('cancellationPolicyHours', val)}
+          />
         </View>
 
         {/* Submit Button */}

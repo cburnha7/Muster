@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
+import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
@@ -89,6 +90,7 @@ export function CreateFacilityScreen(): JSX.Element {
       wholeFacilityRate: 0,
       currency: 'USD',
     },
+    cancellationPolicyHours: null,
   });
 
   const [newCourt, setNewCourt] = useState<CourtFormData>({
@@ -265,6 +267,7 @@ export function CreateFacilityScreen(): JSX.Element {
         bufferTimeMins: 0,
         ownerId: user?.id, // Set the current user as owner
         hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
+        cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
       };
 
       console.log('📤 Sending facility creation request...');
@@ -597,6 +600,14 @@ export function CreateFacilityScreen(): JSX.Element {
               ))}
             </>
           )}
+        </View>
+
+        {/* Cancellation Policy */}
+        <View style={styles.section}>
+          <CancellationPolicyPicker
+            value={formData.cancellationPolicyHours ?? null}
+            onChange={(val) => updateField('cancellationPolicyHours', val)}
+          />
         </View>
 
         {/* Submit Button */}

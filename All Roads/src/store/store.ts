@@ -4,6 +4,7 @@ import { persistStore, persistReducer, createTransform } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import { eventsApi } from './api/eventsApi';
+import { cancelRequestsApi } from './api/cancelRequestsApi';
 import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice, subscriptionSlice, contextSlice, scheduleSlice } from './slices';
 import { contextRecoveryMiddleware } from './middleware/contextRecovery';
 
@@ -43,7 +44,7 @@ const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
   whitelist: ['auth', 'events', 'facilities', 'teams', 'bookings', 'leagues', 'matches', 'subscription'], // Only persist these slices
-  blacklist: ['api', 'eventsApi', 'context'], // Don't persist RTK Query cache or context state
+  blacklist: ['api', 'eventsApi', 'cancelRequestsApi', 'context'], // Don't persist RTK Query cache or context state
   transforms: [cacheTransform],
   // Throttle writes to storage
   throttle: 1000,
@@ -63,6 +64,7 @@ const rootReducer = combineReducers({
   schedule: scheduleSlice,
   api: api.reducer,
   eventsApi: eventsApi.reducer,
+  cancelRequestsApi: cancelRequestsApi.reducer,
 });
 
 // Persisted reducer
@@ -94,7 +96,7 @@ export const store = configureStore({
           return true;
         },
       },
-    }).concat(api.middleware, eventsApi.middleware, contextRecoveryMiddleware),
+    }).concat(api.middleware, eventsApi.middleware, cancelRequestsApi.middleware, contextRecoveryMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

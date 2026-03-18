@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
+import { CancelRequestCard } from '../../components/home/CancelRequestCard';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -28,10 +29,11 @@ import { useAuth } from '../../context/AuthContext';
 // Store
 import { selectUser } from '../../store/slices/authSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
 import { BookingStatus } from '../../types';
 
 // Theme
-import { colors, fonts } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 
 // Types
 import { Booking } from '../../types';
@@ -86,6 +88,11 @@ export function HomeScreen() {
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
+
+  // Cancel requests hooks
+  const { data: cancelRequests = [] } = useGetPendingCancelRequestsQuery(user?.id || '', { skip: !user?.id });
+  const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
+  const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
 
   const upcomingBookings = bookingsData?.data || [];
 
@@ -310,6 +317,24 @@ export function HomeScreen() {
     setSelectedBooking(null);
   }, []);
 
+  const handleApproveCancelRequest = async (id: string) => {
+    try {
+      await approveCancelRequest({ id, userId: user?.id || '' }).unwrap();
+      Alert.alert('Approved', 'Cancellation request approved. The reservation has been cancelled and refunded.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to approve cancellation request.');
+    }
+  };
+
+  const handleDenyCancelRequest = async (id: string) => {
+    try {
+      await denyCancelRequest({ id, userId: user?.id || '' }).unwrap();
+      Alert.alert('Denied', 'Cancellation request denied. The reservation remains active.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to deny cancellation request.');
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -470,6 +495,24 @@ export function HomeScreen() {
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
             ))}
+          </View>
+        )}
+
+        {/* Cancel Requests section */}
+        {cancelRequests.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cancel Requests</Text>
+            <View style={{ gap: Spacing.sm }}>
+              {cancelRequests.map((request) => (
+                <CancelRequestCard
+                  key={request.id}
+                  cancelRequest={request}
+                  onApprove={handleApproveCancelRequest}
+                  onDeny={handleDenyCancelRequest}
+                  isLoading={isApproving || isDenying}
+                />
+              ))}
+            </View>
           </View>
         )}
 

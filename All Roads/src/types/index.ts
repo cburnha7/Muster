@@ -158,6 +158,8 @@ export interface Facility {
   teamPenaltyPct?: number | null;
   penaltyDestination?: 'facility' | 'opposing_team' | 'split' | null;
   policyVersion?: string | null;
+  // Reservation cancellation policy (hours before booking start requiring owner approval)
+  cancellationPolicyHours?: number | null;
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -514,6 +516,7 @@ export interface CreateFacilityData {
   contactInfo: ContactInfo;
   operatingHours: OperatingHours;
   pricing: FacilityPricing;
+  cancellationPolicyHours?: number | null;
 }
 
 export interface UpdateFacilityData extends Partial<CreateFacilityData> {

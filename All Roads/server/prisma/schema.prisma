@@ -79,6 +79,7 @@ model User {
   playerDuesPayments     PlayerDuesPayment[]    @relation("PlayerDuesPayments")
   promoCodesCreated      PromoCode[]            @relation("AdminPromoCodes")
   redemptions            PromoCodeRedemption[]  @relation("UserRedemptions")
+  cancelRequests         CancelRequest[]
 
   // Self-referential relation for guardian/dependent accounts
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
@@ -206,6 +207,9 @@ model Facility {
   penaltyDestination String? // 'facility' | 'opposing_team' | 'split'
   policyVersion      String? // Timestamp of last policy update
 
+  // Reservation cancellation policy (distinct from event/team cancellation policy)
+  cancellationPolicyHours Int? // null = no policy (all cancellations automatic)
+
   // Stripe Connect
   stripeConnectAccountId String? // Stripe Connect Express account ID for receiving payments
 
@@ -223,6 +227,7 @@ model Facility {
   availabilitySlots FacilityAvailability[]
   accessImages      FacilityAccessImage[]
   courts            FacilityCourt[]
+  cancelRequests    CancelRequest[]
 
   @@map("facilities")
 }
@@ -754,6 +759,7 @@ model FacilityRental {
   bookings     Booking[]
   teamTransactions TeamTransaction[]
   matches      Match[]
+  cancelRequests   CancelRequest[]
 
   @@index([userId])
   @@index([status])
@@ -761,6 +767,26 @@ model FacilityRental {
   @@index([bookingSessionId])
   @@index([recurringGroupId])
   @@map("facility_rentals")
+}
+
+model CancelRequest {
+  id            String    @id @default(uuid())
+  status        String    @default("pending") // "pending" | "approved" | "denied"
+  requestedAt   DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  userId        String
+  reservationId String
+  groundId      String
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reservation   FacilityRental @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  ground        Facility       @relation(fields: [groundId], references: [id], onDelete: Cascade)
+
+  @@unique([reservationId, status], name: "unique_pending_per_reservation")
+  @@index([groundId, status])
+  @@index([userId])
+  @@map("cancel_requests")
 }
 
 model RecurringBooking {

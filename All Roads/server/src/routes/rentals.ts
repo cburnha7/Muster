@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { prisma } from '../index';
 import { generateOccurrences, RecurringFrequency } from '../services/recurring-bookings';
+import { evaluateCancellationWindow } from '../services/cancellation-window';
+import { createCancelRequest } from '../services/cancel-request';
+import { stripe } from '../services/stripe-connect';
 
 const router = Router();
 
@@ -121,11 +124,20 @@ router.delete('/rentals/:rentalId', async (req, res) => {
 
     // TODO: Get userId from auth token
 
-    // Verify rental exists
+    // Verify rental exists — include facility (for policy) and bookings (for Stripe refund)
     const rental = await prisma.facilityRental.findUnique({
       where: { id: rentalId },
       include: {
-        timeSlot: true,
+        timeSlot: {
+          include: {
+            court: {
+              include: { facility: true },
+            },
+          },
+        },
+        bookings: {
+          include: { participants: true },
+        },
       },
     });
 
@@ -133,9 +145,8 @@ router.delete('/rentals/:rentalId', async (req, res) => {
       return res.status(404).json({ error: 'Rental not found' });
     }
 
-    // Verify user owns this rental or is facility owner
+    // Verify user owns this rental
     if (rental.userId !== userId) {
-      // TODO: Also check if user is facility owner
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -143,22 +154,38 @@ router.delete('/rentals/:rentalId', async (req, res) => {
       return res.status(400).json({ error: 'Rental already cancelled' });
     }
 
-    // Check if rental is less than 2 hours away
-    const slotDateTime = new Date(rental.timeSlot.date);
-    const [hours, minutes] = rental.timeSlot.startTime.split(':').map(Number);
-    slotDateTime.setHours(hours, minutes, 0, 0);
-
-    const hoursUntilRental = (slotDateTime.getTime() - new Date().getTime()) / (1000 * 60 * 60);
-
-    if (hoursUntilRental < 2) {
-      return res.status(400).json({
-        error: 'Cannot cancel rental less than 2 hours before start time',
-      });
+    if (rental.cancellationStatus === 'pending') {
+      return res.status(400).json({ error: 'Cancellation request already pending' });
     }
 
-    // Cancel rental and return slot to available in a transaction
+    if (rental.usedForEventId) {
+      return res.status(400).json({ error: 'Cannot cancel rental used for an event' });
+    }
+
+    // Compute booking start time from the time slot
+    const bookingStartTime = new Date(rental.timeSlot.date);
+    const [hours, minutes] = rental.timeSlot.startTime.split(':').map(Number);
+    bookingStartTime.setHours(hours, minutes, 0, 0);
+
+    // Evaluate cancellation window
+    const cancellationPolicyHours = rental.timeSlot.court.facility.cancellationPolicyHours;
+    const windowResult = evaluateCancellationWindow(
+      new Date(),
+      bookingStartTime,
+      cancellationPolicyHours ?? null,
+    );
+
+    if (windowResult === 'inside') {
+      // Inside the window — create a cancel request for owner approval
+      const cancelRequest = await createCancelRequest(rentalId, userId, prisma);
+      const updatedRental = await prisma.facilityRental.findUnique({
+        where: { id: rentalId },
+      });
+      return res.status(200).json({ pendingApproval: true, cancelRequest, rental: updatedRental });
+    }
+
+    // Outside the window (or no policy) — proceed with immediate cancellation
     const result = await prisma.$transaction(async (tx) => {
-      // Update rental status
       const updatedRental = await tx.facilityRental.update({
         where: { id: rentalId },
         data: {
@@ -185,6 +212,26 @@ router.delete('/rentals/:rentalId', async (req, res) => {
 
       return updatedRental;
     });
+
+    // Issue Stripe refund if there's a paid booking participant with a payment intent
+    try {
+      const paidParticipant = rental.bookings
+        ?.flatMap((b) => b.participants ?? [])
+        .find(
+          (p) =>
+            p.stripePaymentIntentId &&
+            (p.paymentStatus === 'captured' || p.paymentStatus === 'authorized'),
+        );
+
+      if (paidParticipant?.stripePaymentIntentId) {
+        await stripe.refunds.create(
+          { payment_intent: paidParticipant.stripePaymentIntentId },
+          { idempotencyKey: `${rentalId}:refund` },
+        );
+      }
+    } catch (refundError) {
+      console.error(`[CancelRental] Stripe refund failed for rental ${rentalId}:`, refundError);
+    }
 
     res.json(result);
   } catch (error) {

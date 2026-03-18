@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, fonts, Spacing, TextStyles } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import { formatTime12 } from '../../utils/calendarUtils';
 
@@ -48,6 +48,7 @@ interface Rental {
   paymentStatus: string;
   cancelledAt: Date | null;
   cancellationReason: string | null;
+  cancellationStatus: string | null;
   createdAt: Date;
   timeSlot: TimeSlot;
 }
@@ -113,21 +114,6 @@ export function MyRentalsScreen() {
   }, []);
 
   const handleCancelRental = (rental: Rental) => {
-    const slotDateTime = new Date(rental.timeSlot.date);
-    const [hours, minutes] = rental.timeSlot.startTime.split(':').map(Number);
-    slotDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-
-    const hoursUntilRental = (slotDateTime.getTime() - new Date().getTime()) / (1000 * 60 * 60);
-
-    if (hoursUntilRental < 2) {
-      Alert.alert(
-        'Cannot Cancel',
-        'Rentals cannot be cancelled less than 2 hours before the start time.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
     Alert.alert(
       'Cancel Rental',
       `Are you sure you want to cancel your rental at ${rental.timeSlot.court.facility.name}?\n\nYou will receive a full refund if payment was made.`,
@@ -169,12 +155,27 @@ export function MyRentalsScreen() {
         throw new Error(error.error || 'Failed to cancel rental');
       }
 
-      Alert.alert('Rental Cancelled', 'Your rental has been cancelled successfully.', [
-        {
-          text: 'OK',
-          onPress: () => loadRentals(),
-        },
-      ]);
+      const data = await response.json();
+
+      if (data.cancellationStatus === 'pending') {
+        Alert.alert(
+          'Cancellation Request Submitted',
+          'Your cancellation request has been submitted and is pending approval from the ground owner.',
+          [
+            {
+              text: 'OK',
+              onPress: () => loadRentals(),
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Rental Cancelled', 'Your rental has been cancelled successfully.', [
+          {
+            text: 'OK',
+            onPress: () => loadRentals(),
+          },
+        ]);
+      }
     } catch (error: any) {
       console.error('Cancel rental error:', error);
       Alert.alert('Cancellation Failed', error.message || 'Failed to cancel rental. Please try again.');
@@ -223,9 +224,19 @@ export function MyRentalsScreen() {
     return (
       <View key={rental.id} style={styles.rentalCard}>
         {/* Status Badge */}
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Ionicons name={statusIcon} size={16} color={colors.chalk} />
-          <Text style={styles.statusText}>{rental.status.toUpperCase()}</Text>
+        <View style={styles.badgeRow}>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <Ionicons name={statusIcon} size={16} color={colors.chalk} />
+            <Text style={styles.statusText}>{rental.status.toUpperCase()}</Text>
+          </View>
+
+          {/* Cancellation Pending Badge */}
+          {rental.cancellationStatus === 'pending' && (
+            <View style={[styles.statusBadge, styles.cancellationPendingBadge]}>
+              <Ionicons name="hourglass-outline" size={14} color={colors.chalk} />
+              <Text style={styles.cancellationPendingText}>CANCELLATION PENDING</Text>
+            </View>
+          )}
         </View>
 
         {/* Facility Info */}
@@ -279,11 +290,26 @@ export function MyRentalsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={[
+                styles.cancelButton,
+                rental.cancellationStatus === 'pending' && styles.cancelButtonDisabled,
+              ]}
               onPress={() => handleCancelRental(rental)}
+              disabled={rental.cancellationStatus === 'pending'}
             >
-              <Ionicons name="close-circle-outline" size={20} color={colors.track} />
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Ionicons
+                name="close-circle-outline"
+                size={20}
+                color={rental.cancellationStatus === 'pending' ? colors.soft : colors.track}
+              />
+              <Text
+                style={[
+                  styles.cancelButtonText,
+                  rental.cancellationStatus === 'pending' && styles.cancelButtonTextDisabled,
+                ]}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -459,12 +485,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 6,
-    marginBottom: Spacing.md,
   },
   statusText: {
     ...TextStyles.caption,
     color: colors.chalk,
     fontWeight: '700',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  cancellationPendingBadge: {
+    backgroundColor: colors.court,
+  },
+  cancellationPendingText: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    lineHeight: 14,
+    letterSpacing: 1.8,
+    color: colors.chalk,
   },
   facilityName: {
     ...TextStyles.h4,
@@ -564,6 +605,13 @@ const styles = StyleSheet.create({
     ...TextStyles.body,
     fontWeight: '600',
     color: colors.track,
+  },
+  cancelButtonDisabled: {
+    borderColor: colors.soft,
+    opacity: 0.5,
+  },
+  cancelButtonTextDisabled: {
+    color: colors.soft,
   },
   cancellationInfo: {
     flexDirection: 'row',

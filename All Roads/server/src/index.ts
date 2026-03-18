@@ -31,6 +31,7 @@ import playerDuesRoutes from './routes/player-dues';
 import leagueDuesRoutes from './routes/league-dues';
 import dependentRoutes from './routes/dependents';
 import promoCodeRoutes from './routes/promo-codes';
+import cancelRequestRoutes from './routes/cancel-requests';
 
 dotenv.config();
 
@@ -139,6 +140,7 @@ app.use('/api/player-dues', playerDuesRoutes);
 app.use('/api/league-dues', leagueDuesRoutes);
 app.use('/api/dependents', dependentRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
+app.use('/api/cancel-requests', cancelRequestRoutes);
 
 // Error handling
 app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
