@@ -11,6 +11,15 @@ import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
 import { loggingService } from '../LoggingService';
 
+// Lazy import to avoid circular dependency — store is only accessed at request time
+let _store: any = null;
+function getStore() {
+  if (!_store) {
+    _store = require('../../store/store').store;
+  }
+  return _store;
+}
+
 export interface ApiServiceConfig {
   baseURL: string;
   timeout: number;
@@ -87,6 +96,14 @@ export class BaseApiService {
           console.log('🔐 API Request - User ID attached:', currentUser.id, currentUser.email);
         } else {
           console.log('⚠️ API Request - No current user');
+        }
+
+        // Attach X-Active-User-Id header when acting on behalf of a dependent
+        const storeState = getStore().getState();
+        const activeUserId = storeState?.context?.activeUserId;
+        const authUserId = currentUser?.id;
+        if (activeUserId && activeUserId !== authUserId) {
+          config.headers['X-Active-User-Id'] = activeUserId;
         }
 
         // Add request ID for tracking

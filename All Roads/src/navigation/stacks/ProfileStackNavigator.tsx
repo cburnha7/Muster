@@ -7,6 +7,9 @@ import { SettingsScreen } from '../../screens/profile/SettingsScreen';
 import { NotificationPreferencesScreen } from '../../screens/profile/NotificationPreferencesScreen';
 import { UserStatsScreen } from '../../screens/profile/UserStatsScreen';
 import { BookingHistoryScreen } from '../../screens/bookings/BookingHistoryScreen';
+import { DependentFormScreen } from '../../screens/profile/DependentFormScreen';
+import { DependentProfileScreen } from '../../screens/profile/DependentProfileScreen';
+import { TransferAccountScreen } from '../../screens/profile/TransferAccountScreen';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
@@ -40,6 +43,18 @@ export function ProfileStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="BookingHistory" 
         component={BookingHistoryScreen}
+      />
+      <Stack.Screen 
+        name="DependentForm" 
+        component={DependentFormScreen}
+      />
+      <Stack.Screen 
+        name="DependentProfile" 
+        component={DependentProfileScreen}
+      />
+      <Stack.Screen 
+        name="TransferAccount" 
+        component={TransferAccountScreen}
       />
     </Stack.Navigator>
   );

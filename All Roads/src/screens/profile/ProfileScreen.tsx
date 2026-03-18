@@ -16,7 +16,9 @@ import { MyReservationsSection } from '../../components/profile/MyReservationsSe
 import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
 import { ConnectAccountsSection } from '../../components/profile/ConnectAccountsSection';
 import { UserConnectSection } from '../../components/profile/UserConnectSection';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { DependentsSection } from '../../components/profile/DependentsSection';
+import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
+import { colors, fonts, typeScale } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 
 export function ProfileScreen() {
@@ -50,6 +52,9 @@ export function ProfileScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.grass} />}
     >
+      {/* Context Switcher */}
+      <ContextSwitcher />
+
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatarRow}>
@@ -99,6 +104,9 @@ export function ProfileScreen() {
 
       {/* My Reservations */}
       {authUser?.id && <MyReservationsSection userId={authUser.id} />}
+
+      {/* Dependents */}
+      <DependentsSection />
 
       {/* Log Out */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>

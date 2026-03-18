@@ -29,6 +29,7 @@ import gameChallengeRoutes from './routes/game-challenges';
 import publicEventRoutes from './routes/public-events';
 import playerDuesRoutes from './routes/player-dues';
 import leagueDuesRoutes from './routes/league-dues';
+import dependentRoutes from './routes/dependents';
 
 dotenv.config();
 
@@ -82,7 +83,7 @@ const corsOptions: cors.CorsOptions = {
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id', 'X-Request-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id', 'X-Active-User-Id', 'X-Request-ID'],
   exposedHeaders: ['X-Request-ID'],
   preflightContinue: false,
   optionsSuccessStatus: 204
@@ -131,6 +132,7 @@ app.use('/api/game-challenges', gameChallengeRoutes);
 app.use('/api/public-events', publicEventRoutes);
 app.use('/api/player-dues', playerDuesRoutes);
 app.use('/api/league-dues', leagueDuesRoutes);
+app.use('/api/dependents', dependentRoutes);
 
 // Error handling
 app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

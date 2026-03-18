@@ -9,6 +9,7 @@ import bookingsSliceReducer from './bookingsSlice';
 import leaguesSliceReducer from './leaguesSlice';
 import matchesSliceReducer from './matchesSlice';
 import subscriptionSliceReducer from './subscriptionSlice';
+import contextSliceReducer from './contextSlice';
 
 export { 
   authSliceReducer as authSlice,
@@ -19,6 +20,7 @@ export {
   leaguesSliceReducer as leaguesSlice,
   matchesSliceReducer as matchesSlice,
   subscriptionSliceReducer as subscriptionSlice,
+  contextSliceReducer as contextSlice,
 };
 
 // Re-export individual actions with their original names
@@ -31,3 +33,4 @@ export * as bookingsActions from './bookingsSlice';
 export * as leaguesActions from './leaguesSlice';
 export * as matchesActions from './matchesSlice';
 export * as subscriptionActions from './subscriptionSlice';
+export * as contextActions from './contextSlice';

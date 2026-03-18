@@ -142,6 +142,9 @@ export type ProfileStackParamList = {
   EditProfile: undefined;
   Settings: undefined;
   NotificationPreferences: undefined;
+  DependentForm: { dependentId?: string };
+  DependentProfile: { dependentId: string };
+  TransferAccount: { dependentId: string };
 };
 
 // Navigation Props Types

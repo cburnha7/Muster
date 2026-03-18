@@ -772,6 +772,37 @@ export class NotificationService {
 
 
   /**
+   * Notify a guardian that their dependent has turned 18 and is eligible
+   * for account transfer. Includes the dependent's name and a prompt to
+   * initiate the transfer.
+   */
+  static async notifyDependentTurned18(
+    guardianId: string,
+    dependentId: string,
+    dependentName: string,
+  ): Promise<void> {
+    try {
+      const notification: NotificationTemplate = {
+        title: 'Account Transfer Available',
+        body: `${dependentName} has turned 18 and is eligible for an independent Muster account. Tap here to start the transfer.`,
+        data: {
+          type: 'dependent_turned_18',
+          dependentId,
+        },
+      };
+
+      await NotificationService.queueNotification([guardianId], notification);
+
+      console.log(
+        `[age-check] Sending transfer notification for dependent ${dependentId} to guardian ${guardianId}`,
+      );
+      console.log('Notification:', notification);
+    } catch (error) {
+      console.error('Error sending dependent turned 18 notification:', error);
+    }
+  }
+
+  /**
    * Send notification when event is auto-opened to public
    */
   async sendEventAutoOpenedNotification(

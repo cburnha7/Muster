@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
 import { colors } from '../theme';
+import { ContextIndicator } from '../components/navigation/ContextIndicator';
 
 // Direct imports instead of lazy loading for web compatibility
 import { HomeStackNavigator } from './stacks/HomeStackNavigator';
@@ -92,7 +93,17 @@ export function TabNavigator(): JSX.Element {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
+        headerShown: true,
+        headerTitle: '',
+        headerRight: () => <ContextIndicator />,
+        headerStyle: {
+          backgroundColor: colors.chalk,
+          shadowColor: 'transparent',
+          elevation: 0,
+        },
+        headerRightContainerStyle: {
+          paddingRight: 16,
+        },
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
         tabBarActiveTintColor: colors.grass,

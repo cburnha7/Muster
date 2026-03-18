@@ -15,8 +15,10 @@ export const DEFAULT_EVENT_FILTERS: EventFilters = {
 const baseQuery = fetchBaseQuery({
   baseUrl: apiConfig.baseURL,
   prepareHeaders: (headers, { getState }) => {
+    const state = getState() as RootState;
+
     // Get token from auth state (note: field is 'accessToken' not 'token')
-    const token = (getState() as RootState).auth.accessToken;
+    const token = state.auth.accessToken;
     
     // If we have a token, include it in the Authorization header
     if (token) {
@@ -25,9 +27,15 @@ const baseQuery = fetchBaseQuery({
     
     // Send X-User-Id header as fallback authentication
     // This allows the backend to identify the user even if the JWT is expired
-    const userId = (getState() as RootState).auth.user?.id;
+    const userId = state.auth.user?.id;
     if (userId) {
       headers.set('X-User-Id', userId);
+    }
+
+    // Attach X-Active-User-Id header when acting on behalf of a dependent
+    const activeUserId = state.context?.activeUserId;
+    if (activeUserId && activeUserId !== userId) {
+      headers.set('X-Active-User-Id', activeUserId);
     }
     
     headers.set('content-type', 'application/json');

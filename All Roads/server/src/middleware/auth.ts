@@ -8,6 +8,10 @@ declare global {
       user?: {
         userId: string;
       };
+      /** The effective user ID for the current request. Set by activeContextMiddleware.
+       *  When a guardian is acting on behalf of a dependent, this is the dependent's ID.
+       *  Otherwise, it equals req.user.userId. */
+      effectiveUserId?: string;
     }
   }
 }

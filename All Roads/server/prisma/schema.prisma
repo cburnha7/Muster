@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id           String   @id @default(uuid())
-  email        String   @unique
+  email        String?  @unique // Nullable to support dependents with no credentials
   username     String?  @unique
   password     String? // Nullable to support SSO-only accounts
   firstName    String
@@ -39,6 +39,11 @@ model User {
   ageBracket        String?  // Derived from dateOfBirth: "18-24", "25-34", "35-44", "45-54", "55+"
   stripeAccountId   String?  // Stripe Connect Express account ID for receiving payments
 
+  // Dependent account fields
+  isDependent              Boolean  @default(false)
+  guardianId               String?
+  transferNotificationSent Boolean  @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -65,6 +70,10 @@ model User {
   sportRatings           PlayerSportRating[]
   subscription           Subscription?
   playerDuesPayments     PlayerDuesPayment[]    @relation("PlayerDuesPayments")
+
+  // Self-referential relation for guardian/dependent accounts
+  guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
+  dependents User[] @relation("GuardianDependents")
 
   @@map("users")
 }

@@ -8,8 +8,10 @@ import { clearAuth, setTokens } from './slices/authSlice';
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
+    const state = getState() as RootState;
+
     // Get token from auth state (note: field is 'accessToken' not 'token')
-    const token = (getState() as RootState).auth.accessToken;
+    const token = state.auth.accessToken;
     
     // If we have a token, include it in the Authorization header
     if (token) {
@@ -25,6 +27,13 @@ const baseQuery = fetchBaseQuery({
         headers.set('X-User-Id', currentUser.id);
         console.log('🔑 Setting X-User-Id header:', currentUser.id);
       }
+    }
+
+    // Attach X-Active-User-Id header when acting on behalf of a dependent
+    const activeUserId = state.context?.activeUserId;
+    const authUserId = state.auth.user?.id;
+    if (activeUserId && activeUserId !== authUserId) {
+      headers.set('X-Active-User-Id', activeUserId);
     }
     
     headers.set('content-type', 'application/json');
