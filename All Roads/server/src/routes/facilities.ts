@@ -514,17 +514,21 @@ router.post('/', async (req, res) => {
     }
 
     // Plan gate: facility creation requires facility_basic; 4th+ requires facility_pro
-    const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
-    const existingFacilityCount = await prisma.facility.count({ where: { ownerId: facilityOwnerId } });
-    const sub = await prisma.subscription.findUnique({ where: { userId: facilityOwnerId }, select: { plan: true, status: true } });
-    const userPlan = sub?.plan || 'free';
-    const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
-    const userPlanIndex = PLAN_HIERARCHY.indexOf(userPlan);
+    const { userBypassesPlanGate } = require('../middleware/subscription');
+    const bypassed = await userBypassesPlanGate(facilityOwnerId, 'facility_basic');
+    if (!bypassed) {
+      const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
+      const existingFacilityCount = await prisma.facility.count({ where: { ownerId: facilityOwnerId } });
+      const sub = await prisma.subscription.findUnique({ where: { userId: facilityOwnerId }, select: { plan: true, status: true } });
+      const userPlan = sub?.plan || 'free';
+      const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
+      const userPlanIndex = PLAN_HIERARCHY.indexOf(userPlan);
 
-    if (existingFacilityCount >= 3 && (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))) {
-      return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_pro', currentPlan: userPlan });
-    } else if (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')) {
-      return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_basic', currentPlan: userPlan });
+      if (existingFacilityCount >= 3 && (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))) {
+        return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_pro', currentPlan: userPlan });
+      } else if (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')) {
+        return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_basic', currentPlan: userPlan });
+      }
     }
 
     const facility = await prisma.facility.create({

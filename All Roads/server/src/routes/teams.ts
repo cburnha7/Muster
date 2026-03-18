@@ -244,16 +244,20 @@ router.post('/', optionalAuthMiddleware, async (req, res) => {
 
     // Plan gate: 2nd+ roster requires 'roster' plan
     if (creatorId) {
-      const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
-      const existingRosterCount = await prisma.teamMember.count({
-        where: { userId: creatorId, role: 'captain', status: 'active' },
-      });
-      if (existingRosterCount >= 1) {
-        const sub = await prisma.subscription.findUnique({ where: { userId: creatorId }, select: { plan: true, status: true } });
-        const userPlan = sub?.plan || 'free';
-        const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
-        if (!isActive || PLAN_HIERARCHY.indexOf(userPlan) < PLAN_HIERARCHY.indexOf('roster')) {
-          return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'roster', currentPlan: userPlan });
+      const { userBypassesPlanGate } = require('../middleware/subscription');
+      const bypassed = await userBypassesPlanGate(creatorId, 'roster');
+      if (!bypassed) {
+        const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
+        const existingRosterCount = await prisma.teamMember.count({
+          where: { userId: creatorId, role: 'captain', status: 'active' },
+        });
+        if (existingRosterCount >= 1) {
+          const sub = await prisma.subscription.findUnique({ where: { userId: creatorId }, select: { plan: true, status: true } });
+          const userPlan = sub?.plan || 'free';
+          const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
+          if (!isActive || PLAN_HIERARCHY.indexOf(userPlan) < PLAN_HIERARCHY.indexOf('roster')) {
+            return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'roster', currentPlan: userPlan });
+          }
         }
       }
     }
