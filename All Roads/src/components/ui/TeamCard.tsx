@@ -144,23 +144,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
         </View>
       </View>
 
-      <View style={styles.stats}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{team.stats?.gamesPlayed || 0}</Text>
-          <Text style={styles.statLabel}>Games</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{team.stats?.gamesWon || 0}</Text>
-          <Text style={styles.statLabel}>Wins</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>
-            {team.stats?.winRate ? `${(team.stats.winRate * 100).toFixed(0)}%` : '0%'}
-          </Text>
-          <Text style={styles.statLabel}>Win Rate</Text>
-        </View>
-      </View>
-
       <View style={styles.footer}>
         <View style={styles.availability}>
           <View style={[styles.statusBadge, isFull && styles.fullBadge]}>
@@ -296,27 +279,6 @@ const styles = StyleSheet.create({
   fullText: {
     color: '#FF3B30',
     fontWeight: '500',
-  },
-  stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#F8F9FA',
-    borderRadius: 8,
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
   },
   footer: {
     flexDirection: 'row',
