@@ -66,6 +66,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
     }
   };
 
+  const getRatingBadgeColor = (rating: number) => {
+    if (rating >= 80) return colors.track;
+    if (rating >= 50) return colors.court;
+    return colors.grass;
+  };
+
   const availableSpots = event.maxParticipants - event.currentParticipants;
   const isFullyBooked = availableSpots <= 0;
   const isInviteOnly = event.eligibility?.isInviteOnly && !event.eligibility?.wasAutoOpenedToPublic;
@@ -101,16 +107,18 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
               <Text style={styles.inviteOnlyText}>Invite Only</Text>
             </View>
           )}
-          <View
-            style={[
-              styles.skillBadge,
-              { backgroundColor: getSkillLevelColor(event.skillLevel) },
-            ]}
-          >
-            <Text style={styles.skillText}>
-              {event.skillLevel.replace('_', ' ').toUpperCase()}
-            </Text>
-          </View>
+          {event.minPlayerRating != null && event.minPlayerRating > 0 && (
+            <View
+              style={[
+                styles.skillBadge,
+                { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
+              ]}
+            >
+              <Text style={styles.skillText}>
+                {event.minPlayerRating}+ RATING
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -181,7 +189,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           <View style={styles.detailRow}>
             <Ionicons name="shield-checkmark-outline" size={16} color="#FF9500" />
             <Text style={styles.eligibilityText} numberOfLines={1}>
-              {EventEligibilityService.getEligibilitySummary(event.eligibility).join(', ')}
+              {EventEligibilityService.getEligibilitySummary(event.eligibility, event.minPlayerRating).join(', ')}
             </Text>
           </View>
         )}

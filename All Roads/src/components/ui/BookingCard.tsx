@@ -124,10 +124,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           )}
           {!hidePrice && (
             <Text style={styles.price}>
-              {booking.event?.price && booking.event.price > 0 ? `$${booking.event.price.toFixed(2)}` : 'Free'}
+              {booking.event?.price != null && booking.event.price > 0 ? `$${booking.event.price.toFixed(2)}` : 'Free'}
             </Text>
           )}
-          {!hidePrice && booking.event?.price && booking.event.price > 0 && booking.paymentStatus === PaymentStatus.PENDING && (
+          {!hidePrice && booking.event?.price != null && booking.event.price > 0 && booking.paymentStatus === PaymentStatus.PENDING && (
             <Text style={styles.pendingLabel}>Pending</Text>
           )}
         </View>

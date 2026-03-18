@@ -17,13 +17,29 @@ export class EventEligibilityService {
   static checkEligibility(
     event: Event,
     user: User,
-    userTeams?: Team[]
+    userTeams?: Team[],
+    userSportPercentile?: number // 0-100 percentile for the event's sport
   ): EligibilityCheckResult {
     const reasons: string[] = [];
 
-    // If no eligibility restrictions, everyone is eligible
-    if (!event.eligibility) {
+    // If no eligibility restrictions and no minPlayerRating, everyone is eligible
+    if (!event.eligibility && event.minPlayerRating == null) {
       return { eligible: true, reasons: [] };
+    }
+
+    // Check minPlayerRating restriction
+    if (event.minPlayerRating != null && event.minPlayerRating > 0) {
+      if (userSportPercentile == null) {
+        reasons.push(`Minimum ${event.minPlayerRating}th percentile rating required (no rating found)`);
+      } else if (userSportPercentile < event.minPlayerRating) {
+        reasons.push(
+          `Minimum ${event.minPlayerRating}th percentile rating required (yours: ${Math.round(userSportPercentile)})`
+        );
+      }
+    }
+
+    if (!event.eligibility) {
+      return { eligible: reasons.length === 0, reasons };
     }
 
     const eligibility = event.eligibility;
@@ -73,41 +89,6 @@ export class EventEligibilityService {
       reasons.push('Age verification required (update your profile)');
     }
 
-    // Check skill level restrictions
-    const skillLevelOrder = {
-      [SkillLevel.BEGINNER]: 1,
-      [SkillLevel.INTERMEDIATE]: 2,
-      [SkillLevel.ADVANCED]: 3,
-      [SkillLevel.ALL_LEVELS]: 0,
-    };
-
-    // Get user's skill level from their teams or profile
-    const userSkillLevel = this.getUserSkillLevel(user, userTeams);
-
-    if (eligibility.requiredSkillLevel) {
-      if (userSkillLevel !== eligibility.requiredSkillLevel) {
-        reasons.push(`Required skill level: ${this.formatSkillLevel(eligibility.requiredSkillLevel)}`);
-      }
-    } else {
-      if (eligibility.minSkillLevel) {
-        const userLevel = skillLevelOrder[userSkillLevel] || 0;
-        const minLevel = skillLevelOrder[eligibility.minSkillLevel] || 0;
-
-        if (userLevel < minLevel) {
-          reasons.push(`Minimum skill level: ${this.formatSkillLevel(eligibility.minSkillLevel)}`);
-        }
-      }
-
-      if (eligibility.maxSkillLevel) {
-        const userLevel = skillLevelOrder[userSkillLevel] || 0;
-        const maxLevel = skillLevelOrder[eligibility.maxSkillLevel] || 0;
-
-        if (userLevel > maxLevel) {
-          reasons.push(`Maximum skill level: ${this.formatSkillLevel(eligibility.maxSkillLevel)}`);
-        }
-      }
-    }
-
     return {
       eligible: reasons.length === 0,
       reasons,
@@ -131,61 +112,26 @@ export class EventEligibilityService {
   }
 
   /**
-   * Get user's skill level from their teams or profile
-   */
-  private static getUserSkillLevel(user: User, userTeams?: Team[]): SkillLevel {
-    // If user has teams, use the highest skill level from their teams
-    if (userTeams && userTeams.length > 0) {
-      const skillLevelOrder = {
-        [SkillLevel.BEGINNER]: 1,
-        [SkillLevel.INTERMEDIATE]: 2,
-        [SkillLevel.ADVANCED]: 3,
-        [SkillLevel.ALL_LEVELS]: 0,
-      };
-
-      const highestSkillLevel = userTeams.reduce((highest, team) => {
-        const teamLevel = skillLevelOrder[team.skillLevel] || 0;
-        const currentHighest = skillLevelOrder[highest] || 0;
-        return teamLevel > currentHighest ? team.skillLevel : highest;
-      }, SkillLevel.BEGINNER);
-
-      return highestSkillLevel;
-    }
-
-    // Default to beginner if no teams
-    return SkillLevel.BEGINNER;
-  }
-
-  /**
-   * Format skill level for display
-   */
-  private static formatSkillLevel(skillLevel: SkillLevel): string {
-    const labels = {
-      [SkillLevel.BEGINNER]: 'Beginner',
-      [SkillLevel.INTERMEDIATE]: 'Intermediate',
-      [SkillLevel.ADVANCED]: 'Advanced',
-      [SkillLevel.ALL_LEVELS]: 'All Levels',
-    };
-
-    return labels[skillLevel] || skillLevel;
-  }
-
-  /**
    * Get a summary of eligibility requirements for display
    */
-  static getEligibilitySummary(eligibility?: EventEligibility): string[] {
-    if (!eligibility) {
-      return ['Open to all'];
+  static getEligibilitySummary(eligibility?: EventEligibility, minPlayerRating?: number): string[] {
+    const summary: string[] = [];
+
+    // Show minPlayerRating requirement
+    if (minPlayerRating != null && minPlayerRating > 0) {
+      summary.push(`${minPlayerRating}+ rating required`);
     }
 
-    const summary: string[] = [];
+    if (!eligibility) {
+      return summary.length > 0 ? summary : ['Open to all'];
+    }
 
     if (eligibility.isInviteOnly) {
       summary.push('Invite only');
     }
 
     if (eligibility.restrictedToTeams && eligibility.restrictedToTeams.length > 0) {
-      summary.push(`Restricted to ${eligibility.restrictedToTeams.length} team(s)`);
+      summary.push(`Restricted to ${eligibility.restrictedToTeams.length} roster(s)`);
     }
 
     if (eligibility.restrictedToLeagues && eligibility.restrictedToLeagues.length > 0) {
@@ -199,17 +145,6 @@ export class EventEligibilityService {
         summary.push(`Ages ${eligibility.minAge}+`);
       } else if (eligibility.maxAge) {
         summary.push(`Ages up to ${eligibility.maxAge}`);
-      }
-    }
-
-    if (eligibility.requiredSkillLevel) {
-      summary.push(`${this.formatSkillLevel(eligibility.requiredSkillLevel)} only`);
-    } else {
-      if (eligibility.minSkillLevel) {
-        summary.push(`Min: ${this.formatSkillLevel(eligibility.minSkillLevel)}`);
-      }
-      if (eligibility.maxSkillLevel) {
-        summary.push(`Max: ${this.formatSkillLevel(eligibility.maxSkillLevel)}`);
       }
     }
 

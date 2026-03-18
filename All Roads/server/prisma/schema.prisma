@@ -102,9 +102,10 @@ model Event {
   eligibilityMinAge              Int?
   eligibilityMaxAge              Int?
   ageRestricted                  Boolean  @default(false) // True when minAge/maxAge are set — used for bracket vs overall rating
-  eligibilityRequiredSkillLevel  String?
-  eligibilityMinSkillLevel       String?
-  eligibilityMaxSkillLevel       String?
+  minPlayerRating                Int?     // 0-100 percentile; null = open to all
+  eligibilityRequiredSkillLevel  String?  // @deprecated — use minPlayerRating
+  eligibilityMinSkillLevel       String?  // @deprecated — use minPlayerRating
+  eligibilityMaxSkillLevel       String?  // @deprecated — use minPlayerRating
   eligibilityIsInviteOnly        Boolean  @default(false)
   
   // Private event fields
@@ -256,6 +257,8 @@ model League {
   description String?
   sportType   String
   skillLevel  String
+
+  minPlayerRating Int?    // 0-100 percentile; null = open to all
 
   // League type and visibility
   leagueType    String  @default("team")   // "team" or "pickup"

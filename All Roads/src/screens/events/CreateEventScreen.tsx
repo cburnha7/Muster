@@ -58,6 +58,7 @@ interface FormData {
   maxParticipants: string;
   price: string;
   skillLevel: SkillLevel | '';
+  minPlayerRating: string; // 0-100 percentile
   equipment: string;
   rules: string;
   // Privacy & restrictions
@@ -130,6 +131,7 @@ export function CreateEventScreen(): JSX.Element {
     maxParticipants: '',
     price: '0',
     skillLevel: '',
+    minPlayerRating: '',
     equipment: '',
     rules: '',
     // Privacy & restrictions
@@ -182,13 +184,6 @@ export function CreateEventScreen(): JSX.Element {
     { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
     { label: 'Kickball', value: SportType.KICKBALL },
     { label: 'Other', value: SportType.OTHER },
-  ];
-
-  const skillLevelOptions: SelectOption[] = [
-    { label: 'Beginner', value: SkillLevel.BEGINNER },
-    { label: 'Intermediate', value: SkillLevel.INTERMEDIATE },
-    { label: 'Advanced', value: SkillLevel.ADVANCED },
-    { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
   ];
 
   const eventTypeOptions: SelectOption[] = [
@@ -654,8 +649,15 @@ export function CreateEventScreen(): JSX.Element {
     }
 
     if (!formData.skillLevel) {
-      // Skill level validation disabled for now
-      // newErrors.skillLevel = 'Skill level is required';
+      // Skill level validation disabled — replaced by minPlayerRating
+    }
+
+    // Validate minPlayerRating if provided
+    if (formData.minPlayerRating) {
+      const rating = parseInt(formData.minPlayerRating);
+      if (isNaN(rating) || rating < 0 || rating > 100) {
+        newErrors.minPlayerRating = 'Rating must be between 0 and 100';
+      }
     }
 
     if (!formData.eventType) {
@@ -820,6 +822,7 @@ export function CreateEventScreen(): JSX.Element {
         maxParticipants: parseInt(formData.maxParticipants),
         price: parseFloat(formData.price),
         skillLevel: formData.skillLevel as SkillLevel,
+        minPlayerRating: formData.minPlayerRating ? parseInt(formData.minPlayerRating) : undefined,
         equipment: formData.equipment.split(',').map(item => item.trim()).filter(Boolean),
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
@@ -1255,17 +1258,14 @@ export function CreateEventScreen(): JSX.Element {
             />
           )}
 
-          {/* Skill Level - hidden for now
-          <FormSelect
-            label="Skill Level"
-            placeholder="Select skill level"
-            value={formData.skillLevel}
-            options={skillLevelOptions}
-            onSelect={(option) => handleSelectChange('skillLevel', option)}
-            error={errors.skillLevel}
-            required
+          <FormInput
+            label="Min Player Rating (0-100)"
+            placeholder="e.g., 80 for 80th percentile"
+            value={formData.minPlayerRating}
+            onChangeText={(value) => handleInputChange('minPlayerRating', value)}
+            keyboardType="numeric"
+            error={errors.minPlayerRating}
           />
-          */}
 
           <FormInput
             label="Equipment Needed"

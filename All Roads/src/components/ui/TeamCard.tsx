@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Team, SportType, SkillLevel } from '../../types';
+import { colors } from '../../theme';
 
 interface TeamCardProps {
   team: Team;
@@ -42,6 +43,12 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
 
   const availableSlots = team.maxMembers - team.members.length;
   const isFull = availableSlots <= 0;
+
+  const currentMember = currentUserId
+    ? team.members.find((m) => m.userId === currentUserId)
+    : undefined;
+  const isMember = currentMember?.status === 'active';
+  const isInvited = currentMember?.status === 'inactive'; // pending invite
 
   const isManager = currentUserId && (
     team.captainId === currentUserId ||
@@ -160,9 +167,15 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
             </Text>
           </View>
         </View>
-        {team.isPublic && !isFull && (
+        {isInvited && (
+          <View style={styles.invitedBadge}>
+            <Ionicons name="mail-outline" size={14} color={colors.court} />
+            <Text style={styles.invitedText}>Invited</Text>
+          </View>
+        )}
+        {team.isPublic && !isFull && !isMember && !isInvited && (
           <View style={styles.joinButton}>
-            <Text style={styles.joinText}>Join</Text>
+            <Text style={styles.joinText}>Join Up</Text>
           </View>
         )}
       </View>
@@ -325,13 +338,29 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
   },
   joinButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.grass,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
   },
   joinText: {
     color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  invitedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${colors.court}20`,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.court,
+    gap: 4,
+  },
+  invitedText: {
+    color: colors.court,
     fontSize: 12,
     fontWeight: '600',
   },

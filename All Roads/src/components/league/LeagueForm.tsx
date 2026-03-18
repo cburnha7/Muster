@@ -66,6 +66,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [description, setDescription] = useState(initialData?.description || '');
   const [sportType, setSportType] = useState(initialData?.sportType || '');
   const [skillLevel, setSkillLevel] = useState(initialData?.skillLevel || '');
+  const [minPlayerRating, setMinPlayerRating] = useState(
+    initialData?.minPlayerRating != null ? String(initialData.minPlayerRating) : ''
+  );
   const [seasonName, setSeasonName] = useState(initialData?.seasonName || '');
   const [startDate, setStartDate] = useState<Date | null>(() => {
     if (initialData?.startDate) {
@@ -385,6 +388,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       newErrors.skillLevel = 'Skill level is required';
     }
 
+    if (minPlayerRating) {
+      const rating = parseInt(minPlayerRating);
+      if (isNaN(rating) || rating < 0 || rating > 100) {
+        newErrors.minPlayerRating = 'Rating must be between 0 and 100';
+      }
+    }
+
     const win = parseInt(winPoints);
     const draw = parseInt(drawPoints);
     const loss = parseInt(lossPoints);
@@ -453,6 +463,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       description: description.trim() || undefined,
       sportType: sportType as SportType,
       skillLevel: skillLevel as SkillLevel,
+      minPlayerRating: minPlayerRating ? parseInt(minPlayerRating) : undefined,
       seasonName: seasonName.trim() || undefined,
       startDate: startDate || undefined,
       endDate: undefined,
@@ -705,6 +716,15 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             options={skillLevelOptions}
             onSelect={(option) => setSkillLevel(option.value as string)}
             error={errors.skillLevel}
+          />
+
+          <FormInput
+            label="Min Player Rating (0-100)"
+            placeholder="e.g., 80 for 80th percentile"
+            value={minPlayerRating}
+            onChangeText={setMinPlayerRating}
+            keyboardType="numeric"
+            error={errors.minPlayerRating}
           />
 
           <FormInput

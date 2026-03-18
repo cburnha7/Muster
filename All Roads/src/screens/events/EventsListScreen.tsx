@@ -28,7 +28,7 @@ import {
   setEvents,
 } from '../../store/slices/eventsSlice';
 import { useAuth } from '../../context/AuthContext';
-import { Event, EventFilters, SportType, SkillLevel, EventStatus } from '../../types';
+import { Event, EventFilters, SportType, EventStatus } from '../../types';
 
 interface EventSection {
   title: string;
@@ -46,6 +46,9 @@ export function EventsListScreen(): JSX.Element {
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [page, setPage] = useState(1);
+  const [allFetchedEvents, setAllFetchedEvents] = useState<Event[]>([]);
+  const [hasMore, setHasMore] = useState(true);
 
   const hasCustomFilters = Object.keys(customFilters).length > 0 || searchQuery.trim().length > 0;
   const activeFilters = hasCustomFilters ? customFilters : DEFAULT_EVENT_FILTERS;
@@ -54,13 +57,31 @@ export function EventsListScreen(): JSX.Element {
   const { 
     data: eventsData, 
     isLoading: eventsLoading, 
+    isFetching: eventsFetching,
     error: eventsError,
     refetch: refetchEvents 
   } = useGetEventsQuery({
     filters: activeFilters,
-    pagination: { page: 1, limit: 20 },
+    pagination: { page, limit: 20 },
     ...(currentUser?.id ? { userId: currentUser.id } : {}),
   });
+
+  // Accumulate events across pages
+  React.useEffect(() => {
+    if (eventsData?.data) {
+      if (page === 1) {
+        setAllFetchedEvents(eventsData.data);
+      } else {
+        setAllFetchedEvents(prev => {
+          const existingIds = new Set(prev.map(e => e.id));
+          const newEvents = eventsData.data.filter(e => !existingIds.has(e.id));
+          return [...prev, ...newEvents];
+        });
+      }
+      const totalPages = eventsData.pagination?.totalPages ?? 1;
+      setHasMore(page < totalPages);
+    }
+  }, [eventsData, page]);
 
   const { 
     data: bookingsData,
@@ -71,7 +92,7 @@ export function EventsListScreen(): JSX.Element {
     pagination: { page: 1, limit: 100 },
   });
 
-  const rawEvents = eventsData?.data || [];
+  const rawEvents = allFetchedEvents;
   const upcomingBookings = bookingsData?.data || [];
   const bookedEventIds = new Set(upcomingBookings.map(b => b.eventId));
 
@@ -113,14 +134,6 @@ export function EventsListScreen(): JSX.Element {
     { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
     { label: 'Kickball', value: SportType.KICKBALL },
     { label: 'Other', value: SportType.OTHER },
-  ];
-
-  const skillLevelOptions: SelectOption[] = [
-    { label: 'All Levels', value: '' },
-    { label: 'Beginner', value: SkillLevel.BEGINNER },
-    { label: 'Intermediate', value: SkillLevel.INTERMEDIATE },
-    { label: 'Advanced', value: SkillLevel.ADVANCED },
-    { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
   ];
 
   const debouncedSearch = useMemo(
@@ -174,20 +187,28 @@ export function EventsListScreen(): JSX.Element {
 
   const applyFilters = () => {
     setShowFilters(false);
+    setPage(1);
+    setHasMore(true);
   };
 
   const clearAllFilters = () => {
     setCustomFilters({});
     setSearchQuery('');
     setShowFilters(false);
+    setPage(1);
+    setHasMore(true);
   };
 
   const loadMoreEvents = () => {
-    console.log('Load more events - pagination not yet implemented with RTK Query');
+    if (!eventsFetching && hasMore) {
+      setPage(prev => prev + 1);
+    }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setPage(1);
+    setHasMore(true);
     await Promise.all([refetchEvents(), refetchBookings()]);
     setRefreshing(false);
   };
@@ -228,13 +249,6 @@ export function EventsListScreen(): JSX.Element {
         options={sportTypeOptions}
         onSelect={(option) => handleFilterChange('sportType', option.value as string)}
       />
-      <FormSelect
-        label="Skill Level"
-        placeholder="Select skill level"
-        value={customFilters.skillLevel || ''}
-        options={skillLevelOptions}
-        onSelect={(option) => handleFilterChange('skillLevel', option.value as string)}
-      />
       <View style={styles.filtersActions}>
         <FormButton
           title="Clear All"
@@ -252,12 +266,14 @@ export function EventsListScreen(): JSX.Element {
   );
 
   const renderFooter = () => {
-    if (!eventsLoading) return null;
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator size="small" color={colors.grass} />
-      </View>
-    );
+    if (eventsFetching && page > 1) {
+      return (
+        <View style={styles.footer}>
+          <ActivityIndicator size="small" color={colors.grass} />
+        </View>
+      );
+    }
+    return null;
   };
 
   if (eventsError && rawEvents.length === 0) {

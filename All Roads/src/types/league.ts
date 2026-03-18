@@ -9,6 +9,7 @@ export interface League {
   description?: string;
   sportType: string;
   skillLevel: string;
+  minPlayerRating?: number; // 0-100 percentile; null = open to all
   seasonId?: string;
   seasonName?: string;
   startDate?: Date | string;
@@ -56,6 +57,7 @@ export interface CreateLeagueData {
   description?: string;
   sportType: string;
   skillLevel: string;
+  minPlayerRating?: number; // 0-100 percentile; null = open to all
   seasonName?: string;
   startDate?: Date | string;
   endDate?: Date | string;
@@ -87,6 +89,7 @@ export interface UpdateLeagueData {
   name?: string;
   description?: string;
   skillLevel?: string;
+  minPlayerRating?: number | null; // 0-100 percentile; null = open to all
   seasonName?: string;
   startDate?: Date | string;
   endDate?: Date | string;

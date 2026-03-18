@@ -540,7 +540,7 @@ export function EventDetailsScreen(): JSX.Element {
     }
   };
 
-  // Get skill level color
+  // Get skill level color (kept for backward compat)
   const getSkillLevelColor = (skillLevel: SkillLevel) => {
     switch (skillLevel) {
       case SkillLevel.BEGINNER:
@@ -552,6 +552,12 @@ export function EventDetailsScreen(): JSX.Element {
       default:
         return '#007AFF';
     }
+  };
+
+  const getRatingBadgeColor = (rating: number) => {
+    if (rating >= 80) return colors.track;
+    if (rating >= 50) return colors.court;
+    return colors.grass;
   };
 
   // Get status color
@@ -672,16 +678,18 @@ export function EventDetailsScreen(): JSX.Element {
           </View>
           
           <View style={styles.badges}>
-            <View
-              style={[
-                styles.badge,
-                { backgroundColor: getSkillLevelColor(event.skillLevel) },
-              ]}
-            >
-              <Text style={styles.badgeText}>
-                {event.skillLevel.replace('_', ' ').toUpperCase()}
-              </Text>
-            </View>
+            {event.minPlayerRating != null && event.minPlayerRating > 0 && (
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
+                ]}
+              >
+                <Text style={styles.badgeText}>
+                  {event.minPlayerRating}+ RATING
+                </Text>
+              </View>
+            )}
             
             {event.status !== EventStatus.COMPLETED && (
               <View

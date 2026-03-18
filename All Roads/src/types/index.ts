@@ -242,6 +242,7 @@ export interface Event {
   price: number;
   currency: string;
   skillLevel: SkillLevel;
+  minPlayerRating?: number; // 0-100 percentile; null = open to all
   equipment: string[];
   rules?: string;
   status: EventStatus;
@@ -279,9 +280,10 @@ export interface EventEligibility {
   restrictedToLeagues?: string[]; // Specific league IDs allowed
   minAge?: number; // Minimum age requirement
   maxAge?: number; // Maximum age requirement
-  requiredSkillLevel?: SkillLevel; // Exact skill level required
-  minSkillLevel?: SkillLevel; // Minimum skill level (beginner < intermediate < advanced)
-  maxSkillLevel?: SkillLevel; // Maximum skill level
+  requiredSkillLevel?: SkillLevel; // @deprecated — use minPlayerRating on Event
+  minSkillLevel?: SkillLevel; // @deprecated — use minPlayerRating on Event
+  maxSkillLevel?: SkillLevel; // @deprecated — use minPlayerRating on Event
+  minPlayerRating?: number; // 0-100 percentile; null = open to all
   isInviteOnly?: boolean; // Requires invitation to join
   minimumPlayerCount?: number; // Minimum players needed (required for invite-only)
   wasAutoOpenedToPublic?: boolean; // Track if event was auto-opened
@@ -429,6 +431,7 @@ export interface PaginatedResponse<T> {
 export interface EventFilters {
   sportType?: SportType;
   skillLevel?: SkillLevel;
+  minPlayerRating?: number; // Filter events by max rating requirement
   startDate?: Date;
   endDate?: Date;
   facilityId?: string;
@@ -483,6 +486,7 @@ export interface CreateEventData {
   maxParticipants: number;
   price: number;
   skillLevel: SkillLevel;
+  minPlayerRating?: number; // 0-100 percentile; null = open to all
   equipment: string[];
   rules?: string;
   eventType: EventType;

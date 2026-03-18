@@ -7,7 +7,7 @@ const router = Router();
 // Get all events
 router.get('/', async (req, res) => {
   try {
-    const { sportType, skillLevel, status, organizerId, userId, page = '1', limit = '10' } = req.query;
+    const { sportType, minPlayerRating, status, organizerId, userId, page = '1', limit = '10' } = req.query;
     
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
       startTime: { gte: new Date() },
     };
     if (sportType) where.sportType = sportType;
-    if (skillLevel) where.skillLevel = skillLevel;
+    if (minPlayerRating) where.minPlayerRating = { lte: parseInt(minPlayerRating as string) };
     if (status) where.status = status;
     if (organizerId) where.organizerId = organizerId;
 
@@ -112,7 +112,10 @@ router.get('/:id', async (req, res) => {
     }
 
     // Enforce private event visibility
-    const requestingUserId = req.query.userId as string | undefined;
+    const requestingUserId = (req.query.userId as string | undefined)
+      || (req as any).effectiveUserId
+      || (req as any).user?.userId
+      || (req.headers['x-user-id'] as string | undefined);
     if (event.isPrivate && requestingUserId) {
       const isOrganizer = event.organizerId === requestingUserId;
       const isInvited = event.invitedUserIds?.includes(requestingUserId);
@@ -437,9 +440,15 @@ router.post('/', async (req, res) => {
         cleanEventData.eligibilityRestrictedToLeagues = eligibility.restrictedToLeagues || [];
         cleanEventData.eligibilityMinAge = eligibility.minAge;
         cleanEventData.eligibilityMaxAge = eligibility.maxAge;
-        cleanEventData.eligibilityRequiredSkillLevel = eligibility.requiredSkillLevel;
-        cleanEventData.eligibilityMinSkillLevel = eligibility.minSkillLevel;
-        cleanEventData.eligibilityMaxSkillLevel = eligibility.maxSkillLevel;
+        // Legacy skill-level eligibility fields — no longer written
+        // cleanEventData.eligibilityRequiredSkillLevel = eligibility.requiredSkillLevel;
+        // cleanEventData.eligibilityMinSkillLevel = eligibility.minSkillLevel;
+        // cleanEventData.eligibilityMaxSkillLevel = eligibility.maxSkillLevel;
+      }
+
+      // Set minPlayerRating from top-level field
+      if (eventData.minPlayerRating != null) {
+        cleanEventData.minPlayerRating = eventData.minPlayerRating;
       }
 
       // Store private event data
