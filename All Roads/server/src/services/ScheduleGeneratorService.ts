@@ -24,10 +24,21 @@ export interface LeagueWithRosters {
   preferredTimeWindowEnd?: string | null;
   seasonGameCount?: number | null;
   startDate?: Date | null;
+  endDate?: Date | null;
   playoffTeamCount?: number | null;
   eliminationFormat?: string | null;
   rosters: Array<{ id: string; name: string }>;
 }
+
+interface DistributeConfig {
+  preferredGameDays: number[];
+  timeWindowStart: string;
+  timeWindowEnd: string;
+  startDate: Date;
+  endDate: Date | null;
+  gameFrequency: string;
+}
+
 
 export interface SchedulePreviewEvent {
   homeRoster: RosterInfo;
@@ -89,17 +100,21 @@ export class ScheduleGeneratorService {
     }
 
     const matchups = this.generateMatchups(rosters, league.seasonGameCount);
-    const shellEvents = this.distributeMatchups(
-      matchups,
-      league.preferredGameDays,
-      league.preferredTimeWindowStart || '18:00',
-      league.preferredTimeWindowEnd || '21:00',
-      league.registrationCloseDate
+
+    const config: DistributeConfig = {
+      preferredGameDays: league.preferredGameDays || [],
+      timeWindowStart: league.preferredTimeWindowStart || '09:00',
+      timeWindowEnd: league.preferredTimeWindowEnd || '17:00',
+      startDate: league.registrationCloseDate
         ? new Date(new Date(league.registrationCloseDate).getTime() + 7 * 24 * 60 * 60 * 1000)
         : league.startDate
           ? new Date(league.startDate)
-          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    );
+          : new Date(),
+      endDate: league.endDate ? new Date(league.endDate) : null,
+      gameFrequency: league.gameFrequency || 'weekly',
+    };
+
+    const shellEvents = this.distributeMatchups(matchups, config);
 
     // Create all events and matches in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -178,17 +193,16 @@ export class ScheduleGeneratorService {
 
     const matchups = this.generateMatchups(rosterInfos, league.seasonGameCount);
 
-    const startDate = league.startDate
-      ? new Date(league.startDate)
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const config: DistributeConfig = {
+      preferredGameDays: league.preferredGameDays || [],
+      timeWindowStart: league.preferredTimeWindowStart || '09:00',
+      timeWindowEnd: league.preferredTimeWindowEnd || '17:00',
+      startDate: league.startDate ? new Date(league.startDate) : new Date(),
+      endDate: league.endDate ? new Date(league.endDate) : null,
+      gameFrequency: league.gameFrequency || 'weekly',
+    };
 
-    const shellEvents = this.distributeMatchups(
-      matchups,
-      league.preferredGameDays,
-      league.preferredTimeWindowStart || '18:00',
-      league.preferredTimeWindowEnd || '21:00',
-      startDate
-    );
+    const shellEvents = this.distributeMatchups(matchups, config);
 
     // Verify no double-booking: no roster in two overlapping games on the same day
     this.validateNoDoubleBooking(shellEvents);
@@ -302,60 +316,298 @@ export class ScheduleGeneratorService {
    * Distribute matchups across preferred game days with times within the window.
    */
   private static distributeMatchups(
-    matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number }>,
-    preferredGameDays: number[],
-    timeWindowStart: string,
-    timeWindowEnd: string,
-    startDate: Date
-  ): ShellEvent[] {
-    const events: ShellEvent[] = [];
-    const sortedDays = [...preferredGameDays].sort((a, b) => a - b);
+      matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number }>,
+      config: DistributeConfig
+    ): ShellEvent[] {
+      const {
+        preferredGameDays,
+        timeWindowStart,
+        timeWindowEnd,
+        startDate,
+        endDate,
+        gameFrequency,
+      } = config;
 
-    const [startH, startM] = timeWindowStart.split(':').map(Number);
-    const [endH, endM] = timeWindowEnd.split(':').map(Number);
-    const windowMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-    // Space games 2 hours apart within the window
-    const gamesPerSlot = Math.max(1, Math.floor(windowMinutes / 120));
+      const frequency = gameFrequency ?? 'weekly';
 
-    let currentDate = new Date(startDate);
-    let matchIdx = 0;
+      if (frequency === 'all_at_once') {
+        // All-at-once: collect all consecutive day slots, assign in order
+        const slots = ScheduleGeneratorService.collectAllAtOnceSlots(
+          startDate,
+          endDate,
+          timeWindowStart,
+          timeWindowEnd
+        );
 
-    while (matchIdx < matchups.length) {
-      // Find next preferred game day
-      const dayOfWeek = currentDate.getDay();
-      const nextDay = sortedDays.find(d => d >= dayOfWeek) ?? sortedDays[0];
-      let daysToAdd = nextDay >= dayOfWeek ? nextDay - dayOfWeek : 7 - dayOfWeek + nextDay;
-      if (daysToAdd === 0 && matchIdx > 0 && events.length > 0) {
-        // Already used this day, move to next occurrence
-        const nextNextDay = sortedDays.find(d => d > dayOfWeek) ?? sortedDays[0];
-        daysToAdd = nextNextDay > dayOfWeek ? nextNextDay - dayOfWeek : 7 - dayOfWeek + nextNextDay;
-        if (daysToAdd === 0) daysToAdd = 7;
-      }
+        if (matchups.length > slots.length) {
+          throw new Error(
+            'Insufficient dates to schedule all games within the configured window'
+          );
+        }
 
-      currentDate = new Date(currentDate);
-      currentDate.setDate(currentDate.getDate() + daysToAdd);
-
-      // Schedule up to gamesPerSlot matches on this day
-      for (let slot = 0; slot < gamesPerSlot && matchIdx < matchups.length; slot++) {
-        const matchup = matchups[matchIdx];
-        const gameTime = new Date(currentDate);
-        gameTime.setHours(startH + slot * 2, startM, 0, 0);
-
-        events.push({
+        return matchups.map((matchup, i) => ({
           homeRoster: matchup.home,
           awayRoster: matchup.away,
-          scheduledAt: gameTime,
+          scheduledAt: slots[i],
           round: matchup.round,
-        });
-        matchIdx++;
+        }));
+      }
+
+      if (frequency === 'monthly') {
+        // Monthly: collect slots grouped by month, distribute evenly
+        const monthlySlots = ScheduleGeneratorService.collectMonthlySlots(
+          startDate,
+          endDate,
+          preferredGameDays,
+          timeWindowStart,
+          timeWindowEnd
+        );
+
+        // Filter out months with zero slots and redistribute
+        const activeMonths = monthlySlots.filter((m) => m.slots.length > 0);
+
+        const totalSlots = activeMonths.reduce(
+          (sum, m) => sum + m.slots.length,
+          0
+        );
+
+        if (matchups.length > totalSlots) {
+          throw new Error(
+            'Insufficient dates to schedule all games within the configured window'
+          );
+        }
+
+        const totalGames = matchups.length;
+        const totalMonths = activeMonths.length;
+
+        if (totalMonths === 0) {
+          throw new Error(
+            'Insufficient dates to schedule all games within the configured window'
+          );
+        }
+
+        const gamesPerMonth = Math.floor(totalGames / totalMonths);
+        const remainder = totalGames % totalMonths;
+
+        // Build allocation: first `remainder` months get gamesPerMonth + 1
+        const allocation: number[] = activeMonths.map((_, i) =>
+          i < remainder ? gamesPerMonth + 1 : gamesPerMonth
+        );
+
+        // Redistribute if a month doesn't have enough slots
+        for (let i = 0; i < allocation.length; i++) {
+          const available = activeMonths[i].slots.length;
+          if (allocation[i] > available) {
+            let overflow = allocation[i] - available;
+            allocation[i] = available;
+            // Push overflow to adjacent months (forward first, then backward)
+            for (let j = i + 1; j < allocation.length && overflow > 0; j++) {
+              const canTake = activeMonths[j].slots.length - allocation[j];
+              if (canTake > 0) {
+                const take = Math.min(canTake, overflow);
+                allocation[j] += take;
+                overflow -= take;
+              }
+            }
+            // If still overflow, try earlier months
+            for (let j = i - 1; j >= 0 && overflow > 0; j--) {
+              const canTake = activeMonths[j].slots.length - allocation[j];
+              if (canTake > 0) {
+                const take = Math.min(canTake, overflow);
+                allocation[j] += take;
+                overflow -= take;
+              }
+            }
+          }
+        }
+
+        // Assign matchups to slots within each month
+        const events: ShellEvent[] = [];
+        let matchIdx = 0;
+
+        for (let m = 0; m < activeMonths.length; m++) {
+          const monthSlots = activeMonths[m].slots;
+          const count = allocation[m];
+
+          for (let s = 0; s < count && matchIdx < matchups.length; s++) {
+            const matchup = matchups[matchIdx];
+            events.push({
+              homeRoster: matchup.home,
+              awayRoster: matchup.away,
+              scheduledAt: monthSlots[s],
+              round: matchup.round,
+            });
+            matchIdx++;
+          }
+        }
+
+        return events;
+      }
+
+      // Default: 'weekly' (also handles null/undefined gameFrequency)
+      const slots = ScheduleGeneratorService.collectWeeklySlots(
+        startDate,
+        endDate,
+        preferredGameDays,
+        timeWindowStart,
+        timeWindowEnd
+      );
+
+      if (matchups.length > slots.length) {
+        throw new Error(
+          'Insufficient dates to schedule all games within the configured window'
+        );
+      }
+
+      return matchups.map((matchup, i) => ({
+        homeRoster: matchup.home,
+        awayRoster: matchup.away,
+        scheduledAt: slots[i],
+        round: matchup.round,
+      }));
+    }
+
+
+
+  /**
+   * Collect all available time slots for "all at once" (tournament) distribution.
+   * Iterates consecutive days from startDate to endDate, generating 2-hour-spaced
+   * slots within the time window. Ignores preferredGameDays entirely.
+   */
+  private static collectAllAtOnceSlots(
+    startDate: Date,
+    endDate: Date | null,
+    timeWindowStart: string,
+    timeWindowEnd: string
+  ): Date[] {
+    const [startH, startM] = timeWindowStart.split(':').map(Number);
+    const [endH, endM] = timeWindowEnd.split(':').map(Number);
+    const windowStartMinutes = startH * 60 + startM;
+    const windowEndMinutes = endH * 60 + endM;
+
+    const maxDays = 365;
+    const limitDate = endDate
+      ? new Date(endDate)
+      : new Date(startDate.getTime() + maxDays * 24 * 60 * 60 * 1000);
+
+    const slots: Date[] = [];
+    const current = new Date(startDate);
+
+    while (current <= limitDate) {
+      // Generate time slots spaced 2 hours apart within the window
+      let slotMinutes = windowStartMinutes;
+      while (slotMinutes + 120 <= windowEndMinutes) {
+        const slot = new Date(current);
+        slot.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+        slots.push(slot);
+        slotMinutes += 120;
       }
 
       // Move to next day
-      currentDate.setDate(currentDate.getDate() + 1);
+      current.setDate(current.getDate() + 1);
     }
 
-    return events;
+    return slots;
   }
+
+  private static collectWeeklySlots(
+    startDate: Date,
+    endDate: Date | null,
+    preferredGameDays: number[],
+    timeWindowStart: string,
+    timeWindowEnd: string
+  ): Date[] {
+    const [startH, startM] = timeWindowStart.split(':').map(Number);
+    const [endH, endM] = timeWindowEnd.split(':').map(Number);
+    const windowStartMinutes = startH * 60 + startM;
+    const windowEndMinutes = endH * 60 + endM;
+
+    const maxDays = 365;
+    const limitDate = endDate
+      ? new Date(endDate)
+      : new Date(startDate.getTime() + maxDays * 24 * 60 * 60 * 1000);
+
+    const slots: Date[] = [];
+    const current = new Date(startDate);
+
+    while (current <= limitDate) {
+      if (preferredGameDays.includes(current.getDay())) {
+        // Generate time slots spaced 2 hours apart within the window
+        let slotMinutes = windowStartMinutes;
+        while (slotMinutes + 120 <= windowEndMinutes) {
+          const slot = new Date(current);
+          slot.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+          slots.push(slot);
+          slotMinutes += 120;
+        }
+      }
+
+      // Move to next day
+      current.setDate(current.getDate() + 1);
+    }
+
+    return slots;
+  }
+
+  /**
+   * Collect available time slots for "monthly" distribution, grouped by calendar month.
+   * Iterates from startDate to endDate (or up to 365 days), only including days
+   * whose getDay() is in preferredGameDays. Generates 2-hour-spaced slots within
+   * the time window on each matching day. Returns slots grouped by month key (e.g. "2024-01").
+   */
+  private static collectMonthlySlots(
+    startDate: Date,
+    endDate: Date | null,
+    preferredGameDays: number[],
+    timeWindowStart: string,
+    timeWindowEnd: string
+  ): { month: string; slots: Date[] }[] {
+    const [startH, startM] = timeWindowStart.split(':').map(Number);
+    const [endH, endM] = timeWindowEnd.split(':').map(Number);
+    const windowStartMinutes = startH * 60 + startM;
+    const windowEndMinutes = endH * 60 + endM;
+
+    const maxDays = 365;
+    const limitDate = endDate
+      ? new Date(endDate)
+      : new Date(startDate.getTime() + maxDays * 24 * 60 * 60 * 1000);
+
+    const monthMap = new Map<string, Date[]>();
+    const current = new Date(startDate);
+
+    while (current <= limitDate) {
+      if (preferredGameDays.includes(current.getDay())) {
+        const monthKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+
+        if (!monthMap.has(monthKey)) {
+          monthMap.set(monthKey, []);
+        }
+
+        // Generate time slots spaced 2 hours apart within the window
+        let slotMinutes = windowStartMinutes;
+        while (slotMinutes + 120 <= windowEndMinutes) {
+          const slot = new Date(current);
+          slot.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+          monthMap.get(monthKey)!.push(slot);
+          slotMinutes += 120;
+        }
+      }
+
+      // Move to next day
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Convert map to array, preserving chronological order
+    const result: { month: string; slots: Date[] }[] = [];
+    for (const [month, slots] of monthMap) {
+      result.push({ month, slots });
+    }
+
+    return result;
+  }
+
+
+
 
   /**
    * Generate playoff rounds using a single-elimination bracket.
@@ -392,13 +644,15 @@ export class ScheduleGeneratorService {
     }
 
     // Distribute across preferred days within the time window
-    const shellEvents = this.distributeMatchups(
-      matchups,
-      preferredDays,
-      timeWindow.start,
-      timeWindow.end,
-      startDate
-    );
+    const config: DistributeConfig = {
+      preferredGameDays: preferredDays,
+      timeWindowStart: timeWindow.start,
+      timeWindowEnd: timeWindow.end,
+      startDate,
+      endDate: null,
+      gameFrequency: 'weekly',
+    };
+    const shellEvents = this.distributeMatchups(matchups, config);
 
     // Map to PlayoffEvent with the correct flag and playoffRound
     return shellEvents.map((e, idx) => ({
@@ -460,60 +714,6 @@ export class ScheduleGeneratorService {
         }
       }
     }
-  }
-
-  /**
-   * Generate playoff rounds using a single-elimination bracket.
-   * All roster assignments are TBD — actual rosters are determined by standings.
-   * Returns playoff events distributed across preferred days within the time window.
-   */
-  static generatePlayoffRounds(
-    rosterCount: number,
-    playoffSlots: number,
-    startDate: Date,
-    preferredDays: number[],
-    timeWindow: { start: string; end: string }
-  ): PlayoffEvent[] {
-    if (playoffSlots < 2) return [];
-
-    const tbdRoster: RosterInfo = { id: 'TBD', name: 'TBD' };
-
-    // Build single-elimination bracket: playoffSlots/2 games in round 1, halving each round
-    const matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number; playoffRound: number }> = [];
-    let gamesInRound = Math.floor(playoffSlots / 2);
-    let playoffRound = 1;
-
-    while (gamesInRound >= 1) {
-      for (let i = 0; i < gamesInRound; i++) {
-        matchups.push({
-          home: tbdRoster,
-          away: tbdRoster,
-          round: 100 + playoffRound,
-          playoffRound,
-        });
-      }
-      gamesInRound = Math.floor(gamesInRound / 2);
-      playoffRound++;
-    }
-
-    // Distribute across preferred days within the time window
-    const shellEvents = this.distributeMatchups(
-      matchups,
-      preferredDays,
-      timeWindow.start,
-      timeWindow.end,
-      startDate
-    );
-
-    // Map to PlayoffEvent with the correct flag and playoffRound
-    return shellEvents.map((e, idx) => ({
-      homeRoster: e.homeRoster,
-      awayRoster: e.awayRoster,
-      scheduledAt: e.scheduledAt.toISOString(),
-      round: matchups[idx].round,
-      flag: 'playoffs' as const,
-      playoffRound: matchups[idx].playoffRound,
-    }));
   }
 
   /**
@@ -638,33 +838,35 @@ export class ScheduleGeneratorService {
    * Non-power-of-2 roster counts are padded with byes.
    */
   static generateTournamentBracket(
-    rosters: RosterInfo[],
-    eliminationFormat: 'single_elimination' | 'double_elimination',
-    startDate: Date,
-    preferredDays: number[],
-    timeWindow: { start: string; end: string }
-  ): TournamentEvent[] {
-    if (rosters.length < 2) return [];
+      rosters: RosterInfo[],
+      eliminationFormat: 'single_elimination' | 'double_elimination',
+      startDate: Date,
+      preferredDays: number[],
+      timeWindow: { start: string; end: string },
+      endDate?: Date | null
+    ): TournamentEvent[] {
+      if (rosters.length < 2) return [];
 
-    // Round up to next power of 2
-    const n = rosters.length;
-    let bracketSize = 1;
-    while (bracketSize < n) bracketSize *= 2;
+      // Round up to next power of 2
+      const n = rosters.length;
+      let bracketSize = 1;
+      while (bracketSize < n) bracketSize *= 2;
 
-    const byeRoster: RosterInfo = { id: 'BYE', name: 'BYE' };
+      const byeRoster: RosterInfo = { id: 'BYE', name: 'BYE' };
 
-    // Seed rosters into bracket slots, padding with byes
-    const seeded: RosterInfo[] = [...rosters];
-    while (seeded.length < bracketSize) {
-      seeded.push(byeRoster);
+      // Seed rosters into bracket slots, padding with byes
+      const seeded: RosterInfo[] = [...rosters];
+      while (seeded.length < bracketSize) {
+        seeded.push(byeRoster);
+      }
+
+      if (eliminationFormat === 'single_elimination') {
+        return this.generateSingleElimination(seeded, bracketSize, startDate, preferredDays, timeWindow, endDate);
+      } else {
+        return this.generateDoubleElimination(seeded, bracketSize, startDate, preferredDays, timeWindow, endDate);
+      }
     }
 
-    if (eliminationFormat === 'single_elimination') {
-      return this.generateSingleElimination(seeded, bracketSize, startDate, preferredDays, timeWindow);
-    } else {
-      return this.generateDoubleElimination(seeded, bracketSize, startDate, preferredDays, timeWindow);
-    }
-  }
 
   /**
    * Persist a confirmed schedule as Event + Match records.
@@ -792,7 +994,8 @@ export class ScheduleGeneratorService {
     bracketSize: number,
     startDate: Date,
     preferredDays: number[],
-    timeWindow: { start: string; end: string }
+    timeWindow: { start: string; end: string },
+    endDate?: Date | null
   ): TournamentEvent[] {
     const totalRounds = Math.log2(bracketSize);
     const allMatchups: Array<{
@@ -850,13 +1053,19 @@ export class ScheduleGeneratorService {
       gamesInPrevRound = gamesInRound;
     }
 
-    // Distribute across preferred days
+    // Distribute across preferred days — tournament brackets always use 'all_at_once'
+    const config: DistributeConfig = {
+      preferredGameDays: preferredDays,
+      timeWindowStart: timeWindow.start,
+      timeWindowEnd: timeWindow.end,
+      startDate,
+      endDate: endDate ?? null,
+      gameFrequency: 'all_at_once',
+    };
+
     const distributed = this.distributeMatchups(
       allMatchups.map(m => ({ home: m.home, away: m.away, round: m.round })),
-      preferredDays,
-      timeWindow.start,
-      timeWindow.end,
-      startDate
+      config
     );
 
     return distributed.map((e, idx) => ({
@@ -882,7 +1091,8 @@ export class ScheduleGeneratorService {
       bracketSize: number,
       startDate: Date,
       preferredDays: number[],
-      timeWindow: { start: string; end: string }
+      timeWindow: { start: string; end: string },
+      endDate?: Date | null
     ): TournamentEvent[] {
       const allMatchups: Array<{
         home: RosterInfo;
@@ -1049,13 +1259,19 @@ export class ScheduleGeneratorService {
         gameNumber,
       });
 
-      // Distribute across preferred days
+      // Distribute across preferred days — tournament brackets always use 'all_at_once'
+      const config: DistributeConfig = {
+        preferredGameDays: preferredDays,
+        timeWindowStart: timeWindow.start,
+        timeWindowEnd: timeWindow.end,
+        startDate,
+        endDate: endDate ?? null,
+        gameFrequency: 'all_at_once',
+      };
+
       const distributed = this.distributeMatchups(
         allMatchups.map(m => ({ home: m.home, away: m.away, round: m.round })),
-        preferredDays,
-        timeWindow.start,
-        timeWindow.end,
-        startDate
+        config
       );
 
       return distributed.map((e, idx) => ({

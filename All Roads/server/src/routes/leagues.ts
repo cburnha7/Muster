@@ -2183,6 +2183,7 @@ router.post('/:id/generate-schedule', optionalAuthMiddleware, async (req: Reques
       preferredTimeWindowEnd: league.preferredTimeWindowEnd,
       seasonGameCount: league.seasonGameCount,
       startDate: league.startDate,
+      endDate: league.endDate,
       playoffTeamCount: league.playoffTeamCount,
       eliminationFormat: league.eliminationFormat,
       rosters,
@@ -2200,7 +2201,8 @@ router.post('/:id/generate-schedule', optionalAuthMiddleware, async (req: Reques
         {
           start: league.preferredTimeWindowStart || '18:00',
           end: league.preferredTimeWindowEnd || '21:00',
-        }
+        },
+        league.endDate ? new Date(league.endDate) : null
       );
 
       return res.json({
