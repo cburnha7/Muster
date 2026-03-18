@@ -169,6 +169,10 @@ export interface UserResponse {
   lastName: string;
   email: string;
   username: string;
+  role: string;
+  membershipTier: string;
+  trialTier: string | null;
+  trialExpiry: Date | null;
   ssoProviders: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -188,6 +192,10 @@ export function toUserResponse(user: User): UserResponse {
     lastName: user.lastName,
     email: user.email,
     username: user.username,
+    role: user.role || 'user',
+    membershipTier: user.membershipTier || 'standard',
+    trialTier: user.trialTier || null,
+    trialExpiry: user.trialExpiry || null,
     ssoProviders: user.ssoProviders || [],
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -16,6 +17,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { teamService } from '../../services/api/TeamService';
 import { userService } from '../../services/api/UserService';
+import { setUserTeams } from '../../store/slices/teamsSlice';
 import { Team } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,6 +29,7 @@ interface Section {
 
 export function TeamsListScreen() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const { user } = useAuth();
 
   const [myRosters, setMyRosters] = useState<Team[]>([]);
@@ -47,6 +50,7 @@ export function TeamsListScreen() {
       const myTeamIds = new Set(myTeams.map((t) => t.id));
 
       setMyRosters(myTeams);
+      dispatch(setUserTeams(myTeams));
       // Public rosters: public, user is not a member, exclude private
       setPublicRosters(
         (allRes?.data ?? []).filter((t) => t.isPublic && !myTeamIds.has(t.id))
@@ -94,8 +98,10 @@ export function TeamsListScreen() {
       const response = await teamService.searchTeams(query, {}, { page: 1, limit: 50 });
       const myRes = await userService.getUserTeams();
       const myTeamIds = new Set((myRes?.data ?? []).map((t) => t.id));
+      const myTeamsList = myRes?.data ?? [];
+      dispatch(setUserTeams(myTeamsList));
       const results = response.results ?? [];
-      setMyRosters((myRes?.data ?? []).filter((t) =>
+      setMyRosters(myTeamsList.filter((t) =>
         t.name.toLowerCase().includes(query.toLowerCase())
       ));
       setPublicRosters(results.filter((t) => t.isPublic && !myTeamIds.has(t.id)));

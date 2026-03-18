@@ -14,6 +14,10 @@ export interface User {
   username: string;
   firstName: string;
   lastName: string;
+  role?: string; // 'user' | 'admin'
+  membershipTier?: string; // 'standard' | 'player' | 'host' | 'facility'
+  trialTier?: string | null;
+  trialExpiry?: string | null;
   ssoProviders?: string[]; // Array of linked SSO providers ('apple', 'google')
   ssoProviderIds?: Record<string, string>; // Map of provider name to provider user ID
   createdAt: string;

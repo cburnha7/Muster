@@ -794,14 +794,40 @@ router.delete('/:id', async (req, res) => {
       }
     }
 
-    // Delete facility (cascade will handle related records)
-    await prisma.facility.delete({
-      where: { id },
+    // Clean up references that don't cascade before deleting
+    await prisma.$transaction(async (tx) => {
+      // Nullify facility references on events
+      await tx.event.updateMany({
+        where: { facilityId: id },
+        data: { facilityId: null },
+      });
+
+      // Nullify facility references on bookings
+      await tx.booking.updateMany({
+        where: { facilityId: id },
+        data: { facilityId: null },
+      });
+
+      // Delete reviews for this facility
+      await tx.review.deleteMany({
+        where: { facilityId: id },
+      });
+
+      // Delete facility ratings
+      await tx.facilityRating.deleteMany({
+        where: { facilityId: id },
+      });
+
+      // Delete facility (cascade handles courts, time slots, rentals, etc.)
+      await tx.facility.delete({
+        where: { id },
+      });
     });
 
     res.status(204).send();
-  } catch (error) {
-    console.error('Delete facility error:', error);
+  } catch (error: any) {
+    console.error('Delete facility error:', error?.message || error);
+    console.error('Delete facility error code:', error?.code);
     res.status(500).json({ error: 'Failed to delete facility' });
   }
 });
