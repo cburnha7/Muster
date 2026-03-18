@@ -445,6 +445,39 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Get leagues ready to schedule for the current user (Commissioner only)
+router.get('/leagues-ready-to-schedule', optionalAuthMiddleware, async (req, res) => {
+  try {
+    let userId = req.user?.userId;
+    if (!userId) {
+      userId = req.headers['x-user-id'] as string || req.query.userId as string;
+    }
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Find leagues where user is commissioner, notification was sent, and schedule not yet generated
+    const readyLeagues = await prisma.league.findMany({
+      where: {
+        organizerId: userId,
+        readyNotificationSent: true,
+        scheduleGenerated: false,
+      },
+      select: {
+        id: true,
+        name: true,
+        sportType: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(readyLeagues);
+  } catch (error) {
+    console.error('Get leagues ready to schedule error:', error);
+    res.status(500).json({ error: 'Failed to fetch leagues ready to schedule' });
+  }
+});
+
 // Get current user's events (organized + confirmed participant)
 router.get('/events', optionalAuthMiddleware, async (req, res) => {
   try {

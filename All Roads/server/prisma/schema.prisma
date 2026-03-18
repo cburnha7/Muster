@@ -299,6 +299,7 @@ model League {
   preferredTimeWindowEnd   String?    // HH:MM format
   seasonGameCount          Int?
   scheduleGenerated        Boolean    @default(false)
+  readyNotificationSent    Boolean    @default(false)
   trackStandings           Boolean    @default(true)
   seasonLength             Int?
   scheduleFrequency        String?    // "weekly" or "monthly"

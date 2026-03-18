@@ -309,6 +309,15 @@ export class UserService extends BaseApiService {
   }
 
   /**
+   * Get leagues ready to schedule (Commissioner only)
+   */
+  async getLeaguesReadyToSchedule(): Promise<ReadyToScheduleLeague[]> {
+    return this.get<ReadyToScheduleLeague[]>(`${API_ENDPOINTS.USERS.BASE}/leagues-ready-to-schedule`, {
+      cacheOptions: { skipCache: true },
+    });
+  }
+
+  /**
    * Get pending invitations (roster + league)
    */
   async getInvitations(): Promise<{
@@ -358,6 +367,12 @@ export interface LeagueInvitation {
   rosterId?: string;
   rosterName?: string;
   invitedAt: string;
+}
+
+export interface ReadyToScheduleLeague {
+  id: string;
+  name: string;
+  sportType?: string;
 }
 
 // Create and export singleton instance

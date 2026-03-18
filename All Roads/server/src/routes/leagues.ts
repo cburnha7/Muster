@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { NotificationService } from '../services/NotificationService';
-import { ScheduleGeneratorService } from '../services/ScheduleGeneratorService';
+import { ScheduleGeneratorService, LeagueWithRosters } from '../services/ScheduleGeneratorService';
+import { checkLeagueReady } from '../jobs/league-ready-check';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import { requirePlan } from '../middleware/subscription';
 
@@ -360,6 +361,7 @@ router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Requ
         ...(scheduleFrequency && { scheduleFrequency }),
         ...(seasonLength !== undefined && seasonLength !== null && { seasonLength }),
         ...(genderRestriction && { genderRestriction }),
+        autoGenerateMatchups: false,
       },
       include: {
         organizer: {
@@ -429,7 +431,6 @@ router.put('/:id', async (req: Request, res: Response) => {
       trackStandings,
       seasonLength,
       scheduleFrequency,
-      autoGenerateMatchups,
       leagueFormat,
       playoffTeamCount,
       eliminationFormat,
@@ -495,7 +496,6 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(trackStandings !== undefined && { trackStandings }),
         ...(seasonLength !== undefined && { seasonLength }),
         ...(scheduleFrequency !== undefined && { scheduleFrequency }),
-        ...(autoGenerateMatchups !== undefined && { autoGenerateMatchups }),
         ...(leagueFormat !== undefined && { leagueFormat }),
         ...(playoffTeamCount !== undefined && { playoffTeamCount }),
         ...(eliminationFormat !== undefined && { eliminationFormat }),
@@ -1093,6 +1093,9 @@ router.put('/:id/join-requests/:requestId', async (req: Request, res: Response) 
         // Notify roster owner about approval
         NotificationService.notifyJoinRequestDecision(id, membership.memberId, 'approve');
 
+        // Event-driven: check if league is now ready to schedule (Req 2.2)
+        checkLeagueReady(id).catch(() => {});
+
         return res.json(result);
       }
 
@@ -1114,6 +1117,9 @@ router.put('/:id/join-requests/:requestId', async (req: Request, res: Response) 
 
       // Notify roster owner about approval
       NotificationService.notifyJoinRequestDecision(id, membership.memberId, 'approve');
+
+      // Event-driven: check if league is now ready to schedule (Req 2.2)
+      checkLeagueReady(id).catch(() => {});
 
       return res.json(updatedMembership);
     }
@@ -1338,6 +1344,9 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
           },
         });
 
+        // Event-driven: check if league is now ready to schedule (Req 2.2)
+        checkLeagueReady(id).catch(() => {});
+
         return res.json(result);
       }
 
@@ -1368,6 +1377,9 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
           id: { not: invitationId },
         },
       });
+
+      // Event-driven: check if league is now ready to schedule (Req 2.2)
+      checkLeagueReady(id).catch(() => {});
 
       return res.json(updatedMembership);
     }
@@ -2120,22 +2132,25 @@ router.post('/:id/certify', upload.single('bylaws'), async (req: Request, res: R
   }
 });
 
-// POST /api/leagues/:id/generate-schedule - Manually trigger schedule generation (commissioner only)
-router.post('/:id/generate-schedule', async (req: Request, res: Response) => {
+// POST /api/leagues/:id/generate-schedule - Generate schedule preview for Commissioner review
+router.post('/:id/generate-schedule', optionalAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
+    const userId = req.user?.userId || req.body.userId;
 
     if (!userId) {
       return res.status(400).json({ error: 'Missing required field: userId' });
     }
 
+    // Fetch league with active roster memberships
     const league = await prisma.league.findUnique({
       where: { id },
       include: {
         memberships: {
           where: { status: 'active', memberType: 'roster' },
-          select: { id: true }
+          include: {
+            team: { select: { id: true, name: true } }
+          }
         }
       }
     });
@@ -2144,36 +2159,223 @@ router.post('/:id/generate-schedule', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'League not found' });
     }
 
+    // Only the Commissioner (organizer) can generate the schedule
     if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can generate the schedule' });
+      return res.status(403).json({ error: 'Only the league Commissioner can manage the schedule' });
     }
 
-    if (league.registrationCloseDate) {
-      return res.status(400).json({ error: 'Schedule generation is handled automatically when a registration close date is set' });
+    // Build rosters list from active memberships
+    const rosters = league.memberships
+      .filter((m: any) => m.team)
+      .map((m: any) => ({ id: m.team!.id, name: m.team!.name }));
+
+    if (rosters.length < 2) {
+      return res.status(400).json({ error: 'At least 2 registered rosters are required to generate a schedule' });
     }
 
-    if (league.scheduleGenerated) {
-      return res.status(400).json({ error: 'Schedule has already been generated for this league' });
+    // Build LeagueWithRosters object for the service
+    const leagueWithRosters: LeagueWithRosters = {
+      id: league.id,
+      leagueFormat: league.leagueFormat || 'season',
+      gameFrequency: league.gameFrequency,
+      preferredGameDays: league.preferredGameDays,
+      preferredTimeWindowStart: league.preferredTimeWindowStart,
+      preferredTimeWindowEnd: league.preferredTimeWindowEnd,
+      seasonGameCount: league.seasonGameCount,
+      startDate: league.startDate,
+      playoffTeamCount: league.playoffTeamCount,
+      eliminationFormat: league.eliminationFormat,
+      rosters,
+    };
+
+    const format = league.leagueFormat || 'season';
+
+    if (format === 'tournament') {
+      // Tournament format: generate bracket instead of round-robin
+      const tournamentEvents = ScheduleGeneratorService.generateTournamentBracket(
+        rosters,
+        (league.eliminationFormat as 'single_elimination' | 'double_elimination') || 'single_elimination',
+        league.startDate ? new Date(league.startDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        league.preferredGameDays || [6], // default to Saturday
+        {
+          start: league.preferredTimeWindowStart || '18:00',
+          end: league.preferredTimeWindowEnd || '21:00',
+        }
+      );
+
+      return res.json({
+        events: tournamentEvents,
+      });
     }
 
-    if (league.memberships.length < 2) {
-      return res.status(400).json({ error: 'At least 2 active rosters are required to generate a schedule' });
+    // Season or season_with_playoffs: generate round-robin preview
+    const preview = ScheduleGeneratorService.generateSchedulePreview(leagueWithRosters);
+
+    if (format === 'season_with_playoffs' && league.playoffTeamCount && league.playoffTeamCount >= 2) {
+      // Find the latest regular season date to start playoffs after it
+      const lastRegularDate = preview.events.length > 0
+        ? new Date(Math.max(...preview.events.map(e => new Date(e.scheduledAt).getTime())))
+        : (league.startDate ? new Date(league.startDate) : new Date());
+
+      // Start playoffs one week after the last regular season game
+      const playoffStartDate = new Date(lastRegularDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const playoffEvents = ScheduleGeneratorService.generatePlayoffRounds(
+        rosters.length,
+        league.playoffTeamCount,
+        playoffStartDate,
+        league.preferredGameDays || [6],
+        {
+          start: league.preferredTimeWindowStart || '18:00',
+          end: league.preferredTimeWindowEnd || '21:00',
+        }
+      );
+
+      return res.json({
+        events: [...preview.events, ...playoffEvents],
+      });
     }
 
-    if (!league.preferredGameDays?.length || !league.seasonGameCount) {
-      return res.status(400).json({ error: 'Schedule configuration incomplete. Set preferredGameDays and seasonGameCount first.' });
-    }
-
-    const result = await ScheduleGeneratorService.generateRoundRobin(id);
-
-    res.status(201).json({
-      message: `Schedule generated successfully. ${result.eventsCreated} events created.`,
-      eventsCreated: result.eventsCreated
+    return res.json({
+      events: preview.events,
     });
-  } catch (error) {
-    console.error('Error generating schedule:', error);
+  } catch (error: any) {
+    console.error('Error generating schedule preview:', error);
+
+    // Service throws errors with statusCode for validation failures
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+
     const msg = error instanceof Error ? error.message : 'Failed to generate schedule';
     res.status(500).json({ error: msg });
+  }
+});
+
+// POST /api/leagues/:id/confirm-schedule - Persist reviewed schedule as shell events
+router.post('/:id/confirm-schedule', optionalAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required field: userId' });
+    }
+
+    // Fetch league to validate existence and ownership
+    const league = await prisma.league.findUnique({
+      where: { id },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    // Only the Commissioner (organizer) can confirm the schedule
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league Commissioner can manage the schedule' });
+    }
+
+    // Prevent duplicate schedule confirmation
+    if (league.scheduleGenerated) {
+      return res.status(409).json({ error: 'Schedule has already been generated for this league' });
+    }
+
+    // Validate events payload
+    const { events } = req.body;
+    if (!Array.isArray(events) || events.length === 0) {
+      return res.status(400).json({ error: 'No events provided' });
+    }
+
+    // Persist events and notify players
+    const result = await ScheduleGeneratorService.confirmSchedule(id, userId, events);
+
+    return res.json({ eventsCreated: result.eventsCreated });
+  } catch (error: any) {
+    console.error('Error confirming schedule:', error);
+    res.status(500).json({ error: 'Failed to save schedule. Please try again.' });
+  }
+});
+
+// POST /api/leagues/:id/check-ready - Check if league is ready to schedule and notify Commissioner
+router.post('/:id/check-ready', optionalAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch league with roster memberships
+    const league = await prisma.league.findUnique({
+      where: { id },
+      include: {
+        memberships: {
+          where: { memberType: 'roster' },
+        },
+      },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    // If schedule already generated, no notification needed
+    if (league.scheduleGenerated) {
+      return res.json({ ready: false, reason: 'Schedule already generated' });
+    }
+
+    // Ensure at most one notification per league
+    if (league.readyNotificationSent) {
+      return res.json({ ready: true, notified: false, reason: 'Notification already sent' });
+    }
+
+    // Count active (confirmed) roster memberships
+    const activeRosters = league.memberships.filter((m: any) => m.status === 'active');
+    const activeRosterCount = activeRosters.length;
+
+    // Skip notification if zero registered rosters
+    if (activeRosterCount === 0) {
+      return res.json({ ready: false, reason: 'No registered rosters' });
+    }
+
+    // Condition 1: registrationCloseDate has passed
+    const now = new Date();
+    const registrationClosed = league.registrationCloseDate
+      ? new Date(league.registrationCloseDate) <= now
+      : false;
+
+    // Condition 2: All roster memberships are active (no pending ones)
+    const pendingRosters = league.memberships.filter((m: any) => m.status === 'pending');
+    const allRostersConfirmed = pendingRosters.length === 0;
+
+    if (registrationClosed || allRostersConfirmed) {
+      // Send "ready to schedule" notification to the Commissioner
+      const notification = {
+        title: 'League Ready',
+        body: `${league.name} is ready to schedule.`,
+        data: {
+          type: 'league_ready_to_schedule',
+          leagueId: league.id,
+        },
+      };
+
+      // Send via NotificationService — failure is non-blocking
+      try {
+        NotificationService.sendNotification(league.organizerId, notification);
+      } catch {
+        // Non-critical: continue if notification fails
+      }
+
+      // Mark league so we don't send duplicate notifications
+      await prisma.league.update({
+        where: { id },
+        data: { readyNotificationSent: true },
+      });
+
+      return res.json({ ready: true, notified: true });
+    }
+
+    return res.json({ ready: false });
+  } catch (error) {
+    console.error('Error checking league readiness:', error);
+    res.status(500).json({ error: 'Failed to check league readiness' });
   }
 });
 

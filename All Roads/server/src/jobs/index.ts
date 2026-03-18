@@ -15,6 +15,7 @@ import { processEventCutoffs } from './event-cutoff';
 import { processCaptureWindowRenewals } from './capture-window';
 import { processNightlyRatings } from './nightly-ratings';
 import { processTrialExpiry } from './trial-expiry';
+import { processLeagueReadyChecks } from './league-ready-check';
 
 /**
  * Initialize all cron jobs
@@ -218,6 +219,34 @@ export function initializeCronJobs() {
       }
     } catch (error: any) {
       console.error('❌ Trial expiry job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // League Ready Check Job - Every hour
+  // Checks if leagues are ready to schedule (registration closed or all rosters confirmed)
+  // and sends a notification to the Commissioner (Requirements: 2.1, 2.2, 2.3, 2.7)
+  cron.schedule('30 * * * *', async () => {
+    console.log('🔄 Starting league ready check job');
+
+    try {
+      const metrics = await processLeagueReadyChecks();
+
+      console.log('✅ League ready check completed', {
+        leaguesChecked: metrics.leaguesChecked,
+        notificationsSent: metrics.notificationsSent,
+        duration: `${metrics.duration}ms`,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some leagues had errors during ready check', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ League ready check job failed', { error: error.message });
     }
   }, {
     timezone: 'UTC',

@@ -20,7 +20,7 @@ import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
-import { userService, RosterInvitation, LeagueInvitation } from '../../services/api/UserService';
+import { userService, RosterInvitation, LeagueInvitation, ReadyToScheduleLeague } from '../../services/api/UserService';
 
 // Context
 import { useAuth } from '../../context/AuthContext';
@@ -97,6 +97,9 @@ export function HomeScreen() {
   const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
   const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
+
+  // Ready to schedule leagues state
+  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<ReadyToScheduleLeague[]>([]);
 
   // Schedule tab filter
   type ScheduleFilter = 'upcoming' | 'live' | 'past' | 'cancelled';
@@ -222,6 +225,16 @@ export function HomeScreen() {
     }
   }, []);
 
+  const loadReadyToScheduleLeagues = useCallback(async () => {
+    try {
+      const result = await userService.getLeaguesReadyToSchedule();
+      setReadyToScheduleLeagues(result || []);
+    } catch (err) {
+      console.error('Failed to load ready to schedule leagues:', err);
+      setReadyToScheduleLeagues([]);
+    }
+  }, []);
+
   const handleRosterInvitationPress = useCallback((inv: RosterInvitation) => {
     (navigation as any).navigate('Teams', {
       screen: 'TeamDetails',
@@ -236,11 +249,18 @@ export function HomeScreen() {
     });
   }, [navigation]);
 
+  const handleReadyToSchedulePress = useCallback((league: ReadyToScheduleLeague) => {
+    (navigation as any).navigate('Leagues', {
+      screen: 'LeagueScheduling',
+      params: { leagueId: league.id },
+    });
+  }, [navigation]);
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchEvents(), refetchBookings(), refetchAllBookings(), loadDebriefEvents(), loadInvitations()]);
+    await Promise.all([refetchEvents(), refetchBookings(), refetchAllBookings(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues()]);
     setIsRefreshing(false);
-  }, [refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations]);
+  }, [refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues]);
 
   useFocusEffect(
     useCallback(() => {
@@ -250,8 +270,9 @@ export function HomeScreen() {
         refetchAllBookings();
         loadDebriefEvents();
         loadInvitations();
+        loadReadyToScheduleLeagues();
       }
-    }, [authLoading, refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations])
+    }, [authLoading, refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues])
   );
 
   const handleDebriefPress = useCallback((booking: Booking) => {
@@ -384,6 +405,29 @@ export function HomeScreen() {
                   </Text>
                   <Text style={styles.debriefTime}>
                     {booking.event?.endTime ? formatTimeAgo(new Date(booking.event.endTime)) : ''}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Ready to schedule section */}
+        {readyToScheduleLeagues.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Scheduling</Text>
+            {readyToScheduleLeagues.map((league) => (
+              <TouchableOpacity
+                key={league.id}
+                style={styles.readyToScheduleCard}
+                onPress={() => handleReadyToSchedulePress(league)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+                <View style={styles.readyToScheduleInfo}>
+                  <Text style={styles.readyToScheduleTitle} numberOfLines={1}>
+                    {league.name} is ready to schedule.
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
@@ -587,5 +631,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.inkFaint,
     marginTop: 2,
+  },
+  readyToScheduleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
+    gap: 12,
+  },
+  readyToScheduleInfo: {
+    flex: 1,
+  },
+  readyToScheduleTitle: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.ink,
   },
 });

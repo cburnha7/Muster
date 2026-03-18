@@ -128,6 +128,7 @@ export type LeaguesStackParamList = {
   AssignFacility: { matchId: string };
   DocumentViewer: { leagueId: string; documentId: string; documentName?: string };
   PayLeagueDues: { rosterId: string; leagueId: string; seasonId: string };
+  LeagueScheduling: { leagueId: string };
 };
 
 export type BookingsStackParamList = {

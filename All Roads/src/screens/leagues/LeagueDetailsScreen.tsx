@@ -653,6 +653,17 @@ export function LeagueDetailsScreen(): React.ReactElement {
             </View>
           )}
 
+          {/* Commissioner: Schedule button — navigate to Scheduling Screen */}
+          <TouchableOpacity
+            style={styles.scheduleBtn}
+            onPress={() => (navigation as any).navigate('LeagueScheduling', { leagueId })}
+            accessibilityRole="button"
+            accessibilityLabel="Schedule"
+          >
+            <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.scheduleBtnText}>Schedule</Text>
+          </TouchableOpacity>
+
           {/* League edit form — includes Delete/Cancel/Save at bottom */}
           <LeagueForm
             initialData={league}
@@ -1131,6 +1142,23 @@ const styles = StyleSheet.create({
   },
   stepOutBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.ink },
   // Commissioner action buttons
+  scheduleBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    backgroundColor: colors.grass,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 12,
+    paddingVertical: 14,
+  },
+  scheduleBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
   commissionerActions: {
     paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 32,
   },

@@ -124,10 +124,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [seasonLength, setSeasonLength] = useState(
     (initialData as any)?.seasonLength?.toString() || ''
   );
-  const [autoGenerateMatchups, setAutoGenerateMatchups] = useState<boolean>(
-    (initialData as any)?.autoGenerateMatchups ?? true
-  );
-
   // Track Standings toggle
   const [trackStandings, setTrackStandings] = useState<boolean>(
     (initialData as any)?.trackStandings ?? true
@@ -516,7 +512,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       seasonGameCount: seasonGameCount ? parseInt(seasonGameCount) : null,
       scheduleFrequency,
       seasonLength: seasonLength ? parseInt(seasonLength) : null,
-      autoGenerateMatchups,
       trackStandings,
       leagueFormat: leagueFormat || undefined,
       playoffTeamCount: playoffTeamCount ? parseInt(playoffTeamCount) : null,
@@ -1282,27 +1277,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               />
             </View>
           )}
-
-          {/* Auto-Generate Matchups */}
-          <View style={styles.toggleCard}>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleInfo}>
-                <Text style={styles.toggleLabel}>Auto-Generate Matchups</Text>
-                <Text style={styles.toggleDescription}>
-                  Automatically create shell matchup events after registration closes
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.toggle, autoGenerateMatchups && styles.toggleActive]}
-                onPress={() => setAutoGenerateMatchups(!autoGenerateMatchups)}
-                activeOpacity={0.7}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: autoGenerateMatchups }}
-              >
-                <View style={[styles.toggleThumb, autoGenerateMatchups && styles.toggleThumbActive]} />
-              </TouchableOpacity>
-            </View>
-          </View>
 
           </>
           )}

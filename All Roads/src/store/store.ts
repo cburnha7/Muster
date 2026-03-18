@@ -4,7 +4,7 @@ import { persistStore, persistReducer, createTransform } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import { eventsApi } from './api/eventsApi';
-import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice, subscriptionSlice, contextSlice } from './slices';
+import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice, subscriptionSlice, contextSlice, scheduleSlice } from './slices';
 import { contextRecoveryMiddleware } from './middleware/contextRecovery';
 
 // Transform to handle cache expiration and selective persistence
@@ -60,6 +60,7 @@ const rootReducer = combineReducers({
   matches: matchesSlice,
   subscription: subscriptionSlice,
   context: contextSlice,
+  schedule: scheduleSlice,
   api: api.reducer,
   eventsApi: eventsApi.reducer,
 });

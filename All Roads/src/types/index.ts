@@ -781,6 +781,7 @@ export * from './dependent';
 // ============================================================================
 
 export * from './league';
+export * from './scheduling';
 
 export interface TeamTransaction {
   id: string;

@@ -3,6 +3,7 @@ import { RootState } from './store';
 import { API_BASE_URL } from '../services/api/config';
 import TokenStorage from '../services/auth/TokenStorage';
 import { clearAuth, setTokens } from './slices/authSlice';
+import { SchedulePreviewEvent, ConfirmableEvent } from '../types/scheduling';
 
 // Define base query with authentication
 const baseQuery = fetchBaseQuery({
@@ -140,7 +141,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['User', 'Event', 'Facility', 'Team', 'Booking'],
+  tagTypes: ['User', 'Event', 'Facility', 'Team', 'Booking', 'League'],
   endpoints: (builder) => ({
     // Authentication endpoints
     login: builder.mutation({
@@ -344,6 +345,23 @@ export const api = createApi({
       invalidatesTags: ['Booking', 'Event'],
     }),
 
+    // League scheduling endpoints
+    generateSchedule: builder.mutation<{ events: SchedulePreviewEvent[] }, { leagueId: string }>({
+      query: ({ leagueId }) => ({
+        url: `/leagues/${leagueId}/generate-schedule`,
+        method: 'POST',
+      }),
+    }),
+
+    confirmSchedule: builder.mutation<{ eventsCreated: number }, { leagueId: string; events: ConfirmableEvent[] }>({
+      query: ({ leagueId, events }) => ({
+        url: `/leagues/${leagueId}/confirm-schedule`,
+        method: 'POST',
+        body: { events },
+      }),
+      invalidatesTags: ['Event', 'League'],
+    }),
+
     // Promo code endpoints
     validatePromoCode: builder.mutation<{ valid: boolean; trialDurationDays?: number; error?: string }, { code: string }>({
       query: (body) => ({
@@ -406,4 +424,8 @@ export const {
   // Promo code hooks
   useValidatePromoCodeMutation,
   useRedeemPromoCodeMutation,
+
+  // League scheduling hooks
+  useGenerateScheduleMutation,
+  useConfirmScheduleMutation,
 } = api;
