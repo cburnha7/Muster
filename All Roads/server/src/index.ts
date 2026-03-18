@@ -74,6 +74,10 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy when behind a reverse proxy (Railway, Heroku, etc.)
+// Required for express-rate-limit to read X-Forwarded-For correctly
+app.set('trust proxy', 1);
+
 // CORS configuration
 const corsOptions: cors.CorsOptions = {
   origin: [
