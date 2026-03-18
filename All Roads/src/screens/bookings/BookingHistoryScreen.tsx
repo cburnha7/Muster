@@ -16,11 +16,9 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormInput } from '../../components/forms/FormInput';
-import { colors } from '../../theme';
 
 import { userService } from '../../services/api/UserService';
 import { Booking, Event } from '../../types';
-import { colors } from '../../theme';
 
 export function BookingHistoryScreen(): JSX.Element {
   const navigation = useNavigation();
