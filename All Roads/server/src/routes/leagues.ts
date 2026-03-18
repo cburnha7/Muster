@@ -255,12 +255,17 @@ router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Requ
       playoffTeamCount,
       eliminationFormat,
       gameFrequency,
+      scheduleFrequency,
+      seasonLength,
+      genderRestriction,
+      invitedRosterIds,
     } = req.body;
 
     // Validate required fields
     if (!name || !sportType || !skillLevel || !organizerId) {
       return res.status(400).json({ 
-        error: 'Missing required fields: name, sportType, skillLevel, organizerId' 
+        error: 'Missing required fields: name, sportType, skillLevel, organizerId',
+        received: { name: !!name, sportType: !!sportType, skillLevel: !!skillLevel, organizerId: !!organizerId },
       });
     }
 
@@ -352,6 +357,9 @@ router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Requ
         ...(playoffTeamCount !== undefined && playoffTeamCount !== null && { playoffTeamCount }),
         ...(eliminationFormat && { eliminationFormat }),
         ...(gameFrequency && { gameFrequency }),
+        ...(scheduleFrequency && { scheduleFrequency }),
+        ...(seasonLength !== undefined && seasonLength !== null && { seasonLength }),
+        ...(genderRestriction && { genderRestriction }),
       },
       include: {
         organizer: {

@@ -81,6 +81,14 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
     return null;
   });
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    if ((initialData as any)?.endDate) {
+      const d = new Date((initialData as any).endDate);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  });
+  const [showEndCalendar, setShowEndCalendar] = useState(false);
   const [winPoints, setWinPoints] = useState(
     initialData?.pointsConfig?.win?.toString() || '3'
   );
@@ -142,6 +150,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   // Calendar picker state
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => {
+    if (startDate) return new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  });
+
+  // End date calendar state
+  const [endCalendarMonth, setEndCalendarMonth] = useState<Date>(() => {
+    if (endDate) return new Date(endDate.getFullYear(), endDate.getMonth(), 1);
     if (startDate) return new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   });
@@ -268,9 +283,31 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
   const cutoffCalendarMonthLabel = cutoffCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  // End date calendar helpers
+  const handleSelectEndDate = (day: number) => {
+    const selected = new Date(endCalendarMonth.getFullYear(), endCalendarMonth.getMonth(), day);
+    setEndDate(selected);
+    setShowEndCalendar(false);
+  };
+
+  const goToEndPrevMonth = () => {
+    setEndCalendarMonth(new Date(endCalendarMonth.getFullYear(), endCalendarMonth.getMonth() - 1, 1));
+  };
+
+  const goToEndNextMonth = () => {
+    setEndCalendarMonth(new Date(endCalendarMonth.getFullYear(), endCalendarMonth.getMonth() + 1, 1));
+  };
+
+  const endCalendarMonthLabel = endCalendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
   // ── Projected end date ──────────────────────────────────────────
   const projectedEndDate = (() => {
     if (!startDate) return '';
+    // For "all at once", show the user-selected end date
+    if (gameFrequency === 'all_at_once') {
+      if (endDate) return formatDateDisplay(endDate);
+      return '';
+    }
     // For tournament format, use gameFrequency to estimate
     if (leagueFormat === 'tournament') {
       if (!gameFrequency) return '';
@@ -280,9 +317,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         end.setDate(end.getDate() + rounds * 7);
       } else if (gameFrequency === 'monthly') {
         end.setMonth(end.getMonth() + rounds);
-      } else {
-        // all_at_once — estimate a few days
-        end.setDate(end.getDate() + Math.max(rounds, 3));
       }
       return end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
@@ -471,7 +505,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       genderRestriction: genderRestriction || undefined,
       seasonName: seasonName.trim() || undefined,
       startDate: startDate || undefined,
-      endDate: undefined,
+      endDate: (gameFrequency === 'all_at_once' && endDate) ? endDate : undefined,
       pointsConfig,
       imageUrl: imageUrl.trim() || undefined,
       minimumRosterSize: minimumRosterSize ? parseInt(minimumRosterSize) : null,
@@ -648,6 +682,81 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
+  // ── End Date Calendar renderer ─────────────────────────────────
+  const renderEndCalendar = () => {
+    const year = endCalendarMonth.getFullYear();
+    const month = endCalendarMonth.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    const weeks: (number | null)[][] = [];
+    let currentWeek: (number | null)[] = Array(firstDay).fill(null);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) currentWeek.push(null);
+      weeks.push(currentWeek);
+    }
+
+    return (
+      <View style={styles.calendar}>
+        <View style={styles.calendarHeader}>
+          <TouchableOpacity onPress={goToEndPrevMonth} style={styles.calendarNav} accessibilityLabel="Previous month">
+            <Ionicons name="chevron-back" size={20} color={colors.ink} />
+          </TouchableOpacity>
+          <Text style={styles.calendarMonthLabel}>{endCalendarMonthLabel}</Text>
+          <TouchableOpacity onPress={goToEndNextMonth} style={styles.calendarNav} accessibilityLabel="Next month">
+            <Ionicons name="chevron-forward" size={20} color={colors.ink} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.calendarDayHeaders}>
+          {dayLabels.map(d => (
+            <Text key={d} style={styles.calendarDayHeader}>{d}</Text>
+          ))}
+        </View>
+        {weeks.map((week, wi) => (
+          <View key={wi} style={styles.calendarWeek}>
+            {week.map((day, di) => {
+              if (day === null) return <View key={di} style={styles.calendarDayCell} />;
+              const cellDate = new Date(year, month, day);
+              const isSelected = endDate ? isSameDay(cellDate, endDate) : false;
+              const isTodayDate = isToday(cellDate);
+              const isBeforeStart = startDate ? cellDate <= startDate : false;
+              return (
+                <TouchableOpacity
+                  key={di}
+                  style={[
+                    styles.calendarDayCell,
+                    isSelected && styles.calendarDaySelected,
+                    isTodayDate && !isSelected && styles.calendarDayToday,
+                    isBeforeStart && { opacity: 0.3 },
+                  ]}
+                  onPress={() => !isBeforeStart && handleSelectEndDate(day)}
+                  disabled={isBeforeStart}
+                  accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
+                  accessibilityRole="button"
+                >
+                  <Text style={[
+                    styles.calendarDayText,
+                    isSelected && styles.calendarDayTextSelected,
+                    isTodayDate && !isSelected && styles.calendarDayTextToday,
+                  ]}>
+                    {day}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -800,8 +909,34 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             }}
           />
 
-          {/* Season Length — Season and Season with Playoffs only */}
-          {(leagueFormat === 'season' || leagueFormat === 'season_with_playoffs') && (
+          {/* End Date picker — visible for "All at Once" frequency */}
+          {gameFrequency === 'all_at_once' && (
+            <>
+              <Text style={styles.fieldLabel}>End Date</Text>
+              <TouchableOpacity
+                style={styles.datePickerTrigger}
+                onPress={() => setShowEndCalendar(!showEndCalendar)}
+                accessibilityRole="button"
+                accessibilityLabel="Select end date"
+              >
+                <Ionicons name="calendar-outline" size={20} color={colors.court} />
+                <Text style={[styles.datePickerText, !endDate && styles.datePickerPlaceholder]}>
+                  {endDate ? formatDateDisplay(endDate) : 'Select an end date'}
+                </Text>
+                <Ionicons name={showEndCalendar ? 'chevron-up' : 'chevron-down'} size={18} color={colors.inkFaint} />
+              </TouchableOpacity>
+              {showEndCalendar && renderEndCalendar()}
+              {endDate && (
+                <TouchableOpacity onPress={() => setEndDate(null)} style={styles.clearDateBtn}>
+                  <Ionicons name="close-circle" size={16} color={colors.track} />
+                  <Text style={styles.clearDateText}>Clear end date</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* Season Length — Season and Season with Playoffs only, hidden for All at Once */}
+          {(leagueFormat === 'season' || leagueFormat === 'season_with_playoffs') && gameFrequency !== 'all_at_once' && (
             <FormInput
               label={`Season Length (${scheduleFrequency === 'monthly' ? 'months' : 'weeks'})`}
               placeholder={scheduleFrequency === 'monthly' ? 'e.g. 3' : 'e.g. 12'}
@@ -858,7 +993,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           <View style={styles.projectedEndRow}>
             <Text style={styles.fieldLabel}>Projected End Date</Text>
             <Text style={styles.projectedEndValue}>
-              {projectedEndDate || (leagueFormat === 'tournament' ? 'Set start date and game frequency' : 'Set start date and season length')}
+              {projectedEndDate || (
+                gameFrequency === 'all_at_once'
+                  ? 'Select an end date above'
+                  : leagueFormat === 'tournament'
+                    ? 'Set start date and game frequency'
+                    : 'Set start date and season length'
+              )}
             </Text>
           </View>
 
