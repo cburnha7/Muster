@@ -112,12 +112,12 @@ export const LeaguesBrowserScreen: React.FC = () => {
   const sections: Section[] = [
     {
       title: 'My Leagues',
-      data: applyFilters(myLeagues).sort((a, b) => a.name.localeCompare(b.name)),
+      data: [...applyFilters(myLeagues)].sort((a, b) => a.name.localeCompare(b.name)),
       emptyMessage: searchQuery ? 'No matching leagues' : 'You\'re not part of any leagues yet',
     },
     {
       title: 'Public Leagues',
-      data: applyFilters(publicLeagues).sort((a, b) => a.name.localeCompare(b.name)),
+      data: [...applyFilters(publicLeagues)].sort((a, b) => a.name.localeCompare(b.name)),
       emptyMessage: searchQuery ? 'No matching public leagues' : 'No public leagues available',
     },
   ];

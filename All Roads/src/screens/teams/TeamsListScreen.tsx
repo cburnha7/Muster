@@ -49,7 +49,7 @@ export function TeamsListScreen() {
       const myTeams = myRes?.data ?? [];
       const myTeamIds = new Set(myTeams.map((t) => t.id));
 
-      setMyRosters(myTeams);
+      setMyRosters([...myTeams]);
       dispatch(setUserTeams(myTeams));
       // Public rosters: public, user is not a member, exclude private
       setPublicRosters(
@@ -121,12 +121,12 @@ export function TeamsListScreen() {
   const sections: Section[] = [
     {
       title: 'My Rosters',
-      data: filterBySearch(myRosters).sort((a, b) => a.name.localeCompare(b.name)),
+      data: [...filterBySearch(myRosters)].sort((a, b) => a.name.localeCompare(b.name)),
       emptyMessage: searchQuery ? 'No matching rosters' : 'You haven\'t joined any rosters yet',
     },
     {
       title: 'Public Rosters',
-      data: filterBySearch(publicRosters).sort((a, b) => a.name.localeCompare(b.name)),
+      data: [...filterBySearch(publicRosters)].sort((a, b) => a.name.localeCompare(b.name)),
       emptyMessage: searchQuery ? 'No matching public rosters' : 'No public rosters available',
     },
   ];
