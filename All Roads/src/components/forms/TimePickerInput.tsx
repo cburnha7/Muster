@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
+type DateTimePickerEvent = { type: string };
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
 

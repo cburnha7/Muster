@@ -10,9 +10,8 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
+import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
+type DateTimePickerEvent = { type: string };
 import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent } from '../../store/slices/scheduleSlice';
 import { RosterInfo } from '../../types/scheduling';

@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, typeScale } from '../../theme';
 

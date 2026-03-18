@@ -20,8 +20,10 @@ const getBaseURL = () => {
   return 'https://muster-production.up.railway.app/api';
 };
 
+export const API_BASE_URL = getBaseURL();
+
 export const apiConfig: ApiServiceConfig = {
-  baseURL: getBaseURL(),
+  baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second base delay
