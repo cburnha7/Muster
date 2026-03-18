@@ -33,15 +33,16 @@
         "backgroundColor": "#3D8C5E"
       },
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "NOTIFICATIONS"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
       ]
     },
-      "web": {
+    "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png",
       "name": "Muster",
@@ -72,8 +73,9 @@
     "scheme": "muster",
     "extra": {
       "eas": {
-        "projectId": ""
-      }
+        "projectId": "e887ba1f-fc8a-40df-a483-202a66a6d6be"
+      },
+      "router": {}
     }
   }
 }
