@@ -43,6 +43,7 @@ export function CreateTeamScreen(): JSX.Element {
     maxMembers: 10,
     isPublic: true,
   });
+  const [genderRestriction, setGenderRestriction] = useState<string>('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +127,7 @@ export function CreateTeamScreen(): JSX.Element {
       // Create the team with pending member IDs
       const teamDataWithMembers = {
         ...formData,
+        genderRestriction: genderRestriction || undefined,
         initialMemberIds: pendingMembers.map(m => m.id),
       };
       
@@ -260,6 +262,40 @@ export function CreateTeamScreen(): JSX.Element {
               trackColor={{ false: '#D1D5DB', true: colors.grassLight }}
               thumbColor={formData.isPublic ? colors.grass : '#F4F4F5'}
             />
+          </View>
+
+          {/* Gender Restriction */}
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleInfo}>
+              <Text style={styles.toggleLabel}>Gender</Text>
+              <Text style={styles.toggleDescription}>
+                {genderRestriction === 'male' ? 'Male only' : genderRestriction === 'female' ? 'Female only' : 'Open to all'}
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              {[{ label: 'All', value: '' }, { label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 16,
+                    backgroundColor: genderRestriction === opt.value ? colors.grass : '#F3F4F6',
+                    borderWidth: 1,
+                    borderColor: genderRestriction === opt.value ? colors.grass : '#E5E7EB',
+                  }}
+                  onPress={() => setGenderRestriction(opt.value)}
+                >
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: genderRestriction === opt.value ? '#FFFFFF' : colors.inkFaint,
+                  }}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           {/* Invites Section */}

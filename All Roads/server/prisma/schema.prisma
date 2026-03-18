@@ -19,6 +19,7 @@ model User {
   phoneNumber  String?
   dateOfBirth  DateTime
   profileImage String?
+  gender       String?  // "male" or "female"
 
   // SSO Authentication
   ssoProviders   String[] @default([]) // Array of provider names: "apple", "google"
@@ -111,6 +112,7 @@ model Event {
   eligibilityMaxAge              Int?
   ageRestricted                  Boolean  @default(false) // True when minAge/maxAge are set — used for bracket vs overall rating
   minPlayerRating                Int?     // 0-100 percentile; null = open to all
+  genderRestriction              String?  // "male", "female", or null (open to all)
   eligibilityRequiredSkillLevel  String?  // @deprecated — use minPlayerRating
   eligibilityMinSkillLevel       String?  // @deprecated — use minPlayerRating
   eligibilityMaxSkillLevel       String?  // @deprecated — use minPlayerRating
@@ -233,6 +235,7 @@ model Team {
   skillLevel  String
   maxMembers  Int
   isPrivate   Boolean  @default(false)
+  genderRestriction String? // "male", "female", or null (open to all)
   imageUrl    String?
   leagueId    String?
   
@@ -267,8 +270,7 @@ model League {
   skillLevel  String
 
   minPlayerRating Int?    // 0-100 percentile; null = open to all
-
-  // League type and visibility
+  genderRestriction String? // "male", "female", or null (open to all)
   leagueType    String  @default("team")   // "team" or "pickup"
   visibility    String  @default("public")  // "public" or "private"
   membershipFee Float?                      // Optional fee for joining

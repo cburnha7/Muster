@@ -45,6 +45,7 @@ export function EditProfileScreen(): JSX.Element {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [gender, setGender] = useState<string>('');
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -78,6 +79,7 @@ export function EditProfileScreen(): JSX.Element {
       setPhoneNumber(profileData.phoneNumber || '');
       setProfileImage(profileData.profileImage);
       setSelectedSports(profileData.preferredSports || []);
+      setGender((profileData as any).gender || '');
     } catch (err: any) {
       setError(err.message || 'Failed to load profile');
     } finally {
@@ -189,6 +191,7 @@ export function EditProfileScreen(): JSX.Element {
         lastName,
         email,
         phoneNumber: phoneNumber || undefined,
+        gender: gender || undefined,
         preferredSports: selectedSports,
       };
 
@@ -289,6 +292,24 @@ export function EditProfileScreen(): JSX.Element {
             keyboardType="phone-pad"
             error={errors.phoneNumber}
           />
+
+          {/* Gender */}
+          <View style={styles.genderSection}>
+            <Text style={styles.sportsLabel}>Gender</Text>
+            <View style={styles.sportsList}>
+              {[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.sportTag, gender === opt.value && styles.sportTagSelected]}
+                  onPress={() => setGender(gender === opt.value ? '' : opt.value)}
+                >
+                  <Text style={[styles.sportTagText, gender === opt.value && styles.sportTagTextSelected]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {/* Preferred Sports */}
           <View style={styles.sportsSection}>
@@ -415,6 +436,10 @@ const styles = StyleSheet.create({
   },
   sportsSection: {
     marginTop: 16,
+  },
+  genderSection: {
+    marginTop: 16,
+    marginBottom: 8,
   },
   sportsLabel: {
     fontSize: 14,

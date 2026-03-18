@@ -101,6 +101,7 @@ export function DependentFormScreen() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [sportPreferences, setSportPreferences] = useState<string[]>([]);
   const [profileImage, setProfileImage] = useState('');
+  const [gender, setGender] = useState<string>('');
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,6 +124,7 @@ export function DependentFormScreen() {
         setDateOfBirth(data.dateOfBirth.split('T')[0]); // ISO to YYYY-MM-DD
         setSportPreferences(data.sportPreferences ?? []);
         setProfileImage(data.profileImage ?? '');
+        setGender((data as any).gender ?? '');
       } catch {
         Alert.alert('Error', 'Could not load dependent details. Please try again.');
         (navigation as any).goBack();
@@ -177,6 +179,7 @@ export function DependentFormScreen() {
         lastName: lastName.trim(),
         dateOfBirth,
         sportPreferences,
+        ...(gender ? { gender } : {}),
         ...(profileImage ? { profileImage } : {}),
       };
 
@@ -283,6 +286,29 @@ export function DependentFormScreen() {
             keyboardType="numbers-and-punctuation"
             maxLength={10}
           />
+
+          {/* Gender */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionLabel}>Gender</Text>
+            <View style={styles.chipContainer}>
+              {[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => {
+                const selected = gender === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => setGender(gender === opt.value ? '' : opt.value)}
+                    activeOpacity={0.7}
+                  >
+                    {selected && (
+                      <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" style={styles.chipIcon} />
+                    )}
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
           {/* Sport preferences — chip-style multi-select */}
           <View style={styles.sectionContainer}>

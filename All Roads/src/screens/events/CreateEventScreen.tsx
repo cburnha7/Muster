@@ -64,6 +64,7 @@ interface FormData {
   rules: string;
   // Privacy & restrictions
   isPrivate: boolean;
+  genderRestriction: string;
   restrictedToTeams: string[];
   homeRosterId: string;
   awayRosterId: string;
@@ -137,6 +138,7 @@ export function CreateEventScreen(): JSX.Element {
     rules: '',
     // Privacy & restrictions
     isPrivate: false,
+    genderRestriction: '',
     restrictedToTeams: [],
     homeRosterId: '',
     awayRosterId: '',
@@ -824,6 +826,7 @@ export function CreateEventScreen(): JSX.Element {
         price: parseFloat(formData.price),
         skillLevel: formData.skillLevel as SkillLevel,
         minPlayerRating: formData.minPlayerRating ? parseInt(formData.minPlayerRating) : undefined,
+        genderRestriction: formData.genderRestriction || undefined,
         equipment: formData.equipment.split(',').map(item => item.trim()).filter(Boolean),
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
@@ -1294,6 +1297,25 @@ export function CreateEventScreen(): JSX.Element {
               keyboardType="numeric"
             />
           )}
+
+          {/* Gender Restriction */}
+          <View style={styles.restrictionCard}>
+            <Text style={styles.restrictionLabel}>Gender</Text>
+            <Text style={styles.restrictionHint}>Restrict this event by gender, or leave open to all</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              {[{ label: 'Open to All', value: '' }, { label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.teamItem, formData.genderRestriction === opt.value && styles.teamItemSelected]}
+                  onPress={() => handleInputChange('genderRestriction', opt.value)}
+                >
+                  <Text style={[styles.teamItemText, formData.genderRestriction === opt.value && styles.teamItemTextSelected]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           {/* Privacy & Restrictions Section */}
           <View style={styles.privacySection}>

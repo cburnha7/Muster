@@ -70,6 +70,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [minPlayerRating, setMinPlayerRating] = useState(
     initialData?.minPlayerRating != null ? String(initialData.minPlayerRating) : ''
   );
+  const [genderRestriction, setGenderRestriction] = useState<string>(
+    (initialData as any)?.genderRestriction || ''
+  );
   const [seasonName, setSeasonName] = useState(initialData?.seasonName || '');
   const [startDate, setStartDate] = useState<Date | null>(() => {
     if (initialData?.startDate) {
@@ -465,6 +468,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       sportType: sportType as SportType,
       skillLevel: skillLevel as SkillLevel,
       minPlayerRating: minPlayerRating ? parseInt(minPlayerRating) : undefined,
+      genderRestriction: genderRestriction || undefined,
       seasonName: seasonName.trim() || undefined,
       startDate: startDate || undefined,
       endDate: undefined,
@@ -727,6 +731,35 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             keyboardType="numeric"
             error={errors.minPlayerRating}
           />
+
+          {/* Gender Restriction */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={styles.fieldLabel}>Gender Restriction</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              {[{ label: 'Open to All', value: '' }, { label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: genderRestriction === opt.value ? colors.grass : '#F3F4F6',
+                    borderWidth: 1,
+                    borderColor: genderRestriction === opt.value ? colors.grass : '#E5E7EB',
+                  }}
+                  onPress={() => setGenderRestriction(opt.value)}
+                >
+                  <Text style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: genderRestriction === opt.value ? '#FFFFFF' : colors.inkFaint,
+                  }}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
 
           <FormInput
             label="Season Name"

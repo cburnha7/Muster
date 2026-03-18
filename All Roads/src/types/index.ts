@@ -534,6 +534,7 @@ export interface UpdateProfileData {
   lastName?: string;
   phoneNumber?: string;
   dateOfBirth?: Date;
+  gender?: string;
   preferredSports?: SportType[];
   notificationPreferences?: NotificationPreferences;
 }
