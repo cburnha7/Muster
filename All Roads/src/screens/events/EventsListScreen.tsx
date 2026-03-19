@@ -3,44 +3,48 @@ import {
   View,
   Text,
   StyleSheet,
-  SectionList,
-  RefreshControl,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { debounce } from '../../utils/performance';
 
-import { EventCard } from '../../components/ui/EventCard';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
-import { colors, fonts, Spacing } from '../../theme';
+import { DependentToggle } from '../../components/events/DependentToggle';
+import { EventsCalendar } from '../../components/events/EventsCalendar';
+import { DateEventList } from '../../components/events/DateEventList';
+import { colors, Spacing } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
 import { useGetEventsQuery, useGetUserBookingsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
-import {
-  setEvents,
-} from '../../store/slices/eventsSlice';
+import { setEvents } from '../../store/slices/eventsSlice';
+import { selectDependents } from '../../store/slices/contextSlice';
 import { useAuth } from '../../context/AuthContext';
 import { Event, EventFilters, SportType, EventStatus } from '../../types';
+import { PersonFilter } from '../../types/eventsCalendar';
+import {
+  assignPersonColors,
+  buildMarkedDates,
+  getMonthDateRange,
+  resolveEventOwnership,
+} from '../../utils/eventsCalendarUtils';
+import { formatDateForCalendar } from '../../utils/calendarUtils';
 
-interface EventSection {
-  title: string;
-  data: Event[];
-  emptyMessage: string;
-}
-
-export function EventsListScreen(): JSX.Element {
+export function EventsListScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user: currentUser } = useAuth();
 
+  // Dependents from Redux
+  const dependents = useSelector(selectDependents);
+
+  // Existing state
   const [customFilters, setCustomFilters] = useState<EventFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -48,20 +52,56 @@ export function EventsListScreen(): JSX.Element {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [page, setPage] = useState(1);
   const [allFetchedEvents, setAllFetchedEvents] = useState<Event[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+
+  // New calendar state
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
+  const [activeFilter, setActiveFilter] = useState<PersonFilter>({
+    type: 'individual',
+    userId: currentUser?.id || '',
+  });
+  const [visibleMonth, setVisibleMonth] = useState<{ year: number; month: number }>({
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+  });
+
+  // Person color assignment
+  const personColors = useMemo(
+    () => assignPersonColors(currentUser?.id || '', dependents),
+    [currentUser?.id, dependents],
+  );
+
+  // Family user IDs for ownership resolution
+  const familyUserIds = useMemo(
+    () => [currentUser?.id || '', ...dependents.map(d => d.id)],
+    [currentUser?.id, dependents],
+  );
 
   const hasCustomFilters = Object.keys(customFilters).length > 0 || searchQuery.trim().length > 0;
   const activeFilters = hasCustomFilters ? customFilters : DEFAULT_EVENT_FILTERS;
 
+  // Month-scoped date range for calendar view
+  const monthDateRange = useMemo(
+    () => getMonthDateRange(visibleMonth.year, visibleMonth.month),
+    [visibleMonth.year, visibleMonth.month],
+  );
 
-  const { 
-    data: eventsData, 
-    isLoading: eventsLoading, 
-    isFetching: eventsFetching,
+  // Merge month-scoped dates into filters for list/calendar mode
+  const calendarFilters = useMemo<EventFilters>(
+    () => ({
+      ...activeFilters,
+      startDate: monthDateRange.startDate,
+      endDate: monthDateRange.endDate,
+    }),
+    [activeFilters, monthDateRange],
+  );
+
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
     error: eventsError,
-    refetch: refetchEvents 
+    refetch: refetchEvents,
   } = useGetEventsQuery({
-    filters: activeFilters,
+    filters: viewMode === 'list' ? calendarFilters : activeFilters,
     pagination: { page, limit: 20 },
     ...(currentUser?.id ? { userId: currentUser.id } : {}),
   });
@@ -78,15 +118,13 @@ export function EventsListScreen(): JSX.Element {
           return [...prev, ...newEvents];
         });
       }
-      const totalPages = eventsData.pagination?.totalPages ?? 1;
-      setHasMore(page < totalPages);
     }
   }, [eventsData, page]);
 
-  const { 
+  const {
     data: bookingsData,
     isLoading: bookingsLoading,
-    refetch: refetchBookings 
+    refetch: refetchBookings,
   } = useGetUserBookingsQuery({
     status: 'upcoming',
     pagination: { page: 1, limit: 100 },
@@ -96,25 +134,34 @@ export function EventsListScreen(): JSX.Element {
   const upcomingBookings = bookingsData?.data || [];
   const bookedEventIds = new Set(upcomingBookings.map(b => b.eventId));
 
-  // Split into My Events (user is organizer) and Public Events
+  // Filter events by active person filter for calendar/list view
+  const filteredEvents = useMemo(() => {
+    if (!rawEvents) return [];
+    if (activeFilter.type === 'wholeCrew') {
+      return rawEvents.filter(event => {
+        const ownership = resolveEventOwnership(event, familyUserIds);
+        return ownership.ownerUserIds.length > 0 || event.organizerId !== currentUser?.id;
+      });
+    }
+    // Individual filter — show events owned by that person + public events
+    return rawEvents.filter(event => {
+      const ownership = resolveEventOwnership(event, familyUserIds);
+      return ownership.ownerUserIds.includes(activeFilter.userId) || ownership.ownerUserIds.length === 0;
+    });
+  }, [rawEvents, activeFilter, familyUserIds, currentUser?.id]);
+
+  // For map view, show all events (not person-filtered)
   const myEvents = rawEvents.filter(event => event.organizerId === currentUser?.id);
   const publicEvents = rawEvents.filter(
-    event => event.organizerId !== currentUser?.id && !bookedEventIds.has(event.id)
+    event => event.organizerId !== currentUser?.id && !bookedEventIds.has(event.id),
   );
   const allDisplayEvents = [...myEvents, ...publicEvents];
 
-  const sections: EventSection[] = [
-    {
-      title: 'My Events',
-      data: myEvents,
-      emptyMessage: 'You haven\'t created any events yet',
-    },
-    {
-      title: 'Public Events',
-      data: publicEvents,
-      emptyMessage: searchQuery ? 'No matching events' : 'No public events available',
-    },
-  ];
+  // Marked dates for calendar
+  const markedDates = useMemo(
+    () => buildMarkedDates(filteredEvents, activeFilter, familyUserIds, personColors, selectedDate),
+    [filteredEvents, activeFilter, familyUserIds, personColors, selectedDate],
+  );
 
   const isLoading = eventsLoading || bookingsLoading;
 
@@ -164,7 +211,7 @@ export function EventsListScreen(): JSX.Element {
         console.error('Search error:', err instanceof Error ? err.message : 'Search failed');
       }
     }, 300),
-    [dispatch, customFilters]
+    [dispatch, customFilters],
   );
 
   const searchEvents = useCallback((query: string) => {
@@ -188,7 +235,6 @@ export function EventsListScreen(): JSX.Element {
   const applyFilters = () => {
     setShowFilters(false);
     setPage(1);
-    setHasMore(true);
   };
 
   const clearAllFilters = () => {
@@ -196,19 +242,11 @@ export function EventsListScreen(): JSX.Element {
     setSearchQuery('');
     setShowFilters(false);
     setPage(1);
-    setHasMore(true);
-  };
-
-  const loadMoreEvents = () => {
-    if (!eventsFetching && hasMore) {
-      setPage(prev => prev + 1);
-    }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
     setPage(1);
-    setHasMore(true);
     await Promise.all([refetchEvents(), refetchBookings()]);
     setRefreshing(false);
   };
@@ -220,19 +258,8 @@ export function EventsListScreen(): JSX.Element {
         refetchBookings();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser?.id])
+    }, [currentUser?.id]),
   );
-
-  const renderEventItem = ({ item }: { item: Event }) => (
-    <EventCard
-      event={item}
-      onPress={handleEventPress}
-      isHost={item.organizerId === currentUser?.id ? true : undefined}
-    />
-  );
-
-  const keyExtractor = useCallback((item: Event) => item.id, []);
-
 
   const renderFilters = () => (
     <View style={styles.filtersContainer}>
@@ -265,17 +292,6 @@ export function EventsListScreen(): JSX.Element {
     </View>
   );
 
-  const renderFooter = () => {
-    if (eventsFetching && page > 1) {
-      return (
-        <View style={styles.footer}>
-          <ActivityIndicator size="small" color={colors.grass} />
-        </View>
-      );
-    }
-    return null;
-  };
-
   if (eventsError && rawEvents.length === 0) {
     return (
       <View style={styles.container}>
@@ -292,6 +308,16 @@ export function EventsListScreen(): JSX.Element {
 
   return (
     <View style={styles.container}>
+      {/* DependentToggle at top — only renders when dependents exist */}
+      <DependentToggle
+        guardian={{ id: currentUser?.id || '', firstName: currentUser?.firstName || 'Me' }}
+        dependents={dependents}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        personColors={personColors}
+      />
+
+      {/* Search bar + ViewToggle + filter button (preserved) */}
       <View style={styles.searchContainer}>
         <SearchBar
           placeholder="Search events..."
@@ -323,46 +349,34 @@ export function EventsListScreen(): JSX.Element {
           onEventPress={handleEventPress}
         />
       ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={keyExtractor}
-          renderItem={renderEventItem}
-          renderSectionHeader={({ section }) => (
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <View style={styles.countBadge}>
-                <Text style={styles.countBadgeText}>{section.data.length}</Text>
-              </View>
-            </View>
-          )}
-          renderSectionFooter={({ section }) =>
-            section.data.length === 0 ? (
-              <View style={styles.emptySection}>
-                <Text style={styles.emptySectionText}>{(section as EventSection).emptyMessage}</Text>
-              </View>
-            ) : null
-          }
-          contentContainerStyle={styles.listContent}
-          ListFooterComponent={renderFooter}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.grass}
-              colors={[colors.grass]}
-            />
-          }
-          onEndReached={loadMoreEvents}
-          onEndReachedThreshold={0.1}
-          showsVerticalScrollIndicator={false}
-          stickySectionHeadersEnabled={false}
-        />
+        <View style={{ flex: 1 }}>
+          <EventsCalendar
+            selectedDate={selectedDate}
+            markedDates={markedDates}
+            onDateSelect={setSelectedDate}
+            onMonthChange={(month) => setVisibleMonth(month)}
+          />
+          <DateEventList
+            events={filteredEvents}
+            selectedDate={selectedDate}
+            currentUserId={currentUser?.id || ''}
+            activeFilter={activeFilter}
+            personColors={personColors}
+            familyUserIds={familyUserIds}
+            onEventPress={handleEventPress}
+            isLoading={eventsLoading}
+            onRefresh={onRefresh}
+            refreshing={refreshing}
+          />
+        </View>
       )}
 
+      {/* FAB (preserved) */}
       <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
         <Ionicons name="add" size={28} color={colors.chalk} />
       </TouchableOpacity>
 
+      {/* Filter overlay (preserved) */}
       {showFilters && (
         <View style={styles.filtersOverlay}>
           <TouchableOpacity
@@ -421,13 +435,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
-  },
-  listContent: {
-    paddingBottom: 80,
-  },
-  footer: {
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
   },
   filtersOverlay: {
     position: 'absolute',
@@ -499,40 +506,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.chalk,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
-    backgroundColor: colors.chalkWarm,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.ink,
-  },
-  countBadge: {
-    backgroundColor: `${colors.grass}20`,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  countBadgeText: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    color: colors.grass,
-  },
-  emptySection: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
-    alignItems: 'center',
-  },
-  emptySectionText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.inkFaint,
   },
 });

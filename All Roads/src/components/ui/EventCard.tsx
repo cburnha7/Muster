@@ -11,9 +11,11 @@ interface EventCardProps {
   style?: any;
   compact?: boolean;
   isHost?: boolean | undefined;
+  colorIndicator?: string;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, compact = false, isHost }) => {
+
+export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, compact = false, isHost, colorIndicator }) => {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -79,10 +81,18 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
+      style={[styles.container, colorIndicator ? styles.containerWithIndicator : undefined, style]}
       onPress={() => onPress?.(event)}
       activeOpacity={0.7}
     >
+      {colorIndicator && (
+        <View
+          style={[
+            styles.colorIndicatorStripe,
+            { backgroundColor: colorIndicator },
+          ]}
+        />
+      )}
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
         {isHost && (
@@ -237,6 +247,18 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     position: 'relative' as const,
+  },
+  containerWithIndicator: {
+    overflow: 'hidden' as const,
+  },
+  colorIndicatorStripe: {
+    position: 'absolute' as const,
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
   },
   bubbleStack: {
     position: 'absolute' as const,
