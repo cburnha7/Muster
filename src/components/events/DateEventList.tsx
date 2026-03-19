@@ -109,6 +109,7 @@ export const DateEventList: React.FC<DateEventListProps> = ({
 
   return (
     <ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.listContent}
       refreshControl={
         <RefreshControl
@@ -163,5 +164,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
+    width: '100%',
+  },
+  scrollView: {
+    flex: 1,
+  },
   },
 });
