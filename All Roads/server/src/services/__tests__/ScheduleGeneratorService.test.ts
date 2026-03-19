@@ -835,7 +835,7 @@ describe('ScheduleGeneratorService.confirmSchedule', () => {
     for (const call of mockEventCreate.mock.calls) {
       const data = call[0].data;
       expect(data.scheduledStatus).toBe('unscheduled');
-      expect(data.eventType).toBe('league');
+      expect(data.eventType).toBe('game');
       expect(data.status).toBe('active');
     }
   });

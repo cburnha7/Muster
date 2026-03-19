@@ -17,7 +17,6 @@ import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
 import { DependentToggle } from '../../components/events/DependentToggle';
-import { EventsCalendar } from '../../components/events/EventsCalendar';
 import { DateEventList } from '../../components/events/DateEventList';
 import { colors, Spacing } from '../../theme';
 
@@ -349,26 +348,21 @@ export function EventsListScreen(): React.JSX.Element {
           onEventPress={handleEventPress}
         />
       ) : (
-        <View style={{ flex: 1 }}>
-          <EventsCalendar
-            selectedDate={selectedDate}
-            markedDates={markedDates}
-            onDateSelect={setSelectedDate}
-            onMonthChange={(month) => setVisibleMonth(month)}
-          />
-          <DateEventList
-            events={filteredEvents}
-            selectedDate={selectedDate}
-            currentUserId={currentUser?.id || ''}
-            activeFilter={activeFilter}
-            personColors={personColors}
-            familyUserIds={familyUserIds}
-            onEventPress={handleEventPress}
-            isLoading={eventsLoading}
-            onRefresh={onRefresh}
-            refreshing={refreshing}
-          />
-        </View>
+        <DateEventList
+          events={filteredEvents}
+          selectedDate={selectedDate}
+          currentUserId={currentUser?.id || ''}
+          activeFilter={activeFilter}
+          personColors={personColors}
+          familyUserIds={familyUserIds}
+          onEventPress={handleEventPress}
+          isLoading={eventsLoading}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          markedDates={markedDates}
+          onDateSelect={setSelectedDate}
+          onMonthChange={(month) => setVisibleMonth(month)}
+        />
       )}
 
       {/* FAB (preserved) */}

@@ -2,14 +2,16 @@ import React, { useMemo } from 'react';
 import {
   View,
   Text,
-  SectionList,
+  ScrollView,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Event } from '../../types';
-import { PersonFilter } from '../../types/eventsCalendar';
+import { PersonFilter, MultiDotMarking } from '../../types/eventsCalendar';
 import { EventCard } from '../ui/EventCard';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
+import { EventsCalendar } from './EventsCalendar';
 import { resolveEventOwnership } from '../../utils/eventsCalendarUtils';
 import { formatDateForCalendar } from '../../utils/calendarUtils';
 import { colors, fonts, Spacing } from '../../theme';
@@ -25,6 +27,10 @@ interface DateEventListProps {
   isLoading: boolean;
   onRefresh: () => void;
   refreshing: boolean;
+  // Calendar props — rendered inside My Events section
+  markedDates: Record<string, MultiDotMarking>;
+  onDateSelect: (dateString: string) => void;
+  onMonthChange: (month: { year: number; month: number }) => void;
 }
 
 interface EventSection {
@@ -34,7 +40,6 @@ interface EventSection {
 
 /**
  * Get the color indicator for an event based on ownership and person colors.
- * Returns the first owner's color from personColors, or undefined if no owner.
  */
 function getEventColorIndicator(
   event: Event,
@@ -59,17 +64,18 @@ export const DateEventList: React.FC<DateEventListProps> = ({
   isLoading,
   onRefresh,
   refreshing,
+  markedDates,
+  onDateSelect,
+  onMonthChange,
 }) => {
-  const sections = useMemo<EventSection[]>(() => {
-    // Filter events to the selected date
+  const { myEvents, publicEvents } = useMemo(() => {
     const dayEvents = events.filter((event) => {
       const eventDate = formatDateForCalendar(new Date(event.startTime));
       return eventDate === selectedDate;
     });
 
-    // Split into "My Events" and "Public Events"
-    const myEvents: Event[] = [];
-    const publicEvents: Event[] = [];
+    const my: Event[] = [];
+    const pub: Event[] = [];
 
     for (const event of dayEvents) {
       const isOrganizer = event.organizerId === currentUserId;
@@ -77,38 +83,22 @@ export const DateEventList: React.FC<DateEventListProps> = ({
         (p) => p.userId === currentUserId,
       );
       if (isOrganizer || isParticipant) {
-        myEvents.push(event);
+        my.push(event);
       } else {
-        publicEvents.push(event);
+        pub.push(event);
       }
     }
 
-    const result: EventSection[] = [];
-    if (myEvents.length > 0) {
-      result.push({ title: 'My Events', data: myEvents });
-    }
-    if (publicEvents.length > 0) {
-      result.push({ title: 'Public Events', data: publicEvents });
-    }
-    return result;
+    return { myEvents: my, publicEvents: pub };
   }, [events, selectedDate, currentUserId]);
 
-  const isEmpty = sections.length === 0;
+  const isEmpty = myEvents.length === 0 && publicEvents.length === 0;
 
-  const renderSectionHeader = ({ section }: { section: EventSection }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderText}>{section.title}</Text>
-    </View>
-  );
-
-  const renderItem = ({ item }: { item: Event }) => {
-    const colorIndicator = getEventColorIndicator(
-      item,
-      familyUserIds,
-      personColors,
-    );
+  const renderEventCard = (item: Event) => {
+    const colorIndicator = getEventColorIndicator(item, familyUserIds, personColors);
     return (
       <EventCard
+        key={item.id}
         event={item}
         onPress={() => onEventPress(item)}
         colorIndicator={colorIndicator}
@@ -117,27 +107,9 @@ export const DateEventList: React.FC<DateEventListProps> = ({
     );
   };
 
-  const renderEmpty = () => {
-    if (isLoading) return null;
-    return (
-      <View style={styles.emptyContainer}>
-        <Ionicons
-          name="calendar-outline"
-          size={48}
-          color={colors.inkFaint}
-        />
-        <Text style={styles.emptyText}>No events on this day</Text>
-      </View>
-    );
-  };
-
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      renderSectionHeader={renderSectionHeader}
-      ListEmptyComponent={renderEmpty}
+    <ScrollView
+      contentContainerStyle={isEmpty && !isLoading ? styles.emptyList : undefined}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -146,36 +118,52 @@ export const DateEventList: React.FC<DateEventListProps> = ({
           colors={[colors.grass]}
         />
       }
-      contentContainerStyle={isEmpty ? styles.emptyList : undefined}
-      stickySectionHeadersEnabled={false}
-    />
+    >
+      {/* My Events — calendar + event cards inside */}
+      <CollapsibleSection title="My Events" count={myEvents.length}>
+        <EventsCalendar
+          selectedDate={selectedDate}
+          markedDates={markedDates}
+          onDateSelect={onDateSelect}
+          onMonthChange={onMonthChange}
+        />
+        {myEvents.length > 0
+          ? myEvents.map(renderEventCard)
+          : !isLoading && (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No events on this day</Text>
+              </View>
+            )}
+      </CollapsibleSection>
+
+      {/* Public Events */}
+      <CollapsibleSection title="Public Events" count={publicEvents.length}>
+        {publicEvents.length > 0
+          ? publicEvents.map(renderEventCard)
+          : !isLoading && (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No public events on this day</Text>
+              </View>
+            )}
+      </CollapsibleSection>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionHeader: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
-  },
-  sectionHeaderText: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.ink,
-  },
   emptyContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.massive,
   },
   emptyText: {
     fontFamily: fonts.body,
-    fontSize: 15,
+    fontSize: 14,
     color: colors.inkFaint,
-    marginTop: Spacing.md,
   },
   emptyList: {
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
 });

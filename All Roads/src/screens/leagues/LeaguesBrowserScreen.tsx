@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  SectionList,
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
 import { SearchBar } from '../../components/ui/SearchBar';
+import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { colors, fonts, Spacing } from '../../theme';
@@ -157,37 +157,35 @@ export const LeaguesBrowserScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <LeagueCard
-            league={item}
-            onPress={handleLeaguePress}
-            isOwner={item.organizerId === currentUser?.id}
-          />
-        )}
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{section.data.length}</Text>
-            </View>
-          </View>
-        )}
-        renderSectionFooter={({ section }) =>
-          section.data.length === 0 ? (
-            <View style={styles.emptySection}>
-              <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
-            </View>
-          ) : null
-        }
+      <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
         }
-        stickySectionHeadersEnabled={false}
-      />
+      >
+        {sections.map((section) => (
+          <CollapsibleSection
+            key={section.title}
+            title={section.title}
+            count={section.data.length}
+          >
+            {section.data.length === 0 ? (
+              <View style={styles.emptySection}>
+                <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
+              </View>
+            ) : (
+              section.data.map((item) => (
+                <LeagueCard
+                  key={item.id}
+                  league={item}
+                  onPress={handleLeaguePress}
+                  isOwner={item.organizerId === currentUser?.id}
+                />
+              ))
+            )}
+          </CollapsibleSection>
+        ))}
+      </ScrollView>
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
@@ -288,31 +286,6 @@ const styles = StyleSheet.create({
   listContent: {
     flexGrow: 1,
     paddingBottom: 100,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
-    backgroundColor: colors.chalkWarm,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.ink,
-  },
-  countBadge: {
-    backgroundColor: `${colors.grass}20`,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  countBadgeText: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    color: colors.grass,
   },
   emptySection: {
     paddingHorizontal: Spacing.lg,

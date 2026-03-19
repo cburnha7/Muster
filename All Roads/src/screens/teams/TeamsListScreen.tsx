@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  SectionList,
+  ScrollView,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { TeamCard } from '../../components/ui/TeamCard';
+import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { teamService } from '../../services/api/TeamService';
@@ -159,33 +160,35 @@ export function TeamsListScreen() {
         />
       </View>
 
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TeamCard team={item} onPress={() => handleTeamPress(item)} currentUserId={user?.id ?? undefined} />
-        )}
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{section.data.length}</Text>
-            </View>
-          </View>
-        )}
-        renderSectionFooter={({ section }) =>
-          section.data.length === 0 ? (
-            <View style={styles.emptySection}>
-              <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
-            </View>
-          ) : null
-        }
+      <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
         }
-        stickySectionHeadersEnabled={false}
-      />
+      >
+        {sections.map((section) => (
+          <CollapsibleSection
+            key={section.title}
+            title={section.title}
+            count={section.data.length}
+          >
+            {section.data.length === 0 ? (
+              <View style={styles.emptySection}>
+                <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
+              </View>
+            ) : (
+              section.data.map((item) => (
+                <TeamCard
+                  key={item.id}
+                  team={item}
+                  onPress={() => handleTeamPress(item)}
+                  currentUserId={user?.id ?? undefined}
+                />
+              ))
+            )}
+          </CollapsibleSection>
+        ))}
+      </ScrollView>
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
@@ -216,31 +219,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 100,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
-    backgroundColor: colors.chalkWarm,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.ink,
-  },
-  countBadge: {
-    backgroundColor: `${colors.grass}20`,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  countBadgeText: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    color: colors.grass,
   },
   emptySection: {
     paddingHorizontal: Spacing.lg,
