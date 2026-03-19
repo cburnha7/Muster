@@ -175,7 +175,7 @@ export function LoginScreen() {
       >
         {/* Logo/Icon */}
         <View style={styles.logoContainer}>
-          <MusterIcon size={120} />
+          <MusterIcon size={120} variant="light" />
           <Text style={styles.appName}>Muster</Text>
           <Text style={styles.tagline}>Find a game. Find your people.</Text>
         </View>
