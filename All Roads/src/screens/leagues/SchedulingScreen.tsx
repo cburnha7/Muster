@@ -35,7 +35,9 @@ import {
 } from '../../store/api';
 import { RosterInfo, ConfirmableEvent, SchedulePreviewEvent } from '../../types/scheduling';
 import { LeagueService } from '../../services/api/LeagueService';
+import { MatchService } from '../../services/api/MatchService';
 import { League, LeagueMembership } from '../../types/league';
+import { mapMatchesToScheduleEvents } from './utils/mapMatchesToScheduleEvents';
 import { colors, fonts, Spacing, BorderRadius, Shadows } from '../../theme';
 
 // Generate a simple client-side ID
@@ -114,18 +116,28 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
           name: m.team?.name || m.memberId,
         }));
       setRosters(activeRosters);
+
+      // Fetch existing matches for this league
+      try {
+        const matchSvc = new MatchService();
+        const matchesResponse = await matchSvc.getLeagueMatches(leagueId, 1, 100);
+        const mappedEvents = mapMatchesToScheduleEvents(matchesResponse.data);
+        dispatch(setEvents({ leagueId, events: mappedEvents }));
+      } catch (matchErr) {
+        // Match fetch failure shows a dismissible banner but does not block the screen
+        console.warn('Failed to fetch existing matches:', matchErr);
+        dispatch(setError('Failed to load existing games. Tap retry or try again later.'));
+      }
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load league');
     } finally {
       setIsLoading(false);
     }
-  }, [leagueId]);
+  }, [leagueId, dispatch]);
 
   useEffect(() => {
     loadLeagueData();
-    // Clear schedule state when entering the screen
-    dispatch(clearSchedule());
-  }, [loadLeagueData, dispatch]);
+  }, [loadLeagueData]);
 
   // Auto Generate Schedule handler
   const handleAutoGenerate = async () => {
@@ -281,6 +293,17 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
         <View style={styles.errorBanner}>
           <Ionicons name="warning-outline" size={18} color="#FFFFFF" />
           <Text style={styles.errorBannerText}>{scheduleError}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              dispatch(setError(null));
+              loadLeagueData();
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Retry"
+          >
+            <Ionicons name="refresh" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => dispatch(setError(null))}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

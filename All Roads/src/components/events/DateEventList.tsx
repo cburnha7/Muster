@@ -112,6 +112,7 @@ export const DateEventList: React.FC<DateEventListProps> = ({
         event={item}
         onPress={() => onEventPress(item)}
         colorIndicator={colorIndicator}
+        isHost={item.organizerId === currentUserId ? true : undefined}
       />
     );
   };

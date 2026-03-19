@@ -7,6 +7,7 @@ import {
   EventFilters,
   Booking,
   Participant,
+  ParticipantsResponse,
   PaginatedResponse,
   PaginationParams,
   SearchResult,
@@ -169,17 +170,23 @@ export class EventService extends BaseApiService {
   /**
    * Get participants for an event
    */
-  async getEventParticipants(eventId: string, skipCache = false): Promise<Participant[]> {
+  async getEventParticipants(eventId: string, skipCache = false): Promise<ParticipantsResponse> {
     if (!eventId) {
       console.error('❌ getEventParticipants called with undefined eventId');
       throw new Error('Event ID is required');
     }
     
     console.log('📋 Fetching participants for event:', eventId);
-    return this.get<Participant[]>(
+    const response = await this.get<ParticipantsResponse | Participant[]>(
       API_ENDPOINTS.EVENTS.PARTICIPANTS(eventId),
       { cacheOptions: { skipCache } }
     );
+
+    // Handle both old (array) and new (object) response shapes
+    if (Array.isArray(response)) {
+      return { participants: response };
+    }
+    return response;
   }
 
   /**

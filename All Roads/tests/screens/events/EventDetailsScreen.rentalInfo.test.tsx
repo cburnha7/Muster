@@ -176,7 +176,7 @@ describe('EventDetailsScreen - Rental Information Display', () => {
   describe('Event with Rental', () => {
     beforeEach(() => {
       (eventService.getEvent as jest.Mock).mockResolvedValue(mockEventWithRental);
-      (eventService.getEventParticipants as jest.Mock).mockResolvedValue([]);
+      (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
     });
 
     it('should display rental information section when event has rental', async () => {
@@ -230,7 +230,7 @@ describe('EventDetailsScreen - Rental Information Display', () => {
   describe('Event without Rental', () => {
     beforeEach(() => {
       (eventService.getEvent as jest.Mock).mockResolvedValue(mockEventWithoutRental);
-      (eventService.getEventParticipants as jest.Mock).mockResolvedValue([]);
+      (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
     });
 
     it('should not display rental information section when event has no rental', async () => {
@@ -273,7 +273,7 @@ describe('EventDetailsScreen - Rental Information Display', () => {
       };
 
       (eventService.getEvent as jest.Mock).mockResolvedValue(eventWithLowercaseSport);
-      (eventService.getEventParticipants as jest.Mock).mockResolvedValue([]);
+      (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
 
       renderScreen();
 
@@ -299,7 +299,7 @@ describe('EventDetailsScreen - Rental Information Display', () => {
       };
 
       (eventService.getEvent as jest.Mock).mockResolvedValue(eventWithLongCourtName);
-      (eventService.getEventParticipants as jest.Mock).mockResolvedValue([]);
+      (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
 
       renderScreen();
 
@@ -312,7 +312,7 @@ describe('EventDetailsScreen - Rental Information Display', () => {
   describe('Visual Indicators', () => {
     beforeEach(() => {
       (eventService.getEvent as jest.Mock).mockResolvedValue(mockEventWithRental);
-      (eventService.getEventParticipants as jest.Mock).mockResolvedValue([]);
+      (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
     });
 
     it('should display calendar icon for rental header', async () => {
@@ -342,7 +342,7 @@ describe('EventDetailsScreen - Rental Information Display', () => {
   describe('Integration with Event Details', () => {
     beforeEach(() => {
       (eventService.getEvent as jest.Mock).mockResolvedValue(mockEventWithRental);
-      (eventService.getEventParticipants as jest.Mock).mockResolvedValue([]);
+      (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
     });
 
     it('should display rental info alongside other event details', async () => {

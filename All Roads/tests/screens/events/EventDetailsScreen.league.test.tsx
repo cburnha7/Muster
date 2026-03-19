@@ -156,6 +156,7 @@ describe('EventDetailsScreen - League Context', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (eventService.getEventParticipants as jest.Mock).mockResolvedValue({ participants: [] });
   });
 
   it('should display league match badge when event has a linked match', () => {

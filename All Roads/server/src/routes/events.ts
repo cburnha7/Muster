@@ -138,6 +138,24 @@ router.get('/:id/participants', async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Fetch the event to check type and team associations
+    const event = await prisma.event.findUnique({
+      where: { id },
+      select: {
+        eventType: true,
+        eligibilityRestrictedToTeams: true,
+        matches: {
+          select: {
+            homeTeamId: true,
+            awayTeamId: true,
+            homeTeam: { select: { id: true, name: true } },
+            awayTeam: { select: { id: true, name: true } },
+          },
+          take: 1,
+        },
+      },
+    });
+
     const bookings = await prisma.booking.findMany({
       where: {
         eventId: id,
@@ -150,10 +168,52 @@ router.get('/:id/participants', async (req, res) => {
             firstName: true,
             lastName: true,
             email: true,
+            profileImage: true,
           },
         },
       },
     });
+
+    // For game events, resolve each participant's roster via team membership
+    let teamMembershipMap: Record<string, string> = {};
+    const isGame = event?.eventType === 'game';
+    const rosterIds = event?.eligibilityRestrictedToTeams ?? [];
+
+    if (isGame && rosterIds.length > 0) {
+      const userIds = bookings.map(b => b.user.id);
+      const memberships = await prisma.teamMember.findMany({
+        where: {
+          teamId: { in: rosterIds },
+          userId: { in: userIds },
+          status: 'active',
+        },
+        select: { userId: true, teamId: true },
+      });
+      for (const m of memberships) {
+        teamMembershipMap[m.userId] = m.teamId;
+      }
+    }
+
+    // Build roster metadata for game events
+    let rosters: { id: string; name: string; isHome: boolean }[] | undefined;
+    if (isGame && rosterIds.length > 0) {
+      const match = event?.matches?.[0];
+      if (match) {
+        rosters = [
+          { id: match.homeTeam!.id, name: match.homeTeam!.name, isHome: true },
+          { id: match.awayTeam!.id, name: match.awayTeam!.name, isHome: false },
+        ];
+      } else {
+        // No match record — fetch roster names and order alphabetically
+        const teams = await prisma.team.findMany({
+          where: { id: { in: rosterIds } },
+          select: { id: true, name: true },
+        });
+        rosters = teams
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(t => ({ id: t.id, name: t.name, isHome: false }));
+      }
+    }
 
     const participants = bookings.map(booking => ({
       userId: booking.user.id,
@@ -162,9 +222,12 @@ router.get('/:id/participants', async (req, res) => {
       status: booking.status,
       joinedAt: booking.createdAt,
       user: booking.user,
+      ...(isGame && teamMembershipMap[booking.user.id]
+        ? { teamId: teamMembershipMap[booking.user.id] }
+        : {}),
     }));
 
-    res.json(participants);
+    res.json({ participants, rosters });
   } catch (error) {
     console.error('Get event participants error:', error);
     res.status(500).json({ error: 'Failed to fetch participants' });

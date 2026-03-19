@@ -21,6 +21,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { CancelEventModal } from '../../components/events/CancelEventModal';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
+import { RosterParticipantList } from '../../components/events/RosterParticipantList';
 
 import { eventService } from '../../services/api/EventService';
 import { BookingValidationService } from '../../services/booking';
@@ -35,7 +36,9 @@ import { loggingService } from '../../services/LoggingService';import {
   SportType,
   SkillLevel,
   EventStatus,
+  EventType,
   Participant,
+  RosterInfo,
   BookingStatus,
 } from '../../types';
 import type { Match } from '../../types/league';
@@ -70,6 +73,7 @@ export function EventDetailsScreen(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [rosters, setRosters] = useState<RosterInfo[]>([]);
   const [participantsLoaded, setParticipantsLoaded] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [salutedParticipants, setSalutedParticipants] = useState<Set<string>>(new Set());
@@ -95,7 +99,7 @@ export function EventDetailsScreen(): JSX.Element {
       const eventResponse = await eventService.getEvent(eventId);
       
       // Fetch participants (skip cache if requested)
-      const participantsResponse = await eventService.getEventParticipants(eventId, skipCache);
+      const participantsData = await eventService.getEventParticipants(eventId, skipCache);
 
       // Check if event is in the past and if salutes have been submitted
       const isPastEvent = new Date(eventResponse.endTime) < new Date();
@@ -105,7 +109,8 @@ export function EventDetailsScreen(): JSX.Element {
       }
 
       setEvent(eventResponse);
-      setParticipants(participantsResponse);
+      setParticipants(participantsData.participants);
+      setRosters(participantsData.rosters ?? []);
       setParticipantsLoaded(true);
       dispatch(setSelectedEvent(eventResponse));
     } catch (err) {
@@ -237,12 +242,13 @@ export function EventDetailsScreen(): JSX.Element {
       
       // Reload participants (skip cache to get fresh data)
       console.log('≡ƒöä Reloading participants list...');
-      const newParticipants = await eventService.getEventParticipants(event.id, true);
+      const newParticipantsData = await eventService.getEventParticipants(event.id, true);
       console.log('Γ£à Participants reloaded successfully!');
-      console.log('≡ƒôè Participants count:', newParticipants.length);
-      console.log('≡ƒæÑ Participant user IDs:', newParticipants.map(p => p.userId));
-      console.log('≡ƒöì Current user in participants?', newParticipants.some(p => p.userId === currentUser.id));
-      setParticipants(newParticipants);
+      console.log('≡ƒôè Participants count:', newParticipantsData.participants.length);
+      console.log('≡ƒæÑ Participant user IDs:', newParticipantsData.participants.map(p => p.userId));
+      console.log('≡ƒöì Current user in participants?', newParticipantsData.participants.some(p => p.userId === currentUser.id));
+      setParticipants(newParticipantsData.participants);
+      setRosters(newParticipantsData.rosters ?? []);
 
       // Show success message
       Alert.alert(
@@ -504,6 +510,122 @@ export function EventDetailsScreen(): JSX.Element {
     );
   };
 
+  // Render a single salute participant card (reused in flat and roster-grouped views)
+  const renderSaluteCard = (participant: Participant) => {
+    const isSaluted = salutedParticipants.has(participant.userId);
+    const isCurrentUser = participant.userId === currentUser?.id;
+
+    return (
+      <TouchableOpacity
+        key={participant.userId}
+        style={[
+          styles.participantCard,
+          isSaluted && styles.participantCardSaluted,
+          isCurrentUser && styles.participantCardDisabled,
+        ]}
+        onPress={() => handleParticipantClick(participant)}
+        disabled={isCurrentUser}
+        activeOpacity={0.7}
+      >
+        {participant.user?.profileImage ? (
+          <Image
+            source={{ uri: participant.user.profileImage }}
+            style={styles.participantAvatar}
+          />
+        ) : (
+          <View style={styles.participantAvatarPlaceholder}>
+            <Text style={styles.participantAvatarText}>
+              {participant.user?.firstName?.[0] || '?'}
+              {participant.user?.lastName?.[0] || ''}
+            </Text>
+          </View>
+        )}
+        <Text style={styles.participantCardName} numberOfLines={2}>
+          {participant.user
+            ? `${participant.user.firstName} ${participant.user.lastName}`
+            : 'Unknown Player'}
+        </Text>
+        {isSaluted && (
+          <View style={styles.saluteBadge}>
+            <Text style={styles.saluteBadgeText}>≡ƒÖî</Text>
+          </View>
+        )}
+        {isCurrentUser && (
+          <View style={styles.youBadge}>
+            <Text style={styles.youBadgeText}>You</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  // Render the salute grid — roster-grouped for game events, flat otherwise
+  const renderSaluteGrid = () => {
+    const isGame = event?.eventType === EventType.GAME && rosters.length > 0;
+
+    if (!isGame) {
+      return (
+        <View style={styles.participantsGrid}>
+          {participants.map(renderSaluteCard)}
+        </View>
+      );
+    }
+
+    // Sort rosters: home first, then alphabetical
+    const sortedRosters = [...rosters].sort((a, b) => {
+      if (a.isHome && !b.isHome) return -1;
+      if (!a.isHome && b.isHome) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    const byRoster = new Map<string, Participant[]>();
+    const unassigned: Participant[] = [];
+    for (const p of participants) {
+      if (p.teamId) {
+        const list = byRoster.get(p.teamId) ?? [];
+        list.push(p);
+        byRoster.set(p.teamId, list);
+      } else {
+        unassigned.push(p);
+      }
+    }
+
+    return (
+      <View>
+        {sortedRosters.map((roster) => {
+          const rosterParticipants = byRoster.get(roster.id) ?? [];
+          return (
+            <View key={roster.id} style={{ marginBottom: 16 }}>
+              <View style={styles.rosterSaluteHeader}>
+                <Ionicons name="shield-outline" size={14} color={colors.grass} />
+                <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
+                {roster.isHome && (
+                  <View style={styles.rosterSaluteHomeBadge}>
+                    <Text style={styles.rosterSaluteHomeBadgeText}>HOME</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.participantsGrid}>
+                {rosterParticipants.map(renderSaluteCard)}
+              </View>
+            </View>
+          );
+        })}
+        {unassigned.length > 0 && (
+          <View style={{ marginBottom: 16 }}>
+            <View style={styles.rosterSaluteHeader}>
+              <Ionicons name="people-outline" size={14} color={colors.inkFaint} />
+              <Text style={styles.rosterSaluteLabel}>Other Players</Text>
+            </View>
+            <View style={styles.participantsGrid}>
+              {unassigned.map(renderSaluteCard)}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   // Format date and time
   const formatDateTime = (date: Date) => {
     const eventDate = new Date(date);
@@ -736,55 +858,7 @@ export function EventDetailsScreen(): JSX.Element {
                 <Text style={styles.saluteInstructions}>
                   Tap a participant to salute them (max 3 per event)
                 </Text>
-                <View style={styles.participantsGrid}>
-                  {participants.map((participant) => {
-                    const isSaluted = salutedParticipants.has(participant.userId);
-                    const isCurrentUser = participant.userId === currentUser?.id;
-                    
-                    return (
-                      <TouchableOpacity
-                        key={participant.userId}
-                        style={[
-                          styles.participantCard,
-                          isSaluted && styles.participantCardSaluted,
-                          isCurrentUser && styles.participantCardDisabled,
-                        ]}
-                        onPress={() => handleParticipantClick(participant)}
-                        disabled={isCurrentUser}
-                        activeOpacity={0.7}
-                      >
-                        {participant.user?.profileImage ? (
-                          <Image
-                            source={{ uri: participant.user.profileImage }}
-                            style={styles.participantAvatar}
-                          />
-                        ) : (
-                          <View style={styles.participantAvatarPlaceholder}>
-                            <Text style={styles.participantAvatarText}>
-                              {participant.user?.firstName?.[0] || '?'}
-                              {participant.user?.lastName?.[0] || ''}
-                            </Text>
-                          </View>
-                        )}
-                        <Text style={styles.participantCardName} numberOfLines={2}>
-                          {participant.user
-                            ? `${participant.user.firstName} ${participant.user.lastName}`
-                            : 'Unknown User'}
-                        </Text>
-                        {isSaluted && (
-                          <View style={styles.saluteBadge}>
-                            <Text style={styles.saluteBadgeText}>≡ƒÖî</Text>
-                          </View>
-                        )}
-                        {isCurrentUser && (
-                          <View style={styles.youBadge}>
-                            <Text style={styles.youBadgeText}>You</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                {renderSaluteGrid()}
                 {salutedParticipants.size > 0 && (
                   <View style={styles.submitSalutesContainer}>
                     <TouchableOpacity
@@ -1037,29 +1111,39 @@ export function EventDetailsScreen(): JSX.Element {
         </View>
 
         {/* Participants */}
+        {/* Participants — roster-grouped for game events, flat list otherwise */}
         {!isPastEvent && participants.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Participants ({participants.length})
-            </Text>
-            <View style={styles.participantsList}>
-              {participants.slice(0, 10).map((participant, index) => (
-                <View key={participant.userId} style={styles.participantItem}>
-                  <Ionicons name="person-outline" size={16} color="#666" />
-                  <Text style={styles.participantName}>
-                    {participant.user ? 
-                      `${participant.user.firstName} ${participant.user.lastName}` : 
-                      'Unknown User'
-                    }
-                  </Text>
-                </View>
-              ))}
-              {participants.length > 10 && (
-                <Text style={styles.moreParticipants}>
-                  +{participants.length - 10} more participants
+            {event.eventType === EventType.GAME && rosters.length > 0 ? (
+              <RosterParticipantList
+                participants={participants}
+                rosters={rosters}
+              />
+            ) : (
+              <>
+                <Text style={styles.sectionTitle}>
+                  Players ({participants.length})
                 </Text>
-              )}
-            </View>
+                <View style={styles.participantsList}>
+                  {participants.slice(0, 10).map((participant, index) => (
+                    <View key={participant.userId} style={styles.participantItem}>
+                      <Ionicons name="person-outline" size={16} color="#666" />
+                      <Text style={styles.participantName}>
+                        {participant.user ? 
+                          `${participant.user.firstName} ${participant.user.lastName}` : 
+                          'Unknown User'
+                        }
+                      </Text>
+                    </View>
+                  ))}
+                  {participants.length > 10 && (
+                    <Text style={styles.moreParticipants}>
+                      +{participants.length - 10} more players
+                    </Text>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         )}
       </ScrollView>
@@ -1475,6 +1559,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  rosterSaluteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.chalk,
+  },
+  rosterSaluteLabel: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+    textTransform: 'uppercase',
+    flex: 1,
+  },
+  rosterSaluteHomeBadge: {
+    backgroundColor: colors.grass + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  rosterSaluteHomeBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    color: colors.grass,
   },
   participantCard: {
     width: '30%',

@@ -298,6 +298,20 @@ export interface Participant {
   bookingId: string;
   joinedAt: Date;
   status: ParticipantStatus;
+  teamId?: string; // Roster ID for game events
+}
+
+/** Roster metadata returned alongside participants for game events */
+export interface RosterInfo {
+  id: string;
+  name: string;
+  isHome: boolean;
+}
+
+/** Shape returned by GET /events/:id/participants */
+export interface ParticipantsResponse {
+  participants: Participant[];
+  rosters?: RosterInfo[];
 }
 
 // ============================================================================
