@@ -14,23 +14,23 @@ const variantConfig = {
   dark: {
     bg:          colors.inkMid,
     groundLine:  colors.pineLight,
-    leftFig:     colors.navy,
-    centreFig:   colors.pineLight,
-    rightFig:    colors.court,
+    leftFig:     colors.pine,
+    centreFig:   colors.heart,
+    rightFig:    colors.navy,
   },
   light: {
-    bg:          '#EBF5EF',
-    groundLine:  colors.pine,
-    leftFig:     colors.navy,
-    centreFig:   colors.pine,
-    rightFig:    colors.court,
+    bg:          colors.bronze,
+    groundLine:  colors.navy,
+    leftFig:     colors.pine,
+    centreFig:   colors.heart,
+    rightFig:    colors.navy,
   },
   grass: {
     bg:          'rgba(0,0,0,0.15)',
     groundLine:  'rgba(255,255,255,0.3)',
     leftFig:     'rgba(255,255,255,0.55)',
     centreFig:   '#ffffff',
-    rightFig:    colors.courtLight,
+    rightFig:    colors.bronzeLight,
   },
 } as const;
 
