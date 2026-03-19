@@ -905,6 +905,95 @@ export class NotificationService {
 
 
   /**
+   * Send notification when an insurance document is approaching expiry (30-day warning).
+   */
+  static async notifyReservationApproved(
+    renterId: string,
+    facilityName: string,
+    courtName: string,
+    date: string,
+    startTime: string,
+    rentalId: string,
+    facilityId: string,
+  ): Promise<void> {
+    try {
+      const notification: NotificationTemplate = {
+        title: 'Reservation Approved',
+        body: `Your reservation at ${facilityName} (${courtName}) on ${date} at ${startTime} has been approved.`,
+        data: {
+          type: 'reservation_approved',
+          rentalId,
+          facilityId,
+        },
+      };
+
+      await NotificationService.queueNotification([renterId], notification);
+
+      console.log(
+        `[reservation-approval] Approved notification sent to user ${renterId} for rental ${rentalId}`,
+      );
+    } catch (error) {
+      console.error('Error sending reservation approved notification:', error);
+    }
+  }
+
+  static async notifyReservationDenied(
+    renterId: string,
+    facilityName: string,
+    courtName: string,
+    date: string,
+    startTime: string,
+    rentalId: string,
+    facilityId: string,
+  ): Promise<void> {
+    try {
+      const notification: NotificationTemplate = {
+        title: 'Reservation Denied',
+        body: `Your reservation at ${facilityName} (${courtName}) on ${date} at ${startTime} has been denied.`,
+        data: {
+          type: 'reservation_denied',
+          rentalId,
+          facilityId,
+        },
+      };
+
+      await NotificationService.queueNotification([renterId], notification);
+
+      console.log(
+        `[reservation-approval] Denied notification sent to user ${renterId} for rental ${rentalId}`,
+      );
+    } catch (error) {
+      console.error('Error sending reservation denied notification:', error);
+    }
+  }
+
+  static async notifyInsuranceDocumentExpiring(
+    userId: string,
+    policyName: string,
+    expiryDate: Date,
+  ): Promise<void> {
+    try {
+      const notification: NotificationTemplate = {
+        title: 'Insurance Document Expiring Soon',
+        body: `Your insurance document "${policyName}" expires on ${expiryDate.toLocaleDateString()}. Please upload a new document to maintain coverage.`,
+        data: {
+          type: 'insurance_document_expiring',
+          policyName,
+          expiryDate: expiryDate.toISOString(),
+        },
+      };
+
+      await NotificationService.queueNotification([userId], notification);
+
+      console.log(
+        `[insurance-expiry] Sending expiry warning for user ${userId} (policy: ${policyName}, expires: ${expiryDate.toISOString()})`,
+      );
+    } catch (error) {
+      console.error('Error sending insurance document expiry notification:', error);
+    }
+  }
+
+  /**
    * Check user notification preferences before sending
    */
   private static async shouldSendNotification(userId: string, notificationType: string): Promise<boolean> {

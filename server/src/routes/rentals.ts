@@ -5,6 +5,7 @@ import { generateOccurrences, RecurringFrequency } from '../services/recurring-b
 import { evaluateCancellationWindow } from '../services/cancellation-window';
 import { createCancelRequest } from '../services/cancel-request';
 import { stripe } from '../services/stripe-connect';
+import { InsuranceDocumentService } from '../services/InsuranceDocumentService';
 
 const router = Router();
 
@@ -64,9 +65,44 @@ router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', async 
       return res.status(400).json({ error: 'Cannot rent past time slots' });
     }
 
+    // Determine insurance requirement from the facility
+    const facility = timeSlot.court.facility as typeof timeSlot.court.facility & { requiresInsurance: boolean };
+    const { insuranceDocumentId } = req.body;
+
+    let rentalStatus: string = 'confirmed';
+    let attachedInsuranceDocumentId: string | null = null;
+
+    if (facility.requiresInsurance) {
+      // Insurance document is required
+      if (!insuranceDocumentId) {
+        return res.status(400).json({
+          error: 'You need a valid insurance document to reserve this court',
+        });
+      }
+
+      // Re-validate document status at submission time (guard against expiry between selection and submission)
+      const isActive = await InsuranceDocumentService.validateForAttachment(insuranceDocumentId);
+      if (!isActive) {
+        return res.status(400).json({
+          error: 'Insurance document is not active or does not exist',
+        });
+      }
+
+      // Verify the document belongs to the renter
+      const document = await InsuranceDocumentService.getById(insuranceDocumentId);
+      if (!document || document.userId !== userId) {
+        return res.status(403).json({
+          error: 'Insurance document does not belong to the renter',
+        });
+      }
+
+      rentalStatus = 'pending_approval';
+      attachedInsuranceDocumentId = insuranceDocumentId;
+    }
+
     // Create rental and update slot status in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Update time slot status
+      // Update time slot status — marked as "rented" in both cases to prevent double-booking
       await tx.facilityTimeSlot.update({
         where: { id: slotId },
         data: { status: 'rented' },
@@ -78,8 +114,9 @@ router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', async 
           userId,
           timeSlotId: slotId,
           totalPrice: timeSlot.price,
-          status: 'confirmed',
+          status: rentalStatus,
           paymentStatus: timeSlot.price > 0 ? 'pending' : 'paid',
+          ...(attachedInsuranceDocumentId ? { attachedInsuranceDocumentId } : {}),
         },
         include: {
           timeSlot: {

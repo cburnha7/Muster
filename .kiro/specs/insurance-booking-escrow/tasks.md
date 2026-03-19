@@ -6,25 +6,25 @@ Incremental implementation of insurance document management, ground-level insura
 
 ## Tasks
 
-- [ ] 1. Database schema extensions
-  - [ ] 1.1 Add `InsuranceDocument` and `EscrowTransaction` models to Prisma schema
+- [x] 1. Database schema extensions
+  - [x] 1.1 Add `InsuranceDocument` and `EscrowTransaction` models to Prisma schema
     - Create `InsuranceDocument` model in `server/src/prisma/schema.prisma` with columns: `id`, `documentUrl`, `policyName`, `expiryDate`, `status`, `expiryNotificationSent`, `createdAt`, `updatedAt`, `userId` FK, relation to `User`, relation to `FacilityRental[]`, and indexes on `userId`, `status`, `expiryDate`
     - Create `EscrowTransaction` model with columns: `id`, `type`, `amount`, `status`, `stripePaymentIntentId`, `createdAt`, `rentalId` FK, relation to `FacilityRental`, and indexes on `rentalId`, `type`
     - _Requirements: 10.1_
-  - [ ] 1.2 Extend `Facility`, `FacilityRental`, and `User` models
+  - [x] 1.2 Extend `Facility`, `FacilityRental`, and `User` models
     - Add `requiresInsurance Boolean @default(false)` to `Facility`
     - Add `attachedInsuranceDocumentId String?`, `escrowBalance Float @default(0)`, `rentalFeeCharged Boolean @default(false)` to `FacilityRental`
     - Add `attachedInsuranceDocument` and `escrowTransactions` relations to `FacilityRental`
     - Add `insuranceDocuments InsuranceDocument[]` relation to `User`
     - Ensure `pending_approval` is documented as a valid `status` value for `FacilityRental`
     - _Requirements: 10.2, 10.3, 10.4, 10.5, 10.6_
-  - [ ] 1.3 Generate and run Prisma migration
+  - [x] 1.3 Generate and run Prisma migration
     - Run `npx prisma migrate dev --name add-insurance-escrow`
     - Verify migration applies cleanly and Prisma Client regenerates
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-- [ ] 2. Insurance Document backend service and routes
-  - [ ] 2.1 Create `InsuranceDocumentService` in `server/src/services/InsuranceDocumentService.ts`
+- [x] 2. Insurance Document backend service and routes
+  - [x] 2.1 Create `InsuranceDocumentService` in `server/src/services/InsuranceDocumentService.ts`
     - Implement `create(userId, file, policyName, expiryDate)` — validates file type (PDF/JPEG/PNG), size (≤10 MB), non-empty policy name, future expiry date; stores file via existing `DocumentService`/multer pattern; creates DB record with `status: "active"`
     - Implement `listByUser(userId, status?)` — returns documents ordered by `createdAt` desc, optionally filtered by status
     - Implement `getById(id)` — returns single document
@@ -44,7 +44,7 @@ Incremental implementation of insurance document management, ground-level insura
     - **Property 3: Missing or invalid fields rejected**
     - Generate random combinations of missing fields (file, policy name, expiry date) and past expiry dates → verify rejection with error identifying the problem, no record created
     - **Validates: Requirements 1.5, 1.6**
-  - [ ] 2.5 Create insurance document routes in `server/src/routes/insurance-documents.ts`
+  - [x] 2.5 Create insurance document routes in `server/src/routes/insurance-documents.ts`
     - `POST /api/insurance-documents` — multipart upload with multer, calls `InsuranceDocumentService.create`
     - `GET /api/insurance-documents` — query params `userId`, optional `status`; calls `listByUser`
     - `GET /api/insurance-documents/:id` — calls `getById`
@@ -56,11 +56,11 @@ Incremental implementation of insurance document management, ground-level insura
     - Generate random document sets with mixed `active`/`expired` statuses → query with `status = "active"` → verify only active documents returned
     - **Validates: Requirements 2.3, 4.1**
 
-- [ ] 3. Checkpoint — Ensure all tests pass
+- [x] 3. Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Facility insurance toggle and reservation approval backend
-  - [ ] 4.1 Extend facility routes to support `requiresInsurance`
+- [x] 4. Facility insurance toggle and reservation approval backend
+  - [x] 4.1 Extend facility routes to support `requiresInsurance`
     - Update `POST /api/facilities` and `PUT /api/facilities/:id` in `server/src/routes/facilities.ts` to accept and persist `requiresInsurance` boolean
     - Default to `false` for new facilities
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
@@ -68,7 +68,7 @@ Incremental implementation of insurance document management, ground-level insura
     - **Property 7: requiresInsurance round-trip**
     - Generate random boolean values → set `requiresInsurance` via update → read back → verify value matches
     - **Validates: Requirements 3.3, 3.4**
-  - [ ] 4.3 Extend rental route for insurance-required reservations
+  - [x] 4.3 Extend rental route for insurance-required reservations
     - Update `POST /facilities/:facilityId/courts/:courtId/slots/:slotId/rent` in `server/src/routes/rentals.ts`
     - When `facility.requiresInsurance = true`: require `insuranceDocumentId` in body, validate document is active and belongs to renter via `InsuranceDocumentService.validateForAttachment`, create rental with `status: "pending_approval"` and `attachedInsuranceDocumentId`, hold time slot as `rented`
     - When `facility.requiresInsurance = false`: existing flow unchanged, `status: "confirmed"`, no insurance selector
@@ -91,8 +91,8 @@ Incremental implementation of insurance document management, ground-level insura
     - Generate random pending_approval rentals → attempt second rental on same time slot → verify conflict error
     - **Validates: Requirements 5.2**
 
-- [ ] 5. Reservation approval routes
-  - [ ] 5.1 Create reservation approval routes in `server/src/routes/reservation-approvals.ts`
+- [x] 5. Reservation approval routes
+  - [x] 5.1 Create reservation approval routes in `server/src/routes/reservation-approvals.ts`
     - `GET /api/reservation-approvals` — query param `ownerId`; returns all `pending_approval` rentals across owner's facilities with renter info, court, time, attached insurance document
     - `POST /api/reservation-approvals/:rentalId/approve` — transitions `pending_approval` → `confirmed`, sends confirmation notification via `NotificationService`
     - `POST /api/reservation-approvals/:rentalId/deny` — transitions `pending_approval` → `cancelled`, releases time slot (set to `available`), sends denial notification, creates zero Stripe charges
@@ -108,15 +108,15 @@ Incremental implementation of insurance document management, ground-level insura
     - Generate random `pending_approval` rentals → call deny → verify `status = "cancelled"`, time slot set to `"available"`, zero Stripe PaymentIntents created
     - **Validates: Requirements 6.5, 6.6**
 
-- [ ] 6. Checkpoint — Ensure all tests pass
+- [x] 6. Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Escrow service and transaction logging
-  - [ ] 7.1 Create `EscrowTransactionService` in `server/src/services/EscrowTransactionService.ts`
+- [x] 7. Escrow service and transaction logging
+  - [x] 7.1 Create `EscrowTransactionService` in `server/src/services/EscrowTransactionService.ts`
     - Implement `logTransaction({ rentalId, type, amount, stripePaymentIntentId?, status })` — creates `EscrowTransaction` record
     - Implement `getByRental(rentalId)` — returns all transactions for a rental ordered by `createdAt` desc
     - _Requirements: 9.1, 9.2_
-  - [ ] 7.2 Extend escrow join-fee flow in `server/src/services/escrow.ts`
+  - [x] 7.2 Extend escrow join-fee flow in `server/src/services/escrow.ts`
     - When a participant pays a join fee for an event linked to a reservation, create Stripe PaymentIntent with `capture_method: "manual"`, `transfer_group` set to reservation ID, `transfer_data.destination` set to facility's Stripe Connect account, `application_fee_amount = Math.floor(amount * PLATFORM_FEE_RATE)`, and idempotency key from `server/src/utils/idempotency.ts`
     - Update `FacilityRental.escrowBalance` to reflect cumulative total of all held PaymentIntents
     - Log authorization via `EscrowTransactionService.logTransaction`
@@ -133,7 +133,7 @@ Incremental implementation of insurance document management, ground-level insura
     - **Property 20: Every escrow operation is logged**
     - Generate random escrow operations (authorization, capture, surplus payout, shortfall charge, refund) → verify corresponding `EscrowTransaction` record created with correct `type`, `amount`, `rentalId`, `status`
     - **Validates: Requirements 9.1**
-  - [ ] 7.6 Create escrow transaction log route
+  - [x] 7.6 Create escrow transaction log route
     - Add `GET /api/escrow-transactions?rentalId=` to `server/src/routes/reservation-approvals.ts` or a new route file
     - Restrict access to the ground owner of the associated facility (return 403 for non-owners)
     - _Requirements: 9.2, 9.3_
@@ -142,8 +142,8 @@ Incremental implementation of insurance document management, ground-level insura
     - Generate random non-owner users → request escrow log for a reservation → verify 403 response
     - **Validates: Requirements 9.3**
 
-- [ ] 8. Implement `chargeRentalFee` logic in `EscrowTransactionService`
-  - [ ] 8.1 Implement `chargeRentalFee(rentalId)` method
+- [x] 8. Implement `chargeRentalFee` logic in `EscrowTransactionService`
+  - [x] 8.1 Implement `chargeRentalFee(rentalId)` method
     - Sum all authorized escrow PaymentIntents for the rental
     - If `escrowBalance >= totalPrice`: capture intents to cover rental fee, transfer surplus (`escrowBalance - totalPrice`) to host via Stripe Connect, log capture + surplus_payout transactions
     - If `escrowBalance < totalPrice`: capture all intents, charge host for shortfall (`totalPrice - escrowBalance`), log capture + shortfall_charge transactions
@@ -164,11 +164,11 @@ Incremental implementation of insurance document management, ground-level insura
     - Simulate partial capture failures → verify all successfully captured intents cancelled, `rentalFeeCharged = false`, failure logged
     - **Validates: Requirements 8.6**
 
-- [ ] 9. Checkpoint — Ensure all tests pass
+- [x] 9. Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Cron jobs
-  - [ ] 10.1 Create `insurance-expiry` cron job in `server/src/jobs/insurance-expiry.ts`
+- [x] 10. Cron jobs
+  - [x] 10.1 Create `insurance-expiry` cron job in `server/src/jobs/insurance-expiry.ts`
     - Schedule: daily at 01:00 UTC
     - Calls `InsuranceDocumentService.processExpiry()` — expires stale documents, sends 30-day warning notifications (once per document via `expiryNotificationSent` flag)
     - Register in `server/src/jobs/index.ts` following existing `node-cron` pattern
@@ -181,7 +181,7 @@ Incremental implementation of insurance document management, ground-level insura
     - **Property 5: 30-day expiry notification sent exactly once**
     - Generate documents within 30 days of expiry → run job twice → verify notification sent once, `expiryNotificationSent = true` after first run, no duplicate on second run
     - **Validates: Requirements 2.4, 2.5**
-  - [ ] 10.4 Create `rental-fee-charge` cron job in `server/src/jobs/rental-fee-charge.ts`
+  - [x] 10.4 Create `rental-fee-charge` cron job in `server/src/jobs/rental-fee-charge.ts`
     - Schedule: every 15 minutes
     - Query `FacilityRental` records where `status = "confirmed"`, `rentalFeeCharged = false`, and start time is within `cancellationPolicyHours` of now
     - Call `EscrowTransactionService.chargeRentalFee(rentalId)` for each eligible rental
@@ -192,11 +192,11 @@ Incremental implementation of insurance document management, ground-level insura
     - Generate random rental sets with mixed statuses, `rentalFeeCharged` values, and start times → verify job only processes rentals that are `confirmed`, not yet charged, and within cancellation window
     - **Validates: Requirements 8.1**
 
-- [ ] 11. Checkpoint — Ensure all tests pass
+- [x] 11. Checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Frontend: RTK Query API slice
-  - [ ] 12.1 Create `insuranceDocumentsApi.ts` in `src/store/api/`
+- [x] 12. Frontend: RTK Query API slice
+  - [x] 12.1 Create `insuranceDocumentsApi.ts` in `src/store/api/`
     - Define endpoints following existing RTK Query patterns in `src/store/api/`:
       - `useGetInsuranceDocumentsQuery({ userId, status? })`
       - `useUploadInsuranceDocumentMutation()`
@@ -208,8 +208,8 @@ Incremental implementation of insurance document management, ground-level insura
     - Register the API slice in the Redux store
     - _Requirements: 1.1, 6.1, 9.2_
 
-- [ ] 13. Frontend: Insurance document management components
-  - [ ] 13.1 Create `InsuranceDocumentsSection` in `src/components/profile/InsuranceDocumentsSection.tsx`
+- [x] 13. Frontend: Insurance document management components
+  - [x] 13.1 Create `InsuranceDocumentsSection` in `src/components/profile/InsuranceDocumentsSection.tsx`
     - Render inside `ProfileScreen` below existing sections
     - List all user insurance documents with status badges
     - Expired documents shown grayed out with "Expired" label
@@ -217,63 +217,63 @@ Incremental implementation of insurance document management, ground-level insura
     - Use `useGetInsuranceDocumentsQuery`
     - Import theme tokens from `src/theme/`
     - _Requirements: 1.1, 2.2_
-  - [ ] 13.2 Create `InsuranceDocumentForm` in `src/components/profile/InsuranceDocumentForm.tsx`
+  - [x] 13.2 Create `InsuranceDocumentForm` in `src/components/profile/InsuranceDocumentForm.tsx`
     - Modal/screen with file picker (PDF/JPEG/PNG, ≤10 MB), policy name input, expiry date picker
     - Client-side validation: required fields, future expiry date, file type and size
     - Calls `useUploadInsuranceDocumentMutation`
     - Display validation errors identifying missing/invalid fields
     - _Requirements: 1.2, 1.4, 1.5, 1.6_
-  - [ ] 13.3 Integrate `InsuranceDocumentsSection` into `ProfileScreen`
+  - [x] 13.3 Integrate `InsuranceDocumentsSection` into `ProfileScreen`
     - Add the section to the existing `ProfileScreen` layout
     - Wire up navigation to `InsuranceDocumentForm`
     - _Requirements: 1.1_
 
-- [ ] 14. Frontend: Facility insurance toggle
-  - [ ] 14.1 Add "Requires Proof of Insurance" toggle to Create/Edit Facility screens
+- [x] 14. Frontend: Facility insurance toggle
+  - [x] 14.1 Add "Requires Proof of Insurance" toggle to Create/Edit Facility screens
     - Add toggle to the facility form in the relevant screen components
     - Bind to `requiresInsurance` field in the facility create/update API calls
     - Default to `false`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 15. Frontend: Insurance document selector in reservation flow
-  - [ ] 15.1 Create `InsuranceDocumentSelector` in `src/components/bookings/InsuranceDocumentSelector.tsx`
+- [x] 15. Frontend: Insurance document selector in reservation flow
+  - [x] 15.1 Create `InsuranceDocumentSelector` in `src/components/bookings/InsuranceDocumentSelector.tsx`
     - Shown during reservation flow when `facility.requiresInsurance = true`
     - Lists only active documents via `useGetInsuranceDocumentsQuery({ userId, status: "active" })`
     - If no active documents: show blocking message "You need a valid insurance document to reserve this court" with link to Profile Screen insurance section
     - Selected document ID passed to rental request
     - _Requirements: 4.1, 4.3_
-  - [ ] 15.2 Integrate `InsuranceDocumentSelector` into the reservation/rental flow
+  - [x] 15.2 Integrate `InsuranceDocumentSelector` into the reservation/rental flow
     - Conditionally render selector when `facility.requiresInsurance = true`
     - Include `insuranceDocumentId` in the rental API request body
     - Skip selector entirely when `requiresInsurance = false`
     - _Requirements: 4.1, 4.2, 4.4_
 
-- [ ] 16. Frontend: Pending reservations and approval flow
-  - [ ] 16.1 Create `PendingReservationsSection` in `src/components/home/PendingReservationsSection.tsx`
+- [x] 16. Frontend: Pending reservations and approval flow
+  - [x] 16.1 Create `PendingReservationsSection` in `src/components/home/PendingReservationsSection.tsx`
     - Shown on Home Screen for users who own facilities
     - Lists pending reservations with renter name, court, date/time
     - Tap to view details and attached insurance document (inline viewing)
     - Approve/Deny buttons calling `useApproveReservationMutation` / `useDenyReservationMutation`
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-  - [ ] 16.2 Integrate `PendingReservationsSection` into Home Screen
+  - [x] 16.2 Integrate `PendingReservationsSection` into Home Screen
     - Conditionally render for facility owners
     - _Requirements: 6.1_
-  - [ ] 16.3 Add "Pending Approval" badge to renter's reservation view
+  - [x] 16.3 Add "Pending Approval" badge to renter's reservation view
     - Display badge when reservation `status = "pending_approval"`
     - _Requirements: 5.3_
 
-- [ ] 17. Frontend: Escrow transaction log
-  - [ ] 17.1 Create `EscrowTransactionLog` in `src/components/facilities/EscrowTransactionLog.tsx`
+- [x] 17. Frontend: Escrow transaction log
+  - [x] 17.1 Create `EscrowTransactionLog` in `src/components/facilities/EscrowTransactionLog.tsx`
     - Shown on ground management screen for each reservation
     - Lists all escrow transactions: type, amount, timestamp, status
     - Uses `useGetEscrowTransactionsQuery({ rentalId })`
     - Only visible to the ground owner
     - _Requirements: 9.2, 9.3_
-  - [ ] 17.2 Integrate `EscrowTransactionLog` into ground management screen
+  - [x] 17.2 Integrate `EscrowTransactionLog` into ground management screen
     - Wire into the existing facility/ground management UI
     - _Requirements: 9.2_
 
-- [ ] 18. Final checkpoint — Ensure all tests pass
+- [x] 18. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

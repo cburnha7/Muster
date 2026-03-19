@@ -14,7 +14,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx src/prisma/seed.ts",
-    "seed:facilities": "tsx src/scripts/seed-facilities-with-courts.ts"
+    "seed:facilities": "tsx src/scripts/seed-facilities-with-courts.ts",
+    "test": "jest --forceExit --detectOpenHandles"
   },
   "keywords": [
     "muster",
@@ -46,11 +47,14 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/express-rate-limit": "^5.1.3",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^7.0.11",
     "@types/sharp": "^0.31.1",
+    "jest": "^30.3.0",
     "prisma": "^5.22.0",
+    "ts-jest": "^29.4.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

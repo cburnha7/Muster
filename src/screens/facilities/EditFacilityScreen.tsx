@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Switch,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -67,6 +68,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   const [editingCourtId, setEditingCourtId] = useState<string | null>(null); // Track which court is being edited
   const [originalCourts, setOriginalCourts] = useState<string[]>([]); // Track original court IDs
   const [hoursOfOperation, setHoursOfOperation] = useState<DayHours[]>([]);
+  const [requiresInsurance, setRequiresInsurance] = useState(false);
   
   const [formData, setFormData] = useState<Partial<CreateFacilityData>>({
     name: '',
@@ -163,6 +165,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       }));
       setCourts(loadedCourts);
       setOriginalCourts(facilityCourts.map(c => c.id));
+
+      // Prepopulate insurance requirement
+      setRequiresInsurance(facility.requiresInsurance === true);
       
       // Load hours of operation from availabilitySlots
       if (facility.availabilitySlots && facility.availabilitySlots.length > 0) {
@@ -348,6 +353,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         pricePerHour: formData.pricing?.wholeFacilityRate || 0,
         hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
+        requiresInsurance,
       };
 
       const updatedFacility = await facilityService.updateFacility(facilityId, facilityData as any);
@@ -668,6 +674,24 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
             value={formData.cancellationPolicyHours ?? null}
             onChange={(val) => updateField('cancellationPolicyHours', val)}
           />
+        </View>
+
+        {/* Insurance Requirement */}
+        <View style={styles.section}>
+          <View style={styles.insuranceToggleRow}>
+            <View style={styles.insuranceToggleInfo}>
+              <Text style={styles.insuranceToggleLabel}>Requires Proof of Insurance</Text>
+              <Text style={styles.insuranceToggleDescription}>
+                Renters must attach a valid insurance document when reserving a court
+              </Text>
+            </View>
+            <Switch
+              value={requiresInsurance}
+              onValueChange={setRequiresInsurance}
+              trackColor={{ false: colors.cream, true: colors.pineLight }}
+              thumbColor={requiresInsurance ? colors.pine : colors.chalk}
+            />
+          </View>
         </View>
 
         {/* Submit Button */}
@@ -1166,5 +1190,25 @@ const styles = StyleSheet.create({
     ...TextStyles.body,
     fontWeight: '600',
     color: colors.chalk,
+  },
+  insuranceToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  insuranceToggleInfo: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  insuranceToggleLabel: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.ink,
+    marginBottom: Spacing.xs,
+  },
+  insuranceToggleDescription: {
+    ...TextStyles.body,
+    color: colors.inkFaint,
   },
 });

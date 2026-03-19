@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -102,6 +103,7 @@ export function CreateFacilityScreen(): JSX.Element {
     pricePerHour: 0,
   });
 
+  const [requiresInsurance, setRequiresInsurance] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateField = (field: string, value: any) => {
@@ -268,6 +270,7 @@ export function CreateFacilityScreen(): JSX.Element {
         ownerId: user?.id, // Set the current user as owner
         hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
+        requiresInsurance,
       };
 
       console.log('📤 Sending facility creation request...');
@@ -608,6 +611,24 @@ export function CreateFacilityScreen(): JSX.Element {
             value={formData.cancellationPolicyHours ?? null}
             onChange={(val) => updateField('cancellationPolicyHours', val)}
           />
+        </View>
+
+        {/* Insurance Requirement */}
+        <View style={styles.section}>
+          <View style={styles.insuranceToggleRow}>
+            <View style={styles.insuranceToggleInfo}>
+              <Text style={styles.insuranceToggleLabel}>Requires Proof of Insurance</Text>
+              <Text style={styles.insuranceToggleDescription}>
+                Renters must attach a valid insurance document when reserving a court
+              </Text>
+            </View>
+            <Switch
+              value={requiresInsurance}
+              onValueChange={setRequiresInsurance}
+              trackColor={{ false: colors.cream, true: colors.pineLight }}
+              thumbColor={requiresInsurance ? colors.pine : colors.chalk}
+            />
+          </View>
         </View>
 
         {/* Submit Button */}
@@ -1210,5 +1231,25 @@ const styles = StyleSheet.create({
     ...TextStyles.body,
     fontWeight: '600',
     color: colors.textInverse,
+  },
+  insuranceToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  insuranceToggleInfo: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  insuranceToggleLabel: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.ink,
+    marginBottom: Spacing.xs,
+  },
+  insuranceToggleDescription: {
+    ...TextStyles.body,
+    color: colors.inkFaint,
   },
 });

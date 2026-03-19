@@ -18,6 +18,7 @@ import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
 import { CancelRequestCard } from '../../components/home/CancelRequestCard';
+import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -361,6 +362,9 @@ export function HomeScreen() {
       >
         {/* Dependent toggle — rule 10 */}
         <ContextSwitcher />
+
+        {/* Pending reservations for facility owners */}
+        {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
         {/* Schedule section */}
         <View style={styles.section}>

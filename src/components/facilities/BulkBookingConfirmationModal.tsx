@@ -29,6 +29,8 @@ interface BulkBookingConfirmationModalProps {
   facilityName: string;
   cartSlots: CartSlot[];
   loading?: boolean;
+  insuranceContent?: React.ReactNode;
+  confirmDisabled?: boolean;
 }
 
 export function BulkBookingConfirmationModal({
@@ -38,6 +40,8 @@ export function BulkBookingConfirmationModal({
   facilityName,
   cartSlots,
   loading = false,
+  insuranceContent,
+  confirmDisabled = false,
 }: BulkBookingConfirmationModalProps) {
   // Group by court, then by date
   const grouped = new Map<string, Map<string, CartSlot[]>>();
@@ -106,6 +110,12 @@ export function BulkBookingConfirmationModal({
               <Text style={styles.totalPrice}>${totalPrice.toFixed(2)}</Text>
             </View>
 
+            {insuranceContent && (
+              <View style={styles.insuranceSection}>
+                {insuranceContent}
+              </View>
+            )}
+
             <View style={styles.notice}>
               <Ionicons name="information-circle" size={18} color={colors.court} />
               <Text style={styles.noticeText}>
@@ -118,9 +128,9 @@ export function BulkBookingConfirmationModal({
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.confirmBtn, loading && { opacity: 0.6 }]}
+                style={[styles.confirmBtn, (loading || confirmDisabled) && { opacity: 0.6 }]}
                 onPress={onConfirm}
-                disabled={loading}
+                disabled={loading || confirmDisabled}
               >
                 <Text style={styles.confirmBtnText}>
                   {loading ? 'Booking...' : `Confirm ${cartSlots.length} Slot${cartSlots.length !== 1 ? 's' : ''}`}
@@ -163,6 +173,10 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontFamily: fonts.semibold, ...typeScale.h3, color: colors.ink },
   totalPrice: { fontFamily: fonts.heading, ...typeScale.h2, color: colors.pine },
+  insuranceSection: {
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
   notice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
     marginHorizontal: Spacing.lg, marginBottom: Spacing.lg,

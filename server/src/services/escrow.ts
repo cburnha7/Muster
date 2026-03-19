@@ -12,6 +12,7 @@ import { stripe, calculatePlatformFee } from './stripe-connect';
 import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
 import { snapshotPolicy } from './cancellation';
 import { recalculateBalanceStatuses } from './balance';
+import { EscrowTransactionService } from './EscrowTransactionService';
 
 /**
  * Create an escrow PaymentIntent with manual capture for a booking participant.
@@ -66,6 +67,74 @@ export async function createEscrowIntent(
       stripePaymentIntentId: intent.id,
       paymentStatus: 'authorized',
     },
+  });
+
+  return intent;
+}
+
+/**
+ * Create an escrow PaymentIntent with manual capture for a join fee linked
+ * to a FacilityRental.
+ *
+ * - Routes funds to the facility via `transfer_data.destination`
+ * - Links all intents for the rental via `transfer_group`
+ * - Attaches `application_fee_amount` derived from PLATFORM_FEE_RATE
+ * - Uses a deterministic idempotency key to prevent double-charges on retries
+ * - Increments `FacilityRental.escrowBalance` by the held amount
+ * - Logs the authorization via `EscrowTransactionService.logTransaction`
+ *
+ * @param rentalId - FacilityRental record ID (also used as transfer_group)
+ * @param amount - Join fee amount in cents (USD)
+ * @param facilityConnectId - Facility's Stripe Connect account ID
+ * @param participantId - Identifier for the participant paying the join fee
+ * @returns The created Stripe PaymentIntent
+ */
+export async function createRentalEscrowIntent(
+  rentalId: string,
+  amount: number,
+  facilityConnectId: string,
+  participantId: string,
+): Promise<Stripe.PaymentIntent> {
+  const platformFee = calculatePlatformFee(amount);
+  const idempotencyKey = generateIdempotencyKey(rentalId, participantId, IdempotencyAction.CREATE);
+
+  const intent = await stripe.paymentIntents.create(
+    {
+      amount,
+      currency: 'usd',
+      capture_method: 'manual',
+      application_fee_amount: platformFee,
+      transfer_data: {
+        destination: facilityConnectId,
+      },
+      transfer_group: rentalId,
+      metadata: {
+        rental_id: rentalId,
+        participant_id: participantId,
+      },
+    },
+    {
+      idempotencyKey,
+    },
+  );
+
+  // Increment the rental's escrow balance by the authorized amount
+  await prisma.facilityRental.update({
+    where: { id: rentalId },
+    data: {
+      escrowBalance: {
+        increment: amount,
+      },
+    },
+  });
+
+  // Log the authorization event
+  await EscrowTransactionService.logTransaction({
+    rentalId,
+    type: 'authorization',
+    amount,
+    stripePaymentIntentId: intent.id,
+    status: 'completed',
   });
 
   return intent;

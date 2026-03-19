@@ -56,12 +56,20 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       disabled={!onPress}
     >
       {/* Bubble stack — top-right, vertical */}
-      {isLive && (
+      {(isLive || booking.status === BookingStatus.PENDING_APPROVAL) && (
         <View style={styles.bubbleStack}>
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
+          {isLive && (
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+          )}
+          {booking.status === BookingStatus.PENDING_APPROVAL && (
+            <View style={styles.pendingApprovalBadge}>
+              <Ionicons name="time-outline" size={11} color={colors.bronze} />
+              <Text style={styles.pendingApprovalText}>PENDING</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -290,5 +298,20 @@ const styles = StyleSheet.create({
   cancelledDate: {
     fontSize: 12,
     color: colors.heart,
+  },
+  pendingApprovalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(196, 168, 130, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 5,
+  },
+  pendingApprovalText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.bronze,
+    letterSpacing: 0.5,
   },
 });

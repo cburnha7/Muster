@@ -32,6 +32,9 @@ import leagueDuesRoutes from './routes/league-dues';
 import dependentRoutes from './routes/dependents';
 import promoCodeRoutes from './routes/promo-codes';
 import cancelRequestRoutes from './routes/cancel-requests';
+import insuranceDocumentRoutes from './routes/insurance-documents';
+import reservationApprovalRoutes from './routes/reservation-approvals';
+import escrowTransactionRoutes from './routes/escrow-transactions';
 
 dotenv.config();
 
@@ -141,6 +144,9 @@ app.use('/api/league-dues', leagueDuesRoutes);
 app.use('/api/dependents', dependentRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/cancel-requests', cancelRequestRoutes);
+app.use('/api/insurance-documents', insuranceDocumentRoutes);
+app.use('/api/reservation-approvals', reservationApprovalRoutes);
+app.use('/api/escrow-transactions', escrowTransactionRoutes);
 
 // Error handling
 app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -18,6 +18,8 @@ import { ConnectAccountsSection } from '../../components/profile/ConnectAccounts
 import { UserConnectSection } from '../../components/profile/UserConnectSection';
 import { DependentsSection } from '../../components/profile/DependentsSection';
 import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
+import { InsuranceDocumentsSection } from '../../components/profile/InsuranceDocumentsSection';
+import { InsuranceDocumentForm } from '../../components/profile/InsuranceDocumentForm';
 import { colors, fonts, typeScale } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 
@@ -26,6 +28,7 @@ export function ProfileScreen() {
   const { user: authUser, logout } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showInsuranceForm, setShowInsuranceForm] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -107,6 +110,22 @@ export function ProfileScreen() {
 
       {/* Sport Ratings */}
       {authUser?.id && <SportRatingsSection userId={authUser.id} />}
+
+      {/* Insurance Documents */}
+      {authUser?.id && (
+        <InsuranceDocumentsSection
+          userId={authUser.id}
+          onAddDocument={() => setShowInsuranceForm(true)}
+        />
+      )}
+
+      {/* Insurance Document Form Modal */}
+      {showInsuranceForm && authUser?.id && (
+        <InsuranceDocumentForm
+          userId={authUser.id}
+          onClose={() => setShowInsuranceForm(false)}
+        />
+      )}
 
       {/* Redeem Code */}
       <TouchableOpacity

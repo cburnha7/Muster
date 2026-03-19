@@ -46,6 +46,7 @@ export enum BookingStatus {
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
   NO_SHOW = 'no_show',
+  PENDING_APPROVAL = 'pending_approval',
 }
 
 export enum PaymentStatus {
@@ -160,6 +161,8 @@ export interface Facility {
   policyVersion?: string | null;
   // Reservation cancellation policy (hours before booking start requiring owner approval)
   cancellationPolicyHours?: number | null;
+  // Insurance requirement
+  requiresInsurance: boolean;
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -532,6 +535,7 @@ export interface CreateFacilityData {
   operatingHours: OperatingHours;
   pricing: FacilityPricing;
   cancellationPolicyHours?: number | null;
+  requiresInsurance?: boolean;
 }
 
 export interface UpdateFacilityData extends Partial<CreateFacilityData> {

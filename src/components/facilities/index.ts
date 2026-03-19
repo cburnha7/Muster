@@ -10,3 +10,5 @@ export { CancellationPolicyDisplay } from './CancellationPolicyDisplay';
 export type { CancellationPolicyDisplayProps } from './CancellationPolicyDisplay';
 export { CancellationPolicyPicker } from './CancellationPolicyPicker';
 export type { CancellationPolicyPickerProps } from './CancellationPolicyPicker';
+export { EscrowTransactionLog } from './EscrowTransactionLog';
+export type { EscrowTransactionLogProps } from './EscrowTransactionLog';

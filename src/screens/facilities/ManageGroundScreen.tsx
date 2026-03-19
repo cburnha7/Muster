@@ -104,6 +104,11 @@ export function ManageGroundScreen() {
     navigation.navigate('CancellationPolicy', { facilityId });
   };
 
+  const handleViewEscrowLog = () => {
+    // TODO: Navigate to rental selection then show EscrowTransactionLog
+    Alert.alert('Coming Soon', 'Escrow transaction logs will be available when rental management is implemented');
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -174,6 +179,17 @@ export function ManageGroundScreen() {
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Cancellation Policy</Text>
               <Text style={styles.actionDescription}>Required before your ground can accept bookings</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={handleViewEscrowLog}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="cash-outline" size={24} color={colors.pine} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Escrow Transactions</Text>
+              <Text style={styles.actionDescription}>View escrow transaction logs for rentals</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.soft} />
           </TouchableOpacity>

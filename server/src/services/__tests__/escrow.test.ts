@@ -1,5 +1,5 @@
 /**
- * Unit tests for escrow service — createEscrowIntent & captureEscrow
+ * Unit tests for escrow service — createEscrowIntent, createRentalEscrowIntent & captureEscrow
  *
  * Mocks Stripe SDK and Prisma to verify PaymentIntent creation/capture,
  * idempotency key usage, and BookingParticipant record updates.
@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------------------
 
 const mockSnapshotPolicy = jest.fn();
+const mockLogTransaction = jest.fn();
 
 jest.mock('../stripe-connect', () => ({
   stripe: {
@@ -34,6 +35,9 @@ jest.mock('../../index', () => ({
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    facilityRental: {
+      update: jest.fn(),
+    },
     $transaction: jest.fn(),
   },
 }));
@@ -47,6 +51,12 @@ jest.mock('../cancellation', () => ({
   snapshotPolicy: function () { return mockSnapshotPolicy.apply(null, arguments); },
 }));
 
+jest.mock('../EscrowTransactionService', () => ({
+  EscrowTransactionService: {
+    logTransaction: function () { return mockLogTransaction.apply(null, arguments); },
+  },
+}));
+
 // ---------------------------------------------------------------------------
 // Imports (resolved to mocked versions)
 // ---------------------------------------------------------------------------
@@ -54,7 +64,7 @@ jest.mock('../cancellation', () => ({
 import { stripe, calculatePlatformFee } from '../stripe-connect';
 import { prisma } from '../../index';
 import { generateIdempotencyKey } from '../../utils/idempotency';
-import { createEscrowIntent, captureEscrow, releaseEscrow } from '../escrow';
+import { createEscrowIntent, createRentalEscrowIntent, captureEscrow, releaseEscrow } from '../escrow';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -203,6 +213,123 @@ describe('createEscrowIntent', () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// Tests — createRentalEscrowIntent
+// ---------------------------------------------------------------------------
+
+describe('createRentalEscrowIntent', () => {
+  const RENTAL_ID = 'rental-001';
+  const JOIN_FEE = 3000; // $30.00
+  const RENTAL_PARTICIPANT_ID = 'user-joiner-001';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (calculatePlatformFee).mockReturnValue(150);
+    (generateIdempotencyKey).mockImplementation(
+      (rentalId, participant, action) => `${rentalId}:${participant}:${action}`,
+    );
+    (stripe.paymentIntents.create).mockResolvedValue(makeFakeIntent({ id: 'pi_rental_123', amount: JOIN_FEE }));
+    (prisma.facilityRental.update).mockResolvedValue({ escrowBalance: JOIN_FEE });
+    mockLogTransaction.mockResolvedValue({});
+  });
+
+  it('creates a PaymentIntent with manual capture', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: JOIN_FEE,
+        currency: 'usd',
+        capture_method: 'manual',
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it('sets application_fee_amount from platform fee calculation', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    expect(calculatePlatformFee).toHaveBeenCalledWith(JOIN_FEE);
+    const [params] = (stripe.paymentIntents.create).mock.calls[0];
+    expect(params.application_fee_amount).toBe(150);
+  });
+
+  it('routes funds to the facility via transfer_data.destination', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    const [params] = (stripe.paymentIntents.create).mock.calls[0];
+    expect(params.transfer_data).toEqual({ destination: FACILITY_CONNECT_ID });
+  });
+
+  it('sets transfer_group to the rental ID', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    const [params] = (stripe.paymentIntents.create).mock.calls[0];
+    expect(params.transfer_group).toBe(RENTAL_ID);
+  });
+
+  it('includes rental metadata on the intent', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    const [params] = (stripe.paymentIntents.create).mock.calls[0];
+    expect(params.metadata).toEqual({
+      rental_id: RENTAL_ID,
+      participant_id: RENTAL_PARTICIPANT_ID,
+    });
+  });
+
+  it('passes the correct idempotency key', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    expect(generateIdempotencyKey).toHaveBeenCalledWith(RENTAL_ID, RENTAL_PARTICIPANT_ID, 'create');
+    const [, options] = (stripe.paymentIntents.create).mock.calls[0];
+    expect(options.idempotencyKey).toBe(`${RENTAL_ID}:${RENTAL_PARTICIPANT_ID}:create`);
+  });
+
+  it('increments the rental escrowBalance by the join fee amount', async () => {
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    expect(prisma.facilityRental.update).toHaveBeenCalledWith({
+      where: { id: RENTAL_ID },
+      data: {
+        escrowBalance: { increment: JOIN_FEE },
+      },
+    });
+  });
+
+  it('logs the authorization via EscrowTransactionService', async () => {
+    (stripe.paymentIntents.create).mockResolvedValue(makeFakeIntent({ id: 'pi_logged_456' }));
+
+    await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    expect(mockLogTransaction).toHaveBeenCalledWith({
+      rentalId: RENTAL_ID,
+      type: 'authorization',
+      amount: JOIN_FEE,
+      stripePaymentIntentId: 'pi_logged_456',
+      status: 'completed',
+    });
+  });
+
+  it('returns the created PaymentIntent', async () => {
+    const result = await createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID);
+
+    expect(result.id).toBe('pi_rental_123');
+    expect(result.capture_method).toBe('manual');
+  });
+
+  it('propagates Stripe errors without updating balance or logging', async () => {
+    (stripe.paymentIntents.create).mockRejectedValue(new Error('Stripe error'));
+
+    await expect(
+      createRentalEscrowIntent(RENTAL_ID, JOIN_FEE, FACILITY_CONNECT_ID, RENTAL_PARTICIPANT_ID),
+    ).rejects.toThrow('Stripe error');
+
+    expect(prisma.facilityRental.update).not.toHaveBeenCalled();
+    expect(mockLogTransaction).not.toHaveBeenCalled();
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Tests — captureEscrow

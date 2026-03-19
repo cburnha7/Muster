@@ -16,6 +16,8 @@ import { processCaptureWindowRenewals } from './capture-window';
 import { processNightlyRatings } from './nightly-ratings';
 import { processTrialExpiry } from './trial-expiry';
 import { processLeagueReadyChecks } from './league-ready-check';
+import { processInsuranceExpiry } from './insurance-expiry';
+import { processRentalFeeCharge } from './rental-fee-charge';
 
 /**
  * Initialize all cron jobs
@@ -137,6 +139,51 @@ export function initializeCronJobs() {
       }
     } catch (error: any) {
       console.error('❌ Public event cutoff job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Insurance Expiry Job - Daily at 01:00 UTC
+  // Expires stale documents and sends 30-day warning notifications
+  cron.schedule('0 1 * * *', async () => {
+    console.log('🔄 Starting insurance expiry job');
+
+    try {
+      const metrics = await processInsuranceExpiry();
+
+      console.log('✅ Insurance expiry completed', {
+        expired: metrics.expired,
+        notified: metrics.notified,
+      });
+    } catch (error: any) {
+      console.error('❌ Insurance expiry job failed', { error: error.message });
+    }
+  }, {
+    timezone: 'UTC',
+  });
+
+  // Rental Fee Charge Job - Every 15 minutes (offset)
+  // Charges rental fees for confirmed rentals entering the cancellation window
+  cron.schedule('7,22,37,52 * * * *', async () => {
+    console.log('🔄 Starting rental fee charge job');
+
+    try {
+      const metrics = await processRentalFeeCharge();
+
+      console.log('✅ Rental fee charge completed', {
+        rentalsChecked: metrics.rentalsChecked,
+        rentalsCharged: metrics.rentalsCharged,
+      });
+
+      if (metrics.errors.length > 0) {
+        console.warn('⚠️  Some rentals had errors during fee charging', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Rental fee charge job failed', { error: error.message });
     }
   }, {
     timezone: 'UTC',

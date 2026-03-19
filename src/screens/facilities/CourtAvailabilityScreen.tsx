@@ -32,6 +32,7 @@ import type { ConflictSlot } from '../../components/facilities/BookingConflictMo
 import { useAuth } from '../../context/AuthContext';
 import { RecurringBookingToggle, RecurringConfig } from '../../components/bookings/RecurringBookingToggle';
 import { RecurringConflictsModal } from '../../components/bookings/RecurringConflictsModal';
+import { InsuranceDocumentSelector } from '../../components/bookings/InsuranceDocumentSelector';
 
 type CourtAvailabilityScreenNavigationProp = NativeStackNavigationProp<
   FacilitiesStackParamList,
@@ -63,6 +64,14 @@ export function CourtAvailabilityScreen() {
   const { user } = useAuth();
 
   const { facilityId, facilityName, courtId, eventDate, eventStartTime, returnTo, returnParams } = route.params;
+
+  // Facility data (for requiresInsurance check)
+  const [facilityData, setFacilityData] = useState<{ requiresInsurance?: boolean } | null>(null);
+
+  // Insurance document selection (only used when requiresInsurance = true)
+  const [selectedInsuranceDocumentId, setSelectedInsuranceDocumentId] = useState<string | undefined>(undefined);
+
+  const requiresInsurance = facilityData?.requiresInsurance === true;
 
   const [selectedDate, setSelectedDate] = useState<string>(
     eventDate || formatDateForCalendar(new Date())
@@ -105,6 +114,7 @@ export function CourtAvailabilityScreen() {
   // Load courts on mount
   useEffect(() => {
     loadCourts();
+    loadFacilityData();
   }, [facilityId]);
 
   // Load availability when court or date changes
@@ -153,6 +163,19 @@ export function CourtAvailabilityScreen() {
       Alert.alert('Error', 'Failed to load courts. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFacilityData = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}`
+      );
+      if (!response.ok) throw new Error('Failed to load facility');
+      const data = await response.json();
+      setFacilityData(data);
+    } catch (error) {
+      console.error('Load facility data error:', error);
     }
   };
 
@@ -309,10 +332,15 @@ export function CourtAvailabilityScreen() {
         slotId: s.slotId,
       }));
 
+      const body: any = { userId: user.id, slots };
+      if (requiresInsurance && selectedInsuranceDocumentId) {
+        body.insuranceDocumentId = selectedInsuranceDocumentId;
+      }
+
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/rentals/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, slots }),
+        body: JSON.stringify(body),
       });
 
       if (response.status === 201) {
@@ -628,6 +656,16 @@ export function CourtAvailabilityScreen() {
         facilityName={facilityName}
         cartSlots={cartSlots}
         loading={submitting}
+        insuranceContent={
+          requiresInsurance && user ? (
+            <InsuranceDocumentSelector
+              userId={user.id}
+              onSelect={setSelectedInsuranceDocumentId}
+              selectedDocumentId={selectedInsuranceDocumentId}
+            />
+          ) : undefined
+        }
+        confirmDisabled={requiresInsurance && !selectedInsuranceDocumentId}
       />
 
       {/* Conflict Modal */}

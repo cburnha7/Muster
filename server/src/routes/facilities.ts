@@ -495,6 +495,7 @@ router.post('/', async (req, res) => {
       ownerId,
       hoursOfOperation = [],
       cancellationPolicyHours,
+      requiresInsurance = false,
     } = req.body;
 
     // Validate required fields
@@ -566,6 +567,7 @@ router.post('/', async (req, res) => {
         latitude,
         longitude,
         ownerId: facilityOwnerId,
+        requiresInsurance: requiresInsurance === true,
         ...(cancellationPolicyHours !== undefined && { cancellationPolicyHours }),
       },
     });
@@ -600,9 +602,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { hoursOfOperation, slotIncrementMinutes, ...updateData } = req.body;
+    const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, ...updateData } = req.body;
 
     // TODO: Add authorization check - only owner can update
+
+    // Coerce requiresInsurance to boolean if provided
+    if (requiresInsurance !== undefined) {
+      updateData.requiresInsurance = requiresInsurance === true;
+    }
 
     // Validate cancellation policy hours if provided
     if (updateData.cancellationPolicyHours !== undefined && !isValidPolicyHours(updateData.cancellationPolicyHours)) {

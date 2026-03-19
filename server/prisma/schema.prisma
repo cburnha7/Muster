@@ -81,6 +81,8 @@ model User {
   redemptions            PromoCodeRedemption[]  @relation("UserRedemptions")
   cancelRequests         CancelRequest[]
 
+  insuranceDocuments     InsuranceDocument[]
+
   // Self-referential relation for guardian/dependent accounts
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
   dependents User[] @relation("GuardianDependents")
@@ -212,6 +214,9 @@ model Facility {
 
   // Stripe Connect
   stripeConnectAccountId String? // Stripe Connect Express account ID for receiving payments
+
+  // Insurance requirement
+  requiresInsurance Boolean @default(false)
 
   // Foreign Keys
   ownerId String
@@ -721,9 +726,13 @@ model FacilityTimeSlot {
 
 model FacilityRental {
   id            String @id @default(uuid())
-  status        String @default("confirmed") // confirmed, cancelled, completed, no_show
+  status        String @default("confirmed") // pending_approval, confirmed, cancelled, completed, no_show
   totalPrice    Float
   paymentStatus String @default("pending") // pending, paid, refunded, failed
+
+  // Escrow tracking
+  escrowBalance    Float   @default(0) // Cumulative escrowed join-fee amount in cents
+  rentalFeeCharged Boolean @default(false)
 
   // Cancellation
   cancelledAt        DateTime?
@@ -752,10 +761,15 @@ model FacilityRental {
   userId     String
   timeSlotId String @unique
 
+  // Insurance attachment (nullable FK for insurance-required reservations)
+  attachedInsuranceDocumentId String?
+
   // Relations
   user         User             @relation(fields: [userId], references: [id])
   timeSlot     FacilityTimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
   usedForEvent Event?           @relation("RentalUsedForEvent", fields: [usedForEventId], references: [id])
+  attachedInsuranceDocument InsuranceDocument? @relation(fields: [attachedInsuranceDocumentId], references: [id])
+  escrowTransactions        EscrowTransaction[]
   events       Event[]
   bookings     Booking[]
   teamTransactions TeamTransaction[]
@@ -1234,4 +1248,46 @@ model PromoCodeRedemption {
   @@index([userId])
   @@index([promoCodeId])
   @@map("promo_code_redemptions")
+}
+
+model InsuranceDocument {
+  id                     String   @id @default(uuid())
+  documentUrl            String
+  policyName             String
+  expiryDate             DateTime
+  status                 String   @default("active") // "active" | "expired"
+  expiryNotificationSent Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Foreign Keys
+  userId String
+
+  // Relations
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rentals FacilityRental[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiryDate])
+  @@map("insurance_documents")
+}
+
+model EscrowTransaction {
+  id                    String   @id @default(uuid())
+  type                  String   // "authorization" | "capture" | "surplus_payout" | "shortfall_charge" | "refund"
+  amount                Float    // Amount in cents (USD)
+  status                String   @default("pending") // "pending" | "completed" | "failed"
+  stripePaymentIntentId String?
+  createdAt             DateTime @default(now())
+
+  // Foreign Keys
+  rentalId String
+
+  // Relations
+  rental FacilityRental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  @@index([rentalId])
+  @@index([type])
+  @@map("escrow_transactions")
 }
