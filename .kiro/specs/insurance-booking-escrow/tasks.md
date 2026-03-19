@@ -1,0 +1,287 @@
+# Implementation Plan: Insurance, Booking & Escrow
+
+## Overview
+
+Incremental implementation of insurance document management, ground-level insurance requirements with reservation approval, and escrow-based rental fee charging. Each task builds on the previous, starting with the database schema, then backend services and routes, then cron jobs, then frontend components, and finally wiring everything together.
+
+## Tasks
+
+- [ ] 1. Database schema extensions
+  - [ ] 1.1 Add `InsuranceDocument` and `EscrowTransaction` models to Prisma schema
+    - Create `InsuranceDocument` model in `server/src/prisma/schema.prisma` with columns: `id`, `documentUrl`, `policyName`, `expiryDate`, `status`, `expiryNotificationSent`, `createdAt`, `updatedAt`, `userId` FK, relation to `User`, relation to `FacilityRental[]`, and indexes on `userId`, `status`, `expiryDate`
+    - Create `EscrowTransaction` model with columns: `id`, `type`, `amount`, `status`, `stripePaymentIntentId`, `createdAt`, `rentalId` FK, relation to `FacilityRental`, and indexes on `rentalId`, `type`
+    - _Requirements: 10.1_
+  - [ ] 1.2 Extend `Facility`, `FacilityRental`, and `User` models
+    - Add `requiresInsurance Boolean @default(false)` to `Facility`
+    - Add `attachedInsuranceDocumentId String?`, `escrowBalance Float @default(0)`, `rentalFeeCharged Boolean @default(false)` to `FacilityRental`
+    - Add `attachedInsuranceDocument` and `escrowTransactions` relations to `FacilityRental`
+    - Add `insuranceDocuments InsuranceDocument[]` relation to `User`
+    - Ensure `pending_approval` is documented as a valid `status` value for `FacilityRental`
+    - _Requirements: 10.2, 10.3, 10.4, 10.5, 10.6_
+  - [ ] 1.3 Generate and run Prisma migration
+    - Run `npx prisma migrate dev --name add-insurance-escrow`
+    - Verify migration applies cleanly and Prisma Client regenerates
+    - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
+
+- [ ] 2. Insurance Document backend service and routes
+  - [ ] 2.1 Create `InsuranceDocumentService` in `server/src/services/InsuranceDocumentService.ts`
+    - Implement `create(userId, file, policyName, expiryDate)` — validates file type (PDF/JPEG/PNG), size (≤10 MB), non-empty policy name, future expiry date; stores file via existing `DocumentService`/multer pattern; creates DB record with `status: "active"`
+    - Implement `listByUser(userId, status?)` — returns documents ordered by `createdAt` desc, optionally filtered by status
+    - Implement `getById(id)` — returns single document
+    - Implement `delete(id, userId)` — ownership check, removes file from storage, deletes DB record
+    - Implement `validateForAttachment(documentId)` — checks document exists and `status = "active"`
+    - Implement `processExpiry()` — batch-updates expired documents, sends 30-day warning notifications (once per document)
+    - _Requirements: 1.3, 1.4, 1.5, 1.6, 2.1, 2.4, 2.5_
+  - [ ]* 2.2 Write property test: valid upload creates active record
+    - **Property 1: Valid upload creates active record**
+    - Generate random valid inputs (allowed MIME types, sizes ≤10 MB, non-empty policy names, future expiry dates) → verify `InsuranceDocument` created with `status = "active"`, correct `userId`, `policyName`, `expiryDate`, non-empty `documentUrl`
+    - **Validates: Requirements 1.3**
+  - [ ]* 2.3 Write property test: file validation rejects invalid types and sizes
+    - **Property 2: File validation rejects invalid types and sizes**
+    - Generate random files with invalid MIME types or sizes >10 MB → verify rejection with validation error, no record created
+    - **Validates: Requirements 1.4**
+  - [ ]* 2.4 Write property test: missing or invalid fields rejected
+    - **Property 3: Missing or invalid fields rejected**
+    - Generate random combinations of missing fields (file, policy name, expiry date) and past expiry dates → verify rejection with error identifying the problem, no record created
+    - **Validates: Requirements 1.5, 1.6**
+  - [ ] 2.5 Create insurance document routes in `server/src/routes/insurance-documents.ts`
+    - `POST /api/insurance-documents` — multipart upload with multer, calls `InsuranceDocumentService.create`
+    - `GET /api/insurance-documents` — query params `userId`, optional `status`; calls `listByUser`
+    - `GET /api/insurance-documents/:id` — calls `getById`
+    - `DELETE /api/insurance-documents/:id` — calls `delete` with ownership check
+    - Register routes in `server/src/index.ts`
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
+  - [ ]* 2.6 Write property test: document selector returns only active documents
+    - **Property 6: Document selector returns only active documents**
+    - Generate random document sets with mixed `active`/`expired` statuses → query with `status = "active"` → verify only active documents returned
+    - **Validates: Requirements 2.3, 4.1**
+
+- [ ] 3. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Facility insurance toggle and reservation approval backend
+  - [ ] 4.1 Extend facility routes to support `requiresInsurance`
+    - Update `POST /api/facilities` and `PUT /api/facilities/:id` in `server/src/routes/facilities.ts` to accept and persist `requiresInsurance` boolean
+    - Default to `false` for new facilities
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+  - [ ]* 4.2 Write property test: requiresInsurance round-trip
+    - **Property 7: requiresInsurance round-trip**
+    - Generate random boolean values → set `requiresInsurance` via update → read back → verify value matches
+    - **Validates: Requirements 3.3, 3.4**
+  - [ ] 4.3 Extend rental route for insurance-required reservations
+    - Update `POST /facilities/:facilityId/courts/:courtId/slots/:slotId/rent` in `server/src/routes/rentals.ts`
+    - When `facility.requiresInsurance = true`: require `insuranceDocumentId` in body, validate document is active and belongs to renter via `InsuranceDocumentService.validateForAttachment`, create rental with `status: "pending_approval"` and `attachedInsuranceDocumentId`, hold time slot as `rented`
+    - When `facility.requiresInsurance = false`: existing flow unchanged, `status: "confirmed"`, no insurance selector
+    - Re-validate document status at submission time (guard against expiry between selection and submission)
+    - _Requirements: 4.2, 4.3, 4.4, 4.5, 5.1, 5.2_
+  - [ ]* 4.4 Write property test: insurance-required reservation creates pending_approval
+    - **Property 8: Insurance-required reservation creates pending_approval with correct attachment**
+    - Generate random valid reservations at insurance-required grounds with active documents → verify `status = "pending_approval"`, `attachedInsuranceDocumentId` matches, time slot `status = "rented"`
+    - **Validates: Requirements 4.2, 5.1**
+  - [ ]* 4.5 Write property test: reservation blocked when no active documents
+    - **Property 9: Reservation blocked when renter has no active documents**
+    - Generate random renters with zero active documents → attempt reservation at insurance-required ground → verify rejection, no `FacilityRental` created
+    - **Validates: Requirements 4.3**
+  - [ ]* 4.6 Write property test: non-insurance reservation proceeds normally
+    - **Property 10: Non-insurance reservation proceeds without insurance requirement**
+    - Generate random reservations at grounds where `requiresInsurance = false` → verify `status = "confirmed"`, `attachedInsuranceDocumentId = null`
+    - **Validates: Requirements 4.4**
+  - [ ]* 4.7 Write property test: pending approval slot prevents double-booking
+    - **Property 11: Pending approval slot prevents double-booking**
+    - Generate random pending_approval rentals → attempt second rental on same time slot → verify conflict error
+    - **Validates: Requirements 5.2**
+
+- [ ] 5. Reservation approval routes
+  - [ ] 5.1 Create reservation approval routes in `server/src/routes/reservation-approvals.ts`
+    - `GET /api/reservation-approvals` — query param `ownerId`; returns all `pending_approval` rentals across owner's facilities with renter info, court, time, attached insurance document
+    - `POST /api/reservation-approvals/:rentalId/approve` — transitions `pending_approval` → `confirmed`, sends confirmation notification via `NotificationService`
+    - `POST /api/reservation-approvals/:rentalId/deny` — transitions `pending_approval` → `cancelled`, releases time slot (set to `available`), sends denial notification, creates zero Stripe charges
+    - Guard: return 409 if rental is not in `pending_approval` state
+    - Register routes in `server/src/index.ts`
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
+  - [ ]* 5.2 Write property test: approve transitions pending_approval to confirmed
+    - **Property 12: Approve transitions pending_approval to confirmed**
+    - Generate random `pending_approval` rentals → call approve → verify `status = "confirmed"`, time slot remains `"rented"`
+    - **Validates: Requirements 6.4**
+  - [ ]* 5.3 Write property test: deny transitions to cancelled and releases slot
+    - **Property 13: Deny transitions to cancelled and releases slot**
+    - Generate random `pending_approval` rentals → call deny → verify `status = "cancelled"`, time slot set to `"available"`, zero Stripe PaymentIntents created
+    - **Validates: Requirements 6.5, 6.6**
+
+- [ ] 6. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 7. Escrow service and transaction logging
+  - [ ] 7.1 Create `EscrowTransactionService` in `server/src/services/EscrowTransactionService.ts`
+    - Implement `logTransaction({ rentalId, type, amount, stripePaymentIntentId?, status })` — creates `EscrowTransaction` record
+    - Implement `getByRental(rentalId)` — returns all transactions for a rental ordered by `createdAt` desc
+    - _Requirements: 9.1, 9.2_
+  - [ ] 7.2 Extend escrow join-fee flow in `server/src/services/escrow.ts`
+    - When a participant pays a join fee for an event linked to a reservation, create Stripe PaymentIntent with `capture_method: "manual"`, `transfer_group` set to reservation ID, `transfer_data.destination` set to facility's Stripe Connect account, `application_fee_amount = Math.floor(amount * PLATFORM_FEE_RATE)`, and idempotency key from `server/src/utils/idempotency.ts`
+    - Update `FacilityRental.escrowBalance` to reflect cumulative total of all held PaymentIntents
+    - Log authorization via `EscrowTransactionService.logTransaction`
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+  - [ ]* 7.3 Write property test: escrow PaymentIntent has correct Stripe properties
+    - **Property 14: Escrow PaymentIntent has correct Stripe properties**
+    - Generate random escrow creation params → verify PaymentIntent has `capture_method = "manual"`, `transfer_group = rentalId`, non-empty idempotency key, correct `transfer_data.destination`, `application_fee_amount = Math.floor(amount * PLATFORM_FEE_RATE)` (mock Stripe)
+    - **Validates: Requirements 7.1, 7.2, 7.3, 7.5, 8.5**
+  - [ ]* 7.4 Write property test: escrow balance invariant
+    - **Property 15: Escrow balance invariant**
+    - Generate random sequences of N join fee payments → verify `escrowBalance` equals sum of all authorized PaymentIntent amounts
+    - **Validates: Requirements 7.4**
+  - [ ]* 7.5 Write property test: every escrow operation is logged
+    - **Property 20: Every escrow operation is logged**
+    - Generate random escrow operations (authorization, capture, surplus payout, shortfall charge, refund) → verify corresponding `EscrowTransaction` record created with correct `type`, `amount`, `rentalId`, `status`
+    - **Validates: Requirements 9.1**
+  - [ ] 7.6 Create escrow transaction log route
+    - Add `GET /api/escrow-transactions?rentalId=` to `server/src/routes/reservation-approvals.ts` or a new route file
+    - Restrict access to the ground owner of the associated facility (return 403 for non-owners)
+    - _Requirements: 9.2, 9.3_
+  - [ ]* 7.7 Write property test: escrow transaction log access restricted to ground owner
+    - **Property 21: Escrow transaction log access restricted to ground owner**
+    - Generate random non-owner users → request escrow log for a reservation → verify 403 response
+    - **Validates: Requirements 9.3**
+
+- [ ] 8. Implement `chargeRentalFee` logic in `EscrowTransactionService`
+  - [ ] 8.1 Implement `chargeRentalFee(rentalId)` method
+    - Sum all authorized escrow PaymentIntents for the rental
+    - If `escrowBalance >= totalPrice`: capture intents to cover rental fee, transfer surplus (`escrowBalance - totalPrice`) to host via Stripe Connect, log capture + surplus_payout transactions
+    - If `escrowBalance < totalPrice`: capture all intents, charge host for shortfall (`totalPrice - escrowBalance`), log capture + shortfall_charge transactions
+    - Include `application_fee_amount` on every charge using `PLATFORM_FEE_RATE`
+    - On capture failure: cancel all successfully captured intents, log failure, leave `rentalFeeCharged = false` for retry
+    - Set `rentalFeeCharged = true` on success
+    - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6_
+  - [ ]* 8.2 Write property test: sufficient escrow captures and pays surplus
+    - **Property 17: Sufficient escrow captures and pays surplus**
+    - Generate random rentals where `escrowBalance >= totalPrice` → run charge → verify `rentalFeeCharged = true`, captured amount = `totalPrice`, surplus transfer = `escrowBalance - totalPrice` issued to host
+    - **Validates: Requirements 8.2, 8.3**
+  - [ ]* 8.3 Write property test: insufficient escrow captures all and charges shortfall
+    - **Property 18: Insufficient escrow captures all and charges shortfall**
+    - Generate random rentals where `escrowBalance < totalPrice` → run charge → verify all intents captured, host charged `totalPrice - escrowBalance`, `rentalFeeCharged = true`
+    - **Validates: Requirements 8.4**
+  - [ ]* 8.4 Write property test: capture failure triggers rollback
+    - **Property 19: Capture failure triggers rollback**
+    - Simulate partial capture failures → verify all successfully captured intents cancelled, `rentalFeeCharged = false`, failure logged
+    - **Validates: Requirements 8.6**
+
+- [ ] 9. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 10. Cron jobs
+  - [ ] 10.1 Create `insurance-expiry` cron job in `server/src/jobs/insurance-expiry.ts`
+    - Schedule: daily at 01:00 UTC
+    - Calls `InsuranceDocumentService.processExpiry()` — expires stale documents, sends 30-day warning notifications (once per document via `expiryNotificationSent` flag)
+    - Register in `server/src/jobs/index.ts` following existing `node-cron` pattern
+    - _Requirements: 2.1, 2.4, 2.5_
+  - [ ]* 10.2 Write property test: expiry job correctly transitions expired documents
+    - **Property 4: Expiry job correctly transitions expired documents**
+    - Generate random document sets with mixed expiry dates → run job → verify documents with past expiry have `status = "expired"`, documents with future expiry retain `status = "active"`
+    - **Validates: Requirements 2.1**
+  - [ ]* 10.3 Write property test: 30-day expiry notification sent exactly once
+    - **Property 5: 30-day expiry notification sent exactly once**
+    - Generate documents within 30 days of expiry → run job twice → verify notification sent once, `expiryNotificationSent = true` after first run, no duplicate on second run
+    - **Validates: Requirements 2.4, 2.5**
+  - [ ] 10.4 Create `rental-fee-charge` cron job in `server/src/jobs/rental-fee-charge.ts`
+    - Schedule: every 15 minutes
+    - Query `FacilityRental` records where `status = "confirmed"`, `rentalFeeCharged = false`, and start time is within `cancellationPolicyHours` of now
+    - Call `EscrowTransactionService.chargeRentalFee(rentalId)` for each eligible rental
+    - Register in `server/src/jobs/index.ts`
+    - _Requirements: 8.1_
+  - [ ]* 10.5 Write property test: rental fee charge job selects correct rentals
+    - **Property 16: Rental fee charge job selects correct rentals**
+    - Generate random rental sets with mixed statuses, `rentalFeeCharged` values, and start times → verify job only processes rentals that are `confirmed`, not yet charged, and within cancellation window
+    - **Validates: Requirements 8.1**
+
+- [ ] 11. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 12. Frontend: RTK Query API slice
+  - [ ] 12.1 Create `insuranceDocumentsApi.ts` in `src/store/api/`
+    - Define endpoints following existing RTK Query patterns in `src/store/api/`:
+      - `useGetInsuranceDocumentsQuery({ userId, status? })`
+      - `useUploadInsuranceDocumentMutation()`
+      - `useDeleteInsuranceDocumentMutation()`
+      - `useGetPendingReservationsQuery({ ownerId })`
+      - `useApproveReservationMutation()`
+      - `useDenyReservationMutation()`
+      - `useGetEscrowTransactionsQuery({ rentalId })`
+    - Register the API slice in the Redux store
+    - _Requirements: 1.1, 6.1, 9.2_
+
+- [ ] 13. Frontend: Insurance document management components
+  - [ ] 13.1 Create `InsuranceDocumentsSection` in `src/components/profile/InsuranceDocumentsSection.tsx`
+    - Render inside `ProfileScreen` below existing sections
+    - List all user insurance documents with status badges
+    - Expired documents shown grayed out with "Expired" label
+    - "Add Insurance Document" button
+    - Use `useGetInsuranceDocumentsQuery`
+    - Import theme tokens from `src/theme/`
+    - _Requirements: 1.1, 2.2_
+  - [ ] 13.2 Create `InsuranceDocumentForm` in `src/components/profile/InsuranceDocumentForm.tsx`
+    - Modal/screen with file picker (PDF/JPEG/PNG, ≤10 MB), policy name input, expiry date picker
+    - Client-side validation: required fields, future expiry date, file type and size
+    - Calls `useUploadInsuranceDocumentMutation`
+    - Display validation errors identifying missing/invalid fields
+    - _Requirements: 1.2, 1.4, 1.5, 1.6_
+  - [ ] 13.3 Integrate `InsuranceDocumentsSection` into `ProfileScreen`
+    - Add the section to the existing `ProfileScreen` layout
+    - Wire up navigation to `InsuranceDocumentForm`
+    - _Requirements: 1.1_
+
+- [ ] 14. Frontend: Facility insurance toggle
+  - [ ] 14.1 Add "Requires Proof of Insurance" toggle to Create/Edit Facility screens
+    - Add toggle to the facility form in the relevant screen components
+    - Bind to `requiresInsurance` field in the facility create/update API calls
+    - Default to `false`
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [ ] 15. Frontend: Insurance document selector in reservation flow
+  - [ ] 15.1 Create `InsuranceDocumentSelector` in `src/components/bookings/InsuranceDocumentSelector.tsx`
+    - Shown during reservation flow when `facility.requiresInsurance = true`
+    - Lists only active documents via `useGetInsuranceDocumentsQuery({ userId, status: "active" })`
+    - If no active documents: show blocking message "You need a valid insurance document to reserve this court" with link to Profile Screen insurance section
+    - Selected document ID passed to rental request
+    - _Requirements: 4.1, 4.3_
+  - [ ] 15.2 Integrate `InsuranceDocumentSelector` into the reservation/rental flow
+    - Conditionally render selector when `facility.requiresInsurance = true`
+    - Include `insuranceDocumentId` in the rental API request body
+    - Skip selector entirely when `requiresInsurance = false`
+    - _Requirements: 4.1, 4.2, 4.4_
+
+- [ ] 16. Frontend: Pending reservations and approval flow
+  - [ ] 16.1 Create `PendingReservationsSection` in `src/components/home/PendingReservationsSection.tsx`
+    - Shown on Home Screen for users who own facilities
+    - Lists pending reservations with renter name, court, date/time
+    - Tap to view details and attached insurance document (inline viewing)
+    - Approve/Deny buttons calling `useApproveReservationMutation` / `useDenyReservationMutation`
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
+  - [ ] 16.2 Integrate `PendingReservationsSection` into Home Screen
+    - Conditionally render for facility owners
+    - _Requirements: 6.1_
+  - [ ] 16.3 Add "Pending Approval" badge to renter's reservation view
+    - Display badge when reservation `status = "pending_approval"`
+    - _Requirements: 5.3_
+
+- [ ] 17. Frontend: Escrow transaction log
+  - [ ] 17.1 Create `EscrowTransactionLog` in `src/components/facilities/EscrowTransactionLog.tsx`
+    - Shown on ground management screen for each reservation
+    - Lists all escrow transactions: type, amount, timestamp, status
+    - Uses `useGetEscrowTransactionsQuery({ rentalId })`
+    - Only visible to the ground owner
+    - _Requirements: 9.2, 9.3_
+  - [ ] 17.2 Integrate `EscrowTransactionLog` into ground management screen
+    - Wire into the existing facility/ground management UI
+    - _Requirements: 9.2_
+
+- [ ] 18. Final checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Property tests validate universal correctness properties from the design document (21 total)
+- Unit tests validate specific examples and edge cases
+- All frontend components must import theme tokens from `src/theme/` — never hardcode colors or fonts
+- Use brand vocabulary: "Roster" not "Team", "Join Up" not "Book", "Step Out" not "Cancel", "League" not "Competition"

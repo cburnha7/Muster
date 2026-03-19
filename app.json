@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/muster-icon-1024.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2D5F3F"
+      "backgroundColor": "#B8976A"
     },
     "assetBundlePatterns": [
       "**/*"
