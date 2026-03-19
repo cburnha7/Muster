@@ -109,7 +109,7 @@ export const DateEventList: React.FC<DateEventListProps> = ({
 
   return (
     <ScrollView
-      contentContainerStyle={isEmpty && !isLoading ? styles.emptyList : undefined}
+      contentContainerStyle={styles.listContent}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -161,9 +161,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.inkFaint,
   },
-  emptyList: {
+  listContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
