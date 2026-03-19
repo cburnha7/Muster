@@ -206,7 +206,12 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
               <View style={styles.teamInfo}>
                 <Text style={styles.infoTitle}>About this roster:</Text>
                 <Text style={styles.infoItem}>
-                  🏀 Sport: {validatedTeam.sportType}
+                  🏀 Sport: {(() => {
+                    const sports = validatedTeam.sportTypes && validatedTeam.sportTypes.length > 0
+                      ? validatedTeam.sportTypes
+                      : [validatedTeam.sportType];
+                    return sports.map((s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ');
+                  })()}
                 </Text>
                 <Text style={styles.infoItem}>
                   📊 Skill Level: {validatedTeam.skillLevel}

@@ -48,9 +48,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   initialRosters = [],
   initialInvitedRosters = [],
 }) => {
-  const [visibility, setVisibility] = useState<'public' | 'private'>(
-    (initialData as Partial<CreateLeagueData>)?.visibility || 'public'
-  );
   const [leagueFormat, setLeagueFormat] = useState<'season' | 'season_with_playoffs' | 'tournament' | ''>(
     (initialData as any)?.leagueFormat || ''
   );
@@ -73,7 +70,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [genderRestriction, setGenderRestriction] = useState<string>(
     (initialData as any)?.genderRestriction || ''
   );
-  const [seasonName, setSeasonName] = useState(initialData?.seasonName || '');
   const [startDate, setStartDate] = useState<Date | null>(() => {
     if (initialData?.startDate) {
       const d = new Date(initialData.startDate as any);
@@ -101,8 +97,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
 
   // Schedule management fields
-  const [minimumRosterSize, setMinimumRosterSize] = useState(
-    (initialData as any)?.minimumRosterSize?.toString() || ''
+  const [suggestedRosterSize, setSuggestedRosterSize] = useState(
+    (initialData as any)?.suggestedRosterSize?.toString() || (initialData as any)?.minimumRosterSize?.toString() || ''
   );
   const [preferredGameDays, setPreferredGameDays] = useState<number[]>(
     (initialData as any)?.preferredGameDays || []
@@ -203,11 +199,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'Intermediate', value: SkillLevel.INTERMEDIATE },
     { label: 'Advanced', value: SkillLevel.ADVANCED },
     { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
-  ];
-
-  const visibilityOptions: SelectOption[] = [
-    { label: 'Public', value: 'public' },
-    { label: 'Private', value: 'private' },
   ];
 
   const frequencyOptions: SelectOption[] = [
@@ -455,10 +446,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     if (timeWindowStart && timeWindowEnd && timeWindowStart >= timeWindowEnd) {
       newErrors.timeWindowEnd = 'End time must be after start time';
     }
-    if (minimumRosterSize) {
-      const minSize = parseInt(minimumRosterSize);
+    if (suggestedRosterSize) {
+      const minSize = parseInt(suggestedRosterSize);
       if (isNaN(minSize) || minSize < 1) {
-        newErrors.minimumRosterSize = 'Must be a positive number';
+        newErrors.suggestedRosterSize = 'Must be a positive number';
       }
     }
     if (seasonGameCount) {
@@ -499,12 +490,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       skillLevel: skillLevel as SkillLevel,
       minPlayerRating: minPlayerRating ? parseInt(minPlayerRating) : undefined,
       genderRestriction: genderRestriction || undefined,
-      seasonName: seasonName.trim() || undefined,
       startDate: startDate || undefined,
       endDate: (gameFrequency === 'all_at_once' && endDate) ? endDate : undefined,
       pointsConfig,
       imageUrl: imageUrl.trim() || undefined,
-      minimumRosterSize: minimumRosterSize ? parseInt(minimumRosterSize) : null,
+      suggestedRosterSize: suggestedRosterSize ? parseInt(suggestedRosterSize) : null,
       registrationCloseDate: registrationCutoffDate || null,
       preferredGameDays: preferredGameDays.length > 0 ? preferredGameDays : undefined,
       preferredTimeWindowStart: timeWindowStart || null,
@@ -522,7 +512,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
       invitedRosterIds: invitedRosters.map(r => r.id),
       ...(isEdit ? {} : {
         leagueType: 'team',
-        visibility,
       }),
     } as any;
 
@@ -761,16 +750,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.form}>
-          {!isEdit && (
-            <FormSelect
-              label="Visibility"
-              placeholder="Select visibility"
-              value={visibility}
-              options={visibilityOptions}
-              onSelect={(option) => setVisibility(option.value as 'public' | 'private')}
-            />
-          )}
-
           {/* League Format Selector — required before other fields */}
           <FormSelect
             label="League Format *"
@@ -810,8 +789,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           />
 
           <FormSelect
-            label="Sport Type *"
-            placeholder="Select sport type"
+            label="Sport *"
+            placeholder="Select sport"
             value={sportType}
             options={sportTypeOptions}
             onSelect={(option) => setSportType(option.value as string)}
@@ -864,13 +843,6 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               ))}
             </View>
           </View>
-
-          <FormInput
-            label="Season Name"
-            placeholder="e.g., Spring 2026"
-            value={seasonName}
-            onChangeText={setSeasonName}
-          />
 
           {/* Calendar date picker for Season Start Date */}
           <Text style={styles.fieldLabel}>Season Start Date</Text>
@@ -998,14 +970,14 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </Text>
           </View>
 
-          {/* Minimum Roster Size */}
+          {/* Suggested Roster Size */}
           <FormInput
-            label="Minimum Roster Size"
+            label="Suggested Roster Size"
             placeholder="e.g. 5"
-            value={minimumRosterSize}
-            onChangeText={setMinimumRosterSize}
+            value={suggestedRosterSize}
+            onChangeText={setSuggestedRosterSize}
             keyboardType="numeric"
-            error={errors.minimumRosterSize}
+            error={errors.suggestedRosterSize}
           />
 
           {/* Game Day */}

@@ -13,7 +13,12 @@ router.get('/', async (req, res) => {
     const take = parseInt(limit as string);
 
     const where: any = {};
-    if (sportType) where.sportType = sportType;
+    if (sportType) {
+      where.OR = [
+        { sportType: sportType },
+        { sportTypes: { has: sportType as string } },
+      ];
+    }
 
     const [teams, total] = await Promise.all([
       prisma.team.findMany({
@@ -37,10 +42,11 @@ router.get('/', async (req, res) => {
       prisma.team.count({ where }),
     ]);
 
-    // Map isPrivate to isPublic for frontend
+    // Map isPrivate to isPublic for frontend and ensure sportTypes
     const mappedTeams = teams.map(({ isPrivate, ...rest }) => ({
       ...rest,
       isPublic: !isPrivate,
+      sportTypes: rest.sportTypes && rest.sportTypes.length > 0 ? rest.sportTypes : (rest.sportType ? [rest.sportType] : []),
     }));
 
     res.json({
@@ -86,9 +92,13 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    // Map isPrivate to isPublic for frontend
+    // Map isPrivate to isPublic for frontend and ensure sportTypes
     const { isPrivate, ...rest } = team;
-    res.json({ ...rest, isPublic: !isPrivate });
+    res.json({
+      ...rest,
+      isPublic: !isPrivate,
+      sportTypes: rest.sportTypes && rest.sportTypes.length > 0 ? rest.sportTypes : (rest.sportType ? [rest.sportType] : []),
+    });
   } catch (error) {
     console.error('Get team error:', error);
     res.status(500).json({ error: 'Failed to fetch team' });
@@ -99,7 +109,7 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, sportType, skillLevel, maxMembers, isPublic } = req.body;
+    const { name, description, sportType, sportTypes, skillLevel, maxMembers, isPublic } = req.body;
 
     const existing = await prisma.team.findUnique({ where: { id } });
     if (!existing) {
@@ -112,6 +122,7 @@ router.put('/:id', async (req, res) => {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
         ...(sportType !== undefined && { sportType }),
+        ...(sportTypes !== undefined && { sportTypes }),
         ...(skillLevel !== undefined && { skillLevel }),
         ...(maxMembers !== undefined && { maxMembers }),
         ...(isPublic !== undefined && { isPrivate: !isPublic }),
@@ -128,7 +139,11 @@ router.put('/:id', async (req, res) => {
     });
 
     const { isPrivate, ...rest } = team;
-    res.json({ ...rest, isPublic: !isPrivate });
+    res.json({
+      ...rest,
+      isPublic: !isPrivate,
+      sportTypes: rest.sportTypes && rest.sportTypes.length > 0 ? rest.sportTypes : (rest.sportType ? [rest.sportType] : []),
+    });
   } catch (error) {
     console.error('Update team error:', error);
     res.status(500).json({ error: 'Failed to update team' });
@@ -267,6 +282,10 @@ router.post('/', optionalAuthMiddleware, async (req, res) => {
       ...rest,
       isPrivate: isPublic === undefined ? false : !isPublic,
       description: rest.description || '',
+      // Ensure sportTypes array is populated from sportType if not provided
+      sportTypes: rest.sportTypes && rest.sportTypes.length > 0
+        ? rest.sportTypes
+        : (rest.sportType ? [rest.sportType] : []),
     };
 
     // Create the team
@@ -334,7 +353,11 @@ router.post('/', optionalAuthMiddleware, async (req, res) => {
     // Map isPrivate to isPublic for frontend
     if (completeTeam) {
       const { isPrivate: priv, ...restTeam } = completeTeam;
-      res.status(201).json({ ...restTeam, isPublic: !priv });
+      res.status(201).json({
+        ...restTeam,
+        isPublic: !priv,
+        sportTypes: restTeam.sportTypes && restTeam.sportTypes.length > 0 ? restTeam.sportTypes : (restTeam.sportType ? [restTeam.sportType] : []),
+      });
     } else {
       res.status(201).json(completeTeam);
     }

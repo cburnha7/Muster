@@ -350,6 +350,7 @@ export interface Team {
   captain?: User;
   members: TeamMember[];
   sportType: SportType;
+  sportTypes?: SportType[];
   skillLevel: SkillLevel;
   maxMembers: number;
   isPublic: boolean;
@@ -541,6 +542,7 @@ export interface CreateTeamData {
   name: string;
   description?: string;
   sportType: SportType;
+  sportTypes?: SportType[];
   skillLevel: SkillLevel;
   maxMembers: number;
   isPublic: boolean;

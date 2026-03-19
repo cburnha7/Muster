@@ -90,7 +90,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
           ) : (
             <View style={styles.logoPlaceholder}>
               <Ionicons
-                name={getSportIcon(team.sportType) as any}
+                name={getSportIcon(team.sportTypes?.[0] || team.sportType) as any}
                 size={24}
                 color="#007AFF"
               />
@@ -116,12 +116,17 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
       <View style={styles.details}>
         <View style={styles.detailRow}>
           <Ionicons
-            name={getSportIcon(team.sportType) as any}
+            name={getSportIcon(team.sportTypes?.[0] || team.sportType) as any}
             size={16}
             color="#666"
           />
           <Text style={styles.detailText}>
-            {team.sportType.charAt(0).toUpperCase() + team.sportType.slice(1)}
+            {(() => {
+              const sports = team.sportTypes && team.sportTypes.length > 0
+                ? team.sportTypes
+                : [team.sportType];
+              return sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ');
+            })()}
           </Text>
         </View>
 

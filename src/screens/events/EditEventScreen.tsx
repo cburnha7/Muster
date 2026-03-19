@@ -446,8 +446,8 @@ export function EditEventScreen(): JSX.Element {
           />
 
           <FormSelect
-            label="Sport Type"
-            placeholder="Select sport type"
+            label="Sport"
+            placeholder="Select sport"
             value={formData.sportType}
             options={sportTypeOptions}
             onSelect={(option) => handleSelectChange('sportType', option)}

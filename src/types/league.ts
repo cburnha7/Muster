@@ -30,7 +30,8 @@ export interface League {
   eliminationFormat?: 'single_elimination' | 'double_elimination' | null;
   gameFrequency?: 'all_at_once' | 'weekly' | 'monthly' | null;
   // Schedule management
-  minimumRosterSize?: number | null;
+  suggestedRosterSize?: number | null;
+  minimumRosterSize?: number | null; // legacy alias
   registrationCloseDate?: Date | string | null;
   preferredGameDays?: number[];
   preferredTimeWindowStart?: string | null;
@@ -58,13 +59,11 @@ export interface CreateLeagueData {
   sportType: string;
   skillLevel: string;
   minPlayerRating?: number; // 0-100 percentile; null = open to all
-  seasonName?: string;
   startDate?: Date | string;
   endDate?: Date | string;
   pointsConfig?: PointsConfig;
   imageUrl?: string;
   leagueType: 'team' | 'pickup';
-  visibility?: 'public' | 'private';
   membershipFee?: number;
   // League format
   leagueFormat?: 'season' | 'season_with_playoffs' | 'tournament';
@@ -72,7 +71,7 @@ export interface CreateLeagueData {
   eliminationFormat?: 'single_elimination' | 'double_elimination' | null;
   gameFrequency?: 'all_at_once' | 'weekly' | 'monthly' | null;
   // Schedule management
-  minimumRosterSize?: number | null;
+  suggestedRosterSize?: number | null;
   registrationCloseDate?: Date | string | null;
   preferredGameDays?: number[];
   preferredTimeWindowStart?: string | null;
@@ -90,7 +89,6 @@ export interface UpdateLeagueData {
   description?: string;
   skillLevel?: string;
   minPlayerRating?: number | null; // 0-100 percentile; null = open to all
-  seasonName?: string;
   startDate?: Date | string;
   endDate?: Date | string;
   pointsConfig?: PointsConfig;
@@ -102,7 +100,7 @@ export interface UpdateLeagueData {
   eliminationFormat?: 'single_elimination' | 'double_elimination' | null;
   gameFrequency?: 'all_at_once' | 'weekly' | 'monthly' | null;
   // Schedule management
-  minimumRosterSize?: number | null;
+  suggestedRosterSize?: number | null;
   registrationCloseDate?: Date | string | null;
   preferredGameDays?: number[];
   preferredTimeWindowStart?: string | null;

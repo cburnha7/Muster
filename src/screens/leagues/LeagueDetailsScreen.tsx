@@ -754,9 +754,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
       >
         <View style={styles.roForm}>
-          {/* Visibility */}
-          <ReadOnlyField label="Visibility" value={league.visibility === 'public' ? 'Public' : 'Private'} />
-
           {/* League Format */}
           <ReadOnlyField label="League Format" value={
             (league as any).leagueFormat === 'season' ? 'Season' :
@@ -767,9 +764,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Core fields */}
           <ReadOnlyField label="League Name" value={league.name} />
           <ReadOnlyField label="Description" value={league.description || ''} />
-          <ReadOnlyField label="Sport Type" value={league.sportType ? league.sportType.charAt(0).toUpperCase() + league.sportType.slice(1).replace(/_/g, ' ') : ''} />
+          <ReadOnlyField label="Sport" value={league.sportType ? league.sportType.charAt(0).toUpperCase() + league.sportType.slice(1).replace(/_/g, ' ') : ''} />
           <ReadOnlyField label="Skill Level" value={formatSkillLevel(league.skillLevel)} />
-          <ReadOnlyField label="Season Name" value={league.seasonName || ''} />
 
           {/* Season Start Date */}
           <ReadOnlyField label="Season Start Date" value={formatDate(league.startDate)} />
@@ -823,7 +819,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           </View>
 
           {/* Schedule fields */}
-          <ReadOnlyField label="Minimum Roster Size" value={league.minimumRosterSize != null ? String(league.minimumRosterSize) : ''} />
+          <ReadOnlyField label="Suggested Roster Size" value={league.suggestedRosterSize != null ? String(league.suggestedRosterSize) : (league.minimumRosterSize != null ? String(league.minimumRosterSize) : '')} />
 
           {/* Game Day */}
           <Text style={styles.roFieldLabel}>Game Day</Text>

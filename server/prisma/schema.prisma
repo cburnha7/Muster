@@ -237,6 +237,7 @@ model Team {
   name        String
   description String
   sportType   String
+  sportTypes  String[]   @default([])
   skillLevel  String
   maxMembers  Int
   isPrivate   Boolean  @default(false)
@@ -297,7 +298,7 @@ model League {
   pointsConfig Json @default("{\"win\": 3, \"draw\": 1, \"loss\": 0}")
 
   // Schedule management
-  minimumRosterSize        Int?
+  suggestedRosterSize        Int?
   registrationCloseDate    DateTime?
   preferredGameDays        Int[]      @default([])
   preferredTimeWindowStart String?    // HH:MM format

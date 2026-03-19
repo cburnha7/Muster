@@ -244,7 +244,7 @@ router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Requ
       leagueType,
       visibility,
       membershipFee,
-      minimumRosterSize,
+      suggestedRosterSize,
       registrationCloseDate,
       preferredGameDays,
       preferredTimeWindowStart,
@@ -310,9 +310,9 @@ router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Requ
       return res.status(400).json({ error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd' });
     }
 
-    // Validate minimumRosterSize
-    if (minimumRosterSize !== undefined && minimumRosterSize !== null && (typeof minimumRosterSize !== 'number' || minimumRosterSize < 1)) {
-      return res.status(400).json({ error: 'minimumRosterSize must be a positive integer' });
+    // Validate suggestedRosterSize
+    if (suggestedRosterSize !== undefined && suggestedRosterSize !== null && (typeof suggestedRosterSize !== 'number' || suggestedRosterSize < 1)) {
+      return res.status(400).json({ error: 'suggestedRosterSize must be a positive integer' });
     }
 
     // Validate registrationCloseDate is in the future
@@ -347,7 +347,7 @@ router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Requ
         leagueType: finalLeagueType,
         visibility: finalVisibility,
         ...(membershipFee !== undefined && { membershipFee }),
-        ...(minimumRosterSize !== undefined && { minimumRosterSize }),
+        ...(suggestedRosterSize !== undefined && { suggestedRosterSize }),
         ...(registrationCloseDate && { registrationCloseDate: new Date(registrationCloseDate) }),
         ...(preferredGameDays && { preferredGameDays }),
         ...(preferredTimeWindowStart && { preferredTimeWindowStart }),
@@ -420,7 +420,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       leagueType,
       visibility,
       userId, // For authorization check
-      minimumRosterSize,
+      suggestedRosterSize,
       registrationCloseDate,
       preferredGameDays,
       preferredTimeWindowStart,
@@ -463,8 +463,8 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (preferredTimeWindowStart && preferredTimeWindowEnd && preferredTimeWindowStart >= preferredTimeWindowEnd) {
       return res.status(400).json({ error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd' });
     }
-    if (minimumRosterSize !== undefined && minimumRosterSize !== null && (typeof minimumRosterSize !== 'number' || minimumRosterSize < 1)) {
-      return res.status(400).json({ error: 'minimumRosterSize must be a positive integer' });
+    if (suggestedRosterSize !== undefined && suggestedRosterSize !== null && (typeof suggestedRosterSize !== 'number' || suggestedRosterSize < 1)) {
+      return res.status(400).json({ error: 'suggestedRosterSize must be a positive integer' });
     }
     if (preferredGameDays && Array.isArray(preferredGameDays)) {
       if (preferredGameDays.some((d: number) => d < 0 || d > 6)) {
@@ -487,7 +487,7 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(imageUrl !== undefined && { imageUrl }),
         ...(isActive !== undefined && { isActive }),
         ...(visibility !== undefined && { visibility }),
-        ...(minimumRosterSize !== undefined && { minimumRosterSize }),
+        ...(suggestedRosterSize !== undefined && { suggestedRosterSize }),
         ...(registrationCloseDate !== undefined && { registrationCloseDate: registrationCloseDate ? new Date(registrationCloseDate) : null }),
         ...(preferredGameDays !== undefined && { preferredGameDays }),
         ...(preferredTimeWindowStart !== undefined && { preferredTimeWindowStart }),
@@ -875,17 +875,7 @@ router.post('/:id/join', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required field: rosterId' });
     }
 
-    // Check minimum roster size
-    if (league.minimumRosterSize) {
-      const playerCount = await prisma.teamMember.count({
-        where: { teamId: effectiveRosterId, status: 'active' }
-      });
-      if (playerCount < league.minimumRosterSize) {
-        return res.status(400).json({
-          error: `Roster needs at least ${league.minimumRosterSize} players to join this league. Current count: ${playerCount}`
-        });
-      }
-    }
+    // suggestedRosterSize is informational only — no longer blocks joining
 
     // Check for existing active/pending membership for this roster
     const existingMembership = await prisma.leagueMembership.findFirst({
@@ -956,11 +946,6 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
 
     if (!league) {
       return res.status(404).json({ error: 'League not found' });
-    }
-
-    // Verify it's a public league (join requests are for public leagues)
-    if (league.visibility !== 'public') {
-      return res.status(400).json({ error: 'Join requests are only available for public leagues' });
     }
 
     // Verify the requesting user is the league owner
@@ -1167,11 +1152,6 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
 
     if (!league) {
       return res.status(404).json({ error: 'League not found' });
-    }
-
-    // Verify it's a private league (invitations are for private leagues)
-    if (league.visibility !== 'private') {
-      return res.status(400).json({ error: 'Invitations are only available for private leagues' });
     }
 
     // Verify the requesting user is the league owner

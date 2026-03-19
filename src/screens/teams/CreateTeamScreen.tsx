@@ -39,6 +39,7 @@ export function CreateTeamScreen(): JSX.Element {
     name: '',
     description: '',
     sportType: SportType.BASKETBALL,
+    sportTypes: [],
     skillLevel: SkillLevel.ALL_LEVELS,
     maxMembers: 10,
     isPublic: true,
@@ -59,8 +60,24 @@ export function CreateTeamScreen(): JSX.Element {
     { label: 'Volleyball', value: SportType.VOLLEYBALL },
     { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
     { label: 'Kickball', value: SportType.KICKBALL },
+    { label: 'Hockey', value: SportType.HOCKEY },
     { label: 'Other', value: SportType.OTHER },
   ];
+
+  const toggleSport = (sport: SportType) => {
+    const current = formData.sportTypes || [];
+    const updated = current.includes(sport)
+      ? current.filter(s => s !== sport)
+      : [...current, sport];
+    setFormData(prev => ({
+      ...prev,
+      sportTypes: updated,
+      sportType: updated.length > 0 ? updated[0] : prev.sportType,
+    }));
+    if (errors.sportTypes) {
+      setErrors(prev => { const e = { ...prev }; delete e.sportTypes; return e; });
+    }
+  };
 
   const skillLevelOptions = [
     { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
@@ -101,6 +118,11 @@ export function CreateTeamScreen(): JSX.Element {
     } else if (formData.maxMembers > 100) {
       newErrors.maxMembers = 'Maximum players cannot exceed 100';
       loggingService.logValidation('CreateTeamScreen', 'maxMembers', 'max', 'Maximum players cannot exceed 100');
+    }
+
+    if (!formData.sportTypes || formData.sportTypes.length === 0) {
+      newErrors.sportTypes = 'At least one sport is required';
+      loggingService.logValidation('CreateTeamScreen', 'sportTypes', 'required', 'At least one sport is required');
     }
 
     setErrors(newErrors);
@@ -221,12 +243,33 @@ export function CreateTeamScreen(): JSX.Element {
             maxLength={500}
           />
 
-          <FormSelect
-            label="Sport Type *"
-            value={formData.sportType}
-            onValueChange={(value) => updateFormData('sportType', value)}
-            options={sportTypeOptions}
-          />
+          <View>
+            <Text style={styles.fieldLabel}>Sports *</Text>
+            <Text style={styles.fieldHint}>Select one or more sports for this roster</Text>
+            <View style={styles.sportChipsRow}>
+              {sportTypeOptions.map((opt) => {
+                const selected = (formData.sportTypes || []).includes(opt.value);
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.sportChip, selected && styles.sportChipSelected]}
+                    onPress={() => toggleSport(opt.value)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selected }}
+                    accessibilityLabel={opt.label}
+                  >
+                    <Text style={[styles.sportChipText, selected && styles.sportChipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                    {selected && (
+                      <Ionicons name="close-circle" size={16} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {errors.sportTypes && <Text style={styles.fieldError}>{errors.sportTypes}</Text>}
+          </View>
 
           <FormSelect
             label="Skill Level *"
@@ -529,5 +572,48 @@ const styles = StyleSheet.create({
   },
   removeMemberButton: {
     padding: 4,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.ink,
+    marginBottom: 4,
+  },
+  fieldHint: {
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginBottom: 8,
+  },
+  fieldError: {
+    fontSize: 13,
+    color: colors.heart,
+    marginTop: 4,
+  },
+  sportChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  sportChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  sportChipSelected: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
+  },
+  sportChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.inkFaint,
+  },
+  sportChipTextSelected: {
+    color: '#FFFFFF',
   },
 });

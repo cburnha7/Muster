@@ -269,8 +269,8 @@ export function EventsListScreen(): React.JSX.Element {
         </TouchableOpacity>
       </View>
       <FormSelect
-        label="Sport Type"
-        placeholder="Select sport type"
+        label="Sport"
+        placeholder="Select sport"
         value={customFilters.sportType || ''}
         options={sportTypeOptions}
         onSelect={(option) => handleFilterChange('sportType', option.value as string)}

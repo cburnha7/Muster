@@ -57,6 +57,7 @@ const sportTypeOptions = [
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
   { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
   { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Hockey', value: SportType.HOCKEY },
   { label: 'Other', value: SportType.OTHER },
 ];
 
@@ -89,6 +90,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formSportType, setFormSportType] = useState<SportType>(SportType.BASKETBALL);
+  const [formSportTypes, setFormSportTypes] = useState<SportType[]>([]);
   const [formSkillLevel, setFormSkillLevel] = useState<SkillLevel>(SkillLevel.ALL_LEVELS);
   const [formMaxMembers, setFormMaxMembers] = useState('10');
   const [formIsPublic, setFormIsPublic] = useState(true);
@@ -128,6 +130,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       setFormName(team.name || '');
       setFormDescription(team.description || '');
       setFormSportType(team.sportType || SportType.BASKETBALL);
+      setFormSportTypes(
+        team.sportTypes && team.sportTypes.length > 0
+          ? team.sportTypes
+          : (team.sportType ? [team.sportType] : [SportType.BASKETBALL])
+      );
       setFormSkillLevel(team.skillLevel || SkillLevel.ALL_LEVELS);
       setFormMaxMembers(String(team.maxMembers || 10));
       setFormIsPublic(team.isPublic ?? true);
@@ -259,7 +266,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       const updates = {
         name: formName.trim(),
         description: formDescription.trim(),
-        sportType: formSportType,
+        sportType: (formSportTypes.length > 0 ? formSportTypes[0] : formSportType) ?? SportType.BASKETBALL,
+        sportTypes: formSportTypes,
         skillLevel: formSkillLevel,
         maxMembers: parseInt(formMaxMembers, 10),
         isPublic: formIsPublic,
@@ -547,7 +555,13 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                 <View style={styles.readOnlyHeaderInfo}>
                   <Text style={styles.readOnlyName}>{team.name}</Text>
                   <Text style={styles.readOnlyMeta}>
-                    {team.sportType ? team.sportType.charAt(0).toUpperCase() + team.sportType.slice(1) : ''} • {team.skillLevel || 'All Levels'}
+                    {(() => {
+                      const sports = team.sportTypes && team.sportTypes.length > 0
+                        ? team.sportTypes
+                        : (team.sportType ? [team.sportType] : []);
+                      const formatted = sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ');
+                      return formatted;
+                    })()} • {team.skillLevel || 'All Levels'}
                   </Text>
                 </View>
               </View>
@@ -600,13 +614,39 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             editable={canManageTeam}
           />
 
-          <FormSelect
-            label="Sport Type *"
-            value={formSportType}
-            onValueChange={(v) => setFormSportType(v as SportType)}
-            options={sportTypeOptions}
-            disabled={!canManageTeam}
-          />
+          <View>
+            <Text style={styles.sportFieldLabel}>Sports *</Text>
+            <View style={styles.sportChipsRow}>
+              {sportTypeOptions.map((opt) => {
+                const selected = formSportTypes.includes(opt.value);
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.sportChip, selected && styles.sportChipSelected]}
+                    onPress={() => {
+                      if (!canManageTeam) return;
+                      const updated = selected
+                        ? formSportTypes.filter(s => s !== opt.value)
+                        : [...formSportTypes, opt.value];
+                      setFormSportTypes(updated);
+                      if (updated.length > 0) setFormSportType(updated[0] ?? SportType.BASKETBALL);
+                    }}
+                    disabled={!canManageTeam}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selected }}
+                    accessibilityLabel={opt.label}
+                  >
+                    <Text style={[styles.sportChipText, selected && styles.sportChipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                    {selected && (
+                      <Ionicons name="close-circle" size={16} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
           <FormSelect
             label="Skill Level *"
@@ -1215,5 +1255,38 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     backgroundColor: '#E5E7EB',
+  },
+  sportFieldLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.ink,
+    marginBottom: 4,
+  },
+  sportChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  sportChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  sportChipSelected: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
+  },
+  sportChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.inkFaint,
+  },
+  sportChipTextSelected: {
+    color: '#FFFFFF',
   },
 });

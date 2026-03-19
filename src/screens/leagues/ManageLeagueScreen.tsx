@@ -45,8 +45,8 @@ export const ManageLeagueScreen: React.FC = () => {
   // Strike data for the active season
   const [strikeData, setStrikeData] = useState<Map<string, number>>(new Map());
 
-  // All leagues are now roster-based
-  const isPrivateLeague = league?.visibility === 'private';
+  // All leagues are now visible to all users
+  const isPrivateLeague = false;
 
   // Get roster IDs already in the league (any status) to filter search results
   const existingRosterIds = members.map((m) => m.memberId);
