@@ -93,7 +93,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
           <Text style={styles.loadingText}>Loading dues information...</Text>
         </View>
       </View>
@@ -109,7 +109,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadStatus}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -154,7 +154,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
         {isPaid && (
           <View style={styles.successCard}>
-            <Ionicons name="checkmark-circle" size={24} color={colors.grass} />
+            <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
             <Text style={styles.successText}>
               Your season dues have been paid. You're all set.
             </Text>
@@ -197,7 +197,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   centered: {
     flex: 1,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     fontFamily: fonts.body,
     fontSize: 17,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
   },
   retryButton: {
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   retryButtonText: {
     fontFamily: fonts.ui,
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   statusTextPaid: {
-    color: colors.grass,
+    color: colors.pine,
   },
   statusTextUnpaid: {
     color: colors.court,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   payButtonDisabled: {
     opacity: 0.5,

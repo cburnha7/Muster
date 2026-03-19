@@ -252,7 +252,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
         </View>
       </SafeAreaView>
     );
@@ -268,7 +268,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
           <Text style={styles.errorTitle}>{loadError || 'League not found'}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadLeagueData}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -356,7 +356,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
           accessibilityRole="button"
           accessibilityLabel="Add Game"
         >
-          <Ionicons name="add-circle-outline" size={20} color={colors.grass} />
+          <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
           <Text style={styles.addGameButtonText}>Add Game</Text>
         </TouchableOpacity>
 
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: BorderRadius.md,
   },
   retryButtonText: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     gap: Spacing.sm,
@@ -457,14 +457,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingVertical: Spacing.md + 2,
     borderRadius: BorderRadius.md,
     gap: Spacing.sm,
     ...Shadows.sm,
   },
   generateButtonDisabled: {
-    backgroundColor: colors.grassLight,
+    backgroundColor: colors.pineLight,
   },
   generateButtonText: {
     fontFamily: fonts.ui,
@@ -519,19 +519,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     gap: Spacing.xs,
   },
   addGameButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.grass,
+    color: colors.pine,
   },
   confirmButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     ...Shadows.sm,

@@ -140,7 +140,7 @@ export const AssignFacilityScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </View>
@@ -220,7 +220,7 @@ export const AssignFacilityScreen: React.FC = () => {
                   <Ionicons
                     name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                     size={24}
-                    color={isSelected ? colors.grass : colors.inkFaint}
+                    color={isSelected ? colors.pine : colors.inkFaint}
                   />
                   <Text style={styles.facilityName}>
                     {facility?.name ?? 'Unknown Facility'}
@@ -248,7 +248,7 @@ export const AssignFacilityScreen: React.FC = () => {
           testID="book-new-facility"
           accessibilityRole="button"
         >
-          <Ionicons name="add-circle-outline" size={22} color={colors.sky} />
+          <Ionicons name="add-circle-outline" size={22} color={colors.navy} />
           <Text style={styles.bookNewText}>Rent a new facility</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -288,7 +288,7 @@ export const AssignFacilityScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   centered: {
     flex: 1,
@@ -305,14 +305,14 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   retryButton: {
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
   },
   retryButtonText: {
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   rentalCardSelected: {
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   rentalCardHeader: {
     flexDirection: 'row',
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   rentalPrice: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: Spacing.xxxl,
     marginTop: Spacing.xs,
   },
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   bookNewText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.sky,
+    color: colors.navy,
     marginLeft: Spacing.sm,
   },
   bottomBar: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   assignButtonDisabled: {
     opacity: 0.5,

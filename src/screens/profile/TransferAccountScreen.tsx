@@ -209,7 +209,7 @@ export function TransferAccountScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   flex: {
     flex: 1,

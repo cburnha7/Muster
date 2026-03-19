@@ -143,7 +143,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
           <Ionicons 
             name="refresh" 
             size={20} 
-            color={colors.grass} 
+            color={colors.pine} 
           />
           <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
@@ -156,8 +156,8 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
+            tintColor={colors.pine}
+            colors={[colors.pine]}
           />
         }
       >
@@ -170,7 +170,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   controls: {
     flexDirection: 'row',
@@ -196,13 +196,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     gap: 6,
   },
   refreshText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   scrollView: {
     flex: 1,

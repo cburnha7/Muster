@@ -372,7 +372,7 @@ export const ManageLeagueScreen: React.FC = () => {
                       (membership as any).team?.name || 'this roster'
                     )}
                   >
-                    <Ionicons name="close-circle" size={24} color={colors.track} />
+                    <Ionicons name="close-circle" size={24} color={colors.heart} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -425,7 +425,7 @@ export const ManageLeagueScreen: React.FC = () => {
               {/* Success feedback */}
               {inviteSuccess && (
                 <View style={styles.inviteSuccessContainer}>
-                  <Ionicons name="checkmark-circle" size={18} color={colors.grass} />
+                  <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
                   <Text style={styles.inviteSuccessText}>{inviteSuccess}</Text>
                 </View>
               )}
@@ -433,7 +433,7 @@ export const ManageLeagueScreen: React.FC = () => {
               {/* Error feedback */}
               {inviteError && (
                 <View style={styles.inviteErrorContainer}>
-                  <Ionicons name="alert-circle" size={18} color={colors.track} />
+                  <Ionicons name="alert-circle" size={18} color={colors.heart} />
                   <Text style={styles.inviteErrorText}>{inviteError}</Text>
                 </View>
               )}
@@ -542,7 +542,7 @@ export const ManageLeagueScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   memberCount: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   loadingContainer: {
     padding: 32,
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   searchButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
     width: 44,
     height: 44,
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   inviteSuccessText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 6,
     flex: 1,
   },
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
   inviteErrorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     marginLeft: 6,
     flex: 1,
   },
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   inviteButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
   statusBadgeTextActive: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.grass,
+    color: colors.pine,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

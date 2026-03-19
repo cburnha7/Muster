@@ -114,8 +114,8 @@ export const DateEventList: React.FC<DateEventListProps> = ({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.grass}
-          colors={[colors.grass]}
+          tintColor={colors.pine}
+          colors={[colors.pine]}
         />
       }
     >

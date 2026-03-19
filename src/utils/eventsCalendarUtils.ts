@@ -17,8 +17,8 @@ import {
 import { formatDateForCalendar } from './calendarUtils';
 
 // Hex values used directly to avoid circular dependency with theme
-const NEUTRAL_DOT_COLOR = '#6B7C76'; // colors.inkFaint
-const SELECTED_DATE_COLOR = '#3D8C5E'; // colors.grass
+const NEUTRAL_DOT_COLOR = '#6B7A96'; // colors.inkFaint
+const SELECTED_DATE_COLOR = '#2D5F3F'; // colors.pine
 
 /**
  * Assign a distinct color to each family member.

@@ -122,7 +122,7 @@ export function DebriefScreen(): JSX.Element {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.grass} />
+        <ActivityIndicator size="large" color={colors.pine} />
       </View>
     );
   }
@@ -250,8 +250,8 @@ export function DebriefScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.chalkWarm },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.chalkWarm },
+  container: { flex: 1, backgroundColor: colors.cream },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.sm,
@@ -308,12 +308,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.lg,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderTopWidth: 1,
     borderTopColor: '#FFFFFF',
   },
   submitButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: Spacing.lg,
     alignItems: 'center',

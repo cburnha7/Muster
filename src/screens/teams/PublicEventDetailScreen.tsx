@@ -89,7 +89,7 @@ export const PublicEventDetailScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader title="Event Details" showBack onBackPress={() => navigation.goBack()} />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
         </View>
       </View>
     );
@@ -100,7 +100,7 @@ export const PublicEventDetailScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader title="Event Details" showBack onBackPress={() => navigation.goBack()} />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
           <Text style={styles.errorText}>{error || 'Event not found'}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchEvent}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -119,7 +119,7 @@ export const PublicEventDetailScreen: React.FC = () => {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {isFacilityCancelled && (
           <View style={styles.cancelledBanner}>
-            <Ionicons name="close-circle" size={20} color={colors.track} />
+            <Ionicons name="close-circle" size={20} color={colors.heart} />
             <Text style={styles.cancelledBannerText}>
               This event was cancelled by the facility. All attendees have been refunded in full.
             </Text>
@@ -212,7 +212,7 @@ export const PublicEventDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   centered: {
     flex: 1,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     marginVertical: Spacing.sm,
   },
   statsRow: {
@@ -294,16 +294,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.court + '20',
   },
   statusConfirmed: {
-    backgroundColor: colors.grass + '20',
+    backgroundColor: colors.pine + '20',
   },
   statusCancelled: {
-    backgroundColor: colors.track + '20',
+    backgroundColor: colors.heart + '20',
   },
   statusJoined: {
-    backgroundColor: colors.grass + '20',
+    backgroundColor: colors.pine + '20',
   },
   statusHost: {
-    backgroundColor: colors.sky + '20',
+    backgroundColor: colors.navy + '20',
   },
   statusText: {
     fontFamily: fonts.label,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.track + '15',
+    backgroundColor: colors.heart + '15',
     borderRadius: 10,
     padding: Spacing.sm,
     marginBottom: Spacing.md,
@@ -331,12 +331,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
   },
   errorText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.track,
+    color: colors.heart,
     marginTop: Spacing.sm,
     textAlign: 'center',
   },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
   },
   retryButtonText: {
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.md,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderTopWidth: 1,
     borderTopColor: colors.chalk,
   },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingVertical: 14,
     borderRadius: 10,
   },

@@ -69,9 +69,9 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
   };
 
   const getRatingBadgeColor = (rating: number) => {
-    if (rating >= 80) return colors.track;
+    if (rating >= 80) return colors.heart;
     if (rating >= 50) return colors.court;
-    return colors.grass;
+    return colors.pine;
   };
 
   const availableSpots = event.maxParticipants - event.currentParticipants;
@@ -137,14 +137,14 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
       <View style={[
         styles.participantsTracker,
         isFullyBooked && {
-          backgroundColor: colors.track + '15',
-          borderColor: colors.track + '30',
+          backgroundColor: colors.heart + '15',
+          borderColor: colors.heart + '30',
         }
       ]}>
         <Ionicons 
           name="people" 
           size={16} 
-          color={isFullyBooked ? colors.track : colors.grass} 
+          color={isFullyBooked ? colors.heart : colors.pine} 
         />
         <Text style={[
           styles.participantsText,
@@ -190,7 +190,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
         {event.rental && (
           <View style={styles.rentalIndicator}>
-            <Ionicons name="calendar" size={14} color={colors.grass} />
+            <Ionicons name="calendar" size={14} color={colors.pine} />
             <Text style={styles.rentalText} numberOfLines={1}>
               {event.rental.timeSlot.court.name}
             </Text>
@@ -220,7 +220,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
       {wasAutoOpened && (
         <View style={styles.autoOpenedBanner}>
-          <Ionicons name="megaphone-outline" size={14} color={colors.sky} />
+          <Ionicons name="megaphone-outline" size={14} color={colors.navy} />
           <Text style={styles.autoOpenedText}>
             Now open to public - was invite-only
           </Text>
@@ -289,23 +289,23 @@ const styles = StyleSheet.create({
   participantsTracker: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grass + '15',
+    backgroundColor: colors.pine + '15',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'flex-start',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.grass + '30',
+    borderColor: colors.pine + '30',
   },
   participantsText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 6,
   },
   participantsFullText: {
-    color: colors.track,
+    color: colors.heart,
   },
   inviteOnlyBadge: {
     flexDirection: 'row',
@@ -394,35 +394,35 @@ const styles = StyleSheet.create({
   rentalIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grass + '10',
+    backgroundColor: colors.pine + '10',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.grass + '30',
+    borderColor: colors.pine + '30',
     alignSelf: 'flex-start',
   },
   rentalText: {
     fontSize: 12,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 6,
     fontWeight: '600',
   },
   autoOpenedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.sky + '15',
+    backgroundColor: colors.navy + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: colors.sky + '30',
+    borderColor: colors.navy + '30',
   },
   autoOpenedText: {
     fontSize: 12,
-    color: colors.sky,
+    color: colors.navy,
     marginLeft: 6,
     fontWeight: '600',
   },

@@ -24,16 +24,14 @@ All UI must import tokens from `src/theme/` — never hardcode colors or fonts.
 - `src/theme/index.ts` — barrel export, import everything from here
 
 ## Colors
-- Primary brand: `colors.grass` (#3D8C5E)
-- Primary hover: `colors.grassLight` (#5BAB79)
-- Accent / Salute: `colors.court` (#E8A030)
-- Salute glow: `colors.courtLight` (#F4BC60)
-- Info / links: `colors.sky` (#5B9FD4)
-- Errors: `colors.track` (#D45B5B)
-- Light background: `colors.chalk` (#F7F4EE)
-- Dark background: `colors.ink` (#1C2320)
-- Dark card surface: `colors.inkMid` (#2A3430)
-- Secondary text: `colors.inkFaint` (#6B7C76)
+- Primary green: `colors.pine` (#2D5F3F) — pine figure / brand green
+- Primary red: `colors.heart` (#C0392B) — centre figure / primary accent
+- Primary blue: `colors.navy` (#1B2A4A) — right figure / info / links
+- Bronze: `colors.bronze` (#C4A882) — icon background / warm accent
+- App background: `colors.cream` (#EEEBE3)
+- Light surface: `colors.chalk` (#F7F4EE)
+- Primary text: `colors.ink` (#1B2A4A)
+- Secondary text: `colors.inkFaint` (#6B7A96)
 
 ## Typography
 - Display / hero text: `fonts.display` — Fraunces 700

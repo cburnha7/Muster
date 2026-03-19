@@ -182,7 +182,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${roster.name}`}
               >
-                <Ionicons name="close-circle" size={24} color={colors.track} />
+                <Ionicons name="close-circle" size={24} color={colors.heart} />
               </TouchableOpacity>
             </View>
           ))}
@@ -208,7 +208,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
               accessibilityLabel="Search rosters by name"
             />
             {isSearching && (
-              <ActivityIndicator size="small" color={colors.grass} style={styles.searchSpinner} />
+              <ActivityIndicator size="small" color={colors.pine} style={styles.searchSpinner} />
             )}
           </View>
 
@@ -218,7 +218,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
 
           {searchError && (
             <View style={styles.searchErrorRow}>
-              <Ionicons name="alert-circle" size={16} color={colors.track} />
+              <Ionicons name="alert-circle" size={16} color={colors.heart} />
               <Text style={styles.searchErrorText}>{searchError}</Text>
             </View>
           )}
@@ -250,7 +250,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
                       )}
                     </View>
                   </View>
-                  <Ionicons name="add-circle" size={24} color={colors.grass} />
+                  <Ionicons name="add-circle" size={24} color={colors.pine} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   searchErrorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     flex: 1,
   },
 
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,

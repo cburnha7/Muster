@@ -350,7 +350,7 @@ export function FacilitiesListScreen(): JSX.Element {
           onToggle={setViewMode}
         />
         <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
-          <Ionicons name="filter" size={24} color={colors.grass} />
+          <Ionicons name="filter" size={24} color={colors.pine} />
           {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
@@ -402,13 +402,13 @@ export function FacilitiesListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   listContent: {
     paddingHorizontal: 0,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -512,14 +512,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.grass + '15',
+    backgroundColor: colors.pine + '15',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
   sportTagText: {
     fontSize: 13,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '500',
   },
   moreText: {
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -633,13 +633,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderWidth: 1,
     borderColor: colors.inkFaint,
   },
   sportChipSelected: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   sportChipText: {
     fontSize: 14,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     alignItems: 'center',
   },
   applyButtonText: {

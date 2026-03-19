@@ -209,7 +209,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
                   {item.name}
                 </Text>
                 {isSelected && (
-                  <Ionicons name="checkmark" size={20} color={colors.grass} />
+                  <Ionicons name="checkmark" size={20} color={colors.pine} />
                 )}
               </TouchableOpacity>
             );
@@ -403,7 +403,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   header: {
     flexDirection: 'row',
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.grass,
+    color: colors.pine,
   },
   title: {
     fontFamily: fonts.heading,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   fieldTriggerError: {
-    borderColor: colors.track,
+    borderColor: colors.heart,
   },
   fieldText: {
     fontFamily: fonts.body,
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.track,
+    color: colors.heart,
     marginTop: Spacing.xs,
   },
   doneButton: {
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.grass,
+    color: colors.pine,
   },
   footer: {
     padding: Spacing.lg,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.inkFaint + '20',
   },
   saveButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.md + 2,
     alignItems: 'center',
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   pickerCancelText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.grass,
+    color: colors.pine,
   },
   pickerTitle: {
     fontFamily: fonts.heading,
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.inkFaint + '10',
   },
   pickerOptionSelected: {
-    backgroundColor: colors.grass + '10',
+    backgroundColor: colors.pine + '10',
   },
   pickerOptionDisabled: {
     opacity: 0.4,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   },
   pickerOptionTextSelected: {
     fontFamily: fonts.semibold,
-    color: colors.grass,
+    color: colors.pine,
   },
   pickerOptionTextDisabled: {
     color: colors.inkFaint,

@@ -10,7 +10,7 @@ import { Spacing } from './spacing';
 export const ComponentStyles = {
   button: {
     primary: {
-      backgroundColor: colors.grass,
+      backgroundColor: colors.pine,
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.lg,
       borderRadius: BorderRadius.lg,
@@ -21,7 +21,7 @@ export const ComponentStyles = {
       paddingHorizontal: Spacing.lg,
       borderRadius: BorderRadius.lg,
       borderWidth: 2,
-      borderColor: colors.grass,
+      borderColor: colors.pine,
     },
   },
 
@@ -54,6 +54,6 @@ export const ComponentStyles = {
   /** Global app background */
   screenBackground: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
 } as const;

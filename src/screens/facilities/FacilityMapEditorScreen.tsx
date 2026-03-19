@@ -163,7 +163,7 @@ export function FacilityMapEditorScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderLeftWidth: 4,
-    borderLeftColor: colors.grass,
+    borderLeftColor: colors.pine,
     marginTop: Spacing.xl,
   },
   nextStepsTitle: {

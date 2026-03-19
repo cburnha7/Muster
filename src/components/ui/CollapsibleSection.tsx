@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     gap: 6,
   },
   title: {
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.grass}20`,
+    backgroundColor: `${colors.pine}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -98,6 +98,6 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.grass,
+    color: colors.pine,
   },
 });

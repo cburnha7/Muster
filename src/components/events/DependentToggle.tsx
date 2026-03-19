@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chalk,
   },
   pillActive: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   pillText: {
     fontFamily: fonts.ui,

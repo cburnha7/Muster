@@ -250,7 +250,7 @@ export function TimeSlotPicker({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.grass} />
+        <ActivityIndicator size="small" color={colors.pine} />
         <Text style={styles.loadingText}>Loading available time slots...</Text>
       </View>
     );
@@ -299,7 +299,7 @@ export function TimeSlotPicker({
 
       {!isOwner && (
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.sky} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
           <Text style={styles.infoText}>
             {rentalMode 
               ? 'Select any of your reservations. You can select multiple non-sequential slots.'
@@ -310,7 +310,7 @@ export function TimeSlotPicker({
 
       {isOwner && selectedSlotIds.length > 0 && (
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.grass} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.pine} />
           <Text style={styles.infoText}>
             {selectedSlotIds.length} slot{selectedSlotIds.length > 1 ? 's' : ''} selected. Tap sequential slots to extend your event.
           </Text>
@@ -360,7 +360,7 @@ export function TimeSlotPicker({
           {isOwner ? (
             <>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.grass }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.pine }]} />
                 <Text style={styles.legendText}>Available</Text>
               </View>
               <View style={styles.legendItem}>
@@ -371,7 +371,7 @@ export function TimeSlotPicker({
           ) : (
             <>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.sky }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.navy }]} />
                 <Text style={styles.legendText}>Your Rental</Text>
               </View>
               <View style={styles.legendItem}>
@@ -402,20 +402,20 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   badge: {
-    backgroundColor: colors.grass + '20',
+    backgroundColor: colors.pine + '20',
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
     borderRadius: 12,
   },
   badgeText: {
     ...TextStyles.caption,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.skyLight + '20',
+    backgroundColor: colors.navyLight + '20',
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.md,
@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   slotUserRental: {
-    backgroundColor: colors.sky + '10',
-    shadowColor: colors.sky,
+    backgroundColor: colors.navy + '10',
+    shadowColor: colors.navy,
     shadowOpacity: 0.12,
   },
   slotSelected: {
-    backgroundColor: colors.grass,
-    shadowColor: colors.grass,
+    backgroundColor: colors.pine,
+    shadowColor: colors.pine,
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 3,
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   rentalBadge: {
-    backgroundColor: colors.sky + '30',
+    backgroundColor: colors.navy + '30',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   rentalBadgeText: {
     ...TextStyles.caption,
     fontSize: 10,
-    color: colors.sky,
+    color: colors.navy,
     fontWeight: '600',
   },
   legend: {

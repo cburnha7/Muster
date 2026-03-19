@@ -179,7 +179,7 @@ export function MapImageUploader({
       {showInstructions && (
         <View style={styles.instructionsCard}>
           <View style={styles.instructionHeader}>
-            <Ionicons name="information-circle" size={24} color={colors.sky} />
+            <Ionicons name="information-circle" size={24} color={colors.navy} />
             <Text style={styles.instructionTitle}>Upload Facility Map</Text>
           </View>
           <Text style={styles.instructionText}>
@@ -209,7 +209,7 @@ export function MapImageUploader({
               onPress={handlePickImage}
               disabled={disabled}
             >
-              <Ionicons name="images" size={20} color={colors.grass} />
+              <Ionicons name="images" size={20} color={colors.pine} />
               <Text style={styles.changeButtonText}>Change</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -217,7 +217,7 @@ export function MapImageUploader({
               onPress={handleRemoveImage}
               disabled={disabled}
             >
-              <Ionicons name="trash" size={20} color={colors.track} />
+              <Ionicons name="trash" size={20} color={colors.heart} />
               <Text style={styles.removeButtonText}>Remove</Text>
             </TouchableOpacity>
           </View>
@@ -309,22 +309,22 @@ const styles = StyleSheet.create({
   changeButton: {
     backgroundColor: colors.chalk,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   changeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   removeButton: {
     backgroundColor: colors.chalk,
     borderWidth: 1,
-    borderColor: colors.track,
+    borderColor: colors.heart,
   },
   removeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.track,
+    color: colors.heart,
   },
   uploadPlaceholder: {
     backgroundColor: colors.background,

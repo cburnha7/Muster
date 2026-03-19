@@ -229,7 +229,7 @@ export function DependentFormScreen() {
           onBackPress={() => (navigation as any).goBack()}
         />
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
         </View>
       </View>
     );
@@ -378,7 +378,7 @@ export function DependentFormScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   flex: {
     flex: 1,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   loadingContent: {
     flex: 1,
@@ -422,8 +422,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   chipSelected: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   chipIcon: {
     marginRight: 4,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     marginTop: 4,
   },
   submitContainer: {

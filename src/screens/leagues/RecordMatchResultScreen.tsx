@@ -154,7 +154,7 @@ export const RecordMatchResultScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
           <Text style={styles.loadingText}>Loading match data...</Text>
         </View>
       </View>
@@ -208,7 +208,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
   },
   standingsSection: {

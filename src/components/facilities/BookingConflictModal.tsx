@@ -62,7 +62,7 @@ export function BookingConflictModal({
             <View style={styles.body}>
               {conflicts.map((c) => (
                 <View key={c.slotId} style={styles.conflictRow}>
-                  <Ionicons name="close-circle" size={18} color={colors.track} />
+                  <Ionicons name="close-circle" size={18} color={colors.heart} />
                   <View style={styles.conflictInfo}>
                     <Text style={styles.conflictCourt}>{c.courtName}</Text>
                     <Text style={styles.conflictDetail}>
@@ -79,7 +79,7 @@ export function BookingConflictModal({
 
             {availableCount > 0 && (
               <View style={styles.availableNote}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.grass} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
                 <Text style={styles.availableText}>
                   {availableCount} slot{availableCount !== 1 ? 's are' : ' is'} still available
                 </Text>
@@ -130,16 +130,16 @@ const styles = StyleSheet.create({
   conflictInfo: { flex: 1 },
   conflictCourt: { fontFamily: fonts.semibold, ...typeScale.body, color: colors.ink },
   conflictDetail: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint, marginTop: 1 },
-  conflictReason: { fontFamily: fonts.label, fontSize: 10, color: colors.track, textTransform: 'uppercase', marginTop: 2 },
+  conflictReason: { fontFamily: fonts.label, fontSize: 10, color: colors.heart, textTransform: 'uppercase', marginTop: 2 },
   availableNote: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: Spacing.lg, marginBottom: Spacing.lg,
-    padding: Spacing.sm, backgroundColor: `${colors.grass}10`, borderRadius: 8,
+    padding: Spacing.sm, backgroundColor: `${colors.pine}10`, borderRadius: 8,
   },
-  availableText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.grass },
+  availableText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.pine },
   buttons: { flexDirection: 'row', gap: Spacing.md, paddingHorizontal: Spacing.lg },
   cancelBtn: { flex: 1, ...ComponentStyles.button.secondary, alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.grass },
+  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
   bookBtn: {
     flex: 2, ...ComponentStyles.button.primary,
     alignItems: 'center', justifyContent: 'center',

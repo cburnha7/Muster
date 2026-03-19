@@ -131,7 +131,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
           style={styles.downloadButton}
           disabled={!documentUrl}
         >
-          <Ionicons name="download-outline" size={24} color={colors.grass} />
+          <Ionicons name="download-outline" size={24} color={colors.pine} />
         </TouchableOpacity>
       ),
     });
@@ -140,7 +140,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.grass} />
+        <ActivityIndicator size="large" color={colors.pine} />
         <Text style={styles.loadingText}>Loading document...</Text>
       </View>
     );
@@ -158,7 +158,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.downloadFallbackButton} onPress={handleDownload}>
-          <Ionicons name="download-outline" size={20} color={colors.grass} />
+          <Ionicons name="download-outline" size={20} color={colors.pine} />
           <Text style={styles.downloadFallbackText}>Try Download Instead</Text>
         </TouchableOpacity>
       </View>
@@ -202,7 +202,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.webviewLoading}>
-            <ActivityIndicator size="large" color={colors.grass} />
+            <ActivityIndicator size="large" color={colors.pine} />
           </View>
         )}
         // Enable zoom and scroll
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   retryButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: 8,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   downloadFallbackText: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: Spacing.sm,
     fontWeight: '600',
   },
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Spacing.xl,
     right: Spacing.xl,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     width: 56,
     height: 56,
     borderRadius: 28,

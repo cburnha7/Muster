@@ -152,7 +152,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
           style={styles.searchBar}
         />
         <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilterModal(true)}>
-          <Ionicons name="filter" size={24} color={colors.grass} />
+          <Ionicons name="filter" size={24} color={colors.pine} />
           {activeFiltersCount > 0 && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
@@ -160,7 +160,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
         {sections.map((section) => (
@@ -258,13 +258,13 @@ export const LeaguesBrowserScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   listContent: {
     flexGrow: 1,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.sky,
+    color: colors.navy,
   },
   modalTitle: {
     fontFamily: fonts.heading,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   resetText: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.track,
+    color: colors.heart,
   },
   modalContent: {
     flex: 1,
@@ -367,11 +367,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.inkFaint,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   optionButtonActive: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   optionText: {
     fontFamily: fonts.body,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.inkFaint,
   },
   applyButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
     paddingVertical: Spacing.lg,
     alignItems: 'center',

@@ -107,7 +107,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               style={styles.courtActionButton}
               onPress={() => onEditCourt(court)}
             >
-              <Ionicons name="create-outline" size={20} color={colors.grass} />
+              <Ionicons name="create-outline" size={20} color={colors.pine} />
               <Text style={styles.courtActionText}>Edit</Text>
             </TouchableOpacity>
 
@@ -118,9 +118,9 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               <Ionicons
                 name={court.isActive ? 'pause-outline' : 'play-outline'}
                 size={20}
-                color={colors.sky}
+                color={colors.navy}
               />
-              <Text style={[styles.courtActionText, { color: colors.sky }]}>
+              <Text style={[styles.courtActionText, { color: colors.navy }]}>
                 {court.isActive ? 'Deactivate' : 'Activate'}
               </Text>
             </TouchableOpacity>
@@ -129,8 +129,8 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               style={styles.courtActionButton}
               onPress={() => handleDeleteCourt(court)}
             >
-              <Ionicons name="trash-outline" size={20} color={colors.track} />
-              <Text style={[styles.courtActionText, { color: colors.track }]}>Delete</Text>
+              <Ionicons name="trash-outline" size={20} color={colors.heart} />
+              <Text style={[styles.courtActionText, { color: colors.heart }]}>Delete</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -173,13 +173,13 @@ const styles = StyleSheet.create({
   courtPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   statusBadge: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 16,
-    backgroundColor: colors.grassLight,
+    backgroundColor: colors.pineLight,
   },
   statusBadgeInactive: {
     backgroundColor: colors.soft,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   statusTextInactive: {
     color: colors.chalk,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   courtActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   emptyState: {
     alignItems: 'center',
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   emptyStateButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: 8,

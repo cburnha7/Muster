@@ -380,7 +380,7 @@ export function RegisterScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollContent: {
     flexGrow: 1,

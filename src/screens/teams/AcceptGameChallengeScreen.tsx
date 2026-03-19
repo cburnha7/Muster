@@ -112,7 +112,7 @@ export const AcceptGameChallengeScreen: React.FC = () => {
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
           <Text style={styles.loadingText}>Loading challenge details...</Text>
         </View>
       </View>
@@ -128,7 +128,7 @@ export const AcceptGameChallengeScreen: React.FC = () => {
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.track} />
+          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
           <Text style={styles.errorText}>{error || 'Challenge not found'}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadChallenge}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -200,7 +200,7 @@ export const AcceptGameChallengeScreen: React.FC = () => {
         {shortfalls && shortfalls.length > 0 && (
           <View style={styles.shortfallCard}>
             <View style={styles.shortfallHeader}>
-              <Ionicons name="warning" size={20} color={colors.track} />
+              <Ionicons name="warning" size={20} color={colors.heart} />
               <Text style={styles.shortfallTitle}>Insufficient Funds</Text>
             </View>
             <Text style={styles.shortfallDescription}>
@@ -225,7 +225,7 @@ export const AcceptGameChallengeScreen: React.FC = () => {
         {/* Status info */}
         {!isPending && (
           <View style={styles.statusCard}>
-            <Ionicons name="information-circle" size={20} color={colors.sky} />
+            <Ionicons name="information-circle" size={20} color={colors.navy} />
             <Text style={styles.statusText}>
               This challenge has already been {challenge.status === 'escrow_collecting' ? 'accepted' : challenge.status}.
             </Text>
@@ -279,7 +279,7 @@ const DetailRow: React.FC<{ label: string; value: string; highlight?: boolean }>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   centered: {
     flex: 1,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     fontFamily: fonts.semibold,
     fontSize: 17,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
   },
   retryButton: {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   retryButtonText: {
     fontFamily: fonts.ui,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   detailValueHighlight: {
-    color: colors.grass,
+    color: colors.pine,
   },
   shortfallCard: {
     backgroundColor: '#FFFFFF',
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 2,
-    borderColor: colors.track,
+    borderColor: colors.heart,
   },
   shortfallHeader: {
     flexDirection: 'row',
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   shortfallTitle: {
     fontFamily: fonts.heading,
     fontSize: 16,
-    color: colors.track,
+    color: colors.heart,
     marginLeft: Spacing.sm,
   },
   shortfallDescription: {
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   shortfallAmount: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
   },
   statusCard: {
     flexDirection: 'row',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   acceptButtonDisabled: {
     opacity: 0.5,

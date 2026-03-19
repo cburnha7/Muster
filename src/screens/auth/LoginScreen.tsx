@@ -289,7 +289,7 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.grass,
+    color: colors.pine,
     marginTop: 16,
   },
   tagline: {
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
     marginBottom: 12,
     paddingHorizontal: 16,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     fontSize: 15,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   signUpContainer: {
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   signUpLink: {
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
 });

@@ -356,7 +356,7 @@ export function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
         {/* Dependent toggle — rule 10 */}
@@ -449,7 +449,7 @@ export function HomeScreen() {
                 onPress={() => handleReadyToSchedulePress(league)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+                <Ionicons name="calendar-outline" size={20} color={colors.pine} />
                 <View style={styles.readyToScheduleInfo}>
                   <Text style={styles.readyToScheduleTitle} numberOfLines={1}>
                     {league.name} is ready to schedule.
@@ -472,7 +472,7 @@ export function HomeScreen() {
                 onPress={() => handleRosterInvitationPress(inv)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="people-outline" size={20} color={colors.grass} />
+                <Ionicons name="people-outline" size={20} color={colors.pine} />
                 <View style={styles.invitationInfo}>
                   <Text style={styles.invitationTitle}>{inv.rosterName}</Text>
                   <Text style={styles.invitationSubtitle}>Roster invitation</Text>
@@ -532,7 +532,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterTabActive: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   filterTabText: {
     fontFamily: fonts.label,
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   filterBadge: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   emptyText: {
     fontFamily: fonts.body,

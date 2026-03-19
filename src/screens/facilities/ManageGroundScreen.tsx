@@ -136,7 +136,7 @@ export function ManageGroundScreen() {
           
           <TouchableOpacity style={styles.actionCard} onPress={handleManageAvailability}>
             <View style={styles.actionIcon}>
-              <Ionicons name="calendar-outline" size={24} color={colors.grass} />
+              <Ionicons name="calendar-outline" size={24} color={colors.pine} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Manage Availability</Text>
@@ -147,7 +147,7 @@ export function ManageGroundScreen() {
 
           <TouchableOpacity style={styles.actionCard} onPress={handleViewRentals}>
             <View style={styles.actionIcon}>
-              <Ionicons name="list-outline" size={24} color={colors.sky} />
+              <Ionicons name="list-outline" size={24} color={colors.navy} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>View Rentals</Text>
@@ -169,7 +169,7 @@ export function ManageGroundScreen() {
 
           <TouchableOpacity style={styles.actionCard} onPress={handleCancellationPolicy}>
             <View style={styles.actionIcon}>
-              <Ionicons name="shield-checkmark-outline" size={24} color={colors.track} />
+              <Ionicons name="shield-checkmark-outline" size={24} color={colors.heart} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Cancellation Policy</Text>
@@ -184,7 +184,7 @@ export function ManageGroundScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Courts & Fields</Text>
             <TouchableOpacity style={styles.addButton} onPress={handleAddCourt}>
-              <Ionicons name="add-circle" size={24} color={colors.grass} />
+              <Ionicons name="add-circle" size={24} color={colors.pine} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -216,7 +216,7 @@ export function ManageGroundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   actionCard: {
     flexDirection: 'row',
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,

@@ -90,11 +90,11 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   checkboxChecked: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   checkboxError: {
-    borderColor: colors.track,
+    borderColor: colors.heart,
   },
   labelContainer: {
     flex: 1,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.track,
+    color: colors.heart,
     marginTop: Spacing.xs,
     marginLeft: 40, // Align with label (24px checkbox + 16px margin)
   },

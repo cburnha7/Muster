@@ -532,7 +532,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   content: {
     paddingBottom: Spacing.lg,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grass + '20',
+    backgroundColor: colors.pine + '20',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 16,
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontSize: 14,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
     marginLeft: Spacing.xs,
   },
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     borderRadius: 8,
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '95%',
     height: '90%',
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.soft,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   modalTitle: {
     fontSize: 18,

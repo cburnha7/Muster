@@ -163,7 +163,7 @@ export function TeamsListScreen() {
       <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
         {sections.map((section) => (
@@ -205,13 +205,13 @@ export function TeamsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 84,
     right: 16,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderRadius: 24,

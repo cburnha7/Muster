@@ -118,7 +118,7 @@ export const CreateMatchScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
           <Text style={styles.loadingText}>Loading league data...</Text>
         </View>
       </View>
@@ -148,7 +148,7 @@ export const CreateMatchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   loadingContainer: {
     flex: 1,

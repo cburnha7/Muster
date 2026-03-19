@@ -42,13 +42,13 @@ export function TimeSlotGrid({
     
     switch (slot.status) {
       case 'available':
-        return colors.grass;
+        return colors.pine;
       case 'blocked':
-        return colors.track;
+        return colors.heart;
       case 'rented':
         // Check if rented by current user
         if (currentUserId && slot.rentalUserId === currentUserId) {
-          return colors.sky; // Blue for user's own rentals
+          return colors.navy; // Blue for user's own rentals
         }
         return colors.soft; // Gray for other users' rentals
       default:
@@ -169,7 +169,7 @@ export function TimeSlotGrid({
                   <Ionicons
                     name="information-circle-outline"
                     size={14}
-                    color={colors.track}
+                    color={colors.heart}
                   />
                   <Text style={styles.blockReasonText} numberOfLines={2}>
                     {slot.blockReason}
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   blockReasonText: {
     flex: 1,
     fontSize: 12,
-    color: colors.track,
+    color: colors.heart,
     fontStyle: 'italic',
   },
   selectedIndicator: {

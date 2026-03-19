@@ -72,7 +72,7 @@ export function DependentsSection() {
       <View style={styles.container}>
         <Text style={styles.sectionTitle}>Dependents</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.grass} />
+          <ActivityIndicator size="small" color={colors.pine} />
         </View>
       </View>
     );
@@ -121,7 +121,7 @@ export function DependentsSection() {
         accessibilityRole="button"
         accessibilityLabel="Add Dependent"
       >
-        <Ionicons name="add-circle-outline" size={20} color={colors.grass} />
+        <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
         <Text style={styles.addButtonText}>Add Dependent</Text>
       </TouchableOpacity>
     </View>
@@ -207,13 +207,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: Spacing.sm,
   },
 });

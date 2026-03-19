@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.courtLight,
   },
   badgeDanger: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   badgeText: {
     fontFamily: fonts.label,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   removeButton: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,

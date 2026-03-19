@@ -19,7 +19,7 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
 
       <TouchableOpacity style={styles.content} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.header}>
-          <Ionicons name="business-outline" size={24} color={colors.grass} />
+          <Ionicons name="business-outline" size={24} color={colors.pine} />
           <Text style={styles.title} numberOfLines={1}>
             {ground.name}
           </Text>
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     ...TextStyles.bodyLarge,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
 });

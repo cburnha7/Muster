@@ -441,7 +441,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
             accessibilityRole="button"
             accessibilityLabel={`Add ${roster.name}`}
           >
-            <Ionicons name="add-circle-outline" size={22} color={colors.grass} />
+            <Ionicons name="add-circle-outline" size={22} color={colors.pine} />
             <Text style={styles.addRosterName}>{roster.name}</Text>
           </TouchableOpacity>
         ))}
@@ -547,7 +547,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <Ionicons
             name={tab.icon as any}
             size={18}
-            color={activeTab === tab.key ? colors.grass : colors.inkFaint}
+            color={activeTab === tab.key ? colors.pine : colors.inkFaint}
           />
           <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
             {tab.label}
@@ -611,7 +611,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
         >
           {/* Pending roster invitations the commissioner can confirm (their own rosters) */}
           {pendingUserRosterInvitations.length > 0 && (
@@ -751,7 +751,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.grass} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
       >
         <View style={styles.roForm}>
           {/* Visibility */}
@@ -885,7 +885,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 <Text style={styles.roRosterSectionTitle}>Rosters ({confirmedRosters.length})</Text>
                 {leaguePricingType === 'paid' && leagueDuesAmount != null && rosterDuesMap.size > 0 && (
                   <View style={styles.roDuesSummary}>
-                    <Ionicons name="cash-outline" size={14} color={colors.grass} />
+                    <Ionicons name="cash-outline" size={14} color={colors.pine} />
                     <Text style={styles.roDuesSummaryText}>
                       Season dues: ${(leagueDuesAmount / 100).toFixed(2)} · {
                         Array.from(rosterDuesMap.values()).filter(Boolean).length
@@ -981,7 +981,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.chalkWarm },
+  container: { flex: 1, backgroundColor: colors.cream },
   scrollView: { flex: 1 },
   ledgerSection: { paddingHorizontal: 16, paddingBottom: 24 },
   formSection: { backgroundColor: '#FFFFFF', marginBottom: 12 },
@@ -998,7 +998,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 8,
   },
   countText: {
-    fontFamily: fonts.semibold, fontSize: 14, color: colors.grass,
+    fontFamily: fonts.semibold, fontSize: 14, color: colors.pine,
   },
   countBadge: {
     backgroundColor: colors.court, borderRadius: 10,
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   errorRow: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 8, gap: 6,
   },
-  errorRowText: { fontFamily: fonts.body, fontSize: 13, color: colors.track, flex: 1 },
+  errorRowText: { fontFamily: fonts.body, fontSize: 13, color: colors.heart, flex: 1 },
   // Join request styles
   requestItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -1025,11 +1025,11 @@ const styles = StyleSheet.create({
   requestMeta: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
   requestActions: { flexDirection: 'row', gap: 8 },
   approveBtn: {
-    backgroundColor: colors.grass, borderRadius: 8, width: 34, height: 34,
+    backgroundColor: colors.pine, borderRadius: 8, width: 34, height: 34,
     alignItems: 'center', justifyContent: 'center',
   },
   declineBtn: {
-    backgroundColor: colors.track, borderRadius: 8, width: 34, height: 34,
+    backgroundColor: colors.heart, borderRadius: 8, width: 34, height: 34,
     alignItems: 'center', justifyContent: 'center',
   },
   // Member list styles
@@ -1046,25 +1046,25 @@ const styles = StyleSheet.create({
   statusActive: { backgroundColor: '#EDF7F0' },
   statusPending: { backgroundColor: colors.courtLight },
   statusText: { fontFamily: fonts.label, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  statusTextActive: { color: colors.grass },
+  statusTextActive: { color: colors.pine },
   statusTextPending: { color: colors.ink },
   removeBtn: { padding: 6 },
   // Confirm / decline invitation
   confirmActions: { flexDirection: 'row', gap: 6 },
   confirmBtn: {
-    backgroundColor: colors.grass, borderRadius: 8,
+    backgroundColor: colors.pine, borderRadius: 8,
     paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center',
   },
   confirmBtnText: { fontFamily: fonts.ui, fontSize: 13, color: '#FFFFFF' },
   declineBtnSmall: {
-    borderWidth: 1, borderColor: colors.track, borderRadius: 8,
+    borderWidth: 1, borderColor: colors.heart, borderRadius: 8,
     paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center',
   },
-  declineBtnSmallText: { fontFamily: fonts.ui, fontSize: 13, color: colors.track },
+  declineBtnSmallText: { fontFamily: fonts.ui, fontSize: 13, color: colors.heart },
   // Events section
   generateBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.grass, borderRadius: 10, marginHorizontal: 16,
+    backgroundColor: colors.pine, borderRadius: 10, marginHorizontal: 16,
     paddingVertical: 12, marginBottom: 12,
   },
   generateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
@@ -1087,9 +1087,9 @@ const styles = StyleSheet.create({
   eventActions: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, gap: 8 },
   createEventBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.grass, borderRadius: 10, paddingVertical: 12,
+    borderWidth: 2, borderColor: colors.pine, borderRadius: 10, paddingVertical: 12,
   },
-  createEventBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.grass },
+  createEventBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.pine },
   viewMatchupsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 2, borderColor: colors.court, borderRadius: 10, paddingVertical: 12,
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  addRosterName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.grass },
+  addRosterName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.pine },
   // Tab bar
   tabBar: {
     flexDirection: 'row', backgroundColor: '#FFFFFF',
@@ -1123,16 +1123,16 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: 'center', paddingVertical: 10, gap: 2,
     borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: colors.grass },
+  tabActive: { borderBottomColor: colors.pine },
   tabLabel: { fontFamily: fonts.label, fontSize: 10, color: colors.inkFaint, textTransform: 'uppercase' },
-  tabLabelActive: { color: colors.grass },
+  tabLabelActive: { color: colors.pine },
   // Action bar (bottom)
   actionBar: {
     backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 12,
     borderTopWidth: 1, borderTopColor: '#E5E7EB',
   },
   joinBtn: {
-    backgroundColor: colors.grass, borderRadius: 12, paddingVertical: 14,
+    backgroundColor: colors.pine, borderRadius: 12, paddingVertical: 14,
     alignItems: 'center',
   },
   joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
@@ -1147,7 +1147,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     marginHorizontal: 16,
     marginTop: 12,
@@ -1164,9 +1164,9 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.track, borderRadius: 12, paddingVertical: 14,
+    borderWidth: 2, borderColor: colors.heart, borderRadius: 12, paddingVertical: 14,
   },
-  deleteBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.track },
+  deleteBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.heart },
   // Read-only league header
   leagueHeader: {
     backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 16, marginBottom: 12,
@@ -1184,7 +1184,7 @@ const styles = StyleSheet.create({
   },
   headerStats: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.chalkWarm, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
+    backgroundColor: colors.cream, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontFamily: fonts.semibold, fontSize: 18, color: colors.ink },
@@ -1278,7 +1278,7 @@ const styles = StyleSheet.create({
   roProjectedEndValue: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.grass,
+    color: colors.pine,
     marginTop: 4,
   },
   roDayChipsRow: {
@@ -1297,8 +1297,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   roDayChipSelected: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   roDayChipText: {
     fontFamily: fonts.body,
@@ -1345,7 +1345,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
   },
   roTogglePillActive: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   roTogglePillText: {
     fontFamily: fonts.label,
@@ -1374,7 +1374,7 @@ const styles = StyleSheet.create({
   roRosterSectionTitle: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.grass,
+    color: colors.pine,
     marginBottom: 12,
   },
   roRosterSectionTitleInvited: {
@@ -1400,7 +1400,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 12,
@@ -1438,7 +1438,7 @@ const styles = StyleSheet.create({
   roDuesSummaryText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600' as const,
   },
   roBadgeRow: {
@@ -1458,7 +1458,7 @@ const styles = StyleSheet.create({
   roVisibilityText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.grass,
+    color: colors.pine,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
   },

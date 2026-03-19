@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   liveText: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.track,
+    color: colors.heart,
     letterSpacing: 0.5,
   },
   details: {
@@ -289,6 +289,6 @@ const styles = StyleSheet.create({
   },
   cancelledDate: {
     fontSize: 12,
-    color: colors.track,
+    color: colors.heart,
   },
 });

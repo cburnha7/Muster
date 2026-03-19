@@ -263,7 +263,7 @@ export const CreatePublicEventScreen: React.FC = () => {
         <Ionicons
           name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
           size={24}
-          color={isSelected ? colors.grass : colors.inkFaint}
+          color={isSelected ? colors.pine : colors.inkFaint}
         />
         <Text style={styles.selectionPrimary}>{item.primary}</Text>
       </View>
@@ -277,7 +277,7 @@ export const CreatePublicEventScreen: React.FC = () => {
     if (loading) {
       return (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       );
@@ -357,7 +357,7 @@ export const CreatePublicEventScreen: React.FC = () => {
 
             {selectedTimeSlot && (
               <View style={styles.courtCostBanner}>
-                <Ionicons name="information-circle-outline" size={18} color={colors.sky} />
+                <Ionicons name="information-circle-outline" size={18} color={colors.navy} />
                 <Text style={styles.courtCostText}>
                   Court cost: ${selectedTimeSlot.price.toFixed(2)}
                 </Text>
@@ -523,7 +523,7 @@ const ReviewRow: React.FC<{ label: string; value: string; highlight?: boolean }>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   centered: {
     flex: 1,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   stepDotActive: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     opacity: 1,
   },
   scrollView: {
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectionCardSelected: {
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   selectionCardHeader: {
     flexDirection: 'row',
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   reviewValueHighlight: {
-    color: colors.grass,
+    color: colors.pine,
   },
   reviewNote: {
     fontFamily: fonts.body,
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   primaryButtonDisabled: {
     opacity: 0.5,

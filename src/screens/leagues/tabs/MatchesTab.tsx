@@ -180,7 +180,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
             style={styles.emptyActionButton}
             onPress={handleCreateMatch}
           >
-            <Ionicons name="add-circle" size={20} color={colors.grass} />
+            <Ionicons name="add-circle" size={20} color={colors.pine} />
             <Text style={styles.emptyActionText}>Create First Match</Text>
           </TouchableOpacity>
         )}
@@ -241,7 +241,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
             <Ionicons 
               name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'} 
               size={18} 
-              color={colors.grass} 
+              color={colors.pine} 
             />
             <Text style={styles.sortText}>
               {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
@@ -274,8 +274,8 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
+            tintColor={colors.pine}
+            colors={[colors.pine]}
           />
         }
       />
@@ -286,7 +286,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   controls: {
     paddingHorizontal: 16,
@@ -319,21 +319,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     gap: 6,
     flex: 1,
   },
   sortText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
     gap: 6,
   },
@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     gap: 8,
     marginTop: 24,
   },
   emptyActionText: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
 });

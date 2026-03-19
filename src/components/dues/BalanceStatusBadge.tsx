@@ -21,7 +21,7 @@ const statusConfig: Record<BalanceStatus, { label: string; bg: string; color: st
   funded: {
     label: 'Funded',
     bg: '#EDF7F0',
-    color: colors.grass,
+    color: colors.pine,
     icon: 'checkmark-circle',
   },
   low: {
@@ -32,8 +32,8 @@ const statusConfig: Record<BalanceStatus, { label: string; bg: string; color: st
   },
   blocked: {
     label: 'Blocked',
-    bg: colors.track + '18',
-    color: colors.track,
+    bg: colors.heart + '18',
+    color: colors.heart,
     icon: 'close-circle',
   },
 };

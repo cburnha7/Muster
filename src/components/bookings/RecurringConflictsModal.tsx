@@ -76,7 +76,7 @@ export function RecurringConflictsModal({
           <ScrollView style={styles.list} bounces={false}>
             {conflicts.map((c, i) => (
               <View key={i} style={styles.conflictRow}>
-                <Ionicons name="close-circle" size={16} color={colors.track} />
+                <Ionicons name="close-circle" size={16} color={colors.heart} />
                 <Text style={styles.conflictDate}>{formatDate(c.date)}</Text>
                 <Text style={styles.conflictReason}>{reasonLabel(c.reason)}</Text>
               </View>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   conflictReason: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.track,
+    color: colors.heart,
     textTransform: 'uppercase',
   },
   actions: {

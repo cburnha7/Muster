@@ -213,7 +213,7 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
                     style={styles.applyAllButton}
                     onPress={handleApplyToAll}
                   >
-                    <Ionicons name="copy-outline" size={20} color={colors.grass} />
+                    <Ionicons name="copy-outline" size={20} color={colors.pine} />
                     <Text style={styles.applyAllText}>Apply to all days</Text>
                   </TouchableOpacity>
                 </>
@@ -270,7 +270,7 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
                     {formatTimeDisplay(time)}
                   </Text>
                   {currentDayHours?.startTime === time && (
-                    <Ionicons name="checkmark" size={20} color={colors.grass} />
+                    <Ionicons name="checkmark" size={20} color={colors.pine} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -314,7 +314,7 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
                     {formatTimeDisplay(time)}
                   </Text>
                   {currentDayHours?.endTime === time && (
-                    <Ionicons name="checkmark" size={20} color={colors.grass} />
+                    <Ionicons name="checkmark" size={20} color={colors.pine} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toggleActive: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   toggleThumb: {
     width: 26,
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   },
   applyAllText: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
     marginLeft: Spacing.sm,
   },
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#F0F0F0',
   },
   doneButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingVertical: Spacing.md,
     borderRadius: 8,
     alignItems: 'center',
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   pickerOptionTextSelected: {
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
 });

@@ -66,7 +66,7 @@ export const FormInput: React.FC<FormInputProps> = ({
           <Ionicons
             name={leftIcon as any}
             size={20}
-            color={error ? colors.track : isFocused ? colors.grass : colors.soft}
+            color={error ? colors.heart : isFocused ? colors.pine : colors.soft}
             style={styles.leftIcon}
           />
         )}
@@ -106,7 +106,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={rightIcon as any}
               size={20}
-              color={error ? colors.track : isFocused ? colors.grass : colors.soft}
+              color={error ? colors.heart : isFocused ? colors.pine : colors.soft}
             />
           </TouchableOpacity>
         )}
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   required: {
-    color: colors.track,
+    color: colors.heart,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -151,11 +151,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     backgroundColor: '#FFFFFF',
   },
   inputContainerError: {
-    borderColor: colors.track,
+    borderColor: colors.heart,
     backgroundColor: '#FFF5F5',
   },
   input: {
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     marginTop: 4,
   },
 });

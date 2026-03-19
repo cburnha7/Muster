@@ -81,7 +81,7 @@ export function CancelReservationModal({
         <View style={styles.modal}>
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <Ionicons name="alert-circle" size={24} color={colors.track} />
+              <Ionicons name="alert-circle" size={24} color={colors.heart} />
             </View>
             <Text style={styles.title}>Cancel Reservation</Text>
             <TouchableOpacity
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   required: {
-    color: colors.track,
+    color: colors.heart,
   },
   input: {
     ...TextStyles.body,
@@ -261,6 +261,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cancelButton: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
 });

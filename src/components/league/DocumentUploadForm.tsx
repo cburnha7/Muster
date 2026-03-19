@@ -127,7 +127,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           <Ionicons 
             name={selectedFile ? 'document' : 'cloud-upload-outline'} 
             size={48} 
-            color={selectedFile ? colors.grass : '#999'} 
+            color={selectedFile ? colors.pine : '#999'} 
           />
           {selectedFile ? (
             <View style={styles.fileInfo}>

@@ -160,10 +160,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   approveButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   denyButton: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   buttonText: {
     fontFamily: fonts.ui,

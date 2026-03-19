@@ -616,7 +616,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               style={styles.addButton}
               onPress={() => setShowAddCourtModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color={colors.grass} style={{ marginRight: Spacing.xs }} />
+              <Ionicons name="add-circle" size={24} color={colors.pine} style={{ marginRight: Spacing.xs }} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -643,7 +643,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                   <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
                 </View>
                 <View style={styles.courtActions} pointerEvents="box-none">
-                  <Ionicons name="create-outline" size={20} color={colors.grass} style={{ marginRight: Spacing.sm }} />
+                  <Ionicons name="create-outline" size={20} color={colors.pine} style={{ marginRight: Spacing.sm }} />
                   <TouchableOpacity
                     style={styles.removeButton}
                     activeOpacity={0.7}
@@ -654,7 +654,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                       handleRemoveCourt(court.id);
                     }}
                   >
-                    <Ionicons name="trash-outline" size={20} color={colors.track} pointerEvents="none" />
+                    <Ionicons name="trash-outline" size={20} color={colors.heart} pointerEvents="none" />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -831,7 +831,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
             <View style={styles.deleteModalIcon}>
-              <Ionicons name="warning" size={48} color={colors.track} />
+              <Ionicons name="warning" size={48} color={colors.heart} />
             </View>
             
             <Text style={styles.deleteModalTitle}>Delete Ground?</Text>
@@ -866,7 +866,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   row: {
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sportChipSelected: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   sportChipText: {
     ...TextStyles.body,
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.track,
+    color: colors.heart,
     marginBottom: Spacing.sm,
   },
   emptyText: {
@@ -958,7 +958,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
   },
   courtPrice: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   removeButton: {
@@ -998,7 +998,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   deleteButton: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -1067,8 +1067,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   checkboxLabel: {
     ...TextStyles.body,
@@ -1088,7 +1088,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1096,7 +1096,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   addCourtButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   addCourtButtonText: {
     ...TextStyles.body,
@@ -1122,7 +1122,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
@@ -1152,7 +1152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelDeleteButton: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   cancelDeleteButtonText: {
     ...TextStyles.body,
@@ -1160,7 +1160,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   confirmDeleteButton: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   confirmDeleteButtonText: {
     ...TextStyles.body,

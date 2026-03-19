@@ -62,7 +62,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
           <Ionicons
             name={getSportIcon(event.sportType) as any}
             size={24}
-            color={colors.grass}
+            color={colors.pine}
           />
           <Text style={styles.title} numberOfLines={1}>
             {event.title}
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     ...TextStyles.bodyLarge,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
 });

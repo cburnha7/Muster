@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   required: {
-    color: colors.track,
+    color: colors.heart,
   },
   trigger: {
     flexDirection: 'row',
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   triggerError: {
-    borderColor: colors.track,
+    borderColor: colors.heart,
   },
   triggerText: {
     fontFamily: fonts.body,
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   error: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.track,
+    color: colors.heart,
     marginTop: 4,
   },
   doneButton: {
@@ -151,6 +151,6 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.grass,
+    color: colors.pine,
   },
 });

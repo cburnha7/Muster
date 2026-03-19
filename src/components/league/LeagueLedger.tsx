@@ -37,8 +37,8 @@ function getTypeIcon(type: string): string {
 
 function getTypeColor(type: string): string {
   switch (type) {
-    case 'dues_received': return colors.grass;
-    case 'court_cost': return colors.track;
+    case 'dues_received': return colors.pine;
+    case 'court_cost': return colors.heart;
     case 'refund': return colors.court;
     default: return colors.inkFaint;
   }
@@ -109,7 +109,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="small" color={colors.grass} />
+        <ActivityIndicator size="small" color={colors.pine} />
       </View>
     );
   }
@@ -117,7 +117,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
   if (error) {
     return (
       <View style={styles.center}>
-        <Ionicons name="alert-circle-outline" size={24} color={colors.track} />
+        <Ionicons name="alert-circle-outline" size={24} color={colors.heart} />
         <Text style={styles.errorText}>{error}</Text>
       </View>
     );
@@ -142,7 +142,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
           <Text style={styles.balanceLabel}>BALANCE</Text>
           <Text style={[
             styles.balanceValue,
-            { color: currentBalance >= 0 ? colors.grass : colors.track },
+            { color: currentBalance >= 0 ? colors.pine : colors.heart },
           ]}>
             {formatCurrency(currentBalance)}
           </Text>
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     marginTop: 8,
   },
   emptyText: {

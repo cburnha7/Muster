@@ -57,15 +57,15 @@ export const Button: React.FC<ButtonProps> = ({
     }
     switch (variant) {
       case 'primary':
-        return colors.grass;
+        return colors.pine;
       case 'secondary':
         return colors.surface;
       case 'accent':
         return colors.court;
       case 'destructive':
-        return colors.track;
+        return colors.heart;
       default:
-        return colors.grass;
+        return colors.pine;
     }
   };
 
@@ -73,7 +73,7 @@ export const Button: React.FC<ButtonProps> = ({
     if (isDisabled) {
       return colors.textTertiary;
     }
-    return variant === 'secondary' ? colors.grass : colors.textInverse;
+    return variant === 'secondary' ? colors.pine : colors.textInverse;
   };
 
   const backgroundColor = getBackgroundColor();

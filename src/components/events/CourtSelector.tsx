@@ -56,7 +56,7 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.grass} />
+        <ActivityIndicator size="small" color={colors.pine} />
         <Text style={styles.loadingText}>Loading courts...</Text>
       </View>
     );
@@ -90,7 +90,7 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
                 <Ionicons
                   name={court.isIndoor ? 'home' : 'sunny'}
                   size={20}
-                  color={selectedCourtId === court.id ? colors.grass : colors.ink}
+                  color={selectedCourtId === court.id ? colors.pine : colors.ink}
                 />
                 <Text
                   style={[
@@ -102,7 +102,7 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
                 </Text>
               </View>
               {selectedCourtId === court.id && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.grass} />
+                <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
               )}
             </View>
             <View style={styles.courtCardDetails}>
@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   courtCardSelected: {
-    backgroundColor: colors.grass + '10',
-    shadowColor: colors.grass,
+    backgroundColor: colors.pine + '10',
+    shadowColor: colors.pine,
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 3,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   courtNameSelected: {
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '700',
   },
   courtCardDetails: {

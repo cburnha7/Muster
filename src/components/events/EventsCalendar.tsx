@@ -30,7 +30,7 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({
     [selectedDate]: {
       dots: markedDates[selectedDate]?.dots ?? [],
       selected: true,
-      selectedColor: colors.grass,
+      selectedColor: colors.pine,
     },
   };
 

@@ -67,16 +67,16 @@ export interface MultiDotMarking {
 
 /**
  * Fixed palette of 8 visually distinct colors for person assignment.
- * Guardian always receives index 0 (grass). Dependents are assigned
- * sequentially. All colors contrast well against chalk/chalkWarm backgrounds.
+ * Guardian always receives index 0 (pine). Dependents are assigned
+ * sequentially. All colors contrast well against chalk/cream backgrounds.
  */
 export const PERSON_COLORS: string[] = [
-  '#3D8C5E', // grass — guardian
-  '#5B9FD4', // sky blue
-  '#E8A030', // court gold
+  '#2D5F3F', // pine — guardian
+  '#1B2A4A', // navy
+  '#C4A882', // bronze
   '#9B59B6', // purple
   '#E67E22', // orange
   '#1ABC9C', // teal
-  '#E74C3C', // red
+  '#C0392B', // heart red
   '#34495E', // dark slate
 ];

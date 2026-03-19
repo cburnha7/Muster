@@ -597,7 +597,7 @@ export function EventDetailsScreen(): JSX.Element {
           return (
             <View key={roster.id} style={{ marginBottom: 16 }}>
               <View style={styles.rosterSaluteHeader}>
-                <Ionicons name="shield-outline" size={14} color={colors.grass} />
+                <Ionicons name="shield-outline" size={14} color={colors.pine} />
                 <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
                 {roster.isHome && (
                   <View style={styles.rosterSaluteHomeBadge}>
@@ -683,9 +683,9 @@ export function EventDetailsScreen(): JSX.Element {
   };
 
   const getRatingBadgeColor = (rating: number) => {
-    if (rating >= 80) return colors.track;
+    if (rating >= 80) return colors.heart;
     if (rating >= 50) return colors.court;
-    return colors.grass;
+    return colors.pine;
   };
 
   // Get status color
@@ -766,7 +766,7 @@ export function EventDetailsScreen(): JSX.Element {
                 onPress={handleEditEvent}
                 style={{ padding: 8 }}
               >
-                <Ionicons name="create-outline" size={24} color={colors.grass} />
+                <Ionicons name="create-outline" size={24} color={colors.pine} />
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={() => {
@@ -775,7 +775,7 @@ export function EventDetailsScreen(): JSX.Element {
                 }}
                 style={{ padding: 8 }}
               >
-                <Ionicons name="close-circle-outline" size={24} color={colors.track} />
+                <Ionicons name="close-circle-outline" size={24} color={colors.heart} />
               </TouchableOpacity>
             </View>
           ) : undefined
@@ -800,7 +800,7 @@ export function EventDetailsScreen(): JSX.Element {
             <Ionicons
               name={getSportIcon(event.sportType) as any}
               size={32}
-              color={colors.grass}
+              color={colors.pine}
             />
             <Text style={styles.title}>{event.title}</Text>
           </View>
@@ -848,7 +848,7 @@ export function EventDetailsScreen(): JSX.Element {
               )}
               {salutesSubmitted && (
                 <View style={styles.submittedBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color={colors.grass} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.pine} />
                   <Text style={styles.submittedText}>Submitted</Text>
                 </View>
               )}
@@ -885,7 +885,7 @@ export function EventDetailsScreen(): JSX.Element {
               </>
             ) : (
               <View style={styles.salutesSubmittedContainer}>
-                <Ionicons name="checkmark-circle" size={48} color={colors.grass} />
+                <Ionicons name="checkmark-circle" size={48} color={colors.pine} />
                 <Text style={styles.salutesSubmittedTitle}>Salutes Submitted!</Text>
                 <Text style={styles.salutesSubmittedDescription}>
                   You saluted {salutedParticipants.size} player{salutedParticipants.size > 1 ? 's' : ''} and their ratings have been updated.
@@ -916,7 +916,7 @@ export function EventDetailsScreen(): JSX.Element {
                 
                 <View style={styles.leagueContent}>
                   <View style={styles.leagueHeader}>
-                    <Ionicons name="shield-outline" size={20} color={colors.grass} />
+                    <Ionicons name="shield-outline" size={20} color={colors.pine} />
                     <Text style={styles.leagueName}>{leagueName}</Text>
                     <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
                   </View>
@@ -1306,7 +1306,7 @@ export function EventDetailsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -1418,7 +1418,7 @@ const styles = StyleSheet.create({
   teamScore: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 8,
   },
   vsText: {
@@ -1577,7 +1577,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterSaluteHomeBadge: {
-    backgroundColor: colors.grass + '20',
+    backgroundColor: colors.pine + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1585,7 +1585,7 @@ const styles = StyleSheet.create({
   rosterSaluteHomeBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.grass,
+    color: colors.pine,
   },
   participantCard: {
     width: '30%',
@@ -1615,7 +1615,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1648,7 +1648,7 @@ const styles = StyleSheet.create({
   youBadge: {
     position: 'absolute',
     bottom: 8,
-    backgroundColor: colors.sky,
+    backgroundColor: colors.navy,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1661,7 +1661,7 @@ const styles = StyleSheet.create({
   submittedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grassLight + '20',
+    backgroundColor: colors.pineLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1670,7 +1670,7 @@ const styles = StyleSheet.create({
   submittedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   submitSalutesContainer: {
     marginTop: 20,
@@ -1705,7 +1705,7 @@ const styles = StyleSheet.create({
   salutesSubmittedTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.grass,
+    color: colors.pine,
     marginTop: 16,
     marginBottom: 8,
   },
@@ -1741,7 +1741,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,

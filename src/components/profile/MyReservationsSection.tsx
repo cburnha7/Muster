@@ -12,6 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
 import { CancelReservationModal } from '../facilities/CancelReservationModal';
+import { colors } from '../../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -233,7 +234,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color="#3D8C5E" />
+        <ActivityIndicator size="small" color={colors.pine} />
       </View>
     );
   }
@@ -250,7 +251,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
         activeOpacity={0.7}
       >
         <View style={styles.sectionHeaderLeft}>
-          <Ionicons name="calendar" size={24} color="#3D8C5E" />
+          <Ionicons name="calendar" size={24} color={colors.pine} />
           <Text style={styles.sectionTitle}>My Reservations</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{unusedReservations.length}</Text>
@@ -395,7 +396,7 @@ function ReservationRow({ reservation, navigation, formatDate, formatTime, onCre
         >
           <View style={styles.compactCardContent}>
             <View style={styles.compactCardHeader}>
-              <Ionicons name="location" size={24} color="#3D8C5E" />
+              <Ionicons name="location" size={24} color={colors.pine} />
               <Text style={styles.compactCardTitle} numberOfLines={1}>{reservation.timeSlot.court.facility.name}</Text>
             </View>
             <Text style={styles.compactCardSubtitle} numberOfLines={1}>
@@ -417,7 +418,7 @@ function ReservationRow({ reservation, navigation, formatDate, formatTime, onCre
         ) : (
           <View style={styles.actionButtons}>
             <TouchableOpacity style={styles.createEventButton} onPress={() => onCreateEvent(reservation)} activeOpacity={0.7}>
-              <Ionicons name="add-circle" size={20} color="#3D8C5E" />
+              <Ionicons name="add-circle" size={20} color={colors.pine} />
               <Text style={styles.createEventText}>Create</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => onCancelReservation(reservation)} activeOpacity={0.7}>
@@ -449,7 +450,7 @@ function SessionGroup({ sessionId, reservations, navigation, formatDate, formatT
     <View style={styles.sessionGroup}>
       <TouchableOpacity style={styles.sessionHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
         <View style={styles.sessionHeaderLeft}>
-          <Ionicons name="layers" size={18} color="#3D8C5E" />
+          <Ionicons name="layers" size={18} color={colors.pine} />
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.sessionTitle}>Bulk Booking · {reservations.length} slots</Text>
             <Text style={styles.sessionSubtitle}>${totalPrice.toFixed(2)} total</Text>
@@ -540,7 +541,7 @@ function RecurringSeriesGroup({
     <View style={styles.sessionGroup}>
       <TouchableOpacity style={styles.sessionHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
         <View style={styles.sessionHeaderLeft}>
-          <Ionicons name="repeat" size={18} color="#3D8C5E" />
+          <Ionicons name="repeat" size={18} color={colors.pine} />
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.sessionTitle}>Recurring · {reservations.length} slots</Text>
             <Text style={styles.sessionSubtitle}>${totalPrice.toFixed(2)} total</Text>
@@ -615,7 +616,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   countBadge: {
-    backgroundColor: '#3D8C5E20',
+    backgroundColor: colors.pine + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -623,7 +624,7 @@ const styles = StyleSheet.create({
   },
   countBadgeText: {
     fontSize: 11,
-    color: '#3D8C5E',
+    color: colors.pine,
     fontWeight: '700',
   },
   loadingContainer: {
@@ -685,15 +686,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: '#3D8C5E10',
+    backgroundColor: colors.pine + '10',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#3D8C5E30',
+    borderColor: colors.pine + '30',
     minWidth: 80,
   },
   createEventText: {
     fontSize: 12,
-    color: '#3D8C5E',
+    color: colors.pine,
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -760,7 +761,7 @@ const styles = StyleSheet.create({
   },
   sessionSubtitle: {
     fontSize: 12,
-    color: '#3D8C5E',
+    color: colors.pine,
     fontWeight: '600',
     marginTop: 1,
   },

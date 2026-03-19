@@ -392,8 +392,8 @@ export function BookingsListScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={colors.grass}
-              colors={[colors.grass]}
+              tintColor={colors.pine}
+              colors={[colors.pine]}
             />
           }
           onEndReached={loadMoreBookings}
@@ -420,7 +420,7 @@ export function BookingsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   filterTabs: {
     flexDirection: 'row',
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   activeFilterTab: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   filterTabText: {
     fontSize: 14,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   browseButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
   },
   browseButtonText: {

@@ -79,7 +79,7 @@ export function RedeemCodeScreen() {
 
         {successMsg ? (
           <View style={styles.successCard}>
-            <Ionicons name="checkmark-circle" size={48} color={colors.grass} />
+            <Ionicons name="checkmark-circle" size={48} color={colors.pine} />
             <Text style={styles.successText}>{successMsg}</Text>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
               <Text style={styles.primaryBtnText}>Back to Profile</Text>
@@ -120,12 +120,12 @@ export function RedeemCodeScreen() {
                       onPress={() => setSelectedTier(tier.key)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name={tier.icon} size={24} color={active ? colors.grass : colors.inkFaint} />
+                      <Ionicons name={tier.icon} size={24} color={active ? colors.pine : colors.inkFaint} />
                       <View style={styles.tierInfo}>
                         <Text style={[styles.tierLabel, active && styles.tierLabelActive]}>{tier.label}</Text>
                         <Text style={styles.tierDesc}>{tier.desc}</Text>
                       </View>
-                      {active && <Ionicons name="checkmark-circle" size={22} color={colors.grass} />}
+                      {active && <Ionicons name="checkmark-circle" size={22} color={colors.pine} />}
                     </TouchableOpacity>
                   );
                 })}
@@ -153,7 +153,7 @@ export function RedeemCodeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: colors.chalkWarm },
+  container: { flex: 1, backgroundColor: colors.cream },
   content: { padding: 16, paddingBottom: 40 },
   header: {
     flexDirection: 'row',
@@ -177,15 +177,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${colors.inkFaint}30`,
   },
-  inputDisabled: { backgroundColor: `${colors.grass}10`, borderColor: colors.grass },
+  inputDisabled: { backgroundColor: `${colors.pine}10`, borderColor: colors.pine },
   validateBtn: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 10,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
   validateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#fff' },
-  error: { fontFamily: fonts.body, fontSize: 13, color: colors.track, marginTop: 6 },
+  error: { fontFamily: fonts.body, fontSize: 13, color: colors.heart, marginTop: 6 },
   tierCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,13 +196,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
-  tierCardActive: { borderColor: colors.grass, backgroundColor: `${colors.grass}08` },
+  tierCardActive: { borderColor: colors.pine, backgroundColor: `${colors.pine}08` },
   tierInfo: { flex: 1, marginLeft: 12 },
   tierLabel: { fontFamily: fonts.ui, fontSize: 15, color: colors.ink },
-  tierLabelActive: { color: colors.grass },
+  tierLabelActive: { color: colors.pine },
   tierDesc: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
   primaryBtn: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

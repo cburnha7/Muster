@@ -104,7 +104,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
           <Image source={{ uri: item.team.logo }} style={styles.rosterLogo} />
         ) : (
           <View style={styles.rosterLogoPlaceholder}>
-            <Ionicons name="people" size={20} color={colors.grass} />
+            <Ionicons name="people" size={20} color={colors.pine} />
           </View>
         )}
 
@@ -165,8 +165,8 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
+            tintColor={colors.pine}
+            colors={[colors.pine]}
           />
         }
         onEndReached={handleLoadMore}
@@ -181,7 +181,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   listContent: {
     paddingVertical: 8,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     justifyContent: 'center',
     alignItems: 'center',
   },

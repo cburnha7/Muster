@@ -95,8 +95,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
         <RefreshControl
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.grass}
-          colors={[colors.grass]}
+          tintColor={colors.pine}
+          colors={[colors.pine]}
         />
       }
     >
@@ -114,7 +114,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
         <View style={styles.pointsContainer}>
           <View style={styles.pointsRow}>
             <View style={styles.pointsItem}>
-              <Ionicons name="trophy" size={20} color={colors.grass} />
+              <Ionicons name="trophy" size={20} color={colors.pine} />
               <Text style={styles.pointsLabel}>Win</Text>
               <Text style={styles.pointsValue}>{league.pointsConfig.win} pts</Text>
             </View>
@@ -124,7 +124,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
               <Text style={styles.pointsValue}>{league.pointsConfig.draw} pts</Text>
             </View>
             <View style={styles.pointsItem}>
-              <Ionicons name="close-circle" size={20} color={colors.track} />
+              <Ionicons name="close-circle" size={20} color={colors.heart} />
               <Text style={styles.pointsLabel}>Loss</Text>
               <Text style={styles.pointsValue}>{league.pointsConfig.loss} pts</Text>
             </View>
@@ -144,7 +144,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
             <View key={doc.id} style={styles.documentCard}>
               <View style={styles.documentInfo}>
                 <View style={styles.documentHeader}>
-                  <Ionicons name="document-text" size={24} color={colors.grass} />
+                  <Ionicons name="document-text" size={24} color={colors.pine} />
                   <View style={styles.documentDetails}>
                     <Text style={styles.documentName}>{doc.fileName}</Text>
                     <View style={styles.documentMeta}>
@@ -166,7 +166,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                 onPress={() => handleViewDocument(doc)}
               >
                 <Text style={styles.viewButtonText}>View</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.grass} />
+                <Ionicons name="chevron-forward" size={16} color={colors.pine} />
               </TouchableOpacity>
             </View>
             );
@@ -188,7 +188,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   content: {
     paddingVertical: Spacing.lg,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   documentCategoryLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   viewButton: {
     flexDirection: 'row',
@@ -278,13 +278,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     gap: 4,
   },
   viewButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   emptyState: {
     flex: 1,

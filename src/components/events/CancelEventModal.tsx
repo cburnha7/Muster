@@ -72,7 +72,7 @@ export function CancelEventModal({
         />
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Ionicons name="warning" size={32} color={colors.track} />
+            <Ionicons name="warning" size={32} color={colors.heart} />
             <Text style={styles.title}>Cancel Event</Text>
           </View>
 
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   inputError: {
-    borderColor: colors.track,
+    borderColor: colors.heart,
   },
   charCount: {
     fontSize: 12,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: colors.track,
+    color: colors.heart,
     marginTop: 4,
   },
   actions: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   buttonDanger: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   buttonDangerText: {
     fontSize: 16,

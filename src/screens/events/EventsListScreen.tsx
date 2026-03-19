@@ -295,7 +295,7 @@ export function EventsListScreen(): React.JSX.Element {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={colors.track} />
+          <Ionicons name="alert-circle-outline" size={64} color={colors.heart} />
           <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => refetchEvents()}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -333,7 +333,7 @@ export function EventsListScreen(): React.JSX.Element {
           <Ionicons
             name="filter"
             size={24}
-            color={colors.grass}
+            color={colors.pine}
           />
           {Object.keys(customFilters).length > 0 && <View style={styles.filterBadge} />}
         </TouchableOpacity>
@@ -388,14 +388,14 @@ export function EventsListScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   fab: {
     position: 'absolute',
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: Spacing.lg,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
     marginTop: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 8,
   },
   retryButtonText: {

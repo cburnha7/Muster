@@ -463,7 +463,7 @@ export const RegistrationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -508,12 +508,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   link: {
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   errorText: {
     fontSize: 14,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
     marginVertical: 12,
     paddingHorizontal: 16,

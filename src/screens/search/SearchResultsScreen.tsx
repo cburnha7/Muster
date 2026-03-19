@@ -326,7 +326,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   header: {
     paddingHorizontal: 16,

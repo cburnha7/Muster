@@ -83,7 +83,7 @@ export function RentalConfirmationModal({
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Ionicons name="calendar-outline" size={32} color={colors.grass} />
+                <Ionicons name="calendar-outline" size={32} color={colors.pine} />
               </View>
               <Text style={styles.title}>
                 Confirm {slotCount > 1 ? `${slotCount} Rentals` : 'Rental'}
@@ -96,7 +96,7 @@ export function RentalConfirmationModal({
               {/* Facility */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="location" size={20} color={colors.grass} />
+                  <Ionicons name="location" size={20} color={colors.pine} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Facility</Text>
@@ -107,7 +107,7 @@ export function RentalConfirmationModal({
               {/* Court */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="basketball" size={20} color={colors.grass} />
+                  <Ionicons name="basketball" size={20} color={colors.pine} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Court</Text>
@@ -118,7 +118,7 @@ export function RentalConfirmationModal({
               {/* Date */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+                  <Ionicons name="calendar-outline" size={20} color={colors.pine} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date</Text>
@@ -129,7 +129,7 @@ export function RentalConfirmationModal({
               {/* Time */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="time-outline" size={20} color={colors.grass} />
+                  <Ionicons name="time-outline" size={20} color={colors.pine} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Time</Text>
@@ -146,7 +146,7 @@ export function RentalConfirmationModal({
               {/* Price */}
               <View style={[styles.detailRow, styles.priceRow]}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="cash-outline" size={20} color={colors.grass} />
+                  <Ionicons name="cash-outline" size={20} color={colors.pine} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Total Price</Text>
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     ...TextStyles.h3,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '700',
   },
   noticeContainer: {
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   confirmButton: {
     flex: 2,
@@ -398,8 +398,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkboxChecked: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   acknowledgementText: {
     ...TextStyles.caption,

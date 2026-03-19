@@ -261,7 +261,7 @@ export function CreateEventScreen(): JSX.Element {
       setMarkedDates({
         [formattedDate]: {
           selected: true,
-          selectedColor: colors.grass,
+          selectedColor: colors.pine,
         },
       });
 
@@ -467,7 +467,7 @@ export function CreateEventScreen(): JSX.Element {
       marked[selected] = {
         ...marked[selected],
         selected: true,
-        selectedColor: colors.grass,
+        selectedColor: colors.pine,
       };
     }
     
@@ -901,7 +901,7 @@ export function CreateEventScreen(): JSX.Element {
         {isFromRental && rentalDetails && (
           <View style={styles.rentalBanner}>
             <View style={styles.rentalBannerHeader}>
-              <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+              <Ionicons name="calendar-outline" size={20} color={colors.pine} />
               <Text style={styles.rentalBannerTitle}>Creating Event from Rental</Text>
             </View>
             <Text style={styles.rentalBannerText}>
@@ -996,7 +996,7 @@ export function CreateEventScreen(): JSX.Element {
             <View style={styles.lockedFieldDisplay}>
               <Text style={styles.lockedFieldLabel}>Court/Field</Text>
               <View style={styles.lockedFieldValue}>
-                <Ionicons name="basketball" size={20} color={colors.grass} />
+                <Ionicons name="basketball" size={20} color={colors.pine} />
                 <Text style={styles.lockedFieldText}>{selectedCourt.name}</Text>
               </View>
             </View>
@@ -1037,7 +1037,7 @@ export function CreateEventScreen(): JSX.Element {
                 <View style={styles.lockedFieldDisplay}>
                   <Text style={styles.lockedFieldLabel}>Date</Text>
                   <View style={styles.lockedFieldValue}>
-                    <Ionicons name="calendar" size={20} color={colors.grass} />
+                    <Ionicons name="calendar" size={20} color={colors.pine} />
                     <Text style={styles.lockedFieldText}>
                       {formData.startDate.toLocaleDateString('en-US', {
                         weekday: 'long',
@@ -1067,7 +1067,7 @@ export function CreateEventScreen(): JSX.Element {
                   {selectedSlots.length > 0 && (
                     <View style={styles.selectedSlotsSummary}>
                       <View style={styles.summaryHeader}>
-                        <Ionicons name="checkmark-circle" size={24} color={colors.grass} />
+                        <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
                         <Text style={styles.summaryTitle}>
                           {selectedSlots.length} Slot{selectedSlots.length > 1 ? 's' : ''} Selected
                         </Text>
@@ -1165,7 +1165,7 @@ export function CreateEventScreen(): JSX.Element {
               </View>
 
               <View style={styles.lockedFieldsInfoBox}>
-                <Ionicons name="information-circle-outline" size={20} color={colors.sky} />
+                <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
                 <Text style={styles.lockedFieldsInfoText}>
                   Location, date, and time are locked to match your rental slot and cannot be changed.
                 </Text>
@@ -1278,7 +1278,7 @@ export function CreateEventScreen(): JSX.Element {
                 <Ionicons
                   name={formData.isPrivate ? 'lock-closed' : 'lock-open-outline'}
                   size={20}
-                  color={formData.isPrivate ? colors.grass : colors.inkFaint}
+                  color={formData.isPrivate ? colors.pine : colors.inkFaint}
                 />
                 <Text style={styles.privateToggleLabel}>
                   Private Event
@@ -1360,7 +1360,7 @@ export function CreateEventScreen(): JSX.Element {
                         onPress={() => handleRemoveInvitedUser(invitedUser.id)}
                         style={styles.removeInvitedButton}
                       >
-                        <Ionicons name="close-circle" size={22} color={colors.track} />
+                        <Ionicons name="close-circle" size={22} color={colors.heart} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -1410,7 +1410,7 @@ export function CreateEventScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -1421,7 +1421,7 @@ const styles = StyleSheet.create({
   rentalBanner: {
     backgroundColor: '#FFFFFF',
     borderLeftWidth: 4,
-    borderLeftColor: colors.grass,
+    borderLeftColor: colors.pine,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
@@ -1443,7 +1443,7 @@ const styles = StyleSheet.create({
   rentalBannerTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 8,
   },
   rentalBannerText: {
@@ -1457,7 +1457,7 @@ const styles = StyleSheet.create({
     color: colors.soft,
   },
   disabledField: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     opacity: 0.7,
   },
   disabledText: {
@@ -1487,7 +1487,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     backgroundColor: colors.background,
     borderLeftWidth: 3,
-    borderLeftColor: colors.sky,
+    borderLeftColor: colors.navy,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
@@ -1612,16 +1612,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   teamItemSelected: {
-    backgroundColor: colors.grass + '15',
+    backgroundColor: colors.pine + '15',
     borderWidth: 2,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   teamItemText: {
     fontSize: 16,
     color: '#374151',
   },
   teamItemTextSelected: {
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   errorText: {
@@ -1661,15 +1661,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderWidth: 1,
     borderColor: colors.inkFaint,
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
   toggleSwitchOn: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   toggleKnob: {
     width: 18,
@@ -1687,7 +1687,7 @@ const styles = StyleSheet.create({
   },
   privateToggleNote: {
     fontSize: 13,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 28,
     marginTop: 4,
     fontWeight: '600',
@@ -1731,7 +1731,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -1809,7 +1809,7 @@ const styles = StyleSheet.create({
   calendarLegend: {
     marginTop: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 8,
   },
   legendItem: {
@@ -1829,20 +1829,20 @@ const styles = StyleSheet.create({
   multiSlotBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grass + '20',
+    backgroundColor: colors.pine + '20',
     padding: Spacing.sm,
     borderRadius: 8,
     marginTop: Spacing.sm,
   },
   multiSlotText: {
     ...TextStyles.caption,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   selectedSlotsSummary: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     borderRadius: 12,
     padding: Spacing.lg,
     marginTop: Spacing.md,
@@ -1862,7 +1862,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     ...TextStyles.h4,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '700',
     marginLeft: Spacing.sm,
   },

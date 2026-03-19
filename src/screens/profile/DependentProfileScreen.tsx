@@ -104,7 +104,7 @@ export function DependentProfileScreen() {
           onBackPress={() => (navigation as any).goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.grass} />
+          <ActivityIndicator size="large" color={colors.pine} />
         </View>
       </View>
     );
@@ -136,7 +136,7 @@ export function DependentProfileScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.grass} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
         }
       >
         {/* Profile Header */}
@@ -168,7 +168,7 @@ export function DependentProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel="Edit dependent profile"
             >
-              <Ionicons name="create-outline" size={18} color={colors.grass} />
+              <Ionicons name="create-outline" size={18} color={colors.pine} />
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
 
@@ -184,7 +184,7 @@ export function DependentProfileScreen() {
               <Ionicons
                 name="arrow-forward-circle-outline"
                 size={18}
-                color={canTransfer ? colors.sky : colors.inkFaint}
+                color={canTransfer ? colors.navy : colors.inkFaint}
               />
               <Text style={[styles.transferButtonText, !canTransfer && styles.transferButtonTextDisabled]}>
                 Transfer
@@ -224,7 +224,7 @@ export function DependentProfileScreen() {
           ) : (
             profile.eventHistory.map((event: any, index: number) => (
               <View key={event.id ?? index} style={styles.listItem}>
-                <Ionicons name="calendar-outline" size={18} color={colors.grass} />
+                <Ionicons name="calendar-outline" size={18} color={colors.pine} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {event.title ?? event.name ?? `Event ${index + 1}`}
                 </Text>
@@ -249,7 +249,7 @@ export function DependentProfileScreen() {
           ) : (
             profile.rosterMemberships.map((roster: any, index: number) => (
               <View key={roster.id ?? index} style={styles.listItem}>
-                <Ionicons name="people-outline" size={18} color={colors.grass} />
+                <Ionicons name="people-outline" size={18} color={colors.pine} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {roster.name ?? `Roster ${index + 1}`}
                 </Text>
@@ -269,7 +269,7 @@ export function DependentProfileScreen() {
           ) : (
             profile.leagueMemberships.map((league: any, index: number) => (
               <View key={league.id ?? index} style={styles.listItem}>
-                <Ionicons name="trophy-outline" size={18} color={colors.grass} />
+                <Ionicons name="trophy-outline" size={18} color={colors.pine} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {league.name ?? `League ${index + 1}`}
                 </Text>
@@ -287,7 +287,7 @@ export function DependentProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -359,12 +359,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   editButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 4,
   },
   transferButton: {
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.sky,
+    borderColor: colors.navy,
   },
   transferButtonDisabled: {
     borderColor: colors.inkFaint + '40',
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   transferButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.sky,
+    color: colors.navy,
     marginLeft: 4,
   },
   transferButtonTextDisabled: {

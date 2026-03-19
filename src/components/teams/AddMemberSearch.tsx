@@ -110,10 +110,10 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
         </View>
 
         {isAdding ? (
-          <ActivityIndicator size="small" color={colors.grass} />
+          <ActivityIndicator size="small" color={colors.pine} />
         ) : (
           <View style={styles.addButton}>
-            <Ionicons name="add-circle" size={24} color={colors.grass} />
+            <Ionicons name="add-circle" size={24} color={colors.pine} />
           </View>
         )}
       </TouchableOpacity>
@@ -140,7 +140,7 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
         {isSearching && (
           <ActivityIndicator
             size="small"
-            color={colors.grass}
+            color={colors.pine}
             style={styles.searchSpinner}
           />
         )}
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   userAvatarPlaceholder: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   outcomeText: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.grass,
+    color: colors.pine,
   },
   actions: {
     flexDirection: 'row',

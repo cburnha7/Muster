@@ -169,8 +169,8 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
+            tintColor={colors.pine}
+            colors={[colors.pine]}
           />
         }
       >

@@ -13,16 +13,16 @@ interface MusterIconProps {
 const variantConfig = {
   dark: {
     bg:          colors.inkMid,
-    groundLine:  colors.grassLight,
-    leftFig:     colors.sky,
-    centreFig:   colors.grassLight,
+    groundLine:  colors.pineLight,
+    leftFig:     colors.navy,
+    centreFig:   colors.pineLight,
     rightFig:    colors.court,
   },
   light: {
     bg:          '#EBF5EF',
-    groundLine:  colors.grass,
-    leftFig:     colors.sky,
-    centreFig:   colors.grass,
+    groundLine:  colors.pine,
+    leftFig:     colors.navy,
+    centreFig:   colors.pine,
     rightFig:    colors.court,
   },
   grass: {

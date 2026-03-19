@@ -191,7 +191,7 @@ export function SettingsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   section: {
     backgroundColor: '#FFFFFF',

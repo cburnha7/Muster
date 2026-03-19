@@ -203,7 +203,7 @@ export function UserStatsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   section: {
     backgroundColor: '#FFFFFF',
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     minWidth: '45%',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 8,
   },
   statValue: {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   achievementCard: {
     flexDirection: 'row',
     padding: 12,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 8,
   },
   achievementIcon: {

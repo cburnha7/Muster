@@ -72,9 +72,9 @@ export const TextInput: React.FC<TextInputProps> = ({
   };
 
   const borderColor = error
-    ? colors.track
+    ? colors.heart
     : isFocused
-    ? colors.grass
+    ? colors.pine
     : colors.border;
 
   return (
@@ -92,7 +92,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           <Ionicons
             name={icon}
             size={20}
-            color={error ? colors.track : colors.soft}
+            color={error ? colors.heart : colors.soft}
             style={styles.icon}
           />
         )}
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.track,
+    color: colors.heart,
     marginTop: Spacing.xs,
     marginLeft: Spacing.xs,
   },

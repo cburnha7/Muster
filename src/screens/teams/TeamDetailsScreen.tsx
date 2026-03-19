@@ -480,7 +480,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               style={styles.removeButton}
               onPress={() => handleRemoveMember(member)}
             >
-              <Ionicons name="close-circle" size={22} color={colors.track} />
+              <Ionicons name="close-circle" size={22} color={colors.heart} />
             </TouchableOpacity>
           </View>
         )}
@@ -518,7 +518,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.grass} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
         <View style={styles.form}>
@@ -542,7 +542,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             <View style={styles.readOnlyHeader}>
               <View style={styles.readOnlyHeaderTop}>
                 <View style={styles.readOnlySportBadge}>
-                  <Ionicons name="shield-outline" size={22} color={colors.grass} />
+                  <Ionicons name="shield-outline" size={22} color={colors.pine} />
                 </View>
                 <View style={styles.readOnlyHeaderInfo}>
                   <Text style={styles.readOnlyName}>{team.name}</Text>
@@ -639,8 +639,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             <Switch
               value={formIsPublic}
               onValueChange={(v) => setFormIsPublic(v)}
-              trackColor={{ false: '#D1D5DB', true: colors.grassLight }}
-              thumbColor={formIsPublic ? colors.grass : '#F4F4F5'}
+              trackColor={{ false: '#D1D5DB', true: colors.pineLight }}
+              thumbColor={formIsPublic ? colors.pine : '#F4F4F5'}
               disabled={!canManageTeam}
             />
           </View>
@@ -694,7 +694,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             </Text>
             {canManageTeam && duesAmount != null && playerDuesMap.size > 0 && (
               <View style={styles.duesSummaryBanner}>
-                <Ionicons name="cash-outline" size={16} color={colors.grass} />
+                <Ionicons name="cash-outline" size={16} color={colors.pine} />
                 <Text style={styles.duesSummaryText}>
                   Season dues: ${(duesAmount / 100).toFixed(2)} · {
                     Array.from(playerDuesMap.values()).filter(s => s === 'paid').length
@@ -724,7 +724,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                     onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: true } })}
                   >
                     <View style={styles.listCardContent}>
-                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.court : colors.grass} />
+                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.court : colors.pine} />
                       <View style={styles.listCardText}>
                         <Text style={styles.listCardTitle}>{league.name}</Text>
                         <Text style={styles.listCardSub}>{league.sportType}</Text>
@@ -755,7 +755,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                   onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
                 >
                   <View style={styles.listCardContent}>
-                    <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+                    <Ionicons name="calendar-outline" size={20} color={colors.pine} />
                     <View style={styles.listCardText}>
                       <Text style={styles.listCardTitle}>{event.title}</Text>
                       <Text style={styles.listCardSub}>
@@ -856,7 +856,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -1011,7 +1011,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   memberAvatarPlaceholder: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1082,7 +1082,7 @@ const styles = StyleSheet.create({
   },
   duesSummaryText: {
     fontSize: 13,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   invitedDescription: {
@@ -1193,7 +1193,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 12,
     paddingVertical: 12,
   },

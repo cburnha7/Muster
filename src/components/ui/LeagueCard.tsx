@@ -61,7 +61,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
           <Ionicons
             name={getSportIcon(league.sportType) as any}
             size={28}
-            color={colors.grass}
+            color={colors.pine}
           />
           <View style={styles.nameContainer}>
             <View style={styles.titleRow}>
@@ -118,7 +118,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
           <Ionicons 
             name={league.isActive ? 'checkmark-circle' : 'close-circle'} 
             size={16} 
-            color={league.isActive ? colors.grass : '#999'} 
+            color={league.isActive ? colors.pine : '#999'} 
           />
           <Text style={[styles.detailText, !league.isActive && styles.inactiveText]}>
             {league.isActive ? 'Active' : 'Inactive'}

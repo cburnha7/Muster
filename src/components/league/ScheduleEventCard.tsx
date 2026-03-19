@@ -82,7 +82,7 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
         accessibilityRole="button"
         accessibilityLabel="Remove event"
       >
-        <Ionicons name="trash-outline" size={18} color={colors.track} />
+        <Ionicons name="trash-outline" size={18} color={colors.heart} />
       </TouchableOpacity>
     </TouchableOpacity>
   );

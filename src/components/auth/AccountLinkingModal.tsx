@@ -108,7 +108,7 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
           {/* Error Message */}
           {error && (
             <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={20} color={colors.track} />
+              <Ionicons name="alert-circle" size={20} color={colors.heart} />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
@@ -132,7 +132,7 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
 
           {/* Security Note */}
           <View style={styles.securityNote}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.sky} />
+            <Ionicons name="shield-checkmark-outline" size={16} color={colors.navy} />
             <Text style={styles.securityText}>
               Your password is required to verify your identity and link your accounts securely.
             </Text>
@@ -215,11 +215,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: Spacing.md,
     borderLeftWidth: 4,
-    borderLeftColor: colors.track,
+    borderLeftColor: colors.heart,
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.track,
+    color: colors.heart,
     marginLeft: Spacing.sm,
     flex: 1,
   },
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: colors.sky,
+    borderLeftColor: colors.navy,
   },
   securityText: {
     ...TextStyles.caption,

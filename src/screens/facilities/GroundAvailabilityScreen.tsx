@@ -186,7 +186,7 @@ export function GroundAvailabilityScreen({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.grass} />
+        <ActivityIndicator size="large" color={colors.pine} />
         <Text style={styles.loadingText}>Loading availability...</Text>
       </View>
     );
@@ -220,7 +220,7 @@ export function GroundAvailabilityScreen({
             markedDates={{
               [selectedDate]: {
                 selected: true,
-                selectedColor: colors.grass,
+                selectedColor: colors.pine,
               },
             }}
             theme={calendarTheme}
@@ -271,7 +271,7 @@ export function GroundAvailabilityScreen({
                   }
                 }}
               >
-                <Ionicons name="add-circle" size={24} color={colors.grass} />
+                <Ionicons name="add-circle" size={24} color={colors.pine} />
                 <Text style={styles.addButtonText}>Block Slot</Text>
               </TouchableOpacity>
             </View>
@@ -294,15 +294,15 @@ export function GroundAvailabilityScreen({
           <Text style={styles.sectionTitle}>Legend</Text>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.grass }]} />
+              <View style={[styles.legendColor, { backgroundColor: colors.pine }]} />
               <Text style={styles.legendText}>Available</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.track }]} />
+              <View style={[styles.legendColor, { backgroundColor: colors.heart }]} />
               <Text style={styles.legendText}>Blocked</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.sky }]} />
+              <View style={[styles.legendColor, { backgroundColor: colors.navy }]} />
               <Text style={styles.legendText}>Rented</Text>
             </View>
           </View>
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   courtSelector: {
@@ -420,8 +420,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   courtChipSelected: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   courtChipText: {
     ...TextStyles.body,

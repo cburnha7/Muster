@@ -92,10 +92,10 @@ export const ResetPasswordScreen: React.FC = () => {
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
-    if (score <= 2) return { strength: 'Weak', color: colors.track };
+    if (score <= 2) return { strength: 'Weak', color: colors.heart };
     if (score <= 3) return { strength: 'Fair', color: colors.court };
-    if (score <= 4) return { strength: 'Good', color: colors.sky };
-    return { strength: 'Strong', color: colors.grass };
+    if (score <= 4) return { strength: 'Good', color: colors.navy };
+    return { strength: 'Strong', color: colors.pine };
   };
 
   const handleSubmit = async () => {
@@ -171,7 +171,7 @@ export const ResetPasswordScreen: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={80} color={colors.grass} />
+            <Ionicons name="checkmark-circle" size={80} color={colors.pine} />
           </View>
           <Text style={styles.successTitle}>Password Reset Successful</Text>
           <Text style={styles.successMessage}>
@@ -280,7 +280,7 @@ export const ResetPasswordScreen: React.FC = () => {
             <Ionicons
               name={state.newPassword.length >= 8 ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={state.newPassword.length >= 8 ? colors.grass : colors.textTertiary}
+              color={state.newPassword.length >= 8 ? colors.pine : colors.textTertiary}
             />
             <Text style={styles.requirementText}>At least 8 characters</Text>
           </View>
@@ -288,7 +288,7 @@ export const ResetPasswordScreen: React.FC = () => {
             <Ionicons
               name={/[A-Z]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={/[A-Z]/.test(state.newPassword) ? colors.grass : colors.textTertiary}
+              color={/[A-Z]/.test(state.newPassword) ? colors.pine : colors.textTertiary}
             />
             <Text style={styles.requirementText}>One uppercase letter</Text>
           </View>
@@ -296,7 +296,7 @@ export const ResetPasswordScreen: React.FC = () => {
             <Ionicons
               name={/[a-z]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={/[a-z]/.test(state.newPassword) ? colors.grass : colors.textTertiary}
+              color={/[a-z]/.test(state.newPassword) ? colors.pine : colors.textTertiary}
             />
             <Text style={styles.requirementText}>One lowercase letter</Text>
           </View>
@@ -304,7 +304,7 @@ export const ResetPasswordScreen: React.FC = () => {
             <Ionicons
               name={/[0-9]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={/[0-9]/.test(state.newPassword) ? colors.grass : colors.textTertiary}
+              color={/[0-9]/.test(state.newPassword) ? colors.pine : colors.textTertiary}
             />
             <Text style={styles.requirementText}>One number</Text>
           </View>
@@ -312,7 +312,7 @@ export const ResetPasswordScreen: React.FC = () => {
             <Ionicons
               name={/[^A-Za-z0-9]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={/[^A-Za-z0-9]/.test(state.newPassword) ? colors.grass : colors.textTertiary}
+              color={/[^A-Za-z0-9]/.test(state.newPassword) ? colors.pine : colors.textTertiary}
             />
             <Text style={styles.requirementText}>One special character</Text>
           </View>
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.body,
-    color: colors.track,
+    color: colors.heart,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   requestNewLinkText: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   requirementsBox: {

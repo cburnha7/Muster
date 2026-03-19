@@ -21,7 +21,7 @@ const statusConfig: Record<DuesStatus, { label: string; bg: string; color: strin
   paid: {
     label: 'Paid',
     bg: '#EDF7F0',
-    color: colors.grass,
+    color: colors.pine,
     icon: 'checkmark-circle',
   },
   pending: {
@@ -32,8 +32,8 @@ const statusConfig: Record<DuesStatus, { label: string; bg: string; color: strin
   },
   unpaid: {
     label: 'Unpaid',
-    bg: colors.track + '18',
-    color: colors.track,
+    bg: colors.heart + '18',
+    color: colors.heart,
     icon: 'alert-circle',
   },
 };

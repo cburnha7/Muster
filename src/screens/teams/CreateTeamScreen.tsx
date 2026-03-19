@@ -259,8 +259,8 @@ export function CreateTeamScreen(): JSX.Element {
             <Switch
               value={formData.isPublic}
               onValueChange={(value) => updateFormData('isPublic', value)}
-              trackColor={{ false: '#D1D5DB', true: colors.grassLight }}
-              thumbColor={formData.isPublic ? colors.grass : '#F4F4F5'}
+              trackColor={{ false: '#D1D5DB', true: colors.pineLight }}
+              thumbColor={formData.isPublic ? colors.pine : '#F4F4F5'}
             />
           </View>
 
@@ -280,9 +280,9 @@ export function CreateTeamScreen(): JSX.Element {
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 16,
-                    backgroundColor: genderRestriction === opt.value ? colors.grass : '#F3F4F6',
+                    backgroundColor: genderRestriction === opt.value ? colors.pine : '#F3F4F6',
                     borderWidth: 1,
-                    borderColor: genderRestriction === opt.value ? colors.grass : '#E5E7EB',
+                    borderColor: genderRestriction === opt.value ? colors.pine : '#E5E7EB',
                   }}
                   onPress={() => setGenderRestriction(opt.value)}
                 >
@@ -339,7 +339,7 @@ export function CreateTeamScreen(): JSX.Element {
                         style={styles.removeMemberButton}
                         onPress={() => handleRemovePendingMember(member.id)}
                       >
-                        <Ionicons name="close-circle" size={24} color={colors.track} />
+                        <Ionicons name="close-circle" size={24} color={colors.heart} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -385,7 +385,7 @@ export function CreateTeamScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -487,11 +487,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.grass + '40',
+    borderColor: colors.pine + '40',
   },
   pendingMemberInfo: {
     flexDirection: 'row',
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   pendingMemberAvatarPlaceholder: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
   },

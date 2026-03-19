@@ -205,11 +205,11 @@ export function MyRentalsScreen() {
 
     const statusColor =
       rental.status === 'confirmed'
-        ? colors.grass
+        ? colors.pine
         : rental.status === 'cancelled'
-        ? colors.track
+        ? colors.heart
         : rental.status === 'completed'
-        ? colors.sky
+        ? colors.navy
         : colors.soft;
 
     const statusIcon =
@@ -253,7 +253,7 @@ export function MyRentalsScreen() {
 
         {/* Court Info */}
         <View style={styles.courtInfo}>
-          <Ionicons name="basketball" size={20} color={colors.grass} />
+          <Ionicons name="basketball" size={20} color={colors.pine} />
           <Text style={styles.courtName}>{rental.timeSlot.court.name}</Text>
           <Text style={styles.courtSportType}>• {rental.timeSlot.court.sportType}</Text>
         </View>
@@ -285,7 +285,7 @@ export function MyRentalsScreen() {
               style={styles.createEventButton}
               onPress={() => handleCreateEvent(rental)}
             >
-              <Ionicons name="add-circle-outline" size={20} color={colors.grass} />
+              <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
               <Text style={styles.createEventButtonText}>Create Event</Text>
             </TouchableOpacity>
 
@@ -300,7 +300,7 @@ export function MyRentalsScreen() {
               <Ionicons
                 name="close-circle-outline"
                 size={20}
-                color={rental.cancellationStatus === 'pending' ? colors.soft : colors.track}
+                color={rental.cancellationStatus === 'pending' ? colors.soft : colors.heart}
               />
               <Text
                 style={[
@@ -328,7 +328,7 @@ export function MyRentalsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.grass} />
+        <ActivityIndicator size="large" color={colors.pine} />
         <Text style={styles.loadingText}>Loading your rentals...</Text>
       </View>
     );
@@ -343,8 +343,8 @@ export function MyRentalsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.grass}
-            colors={[colors.grass]}
+            tintColor={colors.pine}
+            colors={[colors.pine]}
           />
         }
       >
@@ -357,7 +357,7 @@ export function MyRentalsScreen() {
         {/* Upcoming Rentals Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="calendar" size={24} color={colors.grass} />
+            <Ionicons name="calendar" size={24} color={colors.pine} />
             <Text style={styles.sectionTitle}>Upcoming Rentals</Text>
             {upcomingRentals.length > 0 && (
               <View style={styles.countBadge}>
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   countBadge: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 8,
   },
   courtName: {
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     ...TextStyles.h4,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '700',
   },
   actionButtons: {
@@ -578,16 +578,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderWidth: 2,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     borderRadius: 8,
     paddingVertical: Spacing.md,
   },
   createEventButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   cancelButton: {
     flex: 1,
@@ -595,16 +595,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderWidth: 2,
-    borderColor: colors.track,
+    borderColor: colors.heart,
     borderRadius: 8,
     paddingVertical: Spacing.md,
   },
   cancelButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.track,
+    color: colors.heart,
   },
   cancelButtonDisabled: {
     borderColor: colors.soft,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     marginTop: Spacing.sm,
     padding: Spacing.sm,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     borderRadius: 6,
   },
   cancellationText: {

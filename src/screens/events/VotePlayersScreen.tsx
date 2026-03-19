@@ -142,7 +142,7 @@ export function VotePlayersScreen(): JSX.Element {
             Select the players who performed well in this game. You can vote for multiple players.
           </Text>
           <View style={styles.voteCount}>
-            <Ionicons name="checkmark-circle" size={20} color={colors.grass} />
+            <Ionicons name="checkmark-circle" size={20} color={colors.pine} />
             <Text style={styles.voteCountText}>
               {selectedPlayers.size} {selectedPlayers.size === 1 ? 'vote' : 'votes'} selected
             </Text>
@@ -228,7 +228,7 @@ export function VotePlayersScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   voteCountText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.grass,
+    color: colors.pine,
   },
   participantsList: {
     padding: 16,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   participantCardSelected: {
-    borderColor: colors.grass,
+    borderColor: colors.pine,
     backgroundColor: '#F0F9FF',
   },
   participantInfo: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -335,8 +335,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   footer: {
     padding: 16,

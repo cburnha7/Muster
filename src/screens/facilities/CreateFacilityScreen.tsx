@@ -545,7 +545,7 @@ export function CreateFacilityScreen(): JSX.Element {
               style={styles.addButton}
               onPress={() => setShowAddCourtModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color={colors.grass} style={{ marginRight: Spacing.xs }} />
+              <Ionicons name="add-circle" size={24} color={colors.pine} style={{ marginRight: Spacing.xs }} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -581,7 +581,7 @@ export function CreateFacilityScreen(): JSX.Element {
                       <Ionicons 
                         name="trash-outline" 
                         size={20} 
-                        color={colors.track}
+                        color={colors.heart}
                         pointerEvents="none"
                       />
                     </TouchableOpacity>
@@ -593,7 +593,7 @@ export function CreateFacilityScreen(): JSX.Element {
                         handleEditCourt(court.id);
                       }}
                     >
-                      <Ionicons name="pencil-outline" size={20} color={colors.grass} />
+                      <Ionicons name="pencil-outline" size={20} color={colors.pine} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -921,7 +921,7 @@ export function CreateFacilityScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   scrollView: {
     flex: 1,
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   row: {
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sportChipSelected: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   sportChipText: {
     ...TextStyles.body,
@@ -1001,7 +1001,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.track,
+    color: colors.heart,
     marginBottom: Spacing.sm,
   },
   emptyText: {
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
   },
   courtPrice: {
     ...TextStyles.body,
-    color: colors.grass,
+    color: colors.pine,
     fontWeight: '600',
   },
   courtActions: {
@@ -1113,8 +1113,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.grass,
-    borderColor: colors.grass,
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
   },
   checkboxLabel: {
     ...TextStyles.body,
@@ -1134,7 +1134,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1142,7 +1142,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   addCourtButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   addCourtButtonText: {
     ...TextStyles.body,
@@ -1160,7 +1160,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   duplicateCard: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   sportBadge: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 12,
@@ -1204,7 +1204,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   continueButton: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   continueButtonText: {
     ...TextStyles.body,

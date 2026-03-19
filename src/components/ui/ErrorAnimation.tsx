@@ -46,7 +46,7 @@ export const ErrorAnimation: React.FC<ErrorAnimationProps> = ({
         },
       ]}
     >
-      <Ionicons name="alert-circle" size={size} color={colors.track} />
+      <Ionicons name="alert-circle" size={size} color={colors.heart} />
     </Animated.View>
   );
 };

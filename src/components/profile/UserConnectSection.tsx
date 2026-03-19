@@ -84,7 +84,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>Payment Account</Text>
-        <ActivityIndicator size="small" color={colors.grass} style={{ marginTop: Spacing.sm }} />
+        <ActivityIndicator size="small" color={colors.pine} style={{ marginTop: Spacing.sm }} />
       </View>
     );
   }
@@ -95,14 +95,14 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Ionicons name="card-outline" size={20} color={colors.grass} />
+        <Ionicons name="card-outline" size={20} color={colors.pine} />
         <Text style={styles.title}>Payment Account</Text>
       </View>
 
       {isActive ? (
         <View style={styles.statusRow}>
-          <View style={[styles.badge, { backgroundColor: `${colors.grass}20` }]}>
-            <Text style={[styles.badgeText, { color: colors.grass }]}>Active</Text>
+          <View style={[styles.badge, { backgroundColor: `${colors.pine}20` }]}>
+            <Text style={[styles.badgeText, { color: colors.pine }]}>Active</Text>
           </View>
           <Text style={styles.hint}>You can receive payments from bookings and join fees.</Text>
         </View>
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   button: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 10,
     borderRadius: 8,

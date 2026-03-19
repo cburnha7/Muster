@@ -1,30 +1,53 @@
 export const colors = {
-  // ── Brand greens ──────────────────────────────
-  grass:      '#3D8C5E', // primary brand
-  grassLight: '#5BAB79', // hover / active states
-  grassDark:  '#2A6644', // pressed states
+  // ── Pine green ────────────────────────────────
+  pine:       '#2D5F3F', // primary figure / brand green
+  pineLight:  '#3D8C5E', // hover / active states
+  pineDark:   '#1E4229', // pressed states
 
-  // ── Accent ────────────────────────────────────
-  court:      '#E8A030', // accent — salute colour
-  courtLight: '#F4BC60', // salute glow / highlights
+  // ── Heart red ─────────────────────────────────
+  heart:      '#C0392B', // centre figure / primary accent
+  heartLight: '#D45B5B', // hover / highlights
+  heartDark:  '#962D22', // pressed states
 
-  // ── Supporting ────────────────────────────────
-  sky:        '#5B9FD4', // info / links
-  skyLight:   '#85BEE8', // info hover
-  track:      '#D45B5B', // errors / alerts
-  trackLight: '#E88585', // error hover
+  // ── Navy ──────────────────────────────────────
+  navy:       '#1B2A4A', // right figure / info / links
+  navyLight:  '#2E4470', // hover
+  navyDark:   '#111B30', // pressed
 
-  // ── Neutrals ──────────────────────────────────
-  chalk:      '#F7F4EE', // light background (legacy)
-  chalkWarm:  '#EEEBE3', // app background — new global default
-  ink:        '#1C2320', // dark background / primary text
-  inkMid:     '#2A3430', // card backgrounds (dark mode)
-  inkSoft:    '#3A4440', // secondary dark surface
-  inkFaint:   '#6B7C76', // secondary / placeholder text
+  // ── Bronze / background ───────────────────────
+  bronze:     '#C4A882', // icon background
+  bronzeLight:'#D4B99A', // light variant
+  bronzeDark: '#A8845A', // dark variant
+
+  // ── Cream / surfaces ──────────────────────────
+  chalk:      '#F7F4EE', // light surface
+  cream:      '#EEEBE3', // app background (slightly darker)
+
+  // ── Ink / text ────────────────────────────────
+  ink:        '#1B2A4A', // primary text / dark background (navy)
+  inkMid:     '#2A3A5A', // card backgrounds (dark mode)
+  inkSoft:    '#3A4A6A', // secondary dark surface
+  inkFaint:   '#6B7A96', // secondary / placeholder text
 
   // ── Transparency helpers ───────────────────────
-  overlay:    'rgba(28, 35, 32, 0.6)',
-  scrim:      'rgba(28, 35, 32, 0.4)',
+  overlay:    'rgba(27, 42, 74, 0.6)',
+  scrim:      'rgba(27, 42, 74, 0.4)',
+
+  // ── Legacy aliases (deprecated) ────────────────
+  // These map old color names to new palette for backward compatibility
+  grass:      '#2D5F3F', // → use colors.pine
+  grassLight: '#3D8C5E', // → use colors.pineLight
+  grassDark:  '#1E4229', // → use colors.pineDark
+  track:      '#C0392B', // → use colors.heart
+  trackLight: '#D45B5B', // → use colors.heartLight
+  sky:        '#1B2A4A', // → use colors.navy
+  skyLight:   '#2E4470', // → use colors.navyLight
+  soft:       '#6B7A96', // → use colors.inkFaint
+  court:      '#C4A882', // → use colors.bronze (accent)
+  courtLight: '#D4B99A', // → use colors.bronzeLight
+  background: '#EEEBE3', // → use colors.cream
+  textTertiary: '#6B7A96', // → use colors.inkFaint
+  chalkWarm: '#EEEBE3', // → use colors.cream
 } as const;
 
 export type ColorKey = keyof typeof colors;

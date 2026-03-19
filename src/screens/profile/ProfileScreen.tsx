@@ -50,7 +50,7 @@ export function ProfileScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.grass} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />}
     >
       {/* Context Switcher */}
       <ContextSwitcher />
@@ -80,7 +80,7 @@ export function ProfileScreen() {
             onPress={() => (navigation as any).navigate('EditProfile')}
             activeOpacity={0.7}
           >
-            <Ionicons name="create-outline" size={18} color={colors.grass} />
+            <Ionicons name="create-outline" size={18} color={colors.pine} />
             <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -114,14 +114,14 @@ export function ProfileScreen() {
         onPress={() => (navigation as any).navigate('RedeemCode')}
         activeOpacity={0.7}
       >
-        <Ionicons name="gift-outline" size={20} color={colors.grass} />
+        <Ionicons name="gift-outline" size={20} color={colors.pine} />
         <Text style={styles.redeemText}>Redeem Code</Text>
         <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
       </TouchableOpacity>
 
       {/* Log Out */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
-        <Ionicons name="log-out-outline" size={20} color={colors.track} />
+        <Ionicons name="log-out-outline" size={20} color={colors.heart} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
 
@@ -133,7 +133,7 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
   },
   content: {
     paddingBottom: 24,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.chalkWarm,
+    backgroundColor: colors.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -192,12 +192,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   editButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.grass,
+    color: colors.pine,
     marginLeft: 4,
   },
   settingsButton: {
@@ -213,12 +213,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: `${colors.track}30`,
+    borderColor: `${colors.heart}30`,
   },
   logoutText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.track,
+    color: colors.heart,
     marginLeft: 8,
   },
   redeemRow: {

@@ -100,7 +100,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
       case 'secondary':
         return colors.ink;
       case 'outline':
-        return colors.grass;
+        return colors.pine;
       case 'muted':
         return colors.ink;
       default:
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   
   // Color variants
   primary: {
-    backgroundColor: colors.grass,
+    backgroundColor: colors.pine,
   },
   primaryText: {
     color: '#FFFFFF',
@@ -225,10 +225,10 @@ const styles = StyleSheet.create({
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.grass,
+    borderColor: colors.pine,
   },
   outlineText: {
-    color: colors.grass,
+    color: colors.pine,
   },
   
   muted: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   
   danger: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   dangerText: {
     color: '#FFFFFF',

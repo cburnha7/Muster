@@ -42,8 +42,8 @@ const getTopLabel = (percentile: number | null): string => {
 const getPercentileColor = (percentile: number | null): string => {
   if (percentile == null) return colors.inkFaint;
   if (percentile >= 90) return colors.court;
-  if (percentile >= 70) return colors.grass;
-  if (percentile >= 50) return colors.sky;
+  if (percentile >= 70) return colors.pine;
+  if (percentile >= 50) return colors.navy;
   return colors.inkFaint;
 };
 
@@ -251,8 +251,8 @@ const styles = StyleSheet.create({
   bracketLabel: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.sky,
-    backgroundColor: colors.sky + '15',
+    color: colors.navy,
+    backgroundColor: colors.navy + '15',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,

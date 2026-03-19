@@ -47,13 +47,13 @@ export function CancellationPolicyDisplay({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="shield-checkmark-outline" size={20} color={colors.sky} />
+        <Ionicons name="shield-checkmark-outline" size={20} color={colors.navy} />
         <Text style={styles.title}>Cancellation Policy</Text>
       </View>
 
       <View style={styles.body}>
         <View style={styles.row}>
-          <Ionicons name="time-outline" size={16} color={colors.grass} />
+          <Ionicons name="time-outline" size={16} color={colors.pine} />
           <Text style={styles.text}>{refundLine}</Text>
         </View>
 
@@ -61,7 +61,7 @@ export function CancellationPolicyDisplay({
           <Ionicons
             name={teamPenaltyPct === 0 ? 'checkmark-circle-outline' : 'alert-circle-outline'}
             size={16}
-            color={teamPenaltyPct === 0 ? colors.grass : colors.court}
+            color={teamPenaltyPct === 0 ? colors.pine : colors.court}
           />
           <Text style={styles.text}>{penaltyLine}</Text>
         </View>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chalk,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.sky + '30',
+    borderColor: colors.navy + '30',
     padding: Spacing.md,
   },
   header: {

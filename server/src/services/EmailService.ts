@@ -188,7 +188,7 @@ class EmailService {
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     .header {
-      background-color: #3D8C5E;
+      background-color: #2D5F3F;
       color: #FFFFFF;
       padding: 32px 24px;
       text-align: center;
@@ -207,7 +207,7 @@ class EmailService {
     }
     .button {
       display: inline-block;
-      background-color: #3D8C5E;
+      background-color: #2D5F3F;
       color: #FFFFFF;
       text-decoration: none;
       padding: 14px 32px;
@@ -250,7 +250,7 @@ class EmailService {
       font-size: 13px;
     }
     .footer a {
-      color: #3D8C5E;
+      color: #2D5F3F;
       text-decoration: none;
     }
   </style>
@@ -275,7 +275,7 @@ class EmailService {
         <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
       </div>
       <p>If the button doesn't work, copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; color: #5B9FD4; font-size: 13px;">${resetLink}</p>
+      <p style="word-break: break-all; color: #1B2A4A; font-size: 13px;">${resetLink}</p>
     </div>
     <div class="footer">
       <p>Need help? Contact us at <a href="mailto:support@muster.app">support@muster.app</a></p>
@@ -345,7 +345,7 @@ Need help? Contact us at support@muster.app
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     .header {
-      background-color: #3D8C5E;
+      background-color: #2D5F3F;
       color: #FFFFFF;
       padding: 32px 24px;
       text-align: center;
@@ -369,7 +369,7 @@ Need help? Contact us at support@muster.app
     }
     .button {
       display: inline-block;
-      background-color: #3D8C5E;
+      background-color: #2D5F3F;
       color: #FFFFFF;
       text-decoration: none;
       padding: 14px 32px;
@@ -390,7 +390,7 @@ Need help? Contact us at support@muster.app
       content: "✓";
       position: absolute;
       left: 0;
-      color: #3D8C5E;
+      color: #2D5F3F;
       font-weight: bold;
       font-size: 20px;
     }
@@ -402,7 +402,7 @@ Need help? Contact us at support@muster.app
       font-size: 13px;
     }
     .footer a {
-      color: #3D8C5E;
+      color: #2D5F3F;
       text-decoration: none;
     }
   </style>
@@ -498,7 +498,7 @@ Need help? Contact us at support@muster.app
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     .header {
-      background-color: #3D8C5E;
+      background-color: #2D5F3F;
       color: #FFFFFF;
       padding: 32px 24px;
       text-align: center;
@@ -526,7 +526,7 @@ Need help? Contact us at support@muster.app
       margin: 0;
       font-size: 17px;
       font-weight: 600;
-      color: #3D8C5E;
+      color: #2D5F3F;
     }
     .security-notice {
       background-color: #FFF4E6;
@@ -548,7 +548,7 @@ Need help? Contact us at support@muster.app
       font-size: 13px;
     }
     .footer a {
-      color: #3D8C5E;
+      color: #2D5F3F;
       text-decoration: none;
     }
   </style>

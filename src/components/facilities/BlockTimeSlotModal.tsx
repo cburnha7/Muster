@@ -146,7 +146,7 @@ export function BlockTimeSlotModal({
             <View style={styles.field}>
               <Text style={styles.label}>Date</Text>
               <View style={styles.dateDisplay}>
-                <Ionicons name="calendar-outline" size={20} color={colors.grass} />
+                <Ionicons name="calendar-outline" size={20} color={colors.pine} />
                 <Text style={styles.dateText}>
                   {new Date(selectedDate).toLocaleDateString('en-US', {
                     weekday: 'long',
@@ -165,7 +165,7 @@ export function BlockTimeSlotModal({
                 style={styles.timeButton}
                 onPress={() => setShowStartPicker(true)}
               >
-                <Ionicons name="time-outline" size={20} color={colors.grass} />
+                <Ionicons name="time-outline" size={20} color={colors.pine} />
                 <Text style={styles.timeButtonText}>{formatTime12(formatTime24(startTime))}</Text>
                 <Ionicons name="chevron-down" size={20} color={colors.soft} />
               </TouchableOpacity>
@@ -188,7 +188,7 @@ export function BlockTimeSlotModal({
                 style={styles.timeButton}
                 onPress={() => setShowEndPicker(true)}
               >
-                <Ionicons name="time-outline" size={20} color={colors.grass} />
+                <Ionicons name="time-outline" size={20} color={colors.pine} />
                 <Text style={styles.timeButtonText}>{formatTime12(formatTime24(endTime))}</Text>
                 <Ionicons name="chevron-down" size={20} color={colors.soft} />
               </TouchableOpacity>
@@ -226,7 +226,7 @@ export function BlockTimeSlotModal({
 
             {/* Info Box */}
             <View style={styles.infoBox}>
-              <Ionicons name="information-circle" size={20} color={colors.sky} />
+              <Ionicons name="information-circle" size={20} color={colors.navy} />
               <Text style={styles.infoText}>
                 Blocked time slots cannot be booked by users. You can unblock them later if needed.
               </Text>
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   required: {
-    color: colors.track,
+    color: colors.heart,
   },
   dateDisplay: {
     flexDirection: 'row',
@@ -354,10 +354,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: colors.skyLight + '20',
+    backgroundColor: colors.navyLight + '20',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.sky + '40',
+    borderColor: colors.navy + '40',
   },
   infoText: {
     flex: 1,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   blockButton: {
-    backgroundColor: colors.track,
+    backgroundColor: colors.heart,
   },
   blockButtonText: {
     fontSize: 16,
