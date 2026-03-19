@@ -50,10 +50,10 @@ export const CreateLeagueScreen: React.FC = () => {
           {
             text: 'OK',
             onPress: () => {
-              // Navigate to league details
-              navigation.navigate('LeagueDetails' as never, {
+              // Replace this screen so user can't go back and re-submit
+              (navigation as any).replace('LeagueDetails', {
                 leagueId: newLeague.id,
-              } as never);
+              });
             },
           },
         ]
