@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": false,
@@ -16,7 +18,9 @@
     "sourceMap": true,
     "noEmitOnError": false
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "dist",
@@ -25,5 +29,6 @@
     "src/prisma/seed.ts",
     "src/middleware/rateLimiter.test.ts",
     "src/services/__tests__"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
