@@ -1,7 +1,0 @@
-                onPress={() => {
-                  if (selectedCourtIds.length === 1) {
-                    handleAddBlockSlot(selectedCourtIds[0]!);
-                  } else {
-                    Alert.alert('Select One Court', 'Please select a single court to block a time slot.');
-                  }
-                }}
