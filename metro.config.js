@@ -12,7 +12,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 // Ensure proper module resolution
-config.resolver.resolverMainFields = ['browser', 'module', 'main'];
+config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
 
 // Exclude the "All Roads" backup directory from bundling
 config.resolver.blockList = [

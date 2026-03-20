@@ -35,6 +35,7 @@ import cancelRequestRoutes from './routes/cancel-requests';
 import insuranceDocumentRoutes from './routes/insurance-documents';
 import reservationApprovalRoutes from './routes/reservation-approvals';
 import escrowTransactionRoutes from './routes/escrow-transactions';
+import { registerLeagueLockMiddleware } from './middleware/league-lock';
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ validateStripeEnv();
 
 const app = express();
 const prisma = new PrismaClient();
+registerLeagueLockMiddleware(prisma);
 const PORT = process.env.PORT || 3000;
 
 // Trust proxy when behind a reverse proxy (Railway, Heroku, etc.)

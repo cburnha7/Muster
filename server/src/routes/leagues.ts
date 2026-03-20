@@ -6,9 +6,11 @@ import { checkLeagueReady } from '../jobs/league-ready-check';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import { requirePlan } from '../middleware/subscription';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import { LeagueDeletionService } from '../services/LeagueDeletionService';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+const leagueDeletionService = new LeagueDeletionService();
 
 // GET /api/leagues - Get all leagues with filtering and pagination
 router.get('/', async (req: Request, res: Response) => {
@@ -101,6 +103,34 @@ router.get('/', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching leagues:', error);
     res.status(500).json({ error: 'Failed to fetch leagues' });
+  }
+});
+
+// GET /api/leagues/:id/deletion-preview - Preview deletion impact
+router.get('/:id/deletion-preview', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req.query.userId as string) || (req.headers['x-user-id'] as string);
+
+    const league = await prisma.league.findUnique({ where: { id } });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can access this' });
+    }
+
+    if (league.lockedFromDeletion) {
+      return res.status(403).json({ error: 'This league cannot be deleted because matches have been played' });
+    }
+
+    const preview = await leagueDeletionService.getDeletionPreview(id);
+    res.json(preview);
+  } catch (error) {
+    console.error('Error generating deletion preview:', error);
+    res.status(500).json({ error: 'Failed to generate deletion preview' });
   }
 });
 
@@ -623,16 +653,13 @@ router.put('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /api/leagues/:id - Delete league
-router.delete('/:id', async (req: Request, res: Response) => {
+// DELETE /api/leagues/:id - Delete league with full cascade
+router.delete('/:id', requireNonDependent, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body; // For authorization check
+    const { userId } = req.body;
 
-    // Check if league exists and user is operator
-    const existingLeague = await prisma.league.findUnique({
-      where: { id }
-    });
+    const existingLeague = await prisma.league.findUnique({ where: { id } });
 
     if (!existingLeague) {
       return res.status(404).json({ error: 'League not found' });
@@ -642,15 +669,15 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Only the league operator can delete this league' });
     }
 
-    // Delete league (cascade will handle related records)
-    await prisma.league.delete({
-      where: { id }
-    });
+    if (existingLeague.lockedFromDeletion) {
+      return res.status(403).json({ error: 'This league cannot be deleted because matches have been played' });
+    }
 
-    res.status(204).send();
-  } catch (error) {
+    const result = await leagueDeletionService.executeLeagueDeletion(id);
+    res.json(result);
+  } catch (error: any) {
     console.error('Error deleting league:', error);
-    res.status(500).json({ error: 'Failed to delete league' });
+    res.status(500).json({ error: 'Deletion failed: ' + error.message });
   }
 });
 

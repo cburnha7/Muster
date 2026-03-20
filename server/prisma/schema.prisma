@@ -326,6 +326,9 @@ model League {
   // Stripe Connect
   stripeConnectAccountId String? // Stripe Connect Express account ID for league commissioner payments
 
+  // Deletion lock
+  lockedFromDeletion Boolean @default(false)
+
   // Metadata
   imageUrl  String?
   createdAt DateTime @default(now())
