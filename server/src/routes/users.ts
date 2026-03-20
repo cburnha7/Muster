@@ -434,10 +434,46 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
       }));
     }
 
+    // 3. Event invitations — league events where the user is in invitedUserIds
+    const eventInvitations = await prisma.event.findMany({
+      where: {
+        invitedUserIds: { has: userId },
+        status: 'active',
+        startTime: { gte: new Date() },
+        bookings: { none: { userId, status: { in: ['confirmed', 'pending'] } } },
+      },
+      select: {
+        id: true,
+        title: true,
+        sportType: true,
+        startTime: true,
+        imageUrl: true,
+        eligibilityRestrictedToLeagues: true,
+        facility: {
+          select: { id: true, name: true, city: true, state: true },
+        },
+      },
+      orderBy: { startTime: 'asc' },
+      take: 50,
+    });
+
+    const mappedEventInvitations = eventInvitations.map((e) => ({
+      id: e.id,
+      type: 'event' as const,
+      eventId: e.id,
+      eventTitle: e.title,
+      sportType: e.sportType,
+      imageUrl: e.imageUrl,
+      startTime: e.startTime,
+      facilityName: e.facility?.name || null,
+      leagueId: e.eligibilityRestrictedToLeagues?.[0] || null,
+    }));
+
     res.json({
       rosterInvitations,
       leagueInvitations,
-      total: rosterInvitations.length + leagueInvitations.length,
+      eventInvitations: mappedEventInvitations,
+      total: rosterInvitations.length + leagueInvitations.length + mappedEventInvitations.length,
     });
   } catch (error) {
     console.error('Get user invitations error:', error);

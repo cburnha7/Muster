@@ -78,7 +78,16 @@ export class ScheduleGeneratorService {
         memberships: {
           where: { status: 'active', memberType: 'roster' },
           include: {
-            team: { select: { id: true, name: true } }
+            team: {
+              select: {
+                id: true,
+                name: true,
+                members: {
+                  where: { status: 'active' },
+                  select: { userId: true },
+                },
+              },
+            }
           }
         }
       }
@@ -116,11 +125,27 @@ export class ScheduleGeneratorService {
 
     const shellEvents = this.distributeMatchups(matchups, config);
 
+    // Build roster → player IDs map for populating invitedUserIds
+    const rosterPlayerMap = new Map<string, string[]>();
+    for (const membership of league.memberships) {
+      if (membership.team) {
+        rosterPlayerMap.set(
+          membership.team.id,
+          membership.team.members.map((m) => m.userId)
+        );
+      }
+    }
+
     // Create all events and matches in a transaction
     const result = await prisma.$transaction(async (tx) => {
       const createdEvents: string[] = [];
 
       for (const shell of shellEvents) {
+        // Collect player IDs from both rosters for invitations
+        const homePlayerIds = rosterPlayerMap.get(shell.homeRoster.id) || [];
+        const awayPlayerIds = rosterPlayerMap.get(shell.awayRoster.id) || [];
+        const invitedUserIds = [...new Set([...homePlayerIds, ...awayPlayerIds])];
+
         const event = await tx.event.create({
           data: {
             title: `${shell.homeRoster.name} vs ${shell.awayRoster.name}`,
@@ -138,6 +163,7 @@ export class ScheduleGeneratorService {
             scheduledStatus: 'unscheduled',
             eligibilityRestrictedToLeagues: [leagueId],
             eligibilityRestrictedToTeams: [shell.homeRoster.id, shell.awayRoster.id],
+            invitedUserIds,
           }
         });
 
@@ -717,121 +743,6 @@ export class ScheduleGeneratorService {
   }
 
   /**
-   * Persist a confirmed schedule as Event + Match records.
-   * Wraps all DB writes in a transaction. After persisting, sends push
-   * notifications to all confirmed roster players.
-   */
-  static async confirmSchedule(
-    leagueId: string,
-    organizerId: string,
-    events: Array<{
-      homeRosterId: string;
-      homeRosterName: string;
-      awayRosterId: string;
-      awayRosterName: string;
-      scheduledAt: string;
-      round: number;
-      flag?: 'playoffs' | 'tournament';
-    }>
-  ): Promise<{ eventsCreated: number }> {
-    const league = await prisma.league.findUnique({
-      where: { id: leagueId },
-      include: {
-        memberships: {
-          where: { status: 'active', memberType: 'roster' },
-          include: {
-            team: {
-              select: {
-                id: true,
-                members: {
-                  where: { status: 'active' },
-                  select: { userId: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!league) throw new Error('League not found');
-
-    const result = await prisma.$transaction(async (tx) => {
-      const createdEventIds: string[] = [];
-
-      for (const ev of events) {
-        const scheduledAt = new Date(ev.scheduledAt);
-
-        const event = await tx.event.create({
-          data: {
-            title: `${ev.homeRosterName} vs ${ev.awayRosterName}`,
-            description: `League match: ${league.name} — Round ${ev.round}`,
-            sportType: league.sportType,
-            skillLevel: league.skillLevel,
-            eventType: 'game',
-            status: 'active',
-            startTime: scheduledAt,
-            endTime: new Date(scheduledAt.getTime() + 2 * 60 * 60 * 1000),
-            maxParticipants: 50,
-            price: 0,
-            organizerId,
-            facilityId: null,
-            scheduledStatus: 'unscheduled',
-            eligibilityRestrictedToLeagues: [leagueId],
-            eligibilityRestrictedToTeams: [ev.homeRosterId, ev.awayRosterId],
-          },
-        });
-
-        await tx.match.create({
-          data: {
-            leagueId,
-            homeTeamId: ev.homeRosterId,
-            awayTeamId: ev.awayRosterId,
-            scheduledAt,
-            status: 'scheduled',
-            eventId: event.id,
-            seasonId: league.seasonId || undefined,
-          },
-        });
-
-        createdEventIds.push(event.id);
-      }
-
-      await tx.league.update({
-        where: { id: leagueId },
-        data: { scheduleGenerated: true },
-      });
-
-      return createdEventIds;
-    });
-
-    // Collect all unique player IDs from confirmed rosters
-    const playerIds = new Set<string>();
-    for (const membership of league.memberships) {
-      if (membership.team) {
-        for (const member of membership.team.members) {
-          playerIds.add(member.userId);
-        }
-      }
-    }
-
-    // Send notifications — failures are non-blocking
-    for (const playerId of playerIds) {
-      try {
-        await NotificationService.sendNotification(playerId, {
-          title: 'Schedule Published',
-          body: `${league.name} schedule has been published.`,
-          data: { leagueId, type: 'schedule_published' },
-        });
-      } catch {
-        // Non-critical: continue if notification fails
-      }
-    }
-
-    return { eventsCreated: result.length };
-  }
-
-  /**
    * Generate a tournament bracket for registered rosters.
    * Supports single and double elimination formats.
    * First round uses actual roster names; subsequent rounds use "Winner of Game N" placeholders.
@@ -908,11 +819,27 @@ export class ScheduleGeneratorService {
 
     if (!league) throw new Error('League not found');
 
+    // Build roster → player IDs map for populating invitedUserIds
+    const rosterPlayerMap = new Map<string, string[]>();
+    for (const membership of league.memberships) {
+      if (membership.team) {
+        rosterPlayerMap.set(
+          membership.team.id,
+          membership.team.members.map((m) => m.userId)
+        );
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const createdEventIds: string[] = [];
 
       for (const ev of events) {
         const scheduledAt = new Date(ev.scheduledAt);
+
+        // Collect player IDs from both rosters for invitations
+        const homePlayerIds = rosterPlayerMap.get(ev.homeRosterId) || [];
+        const awayPlayerIds = rosterPlayerMap.get(ev.awayRosterId) || [];
+        const invitedUserIds = [...new Set([...homePlayerIds, ...awayPlayerIds])];
 
         const event = await tx.event.create({
           data: {
@@ -931,6 +858,7 @@ export class ScheduleGeneratorService {
             scheduledStatus: 'unscheduled',
             eligibilityRestrictedToLeagues: [leagueId],
             eligibilityRestrictedToTeams: [ev.homeRosterId, ev.awayRosterId],
+            invitedUserIds,
           },
         });
 

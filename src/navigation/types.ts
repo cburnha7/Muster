@@ -116,6 +116,7 @@ export type TeamsStackParamList = {
   AcceptGameChallenge: { bookingId: string };
   CreatePublicEvent: { rosterId: string };
   PayPlayerDues: { rosterId: string; seasonId: string };
+  EventDetails: { eventId: string };
 };
 
 export type LeaguesStackParamList = {

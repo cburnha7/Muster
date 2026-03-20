@@ -23,7 +23,7 @@ import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
-import { userService, RosterInvitation, LeagueInvitation, ReadyToScheduleLeague } from '../../services/api/UserService';
+import { userService, RosterInvitation, LeagueInvitation, EventInvitation, ReadyToScheduleLeague } from '../../services/api/UserService';
 
 // Context
 import { useAuth } from '../../context/AuthContext';
@@ -105,6 +105,7 @@ export function HomeScreen() {
   // Invitations state
   const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
   const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
+  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
 
   // Ready to schedule leagues state
@@ -227,6 +228,7 @@ export function HomeScreen() {
       const result = await userService.getInvitations();
       setRosterInvitations(result.rosterInvitations || []);
       setLeagueInvitations(result.leagueInvitations || []);
+      setEventInvitations(result.eventInvitations || []);
     } catch (err) {
       console.error('Failed to load invitations:', err);
     } finally {
@@ -255,6 +257,13 @@ export function HomeScreen() {
     (navigation as any).navigate('Teams', {
       screen: 'TeamDetails',
       params: { teamId: inv.rosterId, readOnly: true },
+    });
+  }, [navigation]);
+
+  const handleEventInvitationPress = useCallback((inv: EventInvitation) => {
+    (navigation as any).navigate('Events', {
+      screen: 'EventDetails',
+      params: { eventId: inv.eventId },
     });
   }, [navigation]);
 
@@ -470,8 +479,8 @@ export function HomeScreen() {
         )}
 
         {/* Invitations section */}
-        {(rosterInvitations.length > 0 || leagueInvitations.length > 0) && (
-          <CollapsibleSection title="Invitations" count={rosterInvitations.length + leagueInvitations.length}>
+        {(rosterInvitations.length > 0 || leagueInvitations.length > 0 || eventInvitations.length > 0) && (
+          <CollapsibleSection title="Invitations" count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length}>
             <View style={styles.sectionInner}>
             {rosterInvitations.map((inv) => (
               <TouchableOpacity
@@ -499,6 +508,23 @@ export function HomeScreen() {
                 <View style={styles.invitationInfo}>
                   <Text style={styles.invitationTitle}>{inv.leagueName}</Text>
                   <Text style={styles.invitationSubtitle}>League invitation</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+              </TouchableOpacity>
+            ))}
+            {eventInvitations.map((inv) => (
+              <TouchableOpacity
+                key={inv.id}
+                style={styles.invitationCard}
+                onPress={() => handleEventInvitationPress(inv)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                <View style={styles.invitationInfo}>
+                  <Text style={styles.invitationTitle}>{inv.eventTitle}</Text>
+                  <Text style={styles.invitationSubtitle}>
+                    {inv.startTime ? new Date(inv.startTime).toLocaleDateString() : 'Event invitation'}
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
               </TouchableOpacity>

@@ -323,6 +323,7 @@ export class UserService extends BaseApiService {
   async getInvitations(): Promise<{
     rosterInvitations: RosterInvitation[];
     leagueInvitations: LeagueInvitation[];
+    eventInvitations: EventInvitation[];
     total: number;
   }> {
     return this.get(`${API_ENDPOINTS.USERS.BASE}/invitations`, {
@@ -367,6 +368,18 @@ export interface LeagueInvitation {
   rosterId?: string;
   rosterName?: string;
   invitedAt: string;
+}
+
+export interface EventInvitation {
+  id: string;
+  type: 'event';
+  eventId: string;
+  eventTitle: string;
+  sportType?: string;
+  imageUrl?: string;
+  startTime: string;
+  facilityName?: string | null;
+  leagueId?: string | null;
 }
 
 export interface ReadyToScheduleLeague {

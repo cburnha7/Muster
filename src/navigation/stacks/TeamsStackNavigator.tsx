@@ -5,6 +5,7 @@ import { TeamsListScreen } from '../../screens/teams/TeamsListScreen';
 import { TeamDetailsScreen } from '../../screens/teams/TeamDetailsScreen';
 import { CreateTeamScreen } from '../../screens/teams/CreateTeamScreen';
 import { JoinTeamScreen } from '../../screens/teams/JoinTeamScreen';
+import { EventDetailsScreen } from '../../screens/events/EventDetailsScreen';
 
 const Stack = createNativeStackNavigator<TeamsStackParamList>();
 
@@ -36,6 +37,10 @@ export function TeamsStackNavigator(): JSX.Element {
         options={{
           presentation: 'modal',
         }}
+      />
+      <Stack.Screen 
+        name="EventDetails" 
+        component={EventDetailsScreen}
       />
     </Stack.Navigator>
   );
