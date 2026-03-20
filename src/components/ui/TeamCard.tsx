@@ -101,7 +101,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
               {team.name}
             </Text>
             <Text style={styles.captain}>
-              Manager: {team.captain?.firstName} {team.captain?.lastName}
+              {team.captain?.firstName} {team.captain?.lastName}
             </Text>
           </View>
         </View>
@@ -130,12 +130,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
           </Text>
         </View>
 
-        <View style={styles.detailRow}>
-          <Ionicons name="people-outline" size={16} color="#666" />
-          <Text style={[styles.detailText, isFull && styles.fullText]}>
-            {team.members.length}/{team.maxMembers} players
-          </Text>
-        </View>
+
 
         <View style={styles.detailRow}>
           <Ionicons

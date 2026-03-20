@@ -213,7 +213,6 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 onPress={() => (navigation as any).navigate('FacilityDetails', { facilityId: group.id })}
                 activeOpacity={0.7}
               >
-                <Ionicons name="location" size={16} color={colors.pine} />
                 <Text style={styles.facilityName} numberOfLines={1}>{group.name}</Text>
                 <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
               </TouchableOpacity>
