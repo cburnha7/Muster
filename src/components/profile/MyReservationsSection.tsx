@@ -144,11 +144,34 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   // Filter to upcoming confirmed reservations (include used ones for event link)
   const upcomingReservations = reservations
     .filter((r) => {
-      const slotDate = new Date(r.timeSlot.date);
-      const slotDateOnly = Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate());
+      if (r.status !== 'confirmed') return false;
+
+      // Parse the slot date as local (YYYY-MM-DD → year, month, day)
+      const parts = r.timeSlot.date.split('T')[0]!.split('-');
+      const slotYear = parseInt(parts[0]!, 10);
+      const slotMonth = parseInt(parts[1]!, 10) - 1;
+      const slotDay = parseInt(parts[2]!, 10);
+
       const now = new Date();
-      const todayDateOnly = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-      return slotDateOnly >= todayDateOnly && r.status === 'confirmed';
+      const todayYear = now.getFullYear();
+      const todayMonth = now.getMonth();
+      const todayDay = now.getDate();
+
+      // Compare as local calendar dates
+      const slotDateNum = slotYear * 10000 + slotMonth * 100 + slotDay;
+      const todayDateNum = todayYear * 10000 + todayMonth * 100 + todayDay;
+
+      if (slotDateNum < todayDateNum) return false;
+
+      // For today's slots, check if the end time has already passed
+      if (slotDateNum === todayDateNum && r.timeSlot.endTime) {
+        const [h, m] = r.timeSlot.endTime.split(':').map(Number);
+        const endMinutes = (h || 0) * 60 + (m || 0);
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        if (endMinutes <= nowMinutes) return false;
+      }
+
+      return true;
     })
     .sort((a, b) => {
       const dateA = new Date(a.timeSlot.date).getTime();
@@ -219,10 +242,12 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                   ) : (
                     <View style={styles.slotActions}>
                       <TouchableOpacity style={styles.createButton} onPress={() => handleCreateEvent(r)} activeOpacity={0.7}>
-                        <Ionicons name="add-circle" size={18} color={colors.pine} />
+                        <Ionicons name="add-circle" size={16} color={colors.pine} />
+                        <Text style={styles.createButtonText}>Create Event</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelReservation(r)} activeOpacity={0.7}>
-                        <Ionicons name="close-circle" size={18} color={colors.heart} />
+                        <Ionicons name="close-circle" size={16} color={colors.heart} />
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -314,14 +339,32 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   createButton: {
-    padding: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: 8,
     backgroundColor: `${colors.pine}10`,
+    gap: 4,
+  },
+  createButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 12,
+    color: colors.pine,
   },
   cancelButton: {
-    padding: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: 8,
     backgroundColor: `${colors.heart}10`,
+    gap: 4,
+  },
+  cancelButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 12,
+    color: colors.heart,
   },
   viewEventButton: {
     flexDirection: 'row',
