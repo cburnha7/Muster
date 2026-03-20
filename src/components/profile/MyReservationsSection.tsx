@@ -129,7 +129,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
   };
 
   const formatTime = (time: string | undefined) => {

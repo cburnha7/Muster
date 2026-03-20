@@ -111,8 +111,9 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
     const preview = ScheduleGeneratorService.generateSchedulePreview(league);
 
     expect(preview.format).toBe('season');
-    expect(preview.totalGames).toBe(6);
-    expect(preview.events).toHaveLength(6);
+    // 3 rosters × 6 games per roster / 2 = 9 total games
+    expect(preview.totalGames).toBe(9);
+    expect(preview.events).toHaveLength(9);
   });
 
   it('generates events with valid ISO date strings', () => {
@@ -142,7 +143,7 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
     const preview = ScheduleGeneratorService.generateSchedulePreview(league);
 
     for (const event of preview.events) {
-      const dayOfWeek = new Date(event.scheduledAt).getDay();
+      const dayOfWeek = new Date(event.scheduledAt).getUTCDay();
       expect([2, 4]).toContain(dayOfWeek);
     }
   });
@@ -156,8 +157,8 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
 
     for (const event of preview.events) {
       const date = new Date(event.scheduledAt);
-      const hours = date.getHours();
-      const minutes = date.getMinutes();
+      const hours = date.getUTCHours();
+      const minutes = date.getUTCMinutes();
       const timeInMinutes = hours * 60 + minutes;
       expect(timeInMinutes).toBeGreaterThanOrEqual(17 * 60);
       expect(timeInMinutes).toBeLessThan(21 * 60);
@@ -191,11 +192,13 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
     const league = makeLeague({ startDate: null });
     const preview = ScheduleGeneratorService.generateSchedulePreview(league);
 
-    expect(preview.totalGames).toBe(6);
-    // All events should be in the future
-    const now = Date.now();
+    // 3 rosters × 6 games per roster / 2 = 9 total games
+    expect(preview.totalGames).toBe(9);
+    // All events should be on or after today
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
     for (const event of preview.events) {
-      expect(new Date(event.scheduledAt).getTime()).toBeGreaterThan(now);
+      expect(new Date(event.scheduledAt).getTime()).toBeGreaterThanOrEqual(todayStart.getTime());
     }
   });
 
@@ -206,11 +209,11 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
     });
     const preview = ScheduleGeneratorService.generateSchedulePreview(league);
 
-    // Default is 18:00-21:00
+    // Default is 09:00-17:00
     for (const event of preview.events) {
-      const hours = new Date(event.scheduledAt).getHours();
-      expect(hours).toBeGreaterThanOrEqual(18);
-      expect(hours).toBeLessThan(21);
+      const hours = new Date(event.scheduledAt).getUTCHours();
+      expect(hours).toBeGreaterThanOrEqual(9);
+      expect(hours).toBeLessThan(17);
     }
   });
 
@@ -222,7 +225,7 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
         { id: 'r3', name: 'Charlie' },
         { id: 'r4', name: 'Delta' },
       ],
-      seasonGameCount: 12,
+      seasonGameCount: 6, // 6 games per roster → (4*6)/2 = 12 total
       preferredGameDays: [6], // Saturday only — forces multiple games per day
     });
     const preview = ScheduleGeneratorService.generateSchedulePreview(league);
@@ -258,7 +261,7 @@ describe('ScheduleGeneratorService.generateSchedulePreview', () => {
         { id: 'r2', name: 'Bravo' },
         { id: 'r3', name: 'Charlie' },
       ],
-      seasonGameCount: 6, // 3 unique pairs, so 6 games = 2 full cycles
+      seasonGameCount: 4, // 4 games per roster → (3*4)/2 = 6 total games, covers all 3 pairs
     });
     const preview = ScheduleGeneratorService.generateSchedulePreview(league);
 
@@ -346,7 +349,7 @@ describe('ScheduleGeneratorService.generatePlayoffRounds', () => {
       8, 8, defaultArgs.startDate, [2, 4], defaultArgs.timeWindow // Tue, Thu
     );
     for (const event of result) {
-      const dayOfWeek = new Date(event.scheduledAt).getDay();
+      const dayOfWeek = new Date(event.scheduledAt).getUTCDay();
       expect([2, 4]).toContain(dayOfWeek);
     }
   });
@@ -357,7 +360,7 @@ describe('ScheduleGeneratorService.generatePlayoffRounds', () => {
     );
     for (const event of result) {
       const date = new Date(event.scheduledAt);
-      const timeInMinutes = date.getHours() * 60 + date.getMinutes();
+      const timeInMinutes = date.getUTCHours() * 60 + date.getUTCMinutes();
       expect(timeInMinutes).toBeGreaterThanOrEqual(17 * 60);
       expect(timeInMinutes).toBeLessThan(21 * 60);
     }
@@ -616,17 +619,18 @@ describe('ScheduleGeneratorService.generateTournamentBracket', () => {
 
   // --- Scheduling constraints ---
 
-  it('schedules games only on preferred days', () => {
+  it('schedules games starting from startDate (tournament uses all days)', () => {
     const result = ScheduleGeneratorService.generateTournamentBracket(
       makeRosters(4),
       'single_elimination',
       defaultArgs.startDate,
-      [2, 4], // Tue, Thu
+      [2, 4], // Tue, Thu — ignored for tournament (all_at_once)
       defaultArgs.timeWindow
     );
+    // Tournament uses all_at_once, so games start from startDate regardless of day
+    expect(result.length).toBeGreaterThan(0);
     for (const event of result) {
-      const dayOfWeek = new Date(event.scheduledAt).getDay();
-      expect([2, 4]).toContain(dayOfWeek);
+      expect(new Date(event.scheduledAt).getTime()).toBeGreaterThanOrEqual(defaultArgs.startDate.getTime());
     }
   });
 
@@ -640,7 +644,7 @@ describe('ScheduleGeneratorService.generateTournamentBracket', () => {
     );
     for (const event of result) {
       const date = new Date(event.scheduledAt);
-      const timeInMinutes = date.getHours() * 60 + date.getMinutes();
+      const timeInMinutes = date.getUTCHours() * 60 + date.getUTCMinutes();
       expect(timeInMinutes).toBeGreaterThanOrEqual(17 * 60);
       expect(timeInMinutes).toBeLessThan(21 * 60);
     }

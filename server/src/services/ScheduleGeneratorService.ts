@@ -1,5 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { NotificationService } from './NotificationService';
+import {
+  generateSchedule as fairGenerateSchedule,
+  SchedulerInput,
+  RosterInfo as FairRosterInfo,
+} from './FairScheduler';
 
 const prisma = new PrismaClient();
 
@@ -108,22 +113,32 @@ export class ScheduleGeneratorService {
       throw new Error('Schedule configuration incomplete: preferredGameDays and seasonGameCount are required');
     }
 
-    const matchups = this.generateMatchups(rosters, league.seasonGameCount);
-
-    const config: DistributeConfig = {
-      preferredGameDays: league.preferredGameDays || [],
-      timeWindowStart: league.preferredTimeWindowStart || '09:00',
-      timeWindowEnd: league.preferredTimeWindowEnd || '17:00',
+    const matchupsResult = fairGenerateSchedule({
+      scheduleType: 'season',
+      frequency: (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') || 'weekly',
       startDate: league.registrationCloseDate
         ? new Date(new Date(league.registrationCloseDate).getTime() + 7 * 24 * 60 * 60 * 1000)
         : league.startDate
           ? new Date(league.startDate)
           : new Date(),
       endDate: league.endDate ? new Date(league.endDate) : null,
-      gameFrequency: league.gameFrequency || 'weekly',
-    };
+      teams: rosters,
+      regularSeasonGamesPerTeam: league.seasonGameCount,
+      allowedDaysOfWeek: league.preferredGameDays || [],
+      gameTimeWindowStart: league.preferredTimeWindowStart || '09:00',
+      gameTimeWindowEnd: league.preferredTimeWindowEnd || '17:00',
+    });
 
-    const shellEvents = this.distributeMatchups(matchups, config);
+    if (!matchupsResult.isValid) {
+      throw new Error(matchupsResult.warnings.join(' '));
+    }
+
+    const shellEvents: ShellEvent[] = matchupsResult.regularSeasonGames.map(g => ({
+      homeRoster: g.homeTeam,
+      awayRoster: g.awayTeam,
+      scheduledAt: g.scheduledAt,
+      round: g.round,
+    }));
 
     // Build roster → player IDs map for populating invitedUserIds
     const rosterPlayerMap = new Map<string, string[]>();
@@ -215,35 +230,60 @@ export class ScheduleGeneratorService {
       throw error;
     }
 
-    const rosterInfos: RosterInfo[] = rosters.map(r => ({ id: r.id, name: r.name }));
+    const format = league.leagueFormat || 'season';
 
-    const matchups = this.generateMatchups(rosterInfos, league.seasonGameCount);
-
-    const config: DistributeConfig = {
-      preferredGameDays: league.preferredGameDays || [],
-      timeWindowStart: league.preferredTimeWindowStart || '09:00',
-      timeWindowEnd: league.preferredTimeWindowEnd || '17:00',
+    // Map league config to FairScheduler input
+    const schedulerInput: SchedulerInput = {
+      scheduleType: format === 'season_with_playoffs' ? 'season_playoffs'
+        : format === 'tournament' ? 'tournament'
+        : 'season',
+      frequency: (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') || 'weekly',
       startDate: league.startDate ? new Date(league.startDate) : new Date(),
       endDate: league.endDate ? new Date(league.endDate) : null,
-      gameFrequency: league.gameFrequency || 'weekly',
+      teams: rosters.map(r => ({ id: r.id, name: r.name })),
+      regularSeasonGamesPerTeam: league.seasonGameCount,
+      allowedDaysOfWeek: league.preferredGameDays || [],
+      gameTimeWindowStart: league.preferredTimeWindowStart || '09:00',
+      gameTimeWindowEnd: league.preferredTimeWindowEnd || '17:00',
+      playoffTeamCount: league.playoffTeamCount ?? undefined,
+      eliminationType: league.eliminationFormat === 'double_elimination' ? 'double'
+        : league.eliminationFormat === 'single_elimination' ? 'single'
+        : undefined,
     };
 
-    const shellEvents = this.distributeMatchups(matchups, config);
+    const result = fairGenerateSchedule(schedulerInput);
 
-    // Verify no double-booking: no roster in two overlapping games on the same day
-    this.validateNoDoubleBooking(shellEvents);
+    if (!result.isValid) {
+      const error: any = new Error(result.warnings.join(' '));
+      error.statusCode = 400;
+      throw error;
+    }
 
-    const events: SchedulePreviewEvent[] = shellEvents.map(e => ({
-      homeRoster: e.homeRoster,
-      awayRoster: e.awayRoster,
-      scheduledAt: e.scheduledAt.toISOString(),
-      round: e.round,
+    // Map regular season games to SchedulePreviewEvent format
+    const seasonEvents: SchedulePreviewEvent[] = result.regularSeasonGames.map(g => ({
+      homeRoster: g.homeTeam,
+      awayRoster: g.awayTeam,
+      scheduledAt: g.scheduledAt.toISOString(),
+      round: g.round,
     }));
+
+    // Map playoff/tournament games
+    const bracketEvents: SchedulePreviewEvent[] = result.playoffGames.map(g => ({
+      homeRoster: g.homeTeam,
+      awayRoster: g.awayTeam,
+      scheduledAt: g.scheduledAt.toISOString(),
+      round: g.round,
+      flag: g.flag,
+    }));
+
+    const events = [...seasonEvents, ...bracketEvents];
 
     return {
       events,
       totalGames: events.length,
-      format: 'season',
+      format: format === 'season_with_playoffs' ? 'season_with_playoffs'
+        : format === 'tournament' ? 'tournament'
+        : 'season',
     };
   }
 
@@ -524,13 +564,13 @@ export class ScheduleGeneratorService {
       let slotMinutes = windowStartMinutes;
       while (slotMinutes + 120 <= windowEndMinutes) {
         const slot = new Date(current);
-        slot.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+        slot.setUTCHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
         slots.push(slot);
         slotMinutes += 120;
       }
 
       // Move to next day
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     return slots;
@@ -557,19 +597,19 @@ export class ScheduleGeneratorService {
     const current = new Date(startDate);
 
     while (current <= limitDate) {
-      if (preferredGameDays.includes(current.getDay())) {
+      if (preferredGameDays.includes(current.getUTCDay())) {
         // Generate time slots spaced 2 hours apart within the window
         let slotMinutes = windowStartMinutes;
         while (slotMinutes + 120 <= windowEndMinutes) {
           const slot = new Date(current);
-          slot.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+          slot.setUTCHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
           slots.push(slot);
           slotMinutes += 120;
         }
       }
 
       // Move to next day
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     return slots;
@@ -602,8 +642,8 @@ export class ScheduleGeneratorService {
     const current = new Date(startDate);
 
     while (current <= limitDate) {
-      if (preferredGameDays.includes(current.getDay())) {
-        const monthKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+      if (preferredGameDays.includes(current.getUTCDay())) {
+        const monthKey = `${current.getUTCFullYear()}-${String(current.getUTCMonth() + 1).padStart(2, '0')}`;
 
         if (!monthMap.has(monthKey)) {
           monthMap.set(monthKey, []);
@@ -613,14 +653,14 @@ export class ScheduleGeneratorService {
         let slotMinutes = windowStartMinutes;
         while (slotMinutes + 120 <= windowEndMinutes) {
           const slot = new Date(current);
-          slot.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+          slot.setUTCHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
           monthMap.get(monthKey)!.push(slot);
           slotMinutes += 120;
         }
       }
 
       // Move to next day
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     // Convert map to array, preserving chronological order

@@ -28,32 +28,32 @@ export interface ScheduleEventEditorProps {
 const generateId = (): string =>
   `evt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
-/** Parse "YYYY-MM-DD" into a Date (local). */
+/** Parse "YYYY-MM-DD" into a Date (UTC). */
 const parseDateString = (str: string): Date => {
   const parts = str.split('-').map(Number);
-  return new Date(parts[0] ?? 2000, (parts[1] ?? 1) - 1, parts[2] ?? 1);
+  return new Date(Date.UTC(parts[0] ?? 2000, (parts[1] ?? 1) - 1, parts[2] ?? 1));
 };
 
-/** Parse "HH:MM" into a Date for the time picker. */
+/** Parse "HH:MM" into a Date for the time picker (UTC). */
 const parseTimeString = (str: string): Date => {
   const date = new Date();
   const parts = str.split(':').map(Number);
-  date.setHours(parts[0] ?? 0, parts[1] ?? 0, 0, 0);
+  date.setUTCHours(parts[0] ?? 0, parts[1] ?? 0, 0, 0);
   return date;
 };
 
-/** Format a Date to "YYYY-MM-DD". */
+/** Format a Date to "YYYY-MM-DD" using UTC. */
 const formatDateValue = (d: Date): string => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
 
-/** Format a Date to "HH:MM" (24-hour). */
+/** Format a Date to "HH:MM" (24-hour) using UTC. */
 const formatTimeValue = (d: Date): string => {
-  const h = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
+  const h = String(d.getUTCHours()).padStart(2, '0');
+  const min = String(d.getUTCMinutes()).padStart(2, '0');
   return `${h}:${min}`;
 };
 
@@ -66,6 +66,7 @@ const formatDateDisplay = (str: string): string => {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'UTC',
   });
 };
 
@@ -77,6 +78,7 @@ const formatTimeDisplay = (str: string): string => {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+    timeZone: 'UTC',
   });
 };
 
@@ -125,7 +127,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
     if (!allFilled) return;
     const timeParts = time.split(':').map(Number);
     const scheduledDate = parseDateString(date);
-    scheduledDate.setHours(timeParts[0] ?? 0, timeParts[1] ?? 0, 0, 0);
+    scheduledDate.setUTCHours(timeParts[0] ?? 0, timeParts[1] ?? 0, 0, 0);
 
     const saved: ScheduleEvent = {
       id: event?.id ?? generateId(),

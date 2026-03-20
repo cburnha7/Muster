@@ -523,7 +523,7 @@ export function HomeScreen() {
                 <View style={styles.invitationInfo}>
                   <Text style={styles.invitationTitle}>{inv.eventTitle}</Text>
                   <Text style={styles.invitationSubtitle}>
-                    {inv.startTime ? new Date(inv.startTime).toLocaleDateString() : 'Event invitation'}
+                    {inv.startTime ? new Date(inv.startTime).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'Event invitation'}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />

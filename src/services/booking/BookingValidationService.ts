@@ -229,11 +229,13 @@ export class BookingValidationService {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'UTC',
     });
     const eventTime = eventStartTime.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: 'UTC',
     });
 
     let message = `You have successfully booked "${event.title}" on ${eventDate} at ${eventTime}`;

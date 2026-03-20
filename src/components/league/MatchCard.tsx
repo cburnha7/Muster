@@ -16,6 +16,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, style }) =
       weekday: 'short',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 
@@ -24,6 +25,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, style }) =
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: 'UTC',
     });
   };
 

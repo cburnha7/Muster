@@ -2223,52 +2223,9 @@ router.post('/:id/generate-schedule', optionalAuthMiddleware, async (req: Reques
 
     const format = league.leagueFormat || 'season';
 
-    if (format === 'tournament') {
-      // Tournament format: generate bracket instead of round-robin
-      const tournamentEvents = ScheduleGeneratorService.generateTournamentBracket(
-        rosters,
-        (league.eliminationFormat as 'single_elimination' | 'double_elimination') || 'single_elimination',
-        league.startDate ? new Date(league.startDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        league.preferredGameDays || [6], // default to Saturday
-        {
-          start: league.preferredTimeWindowStart || '18:00',
-          end: league.preferredTimeWindowEnd || '21:00',
-        },
-        league.endDate ? new Date(league.endDate) : null
-      );
-
-      return res.json({
-        events: tournamentEvents,
-      });
-    }
-
-    // Season or season_with_playoffs: generate round-robin preview
+    // generateSchedulePreview now handles all formats (season, season_with_playoffs, tournament)
+    // via the FairScheduler engine
     const preview = ScheduleGeneratorService.generateSchedulePreview(leagueWithRosters);
-
-    if (format === 'season_with_playoffs' && league.playoffTeamCount && league.playoffTeamCount >= 2) {
-      // Find the latest regular season date to start playoffs after it
-      const lastRegularDate = preview.events.length > 0
-        ? new Date(Math.max(...preview.events.map(e => new Date(e.scheduledAt).getTime())))
-        : (league.startDate ? new Date(league.startDate) : new Date());
-
-      // Start playoffs one week after the last regular season game
-      const playoffStartDate = new Date(lastRegularDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-      const playoffEvents = ScheduleGeneratorService.generatePlayoffRounds(
-        rosters.length,
-        league.playoffTeamCount,
-        playoffStartDate,
-        league.preferredGameDays || [6],
-        {
-          start: league.preferredTimeWindowStart || '18:00',
-          end: league.preferredTimeWindowEnd || '21:00',
-        }
-      );
-
-      return res.json({
-        events: [...preview.events, ...playoffEvents],
-      });
-    }
 
     return res.json({
       events: preview.events,

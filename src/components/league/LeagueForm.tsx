@@ -916,8 +916,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           {/* Number of Games per Roster — Season and Season with Playoffs only */}
           {(leagueFormat === 'season' || leagueFormat === 'season_with_playoffs') && (
             <FormInput
-              label="Number of Games per Roster"
-              placeholder="Total games per roster"
+              label="Number of Regular Season Games per Roster"
+              placeholder="Total regular season games per roster"
               value={seasonGameCount}
               onChangeText={setSeasonGameCount}
               keyboardType="numeric"
@@ -1307,7 +1307,8 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontFamily: fonts.body,
-    ...typeScale.bodySm,
+    fontSize: 16,
+    lineHeight: 22,
     color: colors.ink,
     marginBottom: Spacing.xs,
     fontWeight: '600',

@@ -119,6 +119,7 @@ export const AssignFacilityScreen: React.FC = () => {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 

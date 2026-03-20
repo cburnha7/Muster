@@ -93,6 +93,7 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
             month: 'long',
             day: 'numeric',
             year: 'numeric',
+            timeZone: 'UTC',
           })}
         </Text>
       </View>
