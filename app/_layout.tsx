@@ -1,22 +1,8 @@
-// Minimal layout — uses Expo Router's Slot to render child routes.
-// The actual app content is rendered by app/index.tsx.
+// Stub — the real entry point is index.js → App.tsx.
+// This file exists only to prevent Expo from complaining about a missing app directory.
 import React from 'react';
-import { Slot } from 'expo-router';
-import { ReduxProvider } from '../src/store/Provider';
-import { AuthProvider } from '../src/context/AuthContext';
-import { NotificationProvider } from '../src/services/notifications';
-import { ErrorBoundary } from '../src/components/error/ErrorBoundary';
+import { View } from 'react-native';
 
 export default function RootLayout() {
-  return (
-    <ErrorBoundary>
-      <ReduxProvider>
-        <AuthProvider>
-          <NotificationProvider>
-            <Slot />
-          </NotificationProvider>
-        </AuthProvider>
-      </ReduxProvider>
-    </ErrorBoundary>
-  );
+  return <View />;
 }

@@ -61,8 +61,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      // Initialize auth service (loads mock user in development)
-      await authService.initialize();
+      // Initialize auth service with a timeout to prevent hanging on bad network
+      const initPromise = authService.initialize();
+      const timeoutPromise = new Promise<boolean>((_, reject) => 
+        setTimeout(() => reject(new Error('Auth init timeout')), 5000)
+      );
+      
+      try {
+        await Promise.race([initPromise, timeoutPromise]);
+      } catch (err) {
+        console.warn('Auth initialization timed out or failed, continuing without session');
+      }
       
       // Load cached user from TokenStorage into Redux
       await dispatch(loadCachedUser() as any);

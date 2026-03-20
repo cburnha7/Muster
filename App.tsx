@@ -14,7 +14,7 @@ function AppContent() {
   const { fontsLoaded, error } = useFonts();
 
   if (!fontsLoaded) {
-    return null;
+    return <View style={{ flex: 1, backgroundColor: colors.cream }} />;
   }
 
   if (error) {
