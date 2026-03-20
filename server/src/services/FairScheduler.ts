@@ -380,29 +380,98 @@ function assignSlotsToMatchups(
 ): { games: ScheduledGame[]; warnings: string[] } {
   const warnings: string[] = [];
 
-  // Track which rosters are busy at each slot index
-  const slotBusy = new Map<number, Set<string>>(); // slotIndex → Set of rosterIds
+  if (matchups.length === 0 || slots.length === 0) {
+    return { games: [], warnings };
+  }
+
+  // ── Step 1: Group slots by calendar day (UTC) ──
+  // Each "day" has an ordered list of slot indices.
+  const dayKey = (d: Date) => formatDateUTC(d); // "YYYY-MM-DD"
+  const dayOrder: string[] = []; // ordered unique day keys
+  const daySlots = new Map<string, number[]>(); // dayKey → slot indices
+
+  for (let si = 0; si < slots.length; si++) {
+    const dk = dayKey(slots[si]);
+    if (!daySlots.has(dk)) {
+      daySlots.set(dk, []);
+      dayOrder.push(dk);
+    }
+    daySlots.get(dk)!.push(si);
+  }
+
+  // ── Step 2: Spread-first assignment ──
+  // Strategy: cycle through days round-robin, assigning at most one game per
+  // day per pass before moving to the next day. Within a day, pick the
+  // earliest slot that doesn't conflict with rosters already playing that slot.
+  // This minimises games-per-day and games-per-roster-per-day.
+
+  const slotBusy = new Map<number, Set<string>>(); // slotIndex → busy rosterIds
+  const dayGameCount = new Map<string, number>();   // dayKey → games assigned
+  const rosterDayCount = new Map<string, number>(); // `${rosterId}|${dayKey}` → games on that day
+
+  for (const dk of dayOrder) {
+    dayGameCount.set(dk, 0);
+  }
 
   const games: ScheduledGame[] = [];
+  const unassigned = [...matchups]; // mutable queue
   let gameNumber = 1;
 
-  for (const matchup of matchups) {
-    let assigned = false;
+  // Keep iterating until all matchups are assigned or we can't make progress
+  while (unassigned.length > 0) {
+    let progressThisPass = false;
 
-    for (let si = 0; si < slots.length; si++) {
-      const busy = slotBusy.get(si);
+    // One pass: try to place one game per day, cycling through days in order
+    for (const dk of dayOrder) {
+      if (unassigned.length === 0) break;
+
+      const slotsForDay = daySlots.get(dk)!;
+
+      // Try each unassigned matchup, preferring the one whose rosters have
+      // the fewest games on this day (to spread roster load).
+      let bestIdx = -1;
+      let bestSlot = -1;
+      let bestRosterDayLoad = Infinity;
+
+      for (let mi = 0; mi < unassigned.length; mi++) {
+        const m = unassigned[mi];
+        const homeId = m.home.id;
+        const awayId = m.away.id;
+
+        // Roster load on this day if we assign here
+        const homeLoad = rosterDayCount.get(`${homeId}|${dk}`) ?? 0;
+        const awayLoad = rosterDayCount.get(`${awayId}|${dk}`) ?? 0;
+        const maxLoad = Math.max(homeLoad, awayLoad);
+
+        if (maxLoad >= bestRosterDayLoad) continue; // not better
+
+        // Find earliest non-conflicting slot on this day
+        for (const si of slotsForDay) {
+          const busy = slotBusy.get(si);
+          if (busy && (busy.has(homeId) || busy.has(awayId))) continue;
+          // Found a valid slot with lower roster-day load
+          bestIdx = mi;
+          bestSlot = si;
+          bestRosterDayLoad = maxLoad;
+          break; // earliest slot for this matchup on this day
+        }
+      }
+
+      if (bestIdx === -1) continue; // no matchup fits this day right now
+
+      // Assign the best matchup to the best slot
+      const matchup = unassigned.splice(bestIdx, 1)[0];
+      const slot = slots[bestSlot];
       const homeId = matchup.home.id;
       const awayId = matchup.away.id;
 
-      if (busy && (busy.has(homeId) || busy.has(awayId))) {
-        continue; // conflict — try next slot
-      }
+      if (!slotBusy.has(bestSlot)) slotBusy.set(bestSlot, new Set());
+      slotBusy.get(bestSlot)!.add(homeId);
+      slotBusy.get(bestSlot)!.add(awayId);
 
-      // Assign this slot
-      const slot = slots[si];
-      if (!slotBusy.has(si)) slotBusy.set(si, new Set());
-      slotBusy.get(si)!.add(homeId);
-      slotBusy.get(si)!.add(awayId);
+      dayGameCount.set(dk, (dayGameCount.get(dk) ?? 0) + 1);
+      rosterDayCount.set(`${homeId}|${dk}`, (rosterDayCount.get(`${homeId}|${dk}`) ?? 0) + 1);
+      rosterDayCount.set(`${awayId}|${dk}`, (rosterDayCount.get(`${awayId}|${dk}`) ?? 0) + 1);
 
       games.push({
         gameNumber,
@@ -416,15 +485,25 @@ function assignSlotsToMatchups(
       });
 
       gameNumber++;
-      assigned = true;
-      break;
+      progressThisPass = true;
     }
 
-    if (!assigned) {
-      warnings.push(
-        `Could not schedule game: ${matchup.home.name} vs ${matchup.away.name} (Round ${matchup.round}) — no available slot.`
-      );
+    // If we went through all days without placing anything, we're stuck
+    if (!progressThisPass) {
+      for (const m of unassigned) {
+        warnings.push(
+          `Could not schedule game: ${m.home.name} vs ${m.away.name} (Round ${m.round}) — no available slot.`
+        );
+      }
+      break;
     }
+  }
+
+  // Sort games chronologically (they may be out of order from the round-robin day cycling)
+  games.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+  // Re-number after sorting
+  for (let i = 0; i < games.length; i++) {
+    games[i].gameNumber = i + 1;
   }
 
   return { games, warnings };

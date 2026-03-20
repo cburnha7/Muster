@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -70,6 +70,43 @@ const mapToConfirmableEvents = (events: ScheduleEvent[]): ConfirmableEvent[] =>
     round: e.round,
     ...(e.flag ? { flag: e.flag } : {}),
   }));
+
+const GAME_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+/** Check if a new/edited event conflicts with existing events (same roster playing at overlapping time). */
+function findConflict(
+  candidate: ScheduleEvent,
+  existingEvents: ScheduleEvent[],
+): string | null {
+  const cStart = new Date(candidate.scheduledAt).getTime();
+  const cEnd = cStart + GAME_DURATION_MS;
+  const candidateRosters = [candidate.homeRosterId, candidate.awayRosterId];
+
+  for (const existing of existingEvents) {
+    if (existing.id === candidate.id) continue; // skip self when editing
+    const eStart = new Date(existing.scheduledAt).getTime();
+    const eEnd = eStart + GAME_DURATION_MS;
+    const overlaps = cStart < eEnd && eStart < cEnd;
+    if (!overlaps) continue;
+
+    const conflictingIds = candidateRosters.filter(
+      (id) => id === existing.homeRosterId || id === existing.awayRosterId,
+    );
+    if (conflictingIds.length > 0) {
+      // Find the roster name for the message
+      const conflictName =
+        conflictingIds[0] === existing.homeRosterId
+          ? existing.homeRosterName
+          : conflictingIds[0] === existing.awayRosterId
+            ? existing.awayRosterName
+            : conflictingIds[0] === candidate.homeRosterId
+              ? candidate.homeRosterName
+              : candidate.awayRosterName;
+      return `${conflictName} already has a game at that time (${existing.homeRosterName} vs ${existing.awayRosterName}).`;
+    }
+  }
+  return null;
+}
 
 export default function SchedulingScreen({ route, navigation }: any): React.ReactElement {
   const { leagueId } = route.params || {};
@@ -204,6 +241,15 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
   };
 
   const handleEditorSave = (event: ScheduleEvent) => {
+    const conflict = findConflict(event, events);
+    if (conflict) {
+      if (Platform.OS === 'web') {
+        window.alert(conflict);
+      } else {
+        Alert.alert('Scheduling Conflict', conflict);
+      }
+      return;
+    }
     if (editingEvent) {
       dispatch(updateEvent(event));
     } else {
@@ -216,6 +262,41 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
   const handleEditorCancel = () => {
     setEditorVisible(false);
     setEditingEvent(undefined);
+  };
+
+  // Compute game counts per roster for the summary table
+  const rosterGameCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rosters) counts.set(r.id, 0);
+    for (const e of events) {
+      counts.set(e.homeRosterId, (counts.get(e.homeRosterId) ?? 0) + 1);
+      counts.set(e.awayRosterId, (counts.get(e.awayRosterId) ?? 0) + 1);
+    }
+    return rosters.map((r) => ({ ...r, games: counts.get(r.id) ?? 0 }));
+  }, [rosters, events]);
+
+  // Roster summary header
+  const renderListHeader = () => {
+    if (rosters.length === 0) return null;
+    return (
+      <View style={styles.rosterSummary}>
+        <Text style={styles.rosterSummaryTitle}>Rosters</Text>
+        <View style={styles.rosterSummaryHeader}>
+          <Text style={[styles.rosterSummaryCell, styles.rosterSummaryNameHeader]}>Name</Text>
+          <Text style={[styles.rosterSummaryCell, styles.rosterSummaryCountHeader]}>Games</Text>
+        </View>
+        {rosterGameCounts.map((r) => (
+          <View key={r.id} style={styles.rosterSummaryRow}>
+            <Text style={[styles.rosterSummaryCell, styles.rosterSummaryName]} numberOfLines={1}>
+              {r.name}
+            </Text>
+            <Text style={[styles.rosterSummaryCell, styles.rosterSummaryCount]}>
+              {r.games}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
   };
 
   // Render event card
@@ -340,6 +421,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={renderEventCard}
+        ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyState}
         contentContainerStyle={[
           styles.listContent,
@@ -499,6 +581,67 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     marginTop: Spacing.sm,
     textAlign: 'center',
+  },
+
+  // Roster summary table
+  rosterSummary: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: Spacing.lg,
+    ...Shadows.sm,
+  },
+  rosterSummaryTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: Spacing.md,
+  },
+  rosterSummaryHeader: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.inkFaint + '30',
+    paddingBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  rosterSummaryRow: {
+    flexDirection: 'row',
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.inkFaint + '15',
+  },
+  rosterSummaryCell: {
+    fontSize: 14,
+  },
+  rosterSummaryNameHeader: {
+    flex: 1,
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  rosterSummaryCountHeader: {
+    width: 50,
+    textAlign: 'center',
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  rosterSummaryName: {
+    flex: 1,
+    fontFamily: fonts.body,
+    color: colors.ink,
+  },
+  rosterSummaryCount: {
+    width: 50,
+    textAlign: 'center',
+    fontFamily: fonts.ui,
+    color: colors.ink,
   },
 
   // Bottom bar

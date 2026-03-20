@@ -80,11 +80,11 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
       <TouchableOpacity
         style={styles.removeButton}
         onPress={() => onRemove(event.id)}
-        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         accessibilityRole="button"
         accessibilityLabel="Remove event"
       >
-        <Ionicons name="trash-outline" size={18} color={colors.heart} />
+        <Ionicons name="trash-outline" size={22} color={colors.heart} />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -148,7 +148,13 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: 'absolute',
-    top: Spacing.lg,
-    right: Spacing.lg,
+    top: Spacing.md,
+    right: Spacing.md,
+    backgroundColor: colors.heart + '12',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
