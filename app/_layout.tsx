@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, View, ActivityIndicator } from 'react-native';
+import { Slot } from 'expo-router';
 import { ReduxProvider } from '../src/store/Provider';
 import { AuthProvider } from '../src/services/auth';
 import { NotificationProvider } from '../src/services/notifications';
-import { RootNavigator } from '../src/navigation/RootNavigator';
 import { ErrorBoundary } from '../src/components/error';
 import { crashReportingService, performanceMonitoringService } from '../src/services/monitoring';
 import { useFonts } from '../src/hooks/useFonts';
@@ -47,7 +47,7 @@ export default function RootLayout(): JSX.Element {
       <ReduxProvider>
         <AuthProvider>
           <NotificationProvider>
-            <RootNavigator />
+            <Slot />
             <StatusBar style="auto" />
           </NotificationProvider>
         </AuthProvider>
