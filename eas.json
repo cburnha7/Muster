@@ -25,12 +25,13 @@
       }
     }
   },
-  "submit": {
+
+   "submit": {
     "production": {
       "ios": {
-        "appleId": "APPLE_ID",
-        "ascAppId": "ASC_APP_ID",
-        "appleTeamId": "APPLE_TEAM_ID"
+        "appleId": "burnham_charles@icloud.com",
+        "ascAppId": "6760872035",
+        "appleTeamId": "Z3KZY6682M"
       }
     }
   }

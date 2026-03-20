@@ -112,8 +112,8 @@ Implement a comprehensive league deletion flow that replaces the naive `prisma.l
 - [x] 6. Checkpoint — Ensure all backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Build React Native confirmation screen and update league management UI
-  - [-] 7.1 Create `LeagueDeletionConfirmScreen.tsx` (`src/screens/leagues/LeagueDeletionConfirmScreen.tsx`)
+- [x] 7. Build React Native confirmation screen and update league management UI
+  - [x] 7.1 Create `LeagueDeletionConfirmScreen.tsx` (`src/screens/leagues/LeagueDeletionConfirmScreen.tsx`)
     - Fetch `DeletionImpactSummary` from `GET /api/leagues/:id/deletion-preview` on mount
     - Display each category (events, rentals, Stripe refunds, roster balance refunds) with counts and monetary totals
     - Render a `FormButton` with `variant="danger"` for confirmation
@@ -121,13 +121,13 @@ Implement a comprehensive league deletion flow that replaces the naive `prisma.l
     - Import theme tokens from `src/theme/`
     - _Requirements: 2.2, 2.3_
 
-  - [~] 7.2 Update `ManageLeagueScreen.tsx` to conditionally render delete button
+  - [x] 7.2 Update `ManageLeagueScreen.tsx` to conditionally render delete button
     - Render delete button only when `lockedFromDeletion === false` and current user is the Commissioner
     - When visible, navigate to `LeagueDeletionConfirmScreen` on press
     - When `lockedFromDeletion === true`, completely omit the button from the render tree (not disabled — hidden)
     - _Requirements: 2.4, 8.1, 8.2_
 
-  - [~] 7.3 Register `LeagueDeletionConfirmScreen` in the navigation stack
+  - [x] 7.3 Register `LeagueDeletionConfirmScreen` in the navigation stack
     - Add the screen to the league navigation configuration
     - _Requirements: 2.3_
 
@@ -135,7 +135,7 @@ Implement a comprehensive league deletion flow that replaces the naive `prisma.l
     - **Property 11: UI delete button visibility follows lock state**
     - **Validates: Requirements 2.4, 8.1, 8.2**
 
-- [~] 8. Final checkpoint — Ensure all tests pass
+- [x] 8. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

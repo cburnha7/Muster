@@ -1022,6 +1022,8 @@ async function main() {
     data: {
       leagueId: basketballLeague.id,
       teamId: team1!.id,
+      memberType: 'roster',
+      memberId: team1!.id,
       seasonId: basketballSeason.id,
       status: 'active',
       joinedAt: new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000),
@@ -1040,6 +1042,8 @@ async function main() {
     data: {
       leagueId: basketballLeague.id,
       teamId: team3.id,
+      memberType: 'roster',
+      memberId: team3.id,
       seasonId: basketballSeason.id,
       status: 'active',
       joinedAt: new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000),
@@ -1058,6 +1062,8 @@ async function main() {
     data: {
       leagueId: basketballLeague.id,
       teamId: team4.id,
+      memberType: 'roster',
+      memberId: team4.id,
       seasonId: basketballSeason.id,
       status: 'active',
       joinedAt: new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000),
@@ -1076,6 +1082,8 @@ async function main() {
     data: {
       leagueId: soccerLeague.id,
       teamId: team2!.id,
+      memberType: 'roster',
+      memberId: team2!.id,
       seasonId: soccerSeason.id,
       status: 'active',
       joinedAt: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000),
@@ -1094,6 +1102,8 @@ async function main() {
     data: {
       leagueId: soccerLeague.id,
       teamId: team5.id,
+      memberType: 'roster',
+      memberId: team5.id,
       seasonId: soccerSeason.id,
       status: 'active',
       joinedAt: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000),
@@ -1112,6 +1122,8 @@ async function main() {
     data: {
       leagueId: soccerLeague.id,
       teamId: team6.id,
+      memberType: 'roster',
+      memberId: team6.id,
       seasonId: soccerSeason.id,
       status: 'active',
       joinedAt: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000),

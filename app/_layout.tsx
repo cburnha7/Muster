@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, View, ActivityIndicator } from 'react-native';
 import { ReduxProvider } from '../src/store/Provider';
@@ -15,12 +14,10 @@ export default function RootLayout(): JSX.Element {
   const { fontsLoaded, error } = useFonts();
 
   useEffect(() => {
-    // Set document title for web
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       document.title = 'Muster - Find a game. Find your people.';
     }
 
-    // Initialize monitoring services
     const initializeMonitoring = async () => {
       await crashReportingService.initialize();
       await performanceMonitoringService.initialize();
@@ -29,7 +26,6 @@ export default function RootLayout(): JSX.Element {
     initializeMonitoring();
   }, []);
 
-  // Show loading screen while fonts are loading
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
@@ -38,7 +34,6 @@ export default function RootLayout(): JSX.Element {
     );
   }
 
-  // Log font loading error but continue (will fall back to system fonts)
   if (error) {
     console.warn('Font loading error:', error);
   }
@@ -46,16 +41,13 @@ export default function RootLayout(): JSX.Element {
   return (
     <ErrorBoundary
       onError={(error, errorInfo) => {
-        // Report errors to crash reporting service
         crashReportingService.reportError(error, errorInfo);
       }}
     >
       <ReduxProvider>
         <AuthProvider>
           <NotificationProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
+            <RootNavigator />
             <StatusBar style="auto" />
           </NotificationProvider>
         </AuthProvider>

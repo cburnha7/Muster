@@ -15,6 +15,21 @@ import {
 import { Event } from '../../types';
 import { PaginatedResponse } from '../../types';
 
+export interface DeletionImpactSummary {
+  leagueId: string;
+  leagueName: string;
+  eventCount: number;
+  rentalCount: number;
+  stripeRefunds: {
+    count: number;
+    totalAmount: number;
+  };
+  rosterBalanceRefunds: {
+    count: number;
+    totalAmount: number;
+  };
+}
+
 export interface RosterStrikeData {
   rosterId: string;
   rosterName: string;
@@ -77,11 +92,20 @@ export class LeagueService extends BaseApiService {
   }
 
   /**
-   * Delete league
+   * Delete league (cascade deletion with refunds)
    */
   async deleteLeague(id: string, userId: string): Promise<void> {
     return this.delete<void>(`/leagues/${id}`, {
       data: { userId }
+    });
+  }
+
+  /**
+   * Get deletion impact preview for a league
+   */
+  async getDeletionPreview(id: string): Promise<DeletionImpactSummary> {
+    return this.get<DeletionImpactSummary>(`/leagues/${id}/deletion-preview`, {
+      cacheOptions: { skipCache: true }
     });
   }
 

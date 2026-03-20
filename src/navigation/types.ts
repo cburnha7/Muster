@@ -129,6 +129,7 @@ export type LeaguesStackParamList = {
   DocumentViewer: { leagueId: string; documentId: string; documentName?: string };
   PayLeagueDues: { rosterId: string; leagueId: string; seasonId: string };
   LeagueScheduling: { leagueId: string };
+  LeagueDeletionConfirm: { leagueId: string };
 };
 
 export type BookingsStackParamList = {

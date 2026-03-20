@@ -10,6 +10,7 @@ import { DocumentUploadForm } from '../../components/league/DocumentUploadForm';
 import { StrikeIndicator } from '../../components/league/StrikeIndicator';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { FormButton } from '../../components/forms/FormButton';
 
 import { leagueService } from '../../services/api/LeagueService';
 import { RosterStrikeData } from '../../services/api/LeagueService';
@@ -534,6 +535,22 @@ export const ManageLeagueScreen: React.FC = () => {
             loading={isUpdating}
           />
         </View>
+
+        {/* Delete League — only when not locked */}
+        {league.lockedFromDeletion === false && (
+          <View style={styles.deleteSection}>
+            <FormButton
+              title="Delete League"
+              onPress={() => (navigation as any).navigate('LeagueDeletionConfirm', { leagueId })}
+              variant="danger"
+              size="large"
+              leftIcon="trash-outline"
+            />
+            <Text style={styles.deleteHint}>
+              This will permanently remove the league and issue any applicable refunds.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -805,5 +822,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     flex: 1,
+  },
+  deleteSection: {
+    padding: 16,
+    marginBottom: 40,
+  },
+  deleteHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 18,
   },
 });

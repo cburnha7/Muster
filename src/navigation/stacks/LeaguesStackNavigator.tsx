@@ -12,6 +12,7 @@ import { RecordMatchResultScreen } from '../../screens/leagues/RecordMatchResult
 import { AssignFacilityScreen } from '../../screens/leagues/AssignFacilityScreen';
 import { DocumentViewerScreen } from '../../screens/leagues/DocumentViewerScreen';
 import SchedulingScreen from '../../screens/leagues/SchedulingScreen';
+import { LeagueDeletionConfirmScreen } from '../../screens/leagues/LeagueDeletionConfirmScreen';
 
 const Stack = createNativeStackNavigator<LeaguesStackParamList>();
 
@@ -61,6 +62,10 @@ export function LeaguesStackNavigator(): JSX.Element {
       <Stack.Screen
         name="LeagueScheduling"
         component={SchedulingScreen}
+      />
+      <Stack.Screen
+        name="LeagueDeletionConfirm"
+        component={LeagueDeletionConfirmScreen}
       />
     </Stack.Navigator>
   );
