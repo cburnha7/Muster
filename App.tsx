@@ -1,68 +1,30 @@
-import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
-import { ReduxProvider } from './src/store/Provider';
-import { AuthProvider } from './src/context/AuthContext';
-import { NotificationProvider } from './src/services/notifications';
-import { RootNavigator } from './src/navigation/RootNavigator';
-import { ErrorBoundary } from './src/components/error';
-import { crashReportingService, performanceMonitoringService } from './src/services/monitoring';
-import { loggingService } from './src/services/LoggingService';
-import { useFonts } from './src/hooks/useFonts';
-import { colors } from './src/theme';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
 export default function App(): JSX.Element {
-  const { fontsLoaded, error } = useFonts();
-
-  useEffect(() => {
-    const initializeMonitoring = async () => {
-      await crashReportingService.initialize();
-      await performanceMonitoringService.initialize();
-      loggingService.initialize();
-    };
-
-    initializeMonitoring();
-    return () => loggingService.destroy();
-  }, []);
-
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.pine} />
-      </View>
-    );
-  }
-
-  if (error) {
-    console.warn('Font loading error:', error);
-  }
-
   return (
-    <ErrorBoundary
-      onError={(error, errorInfo) => {
-        crashReportingService.reportError(error, errorInfo);
-      }}
-    >
-      <ReduxProvider>
-        <AuthProvider>
-          <NotificationProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-            <StatusBar style="auto" />
-          </NotificationProvider>
-        </AuthProvider>
-      </ReduxProvider>
-    </ErrorBoundary>
+    <View style={styles.container}>
+      <Text style={styles.title}>Muster</Text>
+      <Text style={styles.subtitle}>App is loading...</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: {
+  container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.cream,
+    backgroundColor: '#EEEBE3',
+  },
+  title: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: '#2D5F3F',
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#1B2A4A',
+    marginTop: 12,
   },
 });
