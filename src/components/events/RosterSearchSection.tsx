@@ -130,7 +130,19 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>ROSTERS</Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconWrap}>
+          <Ionicons name="shield" size={20} color={colors.pine} />
+        </View>
+        <View style={styles.sectionHeaderText}>
+          <Text style={styles.sectionTitle}>Rosters</Text>
+          <Text style={styles.sectionHint}>
+            {isGame
+              ? 'Add up to 2 rosters for this game'
+              : 'Add rosters to invite their players'}
+          </Text>
+        </View>
+      </View>
 
       {/* Added rosters list */}
       {selectedRosters.length > 0 && (
@@ -277,13 +289,42 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
     gap: Spacing.md,
   },
-  sectionLabel: {
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  sectionIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.chalk,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionHeaderText: {
+    flex: 1,
+  },
+  sectionTitle: {
     fontFamily: fonts.label,
-    ...typeScale.label,
+    fontSize: 16,
     color: colors.ink,
-    textTransform: 'uppercase',
+  },
+  sectionHint: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
 
   // ── Added rosters ──────────────────────────────────────────

@@ -504,7 +504,7 @@ router.post('/', requireNonDependent, async (req, res) => {
       const timeSlotIds = eventData.timeSlotIds;
       
       // Clean eventData - remove fields that aren't in the Event model
-      const { rentalIds: _, timeSlotIds: __, eligibility, invitedUserIds, ...cleanEventData } = eventData;
+      const { rentalIds: _, timeSlotIds: __, eligibility, invitedUserIds, homeRosterId: _hr, awayRosterId: _ar, ...cleanEventData } = eventData;
       
       // Transform eligibility object to flat fields if present
       if (eligibility) {
@@ -595,7 +595,8 @@ router.post('/', requireNonDependent, async (req, res) => {
     res.status(201).json(result);
   } catch (error) {
     console.error('Create event error:', error);
-    res.status(500).json({ error: 'Failed to create event' });
+    const message = error instanceof Error ? error.message : 'Failed to create event';
+    res.status(500).json({ error: 'Failed to create event', details: message });
   }
 });
 
