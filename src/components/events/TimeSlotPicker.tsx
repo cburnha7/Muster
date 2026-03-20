@@ -60,7 +60,7 @@ export function TimeSlotPicker({
       setLoading(true);
       // Convert selectedDate (YYYY-MM-DD) to the format expected by the API
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/slots-for-event?userId=${userId}&startDate=${selectedDate}&endDate=${selectedDate}`
+        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/slots-for-event?userId=${userId}&startDate=${selectedDate}&endDate=${selectedDate}&tzOffset=${new Date().getTimezoneOffset()}`
       );
 
       if (!response.ok) {

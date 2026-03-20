@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
+import { PurchaseHistorySection } from '../../components/profile/PurchaseHistorySection';
 import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
 import { ConnectAccountsSection } from '../../components/profile/ConnectAccountsSection';
 import { UserConnectSection } from '../../components/profile/UserConnectSection';
@@ -101,8 +101,8 @@ export function ProfileScreen() {
       {/* Dependents — hidden for dependents (can't manage other users) */}
       {!isDependent && <DependentsSection />}
 
-      {/* My Reservations */}
-      {authUser?.id && <MyReservationsSection userId={authUser.id} />}
+      {/* Purchase History */}
+      {authUser?.id && <PurchaseHistorySection userId={authUser.id} />}
 
       {/* User Payment Account — hidden for dependents */}
       {!isDependent && authUser?.id && <UserConnectSection userId={authUser.id} />}
@@ -113,16 +113,16 @@ export function ProfileScreen() {
       {/* Sport Ratings */}
       {authUser?.id && <SportRatingsSection userId={authUser.id} />}
 
-      {/* Insurance Documents — hidden for dependents */}
-      {!isDependent && authUser?.id && (
+      {/* Insurance Documents — host membership only */}
+      {!isDependent && authUser?.id && (authUser.membershipTier === 'host' || authUser.membershipTier === 'facility' || authUser.trialTier === 'host') && (
         <InsuranceDocumentsSection
           userId={authUser.id}
           onAddDocument={() => setShowInsuranceForm(true)}
         />
       )}
 
-      {/* Insurance Document Form Modal — hidden for dependents */}
-      {!isDependent && showInsuranceForm && authUser?.id && (
+      {/* Insurance Document Form Modal — host membership only */}
+      {!isDependent && showInsuranceForm && authUser?.id && (authUser.membershipTier === 'host' || authUser.membershipTier === 'facility' || authUser.trialTier === 'host') && (
         <InsuranceDocumentForm
           userId={authUser.id}
           onClose={() => setShowInsuranceForm(false)}

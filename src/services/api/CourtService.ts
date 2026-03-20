@@ -98,9 +98,10 @@ class CourtService extends BaseApiService {
     courtId: string,
     params?: { startDate?: string; endDate?: string; status?: string }
   ): Promise<TimeSlot[]> {
+    const tzOffset = new Date().getTimezoneOffset();
     return this.get<TimeSlot[]>(
       `/facilities/${facilityId}/courts/${courtId}/slots`,
-      { params }
+      { params: { ...params, tzOffset } }
     );
   }
 
@@ -133,9 +134,10 @@ class CourtService extends BaseApiService {
     availableSlots: number;
     slots: TimeSlot[];
   }> {
+    const tzOffset = new Date().getTimezoneOffset();
     return this.get(
       `/facilities/${facilityId}/courts/${courtId}/availability`,
-      { params: { date } }
+      { params: { date, tzOffset } }
     );
   }
 

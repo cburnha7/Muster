@@ -426,6 +426,30 @@ router.post('/', optionalAuthMiddleware, requireNonDependent, requirePlan('leagu
       });
     }
 
+    // Create pending memberships for invited rosters
+    if (Array.isArray(invitedRosterIds) && invitedRosterIds.length > 0) {
+      // Filter out any that were already added as active
+      const activeIds = new Set(Array.isArray(rosterIds) ? rosterIds : []);
+      const toInvite = invitedRosterIds.filter((rid: string) => !activeIds.has(rid));
+      if (toInvite.length > 0) {
+        await prisma.leagueMembership.createMany({
+          data: toInvite.map((rid: string) => ({
+            leagueId: league.id,
+            memberId: rid,
+            teamId: rid,
+            memberType: 'roster',
+            status: 'pending',
+            matchesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            points: 0,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
     res.status(201).json(league);
   } catch (error) {
     console.error('Error creating league:', error);

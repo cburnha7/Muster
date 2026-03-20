@@ -421,7 +421,7 @@ export function CreateEventScreen(): JSX.Element {
 
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/slots-for-event?userId=${user.id}`
+        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/slots-for-event?userId=${user.id}&tzOffset=${new Date().getTimezoneOffset()}`
       );
 
       if (!response.ok) {

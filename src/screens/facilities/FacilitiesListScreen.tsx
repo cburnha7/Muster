@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   RefreshControl,
   TouchableOpacity,
   Modal,
@@ -12,19 +11,19 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { debounce, getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
+import { debounce } from '../../utils/performance';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
+import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
+import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
 import { facilityService } from '../../services/api/FacilityService';
 import { colors, Spacing } from '../../theme';
 import {
   setFacilities,
-  appendFacilities,
   setLoading,
-  setLoadingMore,
   setError,
   setFilters,
   clearFilters,
@@ -32,7 +31,6 @@ import {
   selectFacilityFilters,
   selectFacilitiesPagination,
   selectFacilitiesLoading,
-  selectFacilitiesLoadingMore,
   selectFacilitiesError,
 } from '../../store/slices/facilitiesSlice';
 import { useAuth } from '../../context/AuthContext';
@@ -40,7 +38,7 @@ import { Facility, SportType, FacilityFilters } from '../../types';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
-export function FacilitiesListScreen(): JSX.Element {
+export function FacilitiesListScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const route = useRoute();
@@ -49,9 +47,8 @@ export function FacilitiesListScreen(): JSX.Element {
   const filters = useSelector(selectFacilityFilters);
   const pagination = useSelector(selectFacilitiesPagination);
   const isLoading = useSelector(selectFacilitiesLoading);
-  const isLoadingMore = useSelector(selectFacilitiesLoadingMore);
   const error = useSelector(selectFacilitiesError);
-  
+
   const { user: currentUser } = useAuth();
   const { isDependent } = useDependentContext();
 
@@ -59,40 +56,30 @@ export function FacilitiesListScreen(): JSX.Element {
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState<FacilityFilters>(filters);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  
-  // Track last load time with a ref to avoid triggering re-renders
+  const [refreshing, setRefreshing] = useState(false);
+
   const lastLoadTimeRef = React.useRef<number>(0);
 
   useEffect(() => {
     loadFacilities();
   }, [filters]);
 
-  // Watch for refresh parameter from navigation
   useEffect(() => {
     const params = route.params as any;
     const refreshTimestamp = params?.refresh;
-    
     if (refreshTimestamp) {
-      console.log('🔄 Force refresh triggered at:', refreshTimestamp);
-      lastLoadTimeRef.current = 0; // Reset cache
-      // Force reload by adding cache-busting parameter
+      lastLoadTimeRef.current = 0;
       loadFacilities(true);
     }
-  }, [(route.params as any)?.refresh]); // Watch the specific refresh value
+  }, [(route.params as any)?.refresh]);
 
-  // Reload facilities when screen comes into focus, but only if data is stale (>5 seconds old)
   useFocusEffect(
     useCallback(() => {
       const now = Date.now();
       const timeSinceLastLoad = now - lastLoadTimeRef.current;
       const hasFacilities = facilities.length > 0;
-      
-      // Only reload if more than 5 seconds since last load or no facilities
       if (timeSinceLastLoad > 5000 || !hasFacilities) {
-        console.log('🔄 Reloading facilities (stale or empty)');
         loadFacilities();
-      } else {
-        console.log('✅ Using cached facilities (fresh data, loaded', Math.round(timeSinceLastLoad / 1000), 'seconds ago)');
       }
     }, [filters])
   );
@@ -102,10 +89,7 @@ export function FacilitiesListScreen(): JSX.Element {
       dispatch(setLoading(true));
       const response = await facilityService.getFacilities(
         forceRefresh ? { ...filters } as any : filters,
-        {
-          page: 1,
-          limit: pagination.limit,
-        }
+        { page: 1, limit: pagination.limit }
       );
       dispatch(setFacilities(response));
       lastLoadTimeRef.current = Date.now();
@@ -114,22 +98,10 @@ export function FacilitiesListScreen(): JSX.Element {
     }
   };
 
-  const loadMoreFacilities = async () => {
-    if (isLoadingMore || pagination.page >= pagination.totalPages) {
-      return;
-    }
-
-    try {
-      dispatch(setLoadingMore(true));
-      const nextPage = pagination.page + 1;
-      const response = await facilityService.getFacilities(filters, {
-        page: nextPage,
-        limit: pagination.limit,
-      });
-      dispatch(appendFacilities(response));
-    } catch (err: any) {
-      dispatch(setError(err.message || 'Failed to load more facilities'));
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadFacilities(true);
+    setRefreshing(false);
   };
 
   const debouncedSearch = useMemo(
@@ -139,14 +111,12 @@ export function FacilitiesListScreen(): JSX.Element {
         try {
           dispatch(setLoading(true));
           const response = await facilityService.searchFacilities(query, filters, {
-            page: 1,
-            limit: pagination.limit,
+            page: 1, limit: pagination.limit,
           });
           dispatch(setFacilities({
             data: response.results,
             pagination: {
-              page: 1,
-              limit: pagination.limit,
+              page: 1, limit: pagination.limit,
               total: response.total,
               totalPages: Math.ceil(response.total / pagination.limit),
             },
@@ -166,17 +136,15 @@ export function FacilitiesListScreen(): JSX.Element {
   }, [debouncedSearch]);
 
   const handleFacilityPress = (facility: Facility) => {
-    // If user is the owner, navigate to EditFacility screen
     if (currentUser && facility.ownerId === currentUser.id) {
-      navigation.navigate('EditFacility' as never, { facilityId: facility.id } as never);
+      (navigation as any).navigate('EditFacility', { facilityId: facility.id });
     } else {
-      // Otherwise, navigate to FacilityDetails screen
-      navigation.navigate('FacilityDetails' as never, { facilityId: facility.id } as never);
+      (navigation as any).navigate('FacilityDetails', { facilityId: facility.id });
     }
   };
 
   const handleCreateFacility = () => {
-    navigation.navigate('CreateFacility' as never);
+    (navigation as any).navigate('CreateFacility');
   };
 
   const handleApplyFilters = () => {
@@ -190,12 +158,16 @@ export function FacilitiesListScreen(): JSX.Element {
     setShowFilters(false);
   };
 
-  const renderFacilityItem = useCallback(({ item, index }: { item: Facility; index: number }) => {
-    // Format address from facility fields
+  const sortedFacilities = useMemo(
+    () => [...facilities].sort((a, b) => a.name.localeCompare(b.name)),
+    [facilities]
+  );
+
+  const renderFacilityCard = (item: Facility, index: number) => {
     const formattedAddress = `${item.city}, ${item.state}`;
-    
     return (
       <TouchableOpacity
+        key={item.id}
         style={styles.facilityCard}
         onPress={() => handleFacilityPress(item)}
         activeOpacity={0.7}
@@ -206,9 +178,7 @@ export function FacilitiesListScreen(): JSX.Element {
               <Text style={styles.numberText}>{index + 1}</Text>
             </View>
             <View style={styles.facilityTitleContainer}>
-              <Text style={styles.facilityName} numberOfLines={1}>
-                {item.name}
-              </Text>
+              <Text style={styles.facilityName} numberOfLines={1}>{item.name}</Text>
               {item.ownerId === currentUser?.id && (
                 <View style={styles.ownerBadge}>
                   <Ionicons name="star" size={12} color={colors.court} />
@@ -217,14 +187,10 @@ export function FacilitiesListScreen(): JSX.Element {
               )}
             </View>
           </View>
-          
           <View style={styles.facilityInfo}>
             <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
-            <Text style={styles.facilityAddress} numberOfLines={1}>
-              {formattedAddress}
-            </Text>
+            <Text style={styles.facilityAddress} numberOfLines={1}>{formattedAddress}</Text>
           </View>
-          
           {item.sportTypes && item.sportTypes.length > 0 && (
             <View style={styles.sportTypes}>
               {item.sportTypes.slice(0, 3).map((sport, idx) => (
@@ -239,7 +205,6 @@ export function FacilitiesListScreen(): JSX.Element {
               )}
             </View>
           )}
-          
           <View style={styles.facilityFooter}>
             {item.rating && item.rating > 0 && (
               <View style={styles.rating}>
@@ -250,24 +215,6 @@ export function FacilitiesListScreen(): JSX.Element {
           </View>
         </View>
       </TouchableOpacity>
-    );
-  }, [handleFacilityPress, currentUser]);
-
-  const keyExtractor = useCallback((item: Facility) => item.id, []);
-
-  const renderEmptyState = () => {
-    if (isLoading) return null;
-
-    return (
-      <View style={styles.emptyState}>
-        <Ionicons name="map-outline" size={64} color={colors.inkFaint} />
-        <Text style={styles.emptyTitle}>No Grounds Found</Text>
-        <Text style={styles.emptySubtitle}>
-          {searchQuery
-            ? 'Try adjusting your search or filters'
-            : 'Be the first to add a ground'}
-        </Text>
-      </View>
     );
   };
 
@@ -286,7 +233,6 @@ export function FacilitiesListScreen(): JSX.Element {
               <Ionicons name="close" size={24} color={colors.ink} />
             </TouchableOpacity>
           </View>
-
           <ScrollView style={styles.filterContent}>
             <Text style={styles.filterLabel}>Sport Type</Text>
             <View style={styles.sportTypeContainer}>
@@ -304,9 +250,7 @@ export function FacilitiesListScreen(): JSX.Element {
                       setLocalFilters({ ...localFilters, sportTypes: newSports });
                     }}
                   >
-                    <Text
-                      style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}
-                    >
+                    <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
                       {sport.charAt(0).toUpperCase() + sport.slice(1)}
                     </Text>
                   </TouchableOpacity>
@@ -314,7 +258,6 @@ export function FacilitiesListScreen(): JSX.Element {
               })}
             </View>
           </ScrollView>
-
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
               <Text style={styles.clearButtonText}>Clear All</Text>
@@ -338,58 +281,60 @@ export function FacilitiesListScreen(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      {/* Search Header */}
-      <View style={styles.header}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSearch={handleSearch}
-          placeholder="Search grounds..."
-          style={styles.searchBar}
-        />
-        <ViewToggle
-          viewMode={viewMode}
-          onToggle={setViewMode}
-        />
-        <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
-          <Ionicons name="filter" size={24} color={colors.pine} />
-          {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
+        }
+      >
+        {/* Grounds section */}
+        <CollapsibleSection title="Grounds" count={facilities.length}>
+          {/* Search + view toggle + filter */}
+          <View style={styles.header}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSearch={handleSearch}
+              placeholder="Search grounds..."
+              style={styles.searchBar}
+            />
+            <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
+            <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
+              <Ionicons name="filter" size={24} color={colors.pine} />
+              {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
+            </TouchableOpacity>
+          </View>
 
-      {isLoading && !facilities.length ? (
-        <LoadingSpinner />
-      ) : viewMode === 'map' ? (
-        <GroundsMapViewWrapper
-          grounds={facilities}
-          onGroundPress={handleFacilityPress}
-        />
-      ) : (
-        <FlatList
-          data={[...facilities].sort((a, b) => a.name.localeCompare(b.name))}
-          renderItem={renderFacilityItem}
-          keyExtractor={keyExtractor}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={isLoading} onRefresh={loadFacilities} />
-          }
-          onEndReached={loadMoreFacilities}
-          onEndReachedThreshold={0.5}
-          ListEmptyComponent={renderEmptyState}
-          ListFooterComponent={
-            isLoadingMore ? (
-              <View style={styles.loadingMore}>
-                <LoadingSpinner size="small" />
-              </View>
-            ) : null
-          }
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={getOptimalBatchSize()}
-          windowSize={getOptimalWindowSize()}
-          initialNumToRender={getOptimalBatchSize()}
-          updateCellsBatchingPeriod={50}
-        />
-      )}
+          {isLoading && !facilities.length ? (
+            <LoadingSpinner />
+          ) : viewMode === 'map' ? (
+            <View style={styles.mapContainer}>
+              <GroundsMapViewWrapper
+                grounds={facilities}
+                onGroundPress={handleFacilityPress}
+              />
+            </View>
+          ) : sortedFacilities.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="map-outline" size={64} color={colors.inkFaint} />
+              <Text style={styles.emptyTitle}>No Grounds Found</Text>
+              <Text style={styles.emptySubtitle}>
+                {searchQuery ? 'Try adjusting your search or filters' : 'Be the first to add a ground'}
+              </Text>
+            </View>
+          ) : (
+            sortedFacilities.map((item, index) => renderFacilityCard(item, index))
+          )}
+        </CollapsibleSection>
+
+        {/* My Reservations section */}
+        {currentUser?.id && (
+          <MyReservationsSection userId={currentUser.id} />
+        )}
+
+        <View style={{ height: 80 }} />
+      </ScrollView>
 
       {/* FAB — hidden for dependents */}
       {!isDependent && (
@@ -408,10 +353,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.cream,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 16,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     backgroundColor: colors.cream,
     gap: Spacing.sm,
   },
@@ -431,10 +383,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.heart,
   },
-  listContent: {
-    paddingHorizontal: 0,
-    paddingTop: 0,
-    paddingBottom: 80,
+  mapContainer: {
+    height: 400,
   },
   facilityCard: {
     backgroundColor: '#FFFFFF',
@@ -443,10 +393,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
@@ -547,13 +494,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontWeight: '500',
   },
-  distance: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
   emptyState: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
@@ -572,9 +513,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  loadingMore: {
-    paddingVertical: Spacing.lg,
-  },
   fab: {
     position: 'absolute',
     right: 20,
@@ -586,10 +524,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,

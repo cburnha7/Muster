@@ -27,7 +27,7 @@ interface DateEventListProps {
   isLoading: boolean;
   onRefresh: () => void;
   refreshing: boolean;
-  // Calendar props — rendered inside My Events section
+  // Calendar props
   markedDates: Record<string, MultiDotMarking>;
   onDateSelect: (dateString: string) => void;
   onMonthChange: (month: { year: number; month: number }) => void;
@@ -120,14 +120,16 @@ export const DateEventList: React.FC<DateEventListProps> = ({
         />
       }
     >
-      {/* My Events — calendar + event cards inside */}
+      {/* Calendar — filters both sections */}
+      <EventsCalendar
+        selectedDate={selectedDate}
+        markedDates={markedDates}
+        onDateSelect={onDateSelect}
+        onMonthChange={onMonthChange}
+      />
+
+      {/* My Events */}
       <CollapsibleSection title="My Events" count={myEvents.length}>
-        <EventsCalendar
-          selectedDate={selectedDate}
-          markedDates={markedDates}
-          onDateSelect={onDateSelect}
-          onMonthChange={onMonthChange}
-        />
         {myEvents.length > 0
           ? myEvents.map(renderEventCard)
           : !isLoading && (

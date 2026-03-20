@@ -6,13 +6,25 @@ const router = Router();
 
 /**
  * Check whether a time slot's start time is in the past.
- * `date` is stored as UTC midnight; `startTime` is "HH:MM" in UTC.
+ * `date` is stored as UTC midnight; `startTime` is "HH:MM" in facility-local time.
+ * `tzOffset` is the client's timezone offset in minutes (e.g. -240 for UTC-4/Eastern).
+ * When no offset is provided, falls back to UTC comparison.
  */
-function isSlotInPast(slotDate: Date, startTime: string): boolean {
+function isSlotInPast(slotDate: Date, startTime: string, tzOffset?: number): boolean {
   const now = new Date();
   const d = new Date(slotDate);
   const [h, m] = startTime.split(':').map(Number);
   d.setUTCHours(h, m, 0, 0);
+
+  // Adjust "now" to the client's local time perspective
+  // tzOffset is in minutes, negative means behind UTC (e.g. -240 for ET)
+  if (tzOffset !== undefined) {
+    // Shift "now" so the comparison is in the same frame as the stored local times
+    // Stored times are local, treated as UTC. So we shift "now" backward by the offset.
+    const adjustedNow = new Date(now.getTime() + tzOffset * 60 * 1000);
+    return d.getTime() <= adjustedNow.getTime();
+  }
+
   return d.getTime() <= now.getTime();
 }
 
@@ -285,7 +297,8 @@ export default router;
 router.get('/facilities/:facilityId/courts/:courtId/slots', async (req, res) => {
   try {
     const { facilityId, courtId } = req.params;
-    const { startDate, endDate, status } = req.query;
+    const { startDate, endDate, status, tzOffset } = req.query;
+    const clientTzOffset = tzOffset ? parseInt(tzOffset as string, 10) : undefined;
 
     // Verify court exists and belongs to facility
     const court = await prisma.facilityCourt.findFirst({
@@ -317,7 +330,7 @@ router.get('/facilities/:facilityId/courts/:courtId/slots', async (req, res) => 
     });
 
     // Filter out slots whose start time is in the past
-    const futureSlots = timeSlots.filter(slot => !isSlotInPast(slot.date, slot.startTime));
+    const futureSlots = timeSlots.filter(slot => !isSlotInPast(slot.date, slot.startTime, clientTzOffset));
 
     res.json(futureSlots);
   } catch (error) {
@@ -445,7 +458,8 @@ router.delete('/facilities/:facilityId/courts/:courtId/slots/:slotId/unblock', a
 router.get('/facilities/:facilityId/courts/:courtId/availability', async (req, res) => {
   try {
     const { facilityId, courtId } = req.params;
-    const { date } = req.query;
+    const { date, tzOffset: tzOffsetParam } = req.query;
+    const clientTzOffset = tzOffsetParam ? parseInt(tzOffsetParam as string, 10) : undefined;
 
     // Verify court exists and belongs to facility
     const court = await prisma.facilityCourt.findFirst({
@@ -495,7 +509,7 @@ router.get('/facilities/:facilityId/courts/:courtId/availability', async (req, r
     }));
 
     // Filter out slots whose start time is in the past
-    const futureSlots = slotsWithRentalInfo.filter(slot => !isSlotInPast(slot.date, slot.startTime));
+    const futureSlots = slotsWithRentalInfo.filter(slot => !isSlotInPast(slot.date, slot.startTime, clientTzOffset));
 
     // Filter to only show available slots
     const availableSlots = futureSlots.filter(slot => slot.status === 'available');
@@ -518,7 +532,8 @@ router.get('/facilities/:facilityId/courts/:courtId/availability', async (req, r
 router.get('/facilities/:facilityId/courts/:courtId/slots-for-event', async (req, res) => {
   try {
     const { facilityId, courtId } = req.params;
-    const { userId, startDate, endDate } = req.query;
+    const { userId, startDate, endDate, tzOffset: tzOffsetParam2 } = req.query;
+    const clientTzOffset = tzOffsetParam2 ? parseInt(tzOffsetParam2 as string, 10) : undefined;
 
     if (!userId) {
       return res.status(400).json({ error: 'userId is required' });
@@ -587,7 +602,7 @@ router.get('/facilities/:facilityId/courts/:courtId/slots-for-event', async (req
 
     // Map slots with ownership context
     const slotsWithContext = timeSlots
-      .filter(slot => !isSlotInPast(slot.date, slot.startTime))
+      .filter(slot => !isSlotInPast(slot.date, slot.startTime, clientTzOffset))
       .map(slot => {
       const hasPendingCancellation = slot.rental && slot.rental.cancellationStatus === 'pending_cancellation';
       const isUserRental = slot.rental && slot.rental.userId === userId && !slot.rental.usedForEventId && !hasPendingCancellation;
