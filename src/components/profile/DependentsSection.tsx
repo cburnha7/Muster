@@ -14,6 +14,7 @@ import { colors, fonts, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { DependentSummary } from '../../types/dependent';
 import { setActiveUser } from '../../store/slices/contextSlice';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
 
 /**
  * DependentsSection
@@ -76,18 +77,15 @@ export function DependentsSection() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Dependents</Text>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.pine} />
-        </View>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color={colors.pine} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Dependents</Text>
+    <CollapsibleSection title="Dependents" count={dependents.length}>
+      <View style={styles.container}>
 
       {dependents.length === 0 ? (
         <View style={styles.emptyCard}>
@@ -142,20 +140,14 @@ export function DependentsSection() {
         <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
         <Text style={styles.addButtonText}>Add Dependent</Text>
       </TouchableOpacity>
-    </View>
+      </View>
+    </CollapsibleSection>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginTop: 16,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.ink,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
   },
   loadingContainer: {
     backgroundColor: '#FFFFFF',

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -78,8 +79,8 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
   if (loading || ratings.length === 0) return null;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Sport Ratings</Text>
+    <CollapsibleSection title="Sport Ratings" count={ratings.length}>
+      <View style={styles.container}>
       {ratings.map((r) => {
         const isExpanded = expandedSport === r.sportType;
         const summaryPercentile = r.overallPercentile ?? r.percentile;
@@ -158,20 +159,14 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
           </View>
         );
       })}
-    </View>
+      </View>
+    </CollapsibleSection>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginTop: 16,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.ink,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
   },
   ratingCard: {
     backgroundColor: '#FFFFFF',

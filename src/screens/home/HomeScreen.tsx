@@ -19,6 +19,7 @@ import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
 import { CancelRequestCard } from '../../components/home/CancelRequestCard';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
+import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -367,8 +368,8 @@ export function HomeScreen() {
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
         {/* Schedule section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Schedule</Text>
+        <CollapsibleSection title="Schedule" count={scheduleBookings.length}>
+          <View style={styles.sectionInner}>
           <View style={styles.filterRow}>
             {scheduleFilters.map((f) => (
               <TouchableOpacity
@@ -414,12 +415,13 @@ export function HomeScreen() {
               />
             ))
           )}
-        </View>
+          </View>
+        </CollapsibleSection>
 
         {/* Debrief section */}
         {debriefEvents.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Debrief</Text>
+          <CollapsibleSection title="Debrief" count={debriefEvents.length}>
+            <View style={styles.sectionInner}>
             <Text style={styles.sectionSubtitle}>Rate and salute players from recent games</Text>
             {debriefEvents.slice(0, 3).map((booking) => (
               <TouchableOpacity
@@ -439,13 +441,14 @@ export function HomeScreen() {
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
             ))}
-          </View>
+            </View>
+          </CollapsibleSection>
         )}
 
         {/* Ready to schedule section */}
         {readyToScheduleLeagues.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Scheduling</Text>
+          <CollapsibleSection title="Scheduling" count={readyToScheduleLeagues.length}>
+            <View style={styles.sectionInner}>
             {readyToScheduleLeagues.map((league) => (
               <TouchableOpacity
                 key={league.id}
@@ -462,13 +465,14 @@ export function HomeScreen() {
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
             ))}
-          </View>
+            </View>
+          </CollapsibleSection>
         )}
 
         {/* Invitations section */}
         {(rosterInvitations.length > 0 || leagueInvitations.length > 0) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Invitations</Text>
+          <CollapsibleSection title="Invitations" count={rosterInvitations.length + leagueInvitations.length}>
+            <View style={styles.sectionInner}>
             {rosterInvitations.map((inv) => (
               <TouchableOpacity
                 key={inv.id}
@@ -499,13 +503,14 @@ export function HomeScreen() {
                 <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
             ))}
-          </View>
+            </View>
+          </CollapsibleSection>
         )}
 
         {/* Cancel Requests section */}
         {cancelRequests.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cancel Requests</Text>
+          <CollapsibleSection title="Cancel Requests" count={cancelRequests.length}>
+            <View style={styles.sectionInner}>
             <View style={{ gap: Spacing.sm }}>
               {cancelRequests.map((request) => (
                 <CancelRequestCard
@@ -517,7 +522,8 @@ export function HomeScreen() {
                 />
               ))}
             </View>
-          </View>
+            </View>
+          </CollapsibleSection>
         )}
 
         <View style={{ height: 32 }} />
@@ -555,15 +561,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.inkFaint,
   },
-  section: {
-    marginTop: 24,
+  sectionInner: {
     paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.ink,
-    marginBottom: 12,
   },
   sectionSubtitle: {
     fontFamily: fonts.body,

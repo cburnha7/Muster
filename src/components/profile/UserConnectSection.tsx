@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
 
 interface ConnectStatus {
   onboarded: boolean;
@@ -82,9 +83,8 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
 
   if (loading) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.title}>Payment Account</Text>
-        <ActivityIndicator size="small" color={colors.pine} style={{ marginTop: Spacing.sm }} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color={colors.pine} />
       </View>
     );
   }
@@ -93,11 +93,8 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
   const isPending = status?.detailsSubmitted && !isActive;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <Ionicons name="card-outline" size={20} color={colors.pine} />
-        <Text style={styles.title}>Payment Account</Text>
-      </View>
+    <CollapsibleSection title="Payment Account">
+      <View style={styles.body}>
 
       {isActive ? (
         <View style={styles.statusRow}>
@@ -134,33 +131,18 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+      </View>
+    </CollapsibleSection>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  headerRow: {
-    flexDirection: 'row',
+  loadingContainer: {
+    padding: 32,
     alignItems: 'center',
-    gap: 8,
-    marginBottom: Spacing.sm,
   },
-  title: {
-    fontFamily: fonts.heading,
-    ...typeScale.h3,
-    color: colors.ink,
+  body: {
+    paddingHorizontal: Spacing.lg,
   },
   statusRow: {
     gap: 8,

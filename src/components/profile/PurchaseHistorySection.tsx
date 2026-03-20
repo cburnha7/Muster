@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
+import { colors, fonts, Spacing } from '../../theme';
 
 interface PastReservation {
   id: string;
@@ -38,7 +38,6 @@ interface PurchaseHistorySectionProps {
 export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) {
   const [purchases, setPurchases] = useState<PastReservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     loadPurchases();
@@ -118,109 +117,57 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
   if (purchases.length === 0) return null;
 
   return (
-    <View style={styles.section}>
-      <TouchableOpacity
-        style={styles.sectionHeader}
-        onPress={() => setIsExpanded(!isExpanded)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.sectionHeaderLeft}>
-          <Ionicons name="receipt-outline" size={24} color={colors.pine} />
-          <Text style={styles.sectionTitle}>Purchase History</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{purchases.length}</Text>
-          </View>
-        </View>
-        <Ionicons
-          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-          size={24}
-          color={colors.inkFaint}
-        />
-      </TouchableOpacity>
-
-      {isExpanded && purchases.map((purchase) => {
-        const status = getStatusInfo(purchase);
-        return (
-          <View key={purchase.id} style={styles.purchaseRow}>
-            <View style={styles.purchaseContent}>
-              <View style={styles.purchaseHeader}>
-                <Text style={styles.facilityName} numberOfLines={1}>
-                  {purchase.timeSlot.court.facility.name}
+    <View>
+      <CollapsibleSection title="Purchase History" count={purchases.length} defaultExpanded={false}>
+        <View style={styles.sectionInner}>
+          {purchases.map((purchase) => {
+            const status = getStatusInfo(purchase);
+            return (
+              <View key={purchase.id} style={styles.card}>
+                <View style={styles.purchaseHeader}>
+                  <Text style={styles.facilityName} numberOfLines={1}>
+                    {purchase.timeSlot.court.facility.name}
+                  </Text>
+                  <Text style={styles.price}>${purchase.totalPrice.toFixed(2)}</Text>
+                </View>
+                <Text style={styles.courtName}>
+                  {purchase.timeSlot.court.name} · {formatDate(purchase.timeSlot.date)}
                 </Text>
-                <Text style={styles.price}>${purchase.totalPrice.toFixed(2)}</Text>
+                <Text style={styles.timeText}>
+                  {formatTime(purchase.timeSlot.startTime)} – {formatTime(purchase.timeSlot.endTime)}
+                </Text>
+                <View style={[styles.statusBadge, { backgroundColor: status.color + '15' }]}>
+                  <Ionicons name={status.icon} size={14} color={status.color} />
+                  <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+                </View>
               </View>
-              <Text style={styles.courtName}>
-                {purchase.timeSlot.court.name} · {formatDate(purchase.timeSlot.date)}
-              </Text>
-              <Text style={styles.timeText}>
-                {formatTime(purchase.timeSlot.startTime)} – {formatTime(purchase.timeSlot.endTime)}
-              </Text>
-              <View style={[styles.statusBadge, { backgroundColor: status.color + '15' }]}>
-                <Ionicons name={status.icon} size={14} color={status.color} />
-                <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-              </View>
-            </View>
-          </View>
-        );
-      })}
+            );
+          })}
+        </View>
+      </CollapsibleSection>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginTop: 16,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  sectionTitle: {
-    fontFamily: fonts.label,
-    fontSize: 18,
-    color: colors.ink,
-    marginLeft: 8,
-  },
-  countBadge: {
-    backgroundColor: colors.pine + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  countBadgeText: {
-    fontSize: 11,
-    color: colors.pine,
-    fontWeight: '700',
+  sectionInner: {
+    paddingHorizontal: Spacing.lg,
+    gap: 8,
   },
   loadingContainer: {
     padding: 32,
     alignItems: 'center',
   },
-  purchaseRow: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    padding: 16,
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  purchaseContent: {},
   purchaseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

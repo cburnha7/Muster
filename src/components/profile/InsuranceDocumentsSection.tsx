@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
 import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocumentsApi';
 
@@ -43,18 +44,15 @@ export function InsuranceDocumentsSection({
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Insurance Documents</Text>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.pine} />
-        </View>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color={colors.pine} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Insurance Documents</Text>
+    <CollapsibleSection title="Insurance Documents" count={documents?.length || 0}>
+      <View style={styles.container}>
 
       {(!documents || documents.length === 0) ? (
         <View style={styles.emptyCard}>
@@ -113,21 +111,15 @@ export function InsuranceDocumentsSection({
         <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
         <Text style={styles.addButtonText}>Add Insurance Document</Text>
       </TouchableOpacity>
-    </View>
+      </View>
+    </CollapsibleSection>
   );
 }
 
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.ink,
-    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
   },
   loadingContainer: {
     backgroundColor: colors.chalk,

@@ -12,7 +12,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
 import { CancelReservationModal } from '../facilities/CancelReservationModal';
-import { colors } from '../../theme';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
+import { colors, fonts, Spacing } from '../../theme';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,7 +50,6 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   const navigation = useNavigation<NavigationProp>();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 
@@ -244,28 +244,9 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   }
 
   return (
-    <View style={styles.section}>
-      <TouchableOpacity
-        style={styles.sectionHeader}
-        onPress={() => setIsExpanded(!isExpanded)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.sectionHeaderLeft}>
-          <Ionicons name="calendar" size={24} color={colors.pine} />
-          <Text style={styles.sectionTitle}>My Reservations</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{unusedReservations.length}</Text>
-          </View>
-        </View>
-        <Ionicons
-          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-          size={24}
-          color="#999"
-        />
-      </TouchableOpacity>
-
-      {isExpanded && (
-        <>
+    <View>
+      <CollapsibleSection title="My Reservations" count={unusedReservations.length}>
+        <View style={styles.sectionInner}>
           {(() => {
             // Group by recurringGroupId first, then bookingSessionId, then singles
             const groups: { key: string; type: 'recurring' | 'session' | 'single'; items: typeof unusedReservations }[] = [];
@@ -344,8 +325,8 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
               );
             });
           })()}
-        </>
-      )}
+        </View>
+      </CollapsibleSection>
 
       <CancelReservationModal
         visible={showCancelModal}
@@ -387,48 +368,40 @@ interface RowProps {
 
 function ReservationRow({ reservation, navigation, formatDate, formatTime, onCreateEvent, onCancelReservation }: RowProps) {
   return (
-    <View style={styles.reservationRow}>
-      <View style={styles.compactCard}>
-        <TouchableOpacity
-          style={styles.compactCardTouchable}
-          onPress={() => (navigation as any).navigate('FacilityDetails', { facilityId: reservation.timeSlot.court.facility.id })}
-          activeOpacity={0.7}
-        >
-          <View style={styles.compactCardContent}>
-            <View style={styles.compactCardHeader}>
-              <Ionicons name="location" size={24} color={colors.pine} />
-              <Text style={styles.compactCardTitle} numberOfLines={1}>{reservation.timeSlot.court.facility.name}</Text>
-            </View>
-            <Text style={styles.compactCardSubtitle} numberOfLines={1}>
-              {reservation.timeSlot.court.name} • {formatDate(reservation.timeSlot.date)}
-            </Text>
-            <View style={styles.timeContainer}>
-              <Ionicons name="time-outline" size={16} color="#666" />
-              <Text style={styles.timeText}>
-                {formatTime(reservation.timeSlot.startTime)} - {formatTime(reservation.timeSlot.endTime)}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-        {reservation.cancellationStatus === 'pending_cancellation' ? (
-          <View style={styles.pendingBadge}>
-            <Ionicons name="time-outline" size={16} color="#E8A030" />
-            <Text style={styles.pendingText}>Pending{'\n'}Cancellation</Text>
-          </View>
-        ) : (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.createEventButton} onPress={() => onCreateEvent(reservation)} activeOpacity={0.7}>
-              <Ionicons name="add-circle" size={20} color={colors.pine} />
-              <Text style={styles.createEventText}>Create</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => onCancelReservation(reservation)} activeOpacity={0.7}>
-              <Ionicons name="close-circle" size={20} color="#FF3B30" />
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => (navigation as any).navigate('FacilityDetails', { facilityId: reservation.timeSlot.court.facility.id })}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle} numberOfLines={1}>{reservation.timeSlot.court.facility.name}</Text>
       </View>
-    </View>
+      <Text style={styles.cardSubtitle} numberOfLines={1}>
+        {reservation.timeSlot.court.name} · {formatDate(reservation.timeSlot.date)}
+      </Text>
+      <View style={styles.cardTimeRow}>
+        <Ionicons name="time-outline" size={14} color={colors.inkFaint} />
+        <Text style={styles.cardTimeText}>
+          {formatTime(reservation.timeSlot.startTime)} – {formatTime(reservation.timeSlot.endTime)}
+        </Text>
+      </View>
+      {reservation.cancellationStatus === 'pending_cancellation' ? (
+        <View style={styles.pendingBadge}>
+          <Ionicons name="time-outline" size={14} color="#E8A030" />
+          <Text style={styles.pendingText}>Pending Cancellation</Text>
+        </View>
+      ) : (
+        <View style={styles.cardActions}>
+          <TouchableOpacity style={styles.createEventButton} onPress={() => onCreateEvent(reservation)} activeOpacity={0.7}>
+            <Ionicons name="add-circle" size={18} color={colors.pine} />
+            <Text style={styles.createEventText}>Create Event</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => onCancelReservation(reservation)} activeOpacity={0.7}>
+            <Ionicons name="close-circle" size={18} color={colors.heart} />
+          </TouchableOpacity>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 }
 
@@ -447,16 +420,14 @@ function SessionGroup({ sessionId, reservations, navigation, formatDate, formatT
   const totalPrice = reservations.reduce((sum, r) => sum + r.totalPrice, 0);
 
   return (
-    <View style={styles.sessionGroup}>
-      <TouchableOpacity style={styles.sessionHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-        <View style={styles.sessionHeaderLeft}>
-          <Ionicons name="layers" size={18} color={colors.pine} />
-          <View style={{ flex: 1, marginLeft: 8 }}>
-            <Text style={styles.sessionTitle}>Bulk Booking · {reservations.length} slots</Text>
-            <Text style={styles.sessionSubtitle}>${totalPrice.toFixed(2)} total</Text>
-          </View>
+    <View style={styles.groupCard}>
+      <TouchableOpacity style={styles.groupHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
+        <Ionicons name="layers" size={18} color={colors.pine} />
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <Text style={styles.groupTitle}>Bulk Booking · {reservations.length} slots</Text>
+          <Text style={styles.groupSubtitle}>${totalPrice.toFixed(2)} total</Text>
         </View>
-        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#999" />
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color={colors.inkFaint} />
       </TouchableOpacity>
       {expanded && reservations.map((r) => (
         <ReservationRow
@@ -538,16 +509,14 @@ function RecurringSeriesGroup({
   };
 
   return (
-    <View style={styles.sessionGroup}>
-      <TouchableOpacity style={styles.sessionHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-        <View style={styles.sessionHeaderLeft}>
-          <Ionicons name="repeat" size={18} color={colors.pine} />
-          <View style={{ flex: 1, marginLeft: 8 }}>
-            <Text style={styles.sessionTitle}>Recurring · {reservations.length} slots</Text>
-            <Text style={styles.sessionSubtitle}>${totalPrice.toFixed(2)} total</Text>
-          </View>
+    <View style={styles.groupCard}>
+      <TouchableOpacity style={styles.groupHeader} onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
+        <Ionicons name="repeat" size={18} color={colors.pine} />
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <Text style={styles.groupTitle}>Recurring · {reservations.length} slots</Text>
+          <Text style={styles.groupSubtitle}>${totalPrice.toFixed(2)} total</Text>
         </View>
-        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#999" />
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color={colors.inkFaint} />
       </TouchableOpacity>
       {expanded && (
         <>
@@ -568,7 +537,7 @@ function RecurringSeriesGroup({
             activeOpacity={0.7}
             disabled={cancelling}
           >
-            <Ionicons name="close-circle" size={16} color="#FF3B30" />
+            <Ionicons name="close-circle" size={16} color={colors.heart} />
             <Text style={styles.cancelSeriesText}>
               {cancelling ? 'Cancelling...' : 'Cancel Entire Series'}
             </Text>
@@ -580,189 +549,123 @@ function RecurringSeriesGroup({
 }
 
 const styles = StyleSheet.create({
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginTop: 16,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF',
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 8,
-  },
-  countBadge: {
-    backgroundColor: colors.pine + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  countBadgeText: {
-    fontSize: 11,
-    color: colors.pine,
-    fontWeight: '700',
+  sectionInner: {
+    paddingHorizontal: Spacing.lg,
+    gap: 8,
   },
   loadingContainer: {
     padding: 32,
     alignItems: 'center',
   },
-  reservationRow: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  compactCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
+  // Individual reservation card
+  card: {
     backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  compactCardTouchable: {
-    flex: 1,
-    marginRight: 8,
-  },
-  compactCardContent: {
-    flex: 1,
-  },
-  compactCardHeader: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
   },
-  compactCardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 8,
+  cardTitle: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.ink,
     flex: 1,
   },
-  compactCardSubtitle: {
-    fontSize: 14,
-    color: '#666',
+  cardSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
     marginBottom: 4,
   },
-  timeContainer: {
+  cardTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 4,
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-  },
-  actionButtons: {
-    flexDirection: 'row',
     gap: 4,
+    marginBottom: 10,
+  },
+  cardTimeText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   createEventButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: colors.pine + '10',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.pine + '30',
-    minWidth: 80,
-  },
-  createEventText: {
-    fontSize: 12,
-    color: colors.pine,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  cancelButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: '#FF3B3010',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#FF3B3030',
-    minWidth: 80,
-  },
-  cancelText: {
-    fontSize: 12,
-    color: '#FF3B30',
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  pendingBadge: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#E8A03015',
+    backgroundColor: `${colors.pine}10`,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E8A03040',
-    minWidth: 100,
+    borderColor: `${colors.pine}30`,
+    gap: 6,
+  },
+  createEventText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.pine,
+  },
+  cancelButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: `${colors.heart}10`,
+    borderWidth: 1,
+    borderColor: `${colors.heart}30`,
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#E8A03015',
+    borderRadius: 6,
+    gap: 4,
   },
   pendingText: {
-    fontSize: 12,
+    fontFamily: fonts.label,
+    fontSize: 11,
     color: '#E8A030',
-    fontWeight: '700',
-    marginLeft: 6,
-    textAlign: 'center',
-    lineHeight: 14,
   },
-  // Session group styles
-  sessionGroup: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+  // Group cards (session / recurring)
+  groupCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  sessionHeader: {
+  groupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F8F8F8',
+    padding: 14,
+    backgroundColor: colors.chalk,
   },
-  sessionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  sessionTitle: {
+  groupTitle: {
+    fontFamily: fonts.label,
     fontSize: 14,
-    fontWeight: '700',
-    color: '#333',
+    color: colors.ink,
   },
-  sessionSubtitle: {
+  groupSubtitle: {
+    fontFamily: fonts.body,
     fontSize: 12,
     color: colors.pine,
-    fontWeight: '600',
     marginTop: 1,
   },
   cancelSeriesButton: {
@@ -770,15 +673,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    backgroundColor: '#FF3B3008',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: `${colors.inkFaint}20`,
     gap: 6,
   },
   cancelSeriesText: {
+    fontFamily: fonts.ui,
     fontSize: 13,
-    color: '#FF3B30',
-    fontWeight: '700',
+    color: colors.heart,
   },
 });

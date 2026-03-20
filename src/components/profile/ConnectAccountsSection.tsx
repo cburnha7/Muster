@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { CollapsibleSection } from '../ui/CollapsibleSection';
 
 interface ConnectAccount {
   entityType: string;
@@ -51,7 +52,6 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
   const { token } = useAuth();
   const [accounts, setAccounts] = useState<ConnectAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(true);
   const [onboardingEntityId, setOnboardingEntityId] = useState<string | null>(null);
 
   const loadAccounts = useCallback(async () => {
@@ -129,33 +129,16 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
 
   if (loading) {
     return (
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Text style={styles.sectionTitle}>Stripe Connect</Text>
-        </View>
-        <ActivityIndicator size="small" color={colors.pine} style={{ marginTop: Spacing.md }} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color={colors.pine} />
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      <TouchableOpacity
-        style={styles.headerRow}
-        onPress={() => setIsExpanded(!isExpanded)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.sectionTitle}>Stripe Connect</Text>
-        <Ionicons
-          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-          size={20}
-          color={colors.inkFaint}
-        />
-      </TouchableOpacity>
-
-      {isExpanded && (
-        <View style={styles.body}>
-          {accounts.length === 0 ? (
+    <CollapsibleSection title="Stripe Connect" count={accounts.length}>
+      <View style={styles.body}>
+        {accounts.length === 0 ? (
             <Text style={styles.emptyText}>
               You don't manage any rosters, facilities, or leagues yet.
             </Text>
@@ -194,8 +177,7 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
             })
           )}
         </View>
-      )}
-    </View>
+    </CollapsibleSection>
   );
 }
 
@@ -214,30 +196,12 @@ function StatusBadge({ status }: { status: OnboardingStatus }) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loadingContainer: {
+    padding: 32,
     alignItems: 'center',
   },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    ...typeScale.h3,
-    color: colors.ink,
-  },
   body: {
-    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
   },
   emptyText: {
     fontFamily: fonts.body,
