@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { ReduxProvider } from './src/store/Provider';
@@ -28,7 +28,7 @@ export default function App(): JSX.Element {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream }}>
+      <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.pine} />
       </View>
     );
@@ -57,3 +57,12 @@ export default function App(): JSX.Element {
     </ErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.cream,
+  },
+});
