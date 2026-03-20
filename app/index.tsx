@@ -1,11 +1,7 @@
+// This file is unused — the app entry point is index.js → App.tsx
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { RootNavigator } from '../src/navigation/RootNavigator';
+import { View } from 'react-native';
 
-export default function Index(): JSX.Element {
-  return (
-    <NavigationContainer independent={true}>
-      <RootNavigator />
-    </NavigationContainer>
-  );
+export default function Index() {
+  return <View />;
 }
