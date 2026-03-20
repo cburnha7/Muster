@@ -38,6 +38,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { Facility, SportType, FacilityFilters } from '../../types';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useDependentContext } from '../../hooks/useDependentContext';
 
 export function FacilitiesListScreen(): JSX.Element {
   const navigation = useNavigation();
@@ -52,6 +53,7 @@ export function FacilitiesListScreen(): JSX.Element {
   const error = useSelector(selectFacilitiesError);
   
   const { user: currentUser } = useAuth();
+  const { isDependent } = useDependentContext();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -389,10 +391,12 @@ export function FacilitiesListScreen(): JSX.Element {
         />
       )}
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
-        <Ionicons name="add" size={28} color={colors.chalk} />
-      </TouchableOpacity>
+      {/* FAB — hidden for dependents */}
+      {!isDependent && (
+        <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
+          <Ionicons name="add" size={28} color={colors.chalk} />
+        </TouchableOpacity>
+      )}
 
       {renderFilterModal()}
     </View>

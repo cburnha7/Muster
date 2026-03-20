@@ -21,6 +21,7 @@ import { leagueService } from '../../services/api/LeagueService';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
 import { SportType } from '../../types';
+import { useDependentContext } from '../../hooks/useDependentContext';
 
 // Use a flexible type since data comes from multiple API sources with different shapes
 type LeagueItem = any;
@@ -34,6 +35,7 @@ interface Section {
 export const LeaguesBrowserScreen: React.FC = () => {
   const navigation = useNavigation();
   const currentUser = useSelector(selectUser);
+  const { isDependent } = useDependentContext();
 
   const [myLeagues, setMyLeagues] = useState<LeagueItem[]>([]);
   const [publicLeagues, setPublicLeagues] = useState<LeagueItem[]>([]);
@@ -187,10 +189,12 @@ export const LeaguesBrowserScreen: React.FC = () => {
         ))}
       </ScrollView>
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
-        <Ionicons name="add" size={28} color={colors.chalk} />
-      </TouchableOpacity>
+      {/* FAB — hidden for dependents */}
+      {!isDependent && (
+        <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
+          <Ionicons name="add" size={28} color={colors.chalk} />
+        </TouchableOpacity>
+      )}
 
       {/* Filter Modal */}
       <Modal

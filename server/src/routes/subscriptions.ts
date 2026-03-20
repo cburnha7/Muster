@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../index';
 import { optionalAuthMiddleware } from '../middleware/auth';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = Router();
 
@@ -38,7 +39,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
 });
 
 /** Create or update subscription (called after Stripe checkout success) */
-router.post('/', optionalAuthMiddleware, async (req: Request, res: Response) => {
+router.post('/', optionalAuthMiddleware, requireNonDependent, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {

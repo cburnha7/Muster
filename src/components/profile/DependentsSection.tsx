@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
 import { colors, fonts, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { DependentSummary } from '../../types/dependent';
+import { setActiveUser } from '../../store/slices/contextSlice';
 
 /**
  * DependentsSection
@@ -24,6 +26,7 @@ import { DependentSummary } from '../../types/dependent';
  */
 export function DependentsSection() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const { user: authUser } = useAuth();
   const [dependents, setDependents] = useState<DependentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +70,10 @@ export function DependentsSection() {
     (navigation as any).navigate('DependentProfile', { dependentId: dependent.id });
   };
 
+  const handleSwitchTo = (dependent: DependentSummary) => {
+    dispatch(setActiveUser(dependent.id));
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -91,26 +98,37 @@ export function DependentsSection() {
         </View>
       ) : (
         dependents.map((dependent) => (
-          <TouchableOpacity
-            key={dependent.id}
-            style={styles.dependentCard}
-            onPress={() => handleDependentPress(dependent)}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={`View ${dependent.firstName} ${dependent.lastName}'s profile`}
-          >
-            {dependent.profileImage ? (
-              <Image source={{ uri: dependent.profileImage }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Ionicons name="person" size={20} color={colors.inkFaint} />
-              </View>
-            )}
-            <Text style={styles.dependentName}>
-              {dependent.firstName} {dependent.lastName}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
-          </TouchableOpacity>
+          <View key={dependent.id} style={styles.dependentCard}>
+            <TouchableOpacity
+              style={styles.dependentInfo}
+              onPress={() => handleDependentPress(dependent)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`View ${dependent.firstName} ${dependent.lastName}'s profile`}
+            >
+              {dependent.profileImage ? (
+                <Image source={{ uri: dependent.profileImage }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                  <Ionicons name="person" size={20} color={colors.inkFaint} />
+                </View>
+              )}
+              <Text style={styles.dependentName}>
+                {dependent.firstName} {dependent.lastName}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => handleSwitchTo(dependent)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Switch to ${dependent.firstName}`}
+            >
+              <Ionicons name="swap-horizontal" size={14} color={colors.pine} />
+              <Text style={styles.switchButtonText}>Switch</Text>
+            </TouchableOpacity>
+          </View>
         ))
       )}
 
@@ -181,6 +199,11 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  dependentInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   avatar: {
     width: 40,
     height: 40,
@@ -215,5 +238,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.pine,
     marginLeft: Spacing.sm,
+  },
+  switchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: `${colors.pine}15`,
+    marginLeft: Spacing.sm,
+    gap: 4,
+  },
+  switchButtonText: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.pine,
   },
 });

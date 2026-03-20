@@ -12,6 +12,7 @@ import {
   deleteImageFiles 
 } from '../services/ImageUploadService';
 import { isValidPolicyHours } from '../services/cancellation-window';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = Router();
 const timeSlotGenerator = new TimeSlotGeneratorService();
@@ -466,7 +467,7 @@ router.post('/check-duplicates', async (req, res) => {
 });
 
 // Create facility
-router.post('/', async (req, res) => {
+router.post('/', requireNonDependent, async (req, res) => {
   try {
     const {
       name,
@@ -599,12 +600,31 @@ router.post('/', async (req, res) => {
 });
 
 // Update facility
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
-    const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, ...updateData } = req.body;
+    const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, ...rawData } = req.body;
 
     // TODO: Add authorization check - only owner can update
+
+    // Whitelist only known Facility columns to prevent Prisma "Unknown arg" errors
+    const ALLOWED_FIELDS = [
+      'name', 'description', 'sportTypes', 'amenities', 'imageUrl',
+      'rating', 'pricePerHour', 'isActive', 'isVerified', 'verificationStatus',
+      'accessInstructions', 'parkingInfo', 'minimumBookingHours', 'bufferTimeMins',
+      'contactName', 'contactPhone', 'contactEmail', 'contactWebsite',
+      'facilityMapUrl', 'facilityMapThumbnailUrl',
+      'street', 'city', 'state', 'zipCode', 'country', 'latitude', 'longitude',
+      'noticeWindowHours', 'teamPenaltyPct', 'penaltyDestination', 'policyVersion',
+      'cancellationPolicyHours', 'stripeConnectAccountId', 'requiresInsurance',
+    ];
+
+    const updateData: Record<string, any> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in rawData) {
+        updateData[key] = rawData[key];
+      }
+    }
 
     // Coerce requiresInsurance to boolean if provided
     if (requiresInsurance !== undefined) {
@@ -720,7 +740,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete facility
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -867,7 +887,7 @@ export default router;
 // ============================================================================
 
 // Submit verification request
-router.post('/:id/verification', async (req, res) => {
+router.post('/:id/verification', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
     const { documents } = req.body;
@@ -910,7 +930,7 @@ router.get('/:id/verification', async (req, res) => {
 // ============================================================================
 
 // Create rate schedule
-router.post('/:id/rates', async (req, res) => {
+router.post('/:id/rates', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
     const rateData = req.body;
@@ -1015,7 +1035,7 @@ router.post('/:id/calculate-price', async (req, res) => {
 // ============================================================================
 
 // Create availability slot
-router.post('/:id/availability', async (req, res) => {
+router.post('/:id/availability', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
     const availabilityData = req.body;
@@ -1136,7 +1156,7 @@ router.get('/:id/availability/check', async (req, res) => {
 // ============================================================================
 
 // Upload facility map image
-router.post('/:id/map', uploadMap.single('image'), async (req, res) => {
+router.post('/:id/map', uploadMap.single('image'), requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
     const file = req.file;
@@ -1326,7 +1346,7 @@ router.get('/:id/cancellation-policy', async (req, res) => {
 });
 
 // Update cancellation policy for a facility
-router.put('/:id/cancellation-policy', async (req, res) => {
+router.put('/:id/cancellation-policy', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
     const { noticeWindowHours, teamPenaltyPct, penaltyDestination } = req.body;

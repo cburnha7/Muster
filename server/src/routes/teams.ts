@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../index';
 import { optionalAuthMiddleware } from '../middleware/auth';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = Router();
 
@@ -252,7 +253,7 @@ router.get('/:id/events', async (req, res) => {
 });
 
 // Create team
-router.post('/', optionalAuthMiddleware, async (req, res) => {
+router.post('/', optionalAuthMiddleware, requireNonDependent, async (req, res) => {
   try {
     const { initialMemberIds, isPublic, ...rest } = req.body;
     const creatorId = req.user?.userId || req.headers['x-user-id'] as string | undefined;

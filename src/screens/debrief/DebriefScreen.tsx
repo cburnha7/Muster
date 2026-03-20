@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing } from '../../theme';
 import { salute as saluteConstants } from '../../theme/brand';
 import { debriefService, DebriefParticipant, DebriefDetails } from '../../services/api/DebriefService';
+import { SaluteOverlay } from '../../components/SaluteOverlay';
 
 export function DebriefScreen(): JSX.Element {
   const navigation = useNavigation();
@@ -167,15 +168,17 @@ export function DebriefScreen(): JSX.Element {
                 activeOpacity={isReadonly ? 1 : 0.7}
                 disabled={isReadonly}
               >
-                {p.profileImage ? (
-                  <Image source={{ uri: p.profileImage }} style={styles.avatar} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitials}>{getInitials(p)}</Text>
-                  </View>
-                )}
+                <SaluteOverlay saluted={isSaluted} size={56}>
+                  {p.profileImage ? (
+                    <Image source={{ uri: p.profileImage }} style={styles.avatar} />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Text style={styles.avatarInitials}>{getInitials(p)}</Text>
+                    </View>
+                  )}
+                </SaluteOverlay>
                 <Text style={styles.participantName} numberOfLines={1}>
-                  {isSaluted ? '🫡 ' : ''}{p.firstName} {p.lastName?.[0]}.
+                  {p.firstName} {p.lastName?.[0]}.
                 </Text>
               </TouchableOpacity>
             );
@@ -287,7 +290,7 @@ const styles = StyleSheet.create({
     borderColor: colors.court,
     backgroundColor: colors.court + '10',
   },
-  avatar: { width: 56, height: 56, borderRadius: 28, marginBottom: Spacing.sm },
+  avatar: { width: 56, height: 56, borderRadius: 28 },
   avatarPlaceholder: {
     width: 56,
     height: 56,
@@ -295,10 +298,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
   },
   avatarInitials: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
-  participantName: { fontSize: 13, color: colors.ink, textAlign: 'center' },
+  participantName: { fontSize: 13, color: colors.ink, textAlign: 'center', marginTop: Spacing.sm },
   ratingSection: { marginBottom: Spacing.xl, alignItems: 'center', alignSelf: 'stretch' },
   ratingHint: { fontSize: 13, color: colors.inkFaint, marginBottom: Spacing.md, textAlign: 'center' },
   starsRow: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.sm },

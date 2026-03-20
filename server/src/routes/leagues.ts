@@ -5,6 +5,7 @@ import { ScheduleGeneratorService, LeagueWithRosters } from '../services/Schedul
 import { checkLeagueReady } from '../jobs/league-ready-check';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import { requirePlan } from '../middleware/subscription';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -227,7 +228,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/leagues - Create new league
-router.post('/', optionalAuthMiddleware, requirePlan('league'), async (req: Request, res: Response) => {
+router.post('/', optionalAuthMiddleware, requireNonDependent, requirePlan('league'), async (req: Request, res: Response) => {
   try {
     const {
       name,

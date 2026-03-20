@@ -21,6 +21,7 @@ import { userService } from '../../services/api/UserService';
 import { setUserTeams } from '../../store/slices/teamsSlice';
 import { Team } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useDependentContext } from '../../hooks/useDependentContext';
 
 interface Section {
   title: string;
@@ -32,6 +33,7 @@ export function TeamsListScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
+  const { isDependent } = useDependentContext();
 
   const [myRosters, setMyRosters] = useState<Team[]>([]);
   const [publicRosters, setPublicRosters] = useState<Team[]>([]);
@@ -190,12 +192,15 @@ export function TeamsListScreen() {
         ))}
       </ScrollView>
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
-        <Ionicons name="add" size={28} color={colors.chalk} />
-      </TouchableOpacity>
+      {/* FAB — hidden for dependents (create roster not allowed) */}
+      {!isDependent && (
+        <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
+          <Ionicons name="add" size={28} color={colors.chalk} />
+        </TouchableOpacity>
+      )}
 
-      <TouchableOpacity style={styles.joinButton} onPress={handleJoinTeam}>
+      {/* Join with Code — dependents CAN join rosters */}
+      <TouchableOpacity style={[styles.joinButton, isDependent && { bottom: 20 }]} onPress={handleJoinTeam}>
         <Text style={styles.joinButtonText}>Join with Code</Text>
       </TouchableOpacity>
     </View>

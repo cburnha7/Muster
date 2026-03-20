@@ -759,27 +759,7 @@ export function EventDetailsScreen(): JSX.Element {
         title="Event Details"
         showBack={true}
         onBackPress={() => (navigation as any).navigate('Home', { screen: 'HomeScreen' })}
-        rightComponent={
-          isUpcoming && isOrganizer ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity
-                onPress={handleEditEvent}
-                style={{ padding: 8 }}
-              >
-                <Ionicons name="create-outline" size={24} color={colors.pine} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => {
-                  console.log('≡ƒùæ∩╕Å Cancel button clicked!');
-                  setShowCancelModal(true);
-                }}
-                style={{ padding: 8 }}
-              >
-                <Ionicons name="close-circle-outline" size={24} color={colors.heart} />
-              </TouchableOpacity>
-            </View>
-          ) : undefined
-        }
+        rightComponent={undefined}
       />
 
       <ScrollView
@@ -1200,6 +1180,26 @@ export function EventDetailsScreen(): JSX.Element {
             }
             disabled={true}
             onPress={() => {}}
+          />
+        )}
+
+        {/* Edit Event — full-width, organizer only, upcoming only */}
+        {isUpcoming && isOrganizer && (
+          <FormButton
+            title="Edit Event"
+            variant="outline"
+            onPress={handleEditEvent}
+            style={{ marginTop: 10 }}
+          />
+        )}
+
+        {/* Delete Event — full-width, organizer only, upcoming only */}
+        {isUpcoming && isOrganizer && (
+          <FormButton
+            title="Delete Event"
+            variant="danger"
+            onPress={() => setShowCancelModal(true)}
+            style={{ marginTop: 10 }}
           />
         )}
       </View>

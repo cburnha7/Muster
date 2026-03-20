@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../index';
 import { ScheduleGeneratorService } from '../services/ScheduleGeneratorService';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = Router();
 
@@ -268,7 +269,7 @@ router.get('/:id/salutes/status', async (req, res) => {
 });
 
 // Create event
-router.post('/', async (req, res) => {
+router.post('/', requireNonDependent, async (req, res) => {
   try {
     console.log('=== Create Event Request ===');
     console.log('Request body:', JSON.stringify(req.body, null, 2));

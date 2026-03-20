@@ -22,10 +22,12 @@ import { InsuranceDocumentsSection } from '../../components/profile/InsuranceDoc
 import { InsuranceDocumentForm } from '../../components/profile/InsuranceDocumentForm';
 import { colors, fonts, typeScale } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useDependentContext } from '../../hooks/useDependentContext';
 
 export function ProfileScreen() {
   const navigation = useNavigation();
   const { user: authUser, logout } = useAuth();
+  const { isDependent } = useDependentContext();
 
   const [refreshing, setRefreshing] = useState(false);
   const [showInsuranceForm, setShowInsuranceForm] = useState(false);
@@ -96,31 +98,31 @@ export function ProfileScreen() {
         </View>
       </View>
 
-      {/* Dependents */}
-      <DependentsSection />
+      {/* Dependents — hidden for dependents (can't manage other users) */}
+      {!isDependent && <DependentsSection />}
 
       {/* My Reservations */}
       {authUser?.id && <MyReservationsSection userId={authUser.id} />}
 
-      {/* User Payment Account */}
-      {authUser?.id && <UserConnectSection userId={authUser.id} />}
+      {/* User Payment Account — hidden for dependents */}
+      {!isDependent && authUser?.id && <UserConnectSection userId={authUser.id} />}
 
-      {/* Stripe Connect Accounts (entity-level) */}
-      {authUser?.id && <ConnectAccountsSection userId={authUser.id} />}
+      {/* Stripe Connect Accounts (entity-level) — hidden for dependents */}
+      {!isDependent && authUser?.id && <ConnectAccountsSection userId={authUser.id} />}
 
       {/* Sport Ratings */}
       {authUser?.id && <SportRatingsSection userId={authUser.id} />}
 
-      {/* Insurance Documents */}
-      {authUser?.id && (
+      {/* Insurance Documents — hidden for dependents */}
+      {!isDependent && authUser?.id && (
         <InsuranceDocumentsSection
           userId={authUser.id}
           onAddDocument={() => setShowInsuranceForm(true)}
         />
       )}
 
-      {/* Insurance Document Form Modal */}
-      {showInsuranceForm && authUser?.id && (
+      {/* Insurance Document Form Modal — hidden for dependents */}
+      {!isDependent && showInsuranceForm && authUser?.id && (
         <InsuranceDocumentForm
           userId={authUser.id}
           onClose={() => setShowInsuranceForm(false)}

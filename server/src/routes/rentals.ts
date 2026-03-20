@@ -6,11 +6,12 @@ import { evaluateCancellationWindow } from '../services/cancellation-window';
 import { createCancelRequest } from '../services/cancel-request';
 import { stripe } from '../services/stripe-connect';
 import { InsuranceDocumentService } from '../services/InsuranceDocumentService';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = Router();
 
 // Rent a time slot
-router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', async (req, res) => {
+router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', requireNonDependent, async (req, res) => {
   try {
     const { facilityId, courtId, slotId } = req.params;
     const { userId } = req.body;
@@ -357,7 +358,7 @@ router.post('/rentals/:rentalId/request-cancellation', async (req, res) => {
 });
 
 // Bulk rent multiple time slots in a single transaction
-router.post('/rentals/bulk', async (req, res) => {
+router.post('/rentals/bulk', requireNonDependent, async (req, res) => {
   try {
     const { userId, slots } = req.body;
 
@@ -796,7 +797,7 @@ router.post('/rentals/recurring/check', async (req, res) => {
  * Body: { userId, courtId, facilityId, slotStartTime, slotEndTime, frequency, startDate, endDate, skipConflicts }
  * skipConflicts: if true, only books available slots; if false, fails on any conflict.
  */
-router.post('/rentals/recurring', async (req, res) => {
+router.post('/rentals/recurring', requireNonDependent, async (req, res) => {
   try {
     const { userId, courtId, facilityId, slotStartTime, slotEndTime, frequency, startDate, endDate, skipConflicts } = req.body;
 

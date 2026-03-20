@@ -27,6 +27,7 @@ import { selectDependents } from '../../store/slices/contextSlice';
 import { useAuth } from '../../context/AuthContext';
 import { Event, EventFilters, SportType, EventStatus } from '../../types';
 import { PersonFilter } from '../../types/eventsCalendar';
+import { useDependentContext } from '../../hooks/useDependentContext';
 import {
   assignPersonColors,
   buildMarkedDates,
@@ -39,6 +40,7 @@ export function EventsListScreen(): React.JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user: currentUser } = useAuth();
+  const { isDependent } = useDependentContext();
 
   // Dependents from Redux
   const dependents = useSelector(selectDependents);
@@ -365,10 +367,12 @@ export function EventsListScreen(): React.JSX.Element {
         />
       )}
 
-      {/* FAB (preserved) */}
-      <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
-        <Ionicons name="add" size={28} color={colors.chalk} />
-      </TouchableOpacity>
+      {/* FAB — hidden for dependents */}
+      {!isDependent && (
+        <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
+          <Ionicons name="add" size={28} color={colors.chalk} />
+        </TouchableOpacity>
+      )}
 
       {/* Filter overlay (preserved) */}
       {showFilters && (
