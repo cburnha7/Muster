@@ -1,8 +1,22 @@
-// This file is unused — the app entry point is index.js → App.tsx
-// Kept as a placeholder to prevent expo from complaining about missing app directory files
+// Minimal layout — uses Expo Router's Slot to render child routes.
+// The actual app content is rendered by app/index.tsx.
 import React from 'react';
-import { View } from 'react-native';
+import { Slot } from 'expo-router';
+import { ReduxProvider } from '../src/store/Provider';
+import { AuthProvider } from '../src/context/AuthContext';
+import { NotificationProvider } from '../src/services/notifications';
+import { ErrorBoundary } from '../src/components/error/ErrorBoundary';
 
 export default function RootLayout() {
-  return <View />;
+  return (
+    <ErrorBoundary>
+      <ReduxProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <Slot />
+          </NotificationProvider>
+        </AuthProvider>
+      </ReduxProvider>
+    </ErrorBoundary>
+  );
 }

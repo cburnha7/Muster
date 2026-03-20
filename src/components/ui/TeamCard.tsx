@@ -71,16 +71,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, compac
             <Text style={styles.managerBadgeText}>Manager</Text>
           </View>
         )}
-        <View
-          style={[
-            styles.skillBadge,
-            { backgroundColor: getSkillLevelColor(team.skillLevel) },
-          ]}
-        >
-          <Text style={styles.skillText}>
-            {team.skillLevel.replace('_', ' ').toUpperCase()}
-          </Text>
-        </View>
       </View>
 
       <View style={styles.header}>
