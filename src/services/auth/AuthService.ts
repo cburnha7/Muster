@@ -300,17 +300,49 @@ export class AuthService {
   }
 
   /**
-   * Get current authentication token
+   * Get current authentication token (in-memory)
    */
   getToken(): string | null {
     return this.token;
   }
 
   /**
-   * Get current authenticated user
+   * Get stored token from persistent storage (SecureStore / localStorage)
+   */
+  async getStoredToken(): Promise<string | null> {
+    try {
+      if (Platform.OS === 'web') {
+        return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+      } else {
+        return await SecureStore.getItemAsync(TOKEN_KEY);
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get current authenticated user (in-memory)
    */
   getCurrentUser(): User | null {
     return this.currentUser;
+  }
+
+  /**
+   * Get stored user from persistent storage (SecureStore / localStorage)
+   */
+  async getStoredUser(): Promise<User | null> {
+    try {
+      let raw: string | null = null;
+      if (Platform.OS === 'web') {
+        raw = localStorage.getItem(USER_KEY);
+      } else {
+        raw = await SecureStore.getItemAsync(USER_KEY);
+      }
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   }
 
   /**

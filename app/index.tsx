@@ -1,7 +1,4 @@
-// Stub — the real entry point is index.js → App.tsx.
-import React from 'react';
-import { View } from 'react-native';
-
-export default function Index() {
-  return <View />;
-}
+// Redirect to the real App entry point.
+// This file exists to prevent Expo Router from rendering a blank screen
+// if file-based routing is accidentally activated.
+export { default } from '../App';
