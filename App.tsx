@@ -14,18 +14,50 @@ let themeColors: { cream: string };
 
 let importError: string | null = null;
 
+const imports: string[] = [];
 try {
   ReduxProvider = require('./src/store/Provider').ReduxProvider;
+  imports.push('ReduxProvider ✓');
+} catch (e: any) { importError = `ReduxProvider: ${e?.message}`; }
+
+if (!importError) try {
   AuthProvider = require('./src/context/AuthContext').AuthProvider;
+  imports.push('AuthProvider ✓');
+} catch (e: any) { importError = `AuthProvider: ${e?.message}`; }
+
+if (!importError) try {
   NotificationProvider = require('./src/services/notifications').NotificationProvider;
+  imports.push('NotificationProvider ✓');
+} catch (e: any) { importError = `NotificationProvider: ${e?.message}`; }
+
+if (!importError) try {
   NavigationContainer = require('@react-navigation/native').NavigationContainer;
+  imports.push('NavigationContainer ✓');
+} catch (e: any) { importError = `NavigationContainer: ${e?.message}`; }
+
+if (!importError) try {
   RootNavigator = require('./src/navigation/RootNavigator').RootNavigator;
+  imports.push('RootNavigator ✓');
+} catch (e: any) { importError = `RootNavigator: ${e?.message}`; }
+
+if (!importError) try {
   ErrorBoundary = require('./src/components/error/ErrorBoundary').ErrorBoundary;
+  imports.push('ErrorBoundary ✓');
+} catch (e: any) { importError = `ErrorBoundary: ${e?.message}`; }
+
+if (!importError) try {
   useFontsHook = require('./src/hooks/useFonts').useFonts;
+  imports.push('useFonts ✓');
+} catch (e: any) { importError = `useFonts: ${e?.message}`; }
+
+if (!importError) try {
   themeColors = require('./src/theme').colors;
-} catch (e: any) {
-  importError = e?.message || 'Unknown import error';
-  console.error('App import error:', e);
+  imports.push('theme ✓');
+} catch (e: any) { importError = `theme: ${e?.message}`; }
+
+if (importError) {
+  console.error('App import error:', importError);
+  console.log('Loaded so far:', imports.join(', '));
 }
 
 function AppContent() {
@@ -68,6 +100,9 @@ export default function App() {
       <View style={styles.error}>
         <Text style={styles.errorTitle}>Startup Error</Text>
         <Text style={styles.errorMessage}>{importError}</Text>
+        <Text style={[styles.errorMessage, { marginTop: 16, fontSize: 12, opacity: 0.7 }]}>
+          Loaded: {imports.join(', ') || 'none'}
+        </Text>
       </View>
     );
   }
