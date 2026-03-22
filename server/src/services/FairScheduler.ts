@@ -358,9 +358,29 @@ function generateFairMatchups(teams: RosterInfo[], gamesPerTeam: number): { matc
  *   - Earliest valid slots are used first.
  *   - Idle gaps are minimized because we greedily fill earliest slots.
  */
+/**
+ * Return the ISO week key for a UTC date (YYYY-Www).
+ * ISO weeks start on Monday; week 1 contains the year's first Thursday.
+ */
+function isoWeekKey(d: Date): string {
+  const tmp = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  // Set to nearest Thursday: current date + 4 - current day number (Mon=1..Sun=7)
+  const dayNum = tmp.getUTCDay() || 7; // convert Sun=0 → 7
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((tmp.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+/** Return "YYYY-MM" for a UTC date. */
+function monthKey(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
 function assignSlotsToMatchups(
   matchups: Matchup[],
   slots: Date[],
+  frequency: 'all_at_once' | 'weekly' | 'monthly' = 'weekly',
 ): { games: ScheduledGame[]; warnings: string[] } {
   const warnings: string[] = [];
 
@@ -383,8 +403,6 @@ function assignSlotsToMatchups(
   }
 
   // ── Step 2: Group matchups by round ──
-  // All matchups in the same round are concurrent and should be assigned
-  // to the same game day so every roster plays once per week.
   const roundOrder: number[] = [];
   const roundMatchups = new Map<number, Matchup[]>();
   for (const m of matchups) {
@@ -396,9 +414,11 @@ function assignSlotsToMatchups(
   }
 
   // ── Step 3: Assign each round to a game day ──
-  // Rounds are assigned to days in order. Each round's games go on the same
-  // day in sequential (non-overlapping) time slots so they can share a facility.
+  // For weekly frequency: max one round per calendar week.
+  // For monthly frequency: max one round per calendar month.
+  // For all_at_once: no spacing constraint.
   const usedSlots = new Set<number>();
+  const usedPeriods = new Set<string>(); // week or month keys already taken
   const games: ScheduledGame[] = [];
   let gameNumber = 1;
   let dayIdx = 0;
@@ -407,19 +427,30 @@ function assignSlotsToMatchups(
     const roundGames = roundMatchups.get(roundNum)!;
     let placed = false;
 
-    // Try days starting from the current dayIdx
     for (let attempt = 0; attempt < dayOrder.length; attempt++) {
       const di = (dayIdx + attempt) % dayOrder.length;
       const dk = dayOrder[di];
       const slotsForDay = daySlots.get(dk)!;
 
-      // Find enough sequential unused slots on this day for all games in the round
-      const availableSlots = slotsForDay.filter((si) => !usedSlots.has(si));
+      // Enforce spacing: skip this day if its week/month is already used
+      if (frequency === 'weekly' || frequency === 'monthly') {
+        const refSlot = slots[slotsForDay[0]];
+        const periodKey = frequency === 'weekly' ? isoWeekKey(refSlot) : monthKey(refSlot);
+        if (usedPeriods.has(periodKey)) continue;
+      }
 
-      if (availableSlots.length < roundGames.length) continue; // not enough slots
+      const availableSlots = slotsForDay.filter((si) => !usedSlots.has(si));
+      if (availableSlots.length < roundGames.length) continue;
 
       // Take the earliest N available slots for this round's games
       const assignedSlots = availableSlots.slice(0, roundGames.length);
+
+      // Mark the period as used
+      if (frequency === 'weekly' || frequency === 'monthly') {
+        const refSlot = slots[slotsForDay[0]];
+        const periodKey = frequency === 'weekly' ? isoWeekKey(refSlot) : monthKey(refSlot);
+        usedPeriods.add(periodKey);
+      }
 
       for (let gi = 0; gi < roundGames.length; gi++) {
         const matchup = roundGames[gi];
@@ -440,7 +471,7 @@ function assignSlotsToMatchups(
         gameNumber++;
       }
 
-      dayIdx = di + 1; // next round starts from the next day
+      dayIdx = di + 1;
       placed = true;
       break;
     }
@@ -899,7 +930,7 @@ export function generateSchedule(input: SchedulerInput): SchedulerOutput {
       };
     }
 
-    const { games, warnings: slotWarnings } = assignSlotsToMatchups(matchups, slots);
+    const { games, warnings: slotWarnings } = assignSlotsToMatchups(matchups, slots, input.frequency);
     regularSeasonGames = games;
     allWarnings.push(...slotWarnings);
 
