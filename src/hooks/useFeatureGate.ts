@@ -11,6 +11,7 @@
 import { useSelector } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
 import { selectPlan, selectIsSubscriptionActive } from '../store/slices/subscriptionSlice';
+import { selectActiveUserId, selectDependents } from '../store/slices/contextSlice';
 import {
   GatedFeature,
   SubscriptionPlan,
@@ -41,6 +42,18 @@ export function useFeatureGate(feature: GatedFeature): FeatureGateResult {
   // Admins bypass all gates
   if (user?.role === 'admin') {
     return { allowed: true, requiredPlan };
+  }
+
+  // Dependents are locked to free-tier access only
+  const activeUserId = useSelector(selectActiveUserId);
+  const dependents = useSelector(selectDependents);
+  const isDependent =
+    !!activeUserId &&
+    activeUserId !== user?.id &&
+    dependents.some((d) => d.id === activeUserId);
+
+  if (isDependent) {
+    return { allowed: requiredPlan === 'free', requiredPlan };
   }
 
   // Check membershipTier (from promo codes / manual assignment)

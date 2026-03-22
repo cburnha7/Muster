@@ -11,6 +11,7 @@ import {
   createPlayerDuesPayment,
   confirmPlayerDuesPayment,
 } from '../services/dues';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ const router = express.Router();
  *   - rosterId: string  — Roster ID the player belongs to
  *   - seasonId: string  — Season ID the dues are for
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireNonDependent, async (req: Request, res: Response) => {
   try {
     const { playerId, rosterId, seasonId } = req.body;
 
@@ -73,7 +74,7 @@ router.post('/', async (req: Request, res: Response) => {
  * Body:
  *   - paymentIntentId: string — The Stripe PaymentIntent ID
  */
-router.post('/:paymentId/confirm', async (req: Request, res: Response) => {
+router.post('/:paymentId/confirm', requireNonDependent, async (req: Request, res: Response) => {
   try {
     const { paymentId } = req.params;
     const { paymentIntentId } = req.body;

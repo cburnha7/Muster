@@ -7,7 +7,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
-  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -16,10 +15,10 @@ import { useSelector } from 'react-redux';
 // Components
 import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
-import { ContextSwitcher } from '../../components/profile/ContextSwitcher';
 import { CancelRequestCard } from '../../components/home/CancelRequestCard';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
+import { DependentToggle } from '../../components/events/DependentToggle';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -30,7 +29,7 @@ import { useAuth } from '../../context/AuthContext';
 
 // Store
 import { selectUser } from '../../store/slices/authSlice';
-import { selectActiveUserId } from '../../store/slices/contextSlice';
+import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
 import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
 import { BookingStatus } from '../../types';
@@ -42,6 +41,10 @@ import { colors, fonts, Spacing } from '../../theme';
 import { Booking } from '../../types';
 import { HomeStackParamList } from '../../navigation/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+// Utils
+import { PersonFilter } from '../../types/eventsCalendar';
+import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
 
@@ -57,10 +60,12 @@ function formatTimeAgo(date: Date): string {
 export function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { isLoading: authLoading } = useAuth();
+  const { user: currentUser } = useAuth();
   
   // Redux state
   const user = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
+  const dependents = useSelector(selectDependents);
   
   // RTK Query hooks
   const { 
@@ -78,17 +83,8 @@ export function HomeScreen() {
     isLoading: bookingsLoading,
     refetch: refetchBookings 
   } = useGetUserBookingsQuery({
-    status: 'upcoming',
-    pagination: { page: 1, limit: 100 },
-  });
-
-  const {
-    data: allBookingsData,
-    isLoading: allBookingsLoading,
-    refetch: refetchAllBookings,
-  } = useGetUserBookingsQuery({
     status: 'all',
-    pagination: { page: 1, limit: 200 },
+    pagination: { page: 1, limit: 100 },
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
@@ -98,7 +94,15 @@ export function HomeScreen() {
   const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
   const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
 
-  const upcomingBookings = bookingsData?.data || [];
+  // Schedule bookings: all events sorted soonest first
+  const scheduleBookings = useMemo(() => {
+    const all = bookingsData?.data || [];
+    return [...all].sort((a, b) => {
+      const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
+      const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+      return aTime - bTime;
+    });
+  }, [bookingsData]);
 
   // Debrief state
   const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
@@ -113,103 +117,22 @@ export function HomeScreen() {
   // Ready to schedule leagues state
   const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<ReadyToScheduleLeague[]>([]);
 
-  // Schedule tab filter
-  type ScheduleFilter = 'upcoming' | 'live' | 'past' | 'cancelled';
-  const [scheduleFilter, setScheduleFilter] = useState<ScheduleFilter>('upcoming');
+  // DependentToggle state (moved from Events tab)
+  const [activeFilter, setActiveFilter] = useState<PersonFilter>({
+    type: 'individual',
+    userId: currentUser?.id || '',
+  });
 
-  const [now, setNow] = useState(() => new Date());
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      ])
-    );
-    pulse.start();
-    return () => pulse.stop();
-  }, [pulseAnim]);
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const liveBookings = useMemo(() => {
-    const t = now.getTime();
-    return (bookingsData?.data || []).filter((b) => {
-      if (!b.event?.startTime || !b.event?.endTime) return false;
-      if (b.status !== 'confirmed') return false;
-      const start = new Date(b.event.startTime).getTime();
-      const end = new Date(b.event.endTime).getTime();
-      return t >= start && t < end;
-    });
-  }, [bookingsData, now]);
-
-  const liveIds = useMemo(() => new Set(liveBookings.map((b) => b.id)), [liveBookings]);
-  const upcomingOnly = useMemo(
-    () => upcomingBookings.filter((b) => !liveIds.has(b.id)),
-    [upcomingBookings, liveIds]
+  const personColors = useMemo(
+    () => assignPersonColors(currentUser?.id || '', dependents),
+    [currentUser?.id, dependents],
   );
-
-  const allBookingsList = useMemo(() => allBookingsData?.data || [], [allBookingsData]);
-
-  const scheduleBookings = useMemo(() => {
-    const t = now.getTime();
-    switch (scheduleFilter) {
-      case 'live':
-        return allBookingsList.filter((b) => {
-          if (!b.event?.startTime || !b.event?.endTime) return false;
-          if (b.status !== BookingStatus.CONFIRMED) return false;
-          const start = new Date(b.event.startTime).getTime();
-          const end = new Date(b.event.endTime).getTime();
-          return t >= start && t < end;
-        });
-      case 'upcoming':
-        return allBookingsList.filter((b) => {
-          if (b.status === BookingStatus.CANCELLED) return false;
-          if (b.status === BookingStatus.COMPLETED) return false;
-          if (!b.event) return false;
-          const endTime = b.event.endTime ? new Date(b.event.endTime).getTime() : null;
-          const startTime = new Date(b.event.startTime).getTime();
-          const hasEnded = endTime ? endTime < t : startTime < t;
-          if (hasEnded) return false;
-          const isLiveNow = t >= startTime && endTime && t < endTime;
-          return !isLiveNow;
-        });
-      case 'past':
-        return allBookingsList.filter((b) => {
-          if (b.status === BookingStatus.CANCELLED) return false;
-          if (b.event?.status === 'cancelled') return false;
-          if (b.status === BookingStatus.COMPLETED) return true;
-          if (!b.event) return false;
-          const endTime = b.event.endTime ? new Date(b.event.endTime).getTime() : null;
-          const startTime = new Date(b.event.startTime).getTime();
-          return endTime ? endTime < t : startTime < t;
-        }).sort((a, b) => {
-          const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
-          const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
-          return bTime - aTime;
-        });
-      case 'cancelled':
-        return allBookingsList
-          .filter((b) => b.status === BookingStatus.CANCELLED || b.event?.status === 'cancelled')
-          .sort((a, b) => {
-            const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
-            const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
-            return bTime - aTime;
-          });
-      default:
-        return [];
-    }
-  }, [allBookingsList, scheduleFilter, now]);
-
-  const isLoading = eventsLoading || bookingsLoading;
   
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+  const isLoading = eventsLoading || bookingsLoading;
 
   const loadDebriefEvents = useCallback(async () => {
     try {
@@ -278,21 +201,20 @@ export function HomeScreen() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchEvents(), refetchBookings(), refetchAllBookings(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues()]);
+    await Promise.all([refetchEvents(), refetchBookings(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues()]);
     setIsRefreshing(false);
-  }, [refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues]);
+  }, [refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues]);
 
   useFocusEffect(
     useCallback(() => {
       if (!authLoading) {
         refetchEvents();
         refetchBookings();
-        refetchAllBookings();
         loadDebriefEvents();
         loadInvitations();
         loadReadyToScheduleLeagues();
       }
-    }, [authLoading, refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues])
+    }, [authLoading, refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues])
   );
 
   // Re-fetch all data when the active user context changes (guardian ↔ dependent)
@@ -300,7 +222,6 @@ export function HomeScreen() {
     if (!authLoading) {
       refetchEvents();
       refetchBookings();
-      refetchAllBookings();
       loadDebriefEvents();
       loadInvitations();
       loadReadyToScheduleLeagues();
@@ -368,13 +289,6 @@ export function HomeScreen() {
     );
   }
 
-  const scheduleFilters: { key: ScheduleFilter; label: string; count?: number }[] = [
-    { key: 'upcoming', label: 'Upcoming' },
-    { key: 'live', label: 'Live', count: liveBookings.length },
-    { key: 'past', label: 'Past' },
-    { key: 'cancelled', label: 'Cancelled' },
-  ];
-
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -384,60 +298,33 @@ export function HomeScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
-        {/* Dependent toggle — rule 10 */}
-        <ContextSwitcher />
-
         {/* Pending reservations for facility owners */}
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
-        {/* Schedule section */}
+        {/* Schedule section — no segmented controls, just upcoming bookings */}
         <CollapsibleSection title="Schedule" count={scheduleBookings.length}>
           <View style={styles.sectionInner}>
-          <View style={styles.filterRow}>
-            {scheduleFilters.map((f) => (
-              <TouchableOpacity
-                key={f.key}
-                style={[styles.filterTab, scheduleFilter === f.key && styles.filterTabActive]}
-                onPress={() => setScheduleFilter(f.key)}
-                activeOpacity={0.7}
-              >
-                {f.key === 'live' && f.count != null && f.count > 0 && (
-                  <Animated.View style={[styles.liveDot, { opacity: pulseAnim }]} />
-                )}
-                <Text style={[styles.filterTabText, scheduleFilter === f.key && styles.filterTabTextActive]}>
-                  {f.label}
-                </Text>
-                {f.count != null && f.count > 0 && (
-                  <View style={styles.filterBadge}>
-                    <Text style={styles.filterBadgeText}>{f.count}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
+            {/* Calendar/profile toggle — moved from Events tab */}
+            <DependentToggle
+              guardian={{ id: currentUser?.id || '', firstName: currentUser?.firstName || 'Me' }}
+              dependents={dependents}
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+              personColors={personColors}
+            />
 
-          {allBookingsLoading ? (
-            <Text style={styles.emptyText}>Loading schedule...</Text>
-          ) : scheduleBookings.length === 0 ? (
-            <Text style={styles.emptyText}>
-              {scheduleFilter === 'live'
-                ? 'No live events right now'
-                : scheduleFilter === 'upcoming'
-                ? 'No upcoming events'
-                : scheduleFilter === 'past'
-                ? 'No past events'
-                : 'No cancelled events'}
-            </Text>
-          ) : (
-            scheduleBookings.slice(0, 5).map((booking) => (
-              <BookingCard
-                key={booking.id}
-                booking={booking}
-                onPress={handleBookingPress}
-                {...(scheduleFilter === 'upcoming' ? { onCancel: handleStepOut } : {})}
-              />
-            ))
-          )}
+            {scheduleBookings.length === 0 ? (
+              <Text style={styles.emptyText}>No upcoming events</Text>
+            ) : (
+              scheduleBookings.slice(0, 5).map((booking) => (
+                <BookingCard
+                  key={booking.id}
+                  booking={booking}
+                  onPress={handleBookingPress}
+                  onCancel={handleStepOut}
+                />
+              ))
+            )}
           </View>
         </CollapsibleSection>
 
@@ -610,51 +497,6 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     marginBottom: 12,
     marginTop: -4,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  filterTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    gap: 6,
-  },
-  filterTabActive: {
-    backgroundColor: colors.pine,
-  },
-  filterTabText: {
-    fontFamily: fonts.label,
-    fontSize: 13,
-    color: colors.inkFaint,
-  },
-  filterTabTextActive: {
-    color: '#FFFFFF',
-  },
-  filterBadge: {
-    backgroundColor: colors.heart,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  filterBadgeText: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    color: '#FFFFFF',
-  },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.heart,
   },
   emptyText: {
     fontFamily: fonts.body,

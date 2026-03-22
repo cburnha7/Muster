@@ -13,6 +13,7 @@ import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { selectUser } from '../../store/slices/authSlice';
+import { useDependentContext } from '../../hooks/useDependentContext';
 import { colors, fonts, Spacing } from '../../theme';
 import {
   playerDuesService,
@@ -26,6 +27,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<PayPlayerDuesRouteProp>();
   const user = useSelector(selectUser);
+  const { isDependent, activeName } = useDependentContext();
   const { rosterId, seasonId } = route.params;
 
   const [loading, setLoading] = useState(true);
@@ -162,14 +164,14 @@ export const PayPlayerDuesScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {!isPaid && duesAmountCents > 0 && (
+      {!isPaid && duesAmountCents > 0 && !isDependent && (
         <View style={styles.bottomBar}>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>Go Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.payButton, paying && styles.payButtonDisabled]}
@@ -188,6 +190,17 @@ export const PayPlayerDuesScreen: React.FC = () => {
               </Text>
             )}
           </TouchableOpacity>
+        </View>
+      )}
+
+      {!isPaid && isDependent && (
+        <View style={styles.bottomBar}>
+          <View style={styles.dependentNotice}>
+            <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
+            <Text style={styles.dependentNoticeText}>
+              Payments for {activeName} must be made from the parent account.
+            </Text>
+          </View>
         </View>
       )}
     </View>
@@ -344,5 +357,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 15,
     color: '#FFFFFF',
+  },
+  dependentNotice: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  dependentNoticeText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.navy,
+    marginLeft: Spacing.sm,
+    flex: 1,
+    lineHeight: 20,
   },
 });

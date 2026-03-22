@@ -39,39 +39,68 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                    booking.event &&
                    new Date(booking.event.startTime) > new Date();
 
+  const isCancelled =
+    booking.status === BookingStatus.CANCELLED ||
+    booking.event?.status === 'cancelled';
+
   // Determine if the event is currently live
   const isLive = (() => {
     if (!booking.event) return false;
+    if (isCancelled) return false;
     const now = new Date();
     const start = new Date(booking.event.startTime);
     const end = booking.event.endTime ? new Date(booking.event.endTime) : null;
     return start <= now && (!end || end > now);
   })();
 
+  // Determine if the event is in the past
+  const isPast = (() => {
+    if (!booking.event) return false;
+    if (isCancelled || isLive) return false;
+    const now = new Date();
+    const end = booking.event.endTime ? new Date(booking.event.endTime) : null;
+    const start = new Date(booking.event.startTime);
+    return end ? end < now : start < now;
+  })();
+
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        isCancelled && styles.containerCancelled,
+        isLive && styles.containerLive,
+        isPast && styles.containerPast,
+        style,
+      ]}
       onPress={() => onPress?.(booking)}
       activeOpacity={0.7}
       disabled={!onPress}
     >
       {/* Bubble stack — top-right, vertical */}
-      {(isLive || booking.status === BookingStatus.PENDING_APPROVAL) && (
-        <View style={styles.bubbleStack}>
-          {isLive && (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
-          )}
-          {booking.status === BookingStatus.PENDING_APPROVAL && (
-            <View style={styles.pendingApprovalBadge}>
-              <Ionicons name="time-outline" size={11} color={colors.bronze} />
-              <Text style={styles.pendingApprovalText}>PENDING</Text>
-            </View>
-          )}
-        </View>
-      )}
+      <View style={styles.bubbleStack}>
+        {isCancelled && (
+          <View style={styles.cancelledBadge}>
+            <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+          </View>
+        )}
+        {isLive && (
+          <View style={styles.liveBadgePill}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveBadgePillText}>Live</Text>
+          </View>
+        )}
+        {isPast && (
+          <View style={styles.pastBadge}>
+            <Text style={styles.pastBadgeText}>Past</Text>
+          </View>
+        )}
+        {booking.status === BookingStatus.PENDING_APPROVAL && (
+          <View style={styles.pendingApprovalBadge}>
+            <Ionicons name="time-outline" size={11} color={colors.bronze} />
+            <Text style={styles.pendingApprovalText}>PENDING</Text>
+          </View>
+        )}
+      </View>
 
       {/* Header: title + location */}
       <View style={styles.header}>
@@ -191,6 +220,18 @@ const styles = StyleSheet.create({
     elevation: 5,
     position: 'relative' as const,
   },
+  containerCancelled: {
+    borderWidth: 1.5,
+    borderColor: colors.heart,
+  },
+  containerLive: {
+    borderWidth: 1.5,
+    borderColor: colors.court,
+  },
+  containerPast: {
+    borderWidth: 1.5,
+    borderColor: colors.navy,
+  },
   bubbleStack: {
     position: 'absolute' as const,
     top: 12,
@@ -214,11 +255,11 @@ const styles = StyleSheet.create({
     color: colors.ink,
     flex: 1,
   },
-  liveBadge: {
+  liveBadgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDECEC',
-    paddingHorizontal: 8,
+    backgroundColor: colors.court,
+    paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
     gap: 5,
@@ -227,12 +268,36 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.heart,
+    backgroundColor: '#FFFFFF',
   },
-  liveText: {
+  liveBadgePillText: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.heart,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  cancelledBadge: {
+    backgroundColor: colors.heart,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  cancelledBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  pastBadge: {
+    backgroundColor: colors.navy,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  pastBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   details: {

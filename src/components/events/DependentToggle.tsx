@@ -119,25 +119,6 @@ export function DependentToggle({
             </Text>
           </TouchableOpacity>
         ))}
-
-        {/* "Whole Crew" pill — always last */}
-        <TouchableOpacity
-          style={[
-            styles.pill,
-            isActive({ type: 'wholeCrew' }) && styles.pillActive,
-          ]}
-          onPress={() => onFilterChange({ type: 'wholeCrew' })}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.pillText,
-              isActive({ type: 'wholeCrew' }) && styles.pillTextActive,
-            ]}
-          >
-            Whole Crew
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Requirement 4.6: Color key legend below pills */}

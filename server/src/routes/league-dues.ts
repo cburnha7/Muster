@@ -14,6 +14,7 @@ import {
   confirmLeagueDuesPayment,
   getLeagueDuesStatus,
 } from '../services/dues';
+import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ const router = express.Router();
  *   - seasonId:  string — Season ID
  *   - managerId: string — User ID of the roster manager
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireNonDependent, async (req: Request, res: Response) => {
   try {
     const { rosterId, leagueId, seasonId, managerId } = req.body;
 
@@ -81,7 +82,7 @@ router.post('/', async (req: Request, res: Response) => {
  *   - leagueId:        string — League ID
  *   - seasonId:        string — Season ID
  */
-router.post('/confirm', async (req: Request, res: Response) => {
+router.post('/confirm', requireNonDependent, async (req: Request, res: Response) => {
   try {
     const { paymentIntentId, rosterId, leagueId, seasonId } = req.body;
 
