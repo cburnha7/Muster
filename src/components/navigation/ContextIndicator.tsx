@@ -67,7 +67,7 @@ export function ContextIndicator() {
       >
         <Ionicons
           name={isDependent ? 'people' : 'person'}
-          size={12}
+          size={14}
           color={isDependent ? colors.court : colors.inkFaint}
         />
         <Text
@@ -79,7 +79,7 @@ export function ContextIndicator() {
         {hasDependents && (
           <Ionicons
             name="chevron-down"
-            size={12}
+            size={14}
             color={isDependent ? colors.court : colors.inkFaint}
           />
         )}
@@ -136,11 +136,11 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
     borderRadius: BorderRadius.full,
-    maxWidth: 160,
-    gap: 4,
+    maxWidth: 200,
+    gap: 5,
   },
   guardianPill: {
     backgroundColor: colors.chalk,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine + '18',
   },
   name: {
-    fontSize: 12,
+    fontSize: 14,
     flexShrink: 1,
   },
   guardianName: {

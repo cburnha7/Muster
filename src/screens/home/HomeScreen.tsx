@@ -116,7 +116,6 @@ export function HomeScreen() {
       const dateStr = formatDateForCalendar(new Date(b.event.startTime));
       if (dateStr === selectedDate) continue; // selected date handled below
       marks[dateStr] = {
-        marked: true,
         customStyles: {
           container: {
             borderWidth: 1.5,

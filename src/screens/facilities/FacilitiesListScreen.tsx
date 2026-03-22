@@ -17,10 +17,9 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
-import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
 import { facilityService } from '../../services/api/FacilityService';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 import {
   setFacilities,
   setLoading,
@@ -288,8 +287,13 @@ export function FacilitiesListScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
         }
       >
-        {/* Grounds section */}
-        <CollapsibleSection title="Grounds" count={facilities.length}>
+        {/* Grounds section header */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Grounds</Text>
+          <View style={styles.countBadge}>
+            <Text style={styles.countBadgeText}>{facilities.length}</Text>
+          </View>
+        </View>
           {/* Search + view toggle + filter */}
           <View style={styles.header}>
             <SearchBar
@@ -326,7 +330,7 @@ export function FacilitiesListScreen() {
           ) : (
             sortedFacilities.map((item, index) => renderFacilityCard(item, index))
           )}
-        </CollapsibleSection>
+        
 
         {/* My Reservations section */}
         {currentUser?.id && (
@@ -358,6 +362,32 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    backgroundColor: colors.cream,
+    gap: 6,
+  },
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.ink,
+    flex: 1,
+  },
+  countBadge: {
+    backgroundColor: `${colors.pine}20`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  countBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.pine,
   },
   header: {
     flexDirection: 'row',
