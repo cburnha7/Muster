@@ -97,6 +97,22 @@ export function HomeScreen() {
   const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
   const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
 
+  // DependentToggle state — must be declared before allBookings memo that references it
+  const [activeFilter, setActiveFilter] = useState<PersonFilter>({
+    type: 'individual',
+    userId: currentUser?.id || '',
+  });
+
+  const personColors = useMemo(
+    () => assignPersonColors(currentUser?.id || '', dependents),
+    [currentUser?.id, dependents],
+  );
+
+  // Calendar-only filter — does NOT switch the active account
+  const handleFilterChange = useCallback((filter: PersonFilter) => {
+    setActiveFilter(filter);
+  }, []);
+
   // All bookings sorted chronologically, filtered by calendar toggle person
   const allBookings = useMemo(() => {
     const all = bookingsData?.data || [];
@@ -149,22 +165,6 @@ export function HomeScreen() {
       return formatDateForCalendar(new Date(b.event.startTime)) === selectedDate;
     });
   }, [allBookings, selectedDate]);
-
-  // DependentToggle state
-  const [activeFilter, setActiveFilter] = useState<PersonFilter>({
-    type: 'individual',
-    userId: currentUser?.id || '',
-  });
-
-  const personColors = useMemo(
-    () => assignPersonColors(currentUser?.id || '', dependents),
-    [currentUser?.id, dependents],
-  );
-
-  // Calendar-only filter — does NOT switch the active account
-  const handleFilterChange = useCallback((filter: PersonFilter) => {
-    setActiveFilter(filter);
-  }, []);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
