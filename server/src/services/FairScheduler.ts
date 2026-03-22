@@ -259,8 +259,12 @@ function generateFairMatchups(teams: RosterInfo[], gamesPerTeam: number): { matc
   }
 
   const matchups: Matchup[] = [];
-  let roundNum = 1;
   let cycle = 0;
+
+  // Each circle-method round produces n/2 matchups (one per pair).
+  // All matchups in the same round share the same round number — they represent
+  // concurrent games that should be scheduled on the same game day.
+  let roundNum = 1;
 
   while (matchups.length < totalGames) {
     for (let round = 0; round < roundsPerCycle && matchups.length < totalGames; round++) {
@@ -312,6 +316,7 @@ function generateFairMatchups(teams: RosterInfo[], gamesPerTeam: number): { matc
         return aOppCount - bOppCount;
       });
 
+      let addedAny = false;
       for (const { home, away } of candidates) {
         if (matchups.length >= totalGames) break;
 
@@ -332,9 +337,14 @@ function generateFairMatchups(teams: RosterInfo[], gamesPerTeam: number): { matc
         homeOpp.set(away.id, (homeOpp.get(away.id) || 0) + 1);
         const awayOpp = opponentCount.get(away.id)!;
         awayOpp.set(home.id, (awayOpp.get(home.id) || 0) + 1);
+
+        addedAny = true;
       }
 
-      roundNum++;
+      // Only advance round number if we actually added games in this round
+      if (addedAny) {
+        roundNum++;
+      }
     }
     cycle++;
 
@@ -385,10 +395,9 @@ function assignSlotsToMatchups(
   }
 
   // ── Step 1: Group slots by calendar day (UTC) ──
-  // Each "day" has an ordered list of slot indices.
-  const dayKey = (d: Date) => formatDateUTC(d); // "YYYY-MM-DD"
-  const dayOrder: string[] = []; // ordered unique day keys
-  const daySlots = new Map<string, number[]>(); // dayKey → slot indices
+  const dayKey = (d: Date) => formatDateUTC(d);
+  const dayOrder: string[] = [];
+  const daySlots = new Map<string, number[]>();
 
   for (let si = 0; si < slots.length; si++) {
     const dk = dayKey(slots[si]);
@@ -399,109 +408,80 @@ function assignSlotsToMatchups(
     daySlots.get(dk)!.push(si);
   }
 
-  // ── Step 2: Spread-first assignment ──
-  // Strategy: cycle through days round-robin, assigning at most one game per
-  // day per pass before moving to the next day. Within a day, pick the
-  // earliest slot that doesn't conflict with rosters already playing that slot.
-  // This minimises games-per-day and games-per-roster-per-day.
-
-  const slotBusy = new Map<number, Set<string>>(); // slotIndex → busy rosterIds
-  const dayGameCount = new Map<string, number>();   // dayKey → games assigned
-  const rosterDayCount = new Map<string, number>(); // `${rosterId}|${dayKey}` → games on that day
-
-  for (const dk of dayOrder) {
-    dayGameCount.set(dk, 0);
+  // ── Step 2: Group matchups by round ──
+  // All matchups in the same round are concurrent and should be assigned
+  // to the same game day so every roster plays once per week.
+  const roundOrder: number[] = [];
+  const roundMatchups = new Map<number, Matchup[]>();
+  for (const m of matchups) {
+    if (!roundMatchups.has(m.round)) {
+      roundMatchups.set(m.round, []);
+      roundOrder.push(m.round);
+    }
+    roundMatchups.get(m.round)!.push(m);
   }
 
+  // ── Step 3: Assign each round to a game day ──
+  // Rounds are assigned to days in order. Each round's games go on the same
+  // day in sequential (non-overlapping) time slots so they can share a facility.
+  const usedSlots = new Set<number>();
   const games: ScheduledGame[] = [];
-  const unassigned = [...matchups]; // mutable queue
   let gameNumber = 1;
+  let dayIdx = 0;
 
-  // Keep iterating until all matchups are assigned or we can't make progress
-  while (unassigned.length > 0) {
-    let progressThisPass = false;
+  for (const roundNum of roundOrder) {
+    const roundGames = roundMatchups.get(roundNum)!;
+    let placed = false;
 
-    // One pass: try to place one game per day, cycling through days in order
-    for (const dk of dayOrder) {
-      if (unassigned.length === 0) break;
-
+    // Try days starting from the current dayIdx
+    for (let attempt = 0; attempt < dayOrder.length; attempt++) {
+      const di = (dayIdx + attempt) % dayOrder.length;
+      const dk = dayOrder[di];
       const slotsForDay = daySlots.get(dk)!;
 
-      // Try each unassigned matchup, preferring the one whose rosters have
-      // the fewest games on this day (to spread roster load).
-      let bestIdx = -1;
-      let bestSlot = -1;
-      let bestRosterDayLoad = Infinity;
+      // Find enough sequential unused slots on this day for all games in the round
+      const availableSlots = slotsForDay.filter((si) => !usedSlots.has(si));
 
-      for (let mi = 0; mi < unassigned.length; mi++) {
-        const m = unassigned[mi];
-        const homeId = m.home.id;
-        const awayId = m.away.id;
+      if (availableSlots.length < roundGames.length) continue; // not enough slots
 
-        // Roster load on this day if we assign here
-        const homeLoad = rosterDayCount.get(`${homeId}|${dk}`) ?? 0;
-        const awayLoad = rosterDayCount.get(`${awayId}|${dk}`) ?? 0;
-        const maxLoad = Math.max(homeLoad, awayLoad);
+      // Take the earliest N available slots for this round's games
+      const assignedSlots = availableSlots.slice(0, roundGames.length);
 
-        if (maxLoad >= bestRosterDayLoad) continue; // not better
+      for (let gi = 0; gi < roundGames.length; gi++) {
+        const matchup = roundGames[gi];
+        const slotIdx = assignedSlots[gi];
+        usedSlots.add(slotIdx);
 
-        // Find earliest non-conflicting slot on this day
-        for (const si of slotsForDay) {
-          const busy = slotBusy.get(si);
-          if (busy && (busy.has(homeId) || busy.has(awayId))) continue;
-          // Found a valid slot with lower roster-day load
-          bestIdx = mi;
-          bestSlot = si;
-          bestRosterDayLoad = maxLoad;
-          break; // earliest slot for this matchup on this day
-        }
+        const slot = slots[slotIdx];
+        games.push({
+          gameNumber,
+          date: formatDateUTC(slot),
+          dayOfWeek: DAY_NAMES[slot.getUTCDay()],
+          time: formatTimeUTC(slot),
+          homeTeam: matchup.home,
+          awayTeam: matchup.away,
+          round: matchup.round,
+          scheduledAt: slot,
+        });
+        gameNumber++;
       }
 
-      if (bestIdx === -1) continue; // no matchup fits this day right now
-
-      // Assign the best matchup to the best slot
-      const matchup = unassigned.splice(bestIdx, 1)[0];
-      const slot = slots[bestSlot];
-      const homeId = matchup.home.id;
-      const awayId = matchup.away.id;
-
-      if (!slotBusy.has(bestSlot)) slotBusy.set(bestSlot, new Set());
-      slotBusy.get(bestSlot)!.add(homeId);
-      slotBusy.get(bestSlot)!.add(awayId);
-
-      dayGameCount.set(dk, (dayGameCount.get(dk) ?? 0) + 1);
-      rosterDayCount.set(`${homeId}|${dk}`, (rosterDayCount.get(`${homeId}|${dk}`) ?? 0) + 1);
-      rosterDayCount.set(`${awayId}|${dk}`, (rosterDayCount.get(`${awayId}|${dk}`) ?? 0) + 1);
-
-      games.push({
-        gameNumber,
-        date: formatDateUTC(slot),
-        dayOfWeek: DAY_NAMES[slot.getUTCDay()],
-        time: formatTimeUTC(slot),
-        homeTeam: matchup.home,
-        awayTeam: matchup.away,
-        round: matchup.round,
-        scheduledAt: slot,
-      });
-
-      gameNumber++;
-      progressThisPass = true;
+      dayIdx = di + 1; // next round starts from the next day
+      placed = true;
+      break;
     }
 
-    // If we went through all days without placing anything, we're stuck
-    if (!progressThisPass) {
-      for (const m of unassigned) {
+    if (!placed) {
+      for (const m of roundGames) {
         warnings.push(
-          `Could not schedule game: ${m.home.name} vs ${m.away.name} (Round ${m.round}) — no available slot.`
+          `Could not schedule game: ${m.home.name} vs ${m.away.name} (Round ${m.round}) — no available day with enough slots.`
         );
       }
-      break;
     }
   }
 
-  // Sort games chronologically (they may be out of order from the round-robin day cycling)
+  // Sort games chronologically
   games.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
-  // Re-number after sorting
   for (let i = 0; i < games.length; i++) {
     games[i].gameNumber = i + 1;
   }
