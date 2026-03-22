@@ -497,6 +497,7 @@ router.post('/', requireNonDependent, async (req, res) => {
       hoursOfOperation = [],
       cancellationPolicyHours,
       requiresInsurance = false,
+      requiresBookingConfirmation = false,
     } = req.body;
 
     // Validate required fields
@@ -569,6 +570,7 @@ router.post('/', requireNonDependent, async (req, res) => {
         longitude,
         ownerId: facilityOwnerId,
         requiresInsurance: requiresInsurance === true,
+        requiresBookingConfirmation: requiresBookingConfirmation === true,
         ...(cancellationPolicyHours !== undefined && { cancellationPolicyHours }),
       },
     });
@@ -603,7 +605,7 @@ router.post('/', requireNonDependent, async (req, res) => {
 router.put('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
-    const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, ...rawData } = req.body;
+    const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, requiresBookingConfirmation, ...rawData } = req.body;
 
     // TODO: Add authorization check - only owner can update
 
@@ -617,6 +619,7 @@ router.put('/:id', requireNonDependent, async (req, res) => {
       'street', 'city', 'state', 'zipCode', 'country', 'latitude', 'longitude',
       'noticeWindowHours', 'teamPenaltyPct', 'penaltyDestination', 'policyVersion',
       'cancellationPolicyHours', 'stripeConnectAccountId', 'requiresInsurance',
+      'requiresBookingConfirmation',
     ];
 
     const updateData: Record<string, any> = {};
@@ -629,6 +632,15 @@ router.put('/:id', requireNonDependent, async (req, res) => {
     // Coerce requiresInsurance to boolean if provided
     if (requiresInsurance !== undefined) {
       updateData.requiresInsurance = requiresInsurance === true;
+    }
+
+    // Coerce requiresBookingConfirmation to boolean if provided
+    if (requiresBookingConfirmation !== undefined) {
+      updateData.requiresBookingConfirmation = requiresBookingConfirmation === true;
+      // If confirmation is turned off, also turn off insurance requirement
+      if (!updateData.requiresBookingConfirmation) {
+        updateData.requiresInsurance = false;
+      }
     }
 
     // Validate cancellation policy hours if provided

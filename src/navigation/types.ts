@@ -40,6 +40,7 @@ export type HomeStackParamList = {
   FacilityDetails: { facilityId: string };
   SearchResults: { query: string; filters?: any };
   Debrief: { eventId: string; readonly?: boolean };
+  PendingReservationDetails: { rentalId: string };
 };
 
 export type EventsStackParamList = {

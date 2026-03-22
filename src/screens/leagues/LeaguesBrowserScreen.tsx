@@ -51,6 +51,10 @@ export const LeaguesBrowserScreen: React.FC = () => {
 
   const loadData = useCallback(async () => {
     try {
+      // Clear cached responses so the active user's data is fetched fresh
+      await userService.clearCache();
+      await leagueService.clearCache();
+
       const [myRes, allRes] = await Promise.all([
         userService.getUserLeagues(),
         leagueService.getLeagues({}, 1, 100),
@@ -73,7 +77,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [activeUserId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +87,9 @@ export const LeaguesBrowserScreen: React.FC = () => {
 
   // Re-fetch when active user context changes (guardian ↔ dependent)
   React.useEffect(() => {
+    setMyLeagues([]);
+    setPublicLeagues([]);
+    setLoading(true);
     loadData();
   }, [activeUserId]);
 

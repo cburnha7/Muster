@@ -104,6 +104,7 @@ export function CreateFacilityScreen(): JSX.Element {
   });
 
   const [requiresInsurance, setRequiresInsurance] = useState(false);
+  const [requiresBookingConfirmation, setRequiresBookingConfirmation] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateField = (field: string, value: any) => {
@@ -271,6 +272,7 @@ export function CreateFacilityScreen(): JSX.Element {
         hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
         requiresInsurance,
+        requiresBookingConfirmation,
       };
 
       console.log('📤 Sending facility creation request...');
@@ -613,7 +615,29 @@ export function CreateFacilityScreen(): JSX.Element {
           />
         </View>
 
-        {/* Insurance Requirement */}
+        {/* Booking Confirmation Requirement */}
+        <View style={styles.section}>
+          <View style={styles.insuranceToggleRow}>
+            <View style={styles.insuranceToggleInfo}>
+              <Text style={styles.insuranceToggleLabel}>Requires Booking Confirmation</Text>
+              <Text style={styles.insuranceToggleDescription}>
+                All reservation requests must be approved before they are confirmed
+              </Text>
+            </View>
+            <Switch
+              value={requiresBookingConfirmation}
+              onValueChange={(val) => {
+                setRequiresBookingConfirmation(val);
+                if (!val) setRequiresInsurance(false);
+              }}
+              trackColor={{ false: colors.cream, true: colors.pineLight }}
+              thumbColor={requiresBookingConfirmation ? colors.pine : colors.chalk}
+            />
+          </View>
+        </View>
+
+        {/* Insurance Requirement — only visible when confirmation is on */}
+        {requiresBookingConfirmation && (
         <View style={styles.section}>
           <View style={styles.insuranceToggleRow}>
             <View style={styles.insuranceToggleInfo}>
@@ -630,6 +654,7 @@ export function CreateFacilityScreen(): JSX.Element {
             />
           </View>
         </View>
+        )}
 
         {/* Submit Button */}
         <View style={styles.buttonContainer}>

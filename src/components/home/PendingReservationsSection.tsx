@@ -8,6 +8,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import {
@@ -49,6 +50,7 @@ function formatDateTime(dateStr: string, startTime: string, endTime: string): st
 }
 
 export function PendingReservationsSection({ ownerId }: PendingReservationsSectionProps) {
+  const navigation = useNavigation<any>();
   const { data: reservations = [], isLoading } = useGetPendingReservationsQuery({ ownerId });
   const [approveReservation, { isLoading: isApproving }] = useApproveReservationMutation();
   const [denyReservation, { isLoading: isDenying }] = useDenyReservationMutation();
@@ -126,8 +128,8 @@ export function PendingReservationsSection({ ownerId }: PendingReservationsSecti
       {reservations.map((reservation: any) => {
         const isExpanded = expandedId === reservation.id;
         const timeSlot = reservation.timeSlot;
-        const renterName = reservation.renter
-          ? `${reservation.renter.firstName} ${reservation.renter.lastName}`
+        const renterName = (reservation.user || reservation.renter)
+          ? `${(reservation.user || reservation.renter).firstName} ${(reservation.user || reservation.renter).lastName}`
           : 'Unknown';
         const courtName = timeSlot?.court?.name || 'Court';
         const facilityName = timeSlot?.court?.facility?.name || '';
@@ -142,7 +144,7 @@ export function PendingReservationsSection({ ownerId }: PendingReservationsSecti
           <TouchableOpacity
             key={reservation.id}
             style={styles.card}
-            onPress={() => handleToggleExpand(reservation.id)}
+            onPress={() => navigation.navigate('PendingReservationDetails', { rentalId: reservation.id })}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel={`Pending reservation from ${renterName}`}

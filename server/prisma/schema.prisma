@@ -218,6 +218,9 @@ model Facility {
   // Insurance requirement
   requiresInsurance Boolean @default(false)
 
+  // Booking confirmation requirement
+  requiresBookingConfirmation Boolean @default(false)
+
   // Foreign Keys
   ownerId String
 

@@ -66,8 +66,8 @@ router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', requir
       return res.status(400).json({ error: 'Cannot rent past time slots' });
     }
 
-    // Determine insurance requirement from the facility
-    const facility = timeSlot.court.facility as typeof timeSlot.court.facility & { requiresInsurance: boolean };
+    // Determine insurance and confirmation requirements from the facility
+    const facility = timeSlot.court.facility as typeof timeSlot.court.facility & { requiresInsurance: boolean; requiresBookingConfirmation: boolean };
     const { insuranceDocumentId } = req.body;
 
     let rentalStatus: string = 'confirmed';
@@ -99,6 +99,11 @@ router.post('/facilities/:facilityId/courts/:courtId/slots/:slotId/rent', requir
 
       rentalStatus = 'pending_approval';
       attachedInsuranceDocumentId = insuranceDocumentId;
+    }
+
+    // If facility requires booking confirmation, set to pending regardless of insurance
+    if (facility.requiresBookingConfirmation) {
+      rentalStatus = 'pending_approval';
     }
 
     // Create rental and update slot status in a transaction
@@ -507,6 +512,21 @@ router.post('/rentals/bulk', requireNonDependent, async (req, res) => {
       const rentals = [];
 
       for (const { timeSlot: ts } of validSlots) {
+        const facility = ts.court.facility as typeof ts.court.facility & { requiresBookingConfirmation?: boolean; requiresInsurance?: boolean };
+        let rentalStatus = 'confirmed';
+        let attachedInsuranceDocumentId: string | null = null;
+
+        // If facility requires booking confirmation, set to pending
+        if (facility.requiresBookingConfirmation) {
+          rentalStatus = 'pending_approval';
+        }
+
+        // If facility requires insurance and a document was provided, attach it
+        if (facility.requiresInsurance && req.body.insuranceDocumentId) {
+          rentalStatus = 'pending_approval';
+          attachedInsuranceDocumentId = req.body.insuranceDocumentId;
+        }
+
         // Update slot status
         await tx.facilityTimeSlot.update({
           where: { id: ts.id },
@@ -519,9 +539,10 @@ router.post('/rentals/bulk', requireNonDependent, async (req, res) => {
             userId,
             timeSlotId: ts.id,
             totalPrice: ts.price,
-            status: 'confirmed',
+            status: rentalStatus,
             paymentStatus: ts.price > 0 ? 'pending' : 'paid',
             bookingSessionId,
+            ...(attachedInsuranceDocumentId ? { attachedInsuranceDocumentId } : {}),
           },
           include: {
             timeSlot: {
@@ -633,6 +654,7 @@ router.get('/rentals/:rentalId', async (req, res) => {
             email: true,
           },
         },
+        attachedInsuranceDocument: true,
       },
     });
 
@@ -875,6 +897,13 @@ router.post('/rentals/recurring', requireNonDependent, async (req, res) => {
     const sd = new Date(startDate);
     const firstDate = dates[0]!;
 
+    // Fetch facility to check confirmation requirement
+    const facility = await prisma.facility.findUnique({
+      where: { id: facilityId },
+      select: { requiresBookingConfirmation: true, requiresInsurance: true },
+    });
+    const needsApproval = facility?.requiresBookingConfirmation === true;
+
     const result = await prisma.$transaction(async (tx) => {
       // Create recurring booking metadata
       await tx.recurringBooking.create({
@@ -906,7 +935,7 @@ router.post('/rentals/recurring', requireNonDependent, async (req, res) => {
             userId,
             timeSlotId: slotId,
             totalPrice: price,
-            status: 'confirmed',
+            status: needsApproval ? 'pending_approval' : 'confirmed',
             paymentStatus: price > 0 ? 'pending' : 'paid',
             recurringGroupId,
           },

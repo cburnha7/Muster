@@ -2284,7 +2284,8 @@ router.post('/:id/confirm-schedule', optionalAuthMiddleware, async (req: Request
     return res.json({ eventsCreated: result.eventsCreated });
   } catch (error: any) {
     console.error('Error confirming schedule:', error);
-    res.status(500).json({ error: 'Failed to save schedule. Please try again.' });
+    const message = error?.message || 'Failed to save schedule. Please try again.';
+    res.status(500).json({ error: message });
   }
 });
 

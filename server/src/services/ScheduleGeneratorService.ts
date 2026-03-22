@@ -870,6 +870,30 @@ export class ScheduleGeneratorService {
       }
     }
 
+    // Validate all roster IDs exist as teams before starting the transaction
+    const allRosterIds = [
+      ...new Set(events.flatMap((ev) => [ev.homeRosterId, ev.awayRosterId])),
+    ];
+    const existingTeams = await prisma.team.findMany({
+      where: { id: { in: allRosterIds } },
+      select: { id: true },
+    });
+    const existingTeamIds = new Set(existingTeams.map((t) => t.id));
+    const missingRosterIds = allRosterIds.filter((id) => !existingTeamIds.has(id));
+    if (missingRosterIds.length > 0) {
+      throw new Error(`Roster IDs not found: ${missingRosterIds.join(', ')}`);
+    }
+
+    // Validate seasonId references an existing season (if set)
+    let validSeasonId: string | undefined;
+    if (league.seasonId) {
+      const season = await prisma.season.findUnique({
+        where: { id: league.seasonId },
+        select: { id: true },
+      });
+      validSeasonId = season ? season.id : undefined;
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const createdEventIds: string[] = [];
 
@@ -910,7 +934,7 @@ export class ScheduleGeneratorService {
             scheduledAt,
             status: 'scheduled',
             eventId: event.id,
-            seasonId: league.seasonId || undefined,
+            ...(validSeasonId ? { seasonId: validSeasonId } : {}),
           },
         });
 

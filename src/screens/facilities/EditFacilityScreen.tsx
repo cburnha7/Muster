@@ -69,6 +69,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   const [originalCourts, setOriginalCourts] = useState<string[]>([]); // Track original court IDs
   const [hoursOfOperation, setHoursOfOperation] = useState<DayHours[]>([]);
   const [requiresInsurance, setRequiresInsurance] = useState(false);
+  const [requiresBookingConfirmation, setRequiresBookingConfirmation] = useState(false);
   
   const [formData, setFormData] = useState<Partial<CreateFacilityData>>({
     name: '',
@@ -168,6 +169,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
       // Prepopulate insurance requirement
       setRequiresInsurance(facility.requiresInsurance === true);
+      setRequiresBookingConfirmation(facility.requiresBookingConfirmation === true);
       
       // Load hours of operation from availabilitySlots
       if (facility.availabilitySlots && facility.availabilitySlots.length > 0) {
@@ -354,6 +356,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
         requiresInsurance,
+        requiresBookingConfirmation,
       };
 
       const updatedFacility = await facilityService.updateFacility(facilityId, facilityData as any);
@@ -676,7 +679,29 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           />
         </View>
 
-        {/* Insurance Requirement */}
+        {/* Booking Confirmation Requirement */}
+        <View style={styles.section}>
+          <View style={styles.insuranceToggleRow}>
+            <View style={styles.insuranceToggleInfo}>
+              <Text style={styles.insuranceToggleLabel}>Requires Booking Confirmation</Text>
+              <Text style={styles.insuranceToggleDescription}>
+                All reservation requests must be approved before they are confirmed
+              </Text>
+            </View>
+            <Switch
+              value={requiresBookingConfirmation}
+              onValueChange={(val) => {
+                setRequiresBookingConfirmation(val);
+                if (!val) setRequiresInsurance(false);
+              }}
+              trackColor={{ false: colors.cream, true: colors.pineLight }}
+              thumbColor={requiresBookingConfirmation ? colors.pine : colors.chalk}
+            />
+          </View>
+        </View>
+
+        {/* Insurance Requirement — only visible when confirmation is on */}
+        {requiresBookingConfirmation && (
         <View style={styles.section}>
           <View style={styles.insuranceToggleRow}>
             <View style={styles.insuranceToggleInfo}>
@@ -693,6 +718,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
             />
           </View>
         </View>
+        )}
 
         {/* Submit Button */}
         <View style={styles.buttonContainer}>

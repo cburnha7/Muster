@@ -449,7 +449,7 @@ export class BaseApiService {
   /**
    * Clear all cache
    */
-  protected async clearCache(): Promise<void> {
+  public async clearCache(): Promise<void> {
     await this.cache.clear();
   }
 

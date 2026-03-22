@@ -7,6 +7,7 @@ import { EditEventScreen } from '../../screens/events/EditEventScreen';
 import { FacilityDetailsScreen } from '../../screens/facilities/FacilityDetailsScreen';
 import { SearchResultsScreen } from '../../screens/search/SearchResultsScreen';
 import { DebriefScreen } from '../../screens/debrief/DebriefScreen';
+import { PendingReservationDetailsScreen } from '../../screens/facilities/PendingReservationDetailsScreen';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -43,6 +44,10 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="Debrief" 
         component={DebriefScreen}
+      />
+      <Stack.Screen
+        name="PendingReservationDetails"
+        component={PendingReservationDetailsScreen}
       />
     </Stack.Navigator>
   );

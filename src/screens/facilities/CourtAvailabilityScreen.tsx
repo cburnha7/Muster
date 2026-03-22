@@ -65,8 +65,8 @@ export function CourtAvailabilityScreen() {
 
   const { facilityId, facilityName, courtId, eventDate, eventStartTime, returnTo, returnParams } = route.params;
 
-  // Facility data (for requiresInsurance check)
-  const [facilityData, setFacilityData] = useState<{ requiresInsurance?: boolean } | null>(null);
+  // Facility data (for requiresInsurance and requiresBookingConfirmation check)
+  const [facilityData, setFacilityData] = useState<{ requiresInsurance?: boolean; requiresBookingConfirmation?: boolean } | null>(null);
 
   // Insurance document selection (only used when requiresInsurance = true)
   const [selectedInsuranceDocumentId, setSelectedInsuranceDocumentId] = useState<string | undefined>(undefined);
@@ -317,7 +317,7 @@ export function CourtAvailabilityScreen() {
         params: bookingParams,
       });
     } else {
-      (navigation as any).navigate('Profile', { screen: 'ProfileScreen' });
+      (navigation as any).navigate('Facilities', { screen: 'FacilitiesList' });
     }
   };
 
