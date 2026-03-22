@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Calendar, DateData } from 'react-native-calendars';
 
 // Components
@@ -30,7 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 
 // Store
 import { selectUser } from '../../store/slices/authSlice';
-import { selectActiveUserId, selectDependents, setActiveUser } from '../../store/slices/contextSlice';
+import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
 import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
 import { BookingStatus } from '../../types';
@@ -61,7 +61,6 @@ function formatTimeAgo(date: Date): string {
 
 export function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const dispatch = useDispatch();
   const { isLoading: authLoading, user: currentUser } = useAuth();
 
   // Redux state
@@ -98,15 +97,18 @@ export function HomeScreen() {
   const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
   const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
 
-  // All bookings sorted chronologically
+  // All bookings sorted chronologically, filtered by calendar toggle person
   const allBookings = useMemo(() => {
     const all = bookingsData?.data || [];
-    return [...all].sort((a, b) => {
+    const filtered = activeFilter.type === 'individual'
+      ? all.filter((b) => b.userId === activeFilter.userId)
+      : all;
+    return [...filtered].sort((a, b) => {
       const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
       const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
       return aTime - bTime;
     });
-  }, [bookingsData]);
+  }, [bookingsData, activeFilter]);
 
   // Build calendar marked dates — hollow circle for days with events, solid for selected
   const calendarMarkedDates = useMemo(() => {
@@ -159,14 +161,10 @@ export function HomeScreen() {
     [currentUser?.id, dependents],
   );
 
-  // When DependentToggle changes, dispatch setActiveUser to Redux
+  // Calendar-only filter — does NOT switch the active account
   const handleFilterChange = useCallback((filter: PersonFilter) => {
     setActiveFilter(filter);
-    if (filter.type === 'individual') {
-      const isGuardian = filter.userId === currentUser?.id;
-      dispatch(setActiveUser(isGuardian ? null : filter.userId));
-    }
-  }, [currentUser?.id, dispatch]);
+  }, []);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
