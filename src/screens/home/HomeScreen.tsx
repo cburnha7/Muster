@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { Calendar, DateData } from 'react-native-calendars';
 
 // Components
 import { BookingCard } from '../../components/ui/BookingCard';
@@ -29,7 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 
 // Store
 import { selectUser } from '../../store/slices/authSlice';
-import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
+import { selectActiveUserId, selectDependents, setActiveUser } from '../../store/slices/contextSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
 import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
 import { BookingStatus } from '../../types';
@@ -45,6 +46,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // Utils
 import { PersonFilter } from '../../types/eventsCalendar';
 import { assignPersonColors } from '../../utils/eventsCalendarUtils';
+import { formatDateForCalendar, calendarTheme } from '../../utils/calendarUtils';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
 
@@ -59,32 +61,34 @@ function formatTimeAgo(date: Date): string {
 
 export function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { isLoading: authLoading } = useAuth();
-  const { user: currentUser } = useAuth();
-  
+  const dispatch = useDispatch();
+  const { isLoading: authLoading, user: currentUser } = useAuth();
+
   // Redux state
   const user = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
-  
+
+  // Calendar state
+  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
+
   // RTK Query hooks
-  const { 
-    isLoading: eventsLoading, 
-    error: eventsError,
-    refetch: refetchEvents 
+  const {
+    isLoading: eventsLoading,
+    refetch: refetchEvents,
   } = useGetEventsQuery({
     filters: DEFAULT_EVENT_FILTERS,
     pagination: { page: 1, limit: 20 },
     ...(user?.id ? { userId: user.id } : {}),
   });
 
-  const { 
-    data: bookingsData, 
+  const {
+    data: bookingsData,
     isLoading: bookingsLoading,
-    refetch: refetchBookings 
+    refetch: refetchBookings,
   } = useGetUserBookingsQuery({
     status: 'all',
-    pagination: { page: 1, limit: 100 },
+    pagination: { page: 1, limit: 200 },
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
@@ -94,8 +98,8 @@ export function HomeScreen() {
   const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
   const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
 
-  // Schedule bookings: all events sorted soonest first
-  const scheduleBookings = useMemo(() => {
+  // All bookings sorted chronologically
+  const allBookings = useMemo(() => {
     const all = bookingsData?.data || [];
     return [...all].sort((a, b) => {
       const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
@@ -104,20 +108,48 @@ export function HomeScreen() {
     });
   }, [bookingsData]);
 
-  // Debrief state
-  const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
-  const [debriefLoading, setDebriefLoading] = useState(false);
+  // Build calendar marked dates — hollow circle for days with events, solid for selected
+  const calendarMarkedDates = useMemo(() => {
+    const marks: Record<string, any> = {};
+    for (const b of allBookings) {
+      if (!b.event?.startTime) continue;
+      const dateStr = formatDateForCalendar(new Date(b.event.startTime));
+      if (dateStr === selectedDate) continue; // selected date handled below
+      marks[dateStr] = {
+        marked: true,
+        customStyles: {
+          container: {
+            borderWidth: 1.5,
+            borderColor: colors.pine,
+            borderRadius: 16,
+          },
+          text: { color: colors.ink },
+        },
+      };
+    }
+    // Selected date — solid circle
+    marks[selectedDate] = {
+      selected: true,
+      customStyles: {
+        container: {
+          backgroundColor: colors.pine,
+          borderRadius: 16,
+        },
+        text: { color: '#FFFFFF' },
+      },
+    };
+    return marks;
+  }, [allBookings, selectedDate]);
 
-  // Invitations state
-  const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
-  const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
-  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>([]);
-  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  // Filter bookings by selected date
+  const filteredBookings = useMemo(() => {
+    return allBookings.filter((b) => {
+      if (!b.event?.startTime) return false;
+      return formatDateForCalendar(new Date(b.event.startTime)) === selectedDate;
+    });
+  }, [allBookings, selectedDate]);
 
-  // Ready to schedule leagues state
-  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<ReadyToScheduleLeague[]>([]);
-
-  // DependentToggle state (moved from Events tab)
+  // DependentToggle state
   const [activeFilter, setActiveFilter] = useState<PersonFilter>({
     type: 'individual',
     userId: currentUser?.id || '',
@@ -127,37 +159,51 @@ export function HomeScreen() {
     () => assignPersonColors(currentUser?.id || '', dependents),
     [currentUser?.id, dependents],
   );
-  
+
+  // When DependentToggle changes, dispatch setActiveUser to Redux
+  const handleFilterChange = useCallback((filter: PersonFilter) => {
+    setActiveFilter(filter);
+    if (filter.type === 'individual') {
+      const isGuardian = filter.userId === currentUser?.id;
+      dispatch(setActiveUser(isGuardian ? null : filter.userId));
+    }
+  }, [currentUser?.id, dispatch]);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const isLoading = eventsLoading || bookingsLoading;
 
+  // Debrief state
+  const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
+
+  // Invitations state
+  const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
+  const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
+  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>([]);
+
+  // Ready to schedule leagues state
+  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<ReadyToScheduleLeague[]>([]);
+
   const loadDebriefEvents = useCallback(async () => {
     try {
-      setDebriefLoading(true);
       const result = await debriefService.getDebriefEvents();
       setDebriefEvents(result.data || []);
     } catch (err) {
       console.error('Failed to load debrief events:', err);
       setDebriefEvents([]);
-    } finally {
-      setDebriefLoading(false);
     }
   }, []);
 
   const loadInvitations = useCallback(async () => {
     try {
-      setInvitationsLoading(true);
       const result = await userService.getInvitations();
       setRosterInvitations(result.rosterInvitations || []);
       setLeagueInvitations(result.leagueInvitations || []);
       setEventInvitations(result.eventInvitations || []);
     } catch (err) {
       console.error('Failed to load invitations:', err);
-    } finally {
-      setInvitationsLoading(false);
     }
   }, []);
 
@@ -166,38 +212,9 @@ export function HomeScreen() {
       const result = await userService.getLeaguesReadyToSchedule();
       setReadyToScheduleLeagues(result || []);
     } catch (err) {
-      console.error('Failed to load ready to schedule leagues:', err);
       setReadyToScheduleLeagues([]);
     }
   }, []);
-
-  const handleRosterInvitationPress = useCallback((inv: RosterInvitation) => {
-    (navigation as any).navigate('Teams', {
-      screen: 'TeamDetails',
-      params: { teamId: inv.rosterId, readOnly: true },
-    });
-  }, [navigation]);
-
-  const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
-    (navigation as any).navigate('Teams', {
-      screen: 'TeamDetails',
-      params: { teamId: inv.rosterId, readOnly: true },
-    });
-  }, [navigation]);
-
-  const handleEventInvitationPress = useCallback((inv: EventInvitation) => {
-    (navigation as any).navigate('Events', {
-      screen: 'EventDetails',
-      params: { eventId: inv.eventId },
-    });
-  }, [navigation]);
-
-  const handleReadyToSchedulePress = useCallback((league: ReadyToScheduleLeague) => {
-    (navigation as any).navigate('Leagues', {
-      screen: 'LeagueScheduling',
-      params: { leagueId: league.id },
-    });
-  }, [navigation]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -214,10 +231,9 @@ export function HomeScreen() {
         loadInvitations();
         loadReadyToScheduleLeagues();
       }
-    }, [authLoading, refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues])
+    }, [authLoading])
   );
 
-  // Re-fetch all data when the active user context changes (guardian ↔ dependent)
   useEffect(() => {
     if (!authLoading) {
       refetchEvents();
@@ -228,12 +244,12 @@ export function HomeScreen() {
     }
   }, [activeUserId]);
 
-  const handleDebriefPress = useCallback((booking: Booking) => {
-    navigation.navigate('Debrief', { eventId: booking.eventId });
-  }, [navigation]);
-
   const handleBookingPress = useCallback((booking: Booking) => {
     navigation.navigate('EventDetails', { eventId: booking.eventId });
+  }, [navigation]);
+
+  const handleDebriefPress = useCallback((booking: Booking) => {
+    navigation.navigate('Debrief', { eventId: booking.eventId });
   }, [navigation]);
 
   const handleStepOut = useCallback((booking: Booking) => {
@@ -244,16 +260,12 @@ export function HomeScreen() {
   const handleStepOutConfirm = useCallback(async () => {
     if (!selectedBooking) return;
     try {
-      await cancelBookingMutation({
-        eventId: selectedBooking.eventId,
-        bookingId: selectedBooking.id,
-      }).unwrap();
+      await cancelBookingMutation({ eventId: selectedBooking.eventId, bookingId: selectedBooking.id }).unwrap();
       setStepOutModalVisible(false);
       setSelectedBooking(null);
       Alert.alert('Success', 'You have stepped out of the event');
       await Promise.all([refetchEvents(), refetchBookings()]);
     } catch (error) {
-      console.error('Error stepping out:', error);
       Alert.alert('Error', 'Failed to leave the event. Please try again.');
     }
   }, [selectedBooking, cancelBookingMutation, refetchEvents, refetchBookings]);
@@ -266,7 +278,7 @@ export function HomeScreen() {
   const handleApproveCancelRequest = async (id: string) => {
     try {
       await approveCancelRequest({ id, userId: user?.id || '' }).unwrap();
-      Alert.alert('Approved', 'Cancellation request approved. The reservation has been cancelled and refunded.');
+      Alert.alert('Approved', 'Cancellation request approved.');
     } catch (error) {
       Alert.alert('Error', 'Failed to approve cancellation request.');
     }
@@ -275,11 +287,27 @@ export function HomeScreen() {
   const handleDenyCancelRequest = async (id: string) => {
     try {
       await denyCancelRequest({ id, userId: user?.id || '' }).unwrap();
-      Alert.alert('Denied', 'Cancellation request denied. The reservation remains active.');
+      Alert.alert('Denied', 'Cancellation request denied.');
     } catch (error) {
       Alert.alert('Error', 'Failed to deny cancellation request.');
     }
   };
+
+  const handleRosterInvitationPress = useCallback((inv: RosterInvitation) => {
+    (navigation as any).navigate('Teams', { screen: 'TeamDetails', params: { teamId: inv.rosterId, readOnly: true } });
+  }, [navigation]);
+
+  const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
+    (navigation as any).navigate('Teams', { screen: 'TeamDetails', params: { teamId: inv.rosterId, readOnly: true } });
+  }, [navigation]);
+
+  const handleEventInvitationPress = useCallback((inv: EventInvitation) => {
+    (navigation as any).navigate('Events', { screen: 'EventDetails', params: { eventId: inv.eventId } });
+  }, [navigation]);
+
+  const handleReadyToSchedulePress = useCallback((league: ReadyToScheduleLeague) => {
+    (navigation as any).navigate('Leagues', { screen: 'LeagueScheduling', params: { leagueId: league.id } });
+  }, [navigation]);
 
   if (authLoading || isLoading) {
     return (
@@ -298,25 +326,35 @@ export function HomeScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
-        {/* Pending reservations for facility owners */}
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
-        {/* Schedule section — no segmented controls, just upcoming bookings */}
-        <CollapsibleSection title="Schedule" count={scheduleBookings.length}>
+        {/* Schedule section with calendar */}
+        <CollapsibleSection title="Schedule" count={allBookings.length}>
           <View style={styles.sectionInner}>
-            {/* Calendar/profile toggle — moved from Events tab */}
+            {/* Profile toggle pills */}
             <DependentToggle
               guardian={{ id: currentUser?.id || '', firstName: currentUser?.firstName || 'Me' }}
               dependents={dependents}
               activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
+              onFilterChange={handleFilterChange}
               personColors={personColors}
             />
 
-            {scheduleBookings.length === 0 ? (
-              <Text style={styles.emptyText}>No upcoming events</Text>
+            {/* Calendar */}
+            <Calendar
+              current={selectedDate}
+              markedDates={calendarMarkedDates}
+              markingType="custom"
+              onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
+              theme={calendarTheme}
+              style={styles.calendar}
+            />
+
+            {/* Filtered booking cards for selected day */}
+            {filteredBookings.length === 0 ? (
+              <Text style={styles.emptyText}>No events on this day</Text>
             ) : (
-              scheduleBookings.slice(0, 5).map((booking) => (
+              filteredBookings.map((booking) => (
                 <BookingCard
                   key={booking.id}
                   booking={booking}
@@ -332,123 +370,78 @@ export function HomeScreen() {
         {debriefEvents.length > 0 && (
           <CollapsibleSection title="Debrief" count={debriefEvents.length}>
             <View style={styles.sectionInner}>
-            <Text style={styles.sectionSubtitle}>Rate and salute players from recent games</Text>
-            {debriefEvents.slice(0, 3).map((booking) => (
-              <TouchableOpacity
-                key={booking.id}
-                style={styles.debriefCard}
-                onPress={() => handleDebriefPress(booking)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.debriefInfo}>
-                  <Text style={styles.debriefTitle} numberOfLines={1}>
-                    {booking.event?.title || 'Event'}
-                  </Text>
-                  <Text style={styles.debriefTime}>
-                    {booking.event?.endTime ? formatTimeAgo(new Date(booking.event.endTime)) : ''}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-              </TouchableOpacity>
-            ))}
+              <Text style={styles.sectionSubtitle}>Rate and salute players from recent games</Text>
+              {debriefEvents.slice(0, 3).map((booking) => (
+                <TouchableOpacity key={booking.id} style={styles.debriefCard} onPress={() => handleDebriefPress(booking)} activeOpacity={0.7}>
+                  <View style={styles.debriefInfo}>
+                    <Text style={styles.debriefTitle} numberOfLines={1}>{booking.event?.title || 'Event'}</Text>
+                    <Text style={styles.debriefTime}>{booking.event?.endTime ? formatTimeAgo(new Date(booking.event.endTime)) : ''}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
             </View>
           </CollapsibleSection>
         )}
 
-        {/* Ready to schedule section */}
+        {/* Ready to schedule */}
         {readyToScheduleLeagues.length > 0 && (
           <CollapsibleSection title="Scheduling" count={readyToScheduleLeagues.length}>
             <View style={styles.sectionInner}>
-            {readyToScheduleLeagues.map((league) => (
-              <TouchableOpacity
-                key={league.id}
-                style={styles.readyToScheduleCard}
-                onPress={() => handleReadyToSchedulePress(league)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="calendar-outline" size={20} color={colors.pine} />
-                <View style={styles.readyToScheduleInfo}>
-                  <Text style={styles.readyToScheduleTitle} numberOfLines={1}>
-                    {league.name} is ready to schedule.
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-              </TouchableOpacity>
-            ))}
+              {readyToScheduleLeagues.map((league) => (
+                <TouchableOpacity key={league.id} style={styles.actionCard} onPress={() => handleReadyToSchedulePress(league)} activeOpacity={0.7}>
+                  <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                  <View style={styles.actionCardInfo}>
+                    <Text style={styles.actionCardTitle} numberOfLines={1}>{league.name} is ready to schedule.</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
             </View>
           </CollapsibleSection>
         )}
 
-        {/* Invitations section */}
+        {/* Invitations */}
         {(rosterInvitations.length > 0 || leagueInvitations.length > 0 || eventInvitations.length > 0) && (
           <CollapsibleSection title="Invitations" count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length}>
             <View style={styles.sectionInner}>
-            {rosterInvitations.map((inv) => (
-              <TouchableOpacity
-                key={inv.id}
-                style={styles.invitationCard}
-                onPress={() => handleRosterInvitationPress(inv)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="people-outline" size={20} color={colors.pine} />
-                <View style={styles.invitationInfo}>
-                  <Text style={styles.invitationTitle}>{inv.rosterName}</Text>
-                  <Text style={styles.invitationSubtitle}>Roster invitation</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-              </TouchableOpacity>
-            ))}
-            {leagueInvitations.map((inv) => (
-              <TouchableOpacity
-                key={inv.id}
-                style={styles.invitationCard}
-                onPress={() => handleLeagueInvitationPress(inv)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="trophy-outline" size={20} color={colors.court} />
-                <View style={styles.invitationInfo}>
-                  <Text style={styles.invitationTitle}>{inv.leagueName}</Text>
-                  <Text style={styles.invitationSubtitle}>League invitation</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-              </TouchableOpacity>
-            ))}
-            {eventInvitations.map((inv) => (
-              <TouchableOpacity
-                key={inv.id}
-                style={styles.invitationCard}
-                onPress={() => handleEventInvitationPress(inv)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="calendar-outline" size={20} color={colors.pine} />
-                <View style={styles.invitationInfo}>
-                  <Text style={styles.invitationTitle}>{inv.eventTitle}</Text>
-                  <Text style={styles.invitationSubtitle}>
-                    {inv.startTime ? new Date(inv.startTime).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'Event invitation'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-              </TouchableOpacity>
-            ))}
+              {rosterInvitations.map((inv) => (
+                <TouchableOpacity key={inv.id} style={styles.actionCard} onPress={() => handleRosterInvitationPress(inv)} activeOpacity={0.7}>
+                  <Ionicons name="people-outline" size={20} color={colors.pine} />
+                  <View style={styles.actionCardInfo}><Text style={styles.actionCardTitle}>{inv.rosterName}</Text><Text style={styles.actionCardSub}>Roster invitation</Text></View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
+              {leagueInvitations.map((inv) => (
+                <TouchableOpacity key={inv.id} style={styles.actionCard} onPress={() => handleLeagueInvitationPress(inv)} activeOpacity={0.7}>
+                  <Ionicons name="trophy-outline" size={20} color={colors.court} />
+                  <View style={styles.actionCardInfo}><Text style={styles.actionCardTitle}>{inv.leagueName}</Text><Text style={styles.actionCardSub}>League invitation</Text></View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
+              {eventInvitations.map((inv) => (
+                <TouchableOpacity key={inv.id} style={styles.actionCard} onPress={() => handleEventInvitationPress(inv)} activeOpacity={0.7}>
+                  <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                  <View style={styles.actionCardInfo}>
+                    <Text style={styles.actionCardTitle}>{inv.eventTitle}</Text>
+                    <Text style={styles.actionCardSub}>{inv.startTime ? new Date(inv.startTime).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'Event invitation'}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+                </TouchableOpacity>
+              ))}
             </View>
           </CollapsibleSection>
         )}
 
-        {/* Cancel Requests section */}
+        {/* Cancel Requests */}
         {cancelRequests.length > 0 && (
           <CollapsibleSection title="Cancel Requests" count={cancelRequests.length}>
             <View style={styles.sectionInner}>
-            <View style={{ gap: Spacing.sm }}>
-              {cancelRequests.map((request) => (
-                <CancelRequestCard
-                  key={request.id}
-                  cancelRequest={request}
-                  onApprove={handleApproveCancelRequest}
-                  onDeny={handleDenyCancelRequest}
-                  isLoading={isApproving || isDenying}
-                />
-              ))}
-            </View>
+              <View style={{ gap: Spacing.sm }}>
+                {cancelRequests.map((request) => (
+                  <CancelRequestCard key={request.id} cancelRequest={request} onApprove={handleApproveCancelRequest} onDeny={handleDenyCancelRequest} isLoading={isApproving || isDenying} />
+                ))}
+              </View>
             </View>
           </CollapsibleSection>
         )}
@@ -456,12 +449,7 @@ export function HomeScreen() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      <StepOutModal
-        visible={stepOutModalVisible}
-        eventTitle={selectedBooking?.event?.title || 'Event'}
-        onConfirm={handleStepOutConfirm}
-        onCancel={handleStepOutCancel}
-      />
+      <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
     </View>
   );
 }
@@ -498,6 +486,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: -4,
   },
+  calendar: {
+    borderRadius: 12,
+    marginBottom: Spacing.md,
+    overflow: 'hidden',
+  },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
@@ -532,7 +525,7 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     marginTop: 2,
   },
-  invitationCard: {
+  actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -546,40 +539,18 @@ const styles = StyleSheet.create({
     elevation: 2,
     gap: 12,
   },
-  invitationInfo: {
+  actionCardInfo: {
     flex: 1,
   },
-  invitationTitle: {
+  actionCardTitle: {
     fontFamily: fonts.label,
     fontSize: 15,
     color: colors.ink,
   },
-  invitationSubtitle: {
+  actionCardSub: {
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.inkFaint,
     marginTop: 2,
-  },
-  readyToScheduleCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: 12,
-  },
-  readyToScheduleInfo: {
-    flex: 1,
-  },
-  readyToScheduleTitle: {
-    fontFamily: fonts.label,
-    fontSize: 15,
-    color: colors.ink,
   },
 });

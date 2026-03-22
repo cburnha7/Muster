@@ -7,8 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, fonts, Spacing } from '../../theme';
-import { PersonFilter, ColorKeyEntry } from '../../types/eventsCalendar';
-import { ColorKey } from './ColorKey';
+import { PersonFilter } from '../../types/eventsCalendar';
 
 interface DependentToggleProps {
   guardian: { id: string; firstName: string };
@@ -49,20 +48,6 @@ export function DependentToggle({
     }
     return false;
   };
-
-  // Build color key entries from guardian + dependents + personColors
-  const colorKeyEntries: ColorKeyEntry[] = [
-    {
-      userId: guardian.id,
-      firstName: guardian.firstName,
-      color: personColors.get(guardian.id) || colors.inkFaint,
-    },
-    ...dependents.map((dep) => ({
-      userId: dep.id,
-      firstName: dep.firstName,
-      color: personColors.get(dep.id) || colors.inkFaint,
-    })),
-  ];
 
   return (
     <View style={styles.container}>
@@ -120,9 +105,6 @@ export function DependentToggle({
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {/* Requirement 4.6: Color key legend below pills */}
-      <ColorKey entries={colorKeyEntries} />
     </View>
   );
 }
