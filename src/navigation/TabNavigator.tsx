@@ -171,6 +171,12 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Rosters',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Teams', { screen: 'TeamsList' });
+          },
+        })}
       />
       <Tab.Screen 
         name="Leagues" 
@@ -204,6 +210,12 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Profile',
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Profile', { screen: 'ProfileScreen' });
+          },
+        })}
       />
     </Tab.Navigator>
   );

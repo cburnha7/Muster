@@ -57,6 +57,7 @@ const mapPreviewToScheduleEvents = (
     scheduledAt: pe.scheduledAt,
     round: pe.round,
     ...(pe.flag ? { flag: pe.flag } : {}),
+    ...(pe.gameNumber ? { gameNumber: pe.gameNumber } : {}),
   }));
 
 // Map Redux events to confirmable format
@@ -69,6 +70,7 @@ const mapToConfirmableEvents = (events: ScheduleEvent[]): ConfirmableEvent[] =>
     scheduledAt: e.scheduledAt,
     round: e.round,
     ...(e.flag ? { flag: e.flag } : {}),
+    ...(e.gameNumber ? { gameNumber: e.gameNumber } : {}),
   }));
 
 const GAME_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours

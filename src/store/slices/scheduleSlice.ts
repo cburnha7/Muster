@@ -10,6 +10,7 @@ export interface ScheduleEvent {
   scheduledAt: string;       // ISO date-time
   round: number;
   flag?: 'playoffs' | 'tournament';
+  gameNumber?: number;       // bracket game number for cross-referencing
 }
 
 // Schedule state interface

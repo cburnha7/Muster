@@ -124,7 +124,7 @@ function validate(input: SchedulerInput): string[] {
     }
   }
 
-  if (allowedDaysOfWeek.length === 0) {
+  if (allowedDaysOfWeek.length === 0 && input.frequency !== 'all_at_once') {
     errors.push('At least one allowed day of week must be provided.');
   }
 

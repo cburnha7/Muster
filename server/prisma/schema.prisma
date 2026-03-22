@@ -897,6 +897,14 @@ model Match {
   // Away roster confirmation deadline (48h from rental assignment in free leagues)
   confirmationDeadline DateTime?
 
+  // Bracket / tournament shell fields
+  bracketRound    Int?     // Which round of the bracket (1, 2, 3…)
+  bracketPosition Int?     // Position within the round (1, 2, 3…)
+  gameNumber      Int?     // Sequential game number for "Winner of Game X" references
+  placeholderHome String?  // e.g. "Winner of Game 1" — cleared when real roster is assigned
+  placeholderAway String?  // e.g. "Loser of Game 2" — cleared when real roster is assigned
+  bracketFlag     String?  // "playoffs" | "tournament"
+
   // Metadata
   notes     String?
   createdAt DateTime @default(now())
@@ -905,14 +913,14 @@ model Match {
   // Foreign Keys
   leagueId   String
   seasonId   String?
-  homeTeamId String
-  awayTeamId String
+  homeTeamId String?
+  awayTeamId String?
 
   // Relations
   league   League          @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   season   Season?         @relation(fields: [seasonId], references: [id])
-  homeTeam Team            @relation("HomeMatches", fields: [homeTeamId], references: [id])
-  awayTeam Team            @relation("AwayMatches", fields: [awayTeamId], references: [id])
+  homeTeam Team?           @relation("HomeMatches", fields: [homeTeamId], references: [id])
+  awayTeam Team?           @relation("AwayMatches", fields: [awayTeamId], references: [id])
   event    Event?          @relation(fields: [eventId], references: [id])
   rental   FacilityRental? @relation(fields: [rentalId], references: [id])
 

@@ -337,6 +337,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     if (format === 'tournament') {
       setSeasonLength('');
       setSeasonGameCount('');
+      setTrackStandings(false);
     }
   };
 
@@ -980,7 +981,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             error={errors.suggestedRosterSize}
           />
 
-          {/* Game Day */}
+          {/* Game Day — hidden for "All at Once" frequency */}
+          {gameFrequency !== 'all_at_once' && (
+          <>
           <Text style={styles.fieldLabel}>Game Day</Text>
           <View style={styles.dayChipsRow}>
             {dayLabels.map((label, idx) => (
@@ -1004,6 +1007,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </TouchableOpacity>
             ))}
           </View>
+          </>
+          )}
 
           {/* Time Range */}
           <TimePickerInput
@@ -1199,7 +1204,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </TouchableOpacity>
           )}
 
-          {/* Track Standings Toggle */}
+          {/* Track Standings Toggle — hidden for tournament format */}
+          {leagueFormat !== 'tournament' && (
           <View style={styles.toggleCard}>
             <View style={styles.toggleRow}>
               <View style={styles.toggleInfo}>
@@ -1219,6 +1225,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </TouchableOpacity>
             </View>
           </View>
+          )}
 
           {/* Points Configuration — only when tracking standings */}
           {trackStandings && (

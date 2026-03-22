@@ -27,6 +27,7 @@ export interface SchedulePreviewEvent {
   scheduledAt: string;
   round: number;
   flag?: 'playoffs' | 'tournament';
+  gameNumber?: number;
 }
 
 /**
@@ -61,4 +62,5 @@ export interface ConfirmableEvent {
   scheduledAt: string;
   round: number;
   flag?: 'playoffs' | 'tournament';
+  gameNumber?: number;
 }

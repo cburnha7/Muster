@@ -802,6 +802,90 @@ router.post('/:id/result', async (req: Request, res: Response) => {
 
     // TODO: Send notifications to participating teams
 
+    // ── Bracket advancement: resolve placeholder in next bracket game ──
+    if (existingMatch.bracketFlag && existingMatch.gameNumber) {
+      const winnerId = outcome === 'home_win' ? existingMatch.homeTeamId
+        : outcome === 'away_win' ? existingMatch.awayTeamId
+        : null;
+      const loserId = outcome === 'home_win' ? existingMatch.awayTeamId
+        : outcome === 'away_win' ? existingMatch.homeTeamId
+        : null;
+
+      if (winnerId || loserId) {
+        // Find the winning and losing team names
+        const winnerTeam = winnerId ? await prisma.team.findUnique({ where: { id: winnerId }, select: { id: true, name: true } }) : null;
+        const loserTeam = loserId ? await prisma.team.findUnique({ where: { id: loserId }, select: { id: true, name: true } }) : null;
+
+        const winnerLabel = `Winner of Game ${existingMatch.gameNumber}`;
+        const loserLabel = `Loser of Game ${existingMatch.gameNumber}`;
+
+        // Find bracket matches in this league that reference this game's winner or loser
+        const pendingBracketMatches = await prisma.match.findMany({
+          where: {
+            leagueId: existingMatch.leagueId,
+            bracketFlag: { not: null },
+            status: 'pending_bracket',
+            OR: [
+              { placeholderHome: { contains: `Game ${existingMatch.gameNumber}` } },
+              { placeholderAway: { contains: `Game ${existingMatch.gameNumber}` } },
+            ],
+          },
+          include: { event: true },
+        });
+
+        for (const bm of pendingBracketMatches) {
+          const updates: any = {};
+          const eventUpdates: any = {};
+          let newTitle = bm.event?.title || '';
+
+          // Resolve home placeholder
+          if (bm.placeholderHome && bm.placeholderHome === winnerLabel && winnerTeam) {
+            updates.homeTeamId = winnerTeam.id;
+            updates.placeholderHome = null;
+            newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
+          } else if (bm.placeholderHome && bm.placeholderHome === loserLabel && loserTeam) {
+            updates.homeTeamId = loserTeam.id;
+            updates.placeholderHome = null;
+            newTitle = newTitle.replace(loserLabel, loserTeam.name);
+          }
+
+          // Resolve away placeholder
+          if (bm.placeholderAway && bm.placeholderAway === winnerLabel && winnerTeam) {
+            updates.awayTeamId = winnerTeam.id;
+            updates.placeholderAway = null;
+            newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
+          } else if (bm.placeholderAway && bm.placeholderAway === loserLabel && loserTeam) {
+            updates.awayTeamId = loserTeam.id;
+            updates.placeholderAway = null;
+            newTitle = newTitle.replace(loserLabel, loserTeam.name);
+          }
+
+          if (Object.keys(updates).length > 0) {
+            // If both sides are now resolved, promote to scheduled
+            const resolvedHome = updates.homeTeamId || bm.homeTeamId;
+            const resolvedAway = updates.awayTeamId || bm.awayTeamId;
+            if (resolvedHome && resolvedAway) {
+              updates.status = 'scheduled';
+            }
+
+            await prisma.match.update({ where: { id: bm.id }, data: updates });
+
+            // Update the linked event title and eligibility
+            if (bm.eventId) {
+              const eligTeams = [resolvedHome, resolvedAway].filter(Boolean);
+              await prisma.event.update({
+                where: { id: bm.eventId },
+                data: {
+                  title: newTitle,
+                  eligibilityRestrictedToTeams: eligTeams,
+                },
+              });
+            }
+          }
+        }
+      }
+    }
+
     // Return updated match with full details
     const updatedMatch = await prisma.match.findUnique({
       where: { id },

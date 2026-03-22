@@ -224,8 +224,14 @@ export class ScheduleGeneratorService {
       throw error;
     }
 
-    if (!league.preferredGameDays?.length || !league.seasonGameCount) {
-      const error: any = new Error('Schedule configuration incomplete: preferredGameDays and seasonGameCount are required');
+    if (!league.preferredGameDays?.length && league.gameFrequency !== 'all_at_once') {
+      const error: any = new Error('Schedule configuration incomplete: preferredGameDays are required');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (format !== 'tournament' && !league.seasonGameCount) {
+      const error: any = new Error('Schedule configuration incomplete: seasonGameCount is required');
       error.statusCode = 400;
       throw error;
     }
@@ -267,13 +273,14 @@ export class ScheduleGeneratorService {
       round: g.round,
     }));
 
-    // Map playoff/tournament games
+    // Map playoff/tournament games — include gameNumber for bracket cross-referencing
     const bracketEvents: SchedulePreviewEvent[] = result.playoffGames.map(g => ({
       homeRoster: g.homeTeam,
       awayRoster: g.awayTeam,
       scheduledAt: g.scheduledAt.toISOString(),
       round: g.round,
       flag: g.flag,
+      gameNumber: g.gameNumber,
     }));
 
     const events = [...seasonEvents, ...bracketEvents];
@@ -835,6 +842,7 @@ export class ScheduleGeneratorService {
       scheduledAt: string;
       round: number;
       flag?: 'playoffs' | 'tournament';
+      gameNumber?: number;
     }>
   ): Promise<{ eventsCreated: number }> {
     const league = await prisma.league.findUnique({
@@ -870,18 +878,33 @@ export class ScheduleGeneratorService {
       }
     }
 
-    // Validate all roster IDs exist as teams before starting the transaction
+    // Separate concrete events (real roster IDs) from bracket shells (placeholder IDs)
+    const placeholderPattern = /^(seed-|winner-|loser-|wb-winner|lb-winner|BYE)/;
+    const concreteEvents = events.filter(
+      (ev) => !placeholderPattern.test(ev.homeRosterId) && !placeholderPattern.test(ev.awayRosterId)
+    );
+    const bracketEvents = events.filter(
+      (ev) => placeholderPattern.test(ev.homeRosterId) || placeholderPattern.test(ev.awayRosterId)
+    );
+
+    if (concreteEvents.length === 0 && bracketEvents.length === 0) {
+      throw new Error('No games to schedule.');
+    }
+
+    // Validate concrete roster IDs
     const allRosterIds = [
-      ...new Set(events.flatMap((ev) => [ev.homeRosterId, ev.awayRosterId])),
+      ...new Set(concreteEvents.flatMap((ev) => [ev.homeRosterId, ev.awayRosterId])),
     ];
-    const existingTeams = await prisma.team.findMany({
-      where: { id: { in: allRosterIds } },
-      select: { id: true },
-    });
-    const existingTeamIds = new Set(existingTeams.map((t) => t.id));
-    const missingRosterIds = allRosterIds.filter((id) => !existingTeamIds.has(id));
-    if (missingRosterIds.length > 0) {
-      throw new Error(`Roster IDs not found: ${missingRosterIds.join(', ')}`);
+    if (allRosterIds.length > 0) {
+      const existingTeams = await prisma.team.findMany({
+        where: { id: { in: allRosterIds } },
+        select: { id: true },
+      });
+      const existingTeamIds = new Set(existingTeams.map((t) => t.id));
+      const missingRosterIds = allRosterIds.filter((id) => !existingTeamIds.has(id));
+      if (missingRosterIds.length > 0) {
+        throw new Error(`Roster IDs not found: ${missingRosterIds.join(', ')}`);
+      }
     }
 
     // Validate seasonId references an existing season (if set)
@@ -897,18 +920,22 @@ export class ScheduleGeneratorService {
     const result = await prisma.$transaction(async (tx) => {
       const createdEventIds: string[] = [];
 
-      for (const ev of events) {
+      // ── Concrete games (real rosters on both sides) ──
+      for (const ev of concreteEvents) {
         const scheduledAt = new Date(ev.scheduledAt);
 
-        // Collect player IDs from both rosters for invitations
         const homePlayerIds = rosterPlayerMap.get(ev.homeRosterId) || [];
         const awayPlayerIds = rosterPlayerMap.get(ev.awayRosterId) || [];
         const invitedUserIds = [...new Set([...homePlayerIds, ...awayPlayerIds])];
 
+        const isBracket = !!ev.flag;
+
         const event = await tx.event.create({
           data: {
             title: `${ev.homeRosterName} vs ${ev.awayRosterName}`,
-            description: `League match: ${league.name} — Round ${ev.round}`,
+            description: isBracket
+              ? `${league.name} — Bracket Round ${ev.round > 200 ? ev.round - 200 : ev.round}`
+              : `League match: ${league.name} — Round ${ev.round}`,
             sportType: league.sportType,
             skillLevel: league.skillLevel,
             eventType: 'game',
@@ -934,6 +961,69 @@ export class ScheduleGeneratorService {
             scheduledAt,
             status: 'scheduled',
             eventId: event.id,
+            ...(ev.gameNumber ? { gameNumber: ev.gameNumber } : {}),
+            ...(isBracket ? {
+              bracketRound: ev.round > 200 ? ev.round - 200 : ev.round,
+              bracketFlag: ev.flag,
+            } : {}),
+            ...(validSeasonId ? { seasonId: validSeasonId } : {}),
+          },
+        });
+
+        createdEventIds.push(event.id);
+      }
+
+      // ── Bracket shell games (placeholder rosters — resolved when results come in) ──
+      for (const ev of bracketEvents) {
+        const scheduledAt = new Date(ev.scheduledAt);
+        const isHomeReal = !placeholderPattern.test(ev.homeRosterId);
+        const isAwayReal = !placeholderPattern.test(ev.awayRosterId);
+
+        // Build title from real names or placeholder labels
+        const homeLabel = isHomeReal ? ev.homeRosterName : ev.homeRosterName;
+        const awayLabel = isAwayReal ? ev.awayRosterName : ev.awayRosterName;
+
+        const event = await tx.event.create({
+          data: {
+            title: `${homeLabel} vs ${awayLabel}`,
+            description: `${league.name} — Bracket Round ${ev.round - 200}`,
+            sportType: league.sportType,
+            skillLevel: league.skillLevel,
+            eventType: 'game',
+            status: 'active',
+            startTime: scheduledAt,
+            endTime: new Date(scheduledAt.getTime() + 2 * 60 * 60 * 1000),
+            maxParticipants: 50,
+            price: 0,
+            organizerId,
+            facilityId: null,
+            scheduledStatus: 'unscheduled',
+            eligibilityRestrictedToLeagues: [leagueId],
+            eligibilityRestrictedToTeams: [
+              ...(isHomeReal ? [ev.homeRosterId] : []),
+              ...(isAwayReal ? [ev.awayRosterId] : []),
+            ],
+            invitedUserIds: [],
+          },
+        });
+
+        // Extract gameNumber from the round field if available
+        // The frontend sends bracket events with round = 200 + bracketRound
+        const bracketRound = ev.round > 200 ? ev.round - 200 : ev.round;
+
+        await tx.match.create({
+          data: {
+            leagueId,
+            homeTeamId: isHomeReal ? ev.homeRosterId : null,
+            awayTeamId: isAwayReal ? ev.awayRosterId : null,
+            scheduledAt,
+            status: 'pending_bracket',
+            eventId: event.id,
+            bracketRound,
+            gameNumber: ev.gameNumber || null,
+            placeholderHome: isHomeReal ? null : ev.homeRosterName,
+            placeholderAway: isAwayReal ? null : ev.awayRosterName,
+            bracketFlag: ev.flag || 'tournament',
             ...(validSeasonId ? { seasonId: validSeasonId } : {}),
           },
         });

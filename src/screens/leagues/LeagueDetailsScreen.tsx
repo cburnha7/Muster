@@ -934,7 +934,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 )}
               </View>
 
-          {/* Track Standings — display only */}
+          {/* Track Standings — display only, hidden for tournament format */}
+          {league.leagueFormat !== 'tournament' && (
+          <>
           <View style={styles.roToggleCard}>
             <View style={styles.roToggleRow}>
               <View style={styles.roToggleInfo}>
@@ -965,6 +967,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
             <View style={styles.roStandingsSection}>
               <StandingsTab leagueId={leagueId} />
             </View>
+          )}
+          </>
           )}
 
         </View>
