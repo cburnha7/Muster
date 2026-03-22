@@ -19,6 +19,7 @@ import { EventCard } from '../../components/ui/EventCard';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { CancellationPolicyDisplay } from '../../components/facilities/CancellationPolicyDisplay';
 import { facilityService } from '../../services/api/FacilityService';
+import { OwnerReservationsSection } from '../../components/facilities/OwnerReservationsSection';
 import {
   setSelectedFacility,
   removeFacility,
@@ -83,9 +84,13 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
     try {
       const response = await facilityService.getFacilityEvents(facilityId, {
         page: 1,
-        limit: 10,
+        limit: 20,
       });
-      setEvents(response.data);
+      const now = new Date().toISOString();
+      const upcoming = (response.data || []).filter(
+        (e) => e.endTime ? e.endTime > now : e.startTime > now
+      );
+      setEvents(upcoming);
     } catch (err: any) {
       console.error('Failed to load ground events:', err);
     }
@@ -474,6 +479,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
         </View>
       )}
 
+      {/* Owner Reservations */}
+      {isOwner && (
+        <OwnerReservationsSection facilityId={facilityId} />
+      )}
+
       {/* Upcoming Events */}
       {events.length > 0 && (
         <View style={styles.section}>
@@ -568,8 +578,8 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   name: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontFamily: fonts.heading,
+    fontSize: 28,
     color: colors.ink,
     marginBottom: Spacing.sm,
   },

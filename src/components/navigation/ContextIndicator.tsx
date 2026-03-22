@@ -1,32 +1,38 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  Pressable,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
-import { colors, fonts, Spacing } from '../../theme';
+import { useSelector, useDispatch } from 'react-redux';
+import { colors, fonts, Spacing, BorderRadius, Shadows } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import {
   selectActiveUserId,
   selectDependents,
+  setActiveUser,
 } from '../../store/slices/contextSlice';
+import { DependentSummary } from '../../types/dependent';
 
 /**
  * ContextIndicator
  *
- * Persistent compact pill/badge that shows which user context is active.
- * Visible at all times when the guardian has at least one dependent.
- * When acting as guardian: subtle pill with guardian's first name.
- * When acting as a dependent: accent-colored pill with dependent's first name.
- * Returns null when no dependents exist (no indicator needed).
- *
- * Requirements: 6.1, 6.2, 6.3
+ * Persistent tappable pill in the tab header showing "Player – [name]".
+ * Tapping opens a dropdown to switch between guardian and dependents.
  */
 export function ContextIndicator() {
   const { user: guardian } = useAuth();
+  const dispatch = useDispatch();
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
+  const [menuVisible, setMenuVisible] = useState(false);
 
-  // No indicator when guardian has no dependents
-  if (!guardian || dependents.length === 0) return null;
+  if (!guardian) return null;
 
   const activeDependent = activeUserId
     ? dependents.find((d) => d.id === activeUserId)
@@ -37,24 +43,92 @@ export function ContextIndicator() {
     ? activeDependent.firstName
     : guardian.firstName;
 
+  const hasDependents = dependents.length > 0;
+
+  const handleSwitch = (userId: string | null) => {
+    dispatch(setActiveUser(userId));
+    setMenuVisible(false);
+  };
+
+  // Build the list: guardian first, then dependents
+  const switcherItems: { id: string | null; name: string; isDependent: boolean }[] = [
+    { id: null, name: guardian.firstName, isDependent: false },
+    ...dependents.map((d) => ({ id: d.id, name: d.firstName, isDependent: true })),
+  ];
+
   return (
-    <View
-      style={[styles.pill, isDependent ? styles.dependentPill : styles.guardianPill]}
-      accessibilityRole="text"
-      accessibilityLabel={`Active account: ${displayName}${isDependent ? ' (dependent)' : ''}`}
-    >
-      <Ionicons
-        name={isDependent ? 'people' : 'person'}
-        size={12}
-        color={isDependent ? colors.court : colors.inkFaint}
-      />
-      <Text
-        style={[styles.name, isDependent ? styles.dependentName : styles.guardianName]}
-        numberOfLines={1}
+    <>
+      <TouchableOpacity
+        style={[styles.pill, isDependent ? styles.dependentPill : styles.guardianPill]}
+        onPress={() => hasDependents && setMenuVisible(true)}
+        activeOpacity={hasDependents ? 0.7 : 1}
+        accessibilityRole="button"
+        accessibilityLabel={`Active player: ${displayName}. ${hasDependents ? 'Tap to switch.' : ''}`}
       >
-        {displayName}
-      </Text>
-    </View>
+        <Ionicons
+          name={isDependent ? 'people' : 'person'}
+          size={12}
+          color={isDependent ? colors.court : colors.inkFaint}
+        />
+        <Text
+          style={[styles.name, isDependent ? styles.dependentName : styles.guardianName]}
+          numberOfLines={1}
+        >
+          Player – {displayName}
+        </Text>
+        {hasDependents && (
+          <Ionicons
+            name="chevron-down"
+            size={12}
+            color={isDependent ? colors.court : colors.inkFaint}
+          />
+        )}
+      </TouchableOpacity>
+
+      {/* Dropdown modal for switching between guardian and dependents */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setMenuVisible(false)}>
+          <View style={styles.dropdown}>
+            <FlatList
+              data={switcherItems}
+              keyExtractor={(item) => item.id ?? 'guardian'}
+              renderItem={({ item }) => {
+                const isActive = item.id === activeUserId;
+                return (
+                  <TouchableOpacity
+                    style={[styles.row, isActive && styles.activeRow]}
+                    onPress={() => handleSwitch(item.id)}
+                    accessibilityRole="menuitem"
+                    accessibilityLabel={`Switch to ${item.name}`}
+                  >
+                    <Ionicons
+                      name={item.isDependent ? 'people' : 'person'}
+                      size={16}
+                      color={isActive ? colors.pine : colors.inkFaint}
+                      style={styles.rowIcon}
+                    />
+                    <Text
+                      style={[styles.rowText, isActive && styles.activeRowText]}
+                      numberOfLines={1}
+                    >
+                      Player – {item.name}
+                    </Text>
+                    {isActive && (
+                      <Ionicons name="checkmark" size={18} color={colors.pine} />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -62,29 +136,66 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    maxWidth: 120,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    maxWidth: 160,
+    gap: 4,
   },
   guardianPill: {
-    backgroundColor: `${colors.ink}10`,
+    backgroundColor: colors.chalk,
   },
   dependentPill: {
-    backgroundColor: `${colors.court}20`,
-    borderWidth: 1,
-    borderColor: `${colors.court}40`,
+    backgroundColor: colors.pine + '18',
   },
   name: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    marginLeft: 4,
+    fontSize: 12,
     flexShrink: 1,
   },
   guardianName: {
+    fontFamily: fonts.label,
     color: colors.inkFaint,
   },
   dependentName: {
+    fontFamily: fonts.label,
     color: colors.court,
+  },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 90,
+    paddingRight: 16,
+  },
+  dropdown: {
+    backgroundColor: colors.chalk,
+    borderRadius: BorderRadius.md,
+    minWidth: 200,
+    maxWidth: 260,
+    ...Shadows.md,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  activeRow: {
+    backgroundColor: colors.pine + '0D',
+  },
+  rowIcon: {
+    marginRight: 8,
+  },
+  rowText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: fonts.body,
+    color: colors.ink,
+  },
+  activeRowText: {
+    fontFamily: fonts.label,
+    color: colors.pine,
   },
 });
