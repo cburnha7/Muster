@@ -206,24 +206,26 @@ interface Matchup {
 /**
  * Generate fair round-robin matchups.
  *
- * Fairness rules enforced:
- *   1. Every roster plays exactly `gamesPerTeam` games (if mathematically possible).
- *   2. Home/away balance: no roster differs by more than 1 between home and away counts.
- *   3. Opponent distribution: matchups are spread as evenly as possible across opponents.
- *   4. Deterministic — no randomness.
+ * Each "round" guarantees every roster plays exactly once (or gets a bye
+ * if the roster count is odd). Rounds repeat cyclically until every roster
+ * has played `gamesPerTeam` games. With odd rosters the bye rotates so a
+ * different roster sits out each round.
  *
- * Algorithm:
- *   - Use the standard circle method for round-robin scheduling.
- *   - Repeat full cycles until we have enough total games.
- *   - Alternate home/away on even/odd cycles for balance.
- *   - Track per-roster game counts and stop adding games for rosters that have reached their target.
+ * Algorithm — standard circle (polygon) method:
+ *   - Pin roster[0] in place; rotate the remaining rosters each round.
+ *   - One full cycle = (n-1) rounds where n = roster count (padded to even).
+ *   - Repeat cycles, flipping home/away on alternate cycles for balance.
  */
 function generateFairMatchups(teams: RosterInfo[], gamesPerTeam: number): { matchups: Matchup[]; warnings: string[] } {
   const warnings: string[] = [];
   const n = teams.length;
 
+  if (n < 2) {
+    warnings.push('Need at least 2 rosters to generate a schedule.');
+    return { matchups: [], warnings };
+  }
+
   // Total games needed: (n * gamesPerTeam) / 2
-  // If n * gamesPerTeam is odd, we can't perfectly satisfy — round down and warn.
   let totalGames: number;
   if ((n * gamesPerTeam) % 2 !== 0) {
     totalGames = Math.floor((n * gamesPerTeam) / 2);
@@ -235,127 +237,99 @@ function generateFairMatchups(teams: RosterInfo[], gamesPerTeam: number): { matc
     totalGames = (n * gamesPerTeam) / 2;
   }
 
-  // For odd number of rosters, add a BYE placeholder for the circle method
+  // Pad to even for the circle method; BYE = bye week
   const rosterList = [...teams];
   const hasOddRosters = n % 2 !== 0;
   if (hasOddRosters) {
     rosterList.push({ id: 'BYE', name: 'BYE' });
   }
+  const m = rosterList.length; // always even
+  const roundsPerCycle = m - 1;
 
-  const totalRosters = rosterList.length;
-  const roundsPerCycle = totalRosters - 1;
-
-  // Track per-roster stats for fairness
-  const gameCount = new Map<string, number>();   // rosterId → total games played
-  const homeCount = new Map<string, number>();   // rosterId → home games
-  const awayCount = new Map<string, number>();   // rosterId → away games
-  const opponentCount = new Map<string, Map<string, number>>(); // rosterId → (opponentId → count)
-
+  // Tracking
+  const gameCount = new Map<string, number>();
+  const homeCount = new Map<string, number>();
+  const awayCount = new Map<string, number>();
   for (const t of teams) {
     gameCount.set(t.id, 0);
     homeCount.set(t.id, 0);
     awayCount.set(t.id, 0);
-    opponentCount.set(t.id, new Map());
   }
 
   const matchups: Matchup[] = [];
+  let roundNum = 1;
   let cycle = 0;
 
-  // Each circle-method round produces n/2 matchups (one per pair).
-  // All matchups in the same round share the same round number — they represent
-  // concurrent games that should be scheduled on the same game day.
-  let roundNum = 1;
-
   while (matchups.length < totalGames) {
-    for (let round = 0; round < roundsPerCycle && matchups.length < totalGames; round++) {
-      // Collect candidate matchups for this round
-      const candidates: Array<{ home: RosterInfo; away: RosterInfo }> = [];
+    // Build the rotation array: pin index 0, rotate 1..(m-1)
+    // For round r within a cycle, the rotation is:
+    //   position 0 = rosterList[0]  (fixed)
+    //   position k (1..m-1) = rosterList[1 + ((k - 1 + r) % (m - 1))]
+    for (let r = 0; r < roundsPerCycle && matchups.length < totalGames; r++) {
+      const rotated: RosterInfo[] = [rosterList[0]];
+      for (let k = 1; k < m; k++) {
+        rotated.push(rosterList[1 + ((k - 1 + r) % (m - 1))]);
+      }
 
-      for (let i = 0; i < totalRosters / 2; i++) {
-        // Circle method indices
-        const homeIdx = i === 0 ? 0 : ((round + i - 1) % (totalRosters - 1)) + 1;
-        const awayIdx = i === 0
-          ? ((round + totalRosters / 2 - 1) % (totalRosters - 1)) + 1
-          : ((round + totalRosters - 1 - i - 1) % (totalRosters - 1)) + 1;
-
-        let home = rosterList[homeIdx];
-        let away = rosterList[awayIdx];
+      // Pair: rotated[0] vs rotated[m-1], rotated[1] vs rotated[m-2], etc.
+      const roundMatchups: Array<{ home: RosterInfo; away: RosterInfo }> = [];
+      for (let i = 0; i < m / 2; i++) {
+        let home = rotated[i];
+        let away = rotated[m - 1 - i];
 
         // Skip BYE matchups
         if (home.id === 'BYE' || away.id === 'BYE') continue;
 
-        // Home/away balancing: alternate on even/odd cycles,
-        // then fine-tune based on current home/away counts.
+        // Home/away balancing: flip on odd cycles
         if (cycle % 2 !== 0) {
           [home, away] = [away, home];
         }
 
-        // Further balance: if home has more home games than away games, swap
+        // Fine-tune: if home already has more home games, swap
         const hHome = homeCount.get(home.id) || 0;
         const hAway = awayCount.get(home.id) || 0;
         const aHome = homeCount.get(away.id) || 0;
         const aAway = awayCount.get(away.id) || 0;
-
         if (hHome - hAway > aHome - aAway) {
           [home, away] = [away, home];
         }
 
-        candidates.push({ home, away });
+        roundMatchups.push({ home, away });
       }
 
-      // Sort candidates by fairness priority:
-      //   1. Rosters with fewest games played first (unmet game counts)
-      //   2. Opponents faced fewest times first (opponent distribution)
-      candidates.sort((a, b) => {
-        const aMinGames = Math.min(gameCount.get(a.home.id) || 0, gameCount.get(a.away.id) || 0);
-        const bMinGames = Math.min(gameCount.get(b.home.id) || 0, gameCount.get(b.away.id) || 0);
-        if (aMinGames !== bMinGames) return aMinGames - bMinGames;
-
-        const aOppCount = opponentCount.get(a.home.id)?.get(a.away.id) || 0;
-        const bOppCount = opponentCount.get(b.home.id)?.get(b.away.id) || 0;
-        return aOppCount - bOppCount;
+      // Check if any roster in this round has already hit their target.
+      // If so, skip the entire round to avoid one roster playing while
+      // their round-partner sits out (which breaks the 1-game-per-week rule).
+      const allUnderTarget = roundMatchups.every(({ home, away }) => {
+        return (gameCount.get(home.id) || 0) < gamesPerTeam &&
+               (gameCount.get(away.id) || 0) < gamesPerTeam;
       });
 
-      let addedAny = false;
-      for (const { home, away } of candidates) {
-        if (matchups.length >= totalGames) break;
+      if (!allUnderTarget) {
+        // Some rosters are done — skip this round entirely to keep balance
+        continue;
+      }
 
-        // Skip if both rosters have already reached their target
-        const hGames = gameCount.get(home.id) || 0;
-        const aGames = gameCount.get(away.id) || 0;
-        if (hGames >= gamesPerTeam && aGames >= gamesPerTeam) continue;
-
+      // Commit the full round
+      for (const { home, away } of roundMatchups) {
         matchups.push({ home, away, round: roundNum });
-
-        // Update tracking
-        gameCount.set(home.id, hGames + 1);
-        gameCount.set(away.id, aGames + 1);
+        gameCount.set(home.id, (gameCount.get(home.id) || 0) + 1);
+        gameCount.set(away.id, (gameCount.get(away.id) || 0) + 1);
         homeCount.set(home.id, (homeCount.get(home.id) || 0) + 1);
         awayCount.set(away.id, (awayCount.get(away.id) || 0) + 1);
-
-        const homeOpp = opponentCount.get(home.id)!;
-        homeOpp.set(away.id, (homeOpp.get(away.id) || 0) + 1);
-        const awayOpp = opponentCount.get(away.id)!;
-        awayOpp.set(home.id, (awayOpp.get(home.id) || 0) + 1);
-
-        addedAny = true;
       }
-
-      // Only advance round number if we actually added games in this round
-      if (addedAny) {
-        roundNum++;
-      }
+      roundNum++;
     }
     cycle++;
 
-    // Safety: prevent infinite loop if we can't generate enough matchups
-    if (cycle > totalGames * 2) {
+    // Safety: prevent infinite loop
+    if (cycle > totalGames * 4) {
       warnings.push('Could not generate all requested games within cycle limit.');
       break;
     }
   }
 
-  // Check home/away balance and warn if any roster differs by more than 1
+  // Check home/away balance
   for (const t of teams) {
     const h = homeCount.get(t.id) || 0;
     const a = awayCount.get(t.id) || 0;
