@@ -30,6 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 
 // Store
 import { selectUser } from '../../store/slices/authSlice';
+import { selectActiveUserId } from '../../store/slices/contextSlice';
 import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
 import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
 import { BookingStatus } from '../../types';
@@ -59,6 +60,7 @@ export function HomeScreen() {
   
   // Redux state
   const user = useSelector(selectUser);
+  const activeUserId = useSelector(selectActiveUserId);
   
   // RTK Query hooks
   const { 
@@ -292,6 +294,18 @@ export function HomeScreen() {
       }
     }, [authLoading, refetchEvents, refetchBookings, refetchAllBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues])
   );
+
+  // Re-fetch all data when the active user context changes (guardian ↔ dependent)
+  useEffect(() => {
+    if (!authLoading) {
+      refetchEvents();
+      refetchBookings();
+      refetchAllBookings();
+      loadDebriefEvents();
+      loadInvitations();
+      loadReadyToScheduleLeagues();
+    }
+  }, [activeUserId]);
 
   const handleDebriefPress = useCallback((booking: Booking) => {
     navigation.navigate('Debrief', { eventId: booking.eventId });

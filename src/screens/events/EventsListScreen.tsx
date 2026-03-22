@@ -23,7 +23,7 @@ import { colors, Spacing } from '../../theme';
 import { eventService } from '../../services/api/EventService';
 import { useGetEventsQuery, useGetUserBookingsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
 import { setEvents } from '../../store/slices/eventsSlice';
-import { selectDependents } from '../../store/slices/contextSlice';
+import { selectDependents, selectActiveUserId } from '../../store/slices/contextSlice';
 import { useAuth } from '../../context/AuthContext';
 import { Event, EventFilters, SportType, EventStatus } from '../../types';
 import { PersonFilter } from '../../types/eventsCalendar';
@@ -44,6 +44,7 @@ export function EventsListScreen(): React.JSX.Element {
 
   // Dependents from Redux
   const dependents = useSelector(selectDependents);
+  const activeUserId = useSelector(selectActiveUserId);
 
   // Existing state
   const [customFilters, setCustomFilters] = useState<EventFilters>({});
@@ -261,6 +262,15 @@ export function EventsListScreen(): React.JSX.Element {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser?.id]),
   );
+
+  // Re-fetch when active user context changes (guardian ↔ dependent)
+  React.useEffect(() => {
+    if (currentUser) {
+      setPage(1);
+      refetchEvents();
+      refetchBookings();
+    }
+  }, [activeUserId]);
 
   const renderFilters = () => (
     <View style={styles.filtersContainer}>

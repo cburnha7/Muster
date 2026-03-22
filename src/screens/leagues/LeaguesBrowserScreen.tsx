@@ -20,6 +20,7 @@ import { colors, fonts, Spacing } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
+import { selectActiveUserId } from '../../store/slices/contextSlice';
 import { SportType } from '../../types';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
@@ -35,6 +36,7 @@ interface Section {
 export const LeaguesBrowserScreen: React.FC = () => {
   const navigation = useNavigation();
   const currentUser = useSelector(selectUser);
+  const activeUserId = useSelector(selectActiveUserId);
   const { isDependent } = useDependentContext();
 
   const [myLeagues, setMyLeagues] = useState<LeagueItem[]>([]);
@@ -78,6 +80,11 @@ export const LeaguesBrowserScreen: React.FC = () => {
       loadData();
     }, [loadData])
   );
+
+  // Re-fetch when active user context changes (guardian ↔ dependent)
+  React.useEffect(() => {
+    loadData();
+  }, [activeUserId]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);

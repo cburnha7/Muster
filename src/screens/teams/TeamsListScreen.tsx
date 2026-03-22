@@ -22,6 +22,7 @@ import { setUserTeams } from '../../store/slices/teamsSlice';
 import { Team } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
+import { useActiveUserId } from '../../hooks/useActiveUserId';
 
 interface Section {
   title: string;
@@ -34,6 +35,7 @@ export function TeamsListScreen() {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const { isDependent } = useDependentContext();
+  const effectiveUserId = useActiveUserId();
 
   const [myRosters, setMyRosters] = useState<Team[]>([]);
   const [publicRosters, setPublicRosters] = useState<Team[]>([]);
@@ -72,6 +74,11 @@ export function TeamsListScreen() {
       loadData();
     }, [loadData])
   );
+
+  // Re-fetch when active user context changes (guardian ↔ dependent)
+  React.useEffect(() => {
+    loadData();
+  }, [effectiveUserId]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);

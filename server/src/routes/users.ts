@@ -4,6 +4,17 @@ import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
+/**
+ * Resolve the effective user ID for the request.
+ * If the guardian is acting on behalf of a dependent, X-Active-User-Id takes precedence.
+ * Falls back to the authenticated user, then X-User-Id header, then query param.
+ */
+function resolveUserId(req: any): string | undefined {
+  const activeId = req.headers['x-active-user-id'] as string | undefined;
+  if (activeId) return activeId;
+  return req.user?.userId || req.headers['x-user-id'] as string || req.query.userId as string || undefined;
+}
+
 // Search users by name or email
 router.get('/search', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -215,13 +226,14 @@ router.get('/sport-ratings/:userId', async (req, res) => {
 // Get current user bookings
 router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
-    // Get user ID from authenticated request
-    let userId = req.user?.userId;
+    // Get user ID — respects X-Active-User-Id for dependent context
+    let userId = resolveUserId(req);
 
     console.log('📋 GET /users/bookings');
     console.log('📋 Auth header:', req.headers.authorization ? `Bearer ${req.headers.authorization.substring(7, 27)}...` : 'none');
     console.log('📋 X-User-Id header:', req.headers['x-user-id']);
-    console.log('📋 Decoded user ID from middleware:', userId);
+    console.log('📋 X-Active-User-Id header:', req.headers['x-active-user-id']);
+    console.log('📋 Resolved user ID:', userId);
 
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -333,10 +345,7 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
 // Get current user's pending invitations (roster + league)
 router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
   try {
-    let userId = req.user?.userId;
-    if (!userId) {
-      userId = req.headers['x-user-id'] as string || req.query.userId as string;
-    }
+    let userId = resolveUserId(req);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -484,10 +493,7 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
 // Get leagues ready to schedule for the current user (Commissioner only)
 router.get('/leagues-ready-to-schedule', optionalAuthMiddleware, async (req, res) => {
   try {
-    let userId = req.user?.userId;
-    if (!userId) {
-      userId = req.headers['x-user-id'] as string || req.query.userId as string;
-    }
+    let userId = resolveUserId(req);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -596,10 +602,7 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
 // Get current user's teams (teams the user is an active member of)
 router.get('/teams', optionalAuthMiddleware, async (req, res) => {
   try {
-    let userId = req.user?.userId;
-    if (!userId) {
-      userId = req.headers['x-user-id'] as string || req.query.userId as string;
-    }
+    let userId = resolveUserId(req);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -649,10 +652,7 @@ router.get('/teams', optionalAuthMiddleware, async (req, res) => {
 // Get current user's leagues (leagues they organize or are a member of)
 router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
   try {
-    let userId = req.user?.userId;
-    if (!userId) {
-      userId = req.headers['x-user-id'] as string || req.query.userId as string;
-    }
+    let userId = resolveUserId(req);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
