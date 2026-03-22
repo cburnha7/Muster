@@ -1,222 +1,81 @@
-import React, { useState, useCallback, useMemo } from 'react';
+﻿import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+  Modal,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { debounce } from '../../utils/performance';
 
 import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { FormButton } from '../../components/forms/FormButton';
-import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
-import { DependentToggle } from '../../components/events/DependentToggle';
-import { DateEventList } from '../../components/events/DateEventList';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
-import { useGetEventsQuery, useGetUserBookingsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
-import { setEvents } from '../../store/slices/eventsSlice';
-import { selectDependents, selectActiveUserId } from '../../store/slices/contextSlice';
-import { useAuth } from '../../context/AuthContext';
-import { Event, EventFilters, SportType, EventStatus } from '../../types';
-import { PersonFilter } from '../../types/eventsCalendar';
+import { useGetEventsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import { Event, SportType, EventStatus } from '../../types';
 import { useDependentContext } from '../../hooks/useDependentContext';
-import {
-  assignPersonColors,
-  buildMarkedDates,
-  getMonthDateRange,
-  resolveEventOwnership,
-} from '../../utils/eventsCalendarUtils';
-import { formatDateForCalendar } from '../../utils/calendarUtils';
 
 export function EventsListScreen(): React.JSX.Element {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const { user: currentUser } = useAuth();
   const { isDependent } = useDependentContext();
 
-  // Dependents from Redux
-  const dependents = useSelector(selectDependents);
-  const activeUserId = useSelector(selectActiveUserId);
-
-  // Existing state
-  const [customFilters, setCustomFilters] = useState<EventFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [page, setPage] = useState(1);
-  const [allFetchedEvents, setAllFetchedEvents] = useState<Event[]>([]);
-
-  // New calendar state
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
-  const [activeFilter, setActiveFilter] = useState<PersonFilter>({
-    type: 'individual',
-    userId: currentUser?.id || '',
-  });
-  const [visibleMonth, setVisibleMonth] = useState<{ year: number; month: number }>({
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
-  });
-
-  // Person color assignment
-  const personColors = useMemo(
-    () => assignPersonColors(currentUser?.id || '', dependents),
-    [currentUser?.id, dependents],
-  );
-
-  // Family user IDs for ownership resolution
-  const familyUserIds = useMemo(
-    () => [currentUser?.id || '', ...dependents.map(d => d.id)],
-    [currentUser?.id, dependents],
-  );
-
-  const hasCustomFilters = Object.keys(customFilters).length > 0 || searchQuery.trim().length > 0;
-  const activeFilters = hasCustomFilters ? customFilters : DEFAULT_EVENT_FILTERS;
-
-  // Month-scoped date range for calendar view
-  const monthDateRange = useMemo(
-    () => getMonthDateRange(visibleMonth.year, visibleMonth.month),
-    [visibleMonth.year, visibleMonth.month],
-  );
-
-  // Merge month-scoped dates into filters for list/calendar mode
-  const calendarFilters = useMemo<EventFilters>(
-    () => ({
-      ...activeFilters,
-      startDate: monthDateRange.startDate,
-      endDate: monthDateRange.endDate,
-    }),
-    [activeFilters, monthDateRange],
-  );
+  const [refreshing, setRefreshing] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedSports, setSelectedSports] = useState<SportType[]>([]);
+  const [searchResults, setSearchResults] = useState<Event[] | null>(null);
 
   const {
     data: eventsData,
-    isLoading: eventsLoading,
+    isLoading,
     error: eventsError,
     refetch: refetchEvents,
   } = useGetEventsQuery({
-    filters: viewMode === 'list' ? calendarFilters : activeFilters,
-    pagination: { page, limit: 20 },
-    ...(currentUser?.id ? { userId: currentUser.id } : {}),
-  });
-
-  // Accumulate events across pages
-  React.useEffect(() => {
-    if (eventsData?.data) {
-      if (page === 1) {
-        setAllFetchedEvents(eventsData.data);
-      } else {
-        setAllFetchedEvents(prev => {
-          const existingIds = new Set(prev.map(e => e.id));
-          const newEvents = eventsData.data.filter(e => !existingIds.has(e.id));
-          return [...prev, ...newEvents];
-        });
-      }
-    }
-  }, [eventsData, page]);
-
-  const {
-    data: bookingsData,
-    isLoading: bookingsLoading,
-    refetch: refetchBookings,
-  } = useGetUserBookingsQuery({
-    status: 'upcoming',
+    filters: {
+      ...DEFAULT_EVENT_FILTERS,
+      status: EventStatus.ACTIVE,
+      ...(selectedSports.length > 0 ? { sportType: selectedSports[0] } : {}),
+    },
     pagination: { page: 1, limit: 100 },
   });
 
-  const rawEvents = allFetchedEvents;
-  const upcomingBookings = bookingsData?.data || [];
-  const bookedEventIds = new Set(upcomingBookings.map(b => b.eventId));
-
-  // Filter events by active person filter for calendar/list view
-  const filteredEvents = useMemo(() => {
-    if (!rawEvents) return [];
-    if (activeFilter.type === 'wholeCrew') {
-      return rawEvents.filter(event => {
-        const ownership = resolveEventOwnership(event, familyUserIds);
-        return ownership.ownerUserIds.length > 0 || event.organizerId !== currentUser?.id;
-      });
-    }
-    // Individual filter — show events owned by that person + public events
-    return rawEvents.filter(event => {
-      const ownership = resolveEventOwnership(event, familyUserIds);
-      return ownership.ownerUserIds.includes(activeFilter.userId) || ownership.ownerUserIds.length === 0;
-    });
-  }, [rawEvents, activeFilter, familyUserIds, currentUser?.id]);
-
-  // For map view, show all events (not person-filtered)
-  const myEvents = rawEvents.filter(event => event.organizerId === currentUser?.id);
-  const publicEvents = rawEvents.filter(
-    event => event.organizerId !== currentUser?.id && !bookedEventIds.has(event.id),
-  );
-  const allDisplayEvents = [...myEvents, ...publicEvents];
-
-  // Marked dates for calendar
-  const markedDates = useMemo(
-    () => buildMarkedDates(filteredEvents, activeFilter, familyUserIds, personColors, selectedDate),
-    [filteredEvents, activeFilter, familyUserIds, personColors, selectedDate],
-  );
-
-  const isLoading = eventsLoading || bookingsLoading;
-
-  const handleCreateEvent = () => {
-    (navigation as any).navigate('CreateEvent');
-  };
-
-  const sportTypeOptions: SelectOption[] = [
-    { label: 'All Sports', value: '' },
-    { label: 'Basketball', value: SportType.BASKETBALL },
-    { label: 'Pickleball', value: SportType.PICKLEBALL },
-    { label: 'Tennis', value: SportType.TENNIS },
-    { label: 'Soccer', value: SportType.SOCCER },
-    { label: 'Softball', value: SportType.SOFTBALL },
-    { label: 'Baseball', value: SportType.BASEBALL },
-    { label: 'Volleyball', value: SportType.VOLLEYBALL },
-    { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
-    { label: 'Kickball', value: SportType.KICKBALL },
-    { label: 'Other', value: SportType.OTHER },
-  ];
+  const events = useMemo(() => {
+    const raw = searchResults ?? eventsData?.data ?? [];
+    const now = new Date();
+    return raw
+      .filter((e) => new Date(e.startTime) >= now)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  }, [eventsData, searchResults]);
 
   const debouncedSearch = useMemo(
     () => debounce(async (query: string) => {
       if (!query.trim()) {
-        setCustomFilters({});
+        setSearchResults(null);
         return;
       }
       try {
-        const searchFilters: EventFilters = {
-          ...customFilters,
-          status: EventStatus.ACTIVE,
-        };
-        const response = await eventService.searchEvents(query, searchFilters, {
-          page: 1,
-          limit: 20,
-        });
-        dispatch(setEvents({
-          data: response.results,
-          pagination: {
-            page: 1,
-            limit: 20,
-            total: response.total,
-            totalPages: Math.ceil(response.total / 20),
-          },
-        }));
+        const response = await eventService.searchEvents(
+          query, { status: EventStatus.ACTIVE }, { page: 1, limit: 100 },
+        );
+        setSearchResults(response.results);
       } catch (err) {
-        console.error('Search error:', err instanceof Error ? err.message : 'Search failed');
+        console.error('Search error:', err);
       }
     }, 300),
-    [dispatch, customFilters],
+    [],
   );
 
-  const searchEvents = useCallback((query: string) => {
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
     debouncedSearch(query);
   }, [debouncedSearch]);
 
@@ -224,86 +83,86 @@ export function EventsListScreen(): React.JSX.Element {
     (navigation as any).navigate('EventDetails', { eventId: event.id });
   };
 
-  const handleFilterChange = (key: keyof EventFilters, value: string | undefined) => {
-    const newFilters = { ...customFilters };
-    if (value === '' || value === null || value === undefined) {
-      delete newFilters[key];
-    } else {
-      (newFilters as any)[key] = value;
-    }
-    setCustomFilters(newFilters);
-  };
-
-  const applyFilters = () => {
-    setShowFilters(false);
-    setPage(1);
-  };
-
-  const clearAllFilters = () => {
-    setCustomFilters({});
-    setSearchQuery('');
-    setShowFilters(false);
-    setPage(1);
+  const handleCreateEvent = () => {
+    (navigation as any).navigate('CreateEvent');
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    setPage(1);
-    await Promise.all([refetchEvents(), refetchBookings()]);
+    setSearchResults(null);
+    setSearchQuery('');
+    await refetchEvents();
     setRefreshing(false);
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      if (currentUser) {
-        refetchEvents();
-        refetchBookings();
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser?.id]),
+  useFocusEffect(useCallback(() => { refetchEvents(); }, []));
+
+  const toggleSport = (sport: SportType) => {
+    setSelectedSports((prev) =>
+      prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport],
+    );
+  };
+
+  const handleApplyFilters = () => {
+    setShowFilters(false);
+    setSearchResults(null);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedSports([]);
+    setShowFilters(false);
+    setSearchResults(null);
+  };
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
+    });
+
+  const formatTime = (date: string) =>
+    new Date(date).toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC',
+    });
+
+  const renderEventCard = (item: Event, index: number) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.eventCard}
+      onPress={() => handleEventPress(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardContent}>
+        <View style={styles.eventHeader}>
+          <View style={styles.numberBadge}>
+            <Text style={styles.numberText}>{index + 1}</Text>
+          </View>
+          <Text style={styles.eventName} numberOfLines={1}>{item.title}</Text>
+        </View>
+        {item.sportType && (
+          <View style={styles.sportTag}>
+            <Text style={styles.sportTagText}>
+              {item.sportType.charAt(0).toUpperCase() + item.sportType.slice(1)}
+            </Text>
+          </View>
+        )}
+        <View style={styles.detailRow}>
+          <Ionicons name="calendar-outline" size={15} color={colors.inkFaint} />
+          <Text style={styles.detailText}>
+            {formatDate(item.startTime as unknown as string)} at{' '}
+            {formatTime(item.startTime as unknown as string)}
+          </Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Ionicons name="location-outline" size={15} color={colors.inkFaint} />
+          <Text style={styles.detailText} numberOfLines={1}>
+            {item.facility?.name || 'Location TBD'}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
-  // Re-fetch when active user context changes (guardian ↔ dependent)
-  React.useEffect(() => {
-    if (currentUser) {
-      setPage(1);
-      refetchEvents();
-      refetchBookings();
-    }
-  }, [activeUserId]);
-
-  const renderFilters = () => (
-    <View style={styles.filtersContainer}>
-      <View style={styles.filtersHeader}>
-        <Text style={styles.filtersTitle}>Filters</Text>
-        <TouchableOpacity onPress={() => setShowFilters(false)}>
-          <Ionicons name="close" size={24} color={colors.inkFaint} />
-        </TouchableOpacity>
-      </View>
-      <FormSelect
-        label="Sport"
-        placeholder="Select sport"
-        value={customFilters.sportType || ''}
-        options={sportTypeOptions}
-        onSelect={(option) => handleFilterChange('sportType', option.value as string)}
-      />
-      <View style={styles.filtersActions}>
-        <FormButton
-          title="Clear All"
-          variant="outline"
-          onPress={clearAllFilters}
-          style={styles.filterActionButton}
-        />
-        <FormButton
-          title="Apply Filters"
-          onPress={applyFilters}
-          style={styles.filterActionButton}
-        />
-      </View>
-    </View>
-  );
-
-  if (eventsError && rawEvents.length === 0) {
+  if (eventsError && events.length === 0) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
@@ -319,187 +178,249 @@ export function EventsListScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      {/* DependentToggle at top — only renders when dependents exist */}
-      <DependentToggle
-        guardian={{ id: currentUser?.id || '', firstName: currentUser?.firstName || 'Me' }}
-        dependents={dependents}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-        personColors={personColors}
-      />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
+        }
+      >
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Upcoming Events</Text>
+          <View style={styles.countBadge}>
+            <Text style={styles.countBadgeText}>{events.length}</Text>
+          </View>
+        </View>
 
-      {/* Search bar + ViewToggle + filter button (preserved) */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          placeholder="Search events..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSearch={searchEvents}
-          style={styles.searchBar}
-        />
-        <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setShowFilters(true)}
-        >
-          <Ionicons
-            name="filter"
-            size={24}
-            color={colors.pine}
+        <View style={styles.header}>
+          <SearchBar
+            placeholder="Search events..."
+            value={searchQuery}
+            onChangeText={handleSearch}
+            onSearch={handleSearch}
+            style={styles.searchBar}
           />
-          {Object.keys(customFilters).length > 0 && <View style={styles.filterBadge} />}
-        </TouchableOpacity>
-      </View>
+          <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
+          <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
+            <Ionicons name="filter" size={24} color={colors.pine} />
+            {selectedSports.length > 0 && <View style={styles.filterBadge} />}
+          </TouchableOpacity>
+        </View>
 
-      {isLoading && rawEvents.length === 0 ? (
-        <LoadingSpinner />
-      ) : viewMode === 'map' ? (
-        <EventsMapViewWrapper
-          events={allDisplayEvents}
-          userBookedEventIds={Array.from(bookedEventIds)}
-          onEventPress={handleEventPress}
-        />
-      ) : (
-        <DateEventList
-          events={filteredEvents}
-          selectedDate={selectedDate}
-          currentUserId={currentUser?.id || ''}
-          activeFilter={activeFilter}
-          personColors={personColors}
-          familyUserIds={familyUserIds}
-          onEventPress={handleEventPress}
-          isLoading={eventsLoading}
-          onRefresh={onRefresh}
-          refreshing={refreshing}
-          markedDates={markedDates}
-          onDateSelect={setSelectedDate}
-          onMonthChange={(month) => setVisibleMonth(month)}
-        />
-      )}
+        {isLoading && events.length === 0 ? (
+          <LoadingSpinner />
+        ) : viewMode === 'map' ? (
+          <View style={styles.mapContainer}>
+            <EventsMapViewWrapper
+              events={events}
+              userBookedEventIds={[]}
+              onEventPress={handleEventPress}
+            />
+          </View>
+        ) : events.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="calendar-outline" size={64} color={colors.inkFaint} />
+            <Text style={styles.emptyTitle}>No Upcoming Events</Text>
+            <Text style={styles.emptySubtitle}>
+              {searchQuery ? 'Try adjusting your search or filters' : 'Check back soon for upcoming events'}
+            </Text>
+          </View>
+        ) : (
+          events.map((item, index) => renderEventCard(item, index))
+        )}
 
-      {/* FAB — hidden for dependents */}
+        <View style={{ height: 80 }} />
+      </ScrollView>
+
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
           <Ionicons name="add" size={28} color={colors.chalk} />
         </TouchableOpacity>
       )}
 
-      {/* Filter overlay (preserved) */}
-      {showFilters && (
-        <View style={styles.filtersOverlay}>
-          <TouchableOpacity
-            style={styles.filtersBackdrop}
-            onPress={() => setShowFilters(false)}
-          />
-          {renderFilters()}
+      <Modal
+        visible={showFilters}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter Events</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)}>
+                <Ionicons name="close" size={24} color={colors.ink} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.filterContent}>
+              <Text style={styles.filterLabel}>Sport Type</Text>
+              <View style={styles.sportTypeContainer}>
+                {Object.values(SportType).map((sport) => {
+                  const isSelected = selectedSports.includes(sport);
+                  return (
+                    <TouchableOpacity
+                      key={sport}
+                      style={[styles.sportChip, isSelected && styles.sportChipSelected]}
+                      onPress={() => toggleSport(sport)}
+                    >
+                      <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
+                <Text style={styles.clearButtonText}>Clear All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.cream,
+  container: { flex: 1, backgroundColor: colors.cream },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 16 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    gap: 6,
   },
-  searchContainer: {
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.ink,
+    flex: 1,
+  },
+  countBadge: {
+    backgroundColor: colors.pine + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  countBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.pine,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.cream,
     gap: Spacing.sm,
   },
-  searchBar: {
-    flex: 1,
-  },
-  filterButton: {
-    padding: Spacing.sm,
-    position: 'relative',
-  },
+  searchBar: { flex: 1 },
+  filterButton: { padding: Spacing.sm, position: 'relative' as const },
   filterBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
+    position: 'absolute' as const,
+    top: 6, right: 6,
+    width: 8, height: 8,
     borderRadius: 4,
     backgroundColor: colors.heart,
   },
+  mapContainer: { height: 400 },
+  eventCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardContent: { gap: 6 },
+  eventHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    marginBottom: 4,
+  },
+  numberBadge: {
+    width: 32, height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.pine,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    marginRight: 12,
+  },
+  numberText: { fontSize: 16, color: '#FFFFFF', fontWeight: '700' as const },
+  eventName: {
+    fontFamily: fonts.label,
+    fontSize: 18,
+    color: colors.ink,
+    flex: 1,
+    paddingTop: 4,
+  },
+  sportTag: {
+    alignSelf: 'flex-start' as const,
+    backgroundColor: colors.pine + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sportTagText: { fontFamily: fonts.label, fontSize: 13, color: colors.pine },
+  detailRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 },
+  detailText: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, flex: 1 },
+  emptyState: {
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
+  },
+  emptyTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.ink,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  emptySubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.inkFaint,
+    textAlign: 'center' as const,
+    lineHeight: 24,
+  },
   fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
+    position: 'absolute' as const,
+    right: 20, bottom: 20,
+    width: 56, height: 56,
     borderRadius: 28,
     backgroundColor: colors.pine,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
   },
-  filtersOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-  },
-  filtersBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  filtersContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.cream,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 32,
-    maxHeight: '80%',
-  },
-  filtersHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.inkFaint,
-  },
-  filtersTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  filtersActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: Spacing.lg,
-  },
-  filterActionButton: {
-    flex: 1,
-    marginHorizontal: Spacing.sm,
-  },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
     paddingHorizontal: Spacing.xl,
   },
   errorText: {
+    fontFamily: fonts.body,
     fontSize: 16,
     color: colors.heart,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginTop: Spacing.lg,
     marginBottom: Spacing.lg,
     lineHeight: 24,
@@ -510,9 +431,73 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine,
     borderRadius: 8,
   },
-  retryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.chalk,
+  retryButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.chalk },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end' as const,
   },
+  modalContent: {
+    backgroundColor: colors.cream,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.inkFaint,
+  },
+  modalTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
+  filterContent: { padding: Spacing.lg },
+  filterLabel: {
+    fontFamily: fonts.label,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: Spacing.md,
+  },
+  sportTypeContainer: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    marginBottom: Spacing.lg,
+    gap: 8,
+  },
+  sportChip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    backgroundColor: colors.cream,
+    borderWidth: 1,
+    borderColor: colors.inkFaint,
+  },
+  sportChipSelected: { backgroundColor: colors.pine, borderColor: colors.pine },
+  sportChipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
+  sportChipTextSelected: { color: colors.chalk },
+  modalActions: {
+    flexDirection: 'row' as const,
+    padding: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.inkFaint,
+    gap: 8,
+  },
+  clearButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.inkFaint,
+    alignItems: 'center' as const,
+  },
+  clearButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.ink },
+  applyButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    backgroundColor: colors.pine,
+    alignItems: 'center' as const,
+  },
+  applyButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.chalk },
 });
