@@ -413,12 +413,31 @@ function assignSlotsToMatchups(
     roundMatchups.get(m.round)!.push(m);
   }
 
-  // ── Step 3: Assign each round to a game day ──
-  // For weekly frequency: max one round per calendar week.
-  // For monthly frequency: max one round per calendar month.
-  // For all_at_once: no spacing constraint.
+  // ── Step 3: Determine how many rounds fit per period ──
+  // For weekly/monthly we spread rounds evenly across the available
+  // periods. E.g. 12 rounds over 6 weeks → 2 rounds per week.
+  // For all_at_once there is no spacing constraint.
+
+  const periodKeyFn = frequency === 'weekly' ? (d: Date) => isoWeekKey(d)
+    : frequency === 'monthly' ? (d: Date) => monthKey(d)
+    : null;
+
+  let maxRoundsPerPeriod = Infinity; // all_at_once — no limit
+
+  if (periodKeyFn) {
+    // Count distinct periods available in the slot pool
+    const distinctPeriods = new Set<string>();
+    for (const s of slots) distinctPeriods.add(periodKeyFn(s));
+    const periodCount = distinctPeriods.size;
+
+    // Spread rounds evenly: ceil so we don't run out of periods
+    maxRoundsPerPeriod = periodCount > 0
+      ? Math.ceil(roundOrder.length / periodCount)
+      : roundOrder.length;
+  }
+
   const usedSlots = new Set<number>();
-  const usedPeriods = new Set<string>(); // week or month keys already taken
+  const periodRoundCount = new Map<string, number>(); // period → rounds placed so far
   const games: ScheduledGame[] = [];
   let gameNumber = 1;
   let dayIdx = 0;
@@ -432,24 +451,23 @@ function assignSlotsToMatchups(
       const dk = dayOrder[di];
       const slotsForDay = daySlots.get(dk)!;
 
-      // Enforce spacing: skip this day if its week/month is already used
-      if (frequency === 'weekly' || frequency === 'monthly') {
+      // Enforce even spread: skip if this period already has its share
+      if (periodKeyFn) {
         const refSlot = slots[slotsForDay[0]];
-        const periodKey = frequency === 'weekly' ? isoWeekKey(refSlot) : monthKey(refSlot);
-        if (usedPeriods.has(periodKey)) continue;
+        const pk = periodKeyFn(refSlot);
+        if ((periodRoundCount.get(pk) || 0) >= maxRoundsPerPeriod) continue;
       }
 
       const availableSlots = slotsForDay.filter((si) => !usedSlots.has(si));
       if (availableSlots.length < roundGames.length) continue;
 
-      // Take the earliest N available slots for this round's games
       const assignedSlots = availableSlots.slice(0, roundGames.length);
 
-      // Mark the period as used
-      if (frequency === 'weekly' || frequency === 'monthly') {
+      // Track period usage
+      if (periodKeyFn) {
         const refSlot = slots[slotsForDay[0]];
-        const periodKey = frequency === 'weekly' ? isoWeekKey(refSlot) : monthKey(refSlot);
-        usedPeriods.add(periodKey);
+        const pk = periodKeyFn(refSlot);
+        periodRoundCount.set(pk, (periodRoundCount.get(pk) || 0) + 1);
       }
 
       for (let gi = 0; gi < roundGames.length; gi++) {
