@@ -5,6 +5,7 @@ import { authService } from '../services/auth/AuthService';
 import { User } from '../types';
 import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser, clearAuth } from '../store/slices/authSlice';
 import { fetchSubscription, clearSubscription } from '../store/slices/subscriptionSlice';
+import { setDependents, resetContext } from '../store/slices/contextSlice';
 import { loggingService } from '../services/LoggingService';
 
 interface AuthContextType {
@@ -91,6 +92,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Hydrate subscription state when user is available
     if (reduxUser?.id) {
       dispatch(fetchSubscription(reduxUser.id) as any);
+
+      // Hydrate dependents into context slice for the ContextIndicator pill
+      fetch(`${process.env.EXPO_PUBLIC_API_URL}/dependents`, {
+        headers: { 'X-User-Id': reduxUser.id },
+      })
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => dispatch(setDependents(data)))
+        .catch(() => {}); // silent — DependentsSection will retry on profile
     }
 
     if (reduxUser && process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
@@ -116,6 +125,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Dispatch Redux action to clear auth state
       dispatch(clearAuth());
       dispatch(clearSubscription());
+      dispatch(resetContext());
       
       console.log('AuthContext: Logout complete');
     } catch (error) {

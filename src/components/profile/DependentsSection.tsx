@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { colors, fonts, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { DependentSummary } from '../../types/dependent';
-import { setActiveUser } from '../../store/slices/contextSlice';
+import { setActiveUser, setDependents as setContextDependents } from '../../store/slices/contextSlice';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 
 /**
@@ -45,6 +45,7 @@ export function DependentsSection() {
       if (!response.ok) throw new Error('Failed to fetch dependents');
       const data: DependentSummary[] = await response.json();
       setDependents(data);
+      dispatch(setContextDependents(data));
     } catch (error) {
       console.error('Failed to fetch dependents:', error);
     } finally {
