@@ -7,6 +7,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -19,7 +21,6 @@ import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { CancelRequestCard } from '../../components/home/CancelRequestCard';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
-import { DependentToggle } from '../../components/events/DependentToggle';
 import { EventSearchModal, EventSearchParams } from '../../components/home/EventSearchModal';
 
 // Services
@@ -45,7 +46,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Utils
 import { PersonFilter } from '../../types/eventsCalendar';
-import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import { formatDateForCalendar, calendarTheme } from '../../utils/calendarUtils';
 import { searchEventBus } from '../../utils/searchEventBus';
 
@@ -97,10 +97,16 @@ export function HomeScreen() {
     userId: currentUser?.id || '',
   });
 
-  const personColors = useMemo(
-    () => assignPersonColors(currentUser?.id || '', dependents),
-    [currentUser?.id, dependents],
-  );
+  // User selector dropdown state
+  const [userDropdownVisible, setUserDropdownVisible] = useState(false);
+
+  const activeDisplayName = useMemo(() => {
+    if (activeFilter.type === 'individual' && activeFilter.userId !== currentUser?.id) {
+      const dep = dependents.find((d) => d.id === activeFilter.userId);
+      return dep ? dep.firstName : currentUser?.firstName || 'Me';
+    }
+    return currentUser?.firstName || 'Me';
+  }, [activeFilter, currentUser, dependents]);
 
   // Calendar-only filter — does NOT switch the active account
   const handleFilterChange = useCallback((filter: PersonFilter) => {
@@ -342,17 +348,23 @@ export function HomeScreen() {
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
         {/* Schedule section with calendar */}
-        <CollapsibleSection title="Schedule" count={allBookings.length}>
+        <CollapsibleSection
+          title="Schedule"
+          rightElement={
+            <TouchableOpacity
+              style={styles.userSelectorBtn}
+              onPress={() => setUserDropdownVisible(true)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Viewing schedule for ${activeDisplayName}`}
+            >
+              <Ionicons name="person-circle-outline" size={18} color={colors.pine} />
+              <Text style={styles.userSelectorText} numberOfLines={1}>{activeDisplayName}</Text>
+              <Ionicons name="chevron-down" size={14} color={colors.pine} />
+            </TouchableOpacity>
+          }
+        >
           <View style={styles.sectionInner}>
-            {/* Profile toggle pills */}
-            <DependentToggle
-              guardian={{ id: currentUser?.id || '', firstName: currentUser?.firstName || 'Me' }}
-              dependents={dependents}
-              activeFilter={activeFilter}
-              onFilterChange={handleFilterChange}
-              personColors={personColors}
-            />
-
             {/* Calendar */}
             <Calendar
               current={selectedDate}
@@ -461,6 +473,47 @@ export function HomeScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* User selector dropdown */}
+      <Modal visible={userDropdownVisible} transparent animationType="fade" onRequestClose={() => setUserDropdownVisible(false)}>
+        <Pressable style={styles.dropdownBackdrop} onPress={() => setUserDropdownVisible(false)}>
+          <View style={styles.dropdownMenu}>
+            {/* Guardian */}
+            <TouchableOpacity
+              style={[styles.dropdownRow, activeFilter.type === 'individual' && activeFilter.userId === currentUser?.id && styles.dropdownRowActive]}
+              onPress={() => { handleFilterChange({ type: 'individual', userId: currentUser?.id || '' }); setUserDropdownVisible(false); }}
+            >
+              <Ionicons name="person" size={16} color={activeFilter.userId === currentUser?.id ? colors.pine : colors.inkFaint} />
+              <Text style={[styles.dropdownRowText, activeFilter.userId === currentUser?.id && styles.dropdownRowTextActive]}>{currentUser?.firstName || 'Me'}</Text>
+              {activeFilter.type === 'individual' && activeFilter.userId === currentUser?.id && <Ionicons name="checkmark" size={18} color={colors.pine} />}
+            </TouchableOpacity>
+            {/* Dependents */}
+            {dependents.map((dep) => {
+              const isActive = activeFilter.type === 'individual' && activeFilter.userId === dep.id;
+              return (
+                <TouchableOpacity
+                  key={dep.id}
+                  style={[styles.dropdownRow, isActive && styles.dropdownRowActive]}
+                  onPress={() => { handleFilterChange({ type: 'individual', userId: dep.id }); setUserDropdownVisible(false); }}
+                >
+                  <Ionicons name="person" size={16} color={isActive ? colors.pine : colors.inkFaint} />
+                  <Text style={[styles.dropdownRowText, isActive && styles.dropdownRowTextActive]}>{dep.firstName}</Text>
+                  {isActive && <Ionicons name="checkmark" size={18} color={colors.pine} />}
+                </TouchableOpacity>
+              );
+            })}
+            {/* Add Dependent */}
+            <View style={styles.dropdownDivider} />
+            <TouchableOpacity
+              style={styles.dropdownRow}
+              onPress={() => { setUserDropdownVisible(false); (navigation as any).navigate('Profile', { screen: 'DependentForm', params: {} }); }}
+            >
+              <Ionicons name="add-circle-outline" size={16} color={colors.pine} />
+              <Text style={[styles.dropdownRowText, { color: colors.pine }]}>Add Dependent</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
 
       <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
       <EventSearchModal
@@ -571,5 +624,66 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.inkFaint,
     marginTop: 2,
+  },
+  userSelectorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.pine + '15',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    gap: 4,
+    maxWidth: 140,
+  },
+  userSelectorText: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.pine,
+    flexShrink: 1,
+  },
+  dropdownBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 140,
+    paddingRight: 16,
+  },
+  dropdownMenu: {
+    backgroundColor: colors.chalk,
+    borderRadius: 12,
+    minWidth: 200,
+    maxWidth: 260,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  dropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  dropdownRowActive: {
+    backgroundColor: colors.pine + '0D',
+  },
+  dropdownRowText: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  dropdownRowTextActive: {
+    fontFamily: fonts.label,
+    color: colors.pine,
+  },
+  dropdownDivider: {
+    height: 1,
+    backgroundColor: colors.cream,
+    marginHorizontal: 14,
   },
 });

@@ -20,6 +20,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 interface CollapsibleSectionProps {
   title: string;
   count?: number;
+  rightElement?: React.ReactNode;
   defaultExpanded?: boolean;
   children: React.ReactNode;
 }
@@ -27,6 +28,7 @@ interface CollapsibleSectionProps {
 export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   title,
   count,
+  rightElement,
   defaultExpanded = true,
   children,
 }) => {
@@ -67,6 +69,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
             <Text style={styles.countBadgeText}>{count}</Text>
           </View>
         )}
+        {rightElement}
       </TouchableOpacity>
       {expanded && children}
     </View>
