@@ -9,6 +9,7 @@ import { SearchResultsScreen } from '../../screens/search/SearchResultsScreen';
 import { EventSearchResultsScreen } from '../../screens/home/EventSearchResultsScreen';
 import { DebriefScreen } from '../../screens/debrief/DebriefScreen';
 import { PendingReservationDetailsScreen } from '../../screens/facilities/PendingReservationDetailsScreen';
+import { CreateEventScreen } from '../../screens/events/CreateEventScreen';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -53,6 +54,13 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen
         name="PendingReservationDetails"
         component={PendingReservationDetailsScreen}
+      />
+      <Stack.Screen
+        name="CreateEvent"
+        component={CreateEventScreen}
+        options={{
+          presentation: 'modal',
+        }}
       />
     </Stack.Navigator>
   );

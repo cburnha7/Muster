@@ -6,11 +6,10 @@ import { useSelector } from 'react-redux';
 import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
 import { colors } from '../theme';
-import { ContextIndicator } from '../components/navigation/ContextIndicator';
+import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
 
 // Direct imports instead of lazy loading for web compatibility
 import { HomeStackNavigator } from './stacks/HomeStackNavigator';
-import { EventsStackNavigator } from './stacks/EventsStackNavigator';
 import { FacilitiesStackNavigator } from './stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from './stacks/TeamsStackNavigator';
 import { LeaguesStackNavigator } from './stacks/LeaguesStackNavigator';
@@ -44,10 +43,6 @@ export function TabNavigator(): JSX.Element {
   const bookingsCount = useSelector((state: RootState) => 
     state.bookings.bookings?.filter(booking => booking.status === 'confirmed').length || 0
   );
-  
-  const eventsCount = useSelector((state: RootState) => 
-    state.events.events?.filter(event => event.status === 'active').length || 0
-  );
 
   const getTabBarIcon = (
     route: { name: keyof MainTabParamList },
@@ -62,9 +57,6 @@ export function TabNavigator(): JSX.Element {
     switch (route.name) {
       case 'Home':
         iconName = focused ? 'home' : 'home-outline';
-        break;
-      case 'Events':
-        iconName = focused ? 'calendar' : 'calendar-outline';
         break;
       case 'Facilities':
         iconName = focused ? 'map' : 'map-outline';
@@ -94,15 +86,21 @@ export function TabNavigator(): JSX.Element {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: true,
-        headerTitle: '',
-        headerRight: () => <ContextIndicator />,
+        headerTitle: () => <HeaderSearchPill />,
         headerStyle: {
           backgroundColor: colors.chalk,
           shadowColor: 'transparent',
           elevation: 0,
         },
+        headerTitleContainerStyle: {
+          flex: 1,
+          paddingHorizontal: 16,
+        },
+        headerLeftContainerStyle: {
+          width: 0,
+        },
         headerRightContainerStyle: {
-          paddingRight: 16,
+          width: 0,
         },
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
@@ -143,25 +141,6 @@ export function TabNavigator(): JSX.Element {
           tabPress: (e) => {
             e.preventDefault();
             navigation.navigate('Home', { screen: 'HomeScreen' });
-          },
-        })}
-      />
-      <Tab.Screen 
-        name="Events" 
-        component={EventsStackNavigator}
-        options={{
-          tabBarLabel: 'Events',
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            // Prevent default behavior
-            e.preventDefault();
-            
-            // Reset the Events stack to the list screen
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Events', params: { screen: 'EventsList' } }],
-            });
           },
         })}
       />

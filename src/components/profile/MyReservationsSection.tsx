@@ -75,7 +75,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   };
 
   const handleCreateEvent = (reservation: Reservation) => {
-    (navigation as any).navigate('Events', {
+    (navigation as any).navigate('Home', {
       screen: 'CreateEvent',
       params: {
         fromReservation: true,
@@ -94,7 +94,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   };
 
   const handleViewEvent = (eventId: string) => {
-    (navigation as any).navigate('Events', {
+    (navigation as any).navigate('Home', {
       screen: 'EventDetails',
       params: { eventId },
     });

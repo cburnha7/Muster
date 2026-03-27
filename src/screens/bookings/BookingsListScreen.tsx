@@ -347,7 +347,7 @@ export function BookingsListScreen(): JSX.Element {
         {activeFilter === 'upcoming' && (
           <TouchableOpacity 
             style={styles.browseButton}
-            onPress={() => navigation.navigate('Events' as never)}
+            onPress={() => navigation.navigate('Home' as never)}
           >
             <Text style={styles.browseButtonText}>Browse Events</Text>
           </TouchableOpacity>

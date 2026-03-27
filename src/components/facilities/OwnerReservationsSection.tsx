@@ -103,7 +103,7 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
   };
 
   const handleViewEvent = (eventId: string) => {
-    (navigation as any).navigate('Events', {
+    (navigation as any).navigate('Home', {
       screen: 'EventDetails',
       params: { eventId },
     });

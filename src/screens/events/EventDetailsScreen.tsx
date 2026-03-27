@@ -379,8 +379,8 @@ export function EventDetailsScreen(): JSX.Element {
       // Close the modal
       setShowCancelModal(false);
       
-      // Navigate to Events tab (will trigger refresh via useFocusEffect)
-      navigation.navigate('Events' as never);
+      // Navigate to Home (will trigger refresh via useFocusEffect)
+      navigation.navigate('HomeScreen' as never);
       
       // Show success message after navigation
       setTimeout(() => {

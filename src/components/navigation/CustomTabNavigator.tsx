@@ -6,7 +6,6 @@ import { MainTabParamList } from '../../navigation/types';
 
 // Import stack navigators for each tab
 import { HomeStackNavigator } from '../../navigation/stacks/HomeStackNavigator';
-import { EventsStackNavigator } from '../../navigation/stacks/EventsStackNavigator';
 import { FacilitiesStackNavigator } from '../../navigation/stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from '../../navigation/stacks/TeamsStackNavigator';
 import { ProfileStackNavigator } from '../../navigation/stacks/ProfileStackNavigator';
@@ -57,9 +56,6 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
     switch (route.name) {
       case 'Home':
         iconName = focused ? 'home' : 'home-outline';
-        break;
-      case 'Events':
-        iconName = focused ? 'calendar' : 'calendar-outline';
         break;
       case 'Facilities':
         iconName = focused ? 'location' : 'location-outline';
@@ -120,13 +116,6 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         component={HomeStackNavigator}
         options={{
           tabBarLabel: 'Home',
-        }}
-      />
-      <Tab.Screen 
-        name="Events" 
-        component={EventsStackNavigator}
-        options={{
-          tabBarLabel: 'Events',
         }}
       />
       <Tab.Screen 

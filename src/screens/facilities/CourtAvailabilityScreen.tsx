@@ -312,7 +312,7 @@ export function CourtAvailabilityScreen() {
         reservedEndTime: ts?.endTime,
         ...(returnParams || {}),
       };
-      (navigation as any).navigate('Events', {
+      (navigation as any).navigate('Home', {
         screen: returnTo,
         params: bookingParams,
       });

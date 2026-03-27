@@ -184,7 +184,7 @@ export function MyRentalsScreen() {
 
   const handleCreateEvent = (rental: Rental) => {
     // Navigate to CreateEvent screen with rental details pre-filled
-    (navigation as any).navigate('Events', {
+    (navigation as any).navigate('Home', {
       screen: 'CreateEvent',
       params: { rentalId: rental.id },
     });

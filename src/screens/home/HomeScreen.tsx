@@ -47,6 +47,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PersonFilter } from '../../types/eventsCalendar';
 import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import { formatDateForCalendar, calendarTheme } from '../../utils/calendarUtils';
+import { searchEventBus } from '../../utils/searchEventBus';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
 
@@ -223,6 +224,14 @@ export function HomeScreen() {
     }, [authLoading])
   );
 
+  // Listen for openSearch event from the header search pill
+  useEffect(() => {
+    const unsubscribe = searchEventBus.subscribe(() => {
+      setSearchModalVisible(true);
+    });
+    return unsubscribe;
+  }, []);
+
   useEffect(() => {
     if (!authLoading) {
       refetchBookings();
@@ -290,7 +299,7 @@ export function HomeScreen() {
   }, [navigation]);
 
   const handleEventInvitationPress = useCallback((inv: EventInvitation) => {
-    (navigation as any).navigate('Events', { screen: 'EventDetails', params: { eventId: inv.eventId } });
+    navigation.navigate('EventDetails', { eventId: inv.eventId });
   }, [navigation]);
 
   const handleReadyToSchedulePress = useCallback((league: ReadyToScheduleLeague) => {
@@ -306,6 +315,11 @@ export function HomeScreen() {
       longitude: params.longitude,
       radiusMiles: params.radiusMiles,
     });
+  }, [navigation]);
+
+  const handleCreateEvent = useCallback(() => {
+    setSearchModalVisible(false);
+    navigation.navigate('CreateEvent', {});
   }, [navigation]);
 
   if (authLoading || isLoading) {
@@ -325,18 +339,6 @@ export function HomeScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
-        {/* Search bar pill */}
-        <TouchableOpacity
-          style={styles.searchPill}
-          onPress={() => setSearchModalVisible(true)}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Find a game"
-        >
-          <Ionicons name="search" size={18} color={colors.inkFaint} />
-          <Text style={styles.searchPillText}>Find a game...</Text>
-        </TouchableOpacity>
-
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
         {/* Schedule section with calendar */}
@@ -465,6 +467,7 @@ export function HomeScreen() {
         visible={searchModalVisible}
         onClose={() => setSearchModalVisible(false)}
         onSearch={handleSearchSubmit}
+        onCreateEvent={handleCreateEvent}
       />
     </View>
   );
@@ -480,28 +483,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 16,
-  },
-  searchPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 28,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    gap: 10,
-  },
-  searchPillText: {
-    fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.inkFaint,
   },
   loadingContainer: {
     flex: 1,

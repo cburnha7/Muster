@@ -46,9 +46,10 @@ interface EventSearchModalProps {
   visible: boolean;
   onClose: () => void;
   onSearch: (params: EventSearchParams) => void;
+  onCreateEvent: () => void;
 }
 
-export function EventSearchModal({ visible, onClose, onSearch }: EventSearchModalProps) {
+export function EventSearchModal({ visible, onClose, onSearch, onCreateEvent }: EventSearchModalProps) {
   const [selectedSports, setSelectedSports] = useState<SportType[]>([]);
   const [locationText, setLocationText] = useState('');
   const [userLat, setUserLat] = useState<number | null>(null);
@@ -207,6 +208,21 @@ export function EventSearchModal({ visible, onClose, onSearch }: EventSearchModa
                 );
               })}
             </View>
+
+            {/* Create event */}
+            <TouchableOpacity
+              style={styles.createEventBtn}
+              onPress={() => { onClose(); onCreateEvent(); }}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+            >
+              <Ionicons name="add-circle-outline" size={22} color={colors.pine} />
+              <View style={styles.createEventInfo}>
+                <Text style={styles.createEventTitle}>Create an Event</Text>
+                <Text style={styles.createEventSub}>Can't find what you're looking for? Host your own.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+            </TouchableOpacity>
           </ScrollView>
 
           {/* Search button */}
@@ -328,6 +344,31 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 14,
     color: colors.pine,
+  },
+  createEventBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    marginTop: Spacing.xxl,
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: colors.pine + '30',
+  },
+  createEventInfo: {
+    flex: 1,
+  },
+  createEventTitle: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.pine,
+  },
+  createEventSub: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
   footer: {
     paddingHorizontal: Spacing.lg,

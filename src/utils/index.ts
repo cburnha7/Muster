@@ -6,3 +6,4 @@ export * from './lazyLoad';
 export * from './imageOptimization';
 export * from './performance';
 export * from './platform';
+export * from './searchEventBus';

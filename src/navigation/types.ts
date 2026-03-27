@@ -25,7 +25,6 @@ export type AuthStackParamList = {
 // Main Tab Navigator Types
 export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList>;
-  Events: NavigatorScreenParams<EventsStackParamList>;
   Facilities: NavigatorScreenParams<FacilitiesStackParamList>;
   Teams: NavigatorScreenParams<TeamsStackParamList>;
   Leagues: NavigatorScreenParams<LeaguesStackParamList>;
@@ -45,6 +44,19 @@ export type HomeStackParamList = {
     latitude?: number | null;
     longitude?: number | null;
     radiusMiles: number;
+  };
+  CreateEvent: {
+    rentalId?: string;
+    fromReservation?: boolean;
+    facilityId?: string;
+    facilityName?: string;
+    courtId?: string;
+    courtName?: string;
+    courtSportType?: string;
+    timeSlotId?: string;
+    reservedDate?: string;
+    reservedStartTime?: string;
+    reservedEndTime?: string;
   };
   Debrief: { eventId: string; readonly?: boolean };
   PendingReservationDetails: { rentalId: string };
