@@ -7,6 +7,7 @@ import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
 import { colors } from '../theme';
 import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
+import { HeaderUserSelector } from '../components/navigation/HeaderUserSelector';
 
 // Direct imports instead of lazy loading for web compatibility
 import { HomeStackNavigator } from './stacks/HomeStackNavigator';
@@ -101,9 +102,6 @@ export function TabNavigator(): JSX.Element {
         headerLeftContainerStyle: {
           width: 0,
         },
-        headerRightContainerStyle: {
-          width: 0,
-        },
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
         tabBarActiveTintColor: colors.pine,
@@ -138,6 +136,8 @@ export function TabNavigator(): JSX.Element {
         component={HomeStackNavigator}
         options={{
           tabBarLabel: 'Home',
+          headerRight: () => <HeaderUserSelector />,
+          headerRightContainerStyle: { paddingRight: 12 },
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
