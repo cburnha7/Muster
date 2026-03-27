@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from '../../utils/performance';
-import { SearchBar } from '../../components/ui/SearchBar';
+import { SearchBar, SearchBarHandle } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
@@ -52,6 +52,14 @@ export function FacilitiesListScreen() {
   const { isDependent } = useDependentContext();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const searchBarRef = useRef<SearchBarHandle>(null);
+
+  useEffect(() => {
+    const unsub = require('../../utils/searchEventBus').searchEventBus.subscribeTab('Facilities', () => {
+      searchBarRef.current?.focus();
+    });
+    return unsub;
+  }, []);
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState<FacilityFilters>(filters);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -297,6 +305,7 @@ export function FacilitiesListScreen() {
           {/* Search + view toggle + filter */}
           <View style={styles.header}>
             <SearchBar
+              ref={searchBarRef}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSearch={handleSearch}

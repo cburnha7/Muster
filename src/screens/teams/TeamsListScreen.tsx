@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
-import { SearchBar } from '../../components/ui/SearchBar';
+import { SearchBar, SearchBarHandle } from '../../components/ui/SearchBar';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -43,6 +43,15 @@ export function TeamsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchBarRef = useRef<SearchBarHandle>(null);
+
+  // Focus search bar when header pill is tapped
+  useEffect(() => {
+    const unsub = require('../../utils/searchEventBus').searchEventBus.subscribeTab('Teams', () => {
+      searchBarRef.current?.focus();
+    });
+    return unsub;
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
@@ -161,6 +170,7 @@ export function TeamsListScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <SearchBar
+          ref={searchBarRef}
           value={searchQuery}
           onChangeText={setSearchQuery}
           onSearch={handleSearch}

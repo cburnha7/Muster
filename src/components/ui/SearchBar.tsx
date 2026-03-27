@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import {
   View,
   TextInput,
@@ -22,6 +22,10 @@ interface SearchBarProps {
   style?: any;
 }
 
+export interface SearchBarHandle {
+  focus: () => void;
+}
+
 export interface SearchFilters {
   sportType?: SportType;
   skillLevel?: SkillLevel;
@@ -35,7 +39,7 @@ export interface SearchFilters {
   };
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(({
   placeholder = 'Search...',
   value,
   onChangeText,
@@ -44,9 +48,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   filters,
   onFiltersChange,
   style,
-}) => {
+}, ref) => {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [localFilters, setLocalFilters] = useState<SearchFilters>(filters || {});
+  const inputRef = useRef<TextInput>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }));
 
   const handleSearch = () => {
     onSearch?.(value);
@@ -81,6 +90,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         <View style={styles.inputContainer}>
           <Ionicons name="search-outline" size={20} color="#666" />
           <TextInput
+            ref={inputRef}
             style={styles.input}
             placeholder={placeholder}
             value={value}
@@ -205,7 +215,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </Modal>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

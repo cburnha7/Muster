@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
-import { SearchBar } from '../../components/ui/SearchBar';
+import { SearchBar, SearchBarHandle } from '../../components/ui/SearchBar';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
@@ -45,6 +45,14 @@ export const LeaguesBrowserScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchBarRef = useRef<SearchBarHandle>(null);
+
+  useEffect(() => {
+    const unsub = require('../../utils/searchEventBus').searchEventBus.subscribeTab('Leagues', () => {
+      searchBarRef.current?.focus();
+    });
+    return unsub;
+  }, []);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [sportFilter, setSportFilter] = useState<string | undefined>();
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>();
@@ -161,6 +169,7 @@ export const LeaguesBrowserScreen: React.FC = () => {
       {/* Search Header */}
       <View style={styles.header}>
         <SearchBar
+          ref={searchBarRef}
           placeholder="Search leagues..."
           value={searchQuery}
           onChangeText={setSearchQuery}

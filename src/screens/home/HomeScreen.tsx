@@ -18,10 +18,10 @@ import { Calendar, DateData } from 'react-native-calendars';
 // Components
 import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
-import { CancelRequestCard } from '../../components/home/CancelRequestCard';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { EventSearchModal, EventSearchParams } from '../../components/home/EventSearchModal';
+import { InboxSection } from '../../components/home/InboxSection';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -50,15 +50,6 @@ import { formatDateForCalendar, calendarTheme } from '../../utils/calendarUtils'
 import { searchEventBus } from '../../utils/searchEventBus';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
-
-function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'just now';
-  if (diffHours === 1) return '1 hour ago';
-  return `${diffHours} hours ago`;
-}
 
 export function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -347,6 +338,29 @@ export function HomeScreen() {
       >
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
+        {/* Inbox — all action items in one place */}
+        <CollapsibleSection
+          title="Inbox"
+          count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length + readyToScheduleLeagues.length + debriefEvents.length + cancelRequests.length || undefined}
+        >
+          <InboxSection
+            rosterInvitations={rosterInvitations}
+            leagueInvitations={leagueInvitations}
+            eventInvitations={eventInvitations}
+            readyToScheduleLeagues={readyToScheduleLeagues}
+            debriefEvents={debriefEvents}
+            cancelRequests={cancelRequests}
+            onRosterInvitationPress={handleRosterInvitationPress}
+            onLeagueInvitationPress={handleLeagueInvitationPress}
+            onEventInvitationPress={handleEventInvitationPress}
+            onScheduleLeaguePress={handleReadyToSchedulePress}
+            onDebriefPress={handleDebriefPress}
+            onApproveCancelRequest={handleApproveCancelRequest}
+            onDenyCancelRequest={handleDenyCancelRequest}
+            isCancelLoading={isApproving || isDenying}
+          />
+        </CollapsibleSection>
+
         {/* Schedule section with calendar */}
         <CollapsibleSection
           title="Schedule"
@@ -391,88 +405,23 @@ export function HomeScreen() {
           </View>
         </CollapsibleSection>
 
-        {/* Debrief section */}
-        {debriefEvents.length > 0 && (
-          <CollapsibleSection title="Debrief" count={debriefEvents.length}>
-            <View style={styles.sectionInner}>
-              <Text style={styles.sectionSubtitle}>Rate and salute players from recent games</Text>
-              {debriefEvents.slice(0, 3).map((booking) => (
-                <TouchableOpacity key={booking.id} style={styles.debriefCard} onPress={() => handleDebriefPress(booking)} activeOpacity={0.7}>
-                  <View style={styles.debriefInfo}>
-                    <Text style={styles.debriefTitle} numberOfLines={1}>{booking.event?.title || 'Event'}</Text>
-                    <Text style={styles.debriefTime}>{booking.event?.endTime ? formatTimeAgo(new Date(booking.event.endTime)) : ''}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </CollapsibleSection>
-        )}
-
-        {/* Ready to schedule */}
-        {readyToScheduleLeagues.length > 0 && (
-          <CollapsibleSection title="Scheduling" count={readyToScheduleLeagues.length}>
-            <View style={styles.sectionInner}>
-              {readyToScheduleLeagues.map((league) => (
-                <TouchableOpacity key={league.id} style={styles.actionCard} onPress={() => handleReadyToSchedulePress(league)} activeOpacity={0.7}>
-                  <Ionicons name="calendar-outline" size={20} color={colors.pine} />
-                  <View style={styles.actionCardInfo}>
-                    <Text style={styles.actionCardTitle} numberOfLines={1}>{league.name} is ready to schedule.</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </CollapsibleSection>
-        )}
-
-        {/* Invitations */}
-        {(rosterInvitations.length > 0 || leagueInvitations.length > 0 || eventInvitations.length > 0) && (
-          <CollapsibleSection title="Invitations" count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length}>
-            <View style={styles.sectionInner}>
-              {rosterInvitations.map((inv) => (
-                <TouchableOpacity key={inv.id} style={styles.actionCard} onPress={() => handleRosterInvitationPress(inv)} activeOpacity={0.7}>
-                  <Ionicons name="people-outline" size={20} color={colors.pine} />
-                  <View style={styles.actionCardInfo}><Text style={styles.actionCardTitle}>{inv.rosterName}</Text><Text style={styles.actionCardSub}>Roster invitation</Text></View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-                </TouchableOpacity>
-              ))}
-              {leagueInvitations.map((inv) => (
-                <TouchableOpacity key={inv.id} style={styles.actionCard} onPress={() => handleLeagueInvitationPress(inv)} activeOpacity={0.7}>
-                  <Ionicons name="trophy-outline" size={20} color={colors.court} />
-                  <View style={styles.actionCardInfo}><Text style={styles.actionCardTitle}>{inv.leagueName}</Text><Text style={styles.actionCardSub}>League invitation</Text></View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-                </TouchableOpacity>
-              ))}
-              {eventInvitations.map((inv) => (
-                <TouchableOpacity key={inv.id} style={styles.actionCard} onPress={() => handleEventInvitationPress(inv)} activeOpacity={0.7}>
-                  <Ionicons name="calendar-outline" size={20} color={colors.pine} />
-                  <View style={styles.actionCardInfo}>
-                    <Text style={styles.actionCardTitle}>{inv.eventTitle}</Text>
-                    <Text style={styles.actionCardSub}>{inv.startTime ? new Date(inv.startTime).toLocaleDateString(undefined, { timeZone: 'UTC' }) : 'Event invitation'}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          </CollapsibleSection>
-        )}
-
-        {/* Cancel Requests */}
-        {cancelRequests.length > 0 && (
-          <CollapsibleSection title="Cancel Requests" count={cancelRequests.length}>
-            <View style={styles.sectionInner}>
-              <View style={{ gap: Spacing.sm }}>
-                {cancelRequests.map((request) => (
-                  <CancelRequestCard key={request.id} cancelRequest={request} onApprove={handleApproveCancelRequest} onDeny={handleDenyCancelRequest} isLoading={isApproving || isDenying} />
-                ))}
-              </View>
-            </View>
-          </CollapsibleSection>
-        )}
-
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* Floating Host button */}
+      <View style={styles.fabContainer}>
+        <Text style={styles.fabHint}>Membership required</Text>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={handleCreateEvent}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Host an event"
+        >
+          <Ionicons name="add" size={22} color="#FFFFFF" />
+          <Text style={styles.fabText}>Host</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* User selector dropdown */}
       <Modal visible={userDropdownVisible} transparent animationType="fade" onRequestClose={() => setUserDropdownVisible(false)}>
@@ -551,13 +500,6 @@ const styles = StyleSheet.create({
   sectionInner: {
     paddingHorizontal: 16,
   },
-  sectionSubtitle: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.inkFaint,
-    marginBottom: 12,
-    marginTop: -4,
-  },
   calendar: {
     borderRadius: 12,
     marginBottom: Spacing.md,
@@ -569,61 +511,6 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     textAlign: 'center',
     paddingVertical: 24,
-  },
-  debriefCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  debriefInfo: {
-    flex: 1,
-  },
-  debriefTitle: {
-    fontFamily: fonts.label,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  debriefTime: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: 12,
-  },
-  actionCardInfo: {
-    flex: 1,
-  },
-  actionCardTitle: {
-    fontFamily: fonts.label,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  actionCardSub: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.inkFaint,
-    marginTop: 2,
   },
   userSelectorBtn: {
     flexDirection: 'row',
@@ -685,5 +572,36 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.cream,
     marginHorizontal: 14,
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    alignItems: 'center',
+  },
+  fabHint: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    color: colors.inkFaint,
+    marginBottom: 4,
+  },
+  fab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.pine,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 28,
+    gap: 6,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
 });

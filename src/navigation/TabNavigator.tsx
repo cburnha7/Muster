@@ -86,11 +86,12 @@ export function TabNavigator(): JSX.Element {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: true,
-        headerTitle: () => <HeaderSearchPill />,
+        headerTitle: () => <HeaderSearchPill routeName={route.name} />,
         headerStyle: {
-          backgroundColor: colors.chalk,
+          backgroundColor: colors.cream,
           shadowColor: 'transparent',
           elevation: 0,
+          borderBottomWidth: 0,
         },
         headerTitleContainerStyle: {
           flex: 1,

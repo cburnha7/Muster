@@ -107,6 +107,21 @@ export function EventSearchResultsScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Floating Host button */}
+      <View style={styles.fabContainer}>
+        <Text style={styles.fabHint}>Membership required</Text>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('CreateEvent', {})}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Host an event"
+        >
+          <Ionicons name="add" size={22} color="#FFFFFF" />
+          <Text style={styles.fabText}>Host</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -177,6 +192,37 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   listContent: {
-    paddingBottom: Spacing.xxxl,
+    paddingBottom: Spacing.xxxl + 80,
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    alignItems: 'center',
+  },
+  fabHint: {
+    fontFamily: fonts.body,
+    fontSize: 10,
+    color: colors.inkFaint,
+    marginBottom: 4,
+  },
+  fab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.pine,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 28,
+    gap: 6,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
 });

@@ -5,16 +5,35 @@ import { useNavigation } from '@react-navigation/native';
 import { colors, fonts } from '../../theme';
 import { searchEventBus } from '../../utils/searchEventBus';
 
+const PLACEHOLDERS: Record<string, string> = {
+  Home: 'Find a game...',
+  Teams: 'Search rosters...',
+  Leagues: 'Search leagues...',
+  Facilities: 'Search grounds...',
+  Profile: 'Find a game...',
+};
+
+interface HeaderSearchPillProps {
+  routeName?: string;
+}
+
 /**
- * AirBnB-style search pill rendered in the tab bar header.
- * Navigates to Home and fires a lightweight event that HomeScreen listens for.
+ * Context-aware search pill rendered in the tab bar header.
+ * On Home tab: opens the event search modal.
+ * On other tabs: focuses the search bar on that tab's list screen.
  */
-export function HeaderSearchPill() {
+export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) {
   const navigation = useNavigation();
+  const placeholder = PLACEHOLDERS[routeName] || 'Search...';
 
   const handlePress = () => {
-    (navigation as any).navigate('Home', { screen: 'HomeScreen' });
-    setTimeout(() => searchEventBus.emit(), 50);
+    if (routeName === 'Home' || routeName === 'Profile') {
+      (navigation as any).navigate('Home', { screen: 'HomeScreen' });
+      setTimeout(() => searchEventBus.emit(), 50);
+    } else {
+      // Emit a tab-specific focus event so the list screen can focus its search bar
+      searchEventBus.emitTab(routeName);
+    }
   };
 
   return (
@@ -23,10 +42,10 @@ export function HeaderSearchPill() {
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityRole="button"
-      accessibilityLabel="Find a game"
+      accessibilityLabel={placeholder}
     >
       <Ionicons name="search" size={16} color={colors.inkFaint} />
-      <Text style={styles.text}>Find a game...</Text>
+      <Text style={styles.text}>{placeholder}</Text>
     </TouchableOpacity>
   );
 }
