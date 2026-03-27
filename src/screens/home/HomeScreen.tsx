@@ -338,29 +338,6 @@ export function HomeScreen() {
       >
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
-        {/* Inbox — all action items in one place */}
-        <CollapsibleSection
-          title="Inbox"
-          count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length + readyToScheduleLeagues.length + debriefEvents.length + cancelRequests.length || undefined}
-        >
-          <InboxSection
-            rosterInvitations={rosterInvitations}
-            leagueInvitations={leagueInvitations}
-            eventInvitations={eventInvitations}
-            readyToScheduleLeagues={readyToScheduleLeagues}
-            debriefEvents={debriefEvents}
-            cancelRequests={cancelRequests}
-            onRosterInvitationPress={handleRosterInvitationPress}
-            onLeagueInvitationPress={handleLeagueInvitationPress}
-            onEventInvitationPress={handleEventInvitationPress}
-            onScheduleLeaguePress={handleReadyToSchedulePress}
-            onDebriefPress={handleDebriefPress}
-            onApproveCancelRequest={handleApproveCancelRequest}
-            onDenyCancelRequest={handleDenyCancelRequest}
-            isCancelLoading={isApproving || isDenying}
-          />
-        </CollapsibleSection>
-
         {/* Schedule section with calendar */}
         <CollapsibleSection
           title="Schedule"
@@ -405,23 +382,42 @@ export function HomeScreen() {
           </View>
         </CollapsibleSection>
 
+        {/* Inbox — all action items in one place */}
+        <CollapsibleSection
+          title="Inbox"
+          count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length + readyToScheduleLeagues.length + debriefEvents.length + cancelRequests.length || undefined}
+        >
+          <InboxSection
+            rosterInvitations={rosterInvitations}
+            leagueInvitations={leagueInvitations}
+            eventInvitations={eventInvitations}
+            readyToScheduleLeagues={readyToScheduleLeagues}
+            debriefEvents={debriefEvents}
+            cancelRequests={cancelRequests}
+            onRosterInvitationPress={handleRosterInvitationPress}
+            onLeagueInvitationPress={handleLeagueInvitationPress}
+            onEventInvitationPress={handleEventInvitationPress}
+            onScheduleLeaguePress={handleReadyToSchedulePress}
+            onDebriefPress={handleDebriefPress}
+            onApproveCancelRequest={handleApproveCancelRequest}
+            onDenyCancelRequest={handleDenyCancelRequest}
+            isCancelLoading={isApproving || isDenying}
+          />
+        </CollapsibleSection>
+
         <View style={{ height: 32 }} />
       </ScrollView>
 
       {/* Floating Host button */}
-      <View style={styles.fabContainer}>
-        <Text style={styles.fabHint}>Membership required</Text>
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={handleCreateEvent}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Host an event"
-        >
-          <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.fabText}>Host</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleCreateEvent}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Host an event"
+      >
+        <Ionicons name="add" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
 
       {/* User selector dropdown */}
       <Modal visible={userDropdownVisible} transparent animationType="fade" onRequestClose={() => setUserDropdownVisible(false)}>
@@ -573,35 +569,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cream,
     marginHorizontal: 14,
   },
-  fabContainer: {
+  fab: {
     position: 'absolute',
     bottom: 24,
     right: 20,
-    alignItems: 'center',
-  },
-  fabHint: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    color: colors.inkFaint,
-    marginBottom: 4,
-  },
-  fab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.pine,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    width: 56,
+    height: 56,
     borderRadius: 28,
-    gap: 6,
+    backgroundColor: colors.pine,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
-  },
-  fabText: {
-    fontFamily: fonts.ui,
-    fontSize: 16,
-    color: '#FFFFFF',
   },
 });

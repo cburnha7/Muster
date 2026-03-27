@@ -95,7 +95,8 @@ export function TabNavigator(): JSX.Element {
         },
         headerTitleContainerStyle: {
           flex: 1,
-          paddingHorizontal: 16,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         headerLeftContainerStyle: {
           width: 0,

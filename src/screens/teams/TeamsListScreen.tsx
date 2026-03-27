@@ -168,17 +168,6 @@ export function TeamsListScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <SearchBar
-          ref={searchBarRef}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSearch={handleSearch}
-          placeholder="Search rosters..."
-          style={styles.searchBar}
-        />
-      </View>
-
       <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={

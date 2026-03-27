@@ -166,22 +166,6 @@ export const LeaguesBrowserScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Search Header */}
-      <View style={styles.header}>
-        <SearchBar
-          ref={searchBarRef}
-          placeholder="Search leagues..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSearch={handleSearch}
-          style={styles.searchBar}
-        />
-        <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilterModal(true)}>
-          <Ionicons name="filter" size={24} color={colors.pine} />
-          {activeFiltersCount > 0 && <View style={styles.filterBadge} />}
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={

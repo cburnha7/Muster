@@ -108,20 +108,16 @@ export function EventSearchResultsScreen() {
         />
       )}
 
-      {/* Floating Host button */}
-      <View style={styles.fabContainer}>
-        <Text style={styles.fabHint}>Membership required</Text>
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => navigation.navigate('CreateEvent', {})}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Host an event"
-        >
-          <Ionicons name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.fabText}>Host</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Floating create button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('CreateEvent', {})}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Host an event"
+      >
+        <Ionicons name="add" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -194,35 +190,20 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: Spacing.xxxl + 80,
   },
-  fabContainer: {
+  fab: {
     position: 'absolute',
     bottom: 24,
     right: 20,
-    alignItems: 'center',
-  },
-  fabHint: {
-    fontFamily: fonts.body,
-    fontSize: 10,
-    color: colors.inkFaint,
-    marginBottom: 4,
-  },
-  fab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.pine,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    width: 56,
+    height: 56,
     borderRadius: 28,
-    gap: 6,
+    backgroundColor: colors.pine,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
-  },
-  fabText: {
-    fontFamily: fonts.ui,
-    fontSize: 16,
-    color: '#FFFFFF',
   },
 });

@@ -302,22 +302,6 @@ export function FacilitiesListScreen() {
             <Text style={styles.countBadgeText}>{facilities.length}</Text>
           </View>
         </View>
-          {/* Search + view toggle + filter */}
-          <View style={styles.header}>
-            <SearchBar
-              ref={searchBarRef}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSearch={handleSearch}
-              placeholder="Search grounds..."
-              style={styles.searchBar}
-            />
-            <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
-            <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
-              <Ionicons name="filter" size={24} color={colors.pine} />
-              {Object.keys(filters).length > 0 && <View style={styles.filterBadge} />}
-            </TouchableOpacity>
-          </View>
 
           {isLoading && !facilities.length ? (
             <LoadingSpinner />
