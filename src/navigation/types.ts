@@ -39,6 +39,13 @@ export type HomeStackParamList = {
   EditEvent: { eventId: string };
   FacilityDetails: { facilityId: string };
   SearchResults: { query: string; filters?: any };
+  EventSearchResults: {
+    sportTypes: string[];
+    locationQuery: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    radiusMiles: number;
+  };
   Debrief: { eventId: string; readonly?: boolean };
   PendingReservationDetails: { rentalId: string };
 };

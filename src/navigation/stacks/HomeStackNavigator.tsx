@@ -6,6 +6,7 @@ import { EventDetailsScreen } from '../../screens/events/EventDetailsScreen';
 import { EditEventScreen } from '../../screens/events/EditEventScreen';
 import { FacilityDetailsScreen } from '../../screens/facilities/FacilityDetailsScreen';
 import { SearchResultsScreen } from '../../screens/search/SearchResultsScreen';
+import { EventSearchResultsScreen } from '../../screens/home/EventSearchResultsScreen';
 import { DebriefScreen } from '../../screens/debrief/DebriefScreen';
 import { PendingReservationDetailsScreen } from '../../screens/facilities/PendingReservationDetailsScreen';
 
@@ -40,6 +41,10 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="SearchResults" 
         component={SearchResultsScreen}
+      />
+      <Stack.Screen
+        name="EventSearchResults"
+        component={EventSearchResultsScreen}
       />
       <Stack.Screen 
         name="Debrief" 

@@ -117,6 +117,8 @@ export const eventsApi = createApi({
           startDate: filters.startDate?.toISOString(),
           endDate: filters.endDate?.toISOString(),
           ...(userId ? { userId } : {}),
+          // Strip the nested location object — pass as flat params
+          location: undefined,
         },
       }),
       providesTags: (result) =>
@@ -244,6 +246,37 @@ export const eventsApi = createApi({
         }
       },
     }),
+
+    // Search events with location, sport filters, and proximity
+    searchEvents: builder.query<PaginatedResponse<Event>, {
+      sportTypes?: string[];
+      latitude?: number;
+      longitude?: number;
+      radiusMiles?: number;
+      locationQuery?: string;
+      status?: string;
+      userId?: string;
+      page?: number;
+      limit?: number;
+    }>({
+      query: (params) => ({
+        url: '/events',
+        params: {
+          ...(params.sportTypes && params.sportTypes.length > 0
+            ? { sportTypes: params.sportTypes.join(',') }
+            : {}),
+          ...(params.latitude != null ? { latitude: params.latitude } : {}),
+          ...(params.longitude != null ? { longitude: params.longitude } : {}),
+          ...(params.radiusMiles != null ? { radiusMiles: params.radiusMiles } : {}),
+          ...(params.locationQuery ? { locationQuery: params.locationQuery } : {}),
+          status: params.status || 'active',
+          ...(params.userId ? { userId: params.userId } : {}),
+          page: params.page || 1,
+          limit: params.limit || 50,
+        },
+      }),
+      providesTags: [{ type: 'Events', id: 'SEARCH' }],
+    }),
   }),
 });
 
@@ -253,4 +286,5 @@ export const {
   useGetUserBookingsQuery,
   useBookEventMutation,
   useCancelBookingMutation,
+  useLazySearchEventsQuery,
 } = eventsApi;

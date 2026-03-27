@@ -20,6 +20,7 @@ import { CancelRequestCard } from '../../components/home/CancelRequestCard';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { DependentToggle } from '../../components/events/DependentToggle';
+import { EventSearchModal, EventSearchParams } from '../../components/home/EventSearchModal';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -31,9 +32,8 @@ import { useAuth } from '../../context/AuthContext';
 // Store
 import { selectUser } from '../../store/slices/authSlice';
 import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
-import { useGetEventsQuery, useGetUserBookingsQuery, useCancelBookingMutation, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import { useGetUserBookingsQuery, useCancelBookingMutation } from '../../store/api/eventsApi';
 import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
-import { BookingStatus } from '../../types';
 
 // Theme
 import { colors, fonts, Spacing } from '../../theme';
@@ -71,15 +71,8 @@ export function HomeScreen() {
   // Calendar state
   const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
 
-  // RTK Query hooks
-  const {
-    isLoading: eventsLoading,
-    refetch: refetchEvents,
-  } = useGetEventsQuery({
-    filters: DEFAULT_EVENT_FILTERS,
-    pagination: { page: 1, limit: 20 },
-    ...(user?.id ? { userId: user.id } : {}),
-  });
+  // Search modal state
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   const {
     data: bookingsData,
@@ -170,7 +163,7 @@ export function HomeScreen() {
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  const isLoading = eventsLoading || bookingsLoading;
+  const isLoading = bookingsLoading;
 
   // Debrief state
   const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
@@ -215,14 +208,13 @@ export function HomeScreen() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchEvents(), refetchBookings(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues()]);
+    await Promise.all([refetchBookings(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues()]);
     setIsRefreshing(false);
-  }, [refetchEvents, refetchBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues]);
+  }, [refetchBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues]);
 
   useFocusEffect(
     useCallback(() => {
       if (!authLoading) {
-        refetchEvents();
         refetchBookings();
         loadDebriefEvents();
         loadInvitations();
@@ -233,7 +225,6 @@ export function HomeScreen() {
 
   useEffect(() => {
     if (!authLoading) {
-      refetchEvents();
       refetchBookings();
       loadDebriefEvents();
       loadInvitations();
@@ -261,7 +252,7 @@ export function HomeScreen() {
       setStepOutModalVisible(false);
       setSelectedBooking(null);
       Alert.alert('Success', 'You have stepped out of the event');
-      await Promise.all([refetchEvents(), refetchBookings()]);
+      await refetchBookings();
     } catch (error) {
       Alert.alert('Error', 'Failed to leave the event. Please try again.');
     }
@@ -306,6 +297,17 @@ export function HomeScreen() {
     (navigation as any).navigate('Leagues', { screen: 'LeagueScheduling', params: { leagueId: league.id } });
   }, [navigation]);
 
+  const handleSearchSubmit = useCallback((params: EventSearchParams) => {
+    setSearchModalVisible(false);
+    navigation.navigate('EventSearchResults', {
+      sportTypes: params.sportTypes,
+      locationQuery: params.locationQuery,
+      latitude: params.latitude,
+      longitude: params.longitude,
+      radiusMiles: params.radiusMiles,
+    });
+  }, [navigation]);
+
   if (authLoading || isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -323,6 +325,18 @@ export function HomeScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
+        {/* Search bar pill */}
+        <TouchableOpacity
+          style={styles.searchPill}
+          onPress={() => setSearchModalVisible(true)}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Find a game"
+        >
+          <Ionicons name="search" size={18} color={colors.inkFaint} />
+          <Text style={styles.searchPillText}>Find a game...</Text>
+        </TouchableOpacity>
+
         {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
         {/* Schedule section with calendar */}
@@ -447,6 +461,11 @@ export function HomeScreen() {
       </ScrollView>
 
       <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
+      <EventSearchModal
+        visible={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        onSearch={handleSearchSubmit}
+      />
     </View>
   );
 }
@@ -461,6 +480,28 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 16,
+  },
+  searchPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 28,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    gap: 10,
+  },
+  searchPillText: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.inkFaint,
   },
   loadingContainer: {
     flex: 1,

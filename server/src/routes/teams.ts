@@ -322,13 +322,13 @@ router.post('/', optionalAuthMiddleware, requireNonDependent, async (req, res) =
             teamId: team.id,
             userId,
             role: 'member',
-            status: 'active',
+            status: 'pending',
             joinedAt: new Date(),
           })),
         });
       }
 
-      console.log(`Successfully added ${initialMemberIds.length} members to team ${team.id}`);
+      console.log(`Successfully invited ${memberIds.length} players to team ${team.id}`);
     }
 
     // Fetch the complete team with members

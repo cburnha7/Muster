@@ -8,7 +8,12 @@ const router = Router();
 // Get all events
 router.get('/', async (req, res) => {
   try {
-    const { sportType, minPlayerRating, status, organizerId, userId, page = '1', limit = '10' } = req.query;
+    const {
+      sportType, sportTypes: sportTypesRaw, minPlayerRating, status, organizerId, userId,
+      latitude: latRaw, longitude: lngRaw, radiusMiles: radiusRaw,
+      locationQuery,
+      page = '1', limit = '10',
+    } = req.query;
     
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
@@ -17,10 +22,78 @@ router.get('/', async (req, res) => {
       // Only show upcoming events (not past events)
       startTime: { gte: new Date() },
     };
-    if (sportType) where.sportType = sportType;
+
+    // Multi-sport filter (comma-separated)
+    if (sportTypesRaw) {
+      const sportsList = (sportTypesRaw as string).split(',').map(s => s.trim()).filter(Boolean);
+      if (sportsList.length === 1) {
+        where.sportType = sportsList[0];
+      } else if (sportsList.length > 1) {
+        where.sportType = { in: sportsList };
+      }
+    } else if (sportType) {
+      where.sportType = sportType;
+    }
+
     if (minPlayerRating) where.minPlayerRating = { lte: parseInt(minPlayerRating as string) };
     if (status) where.status = status;
     if (organizerId) where.organizerId = organizerId;
+
+    // Location-based filtering: restrict to facilities within radius
+    const lat = latRaw ? parseFloat(latRaw as string) : null;
+    const lng = lngRaw ? parseFloat(lngRaw as string) : null;
+    const radiusMiles = radiusRaw ? parseFloat(radiusRaw as string) : null;
+
+    let facilityIdsInRadius: string[] | null = null;
+    if (lat != null && lng != null && radiusMiles != null) {
+      // Haversine approximation: 1 degree latitude ≈ 69 miles
+      const latDelta = radiusMiles / 69;
+      const lngDelta = radiusMiles / (69 * Math.cos((lat * Math.PI) / 180));
+
+      const nearbyFacilities = await prisma.facility.findMany({
+        where: {
+          latitude: { gte: lat - latDelta, lte: lat + latDelta },
+          longitude: { gte: lng - lngDelta, lte: lng + lngDelta },
+        },
+        select: { id: true, latitude: true, longitude: true },
+      });
+
+      // Precise Haversine filter
+      facilityIdsInRadius = nearbyFacilities
+        .filter((f) => {
+          const dLat = ((f.latitude - lat) * Math.PI) / 180;
+          const dLng = ((f.longitude - lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos((lat * Math.PI) / 180) *
+              Math.cos((f.latitude * Math.PI) / 180) *
+              Math.sin(dLng / 2) ** 2;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const distMiles = 3959 * c; // Earth radius in miles
+          return distMiles <= radiusMiles;
+        })
+        .map((f) => f.id);
+
+      where.facilityId = { in: facilityIdsInRadius };
+    }
+
+    // Text-based location search (city/state match on facility)
+    if (locationQuery && !facilityIdsInRadius) {
+      const locStr = (locationQuery as string).trim();
+      if (locStr) {
+        const matchingFacilities = await prisma.facility.findMany({
+          where: {
+            OR: [
+              { city: { contains: locStr, mode: 'insensitive' } },
+              { state: { contains: locStr, mode: 'insensitive' } },
+              { name: { contains: locStr, mode: 'insensitive' } },
+            ],
+          },
+          select: { id: true },
+        });
+        where.facilityId = { in: matchingFacilities.map((f) => f.id) };
+      }
+    }
 
     // Filter out private events unless the requesting user is the organizer or invited
     if (userId) {
