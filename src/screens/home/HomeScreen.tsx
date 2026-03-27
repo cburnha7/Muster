@@ -256,7 +256,7 @@ export function HomeScreen() {
     } catch (error) {
       Alert.alert('Error', 'Failed to leave the event. Please try again.');
     }
-  }, [selectedBooking, cancelBookingMutation, refetchEvents, refetchBookings]);
+  }, [selectedBooking, cancelBookingMutation, refetchBookings]);
 
   const handleStepOutCancel = useCallback(() => {
     setStepOutModalVisible(false);
