@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,32 +7,28 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  Modal,
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { Calendar, DateData } from 'react-native-calendars';
 
-import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
-
+import { FormButton } from '../../components/forms/FormButton';
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
 import { addEvent } from '../../store/slices/eventsSlice';
 import { useAuth } from '../../context/AuthContext';
-import { colors, fonts } from '../../theme';
-import {
-  SportType,
-  SkillLevel,
-  EventType,
-  Facility,
-} from '../../types';
+import { colors, fonts, Spacing } from '../../theme';
+import { calendarTheme } from '../../utils/calendarUtils';
+import { SportType, SkillLevel, EventType, Facility } from '../../types';
 
-// ── Options ──────────────────────────────────────────────
+// ── Sport options ──
 const SPORT_OPTIONS: SelectOption[] = [
   { label: 'Basketball', value: SportType.BASKETBALL },
   { label: 'Pickleball', value: SportType.PICKLEBALL },
@@ -58,152 +54,182 @@ const GENDER_OPTIONS: SelectOption[] = [
   { label: 'Female Only', value: 'female' },
 ];
 
-interface RosterResult {
+interface SlotData {
   id: string;
-  name: string;
-  memberCount?: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  price: number;
+  court: { id: string; name: string; sportType: string; capacity: number };
+  isFromRental: boolean;
+  rentalId: string | null;
 }
 
-// ── Component ────────────────────────────────────────────
+interface InviteItem {
+  id: string;
+  name: string;
+  type: 'roster' | 'player';
+  image?: string;
+}
+
 export function CreateEventScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
 
-  // ── Progressive step tracking ──
+  // ── Step state ──
   const [sport, setSport] = useState<SportType | ''>('');
-  const [eventType, setEventType] = useState<EventType | ''>('');
   const [facilityId, setFacilityId] = useState('');
-  const [courtId] = useState('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [startTime, setStartTime] = useState('');
-  const [duration, setDuration] = useState('60');
-  const [maxParticipants, setMaxParticipants] = useState('');
+  const [courtId, setCourtId] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState<SlotData | null>(null);
+  const [eventType, setEventType] = useState<EventType | ''>('');
   const [visibility, setVisibility] = useState<'private' | 'public' | ''>('');
+  const [maxParticipants, setMaxParticipants] = useState('');
   const [price, setPrice] = useState('0');
   const [minPlayerRating, setMinPlayerRating] = useState('');
   const [genderRestriction, setGenderRestriction] = useState('');
-  const [title] = useState('');
-  const [description] = useState('');
 
-  // Game roster selection
-  const [gameRosterModalVisible, setGameRosterModalVisible] = useState(false);
-  const [teamA, setTeamA] = useState<RosterResult | null>(null);
-  const [teamB, setTeamB] = useState<RosterResult | null>(null);
-  const [rosterSearchQuery, setRosterSearchQuery] = useState('');
-  const [rosterSearchResults, setRosterSearchResults] = useState<RosterResult[]>([]);
-  const [selectingSlot, setSelectingSlot] = useState<'A' | 'B'>('A');
-
-  // Private invite list
-  const [inviteSearchQuery, setInviteSearchQuery] = useState('');
-  const [inviteSearchResults, setInviteSearchResults] = useState<Array<{ id: string; name: string; type: 'roster' | 'player'; image?: string }>>([]);
-  const [invitedItems, setInvitedItems] = useState<Array<{ id: string; name: string; type: 'roster' | 'player'; image?: string }>>([]);
-
-  // Facilities
-  const [facilities, setFacilities] = useState<Facility[]>([]);
+  // ── Data ──
+  const [facilities, setFacilities] = useState<(Facility & { isOwned: boolean })[]>([]);
+  const [allSlots, setAllSlots] = useState<SlotData[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ── Derived step visibility ──
-  const showEventType = !!sport;
-  const showGrounds = !!eventType && (eventType !== EventType.GAME || (!!teamA && !!teamB));
-  const groundConfirmed = !!facilityId && !!startDate && !!startTime;
-  const showMaxParticipants = groundConfirmed;
-  const showVisibility = !!maxParticipants && parseInt(maxParticipants) > 0;
-  const showPrice = visibility !== '';
-  const showSubmit = showPrice;
+  // ── Invitations ──
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [inviteResults, setInviteResults] = useState<InviteItem[]>([]);
+  const [invitedItems, setInvitedItems] = useState<InviteItem[]>([]);
 
-  // Load facilities
+  // ── Load authorized facilities ──
   useEffect(() => {
     if (!user) return;
     facilityService.getAuthorizedFacilities(user.id)
-      .then((res) => setFacilities(res.data))
+      .then((res) => setFacilities(res.data as any))
       .catch(() => {});
   }, [user]);
 
-  // When Game is selected, open roster modal
+  // ── Load slots when facility changes ──
   useEffect(() => {
-    if (eventType === EventType.GAME && !teamA && !teamB) {
-      setGameRosterModalVisible(true);
+    if (!facilityId || !user) { setAllSlots([]); return; }
+    setLoadingSlots(true);
+    setCourtId('');
+    setSelectedDate('');
+    setSelectedSlot(null);
+    facilityService.getAvailableSlots(facilityId, user.id)
+      .then((res) => {
+        setAllSlots(res.data);
+      })
+      .catch(() => setAllSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }, [facilityId, user]);
+
+  // ── Derived data ──
+  const courts = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; sportType: string }>();
+    allSlots.forEach((s) => { if (!map.has(s.court.id)) map.set(s.court.id, s.court); });
+    return Array.from(map.values());
+  }, [allSlots]);
+
+  const courtOptions: SelectOption[] = courts.map((c) => ({ label: c.name, value: c.id }));
+
+  const datesForCourt = useMemo(() => {
+    if (!courtId) return new Set<string>();
+    return new Set(allSlots.filter((s) => s.court.id === courtId).map((s) => s.date.split('T')[0]));
+  }, [allSlots, courtId]);
+
+  const calendarMarked = useMemo(() => {
+    const marks: Record<string, any> = {};
+    datesForCourt.forEach((d) => {
+      if (d === selectedDate) {
+        marks[d!] = { selected: true, selectedColor: colors.pine };
+      } else {
+        marks[d!] = { marked: true, dotColor: colors.pine };
+      }
+    });
+    if (selectedDate && !datesForCourt.has(selectedDate)) {
+      marks[selectedDate] = { selected: true, selectedColor: colors.pine };
     }
-  }, [eventType]);
+    return marks;
+  }, [datesForCourt, selectedDate]);
 
-  // ── Roster search ──
-  const searchRosters = useCallback(async (query: string) => {
-    if (!query.trim()) { setRosterSearchResults([]); return; }
-    try {
-      const res = await teamService.getTeams(undefined, { page: 1, limit: 20 });
-      const filtered = (res.data || []).filter((t: any) => t.name.toLowerCase().includes(query.toLowerCase()));
-      setRosterSearchResults(filtered.map((t: any) => ({ id: t.id, name: t.name, memberCount: t.members?.length })));
-    } catch { setRosterSearchResults([]); }
-  }, []);
+  const slotsForDate = useMemo(() => {
+    if (!courtId || !selectedDate) return [];
+    return allSlots.filter((s) => s.court.id === courtId && s.date.split('T')[0] === selectedDate);
+  }, [allSlots, courtId, selectedDate]);
 
+  // ── Step visibility ──
+  const showGrounds = !!sport;
+  const showCourt = showGrounds && !!facilityId;
+  const showCalendar = showCourt && !!courtId;
+  const showTimeSlots = showCalendar && !!selectedDate && slotsForDate.length > 0;
+  const showEventType = !!selectedSlot;
+  const showVisibility = !!eventType;
+  const showMaxParticipants = visibility !== '';
+  const showInvitations = !!maxParticipants && parseInt(maxParticipants) > 0 && visibility === 'private';
+  const showPublicFilters = !!maxParticipants && parseInt(maxParticipants) > 0 && visibility === 'public';
+  const showPrice = showInvitations || showPublicFilters;
+  const showSubmit = showPrice;
+
+  // ── Invite search ──
   useEffect(() => {
-    const timer = setTimeout(() => searchRosters(rosterSearchQuery), 300);
-    return () => clearTimeout(timer);
-  }, [rosterSearchQuery]);
-
-  // ── Invite search (rosters + players) ──
-  const searchInvites = useCallback(async (query: string) => {
-    if (!query.trim()) { setInviteSearchResults([]); return; }
-    try {
-      const rostersRes = await teamService.getTeams(undefined, { page: 1, limit: 10 });
-      let playersRes: any[] = [];
+    if (!inviteQuery.trim()) { setInviteResults([]); return; }
+    const timer = setTimeout(async () => {
       try {
-        const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?q=${encodeURIComponent(query)}&limit=10`);
-        const json = await resp.json();
-        playersRes = Array.isArray(json) ? json : json.data || [];
-      } catch {}
-      const rosterItems = (rostersRes.data || [])
-        .filter((t: any) => t.name.toLowerCase().includes(query.toLowerCase()))
-        .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }));
-      const playerItems = playersRes
-        .map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }));
-      setInviteSearchResults([...rosterItems, ...playerItems]);
-    } catch { setInviteSearchResults([]); }
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => searchInvites(inviteSearchQuery), 300);
+        const isGame = eventType === EventType.GAME;
+        if (isGame) {
+          // Game: search rosters only
+          const res = await teamService.getTeams(undefined, { page: 1, limit: 15 });
+          setInviteResults(
+            (res.data || [])
+              .filter((t: any) => t.name.toLowerCase().includes(inviteQuery.toLowerCase()))
+              .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }))
+          );
+        } else {
+          // Practice/Pickup: search rosters + players
+          const rostersRes = await teamService.getTeams(undefined, { page: 1, limit: 10 });
+          let players: any[] = [];
+          try {
+            const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?q=${encodeURIComponent(inviteQuery)}&limit=10`);
+            const json = await resp.json();
+            players = Array.isArray(json) ? json : json.data || [];
+          } catch {}
+          const rosterItems: InviteItem[] = (rostersRes.data || [])
+            .filter((t: any) => t.name.toLowerCase().includes(inviteQuery.toLowerCase()))
+            .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }));
+          const playerItems: InviteItem[] = players
+            .map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }));
+          setInviteResults([...rosterItems, ...playerItems]);
+        }
+      } catch { setInviteResults([]); }
+    }, 300);
     return () => clearTimeout(timer);
-  }, [inviteSearchQuery]);
+  }, [inviteQuery, eventType]);
 
-  const addInviteItem = (item: typeof invitedItems[0]) => {
-    if (!invitedItems.some(i => i.id === item.id)) {
-      setInvitedItems(prev => [...prev, item]);
-    }
-    setInviteSearchQuery('');
-    setInviteSearchResults([]);
+  const addInvite = (item: InviteItem) => {
+    if (!invitedItems.some((i) => i.id === item.id)) setInvitedItems((prev) => [...prev, item]);
+    setInviteQuery('');
+    setInviteResults([]);
   };
 
-  const removeInviteItem = (id: string) => {
-    setInvitedItems(prev => prev.filter(i => i.id !== id));
-  };
+  const removeInvite = (id: string) => setInvitedItems((prev) => prev.filter((i) => i.id !== id));
 
   // ── Submit ──
   const handleSubmit = async () => {
-    if (!user) return;
-    if (!sport || !eventType || !facilityId || !startDate || !startTime) {
-      Alert.alert('Missing Fields', 'Please complete all required steps.');
-      return;
-    }
-
+    if (!user || !sport || !facilityId || !selectedSlot) return;
     try {
       setIsLoading(true);
-
-      // Build start/end datetimes
-      const parts = startTime.split(':').map(Number);
-      const h = parts[0] ?? 0;
-      const m = parts[1] ?? 0;
-      const start = new Date(startDate);
-      start.setUTCHours(h, m, 0, 0);
-      const durationMin = parseInt(duration) || 60;
-      const end = new Date(start.getTime() + durationMin * 60000);
+      const slotDate = new Date(selectedSlot.date);
+      const [h, mStr] = selectedSlot.startTime.split(':');
+      const start = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(h || '0'), parseInt(mStr || '0')));
+      const [eh, em] = selectedSlot.endTime.split(':');
+      const end = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(eh || '0'), parseInt(em || '0')));
 
       const eventData: any = {
-        title: title.trim() || `${sport.charAt(0).toUpperCase() + sport.slice(1)} ${eventType}`,
-        description: description.trim() || '',
+        title: `${SPORT_OPTIONS.find((o) => o.value === sport)?.label || sport} ${eventType || 'Event'}`,
+        description: '',
         sportType: sport,
-        eventType,
+        eventType: eventType || EventType.PICKUP,
         facilityId,
         startTime: start,
         endTime: end,
@@ -215,27 +241,16 @@ export function CreateEventScreen() {
         equipment: [],
         isPrivate: visibility === 'private',
         organizerId: user.id,
-        eligibility: {
-          isInviteOnly: visibility === 'private',
-        },
+        timeSlotId: selectedSlot.id,
+        rentalId: selectedSlot.rentalId || undefined,
+        eligibility: { isInviteOnly: visibility === 'private' },
       };
 
-      // Game rosters
-      if (eventType === EventType.GAME && teamA && teamB) {
-        eventData.homeRosterId = teamA.id;
-        eventData.awayRosterId = teamB.id;
-        eventData.eligibility.restrictedToTeams = [teamA.id, teamB.id];
-      }
-
-      // Private invites
-      if (visibility === 'private' && invitedItems.length > 0) {
-        const rosterIds = invitedItems.filter(i => i.type === 'roster').map(i => i.id);
-        const playerIds = invitedItems.filter(i => i.type === 'player').map(i => i.id);
-        if (rosterIds.length > 0) eventData.eligibility.restrictedToTeams = rosterIds;
-        if (playerIds.length > 0) eventData.invitedUserIds = playerIds;
-      }
-
-      if (courtId) eventData.courtId = courtId;
+      // Invitations
+      const rosterIds = invitedItems.filter((i) => i.type === 'roster').map((i) => i.id);
+      const playerIds = invitedItems.filter((i) => i.type === 'player').map((i) => i.id);
+      if (rosterIds.length > 0) eventData.eligibility.restrictedToTeams = rosterIds;
+      if (playerIds.length > 0) eventData.invitedUserIds = playerIds;
 
       const newEvent = await eventService.createEvent(eventData);
       dispatch(addEvent(newEvent));
@@ -249,7 +264,14 @@ export function CreateEventScreen() {
   };
 
   // ── Facility options ──
-  const facilityOptions: SelectOption[] = facilities.map(f => ({ label: f.name, value: f.id }));
+  const facilityOptions: SelectOption[] = facilities.map((f) => ({ label: f.name, value: f.id }));
+
+  const formatTime = (t: string) => {
+    const [hh, mm] = t.split(':').map(Number);
+    const h12 = (hh ?? 0) % 12 || 12;
+    const ampm = (hh ?? 0) >= 12 ? 'PM' : 'AM';
+    return `${h12}:${String(mm ?? 0).padStart(2, '0')} ${ampm}`;
+  };
 
   // ── Render ──
   return (
@@ -258,27 +280,62 @@ export function CreateEventScreen() {
 
         {/* Step 1: Sport */}
         <Text style={styles.stepLabel}>Sport</Text>
-        <View style={styles.chipRow}>
-          {SPORT_OPTIONS.map((opt) => {
-            const selected = sport === opt.value;
-            return (
-              <TouchableOpacity key={String(opt.value)} style={[styles.chip, selected && styles.chipSelected]} onPress={() => setSport(opt.value as SportType)}>
-                <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <FormSelect label="" options={SPORT_OPTIONS} value={sport} onSelect={(o) => { setSport(o.value as SportType); setFacilityId(''); setCourtId(''); setSelectedDate(''); setSelectedSlot(null); setEventType(''); setVisibility(''); }} placeholder="Select a sport..." />
 
-        {/* Step 2: Event Type */}
-        {showEventType && (
+        {/* Step 2: Ground */}
+        {showGrounds && (
           <>
-            <Text style={styles.stepLabel}>Event Type</Text>
-            <View style={styles.chipRow}>
-              {EVENT_TYPE_OPTIONS.map((opt) => {
-                const selected = eventType === opt.value;
+            <Text style={styles.stepLabel}>Ground</Text>
+            <FormSelect label="" options={facilityOptions} value={facilityId} onSelect={(o) => setFacilityId(String(o.value))} placeholder="Select a ground..." />
+          </>
+        )}
+
+        {/* Step 2b: Court */}
+        {showCourt && (
+          <>
+            {loadingSlots ? (
+              <ActivityIndicator color={colors.pine} style={{ marginVertical: 12 }} />
+            ) : courts.length === 0 ? (
+              <Text style={styles.hint}>No courts with available slots at this ground.</Text>
+            ) : (
+              <>
+                <Text style={styles.stepLabel}>Court</Text>
+                <FormSelect label="" options={courtOptions} value={courtId} onSelect={(o) => { setCourtId(String(o.value)); setSelectedDate(''); setSelectedSlot(null); }} placeholder="Select a court..." />
+              </>
+            )}
+          </>
+        )}
+
+        {/* Step 2c: Date */}
+        {showCalendar && (
+          <>
+            <Text style={styles.stepLabel}>Date</Text>
+            <Calendar
+              markedDates={calendarMarked}
+              onDayPress={(day: DateData) => {
+                if (datesForCourt.has(day.dateString)) {
+                  setSelectedDate(day.dateString);
+                  setSelectedSlot(null);
+                }
+              }}
+              theme={calendarTheme}
+              style={styles.calendar}
+            />
+          </>
+        )}
+
+        {/* Step 2d: Time */}
+        {showTimeSlots && (
+          <>
+            <Text style={styles.stepLabel}>Time</Text>
+            <View style={styles.slotRow}>
+              {slotsForDate.map((slot) => {
+                const active = selectedSlot?.id === slot.id;
                 return (
-                  <TouchableOpacity key={String(opt.value)} style={[styles.chip, selected && styles.chipSelected]} onPress={() => setEventType(opt.value as EventType)}>
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
+                  <TouchableOpacity key={slot.id} style={[styles.slotChip, active && styles.slotChipActive]} onPress={() => setSelectedSlot(slot)}>
+                    <Text style={[styles.slotChipText, active && styles.slotChipTextActive]}>
+                      {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
@@ -286,225 +343,111 @@ export function CreateEventScreen() {
           </>
         )}
 
-        {/* Step 3: Grounds + Date/Time */}
-        {showGrounds && (
+        {/* Step 3: Event Type */}
+        {showEventType && (
           <>
-            <Text style={styles.stepLabel}>Grounds</Text>
-            <FormSelect
-              label=""
-              options={facilityOptions}
-              value={facilityId}
-              onSelect={(opt) => { setFacilityId(opt.value.toString()); }}
-              placeholder="Select a ground..."
-            />
-            {facilityId && (
-              <>
-                <Text style={styles.stepLabel}>Date & Time</Text>
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="Start (HH:MM)"
-                    placeholderTextColor={colors.inkFaint}
-                    value={startTime}
-                    onChangeText={setStartTime}
-                    keyboardType="numbers-and-punctuation"
-                  />
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    placeholder="Duration (min)"
-                    placeholderTextColor={colors.inkFaint}
-                    value={duration}
-                    onChangeText={setDuration}
-                    keyboardType="number-pad"
-                  />
-                </View>
-                <TouchableOpacity style={styles.dateBtn} onPress={() => {
-                  // Simple date input — in production this would be a date picker
-                  const today = new Date();
-                  setStartDate(today);
-                }}>
-                  <Ionicons name="calendar-outline" size={18} color={colors.pine} />
-                  <Text style={styles.dateBtnText}>{startDate ? startDate.toLocaleDateString() : 'Select date'}</Text>
-                </TouchableOpacity>
-              </>
-            )}
+            <Text style={styles.stepLabel}>Event Type</Text>
+            <FormSelect label="" options={EVENT_TYPE_OPTIONS} value={eventType} onSelect={(o) => { setEventType(o.value as EventType); setVisibility(''); setInvitedItems([]); }} placeholder="Select event type..." />
           </>
         )}
 
-        {/* Step 4: Max Participants */}
-        {showMaxParticipants && (
-          <>
-            <Text style={styles.stepLabel}>Max Players</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 10"
-              placeholderTextColor={colors.inkFaint}
-              value={maxParticipants}
-              onChangeText={setMaxParticipants}
-              keyboardType="number-pad"
-            />
-          </>
-        )}
-
-        {/* Step 5: Private / Public */}
+        {/* Step 4: Visibility */}
         {showVisibility && (
           <>
             <Text style={styles.stepLabel}>Visibility</Text>
             <View style={styles.row}>
               <TouchableOpacity style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]} onPress={() => setVisibility('private')}>
                 <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.ink} />
-                <Text style={[styles.toggleBtnText, visibility === 'private' && styles.toggleBtnTextActive]}>Private</Text>
+                <Text style={[styles.toggleText, visibility === 'private' && styles.toggleTextActive]}>Private</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]} onPress={() => setVisibility('public')}>
                 <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.ink} />
-                <Text style={[styles.toggleBtnText, visibility === 'public' && styles.toggleBtnTextActive]}>Public</Text>
+                <Text style={[styles.toggleText, visibility === 'public' && styles.toggleTextActive]}>Public</Text>
               </TouchableOpacity>
             </View>
+          </>
+        )}
 
-            {/* Private: invite search */}
-            {visibility === 'private' && (
-              <View style={styles.inviteSection}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Search rosters or players..."
-                  placeholderTextColor={colors.inkFaint}
-                  value={inviteSearchQuery}
-                  onChangeText={setInviteSearchQuery}
-                />
-                {inviteSearchResults.length > 0 && (
-                  <View style={styles.searchDropdown}>
-                    {inviteSearchResults.slice(0, 8).map((item) => (
-                      <TouchableOpacity key={item.id} style={styles.searchRow} onPress={() => addInviteItem(item)}>
-                        {item.type === 'roster' ? (
-                          <Ionicons name="people" size={18} color={colors.pine} />
-                        ) : item.image ? (
-                          <Image source={{ uri: item.image }} style={styles.searchAvatar} />
-                        ) : (
-                          <Ionicons name="person" size={18} color={colors.inkFaint} />
-                        )}
-                        <Text style={styles.searchRowText}>{item.name}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-                {invitedItems.length > 0 && (
-                  <View style={styles.inviteList}>
-                    {invitedItems.map((item) => (
-                      <View key={item.id} style={styles.inviteChip}>
-                        {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.pine} /> : <Ionicons name="person" size={14} color={colors.ink} />}
-                        <Text style={styles.inviteChipText}>{item.name}</Text>
-                        <TouchableOpacity onPress={() => removeInviteItem(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
+        {/* Step 5: Max Participants */}
+        {showMaxParticipants && (
+          <>
+            <Text style={styles.stepLabel}>
+              {eventType === EventType.GAME ? 'Max Rosters' : 'Max Players'}
+            </Text>
+            <TextInput style={styles.input} placeholder="e.g. 10" placeholderTextColor={colors.inkFaint} value={maxParticipants} onChangeText={setMaxParticipants} keyboardType="number-pad" />
+          </>
+        )}
+
+        {/* Step 6a: Invitations (private) */}
+        {showInvitations && (
+          <>
+            <Text style={styles.stepLabel}>
+              {eventType === EventType.GAME ? 'Invite Rosters' : 'Invite Rosters & Players'}
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder={eventType === EventType.GAME ? 'Search rosters...' : 'Search rosters or players...'}
+              placeholderTextColor={colors.inkFaint}
+              value={inviteQuery}
+              onChangeText={setInviteQuery}
+            />
+            {inviteResults.length > 0 && (
+              <View style={styles.dropdown}>
+                {inviteResults.slice(0, 8).map((item) => (
+                  <TouchableOpacity key={item.id} style={styles.dropdownRow} onPress={() => addInvite(item)}>
+                    {item.type === 'roster' ? (
+                      <Ionicons name="people" size={18} color={colors.pine} />
+                    ) : item.image ? (
+                      <Image source={{ uri: item.image }} style={styles.avatar} />
+                    ) : (
+                      <Ionicons name="person" size={18} color={colors.inkFaint} />
+                    )}
+                    <Text style={styles.dropdownText}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             )}
-
-            {/* Public: rating + gender */}
-            {visibility === 'public' && (
-              <View style={styles.publicFilters}>
-                <Text style={styles.miniLabel}>Min Player Rating (0-100)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Leave blank for open"
-                  placeholderTextColor={colors.inkFaint}
-                  value={minPlayerRating}
-                  onChangeText={setMinPlayerRating}
-                  keyboardType="number-pad"
-                />
-                <Text style={styles.miniLabel}>Gender</Text>
-                <View style={styles.chipRow}>
-                  {GENDER_OPTIONS.map((opt) => {
-                    const selected = genderRestriction === opt.value;
-                    return (
-                      <TouchableOpacity key={String(opt.value)} style={[styles.chip, selected && styles.chipSelected]} onPress={() => setGenderRestriction(opt.value.toString())}>
-                        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+            {invitedItems.length > 0 && (
+              <View style={styles.chipRow}>
+                {invitedItems.map((item) => (
+                  <View key={item.id} style={styles.inviteChip}>
+                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.pine} /> : <Ionicons name="person" size={14} color={colors.ink} />}
+                    <Text style={styles.inviteChipText}>{item.name}</Text>
+                    <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
+                  </View>
+                ))}
               </View>
             )}
           </>
         )}
 
-        {/* Step 6: Price */}
+        {/* Step 6b: Public filters */}
+        {showPublicFilters && (
+          <>
+            <Text style={styles.stepLabel}>Min Player Rating (0–100)</Text>
+            <TextInput style={styles.input} placeholder="Leave blank for open" placeholderTextColor={colors.inkFaint} value={minPlayerRating} onChangeText={setMinPlayerRating} keyboardType="number-pad" />
+            <Text style={styles.stepLabel}>Gender</Text>
+            <FormSelect label="" options={GENDER_OPTIONS} value={genderRestriction} onSelect={(o) => setGenderRestriction(String(o.value))} placeholder="Open to All" />
+          </>
+        )}
+
+        {/* Step 7: Price */}
         {showPrice && (
           <>
             <Text style={styles.stepLabel}>Price</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="0 for free"
-              placeholderTextColor={colors.inkFaint}
-              value={price}
-              onChangeText={setPrice}
-              keyboardType="decimal-pad"
-            />
+            <TextInput style={styles.input} placeholder="0 for free" placeholderTextColor={colors.inkFaint} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
           </>
         )}
 
         {/* Submit */}
         {showSubmit && (
-          <View style={styles.submitContainer}>
+          <View style={{ marginTop: 24 }}>
             <FormButton title={isLoading ? 'Creating...' : 'Create Event'} onPress={handleSubmit} loading={isLoading} disabled={isLoading} />
           </View>
         )}
 
-        <View style={{ height: 60 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
-
-      {/* Game Roster Selection Modal */}
-      <Modal visible={gameRosterModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setGameRosterModalVisible(false); if (!teamA || !teamB) setEventType(''); }}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => { setGameRosterModalVisible(false); if (!teamA || !teamB) setEventType(''); }}>
-              <Text style={styles.modalCancel}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Select Rosters</Text>
-            <TouchableOpacity onPress={() => { if (teamA && teamB) setGameRosterModalVisible(false); }} disabled={!teamA || !teamB}>
-              <Text style={[styles.modalDone, (!teamA || !teamB) && { opacity: 0.4 }]}>Done</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.modalBody}>
-            {/* Slot A */}
-            <TouchableOpacity style={[styles.rosterSlot, teamA && styles.rosterSlotFilled]} onPress={() => { setSelectingSlot('A'); setRosterSearchQuery(''); }}>
-              <Text style={styles.rosterSlotLabel}>Roster A</Text>
-              <Text style={styles.rosterSlotValue}>{teamA?.name || 'Tap to select'}</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.vsText}>vs</Text>
-
-            {/* Slot B */}
-            <TouchableOpacity style={[styles.rosterSlot, teamB && styles.rosterSlotFilled]} onPress={() => { setSelectingSlot('B'); setRosterSearchQuery(''); }}>
-              <Text style={styles.rosterSlotLabel}>Roster B</Text>
-              <Text style={styles.rosterSlotValue}>{teamB?.name || 'Tap to select'}</Text>
-            </TouchableOpacity>
-
-            {/* Search */}
-            <TextInput
-              style={[styles.input, { marginTop: 20 }]}
-              placeholder={`Search for Roster ${selectingSlot}...`}
-              placeholderTextColor={colors.inkFaint}
-              value={rosterSearchQuery}
-              onChangeText={setRosterSearchQuery}
-              autoFocus
-            />
-            {rosterSearchResults.map((r) => (
-              <TouchableOpacity key={r.id} style={styles.searchRow} onPress={() => {
-                if (selectingSlot === 'A') { setTeamA(r); setSelectingSlot('B'); }
-                else { setTeamB(r); }
-                setRosterSearchQuery('');
-                setRosterSearchResults([]);
-              }}>
-                <Ionicons name="people" size={18} color={colors.pine} />
-                <Text style={styles.searchRowText}>{r.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -521,18 +464,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
   },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: colors.cream,
+  hint: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    marginVertical: 12,
+    textAlign: 'center',
   },
-  chipSelected: { backgroundColor: colors.pine, borderColor: colors.pine },
-  chipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
-  chipTextSelected: { color: '#FFFFFF', fontFamily: fonts.label },
   input: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -544,20 +482,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.cream,
   },
-  row: { flexDirection: 'row', gap: 10 },
-  dateBtn: {
+  calendar: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: Spacing.sm,
+  },
+  slotRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    flexWrap: 'wrap',
     gap: 8,
-    marginTop: 8,
-    borderWidth: 1,
+  },
+  slotChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
     borderColor: colors.cream,
   },
-  dateBtnText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink },
+  slotChipActive: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
+  },
+  slotChipText: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  slotChipTextActive: {
+    color: '#FFFFFF',
+  },
+  row: { flexDirection: 'row', gap: 10 },
   toggleBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -571,18 +526,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
-  toggleBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
-  toggleBtnTextActive: { color: '#FFFFFF' },
-  miniLabel: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  inviteSection: { marginTop: 12 },
-  publicFilters: { marginTop: 4 },
-  searchDropdown: {
+  toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
+  toggleTextActive: { color: '#FFFFFF' },
+  dropdown: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     marginTop: 4,
@@ -590,7 +536,7 @@ const styles = StyleSheet.create({
     borderColor: colors.cream,
     maxHeight: 240,
   },
-  searchRow: {
+  dropdownRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
@@ -599,9 +545,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.cream,
   },
-  searchRowText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
-  searchAvatar: { width: 24, height: 24, borderRadius: 12 },
-  inviteList: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
+  avatar: { width: 24, height: 24, borderRadius: 12 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   inviteChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -614,33 +560,4 @@ const styles = StyleSheet.create({
     borderColor: colors.cream,
   },
   inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
-  submitContainer: { marginTop: 24 },
-  // Modal
-  modalContainer: { flex: 1, backgroundColor: colors.chalk },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
-  },
-  modalCancel: { fontFamily: fonts.body, fontSize: 16, color: colors.inkFaint },
-  modalTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
-  modalDone: { fontFamily: fonts.ui, fontSize: 16, color: colors.pine },
-  modalBody: { padding: 16 },
-  rosterSlot: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: colors.cream,
-    borderStyle: 'dashed',
-  },
-  rosterSlotFilled: { borderColor: colors.pine, borderStyle: 'solid' },
-  rosterSlotLabel: { fontFamily: fonts.label, fontSize: 11, color: colors.inkFaint, textTransform: 'uppercase' },
-  rosterSlotValue: { fontFamily: fonts.label, fontSize: 16, color: colors.ink, marginTop: 4 },
-  vsText: { fontFamily: fonts.heading, fontSize: 18, color: colors.inkFaint, textAlign: 'center', marginVertical: 8 },
 });
