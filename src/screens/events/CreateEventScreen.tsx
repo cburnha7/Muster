@@ -82,7 +82,7 @@ export function CreateEventScreen() {
   const [facilityId, setFacilityId] = useState('');
   const [courtId, setCourtId] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState<SlotData | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<SlotData[]>([]);
   const [eventType, setEventType] = useState<EventType | ''>('');
   const [visibility, setVisibility] = useState<'private' | 'public' | ''>('');
   const [maxParticipants, setMaxParticipants] = useState('');
@@ -115,7 +115,7 @@ export function CreateEventScreen() {
     setLoadingSlots(true);
     setCourtId('');
     setSelectedDate('');
-    setSelectedSlot(null);
+    setSelectedSlots([]);
     facilityService.getAvailableSlots(facilityId, user.id)
       .then((res) => {
         setAllSlots(res.data);
@@ -163,7 +163,7 @@ export function CreateEventScreen() {
   const showCourt = showGrounds && !!facilityId;
   const showCalendar = showCourt && !!courtId;
   const showTimeSlots = showCalendar && !!selectedDate && slotsForDate.length > 0;
-  const showEventType = !!selectedSlot;
+  const showEventType = selectedSlots.length > 0;
   const showVisibility = !!eventType;
   const showMaxParticipants = visibility !== '';
   const showInvitations = !!maxParticipants && parseInt(maxParticipants) > 0 && visibility === 'private';
@@ -216,13 +216,15 @@ export function CreateEventScreen() {
 
   // ── Submit ──
   const handleSubmit = async () => {
-    if (!user || !sport || !facilityId || !selectedSlot) return;
+    if (!user || !sport || !facilityId || selectedSlots.length === 0) return;
     try {
       setIsLoading(true);
-      const slotDate = new Date(selectedSlot.date);
-      const [h, mStr] = selectedSlot.startTime.split(':');
+      const firstSlot = selectedSlots[0]!;
+      const lastSlot = selectedSlots[selectedSlots.length - 1]!;
+      const slotDate = new Date(firstSlot.date);
+      const [h, mStr] = firstSlot.startTime.split(':');
       const start = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(h || '0'), parseInt(mStr || '0')));
-      const [eh, em] = selectedSlot.endTime.split(':');
+      const [eh, em] = lastSlot.endTime.split(':');
       const end = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(eh || '0'), parseInt(em || '0')));
 
       const eventData: any = {
@@ -241,8 +243,10 @@ export function CreateEventScreen() {
         equipment: [],
         isPrivate: visibility === 'private',
         organizerId: user.id,
-        timeSlotId: selectedSlot.id,
-        rentalId: selectedSlot.rentalId || undefined,
+        timeSlotId: firstSlot.id,
+        rentalId: firstSlot.rentalId || undefined,
+        timeSlotIds: selectedSlots.map((s) => s.id),
+        rentalIds: selectedSlots.map((s) => s.rentalId).filter(Boolean),
         eligibility: { isInviteOnly: visibility === 'private' },
       };
 
@@ -280,7 +284,7 @@ export function CreateEventScreen() {
 
         {/* Step 1: Sport */}
         <Text style={styles.stepLabel}>Sport</Text>
-        <FormSelect label="" options={SPORT_OPTIONS} value={sport} onSelect={(o) => { setSport(o.value as SportType); setFacilityId(''); setCourtId(''); setSelectedDate(''); setSelectedSlot(null); setEventType(''); setVisibility(''); }} placeholder="Select a sport..." />
+        <FormSelect label="" options={SPORT_OPTIONS} value={sport} onSelect={(o) => { setSport(o.value as SportType); setFacilityId(''); setCourtId(''); setSelectedDate(''); setSelectedSlots([]); setEventType(''); setVisibility(''); }} placeholder="Select a sport..." />
 
         {/* Step 2: Ground */}
         {showGrounds && (
@@ -300,7 +304,7 @@ export function CreateEventScreen() {
             ) : (
               <>
                 <Text style={styles.stepLabel}>Court</Text>
-                <FormSelect label="" options={courtOptions} value={courtId} onSelect={(o) => { setCourtId(String(o.value)); setSelectedDate(''); setSelectedSlot(null); }} placeholder="Select a court..." />
+                <FormSelect label="" options={courtOptions} value={courtId} onSelect={(o) => { setCourtId(String(o.value)); setSelectedDate(''); setSelectedSlots([]); }} placeholder="Select a court..." />
               </>
             )}
           </>
@@ -315,7 +319,7 @@ export function CreateEventScreen() {
               onDayPress={(day: DateData) => {
                 if (datesForCourt.has(day.dateString)) {
                   setSelectedDate(day.dateString);
-                  setSelectedSlot(null);
+                  setSelectedSlots([]);
                 }
               }}
               theme={calendarTheme}
@@ -328,18 +332,61 @@ export function CreateEventScreen() {
         {showTimeSlots && (
           <>
             <Text style={styles.stepLabel}>Time</Text>
-            <View style={styles.slotRow}>
-              {slotsForDate.map((slot) => {
-                const active = selectedSlot?.id === slot.id;
+            <View style={styles.timeDropdown}>
+              {slotsForDate.map((slot, idx) => {
+                const isSelected = selectedSlots.some((s) => s.id === slot.id);
+                // Allow selection only if contiguous with existing selection
+                const canSelect = (() => {
+                  if (selectedSlots.length === 0) return true;
+                  if (isSelected) return true; // can deselect
+                  const selectedIndices = selectedSlots.map((s) => slotsForDate.findIndex((sf) => sf.id === s.id));
+                  const minIdx = Math.min(...selectedIndices);
+                  const maxIdx = Math.max(...selectedIndices);
+                  return idx === minIdx - 1 || idx === maxIdx + 1;
+                })();
+
                 return (
-                  <TouchableOpacity key={slot.id} style={[styles.slotChip, active && styles.slotChipActive]} onPress={() => setSelectedSlot(slot)}>
-                    <Text style={[styles.slotChipText, active && styles.slotChipTextActive]}>
+                  <TouchableOpacity
+                    key={slot.id}
+                    style={[styles.timeRow, isSelected && styles.timeRowSelected, !canSelect && styles.timeRowDisabled]}
+                    disabled={!canSelect}
+                    onPress={() => {
+                      if (isSelected) {
+                        // Only allow deselecting from the ends
+                        const selectedIndices = selectedSlots.map((s) => slotsForDate.findIndex((sf) => sf.id === s.id));
+                        const minIdx = Math.min(...selectedIndices);
+                        const maxIdx = Math.max(...selectedIndices);
+                        const thisIdx = slotsForDate.findIndex((sf) => sf.id === slot.id);
+                        if (thisIdx === minIdx || thisIdx === maxIdx) {
+                          setSelectedSlots((prev) => prev.filter((s) => s.id !== slot.id));
+                        }
+                      } else {
+                        setSelectedSlots((prev) => {
+                          const next = [...prev, slot];
+                          // Sort by start time to keep order
+                          next.sort((a, b) => a.startTime.localeCompare(b.startTime));
+                          return next;
+                        });
+                      }
+                    }}
+                  >
+                    <Ionicons
+                      name={isSelected ? 'checkbox' : 'square-outline'}
+                      size={20}
+                      color={isSelected ? colors.pine : canSelect ? colors.inkFaint : colors.cream}
+                    />
+                    <Text style={[styles.timeRowText, isSelected && styles.timeRowTextSelected]}>
                       {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
+            {selectedSlots.length > 0 && (
+              <Text style={styles.timeHint}>
+                {formatTime(selectedSlots[0]!.startTime)} – {formatTime(selectedSlots[selectedSlots.length - 1]!.endTime)}
+              </Text>
+            )}
           </>
         )}
 
@@ -487,30 +534,43 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: Spacing.sm,
   },
-  slotRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  slotChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
+  timeDropdown: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderRadius: 10,
+    borderWidth: 1,
     borderColor: colors.cream,
+    overflow: 'hidden',
   },
-  slotChipActive: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cream,
   },
-  slotChipText: {
-    fontFamily: fonts.label,
-    fontSize: 13,
+  timeRowSelected: {
+    backgroundColor: colors.pine + '0D',
+  },
+  timeRowDisabled: {
+    opacity: 0.35,
+  },
+  timeRowText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
     color: colors.ink,
   },
-  slotChipTextActive: {
-    color: '#FFFFFF',
+  timeRowTextSelected: {
+    fontFamily: fonts.label,
+    color: colors.pine,
+  },
+  timeHint: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.pine,
+    marginTop: 6,
+    textAlign: 'center',
   },
   row: { flexDirection: 'row', gap: 10 },
   toggleBtn: {
