@@ -18,6 +18,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { PlayerCard } from '../../components/ui/PlayerCard';
 
 import { CancelEventModal } from '../../components/events/CancelEventModal';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
@@ -82,6 +83,7 @@ export function EventDetailsScreen(): JSX.Element {
   const [salutesSubmitted, setSalutesSubmitted] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showStepOutModal, setShowStepOutModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
 
   // Load event details
   const loadEvent = useCallback(async (isRefresh = false, skipCache = false) => {
@@ -1051,7 +1053,7 @@ export function EventDetailsScreen(): JSX.Element {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Players ({participants.length})</Text>
             {participants.map((p) => (
-              <View key={p.userId} style={styles.compactMemberRow}>
+              <TouchableOpacity key={p.userId} style={styles.compactMemberRow} onPress={() => p.user && setSelectedPlayer({ id: p.userId, firstName: p.user.firstName, lastName: p.user.lastName, profileImage: p.user.profileImage, dateOfBirth: (p.user as any).dateOfBirth, gender: (p.user as any).gender })} activeOpacity={0.7}>
                 {p.user?.profileImage ? (
                   <Image source={{ uri: p.user.profileImage }} style={styles.compactMemberAvatar} />
                 ) : (
@@ -1062,7 +1064,7 @@ export function EventDetailsScreen(): JSX.Element {
                 <Text style={styles.compactMemberName}>
                   {p.user ? `${p.user.firstName} ${p.user.lastName}` : 'Unknown'}
                 </Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -1158,6 +1160,13 @@ export function EventDetailsScreen(): JSX.Element {
         eventTitle={event?.title || 'Event'}
         onCancel={() => setShowStepOutModal(false)}
         onConfirm={handleStepOutConfirm}
+      />
+
+      {/* Player Card Popup */}
+      <PlayerCard
+        visible={!!selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        player={selectedPlayer}
       />
 
       {/* Salute Modal */}

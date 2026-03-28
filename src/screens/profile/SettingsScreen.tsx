@@ -14,6 +14,8 @@ import { PurchaseHistorySection } from '../../components/profile/PurchaseHistory
 import { UserConnectSection } from '../../components/profile/UserConnectSection';
 import { ConnectAccountsSection } from '../../components/profile/ConnectAccountsSection';
 import { DependentsSection } from '../../components/profile/DependentsSection';
+import { InsuranceDocumentsSection } from '../../components/profile/InsuranceDocumentsSection';
+import { InsuranceDocumentForm } from '../../components/profile/InsuranceDocumentForm';
 import { userService } from '../../services/api/UserService';
 import { loggingService } from '../../services/LoggingService';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +29,7 @@ export function SettingsScreen(): JSX.Element {
   const [darkMode, setDarkMode] = useState(false);
   const [locationServices, setLocationServices] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [showInsuranceForm, setShowInsuranceForm] = useState(false);
 
   const handleExportData = async () => {
     try {
@@ -172,6 +175,14 @@ export function SettingsScreen(): JSX.Element {
 
         {/* Stripe Connect */}
         {!isDependent && authUser?.id && <ConnectAccountsSection userId={authUser.id} />}
+
+        {/* Insurance Documents */}
+        {!isDependent && authUser?.id && (authUser.membershipTier === 'host' || authUser.membershipTier === 'facility' || authUser.trialTier === 'host') && (
+          <InsuranceDocumentsSection userId={authUser.id} onAddDocument={() => setShowInsuranceForm(true)} />
+        )}
+        {!isDependent && showInsuranceForm && authUser?.id && (
+          <InsuranceDocumentForm userId={authUser.id} onClose={() => setShowInsuranceForm(false)} />
+        )}
 
         {/* Remove Dependents */}
         {!isDependent && <DependentsSection />}

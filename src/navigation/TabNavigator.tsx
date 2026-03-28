@@ -223,9 +223,7 @@ export function TabNavigator(): JSX.Element {
         component={ProfileStackNavigator}
         options={({ route }) => ({
           tabBarLabel: 'Profile',
-          headerShown: isRootScreen(route),
-          headerRight: () => <HeaderUserSelector />,
-          headerRightContainerStyle: { paddingRight: 16 },
+          headerShown: false,
         })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {

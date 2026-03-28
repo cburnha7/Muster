@@ -13,8 +13,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
-import { InsuranceDocumentsSection } from '../../components/profile/InsuranceDocumentsSection';
-import { InsuranceDocumentForm } from '../../components/profile/InsuranceDocumentForm';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
@@ -25,7 +23,6 @@ export function ProfileScreen() {
   const { isDependent } = useDependentContext();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [showInsuranceForm, setShowInsuranceForm] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -94,14 +91,6 @@ export function ProfileScreen() {
 
       {/* Sport Ratings */}
       {authUser?.id && <SportRatingsSection userId={authUser.id} />}
-
-      {/* Insurance Documents */}
-      {!isDependent && authUser?.id && (authUser.membershipTier === 'host' || authUser.membershipTier === 'facility' || authUser.trialTier === 'host') && (
-        <InsuranceDocumentsSection userId={authUser.id} onAddDocument={() => setShowInsuranceForm(true)} />
-      )}
-      {!isDependent && showInsuranceForm && authUser?.id && (
-        <InsuranceDocumentForm userId={authUser.id} onClose={() => setShowInsuranceForm(false)} />
-      )}
 
       {/* Redeem Code */}
       <TouchableOpacity style={styles.menuRow} onPress={() => (navigation as any).navigate('RedeemCode')} activeOpacity={0.7}>
