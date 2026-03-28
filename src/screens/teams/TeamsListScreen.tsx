@@ -177,6 +177,8 @@ export function TeamsListScreen() {
         placeholder="Search by roster name..."
         onSearch={handleSearchRosters}
         onResultPress={handleSearchResultPress}
+        createLabel="Create Roster"
+        onCreatePress={handleCreateTeam}
       />
     </View>
   );
