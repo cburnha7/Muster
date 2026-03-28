@@ -755,46 +755,6 @@ export function EventDetailsScreen(): JSX.Element {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <Ionicons
-              name={getSportIcon(event.sportType) as any}
-              size={32}
-              color={colors.pine}
-            />
-            <Text style={styles.title}>{event.title}</Text>
-          </View>
-          
-          <View style={styles.badges}>
-            {event.minPlayerRating != null && event.minPlayerRating > 0 && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
-                ]}
-              >
-                <Text style={styles.badgeText}>
-                  {event.minPlayerRating}+ RATING
-                </Text>
-              </View>
-            )}
-            
-            {event.status !== EventStatus.COMPLETED && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: getStatusColor(event.status) },
-                ]}
-              >
-                <Text style={styles.badgeText}>
-                  {event.status.toUpperCase()}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-
         {/* Participants Section - Show salute grid at top for past GAME events only */}
         {isPastEvent && participants.length > 0 && event.eventType === EventType.GAME && (
           <View style={styles.section}>
@@ -934,14 +894,14 @@ export function EventDetailsScreen(): JSX.Element {
         })()}
 
         {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.description}>{event.description}</Text>
-        </View>
+        {event.description ? (
+          <View style={styles.section}>
+            <Text style={styles.description}>{event.description}</Text>
+          </View>
+        ) : null}
 
         {/* Event Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Event Details</Text>
-          
           <View style={styles.detailRow}>
             <Ionicons name="calendar-outline" size={20} color="#666" />
             <View style={styles.detailContent}>

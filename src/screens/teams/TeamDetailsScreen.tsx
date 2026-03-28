@@ -574,18 +574,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Manager</Text>
                   <Text style={styles.detailValue}>
-                    {team.captain ? `${team.captain.firstName} ${team.captain.lastName}` : 'Unknown'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Players */}
-              <View style={styles.detailRow}>
-                <Ionicons name="people-outline" size={20} color="#666" />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Players</Text>
-                  <Text style={styles.detailValue}>
-                    {activeMembers.length} / {team.maxMembers} · {Math.max(0, team.maxMembers - activeMembers.length)} spots available
+                    {(() => {
+                      const captainMember = team.members?.find((m) => m.role === TeamRole.CAPTAIN);
+                      if (captainMember?.user) return `${captainMember.user.firstName} ${captainMember.user.lastName}`;
+                      if (team.captain) return `${team.captain.firstName} ${team.captain.lastName}`;
+                      return 'Unknown';
+                    })()}
                   </Text>
                 </View>
               </View>
@@ -626,7 +620,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               )}
 
               {/* Members List */}
-              <Text style={styles.membersTitle}>Players ({activeMembers.length})</Text>
+              <Text style={styles.membersTitle}>Players ({activeMembers.length}/{team.maxMembers})</Text>
               {activeMembers.map((member) => (
                 <View key={member.userId} style={styles.memberRow}>
                   {member.user?.profileImage ? (
@@ -729,28 +723,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               {pendingMembers.map((m) => renderMember(m, true))}
             </View>
           )}
-
-          {/* ── Confirmed Players ── */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Players ({activeMembers.length})
-            </Text>
-            {canManageTeam && duesAmount != null && playerDuesMap.size > 0 && (
-              <View style={styles.duesSummaryBanner}>
-                <Ionicons name="cash-outline" size={16} color={colors.pine} />
-                <Text style={styles.duesSummaryText}>
-                  Season dues: ${(duesAmount / 100).toFixed(2)} · {
-                    Array.from(playerDuesMap.values()).filter(s => s === 'paid').length
-                  }/{playerDuesMap.size} paid
-                </Text>
-              </View>
-            )}
-            {activeMembers.length === 0 ? (
-              <Text style={styles.emptyText}>No confirmed players yet.</Text>
-            ) : (
-              activeMembers.map((m) => renderMember(m, false))
-            )}
-          </View>
 
           {/* ── Leagues ── */}
           <View style={styles.section}>

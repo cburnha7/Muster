@@ -1,7 +1,6 @@
 export const brand = {
   name:     'Muster',
-  tagline:  'Muster the Troops.',
-  secondary:'Find a game. Find your people.',
+  tagline:  'the Troops.',
   mechanic: 'Salute', // in-app peer recognition system
 } as const;
 

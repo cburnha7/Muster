@@ -2,17 +2,17 @@
 
 ## Name & Voice
 - App name: **Muster**
-- Tagline: **Muster the Troops.**
-- Secondary tagline: **Find a game. Find your people.**
+- Tagline: **the Troops.**
+- Full read: "Muster the Troops."
 - Join a game: **Join Up**
 - Leave a game: **Step Out**
 - Recognise a player: **Salute**
-- A group of players: **Roster** (covers both formal teams and recurring pickup crews — never use "Team" or "Outfit")
-- An organised competition: **League** (never use "Competition", "Tournament" or "Division")
+- A group of players: **Roster** (never use "Team", "Group", or "Outfit")
+- An organised competition: **League** (never use "Competition", "Tournament", or "Division")
 
 ## Logo
 - Use `<MusterIcon />` from `src/theme/MusterIcon.tsx`
-- Always render with `variant="dark"` on light backgrounds
+- Always render with `variant="dark"` on light/white backgrounds
 - Always render with `variant="light"` on dark backgrounds
 - Always render with `variant="grass"` on green backgrounds
 
@@ -24,14 +24,17 @@ All UI must import tokens from `src/theme/` — never hardcode colors or fonts.
 - `src/theme/index.ts` — barrel export, import everything from here
 
 ## Colors
-- Primary green: `colors.pine` (#2D5F3F) — pine figure / brand green
-- Primary red: `colors.heart` (#C0392B) — centre figure / primary accent
-- Primary blue: `colors.navy` (#1B2A4A) — right figure / info / links
-- Bronze: `colors.bronze` (#C4A882) — icon background / warm accent
-- App background: `colors.cream` (#EEEBE3)
-- Light surface: `colors.chalk` (#F7F4EE)
+- Primary green: `colors.pine` (#2D5F3F)
+- Green hover: `colors.pineLight` (#3D8C5E)
+- Primary red: `colors.heart` (#C0392B)
+- Red accent: `colors.vermillion` (#E05A20)
+- Primary blue / ink: `colors.navy` (#1B2A4A)
+- Salute accent: `colors.gold` (#D4A017)
+- Salute glow: `colors.goldLight` (#F0BE40)
+- App background: `colors.white` (#FFFFFF)
+- Card background: `colors.surface` (#F8F8F8)
 - Primary text: `colors.ink` (#1B2A4A)
-- Secondary text: `colors.inkFaint` (#6B7A96)
+- Secondary text: `colors.inkSoft` (#4A5568)
 
 ## Typography
 - Display / hero text: `fonts.display` — Fraunces 700

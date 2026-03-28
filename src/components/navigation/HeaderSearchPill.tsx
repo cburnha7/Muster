@@ -6,8 +6,8 @@ import { searchEventBus } from '../../utils';
 
 const PLACEHOLDERS: Record<string, string> = {
   Home: "Who's in?",
-  Teams: 'Search rosters...',
-  Leagues: 'Search leagues...',
+  Teams: 'Looking for a team?',
+  Leagues: 'Looking for a league?',
   Facilities: 'Search grounds...',
   Profile: "Who's in?",
 };

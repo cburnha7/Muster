@@ -1,53 +1,41 @@
 export const colors = {
   // ── Pine green ────────────────────────────────
-  pine:       '#2D5F3F', // primary figure / brand green
-  pineLight:  '#3D8C5E', // hover / active states
-  pineDark:   '#1E4229', // pressed states
+  pine:        '#2D5F3F', // primary brand green
+  pineLight:   '#3D8C5E', // hover / active states
+  pineDark:    '#1E4229', // pressed states
 
   // ── Heart red ─────────────────────────────────
-  heart:      '#C0392B', // centre figure / primary accent
-  heartLight: '#D45B5B', // hover / highlights
-  heartDark:  '#962D22', // pressed states
+  heart:       '#C0392B', // primary red
+  vermillion:  '#E05A20', // red accent / light variant
 
   // ── Navy ──────────────────────────────────────
-  navy:       '#1B2A4A', // right figure / info / links
-  navyLight:  '#2E4470', // hover
-  navyDark:   '#111B30', // pressed
+  navy:        '#1B2A4A', // primary blue / ink
+  navyLight:   '#2E4470', // hover
+  navyDark:    '#111B30', // pressed
 
-  // ── Bronze / background ───────────────────────
-  bronze:     '#C4A882', // icon background
-  bronzeLight:'#D4B99A', // light variant
-  bronzeDark: '#A8845A', // dark variant
+  // ── Gold ──────────────────────────────────────
+  gold:        '#D4A017', // salute accent
+  goldLight:   '#F0BE40', // salute glow / highlights
 
-  // ── Cream / surfaces ──────────────────────────
-  chalk:      '#F7F4EE', // light surface
-  cream:      '#EEEBE3', // app background (slightly darker)
+  // ── Surfaces ──────────────────────────────────
+  white:       '#FFFFFF', // app background
+  surface:     '#F8F8F8', // card background
+  border:      '#E8E8E8', // dividers / outlines
 
   // ── Ink / text ────────────────────────────────
-  ink:        '#1B2A4A', // primary text / dark background (navy)
-  inkMid:     '#2A3A5A', // card backgrounds (dark mode)
-  inkSoft:    '#3A4A6A', // secondary dark surface
-  inkFaint:   '#6B7A96', // secondary / placeholder text
+  ink:         '#1B2A4A', // primary text (navy)
+  inkSoft:     '#4A5568', // secondary text
+  inkFaint:    '#9AA5B4', // placeholder / disabled
+
+  // ── Semantic tints ────────────────────────────
+  pineTint:    '#EBF5EF', // green background tint
+  heartTint:   '#FDECEA', // red background tint
+  goldTint:    '#FEF3CD', // gold background tint
+  navyTint:    '#EEF2FF', // navy background tint
 
   // ── Transparency helpers ───────────────────────
-  overlay:    'rgba(27, 42, 74, 0.6)',
-  scrim:      'rgba(27, 42, 74, 0.4)',
-
-  // ── Legacy aliases (deprecated) ────────────────
-  // These map old color names to new palette for backward compatibility
-  grass:      '#2D5F3F', // → use colors.pine
-  grassLight: '#3D8C5E', // → use colors.pineLight
-  grassDark:  '#1E4229', // → use colors.pineDark
-  track:      '#C0392B', // → use colors.heart
-  trackLight: '#D45B5B', // → use colors.heartLight
-  sky:        '#1B2A4A', // → use colors.navy
-  skyLight:   '#2E4470', // → use colors.navyLight
-  soft:       '#6B7A96', // → use colors.inkFaint
-  court:      '#C4A882', // → use colors.bronze (accent)
-  courtLight: '#D4B99A', // → use colors.bronzeLight
-  background: '#EEEBE3', // → use colors.cream
-  textTertiary: '#6B7A96', // → use colors.inkFaint
-  chalkWarm: '#EEEBE3', // → use colors.cream
+  overlay:     'rgba(27, 42, 74, 0.6)',
+  scrim:       'rgba(27, 42, 74, 0.4)',
 } as const;
 
 export type ColorKey = keyof typeof colors;
