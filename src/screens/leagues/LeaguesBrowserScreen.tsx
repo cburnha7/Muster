@@ -23,7 +23,6 @@ import { searchEventBus } from '../../utils/searchEventBus';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
 import { selectActiveUserId } from '../../store/slices/contextSlice';
-import { SportType } from '../../types';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
 // Use a flexible type since data comes from multiple API sources with different shapes
