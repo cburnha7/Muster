@@ -17,7 +17,6 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
-import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { EventSearchModal, EventSearchParams } from '../../components/home/EventSearchModal';
 import { InboxSection } from '../../components/home/InboxSection';
 
@@ -351,28 +350,23 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* Inbox — all action items in one place */}
-        <CollapsibleSection
-          title="Inbox"
-          count={rosterInvitations.length + leagueInvitations.length + eventInvitations.length + readyToScheduleLeagues.length + debriefEvents.length + cancelRequests.length || undefined}
-        >
-          <InboxSection
-            rosterInvitations={rosterInvitations}
-            leagueInvitations={leagueInvitations}
-            eventInvitations={eventInvitations}
-            readyToScheduleLeagues={readyToScheduleLeagues}
-            debriefEvents={debriefEvents}
-            cancelRequests={cancelRequests}
-            onRosterInvitationPress={handleRosterInvitationPress}
-            onLeagueInvitationPress={handleLeagueInvitationPress}
-            onEventInvitationPress={handleEventInvitationPress}
-            onScheduleLeaguePress={handleReadyToSchedulePress}
-            onDebriefPress={handleDebriefPress}
-            onApproveCancelRequest={handleApproveCancelRequest}
-            onDenyCancelRequest={handleDenyCancelRequest}
-            isCancelLoading={isApproving || isDenying}
-          />
-        </CollapsibleSection>
+        {/* Action items */}
+        <InboxSection
+          rosterInvitations={rosterInvitations}
+          leagueInvitations={leagueInvitations}
+          eventInvitations={eventInvitations}
+          readyToScheduleLeagues={readyToScheduleLeagues}
+          debriefEvents={debriefEvents}
+          cancelRequests={cancelRequests}
+          onRosterInvitationPress={handleRosterInvitationPress}
+          onLeagueInvitationPress={handleLeagueInvitationPress}
+          onEventInvitationPress={handleEventInvitationPress}
+          onScheduleLeaguePress={handleReadyToSchedulePress}
+          onDebriefPress={handleDebriefPress}
+          onApproveCancelRequest={handleApproveCancelRequest}
+          onDenyCancelRequest={handleDenyCancelRequest}
+          isCancelLoading={isApproving || isDenying}
+        />
 
         <View style={{ height: 32 }} />
       </ScrollView>

@@ -3,6 +3,7 @@ import {
   TouchableOpacity,
   Text,
   View,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -12,13 +13,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { selectActiveUserId, selectDependents, setActiveUser } from '../../store/slices/contextSlice';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts } from '../../theme';
 
-/**
- * Compact user selector for the tab header.
- * Shows the active user's first name; tapping opens a dropdown to switch.
- * Only renders when dependents exist.
- */
 export function HeaderUserSelector() {
   const { user: guardian } = useAuth();
   const dispatch = useDispatch();
@@ -27,10 +23,12 @@ export function HeaderUserSelector() {
   const dependents = useSelector(selectDependents);
   const [menuVisible, setMenuVisible] = useState(false);
 
-  if (!guardian || dependents.length === 0) return null;
+  if (!guardian) return null;
 
   const activeDep = activeUserId ? dependents.find((d) => d.id === activeUserId) : null;
   const displayName = activeDep ? activeDep.firstName : guardian.firstName || 'Me';
+  const profileImage = (activeDep as any)?.profileImage || (guardian as any)?.profileImage;
+  const initial = displayName.charAt(0).toUpperCase();
 
   const handleSwitch = (userId: string | null) => {
     dispatch(setActiveUser(userId));
@@ -40,13 +38,19 @@ export function HeaderUserSelector() {
   return (
     <>
       <TouchableOpacity
-        style={styles.btn}
+        style={styles.avatarBtn}
         onPress={() => setMenuVisible(true)}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`Viewing as ${displayName}`}
       >
-        <Ionicons name="person-circle-outline" size={20} color={colors.pine} />
+        {profileImage ? (
+          <Image source={{ uri: profileImage }} style={styles.avatarImg} />
+        ) : (
+          <View style={styles.avatarFallback}>
+            <Text style={styles.avatarInitial}>{initial}</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
@@ -83,8 +87,29 @@ export function HeaderUserSelector() {
 }
 
 const styles = StyleSheet.create({
-  btn: {
-    padding: 6,
+  avatarBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  avatarImg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  avatarFallback: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.pine,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitial: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   backdrop: {
     flex: 1,

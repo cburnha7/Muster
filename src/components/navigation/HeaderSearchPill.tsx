@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { colors, fonts } from '../../theme';
@@ -50,12 +50,15 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
   );
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
+    width: SCREEN_WIDTH * 0.7,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
