@@ -186,21 +186,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         )}
       </View>
 
-      {/* Booking meta */}
-      {(booking.bookedAt || booking.createdAt || booking.cancelledAt) && (
-        <View style={styles.bookingInfo}>
-          {(booking.bookedAt || booking.createdAt) && !booking.cancelledAt && (
-            <Text style={styles.bookingDate}>
-              Joined {formatDate(booking.bookedAt || booking.createdAt)}
-            </Text>
-          )}
-          {booking.cancelledAt && (
-            <Text style={styles.cancelledDate}>
-              Cancelled {formatDate(booking.cancelledAt)}
-            </Text>
-          )}
-        </View>
-      )}
     </TouchableOpacity>
   );
 };

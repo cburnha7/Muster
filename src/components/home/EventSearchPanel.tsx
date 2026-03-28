@@ -40,6 +40,12 @@ const EVENT_TYPE_OPTIONS: SelectOption[] = [
 
 const PROXIMITY_OPTIONS = [5, 10, 25, 50, 100];
 
+const GENDER_OPTIONS: SelectOption[] = [
+  { label: 'All Genders', value: '' },
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+];
+
 interface EventSearchPanelProps {
   visible: boolean;
   onCreateEvent: () => void;
@@ -50,6 +56,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
   const [query, setQuery] = useState('');
   const [sportFilter, setSportFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [genderFilter, setGenderFilter] = useState('');
   const [locationText, setLocationText] = useState('');
   const [radiusMiles, setRadiusMiles] = useState(25);
   const [userLat, setUserLat] = useState<number | null>(null);
@@ -58,7 +65,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
   const [results, setResults] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const hasFilters = query.trim() !== '' || sportFilter !== '' || typeFilter !== '' || locationText !== '';
+  const hasFilters = query.trim() !== '' || sportFilter !== '' || typeFilter !== '' || genderFilter !== '' || locationText !== '';
 
   // Listen for query changes from the header pill
   useEffect(() => {
@@ -72,6 +79,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
       setQuery('');
       setSportFilter('');
       setTypeFilter('');
+      setGenderFilter('');
       setLocationText('');
       setUserLat(null);
       setUserLng(null);
@@ -101,6 +109,8 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
         }
         // Event type filter
         if (typeFilter) filtered = filtered.filter((e: Event) => e.eventType === typeFilter);
+        // Gender filter
+        if (genderFilter) filtered = filtered.filter((e: Event) => (e as any).genderRestriction === genderFilter || !(e as any).genderRestriction);
 
         // Location filter (client-side distance calc if we have coords)
         if (userLat != null && userLng != null) {
@@ -125,7 +135,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
       setLoading(false);
     }, 250);
     return () => clearTimeout(timer);
-  }, [query, sportFilter, typeFilter, visible, userLat, userLng, radiusMiles]);
+  }, [query, sportFilter, typeFilter, genderFilter, visible, userLat, userLng, radiusMiles]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     setLocationLoading(true);
@@ -144,6 +154,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
     setQuery('');
     setSportFilter('');
     setTypeFilter('');
+    setGenderFilter('');
     setLocationText('');
     setUserLat(null);
     setUserLng(null);
@@ -162,6 +173,9 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
         </View>
         <View style={{ flex: 1 }}>
           <FormSelect label="" options={EVENT_TYPE_OPTIONS} value={typeFilter} onSelect={(o) => setTypeFilter(String(o.value))} placeholder="Type" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <FormSelect label="" options={GENDER_OPTIONS} value={genderFilter} onSelect={(o) => setGenderFilter(String(o.value))} placeholder="Gender" />
         </View>
       </View>
 

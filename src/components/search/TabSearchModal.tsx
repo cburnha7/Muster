@@ -27,6 +27,12 @@ const SPORT_OPTIONS: SelectOption[] = [
   { label: 'Other', value: SportType.OTHER },
 ];
 
+const GENDER_OPTIONS: SelectOption[] = [
+  { label: 'All Genders', value: '' },
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+];
+
 export interface TabSearchResult {
   id: string;
   name: string;
@@ -38,7 +44,7 @@ interface TabSearchModalProps {
   onClose: () => void;
   title: string;
   placeholder: string;
-  onSearch: (query: string, sport: SportType | null) => Promise<TabSearchResult[]>;
+  onSearch: (query: string, sport: SportType | null, gender?: string) => Promise<TabSearchResult[]>;
   onResultPress: (result: TabSearchResult) => void;
   createLabel?: string;
   onCreatePress?: () => void;
@@ -56,6 +62,7 @@ export function TabSearchModal({
 }: TabSearchModalProps) {
   const [query, setQuery] = useState('');
   const [selectedSport, setSelectedSport] = useState<SportType | null>(null);
+  const [selectedGender, setSelectedGender] = useState('');
   const [results, setResults] = useState<TabSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -70,6 +77,7 @@ export function TabSearchModal({
     if (!visible) {
       setQuery('');
       setSelectedSport(null);
+      setSelectedGender('');
       setResults([]);
     }
   }, [visible]);
@@ -78,30 +86,29 @@ export function TabSearchModal({
   useEffect(() => {
     if (!visible) return;
     const timer = setTimeout(async () => {
-      if (!query.trim() && !selectedSport) { setResults([]); return; }
+      if (!query.trim() && !selectedSport && !selectedGender) { setResults([]); return; }
       setLoading(true);
       try {
-        const res = await onSearch(query, selectedSport);
+        const res = await onSearch(query, selectedSport, selectedGender || undefined);
         setResults(res);
       } catch { setResults([]); }
       setLoading(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, selectedSport, visible]);
+  }, [query, selectedSport, selectedGender, visible]);
 
   if (!visible) return null;
 
   return (
     <View style={styles.container}>
-      {/* Sport filter */}
+      {/* Filters */}
       <View style={styles.filterRow}>
-        <FormSelect
-          label=""
-          options={SPORT_OPTIONS}
-          value={selectedSport || ''}
-          onSelect={(o) => setSelectedSport(o.value ? (o.value as SportType) : null)}
-          placeholder="All Sports"
-        />
+        <View style={{ flex: 1 }}>
+          <FormSelect label="" options={SPORT_OPTIONS} value={selectedSport || ''} onSelect={(o) => setSelectedSport(o.value ? (o.value as SportType) : null)} placeholder="All Sports" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <FormSelect label="" options={GENDER_OPTIONS} value={selectedGender} onSelect={(o) => setSelectedGender(String(o.value))} placeholder="All Genders" />
+        </View>
       </View>
 
       {/* Results */}

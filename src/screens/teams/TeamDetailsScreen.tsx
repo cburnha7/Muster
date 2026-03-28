@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Switch,
+  TextInput,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -115,7 +116,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   );
   const currentMember = team?.members?.find((m) => m.userId === currentUser?.id);
   const isCaptain = currentMember?.role === TeamRole.CAPTAIN;
-  const canManageTeam = !readOnly && (isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN);
+  const isManagerRole = isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN;
+  const [editMode, setEditMode] = useState(false);
+  const canManageTeam = !readOnly && isManagerRole && editMode;
   const isPendingInvite = team?.members?.some(
     (m) => m.userId === currentUser?.id && m.status === MemberStatus.PENDING
   );
@@ -263,18 +266,25 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     loggingService.logButton('Update Roster', 'TeamDetailsScreen');
     setIsSaving(true);
     try {
-      const updates = {
-        name: formName.trim(),
-        description: formDescription.trim(),
-        sportType: (formSportTypes.length > 0 ? formSportTypes[0] : formSportType) ?? SportType.BASKETBALL,
-        sportTypes: formSportTypes,
-        skillLevel: formSkillLevel,
-        maxMembers: parseInt(formMaxMembers, 10),
-        isPublic: formIsPublic,
-      };
+      // Only submit fields that are currently visible in the progressive flow
+      const nameOk = formName.trim().length >= 2;
+      const sportOk = nameOk && !!formSportType;
+      const maxOk = sportOk && !!formMaxMembers && parseInt(formMaxMembers) > 0;
+
+      const updates: any = { name: formName.trim() };
+      if (sportOk) {
+        updates.sportType = (formSportTypes.length > 0 ? formSportTypes[0] : formSportType) ?? SportType.BASKETBALL;
+        updates.sportTypes = formSportTypes;
+        updates.isPublic = formIsPublic;
+      }
+      if (maxOk) {
+        updates.maxMembers = parseInt(formMaxMembers, 10);
+        updates.skillLevel = formSkillLevel;
+      }
+
       const updated = await teamService.updateTeam(teamId, updates);
       dispatch(updateTeam(updated));
-      (navigation as any).replace('TeamsList');
+      setEditMode(false);
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update roster.');
     } finally {
@@ -504,7 +514,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   if (error || !team) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="Roster" showBack onBackPress={() => navigation.goBack()} />
+        <ScreenHeader title="" showBack onBackPress={() => navigation.goBack()} />
         <ErrorDisplay message={error || 'Roster not found'} onRetry={loadTeamDetails} />
       </View>
     );
@@ -516,7 +526,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader
-        title={canManageTeam ? 'Edit Roster' : 'Roster Details'}
+        title={team.name}
         showBack
         onBackPress={() => navigation.goBack()}
       />
@@ -545,168 +555,167 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             </View>
           )}
 
-          {/* ── Read-only Roster Header (non-managers and readOnly mode) ── */}
+          {/* ── Read-only Roster Detail (event-detail style) ── */}
           {!canManageTeam && (
-            <View style={styles.readOnlyHeader}>
-              <View style={styles.readOnlyHeaderTop}>
-                <View style={styles.readOnlySportBadge}>
-                  <Ionicons name="shield-outline" size={22} color={colors.pine} />
-                </View>
-                <View style={styles.readOnlyHeaderInfo}>
-                  <Text style={styles.readOnlyName}>{team.name}</Text>
-                  <Text style={styles.readOnlyMeta}>
+            <View style={styles.readOnlySection}>
+              {/* Sport */}
+              <View style={styles.detailRow}>
+                <Ionicons name="fitness-outline" size={20} color="#666" />
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Sport</Text>
+                  <Text style={styles.detailValue}>
                     {(() => {
                       const sports = team.sportTypes && team.sportTypes.length > 0
                         ? team.sportTypes
                         : (team.sportType ? [team.sportType] : []);
-                      const formatted = sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ');
-                      return formatted;
-                    })()} • {team.skillLevel || 'All Levels'}
+                      return sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ');
+                    })()}
                   </Text>
                 </View>
               </View>
-              {team.description ? (
-                <Text style={styles.readOnlyDescription}>{team.description}</Text>
-              ) : null}
-              <View style={styles.readOnlyStats}>
-                <View style={styles.readOnlyStatItem}>
-                  <Text style={styles.readOnlyStatValue}>{activeMembers.length}</Text>
-                  <Text style={styles.readOnlyStatLabel}>Players</Text>
-                </View>
-                <View style={styles.readOnlyStatDivider} />
-                <View style={styles.readOnlyStatItem}>
-                  <Text style={styles.readOnlyStatValue}>{team.maxMembers || '—'}</Text>
-                  <Text style={styles.readOnlyStatLabel}>Max</Text>
-                </View>
-                <View style={styles.readOnlyStatDivider} />
-                <View style={styles.readOnlyStatItem}>
-                  <Text style={styles.readOnlyStatValue}>{formIsPublic ? 'Public' : 'Private'}</Text>
-                  <Text style={styles.readOnlyStatLabel}>Visibility</Text>
-                </View>
-              </View>
-            </View>
-          )}
 
-          {/* ── Editable Roster Information (managers only) ── */}
-          {canManageTeam && (
-            <>
-          <Text style={styles.sectionTitle}>Roster Information</Text>
-
-          <FormInput
-            label="Roster Name *"
-            value={formName}
-            onChangeText={setFormName}
-            placeholder="Enter roster name"
-            error={formErrors.name}
-            maxLength={50}
-            editable={canManageTeam}
-          />
-
-          <FormInput
-            label="Description"
-            value={formDescription}
-            onChangeText={setFormDescription}
-            placeholder="Tell others about your roster"
-            multiline
-            numberOfLines={4}
-            error={formErrors.description}
-            maxLength={500}
-            editable={canManageTeam}
-          />
-
-          <View>
-            <Text style={styles.sportFieldLabel}>Sports *</Text>
-            <View style={styles.sportChipsRow}>
-              {sportTypeOptions.map((opt) => {
-                const selected = formSportTypes.includes(opt.value);
-                return (
-                  <TouchableOpacity
-                    key={opt.value}
-                    style={[styles.sportChip, selected && styles.sportChipSelected]}
-                    onPress={() => {
-                      if (!canManageTeam) return;
-                      const updated = selected
-                        ? formSportTypes.filter(s => s !== opt.value)
-                        : [...formSportTypes, opt.value];
-                      setFormSportTypes(updated);
-                      if (updated.length > 0) setFormSportType(updated[0] ?? SportType.BASKETBALL);
-                    }}
-                    disabled={!canManageTeam}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selected }}
-                    accessibilityLabel={opt.label}
-                  >
-                    <Text style={[styles.sportChipText, selected && styles.sportChipTextSelected]}>
-                      {opt.label}
-                    </Text>
-                    {selected && (
-                      <Ionicons name="close-circle" size={16} color="#FFFFFF" style={{ marginLeft: 4 }} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <FormSelect
-            label="Skill Level *"
-            value={formSkillLevel}
-            onValueChange={(v) => setFormSkillLevel(v as SkillLevel)}
-            options={skillLevelOptions}
-            disabled={!canManageTeam}
-          />
-
-          <FormInput
-            label="Maximum Players *"
-            value={formMaxMembers}
-            onChangeText={(v) => {
-              const num = parseInt(v, 10);
-              if (!isNaN(num) || v === '') setFormMaxMembers(v === '' ? '' : String(num));
-            }}
-            placeholder="Enter maximum number of players"
-            keyboardType="numeric"
-            error={formErrors.maxMembers}
-            editable={canManageTeam}
-          />
-
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleInfo}>
-              <Text style={styles.toggleLabel}>Public Roster</Text>
-              <Text style={styles.toggleDescription}>
-                {formIsPublic ? 'Anyone can find and join' : 'Invite only'}
-              </Text>
-            </View>
-            <Switch
-              value={formIsPublic}
-              onValueChange={(v) => setFormIsPublic(v)}
-              trackColor={{ false: '#D1D5DB', true: colors.pineLight }}
-              thumbColor={formIsPublic ? colors.pine : '#F4F4F5'}
-              disabled={!canManageTeam}
-            />
-          </View>
-            </>
-          )}
-
-          {/* ── Invites Section (managers only) ── */}
-          {canManageTeam && (
-            <View style={styles.addMembersSection}>
-              <View style={styles.addMembersHeader}>
-                <Text style={styles.addMembersTitle}>Invite Players</Text>
-              </View>
-              <Text style={styles.addMembersDescription}>
-                Search for players and invite them to your roster. They must accept before appearing on the confirmed players list.
-              </Text>
-
-              {/* Invited list inside the invite card */}
-              {pendingMembers.length > 0 && (
-                <View style={styles.pendingMembersContainer}>
-                  <Text style={styles.pendingMembersTitle}>
-                    Invited ({pendingMembers.length})
+              {/* Manager */}
+              <View style={styles.detailRow}>
+                <Ionicons name="person-circle-outline" size={20} color="#666" />
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Manager</Text>
+                  <Text style={styles.detailValue}>
+                    {team.captain ? `${team.captain.firstName} ${team.captain.lastName}` : 'Unknown'}
                   </Text>
-                  {pendingMembers.map((m) => renderMember(m, true))}
+                </View>
+              </View>
+
+              {/* Players */}
+              <View style={styles.detailRow}>
+                <Ionicons name="people-outline" size={20} color="#666" />
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Players</Text>
+                  <Text style={styles.detailValue}>
+                    {activeMembers.length} / {team.maxMembers} · {Math.max(0, team.maxMembers - activeMembers.length)} spots available
+                  </Text>
+                </View>
+              </View>
+
+              {/* Price */}
+              {team.joinFee != null && team.joinFee > 0 && (
+                <View style={styles.detailRow}>
+                  <Ionicons name="cash-outline" size={20} color="#666" />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>Join Fee</Text>
+                    <Text style={styles.detailValue}>${team.joinFee}</Text>
+                  </View>
                 </View>
               )}
 
+              {/* Skill Level */}
+              <View style={styles.detailRow}>
+                <Ionicons name="bar-chart-outline" size={20} color="#666" />
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Skill Level</Text>
+                  <Text style={styles.detailValue}>
+                    {(team.skillLevel || 'all_levels').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Gender */}
+              {(team as any).genderRestriction && (
+                <View style={styles.detailRow}>
+                  <Ionicons name="male-female-outline" size={20} color="#666" />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>Gender</Text>
+                    <Text style={styles.detailValue}>
+                      {(team as any).genderRestriction === 'male' ? 'Male Only' : (team as any).genderRestriction === 'female' ? 'Female Only' : 'Open to All'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Members List */}
+              <Text style={styles.membersTitle}>Players ({activeMembers.length})</Text>
+              {activeMembers.map((member) => (
+                <View key={member.userId} style={styles.memberRow}>
+                  {member.user?.profileImage ? (
+                    <Image source={{ uri: member.user.profileImage }} style={styles.memberAvatar} />
+                  ) : (
+                    <View style={styles.memberAvatarFallback}>
+                      <Text style={styles.memberAvatarInitial}>
+                        {member.user?.firstName?.[0] || '?'}
+                      </Text>
+                    </View>
+                  )}
+                  <Text style={styles.memberName}>
+                    {member.user ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown'}
+                  </Text>
+                  {member.role === TeamRole.CAPTAIN && (
+                    <View style={styles.captainBadge}>
+                      <Text style={styles.captainBadgeText}>Manager</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* ── Editable Roster (progressive disclosure like create) ── */}
+          {canManageTeam && (() => {
+            // Progressive visibility: downstream hides when upstream changes
+            const nameOk = formName.trim().length >= 2;
+            const sportOk = nameOk && !!formSportType;
+            const visOk = sportOk; // visibility is always shown once sport is set (both buttons visible)
+            const visSelected = formIsPublic !== undefined; // always true in edit since it has a value
+            const maxOk = visOk && visSelected && !!formMaxMembers && parseInt(formMaxMembers) > 0;
+            const skillOk = maxOk;
+
+            return (
+              <View style={styles.editSection}>
+                <Text style={styles.editStepLabel}>Roster Name</Text>
+                <TextInput style={styles.editInput} value={formName} onChangeText={setFormName} placeholder="Roster name" placeholderTextColor={colors.inkFaint} />
+
+                {nameOk && (
+                  <>
+                    <Text style={styles.editStepLabel}>Sport</Text>
+                    <FormSelect label="" options={sportTypeOptions} value={formSportType} onSelect={(o) => { setFormSportType(o.value as SportType); setFormSportTypes([o.value as SportType]); }} placeholder="Select a sport..." />
+                  </>
+                )}
+
+                {sportOk && (
+                  <>
+                    <Text style={styles.editStepLabel}>Visibility</Text>
+                    <View style={styles.editRow}>
+                      <TouchableOpacity style={[styles.editToggle, !formIsPublic && styles.editToggleActive]} onPress={() => setFormIsPublic(false)}>
+                        <Ionicons name="lock-closed-outline" size={16} color={!formIsPublic ? '#FFF' : colors.ink} />
+                        <Text style={[styles.editToggleText, !formIsPublic && styles.editToggleTextActive]}>Private</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.editToggle, formIsPublic && styles.editToggleActive]} onPress={() => setFormIsPublic(true)}>
+                        <Ionicons name="globe-outline" size={16} color={formIsPublic ? '#FFF' : colors.ink} />
+                        <Text style={[styles.editToggleText, formIsPublic && styles.editToggleTextActive]}>Public</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+
+                {visOk && (
+                  <>
+                    <Text style={styles.editStepLabel}>Max Players</Text>
+                    <TextInput style={styles.editInput} value={formMaxMembers} onChangeText={(v) => { const n = parseInt(v, 10); if (!isNaN(n) || v === '') setFormMaxMembers(v === '' ? '' : String(n)); }} placeholder="e.g. 15" placeholderTextColor={colors.inkFaint} keyboardType="number-pad" />
+                  </>
+                )}
+
+                {maxOk && (
+                  <>
+                    <Text style={styles.editStepLabel}>Skill Level</Text>
+                    <FormSelect label="" options={skillLevelOptions} value={formSkillLevel} onSelect={(o) => setFormSkillLevel(o.value as SkillLevel)} placeholder="All Levels" />
+                  </>
+                )}
+              </View>
+            );
+          })()}
+
+          {/* ── Invites Section (managers only, visible when all fields filled) ── */}
+          {canManageTeam && formName.trim().length >= 2 && !!formSportType && !!formMaxMembers && parseInt(formMaxMembers) > 0 && (
+            <View style={styles.addMembersSection}>
+              <Text style={styles.editStepLabel}>Invite Players</Text>
               <AddMemberSearch
                 onAddMember={handleAddMemberDirectly}
                 existingMemberIds={allMemberIds}
@@ -811,6 +820,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
           {/* ── Action Buttons ── */}
           <View style={styles.actionsSection}>
+            {/* Edit button — shown to managers when in read-only view */}
+            {!readOnly && isManagerRole && !editMode && (
+              <FormButton
+                title="Edit"
+                onPress={() => setEditMode(true)}
+                variant="outline"
+                leftIcon="create-outline"
+              />
+            )}
+
             {readOnly && isPendingInvite && (
               <>
                 <FormButton
@@ -1287,6 +1306,130 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   sportChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  // ── Read-only detail styles (event-detail style) ──
+  readOnlySection: {
+    gap: 4,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    gap: 12,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+  },
+  detailValue: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.ink,
+    marginTop: 1,
+  },
+  membersTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.ink,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+  },
+  memberAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  memberAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.pine + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  memberAvatarInitial: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.pine,
+  },
+  memberName: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  captainBadge: {
+    backgroundColor: '#E8A030',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  captainBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontFamily: fonts.label,
+  },
+  // ── Edit mode styles (matches create roster) ──
+  editSection: {
+    gap: 0,
+  },
+  editStepLabel: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  editInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.cream,
+  },
+  editRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  editToggle: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.cream,
+    gap: 6,
+  },
+  editToggleActive: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
+  },
+  editToggleText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.ink,
+  },
+  editToggleTextActive: {
     color: '#FFFFFF',
   },
 });

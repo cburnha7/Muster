@@ -816,8 +816,8 @@ export function EventDetailsScreen(): JSX.Element {
           </View>
         </View>
 
-        {/* Participants Section - Show at top for past events */}
-        {isPastEvent && participants.length > 0 && (
+        {/* Participants Section - Show salute grid at top for past GAME events only */}
+        {isPastEvent && participants.length > 0 && event.eventType === EventType.GAME && (
           <View style={styles.section}>
             <View style={styles.participantsHeader}>
               <Text style={styles.sectionTitle}>
@@ -1104,6 +1104,27 @@ export function EventDetailsScreen(): JSX.Element {
                 </Text>
               </View>
             </View>
+          </View>
+        )}
+
+        {/* Compact member list for past non-game events */}
+        {isPastEvent && event.eventType !== EventType.GAME && participants.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Players ({participants.length})</Text>
+            {participants.map((p) => (
+              <View key={p.userId} style={styles.compactMemberRow}>
+                {p.user?.profileImage ? (
+                  <Image source={{ uri: p.user.profileImage }} style={styles.compactMemberAvatar} />
+                ) : (
+                  <View style={styles.compactMemberAvatarFallback}>
+                    <Text style={styles.compactMemberInitial}>{p.user?.firstName?.[0] || '?'}</Text>
+                  </View>
+                )}
+                <Text style={styles.compactMemberName}>
+                  {p.user ? `${p.user.firstName} ${p.user.lastName}` : 'Unknown'}
+                </Text>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
@@ -1793,5 +1814,34 @@ const styles = StyleSheet.create({
   modalButtonCloseText: {
     fontSize: 16,
     color: '#666',
+  },
+  compactMemberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+  },
+  compactMemberAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  compactMemberAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.pine + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactMemberInitial: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.pine,
+  },
+  compactMemberName: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
   },
 });
