@@ -74,9 +74,9 @@ const styles = StyleSheet.create({
     gap: 10,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   body: {
     flex: 1,

@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: '#F8F8F8',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
@@ -281,7 +281,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#E8E8E8',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   locationRow: {
     flexDirection: 'row',
