@@ -93,6 +93,7 @@ export function TabNavigator(): JSX.Element {
           shadowColor: 'transparent',
           elevation: 0,
           borderBottomWidth: 0,
+          height: 110,
         },
         headerTitleAlign: 'center',
         headerTitleContainerStyle: {
@@ -135,7 +136,7 @@ export function TabNavigator(): JSX.Element {
         options={{
           tabBarLabel: 'Home',
           headerRight: () => <HeaderUserSelector />,
-          headerRightContainerStyle: { paddingRight: 12 },
+          headerRightContainerStyle: { paddingRight: 16 },
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {

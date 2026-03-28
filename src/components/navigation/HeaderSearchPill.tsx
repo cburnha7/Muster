@@ -6,11 +6,11 @@ import { colors, fonts } from '../../theme';
 import { searchEventBus } from '../../utils';
 
 const PLACEHOLDERS: Record<string, string> = {
-  Home: 'Find a game...',
+  Home: "Who's in?",
   Teams: 'Search rosters...',
   Leagues: 'Search leagues...',
   Facilities: 'Search grounds...',
-  Profile: 'Find a game...',
+  Profile: "Who's in?",
 };
 
 interface HeaderSearchPillProps {
@@ -44,7 +44,7 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
       accessibilityRole="button"
       accessibilityLabel={placeholder}
     >
-      <Ionicons name="search" size={16} color={colors.inkFaint} />
+      <Ionicons name="search" size={18} color={colors.inkFaint} />
       <Text style={styles.text}>{placeholder}</Text>
     </TouchableOpacity>
   );
@@ -59,10 +59,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
     width: SCREEN_WIDTH * 0.7,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 24,
+    gap: 8,
     alignSelf: 'center',
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 16,
     color: colors.inkFaint,
   },
 });
