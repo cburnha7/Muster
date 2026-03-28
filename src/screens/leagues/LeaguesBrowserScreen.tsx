@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,14 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
-import { SearchBar, SearchBarHandle } from '../../components/ui/SearchBar';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { colors, fonts, Spacing } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
+import { SportType } from '../../types';
+import { searchEventBus } from '../../utils/searchEventBus';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
 import { selectActiveUserId } from '../../store/slices/contextSlice';
@@ -45,14 +47,31 @@ export const LeaguesBrowserScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const searchBarRef = useRef<SearchBarHandle>(null);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   useEffect(() => {
-    const unsub = require('../../utils/searchEventBus').searchEventBus.subscribeTab('Leagues', () => {
-      searchBarRef.current?.focus();
+    const unsub = searchEventBus.subscribeTab('Leagues', () => {
+      setSearchModalVisible(true);
     });
     return unsub;
   }, []);
+
+  const handleSearchLeagues = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {
+    try {
+      const res = await leagueService.getLeagues({ page: 1, limit: 30 });
+      return (res.data || [])
+        .filter((l: any) => {
+          const nameMatch = !query.trim() || l.name.toLowerCase().includes(query.toLowerCase());
+          const sportMatch = !sport || l.sportType === sport;
+          return nameMatch && sportMatch;
+        })
+        .map((l: any) => ({ id: l.id, name: l.name, subtitle: l.sportType }));
+    } catch { return []; }
+  }, []);
+
+  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
+    (navigation as any).navigate('LeagueDetails', { leagueId: result.id });
+  }, [navigation]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [sportFilter, setSportFilter] = useState<string | undefined>();
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>();
@@ -262,6 +281,15 @@ export const LeaguesBrowserScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      <TabSearchModal
+        visible={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        title="Search Leagues"
+        placeholder="Search by league name..."
+        onSearch={handleSearchLeagues}
+        onResultPress={handleSearchResultPress}
+      />
     </View>
   );
 };

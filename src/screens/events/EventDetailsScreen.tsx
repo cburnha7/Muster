@@ -710,7 +710,7 @@ export function EventDetailsScreen(): JSX.Element {
     return (
       <View style={styles.container}>
         <ScreenHeader
-          title="Event Details"
+          title=""
           showBack={true}
           onBackPress={() => navigation.goBack()}
         />
@@ -723,7 +723,7 @@ export function EventDetailsScreen(): JSX.Element {
     return (
       <View style={styles.container}>
         <ScreenHeader
-          title="Event Details"
+          title=""
           showBack={true}
           onBackPress={() => navigation.goBack()}
         />
@@ -739,7 +739,7 @@ export function EventDetailsScreen(): JSX.Element {
     return (
       <View style={styles.container}>
         <ScreenHeader
-          title="Event Details"
+          title=""
           showBack={true}
           onBackPress={() => navigation.goBack()}
         />
@@ -758,7 +758,7 @@ export function EventDetailsScreen(): JSX.Element {
   return (
     <View style={styles.container}>
       <ScreenHeader
-        title="Event Details"
+        title=""
         showBack={true}
         onBackPress={() => (navigation as any).navigate('Home', { screen: 'HomeScreen' })}
         rightComponent={undefined}
@@ -1049,7 +1049,7 @@ export function EventDetailsScreen(): JSX.Element {
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Event Type</Text>
               <Text style={styles.detailValue}>
-                {event.eventType.replace('_', ' ').toUpperCase()}
+                {event.eventType.split('_').map((w, i) => i === 0 ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
               </Text>
             </View>
           </View>
@@ -1092,40 +1092,18 @@ export function EventDetailsScreen(): JSX.Element {
           </View>
         </View>
 
-        {/* Participants */}
-        {/* Participants — roster-grouped for game events, flat list otherwise */}
+        {/* Condensed participant count (non-debrief view) */}
         {!isPastEvent && participants.length > 0 && (
           <View style={styles.section}>
-            {event.eventType === EventType.GAME && rosters.length > 0 ? (
-              <RosterParticipantList
-                participants={participants}
-                rosters={rosters}
-              />
-            ) : (
-              <>
-                <Text style={styles.sectionTitle}>
-                  Players ({participants.length})
+            <View style={styles.detailRow}>
+              <Ionicons name="people-outline" size={20} color="#666" />
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Players</Text>
+                <Text style={styles.detailValue}>
+                  {participants.length} / {event.maxParticipants} joined
                 </Text>
-                <View style={styles.participantsList}>
-                  {participants.slice(0, 10).map((participant, index) => (
-                    <View key={participant.userId} style={styles.participantItem}>
-                      <Ionicons name="person-outline" size={16} color="#666" />
-                      <Text style={styles.participantName}>
-                        {participant.user ? 
-                          `${participant.user.firstName} ${participant.user.lastName}` : 
-                          'Unknown User'
-                        }
-                      </Text>
-                    </View>
-                  ))}
-                  {participants.length > 10 && (
-                    <Text style={styles.moreParticipants}>
-                      +{participants.length - 10} more players
-                    </Text>
-                  )}
-                </View>
-              </>
-            )}
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>

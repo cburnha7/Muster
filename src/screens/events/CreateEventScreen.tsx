@@ -1,1888 +1,646 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Alert,
+  TouchableOpacity,
+  TextInput,
+  Modal,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
+  Image,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
-import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
-import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
-import { TimePickerInput } from '../../components/forms/TimePickerInput';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
-import { CourtSelector } from '../../components/events/CourtSelector';
-import { TimeSlotPicker } from '../../components/events/TimeSlotPicker';
-import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
-import { RosterSearchSection, RosterSearchResult } from '../../components/events/RosterSearchSection';
 
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
+import { teamService } from '../../services/api/TeamService';
 import { addEvent } from '../../store/slices/eventsSlice';
 import { useAuth } from '../../context/AuthContext';
-import { colors, Spacing, TextStyles } from '../../theme';
-import { loggingService } from '../../services/LoggingService';
+import { colors, fonts } from '../../theme';
 import {
-  calendarTheme,
-  formatDateForCalendar,
-} from '../../utils/calendarUtils';
-import {
-  CreateEventData,
   SportType,
   SkillLevel,
   EventType,
   Facility,
-  User,
 } from '../../types';
 
-interface FormData {
-  title: string;
-  description: string;
-  sportType: SportType | '';
-  eventType: EventType | '';
-  facilityId: string;
-  courtId: string; // Added for rental-based events
-  startDate: Date | null;
-  startTime: string;
-  duration: string; // in minutes
-  maxParticipants: string;
-  price: string;
-  skillLevel: SkillLevel | '';
-  minPlayerRating: string; // 0-100 percentile
-  equipment: string;
-  rules: string;
-  // Privacy & restrictions
-  isPrivate: boolean;
-  genderRestriction: string;
-  restrictedToTeams: string[];
-  minimumPlayerCount: string;
-}
+// ── Options ──────────────────────────────────────────────
+const SPORT_OPTIONS: SelectOption[] = [
+  { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Other', value: SportType.OTHER },
+];
 
-interface FormErrors {
-  [key: string]: string;
-}
+const EVENT_TYPE_OPTIONS: SelectOption[] = [
+  { label: 'Game', value: EventType.GAME },
+  { label: 'Practice', value: EventType.PRACTICE },
+  { label: 'Pickup', value: EventType.PICKUP },
+];
 
-interface RentalDetails {
+const GENDER_OPTIONS: SelectOption[] = [
+  { label: 'Open to All', value: '' },
+  { label: 'Male Only', value: 'male' },
+  { label: 'Female Only', value: 'female' },
+];
+
+interface RosterResult {
   id: string;
-  timeSlot: {
-    id: string;
-    date: Date;
-    startTime: string;
-    endTime: string;
-    court: {
-      id: string;
-      name: string;
-      sportType: string;
-      facility: {
-        id: string;
-        name: string;
-      };
-    };
-  };
+  name: string;
+  memberCount?: number;
 }
 
-export function CreateEventScreen(): JSX.Element {
+// ── Component ────────────────────────────────────────────
+export function CreateEventScreen() {
   const navigation = useNavigation();
-  const route = useRoute();
   const dispatch = useDispatch();
   const { user } = useAuth();
 
-  // Get params from route - either rentalId (old way) or fromReservation (new way)
-  const params = (route.params as any) || {};
-  const { 
-    rentalId,
-    fromReservation,
-    facilityId: prefilledFacilityId,
-    facilityName: prefilledFacilityName,
-    courtId: prefilledCourtId,
-    courtName: prefilledCourtName,
-    courtSportType: prefilledCourtSportType,
-    timeSlotId: prefilledTimeSlotId,
-    reservedDate,
-    reservedStartTime,
-    reservedEndTime,
-  } = params;
+  // ── Progressive step tracking ──
+  const [sport, setSport] = useState<SportType | ''>('');
+  const [eventType, setEventType] = useState<EventType | ''>('');
+  const [facilityId, setFacilityId] = useState('');
+  const [courtId] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState('');
+  const [duration, setDuration] = useState('60');
+  const [maxParticipants, setMaxParticipants] = useState('');
+  const [visibility, setVisibility] = useState<'private' | 'public' | ''>('');
+  const [price, setPrice] = useState('0');
+  const [minPlayerRating, setMinPlayerRating] = useState('');
+  const [genderRestriction, setGenderRestriction] = useState('');
+  const [title] = useState('');
+  const [description] = useState('');
 
-  const isFromReservation = fromReservation || !!rentalId;
+  // Game roster selection
+  const [gameRosterModalVisible, setGameRosterModalVisible] = useState(false);
+  const [teamA, setTeamA] = useState<RosterResult | null>(null);
+  const [teamB, setTeamB] = useState<RosterResult | null>(null);
+  const [rosterSearchQuery, setRosterSearchQuery] = useState('');
+  const [rosterSearchResults, setRosterSearchResults] = useState<RosterResult[]>([]);
+  const [selectingSlot, setSelectingSlot] = useState<'A' | 'B'>('A');
 
-  // Form state
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    description: '',
-    sportType: '',
-    eventType: '',
-    facilityId: '',
-    courtId: '',
-    startDate: null,
-    startTime: '',
-    duration: '60', // default 60 minutes
-    maxParticipants: '',
-    price: '0',
-    skillLevel: '',
-    minPlayerRating: '',
-    equipment: '',
-    rules: '',
-    // Privacy & restrictions
-    isPrivate: false,
-    genderRestriction: '',
-    restrictedToTeams: [],
-    minimumPlayerCount: '',
-  });
+  // Private invite list
+  const [inviteSearchQuery, setInviteSearchQuery] = useState('');
+  const [inviteSearchResults, setInviteSearchResults] = useState<Array<{ id: string; name: string; type: 'roster' | 'player'; image?: string }>>([]);
+  const [invitedItems, setInvitedItems] = useState<Array<{ id: string; name: string; type: 'roster' | 'player'; image?: string }>>([]);
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
+  // Facilities
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const [rentalDetails, setRentalDetails] = useState<RentalDetails | null>(null);
-  const [loadingRental, setLoadingRental] = useState(!!rentalId);
-  
-  // Calendar state for date selection
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
-  const [markedDates, setMarkedDates] = useState<any>({});
-  const [rentalDates, setRentalDates] = useState<string[]>([]); // Dates with user rentals
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Court and time slot selection state
-  const [selectedCourt, setSelectedCourt] = useState<{ id: string; name: string; sportType: string } | null>(null);
-  const [selectedSlots, setSelectedSlots] = useState<Array<{
-    id: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    price: number;
-    rentalId: string | null;
-  }>>([]);
-
-
-  const isFromRental = !!rentalId && !!rentalDetails;
-  const isGameEvent = formData.eventType === EventType.GAME;
-
-  // Invited users state
-  const [invitedUsers, setInvitedUsers] = useState<User[]>([]);
-
-  // Roster search state
-  const [selectedRosters, setSelectedRosters] = useState<RosterSearchResult[]>([]);
-  const [homeRosterId, setHomeRosterId] = useState<string | null>(null);
-
-  // Form options
-  const sportTypeOptions: SelectOption[] = [
-    { label: 'Basketball', value: SportType.BASKETBALL },
-    { label: 'Pickleball', value: SportType.PICKLEBALL },
-    { label: 'Tennis', value: SportType.TENNIS },
-    { label: 'Soccer', value: SportType.SOCCER },
-    { label: 'Softball', value: SportType.SOFTBALL },
-    { label: 'Baseball', value: SportType.BASEBALL },
-    { label: 'Volleyball', value: SportType.VOLLEYBALL },
-    { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
-    { label: 'Kickball', value: SportType.KICKBALL },
-    { label: 'Other', value: SportType.OTHER },
-  ];
-
-  const eventTypeOptions: SelectOption[] = [
-    { label: 'Game', value: EventType.GAME },
-    { label: 'Practice', value: EventType.PRACTICE },
-    { label: 'Pickup', value: EventType.PICKUP },
-  ];
-
-  const durationOptions: SelectOption[] = [
-    { label: '30 minutes', value: '30' },
-    { label: '45 minutes', value: '45' },
-    { label: '1 hour', value: '60' },
-    { label: '1.5 hours', value: '90' },
-    { label: '2 hours', value: '120' },
-    { label: '2.5 hours', value: '150' },
-    { label: '3 hours', value: '180' },
-  ];
+  // ── Derived step visibility ──
+  const showEventType = !!sport;
+  const showGrounds = !!eventType && (eventType !== EventType.GAME || (!!teamA && !!teamB));
+  const groundConfirmed = !!facilityId && !!startDate && !!startTime;
+  const showMaxParticipants = groundConfirmed;
+  const showVisibility = !!maxParticipants && parseInt(maxParticipants) > 0;
+  const showPrice = visibility !== '';
+  const showSubmit = showPrice;
 
   // Load facilities
   useEffect(() => {
-    loadFacilities();
+    if (!user) return;
+    facilityService.getAuthorizedFacilities(user.id)
+      .then((res) => setFacilities(res.data))
+      .catch(() => {});
+  }, [user]);
+
+  // When Game is selected, open roster modal
+  useEffect(() => {
+    if (eventType === EventType.GAME && !teamA && !teamB) {
+      setGameRosterModalVisible(true);
+    }
+  }, [eventType]);
+
+  // ── Roster search ──
+  const searchRosters = useCallback(async (query: string) => {
+    if (!query.trim()) { setRosterSearchResults([]); return; }
+    try {
+      const res = await teamService.getTeams(undefined, { page: 1, limit: 20 });
+      const filtered = (res.data || []).filter((t: any) => t.name.toLowerCase().includes(query.toLowerCase()));
+      setRosterSearchResults(filtered.map((t: any) => ({ id: t.id, name: t.name, memberCount: t.members?.length })));
+    } catch { setRosterSearchResults([]); }
   }, []);
 
-  // Load rental details if rentalId is provided
   useEffect(() => {
-    if (rentalId) {
-      loadRentalDetails();
-    }
-  }, [rentalId]);
+    const timer = setTimeout(() => searchRosters(rosterSearchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [rosterSearchQuery]);
 
-  // Handle pre-populated data from reservation
+  // ── Invite search (rosters + players) ──
+  const searchInvites = useCallback(async (query: string) => {
+    if (!query.trim()) { setInviteSearchResults([]); return; }
+    try {
+      const rostersRes = await teamService.getTeams(undefined, { page: 1, limit: 10 });
+      let playersRes: any[] = [];
+      try {
+        const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?q=${encodeURIComponent(query)}&limit=10`);
+        const json = await resp.json();
+        playersRes = Array.isArray(json) ? json : json.data || [];
+      } catch {}
+      const rosterItems = (rostersRes.data || [])
+        .filter((t: any) => t.name.toLowerCase().includes(query.toLowerCase()))
+        .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }));
+      const playerItems = playersRes
+        .map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }));
+      setInviteSearchResults([...rosterItems, ...playerItems]);
+    } catch { setInviteSearchResults([]); }
+  }, []);
+
   useEffect(() => {
-    if (fromReservation && prefilledFacilityId && prefilledCourtId && reservedDate) {
-      // Parse the reserved date
-      const dateObj = new Date(reservedDate);
-      const formattedDate = formatDateForCalendar(dateObj);
+    const timer = setTimeout(() => searchInvites(inviteSearchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [inviteSearchQuery]);
 
-      // Calculate duration
-      const [startHours, startMinutes] = reservedStartTime.split(':').map(Number);
-      const [endHours, endMinutes] = reservedEndTime.split(':').map(Number);
-      const startTimeMinutes = startHours * 60 + startMinutes;
-      const endTimeMinutes = endHours * 60 + endMinutes;
-      const durationMinutes = endTimeMinutes - startTimeMinutes;
-
-      // Map court sport type to SportType enum
-      const courtSportType = prefilledCourtSportType.toLowerCase();
-      let mappedSportType: SportType | '' = '';
-      if (Object.values(SportType).includes(courtSportType as SportType)) {
-        mappedSportType = courtSportType as SportType;
-      }
-
-      // Set form data
-      setFormData(prev => ({
-        ...prev,
-        facilityId: prefilledFacilityId,
-        courtId: prefilledCourtId,
-        startDate: dateObj,
-        startTime: reservedStartTime,
-        duration: durationMinutes.toString(),
-        sportType: mappedSportType,
-      }));
-
-      // Set selected court
-      setSelectedCourt({
-        id: prefilledCourtId,
-        name: prefilledCourtName,
-        sportType: prefilledCourtSportType,
-      });
-
-      // Set selected date
-      setSelectedDate(formattedDate);
-
-      // Mark the date
-      setMarkedDates({
-        [formattedDate]: {
-          selected: true,
-          selectedColor: colors.pine,
-        },
-      });
-
-      // Pre-select the time slot
-      setSelectedSlots([{
-        id: prefilledTimeSlotId,
-        date: reservedDate,
-        startTime: reservedStartTime,
-        endTime: reservedEndTime,
-        price: 0,
-        rentalId: rentalId || null,
-      }]);
+  const addInviteItem = (item: typeof invitedItems[0]) => {
+    if (!invitedItems.some(i => i.id === item.id)) {
+      setInvitedItems(prev => [...prev, item]);
     }
-  }, [fromReservation, prefilledFacilityId, prefilledCourtId, reservedDate]);
-
-  const loadFacilities = async () => {
-    if (!user) {
-      Alert.alert('Error', 'User not found. Please log in.');
-      return;
-    }
-
-    try {
-      setLoadingFacilities(true);
-      const response = await facilityService.getAuthorizedFacilities(user.id);
-      setFacilities(response.data);
-      
-      if (response.data.length === 0) {
-        Alert.alert(
-          'No Grounds Available',
-          'You need to either own a ground or have a confirmed reservation to create events. Book a time slot at a ground first.',
-          [{ text: 'OK' }]
-        );
-      }
-    } catch (error) {
-      console.error('Load authorized facilities error:', error);
-      Alert.alert('Error', 'Failed to load grounds');
-    } finally {
-      setLoadingFacilities(false);
-    }
+    setInviteSearchQuery('');
+    setInviteSearchResults([]);
   };
 
-  const loadRentalDetails = async () => {
-    if (!rentalId) return;
-
-    try {
-      setLoadingRental(true);
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/rentals/${rentalId}`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to load rental details');
-      }
-
-      const rental: RentalDetails = await response.json();
-      setRentalDetails(rental);
-
-      // Pre-fill form with rental details
-      const slotDate = new Date(rental.timeSlot.date);
-      const [startHours, startMinutes] = rental.timeSlot.startTime.split(':').map(Number);
-      const [endHours, endMinutes] = rental.timeSlot.endTime.split(':').map(Number);
-
-      // Calculate duration in minutes
-      const startTimeMinutes = startHours * 60 + startMinutes;
-      const endTimeMinutes = endHours * 60 + endMinutes;
-      const durationMinutes = endTimeMinutes - startTimeMinutes;
-
-      // Map court sport type to SportType enum
-      const courtSportType = rental.timeSlot.court.sportType.toLowerCase();
-      let mappedSportType: SportType | '' = '';
-      if (Object.values(SportType).includes(courtSportType as SportType)) {
-        mappedSportType = courtSportType as SportType;
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        facilityId: rental.timeSlot.court.facility.id,
-        courtId: rental.timeSlot.court.id,
-        startDate: slotDate,
-        startTime: rental.timeSlot.startTime,
-        duration: durationMinutes.toString(),
-        sportType: mappedSportType,
-      }));
-    } catch (error) {
-      console.error('Load rental error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to load rental details. Please try again.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
-    } finally {
-      setLoadingRental(false);
-    }
+  const removeInviteItem = (id: string) => {
+    setInvitedItems(prev => prev.filter(i => i.id !== id));
   };
 
-  // Get facility options
-  const facilityOptions: SelectOption[] = (facilities || []).map(facility => ({
-    label: facility?.name || 'Unknown',
-    value: facility?.id || '',
-  }));
-
-  // Handle input change
-  const handleInputChange = (field: keyof FormData, value: string | string[] | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  // Handle select change
-  const handleSelectChange = (field: keyof FormData, option: SelectOption) => {
-    handleInputChange(field, option.value.toString());
-  };
-
-  // Handle adding an individual person to the invited list
-  const handleAddInvitedUser = async (addedUser: User) => {
-    setInvitedUsers(prev => {
-      if (prev.some(u => u.id === addedUser.id)) return prev;
-      return [...prev, addedUser];
-    });
-  };
-
-  // Handle removing a person from the invited list
-  const handleRemoveInvitedUser = (userId: string) => {
-    setInvitedUsers(prev => prev.filter(u => u.id !== userId));
-  };
-
-  // Handle court selection
-  const handleCourtSelect = (courtId: string, court: { id: string; name: string; sportType: string }) => {
-    setSelectedCourt(court);
-    setSelectedSlots([]); // Reset slots when court changes
-    
-    // Load rental dates for this court
-    if (formData.facilityId && user) {
-      loadRentalDates(formData.facilityId, courtId);
-    }
-    
-    // Update sport type if not already set
-    if (!formData.sportType && court.sportType) {
-      const sportTypeValue = court.sportType.toLowerCase();
-      if (Object.values(SportType).includes(sportTypeValue as SportType)) {
-        setFormData(prev => ({ ...prev, sportType: sportTypeValue as SportType }));
-      }
-    }
-  };
-
-  // Load rental dates for calendar marking
-  const loadRentalDates = async (facilityId: string, courtId: string) => {
-    if (!user) return;
-
-    try {
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/slots-for-event?userId=${user.id}&tzOffset=${new Date().getTimezoneOffset()}`
-      );
-
-      if (!response.ok) {
-        console.error('Failed to load rental dates');
-        return;
-      }
-
-      const data = await response.json();
-      
-      // Extract unique dates where user has rentals
-      const dates = data.slots
-        .filter((slot: any) => slot.isUserRental)
-        .map((slot: any) => {
-          const date = new Date(slot.date);
-          return formatDateForCalendar(date);
-        }) as string[];
-      
-      // Remove duplicates
-      const uniqueDates = Array.from(new Set(dates)) as string[];
-      setRentalDates(uniqueDates);
-      
-      // Update marked dates to include rental dates
-      updateMarkedDates(selectedDate, uniqueDates);
-    } catch (error) {
-      console.error('Load rental dates error:', error);
-    }
-  };
-
-  // Update marked dates with rental indicators
-  const updateMarkedDates = (selected: string, rentals: string[]) => {
-    const marked: any = {};
-    
-    // Mark rental dates with dots
-    rentals.forEach(date => {
-      marked[date] = {
-        marked: true,
-        dotColor: colors.court, // Use court orange for rental indicator
-      };
-    });
-    
-    // Mark selected date
-    if (selected) {
-      marked[selected] = {
-        ...marked[selected],
-        selected: true,
-        selectedColor: colors.pine,
-      };
-    }
-    
-    setMarkedDates(marked);
-  };
-
-  // Handle time slot selection
-  const handleSlotsSelect = (slots: Array<{
-    id: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    price: number;
-    rentalId: string | null;
-  }>) => {
-    setSelectedSlots(slots);
-    
-    if (slots.length === 0) return;
-    
-    // Pre-fill form data from first and last slot
-    const firstSlot = slots[0];
-    const lastSlot = slots[slots.length - 1];
-    
-    if (!firstSlot || !lastSlot) return;
-    
-    // Use UTC date components to avoid timezone shift
-    const slotDateUTC = new Date(firstSlot.date);
-    const slotDate = new Date(
-      slotDateUTC.getUTCFullYear(),
-      slotDateUTC.getUTCMonth(),
-      slotDateUTC.getUTCDate()
-    );
-    
-    const startTimeParts = firstSlot.startTime.split(':');
-    const endTimeParts = lastSlot.endTime.split(':');
-    
-    if (startTimeParts.length < 2 || endTimeParts.length < 2) return;
-    
-    const startHours = parseInt(startTimeParts[0], 10);
-    const startMinutes = parseInt(startTimeParts[1], 10);
-    const endHours = parseInt(endTimeParts[0], 10);
-    const endMinutes = parseInt(endTimeParts[1], 10);
-    
-    if (isNaN(startHours) || isNaN(startMinutes) || isNaN(endHours) || isNaN(endMinutes)) return;
-    
-    // Calculate total duration in minutes
-    const durationMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
-    
-    setFormData(prev => ({
-      ...prev,
-      startDate: slotDate,
-      startTime: firstSlot.startTime,
-      duration: durationMinutes.toString(),
-      courtId: selectedCourt?.id || '',
-    }));
-  };
-
-  // Handle calendar date selection
-  const handleDateSelect = (day: DateData) => {
-    setSelectedDate(day.dateString);
-    const selectedDateObj = new Date(day.dateString);
-    setFormData(prev => ({
-      ...prev,
-      startDate: selectedDateObj,
-    }));
-    // Update marked dates with rental indicators
-    updateMarkedDates(day.dateString, rentalDates);
-  };
-
-  // Initialize marked dates
-  useEffect(() => {
-    updateMarkedDates(selectedDate, rentalDates);
-  }, [rentalDates]);
-
-  // Validate form
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    // Required fields
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-
-    if (!formData.sportType) {
-      newErrors.sportType = 'Sport type is required';
-    }
-
-    if (!formData.facilityId) {
-      newErrors.facilityId = 'Grounds is required';
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = 'Start date is required';
-    }
-
-    if (!formData.startDate) {
-      newErrors.startDate = 'Start date is required';
-    }
-
-    if (!formData.startTime) {
-      newErrors.startTime = 'Start time is required';
-    }
-
-    if (!formData.duration) {
-      newErrors.duration = 'Duration is required';
-    }
-
-    if (!isGameEvent) {
-      if (!formData.maxParticipants) {
-        newErrors.maxParticipants = 'Max participants is required';
-      } else {
-        const maxParticipants = parseInt(formData.maxParticipants);
-        if (isNaN(maxParticipants) || maxParticipants < 1) {
-          newErrors.maxParticipants = 'Must be a valid number greater than 0';
-        }
-      }
-    }
-
-    if (!formData.skillLevel) {
-      // Skill level validation disabled — replaced by minPlayerRating
-    }
-
-    // Validate minPlayerRating if provided
-    if (formData.minPlayerRating) {
-      const rating = parseInt(formData.minPlayerRating);
-      if (isNaN(rating) || rating < 0 || rating > 100) {
-        newErrors.minPlayerRating = 'Rating must be between 0 and 100';
-      }
-    }
-
-    if (!formData.eventType) {
-      newErrors.eventType = 'Event type is required';
-    }
-
-    // Team validation for team-based events - optional
-    // Teams can be added but are not required
-
-    // Price validation
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
-      newErrors.price = 'Price must be a valid number (0 or greater)';
-    }
-
-    // Minimum player count validation
-    if (formData.minimumPlayerCount) {
-      const minPlayers = parseInt(formData.minimumPlayerCount);
-      const maxParticipants = parseInt(formData.maxParticipants);
-      
-      if (isNaN(minPlayers) || minPlayers < 1) {
-        newErrors.minimumPlayerCount = 'Must be a valid number greater than 0';
-      } else if (!isNaN(maxParticipants) && minPlayers > maxParticipants) {
-        newErrors.minimumPlayerCount = 'Cannot exceed maximum participants';
-      }
-    }
-
-    // Date/time validation - skip if slots are selected (slot times are already validated)
-    if (selectedSlots.length === 0 && formData.startDate && formData.startTime) {
-      const startDateTime = new Date(formData.startDate);
-      const [hours, minutes] = formData.startTime.split(':').map(Number);
-      startDateTime.setHours(hours, minutes, 0, 0);
-      const now = new Date();
-
-      if (startDateTime <= now) {
-        newErrors.startDate = 'Start date/time must be in the future';
-      }
-    }
-
-    // Rental-specific validation
-    if (isFromRental && selectedSlots.length > 0) {
-      // When multiple slots are selected, skip date/time/duration/facility validation
-      // The slots themselves define the event timing and are already from the correct facility
-      // No additional validation needed
-    } else if (isFromRental && rentalDetails && selectedSlots.length === 0) {
-      // Single rental slot validation (legacy path - only when no slots selected)
-      // Validate facility matches rental
-      if (formData.facilityId !== rentalDetails.timeSlot.court.facility.id) {
-        newErrors.facilityId = 'Event ground must match rental ground';
-      }
-
-      // Ensure event time matches rental slot
-      const rentalDate = new Date(rentalDetails.timeSlot.date);
-      const eventDate = formData.startDate;
-
-      if (eventDate) {
-        // Check if dates match
-        if (
-          rentalDate.getFullYear() !== eventDate.getFullYear() ||
-          rentalDate.getMonth() !== eventDate.getMonth() ||
-          rentalDate.getDate() !== eventDate.getDate()
-        ) {
-          newErrors.startDate = 'Event date must match rental slot date';
-        }
-      }
-
-      // Check if times match
-      if (formData.startTime !== rentalDetails.timeSlot.startTime) {
-        newErrors.startTime = 'Event start time must match rental slot start time';
-      }
-
-      // Calculate expected duration
-      const [startHours, startMinutes] = rentalDetails.timeSlot.startTime.split(':').map(Number);
-      const [endHours, endMinutes] = rentalDetails.timeSlot.endTime.split(':').map(Number);
-      const expectedDuration = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
-
-      if (parseInt(formData.duration) !== expectedDuration) {
-        newErrors.duration = 'Event duration must match rental slot duration';
-      }
-    }
-
-    // Log each validation failure
-    Object.entries(newErrors).forEach(([field, msg]) => {
-      if (msg) loggingService.logValidation('CreateEventScreen', field, 'invalid', msg);
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle form submission
+  // ── Submit ──
   const handleSubmit = async () => {
-    console.log('=== Create Event Submit ===');
-    console.log('Form data:', formData);
-    console.log('Selected slots:', selectedSlots);
-    console.log('Is from rental:', isFromRental);
-    
-    if (!validateForm()) {
-      console.log('Validation failed, errors:', errors);
-      Alert.alert('Validation Error', 'Please fill in all required fields correctly.');
+    if (!user) return;
+    if (!sport || !eventType || !facilityId || !startDate || !startTime) {
+      Alert.alert('Missing Fields', 'Please complete all required steps.');
       return;
     }
-
-    loggingService.logButton('Create Event', 'CreateEventScreen');
-    console.log('Validation passed, creating event...');
 
     try {
       setIsLoading(true);
 
-      // Calculate end time based on start time and duration
-      let startDateTime: Date;
-      
-      if (selectedSlots.length > 0) {
-        const firstSlot = selectedSlots[0];
-        if (!firstSlot) {
-          throw new Error('Invalid slot selection');
-        }
-        
-        // Parse the slot's date - it's stored as UTC midnight representing a date
-        const slotDate = new Date(firstSlot.date);
-        const year = slotDate.getUTCFullYear();
-        const month = slotDate.getUTCMonth();
-        const day = slotDate.getUTCDate();
-        
-        // Parse the time (stored as local time like "17:00" = 5 PM local)
-        const timeParts = firstSlot.startTime.split(':');
-        if (timeParts.length < 2) {
-          throw new Error('Invalid time format');
-        }
-        
-        const hours = parseInt(timeParts[0], 10);
-        const minutes = parseInt(timeParts[1], 10);
-        
-        if (isNaN(hours) || isNaN(minutes)) {
-          throw new Error('Invalid time values');
-        }
-        
-        // Create date in UTC — slot times are stored as UTC on the server
-        startDateTime = new Date(Date.UTC(year, month, day, hours, minutes, 0, 0));
-        
-        console.log('First slot date string:', firstSlot.date);
-        console.log('Extracted date components:', { year, month: month + 1, day });
-        console.log('Time:', { hours, minutes });
-        console.log('Created UTC datetime:', startDateTime.toISOString());
-      } else {
-        // Manual date/time entry
-        startDateTime = new Date(formData.startDate!);
-        const [hours, minutes] = formData.startTime.split(':').map(Number);
-        startDateTime.setHours(hours, minutes, 0, 0);
-      }
+      // Build start/end datetimes
+      const parts = startTime.split(':').map(Number);
+      const h = parts[0] ?? 0;
+      const m = parts[1] ?? 0;
+      const start = new Date(startDate);
+      start.setUTCHours(h, m, 0, 0);
+      const durationMin = parseInt(duration) || 60;
+      const end = new Date(start.getTime() + durationMin * 60000);
 
-      const durationMinutes = parseInt(formData.duration);
-      const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60000);
-
-      const eventData: CreateEventData = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        sportType: formData.sportType as SportType,
-        facilityId: formData.facilityId,
-        startTime: startDateTime,
-        endTime: endDateTime,
-        maxParticipants: parseInt(formData.maxParticipants),
-        price: parseFloat(formData.price),
-        skillLevel: formData.skillLevel as SkillLevel,
-        minPlayerRating: formData.minPlayerRating ? parseInt(formData.minPlayerRating) : undefined,
-        genderRestriction: formData.genderRestriction || undefined,
-        equipment: formData.equipment.split(',').map(item => item.trim()).filter(Boolean),
-        rules: formData.rules.trim() || undefined,
-        eventType: formData.eventType as EventType,
-        isPrivate: formData.isPrivate,
+      const eventData: any = {
+        title: title.trim() || `${sport.charAt(0).toUpperCase() + sport.slice(1)} ${eventType}`,
+        description: description.trim() || '',
+        sportType: sport,
+        eventType,
+        facilityId,
+        startTime: start,
+        endTime: end,
+        maxParticipants: parseInt(maxParticipants) || 10,
+        price: parseFloat(price) || 0,
+        skillLevel: SkillLevel.ALL_LEVELS,
+        minPlayerRating: minPlayerRating ? parseInt(minPlayerRating) : undefined,
+        genderRestriction: genderRestriction || undefined,
+        equipment: [],
+        isPrivate: visibility === 'private',
+        organizerId: user.id,
         eligibility: {
-          isInviteOnly: formData.isPrivate,
-          minimumPlayerCount: formData.minimumPlayerCount
-            ? parseInt(formData.minimumPlayerCount)
-            : undefined,
-          restrictedToLeagues: undefined,
-          minSkillLevel: undefined,
-          maxSkillLevel: undefined,
+          isInviteOnly: visibility === 'private',
         },
-        organizerId: user?.id,
       };
 
-      // Map roster selection into the submission payload by event type
-      if (isGameEvent && selectedRosters.length === 2) {
-        // Game with 2 rosters: derive home/away from Home tag, restrict to both
-        const away = selectedRosters.find(r => r.id !== homeRosterId);
-        eventData.homeRosterId = homeRosterId || undefined;
-        eventData.awayRosterId = away?.id || undefined;
-        eventData.eligibility!.restrictedToTeams = selectedRosters.map(r => r.id);
-      } else if (isGameEvent && selectedRosters.length === 1) {
-        // Game with 1 roster: no home/away yet, just restrict
-        eventData.eligibility!.restrictedToTeams = selectedRosters.map(r => r.id);
-      } else if (!isGameEvent && selectedRosters.length > 0) {
-        // Pickup/practice: restrict to selected rosters, include expanded players
-        eventData.eligibility!.restrictedToTeams = selectedRosters.map(r => r.id);
-        eventData.invitedUserIds = invitedUsers.length > 0 ? invitedUsers.map(u => u.id) : undefined;
+      // Game rosters
+      if (eventType === EventType.GAME && teamA && teamB) {
+        eventData.homeRosterId = teamA.id;
+        eventData.awayRosterId = teamB.id;
+        eventData.eligibility.restrictedToTeams = [teamA.id, teamB.id];
       }
 
-      // For non-game events with no rosters but manually invited users
-      if (!isGameEvent && selectedRosters.length === 0 && invitedUsers.length > 0) {
-        eventData.invitedUserIds = invitedUsers.map(u => u.id);
+      // Private invites
+      if (visibility === 'private' && invitedItems.length > 0) {
+        const rosterIds = invitedItems.filter(i => i.type === 'roster').map(i => i.id);
+        const playerIds = invitedItems.filter(i => i.type === 'player').map(i => i.id);
+        if (rosterIds.length > 0) eventData.eligibility.restrictedToTeams = rosterIds;
+        if (playerIds.length > 0) eventData.invitedUserIds = playerIds;
       }
 
-      // Include timeSlotId and rentalId if selected
-      // For multiple slots, collect all rental IDs
-      const firstSlot = selectedSlots[0];
-      const allRentalIds = selectedSlots
-        .map(s => s.rentalId)
-        .filter((id): id is string => id !== null);
-      
-      const eventDataWithSlot = {
-        ...eventData,
-        timeSlotId: firstSlot?.id,
-        rentalId: firstSlot?.rentalId || (isFromRental ? rentalId : undefined),
-        rentalIds: allRentalIds.length > 0 ? allRentalIds : undefined, // Send all rental IDs
-        timeSlotIds: selectedSlots.map(s => s.id), // Send all selected slot IDs
-      } as any;
+      if (courtId) eventData.courtId = courtId;
 
-      console.log('Sending event data:', JSON.stringify({
-        ...eventDataWithSlot,
-        startTime: eventDataWithSlot.startTime.toISOString(),
-        endTime: eventDataWithSlot.endTime.toISOString(),
-      }, null, 2));
-
-      const newEvent = await eventService.createEvent(eventDataWithSlot);
-      console.log('Event created successfully:', newEvent);
+      const newEvent = await eventService.createEvent(eventData);
       dispatch(addEvent(newEvent));
-
-      // Navigate to the newly created event details page
-      navigation.navigate('EventDetails' as never, { eventId: newEvent.id } as never);
-      
-      // Show success message after navigation
-      setTimeout(() => {
-        Alert.alert('Success', 'Event created successfully!');
-      }, 300);
-    } catch (error) {
-      console.error('❌ Create event error:', error);
-      console.error('❌ Error type:', typeof error);
-      console.error('❌ Error details:', JSON.stringify(error, null, 2));
-      
-      // Extract error message from API error response
-      let errorMessage = 'Failed to create event';
-      if (error && typeof error === 'object') {
-        const apiError = error as any;
-        if (apiError.message) {
-          errorMessage = apiError.message;
-        }
-        if (apiError.details) {
-          console.error('❌ Error details object:', apiError.details);
-          if (typeof apiError.details === 'object' && apiError.details.error) {
-            errorMessage = apiError.details.error;
-          }
-        }
-      }
-      
-      console.error('❌ Final error message:', errorMessage);
-      Alert.alert('Error', errorMessage);
+      (navigation as any).navigate('EventDetails', { eventId: newEvent.id });
+      setTimeout(() => Alert.alert('Success', 'Event created!'), 300);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to create event');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle cancel
-  const handleCancel = () => {
-    navigation.goBack();
-  };
+  // ── Facility options ──
+  const facilityOptions: SelectOption[] = facilities.map(f => ({ label: f.name, value: f.id }));
 
-  if (loadingFacilities || loadingRental) {
-    return (
-      <View style={styles.container}>
-        <ScreenHeader
-          title="Create Event"
-          showBack={true}
-          onBackPress={handleCancel}
-        />
-        <LoadingSpinner />
-      </View>
-    );
-  }
-
+  // ── Render ──
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScreenHeader
-        title="Create Event"
-        showBack={true}
-        onBackPress={handleCancel}
-      />
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Rental Info Banner */}
-        {isFromRental && rentalDetails && (
-          <View style={styles.rentalBanner}>
-            <View style={styles.rentalBannerHeader}>
-              <Ionicons name="calendar-outline" size={20} color={colors.pine} />
-              <Text style={styles.rentalBannerTitle}>Creating Event from Rental</Text>
+        {/* Step 1: Sport */}
+        <Text style={styles.stepLabel}>Sport</Text>
+        <View style={styles.chipRow}>
+          {SPORT_OPTIONS.map((opt) => {
+            const selected = sport === opt.value;
+            return (
+              <TouchableOpacity key={String(opt.value)} style={[styles.chip, selected && styles.chipSelected]} onPress={() => setSport(opt.value as SportType)}>
+                <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Step 2: Event Type */}
+        {showEventType && (
+          <>
+            <Text style={styles.stepLabel}>Event Type</Text>
+            <View style={styles.chipRow}>
+              {EVENT_TYPE_OPTIONS.map((opt) => {
+                const selected = eventType === opt.value;
+                return (
+                  <TouchableOpacity key={String(opt.value)} style={[styles.chip, selected && styles.chipSelected]} onPress={() => setEventType(opt.value as EventType)}>
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-            <Text style={styles.rentalBannerText}>
-              {rentalDetails.timeSlot.court.name} at {rentalDetails.timeSlot.court.facility.name}
-            </Text>
-            <Text style={styles.rentalBannerSubtext}>
-              Location and time are locked to match your rental slot
-            </Text>
+          </>
+        )}
+
+        {/* Step 3: Grounds + Date/Time */}
+        {showGrounds && (
+          <>
+            <Text style={styles.stepLabel}>Grounds</Text>
+            <FormSelect
+              label=""
+              options={facilityOptions}
+              value={facilityId}
+              onSelect={(opt) => { setFacilityId(opt.value.toString()); }}
+              placeholder="Select a ground..."
+            />
+            {facilityId && (
+              <>
+                <Text style={styles.stepLabel}>Date & Time</Text>
+                <View style={styles.row}>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Start (HH:MM)"
+                    placeholderTextColor={colors.inkFaint}
+                    value={startTime}
+                    onChangeText={setStartTime}
+                    keyboardType="numbers-and-punctuation"
+                  />
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Duration (min)"
+                    placeholderTextColor={colors.inkFaint}
+                    value={duration}
+                    onChangeText={setDuration}
+                    keyboardType="number-pad"
+                  />
+                </View>
+                <TouchableOpacity style={styles.dateBtn} onPress={() => {
+                  // Simple date input — in production this would be a date picker
+                  const today = new Date();
+                  setStartDate(today);
+                }}>
+                  <Ionicons name="calendar-outline" size={18} color={colors.pine} />
+                  <Text style={styles.dateBtnText}>{startDate ? startDate.toLocaleDateString() : 'Select date'}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Step 4: Max Participants */}
+        {showMaxParticipants && (
+          <>
+            <Text style={styles.stepLabel}>Max Players</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. 10"
+              placeholderTextColor={colors.inkFaint}
+              value={maxParticipants}
+              onChangeText={setMaxParticipants}
+              keyboardType="number-pad"
+            />
+          </>
+        )}
+
+        {/* Step 5: Private / Public */}
+        {showVisibility && (
+          <>
+            <Text style={styles.stepLabel}>Visibility</Text>
+            <View style={styles.row}>
+              <TouchableOpacity style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]} onPress={() => setVisibility('private')}>
+                <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.ink} />
+                <Text style={[styles.toggleBtnText, visibility === 'private' && styles.toggleBtnTextActive]}>Private</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]} onPress={() => setVisibility('public')}>
+                <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.ink} />
+                <Text style={[styles.toggleBtnText, visibility === 'public' && styles.toggleBtnTextActive]}>Public</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Private: invite search */}
+            {visibility === 'private' && (
+              <View style={styles.inviteSection}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Search rosters or players..."
+                  placeholderTextColor={colors.inkFaint}
+                  value={inviteSearchQuery}
+                  onChangeText={setInviteSearchQuery}
+                />
+                {inviteSearchResults.length > 0 && (
+                  <View style={styles.searchDropdown}>
+                    {inviteSearchResults.slice(0, 8).map((item) => (
+                      <TouchableOpacity key={item.id} style={styles.searchRow} onPress={() => addInviteItem(item)}>
+                        {item.type === 'roster' ? (
+                          <Ionicons name="people" size={18} color={colors.pine} />
+                        ) : item.image ? (
+                          <Image source={{ uri: item.image }} style={styles.searchAvatar} />
+                        ) : (
+                          <Ionicons name="person" size={18} color={colors.inkFaint} />
+                        )}
+                        <Text style={styles.searchRowText}>{item.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+                {invitedItems.length > 0 && (
+                  <View style={styles.inviteList}>
+                    {invitedItems.map((item) => (
+                      <View key={item.id} style={styles.inviteChip}>
+                        {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.pine} /> : <Ionicons name="person" size={14} color={colors.ink} />}
+                        <Text style={styles.inviteChipText}>{item.name}</Text>
+                        <TouchableOpacity onPress={() => removeInviteItem(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Public: rating + gender */}
+            {visibility === 'public' && (
+              <View style={styles.publicFilters}>
+                <Text style={styles.miniLabel}>Min Player Rating (0-100)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Leave blank for open"
+                  placeholderTextColor={colors.inkFaint}
+                  value={minPlayerRating}
+                  onChangeText={setMinPlayerRating}
+                  keyboardType="number-pad"
+                />
+                <Text style={styles.miniLabel}>Gender</Text>
+                <View style={styles.chipRow}>
+                  {GENDER_OPTIONS.map((opt) => {
+                    const selected = genderRestriction === opt.value;
+                    return (
+                      <TouchableOpacity key={String(opt.value)} style={[styles.chip, selected && styles.chipSelected]} onPress={() => setGenderRestriction(opt.value.toString())}>
+                        <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Step 6: Price */}
+        {showPrice && (
+          <>
+            <Text style={styles.stepLabel}>Price</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="0 for free"
+              placeholderTextColor={colors.inkFaint}
+              value={price}
+              onChangeText={setPrice}
+              keyboardType="decimal-pad"
+            />
+          </>
+        )}
+
+        {/* Submit */}
+        {showSubmit && (
+          <View style={styles.submitContainer}>
+            <FormButton title={isLoading ? 'Creating...' : 'Create Event'} onPress={handleSubmit} loading={isLoading} disabled={isLoading} />
           </View>
         )}
 
-        <View style={styles.form}>
-          <FormInput
-            label="Event Title"
-            placeholder="Enter event title"
-            value={formData.title}
-            onChangeText={(value) => handleInputChange('title', value)}
-            error={errors.title}
-            required
-          />
+        <View style={{ height: 60 }} />
+      </ScrollView>
 
-          <FormInput
-            label="Description"
-            placeholder="Describe your event"
-            value={formData.description}
-            onChangeText={(value) => handleInputChange('description', value)}
-            error={errors.description}
-            multiline
-            numberOfLines={3}
-            required
-          />
-
-          <FormSelect
-            label="Event Type"
-            placeholder="Select event type"
-            value={formData.eventType}
-            options={eventTypeOptions}
-            onSelect={(option) => handleSelectChange('eventType', option)}
-            error={errors.eventType}
-            required
-          />
-
-          <FormSelect
-            label="Sport"
-            placeholder="Select sport"
-            value={formData.sportType}
-            options={sportTypeOptions}
-            onSelect={(option) => handleSelectChange('sportType', option)}
-            error={errors.sportType}
-            required
-          />
-
-          <FormSelect
-            label="Grounds"
-            placeholder="Select grounds"
-            value={formData.facilityId}
-            options={facilityOptions}
-            onSelect={(option) => handleSelectChange('facilityId', option)}
-            error={errors.facilityId}
-            required
-            disabled={isFromReservation}
-            footerOption={!isFromReservation ? {
-              label: 'Book a Court',
-              icon: 'calendar-outline',
-              onPress: () => {
-                const eventDateStr = formData.startDate
-                  ? formatDateForCalendar(formData.startDate)
-                  : undefined;
-                (navigation as any).navigate('Facilities', {
-                  screen: 'FacilitiesList',
-                  params: {
-                    eventDate: eventDateStr,
-                    eventStartTime: formData.startTime || undefined,
-                    returnTo: 'CreateEvent',
-                  },
-                });
-              },
-            } : undefined}
-          />
-
-          {/* Court Selector - Show after ground is selected */}
-          {formData.facilityId && !isFromReservation && user && (
-            <CourtSelector
-              facilityId={formData.facilityId}
-              selectedCourtId={selectedCourt?.id}
-              onCourtSelect={handleCourtSelect}
-            />
-          )}
-
-          {/* Show locked court info when from reservation */}
-          {isFromReservation && selectedCourt && (
-            <View style={styles.lockedFieldDisplay}>
-              <Text style={styles.lockedFieldLabel}>Court/Field</Text>
-              <View style={styles.lockedFieldValue}>
-                <Ionicons name="basketball" size={20} color={colors.pine} />
-                <Text style={styles.lockedFieldText}>{selectedCourt.name}</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Date and Time Selection - Only show after court is selected */}
-          {formData.facilityId && selectedCourt && (
-            <>
-              {/* Calendar for Date Selection - Only show if not from reservation */}
-              {!isFromReservation && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Select Date</Text>
-                  <Calendar
-                    current={selectedDate}
-                    onDayPress={handleDateSelect}
-                    markedDates={markedDates}
-                    minDate={formatDateForCalendar(new Date())}
-                    theme={calendarTheme}
-                    style={styles.calendar}
-                  />
-                  
-                  {/* Calendar Legend */}
-                  {rentalDates.length > 0 && (
-                    <View style={styles.calendarLegend}>
-                      <View style={styles.legendItem}>
-                        <View style={[styles.legendDot, { backgroundColor: colors.court }]} />
-                        <Text style={styles.legendText}>You have reservations</Text>
-                      </View>
-                    </View>
-                  )}
-                  
-                  {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
-                </View>
-              )}
-
-              {/* Show locked date when from reservation */}
-              {isFromReservation && formData.startDate && (
-                <View style={styles.lockedFieldDisplay}>
-                  <Text style={styles.lockedFieldLabel}>Date</Text>
-                  <View style={styles.lockedFieldValue}>
-                    <Ionicons name="calendar" size={20} color={colors.pine} />
-                    <Text style={styles.lockedFieldText}>
-                      {formData.startDate.toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Time Slot Picker - Show after court AND date are selected */}
-              {selectedCourt && user && formData.startDate && (
-                <>
-                  <TimeSlotPicker
-                    facilityId={formData.facilityId}
-                    courtId={selectedCourt.id}
-                    userId={user.id}
-                    selectedSlotIds={selectedSlots.map(s => s.id)}
-                    onSlotsSelect={handleSlotsSelect}
-                    selectedDate={selectedDate}
-                    rentalMode={isFromReservation}
-                  />
-                  
-                  {/* Show selected slots summary */}
-                  {selectedSlots.length > 0 && (
-                    <View style={styles.selectedSlotsSummary}>
-                      <View style={styles.summaryHeader}>
-                        <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
-                        <Text style={styles.summaryTitle}>
-                          {selectedSlots.length} Slot{selectedSlots.length > 1 ? 's' : ''} Selected
-                        </Text>
-                      </View>
-                      <View style={styles.summaryContent}>
-                        <View style={styles.summaryRow}>
-                          <Text style={styles.summaryLabel}>Date:</Text>
-                          <Text style={styles.summaryValue}>
-                            {(() => {
-                              const dateUTC = new Date(selectedSlots[0].date);
-                              const localDate = new Date(
-                                dateUTC.getUTCFullYear(),
-                                dateUTC.getUTCMonth(),
-                                dateUTC.getUTCDate()
-                              );
-                              return localDate.toLocaleDateString('en-US', {
-                                weekday: 'short',
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              });
-                            })()}
-                          </Text>
-                        </View>
-                        <View style={styles.summaryRow}>
-                          <Text style={styles.summaryLabel}>Time:</Text>
-                          <Text style={styles.summaryValue}>
-                            {selectedSlots[0].startTime} - {selectedSlots[selectedSlots.length - 1].endTime}
-                          </Text>
-                        </View>
-                        <View style={styles.summaryRow}>
-                          <Text style={styles.summaryLabel}>Duration:</Text>
-                          <Text style={styles.summaryValue}>{formData.duration} minutes</Text>
-                        </View>
-                      </View>
-                    </View>
-                  )}
-                </>
-              )}
-
-              {/* Manual Time and Duration Inputs - Only show if no court selected and not from reservation */}
-              {!selectedCourt && !isFromReservation && (
-                <View style={styles.dateTimeRow}>
-                  <View style={styles.timeInput}>
-                    <TimePickerInput
-                      label="Start Time"
-                      value={formData.startTime}
-                      onChange={(value) => handleInputChange('startTime', value)}
-                      error={errors.startTime}
-                      containerStyle={styles.timeInputInner}
-                      required
-                    />
-                  </View>
-
-                  <View style={styles.durationContainer}>
-                    <FormSelect
-                      label="Duration"
-                      placeholder="Select duration"
-                      value={formData.duration}
-                      options={durationOptions}
-                      onSelect={(option) => handleSelectChange('duration', option)}
-                      error={errors.duration}
-                      required
-                    />
-                  </View>
-                </View>
-              )}
-            </>
-          )}
-
-          {/* Locked date/time fields for rental-based events - Only show if no slots selected yet */}
-          {isFromRental && selectedSlots.length === 0 && (
-            <>
-              <View style={styles.readOnlyField}>
-                <Text style={styles.readOnlyLabel}>Date</Text>
-                <Text style={styles.readOnlyValue}>
-                  {formData.startDate?.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </Text>
-              </View>
-
-              <View style={styles.dateTimeRow}>
-                <View style={styles.readOnlyField}>
-                  <Text style={styles.readOnlyLabel}>Start Time</Text>
-                  <Text style={styles.readOnlyValue}>{formData.startTime}</Text>
-                </View>
-                <View style={styles.readOnlyField}>
-                  <Text style={styles.readOnlyLabel}>Duration</Text>
-                  <Text style={styles.readOnlyValue}>{formData.duration} min</Text>
-                </View>
-              </View>
-
-              <View style={styles.lockedFieldsInfoBox}>
-                <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
-                <Text style={styles.lockedFieldsInfoText}>
-                  Location, date, and time are locked to match your rental slot and cannot be changed.
-                </Text>
-              </View>
-            </>
-          )}
-
-          {!isGameEvent && (
-            <View style={styles.numberRow}>
-              <FormInput
-                label="Max Participants"
-                placeholder="e.g., 10"
-                value={formData.maxParticipants}
-                onChangeText={(value) => handleInputChange('maxParticipants', value)}
-                error={errors.maxParticipants}
-                keyboardType="numeric"
-                containerStyle={styles.numberInput}
-                required
-              />
-
-              <FormInput
-                label="Price (USD)"
-                placeholder="0.00"
-                value={formData.price}
-                onChangeText={(value) => handleInputChange('price', value)}
-                error={errors.price}
-                keyboardType="decimal-pad"
-                containerStyle={styles.numberInput}
-              />
-            </View>
-          )}
-
-          {isGameEvent && (
-            <FormInput
-              label="Price (USD)"
-              placeholder="0.00"
-              value={formData.price}
-              onChangeText={(value) => handleInputChange('price', value)}
-              error={errors.price}
-              keyboardType="decimal-pad"
-            />
-          )}
-
-          <FormInput
-            label="Min Player Rating (0-100)"
-            placeholder="e.g., 80 for 80th percentile"
-            value={formData.minPlayerRating}
-            onChangeText={(value) => handleInputChange('minPlayerRating', value)}
-            keyboardType="numeric"
-            error={errors.minPlayerRating}
-          />
-
-          <FormInput
-            label="Equipment Needed"
-            placeholder="e.g., Basketball, Water bottle (comma separated)"
-            value={formData.equipment}
-            onChangeText={(value) => handleInputChange('equipment', value)}
-          />
-
-          <FormInput
-            label="Rules & Notes"
-            placeholder="Any special rules or notes for participants"
-            value={formData.rules}
-            onChangeText={(value) => handleInputChange('rules', value)}
-            multiline
-            numberOfLines={3}
-          />
-
-          {/* Minimum Player Count - hidden for games */}
-          {!isGameEvent && (
-            <FormInput
-              label="Minimum Player Count"
-              placeholder="e.g., 8"
-              value={formData.minimumPlayerCount}
-              onChangeText={(value) => handleInputChange('minimumPlayerCount', value)}
-              error={errors.minimumPlayerCount}
-              keyboardType="numeric"
-            />
-          )}
-
-          {/* Gender Restriction */}
-          <View style={styles.restrictionCard}>
-            <Text style={styles.restrictionLabel}>Gender</Text>
-            <Text style={styles.restrictionHint}>Restrict this event by gender, or leave open to all</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              {[{ label: 'Open to All', value: '' }, { label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => (
-                <TouchableOpacity
-                  key={opt.value}
-                  style={[styles.teamItem, formData.genderRestriction === opt.value && styles.teamItemSelected]}
-                  onPress={() => handleInputChange('genderRestriction', opt.value)}
-                >
-                  <Text style={[styles.teamItemText, formData.genderRestriction === opt.value && styles.teamItemTextSelected]}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+      {/* Game Roster Selection Modal */}
+      <Modal visible={gameRosterModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setGameRosterModalVisible(false); if (!teamA || !teamB) setEventType(''); }}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => { setGameRosterModalVisible(false); if (!teamA || !teamB) setEventType(''); }}>
+              <Text style={styles.modalCancel}>Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Select Rosters</Text>
+            <TouchableOpacity onPress={() => { if (teamA && teamB) setGameRosterModalVisible(false); }} disabled={!teamA || !teamB}>
+              <Text style={[styles.modalDone, (!teamA || !teamB) && { opacity: 0.4 }]}>Done</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Privacy & Restrictions Section */}
-          <View style={styles.privacySection}>
-            <TouchableOpacity
-              style={styles.privateToggle}
-              onPress={() => {
-                const newValue = !formData.isPrivate;
-                handleInputChange('isPrivate', newValue);
-              }}
-            >
-              <View style={styles.privateToggleRow}>
-                <Ionicons
-                  name={formData.isPrivate ? 'lock-closed' : 'lock-open-outline'}
-                  size={20}
-                  color={formData.isPrivate ? colors.pine : colors.inkFaint}
-                />
-                <Text style={styles.privateToggleLabel}>
-                  Private Event
-                </Text>
-                <View style={[styles.toggleSwitch, formData.isPrivate && styles.toggleSwitchOn]}>
-                  <View style={[styles.toggleKnob, formData.isPrivate && styles.toggleKnobOn]} />
-                </View>
-              </View>
-              <Text style={styles.privateToggleHint}>
-                {formData.isPrivate
-                  ? 'Only invited rosters and people can join'
-                  : 'Open for anyone to join'}
-              </Text>
+          <View style={styles.modalBody}>
+            {/* Slot A */}
+            <TouchableOpacity style={[styles.rosterSlot, teamA && styles.rosterSlotFilled]} onPress={() => { setSelectingSlot('A'); setRosterSearchQuery(''); }}>
+              <Text style={styles.rosterSlotLabel}>Roster A</Text>
+              <Text style={styles.rosterSlotValue}>{teamA?.name || 'Tap to select'}</Text>
             </TouchableOpacity>
 
-            {formData.isPrivate && (
-              <Text style={styles.privateToggleNote}>
-                Only invited rosters and people can see and join this event
-              </Text>
-            )}
+            <Text style={styles.vsText}>vs</Text>
+
+            {/* Slot B */}
+            <TouchableOpacity style={[styles.rosterSlot, teamB && styles.rosterSlotFilled]} onPress={() => { setSelectingSlot('B'); setRosterSearchQuery(''); }}>
+              <Text style={styles.rosterSlotLabel}>Roster B</Text>
+              <Text style={styles.rosterSlotValue}>{teamB?.name || 'Tap to select'}</Text>
+            </TouchableOpacity>
+
+            {/* Search */}
+            <TextInput
+              style={[styles.input, { marginTop: 20 }]}
+              placeholder={`Search for Roster ${selectingSlot}...`}
+              placeholderTextColor={colors.inkFaint}
+              value={rosterSearchQuery}
+              onChangeText={setRosterSearchQuery}
+              autoFocus
+            />
+            {rosterSearchResults.map((r) => (
+              <TouchableOpacity key={r.id} style={styles.searchRow} onPress={() => {
+                if (selectingSlot === 'A') { setTeamA(r); setSelectingSlot('B'); }
+                else { setTeamB(r); }
+                setRosterSearchQuery('');
+                setRosterSearchResults([]);
+              }}>
+                <Ionicons name="people" size={18} color={colors.pine} />
+                <Text style={styles.searchRowText}>{r.name}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-
-          {/* Roster Selection — unified search for all event types */}
-          <RosterSearchSection
-            eventType={formData.eventType}
-            selectedRosters={selectedRosters}
-            homeRosterId={homeRosterId}
-            onRostersChange={setSelectedRosters}
-            onHomeRosterChange={setHomeRosterId}
-            onRosterPlayersLoaded={(players) => {
-              // Merge into invitedUsers for pickup/practice
-              setInvitedUsers(prev => {
-                const existingIds = new Set(prev.map(u => u.id));
-                const newPlayers = players.filter(p => !existingIds.has(p.id));
-                return [...prev, ...newPlayers];
-              });
-            }}
-          />
-
-          {/* Add People - hidden for games */}
-          {!isGameEvent && (
-            <>
-              <View style={styles.restrictionCard}>
-                <Text style={styles.restrictionLabel}>Add People</Text>
-                <Text style={styles.restrictionHint}>
-                  Search by name or email to invite individuals
-                </Text>
-                <AddMemberSearch
-                  onAddMember={handleAddInvitedUser}
-                  existingMemberIds={[
-                    ...invitedUsers.map(u => u.id),
-                    ...(user?.id ? [user.id] : []),
-                  ]}
-                />
-              </View>
-
-              {/* Invited List */}
-              {invitedUsers.length > 0 && (
-                <View style={styles.restrictionCard}>
-                  <Text style={styles.restrictionLabel}>
-                    Invited ({invitedUsers.length})
-                  </Text>
-                  {invitedUsers.map(invitedUser => (
-                    <View key={invitedUser.id} style={styles.invitedUserRow}>
-                      <View style={styles.invitedUserInfo}>
-                        <View style={styles.invitedUserAvatar}>
-                          <Text style={styles.invitedUserAvatarText}>
-                            {invitedUser.firstName?.[0] || invitedUser.email?.[0]?.toUpperCase() || '?'}
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={styles.invitedUserName}>
-                            {invitedUser.firstName} {invitedUser.lastName}
-                          </Text>
-                          <Text style={styles.invitedUserEmail}>{invitedUser.email}</Text>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => handleRemoveInvitedUser(invitedUser.id)}
-                        style={styles.removeInvitedButton}
-                      >
-                        <Ionicons name="close-circle" size={22} color={colors.heart} />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </>
-          )}
-
-          {/* Game event — show selected roster names in invited section */}
-          {isGameEvent && selectedRosters.length > 0 && (
-            <View style={styles.restrictionCard}>
-              <Text style={styles.restrictionLabel}>
-                Rosters ({selectedRosters.length})
-              </Text>
-              {selectedRosters.map(roster => (
-                <View key={roster.id} style={styles.invitedUserRow}>
-                  <View style={styles.invitedUserInfo}>
-                    <View style={styles.invitedUserAvatar}>
-                      <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
-                    </View>
-                    <Text style={styles.invitedUserName}>{roster.name}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <FormButton
-            title="Create Event"
-            onPress={handleSubmit}
-            loading={isLoading}
-            disabled={isLoading}
-          />
-
-          <FormButton
-            title="Cancel"
-            variant="secondary"
-            onPress={handleCancel}
-            disabled={isLoading}
-          />
         </View>
-      </ScrollView>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.cream,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  rentalBanner: {
-    backgroundColor: '#FFFFFF',
-    borderLeftWidth: 4,
-    borderLeftColor: colors.pine,
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 8,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  rentalBannerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  rentalBannerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.pine,
-    marginLeft: 8,
-  },
-  rentalBannerText: {
-    fontSize: 15,
-    color: colors.ink,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  rentalBannerSubtext: {
-    fontSize: 13,
-    color: colors.soft,
-  },
-  disabledField: {
-    backgroundColor: colors.cream,
-    opacity: 0.7,
-  },
-  disabledText: {
-    color: colors.soft,
-  },
-  lockedFieldContainer: {
-    position: 'relative',
-  },
-  lockIconOverlay: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    padding: 4,
-  },
-  datePickerValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  lockIcon: {
-    marginLeft: 8,
-  },
-  lockedFieldsInfoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.background,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.navy,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-    marginBottom: 16,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  lockedFieldsInfoText: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.ink,
-    marginLeft: 8,
-    lineHeight: 18,
-  },
-  lockedFieldDisplay: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  lockedFieldLabel: {
-    ...TextStyles.caption,
-    color: colors.soft,
-    marginBottom: Spacing.xs,
+  screen: { flex: 1, backgroundColor: colors.cream },
+  content: { padding: 16, paddingTop: 8 },
+  stepLabel: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.inkFaint,
     textTransform: 'uppercase',
-    fontWeight: '600',
-  },
-  lockedFieldValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lockedFieldText: {
-    ...TextStyles.bodyLarge,
-    color: colors.ink,
-    fontWeight: '500',
-    marginLeft: Spacing.sm,
-  },
-  lockedHint: {
-    fontSize: 12,
-    color: colors.soft,
-    marginTop: 4,
-  },
-  lockedFieldsHint: {
-    fontSize: 13,
-    color: colors.soft,
-    marginTop: -8,
-    marginBottom: 16,
-    fontStyle: 'italic',
-  },
-  form: {
-    padding: 16,
-  },
-  dateTimeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  dateInput: {
-    flex: 1,
-    marginRight: 8,
-  },
-  timeInput: {
-    flex: 1,
-  },
-  timeInputInner: {
-    flex: 1,
-  },
-  durationContainer: {
-    flex: 1,
-  },
-  datePickerButton: {
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  datePickerLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  datePickerValue: {
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  numberRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  numberInput: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  teamItem: {
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    letterSpacing: 0.5,
+    marginTop: 20,
     marginBottom: 8,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  teamItemSelected: {
-    backgroundColor: colors.pine + '15',
-    borderWidth: 2,
-    borderColor: colors.pine,
-  },
-  teamItemText: {
-    fontSize: 16,
-    color: '#374151',
-  },
-  teamItemTextSelected: {
-    color: colors.pine,
-    fontWeight: '600',
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#DC2626',
-    marginTop: 4,
-  },
-  privacySection: {
-    marginTop: 24,
-    paddingTop: 24,
-    borderTopWidth: 1,
-    borderTopColor: colors.chalk,
-  },
-  privateToggle: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  privateToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  privateToggleLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-    marginLeft: 8,
-    flex: 1,
-  },
-  toggleSwitch: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.cream,
-    borderWidth: 1,
-    borderColor: colors.inkFaint,
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleSwitchOn: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
-  },
-  toggleKnob: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#FFFFFF',
-  },
-  toggleKnobOn: {
-    alignSelf: 'flex-end',
-  },
-  privateToggleHint: {
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginLeft: 28,
-  },
-  privateToggleNote: {
-    fontSize: 13,
-    color: colors.pine,
-    marginLeft: 28,
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  restrictionCard: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    marginBottom: 16,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  restrictionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 4,
-  },
-  restrictionHint: {
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginBottom: 12,
-  },
-  invitedUserRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.chalk,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.cream,
   },
-  invitedUserInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  invitedUserAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.pine,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  invitedUserAvatarText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  invitedUserName: {
+  chipSelected: { backgroundColor: colors.pine, borderColor: colors.pine },
+  chipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
+  chipTextSelected: { color: '#FFFFFF', fontFamily: fonts.label },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: fonts.body,
     fontSize: 15,
-    fontWeight: '500',
     color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.cream,
   },
-  invitedUserEmail: {
-    fontSize: 12,
+  row: { flexDirection: 'row', gap: 10 },
+  dateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.cream,
+  },
+  dateBtnText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink },
+  toggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.cream,
+    gap: 6,
+  },
+  toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
+  toggleBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
+  toggleBtnTextActive: { color: '#FFFFFF' },
+  miniLabel: {
+    fontFamily: fonts.body,
+    fontSize: 13,
     color: colors.inkFaint,
+    marginTop: 12,
+    marginBottom: 6,
   },
-  removeInvitedButton: {
-    padding: 4,
-  },
-  sectionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 8,
-  },
-  readOnlyField: {
-    marginBottom: 16,
-    padding: 12,
+  inviteSection: { marginTop: 12 },
+  publicFilters: { marginTop: 4 },
+  searchDropdown: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 10,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: colors.cream,
+    maxHeight: 240,
   },
-  readOnlyLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  readOnlyValue: {
-    fontSize: 16,
-    color: '#1F2937',
-    fontWeight: '500',
-  },
-  // Calendar styles matching Court Booking screen
-  section: {
-    padding: Spacing.lg,
-  },
-  sectionTitle: {
-    ...TextStyles.h4,
-    color: colors.ink,
-    marginBottom: Spacing.md,
-  },
-  calendar: {
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-    overflow: 'hidden',
-  },
-  calendarLegend: {
-    marginTop: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: colors.cream,
-    borderRadius: 8,
-  },
-  legendItem: {
+  searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cream,
   },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: Spacing.sm,
-  },
-  legendText: {
-    ...TextStyles.caption,
-    color: colors.ink,
-  },
-  multiSlotBadge: {
+  searchRowText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
+  searchAvatar: { width: 24, height: 24, borderRadius: 12 },
+  inviteList: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  inviteChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pine + '20',
-    padding: Spacing.sm,
-    borderRadius: 8,
-    marginTop: Spacing.sm,
-  },
-  multiSlotText: {
-    ...TextStyles.caption,
-    color: colors.pine,
-    fontWeight: '600',
-  },
-  selectedSlotsSummary: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: colors.pine,
-    borderRadius: 12,
-    padding: Spacing.lg,
-    marginTop: Spacing.md,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.cream,
   },
-  summaryHeader: {
+  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  submitContainer: { marginTop: 24 },
+  // Modal
+  modalContainer: { flex: 1, backgroundColor: colors.chalk },
+  modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  summaryTitle: {
-    ...TextStyles.h4,
-    color: colors.pine,
-    fontWeight: '700',
-    marginLeft: Spacing.sm,
-  },
-  summaryContent: {
-    // gap removed - use marginBottom on summaryRow instead
-  },
-  summaryRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cream,
   },
-  summaryLabel: {
-    ...TextStyles.body,
-    color: colors.soft,
-    fontWeight: '600',
+  modalCancel: { fontFamily: fonts.body, fontSize: 16, color: colors.inkFaint },
+  modalTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
+  modalDone: { fontFamily: fonts.ui, fontSize: 16, color: colors.pine },
+  modalBody: { padding: 16 },
+  rosterSlot: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: colors.cream,
+    borderStyle: 'dashed',
   },
-  summaryValue: {
-    ...TextStyles.body,
-    color: colors.ink,
-    fontWeight: '600',
-  },
+  rosterSlotFilled: { borderColor: colors.pine, borderStyle: 'solid' },
+  rosterSlotLabel: { fontFamily: fonts.label, fontSize: 11, color: colors.inkFaint, textTransform: 'uppercase' },
+  rosterSlotValue: { fontFamily: fonts.label, fontSize: 16, color: colors.ink, marginTop: 4 },
+  vsText: { fontFamily: fonts.heading, fontSize: 18, color: colors.inkFaint, textAlign: 'center', marginVertical: 8 },
 });

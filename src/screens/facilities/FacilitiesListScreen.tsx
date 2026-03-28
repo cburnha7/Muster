@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,15 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from '../../utils/performance';
-import { SearchBar, SearchBarHandle } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
 import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
+import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { facilityService } from '../../services/api/FacilityService';
 import { colors, fonts, Spacing } from '../../theme';
+import { searchEventBus } from '../../utils/searchEventBus';
 import {
   setFacilities,
   setLoading,
@@ -52,14 +53,31 @@ export function FacilitiesListScreen() {
   const { isDependent } = useDependentContext();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const searchBarRef = useRef<SearchBarHandle>(null);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   useEffect(() => {
-    const unsub = require('../../utils/searchEventBus').searchEventBus.subscribeTab('Facilities', () => {
-      searchBarRef.current?.focus();
+    const unsub = searchEventBus.subscribeTab('Facilities', () => {
+      setSearchModalVisible(true);
     });
     return unsub;
   }, []);
+
+  const handleSearchGrounds = useCallback(async (query: string, sport: any): Promise<TabSearchResult[]> => {
+    try {
+      const res = await facilityService.getFacilities({ page: 1, limit: 30 });
+      return (res.data || [])
+        .filter((f: any) => {
+          const nameMatch = !query.trim() || f.name.toLowerCase().includes(query.toLowerCase());
+          const sportMatch = !sport || (f.sportTypes || []).includes(sport);
+          return nameMatch && sportMatch;
+        })
+        .map((f: any) => ({ id: f.id, name: f.name, subtitle: `${f.city}, ${f.state}` }));
+    } catch { return []; }
+  }, []);
+
+  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
+    (navigation as any).navigate('FacilityDetails', { facilityId: result.id });
+  }, [navigation]);
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState<FacilityFilters>(filters);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -341,6 +359,15 @@ export function FacilitiesListScreen() {
       )}
 
       {renderFilterModal()}
+
+      <TabSearchModal
+        visible={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        title="Search Grounds"
+        placeholder="Search by ground name..."
+        onSearch={handleSearchGrounds}
+        onResultPress={handleSearchResultPress}
+      />
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,18 +11,19 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
-import { SearchBar, SearchBarHandle } from '../../components/ui/SearchBar';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { teamService } from '../../services/api/TeamService';
 import { userService } from '../../services/api/UserService';
 import { setUserTeams } from '../../store/slices/teamsSlice';
-import { Team } from '../../types';
+import { Team, SportType } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { useActiveUserId } from '../../hooks/useActiveUserId';
+import { searchEventBus } from '../../utils/searchEventBus';
 
 interface Section {
   title: string;
@@ -43,15 +44,30 @@ export function TeamsListScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const searchBarRef = useRef<SearchBarHandle>(null);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
 
-  // Focus search bar when header pill is tapped
+  // Open search modal when header pill is tapped
   useEffect(() => {
-    const unsub = require('../../utils/searchEventBus').searchEventBus.subscribeTab('Teams', () => {
-      searchBarRef.current?.focus();
+    const unsub = searchEventBus.subscribeTab('Teams', () => {
+      setSearchModalVisible(true);
     });
     return unsub;
   }, []);
+
+  const handleSearchRosters = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {
+    try {
+      const filters: any = {};
+      if (sport) filters.sportType = sport;
+      const res = await teamService.getTeams(filters, { page: 1, limit: 30 });
+      return (res.data || [])
+        .filter((t: Team) => !query.trim() || t.name.toLowerCase().includes(query.toLowerCase()))
+        .map((t: Team) => ({ id: t.id, name: t.name, subtitle: t.sportType }));
+    } catch { return []; }
+  }, []);
+
+  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
+    (navigation as any).navigate('TeamDetails', { teamId: result.id });
+  }, [navigation]);
 
   const loadData = useCallback(async () => {
     try {
@@ -209,6 +225,15 @@ export function TeamsListScreen() {
       <TouchableOpacity style={[styles.joinButton, isDependent && { bottom: 20 }]} onPress={handleJoinTeam}>
         <Text style={styles.joinButtonText}>Join with Code</Text>
       </TouchableOpacity>
+
+      <TabSearchModal
+        visible={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        title="Search Rosters"
+        placeholder="Search by roster name..."
+        onSearch={handleSearchRosters}
+        onResultPress={handleSearchResultPress}
+      />
     </View>
   );
 }

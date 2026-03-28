@@ -94,14 +94,12 @@ export function TabNavigator(): JSX.Element {
           elevation: 0,
           borderBottomWidth: 0,
         },
+        headerTitleAlign: 'center',
         headerTitleContainerStyle: {
-          flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
         },
-        headerLeftContainerStyle: {
-          width: 0,
-        },
+        headerLeft: () => null,
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
         tabBarActiveTintColor: colors.pine,
