@@ -149,6 +149,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       const teamData = await teamService.getTeam(teamId);
       setTeam(teamData);
       dispatch(setSelectedTeam(teamData));
+      navigation.setOptions({ headerTitle: teamData.name });
       setError(null);
     } catch (err: any) {
       console.error('Error loading roster details:', err);
@@ -514,7 +515,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   if (error || !team) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="" showBack onBackPress={() => navigation.goBack()} />
         <ErrorDisplay message={error || 'Roster not found'} onRetry={loadTeamDetails} />
       </View>
     );
@@ -525,12 +525,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenHeader
-        title={team.name}
-        showBack
-        onBackPress={() => navigation.goBack()}
-      />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

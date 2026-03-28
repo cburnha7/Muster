@@ -89,6 +89,8 @@ export function CreateEventScreen() {
   const [price, setPrice] = useState('0');
   const [minPlayerRating, setMinPlayerRating] = useState('');
   const [genderRestriction, setGenderRestriction] = useState('');
+  const [minAge, setMinAge] = useState('');
+  const [maxAge, setMaxAge] = useState('');
 
   // ── Data ──
   const [facilities, setFacilities] = useState<(Facility & { isOwned: boolean })[]>([]);
@@ -247,7 +249,11 @@ export function CreateEventScreen() {
         rentalId: firstSlot.rentalId || undefined,
         timeSlotIds: selectedSlots.map((s) => s.id),
         rentalIds: selectedSlots.map((s) => s.rentalId).filter(Boolean),
-        eligibility: { isInviteOnly: visibility === 'private' },
+        eligibility: {
+          isInviteOnly: visibility === 'private',
+          minAge: minAge ? parseInt(minAge) : undefined,
+          maxAge: maxAge ? parseInt(maxAge) : undefined,
+        },
       };
 
       // Invitations
@@ -475,6 +481,11 @@ export function CreateEventScreen() {
             <TextInput style={styles.input} placeholder="Leave blank for open" placeholderTextColor={colors.inkFaint} value={minPlayerRating} onChangeText={setMinPlayerRating} keyboardType="number-pad" />
             <Text style={styles.stepLabel}>Gender</Text>
             <FormSelect label="" options={GENDER_OPTIONS} value={genderRestriction} onSelect={(o) => setGenderRestriction(String(o.value))} placeholder="Open to All" />
+            <Text style={styles.stepLabel}>Age Limit</Text>
+            <View style={styles.row}>
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
+            </View>
           </>
         )}
 

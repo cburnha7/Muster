@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
-import { colors } from '../theme';
+import { colors, fonts } from '../theme';
 import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
 import { HeaderUserSelector } from '../components/navigation/HeaderUserSelector';
 import { searchEventBus } from '../utils/searchEventBus';
@@ -18,6 +19,24 @@ import { LeaguesStackNavigator } from './stacks/LeaguesStackNavigator';
 import { ProfileStackNavigator } from './stacks/ProfileStackNavigator';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Root screens that show the search pill header
+const ROOT_SCREENS: Record<string, string> = {
+  Home: 'HomeScreen',
+  Teams: 'TeamsList',
+  Leagues: 'LeaguesBrowser',
+  Facilities: 'FacilitiesList',
+  Profile: 'ProfileScreen',
+};
+
+/** Returns true if the focused screen is the root list screen for this tab */
+function isRootScreen(route: any): boolean {
+  const routeName = getFocusedRouteNameFromRoute(route);
+  const tabName = route.name as string;
+  // If no focused route name, it's the initial (root) screen
+  if (!routeName) return true;
+  return routeName === ROOT_SCREENS[tabName];
+}
 
 interface TabBadgeProps {
   count?: number;
@@ -134,11 +153,12 @@ export function TabNavigator(): JSX.Element {
       <Tab.Screen 
         name="Home" 
         component={HomeStackNavigator}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: 'Home',
+          headerShown: isRootScreen(route),
           headerRight: () => <HeaderUserSelector />,
           headerRightContainerStyle: { paddingRight: 16 },
-        }}
+        })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -150,11 +170,12 @@ export function TabNavigator(): JSX.Element {
       <Tab.Screen 
         name="Teams" 
         component={TeamsStackNavigator}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: 'Rosters',
+          headerShown: isRootScreen(route),
           headerRight: () => <HeaderUserSelector />,
           headerRightContainerStyle: { paddingRight: 16 },
-        }}
+        })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -166,9 +187,10 @@ export function TabNavigator(): JSX.Element {
       <Tab.Screen 
         name="Leagues" 
         component={LeaguesStackNavigator}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: 'Leagues',
-        }}
+          headerShown: isRootScreen(route),
+        })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -180,9 +202,10 @@ export function TabNavigator(): JSX.Element {
       <Tab.Screen 
         name="Facilities" 
         component={FacilitiesStackNavigator}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: 'Grounds',
-        }}
+          headerShown: isRootScreen(route),
+        })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -194,9 +217,10 @@ export function TabNavigator(): JSX.Element {
       <Tab.Screen 
         name="Profile" 
         component={ProfileStackNavigator}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: 'Profile',
-        }}
+          headerShown: isRootScreen(route),
+        })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();

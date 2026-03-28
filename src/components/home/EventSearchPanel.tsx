@@ -57,6 +57,8 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
   const [sportFilter, setSportFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
+  const [minAgeFilter, setMinAgeFilter] = useState('');
+  const [maxAgeFilter, setMaxAgeFilter] = useState('');
   const [locationText, setLocationText] = useState('');
   const [radiusMiles, setRadiusMiles] = useState(25);
   const [userLat, setUserLat] = useState<number | null>(null);
@@ -65,7 +67,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
   const [results, setResults] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const hasFilters = query.trim() !== '' || sportFilter !== '' || typeFilter !== '' || genderFilter !== '' || locationText !== '';
+  const hasFilters = query.trim() !== '' || sportFilter !== '' || typeFilter !== '' || genderFilter !== '' || minAgeFilter !== '' || maxAgeFilter !== '' || locationText !== '';
 
   // Listen for query changes from the header pill
   useEffect(() => {
@@ -80,6 +82,8 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
       setSportFilter('');
       setTypeFilter('');
       setGenderFilter('');
+      setMinAgeFilter('');
+      setMaxAgeFilter('');
       setLocationText('');
       setUserLat(null);
       setUserLng(null);
@@ -111,6 +115,9 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
         if (typeFilter) filtered = filtered.filter((e: Event) => e.eventType === typeFilter);
         // Gender filter
         if (genderFilter) filtered = filtered.filter((e: Event) => (e as any).genderRestriction === genderFilter || !(e as any).genderRestriction);
+        // Age filter
+        if (minAgeFilter) filtered = filtered.filter((e: Event) => !(e as any).eligibilityMaxAge || (e as any).eligibilityMaxAge >= parseInt(minAgeFilter));
+        if (maxAgeFilter) filtered = filtered.filter((e: Event) => !(e as any).eligibilityMinAge || (e as any).eligibilityMinAge <= parseInt(maxAgeFilter));
 
         // Location filter (client-side distance calc if we have coords)
         if (userLat != null && userLng != null) {
@@ -135,7 +142,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
       setLoading(false);
     }, 250);
     return () => clearTimeout(timer);
-  }, [query, sportFilter, typeFilter, genderFilter, visible, userLat, userLng, radiusMiles]);
+  }, [query, sportFilter, typeFilter, genderFilter, minAgeFilter, maxAgeFilter, visible, userLat, userLng, radiusMiles]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     setLocationLoading(true);
@@ -155,6 +162,8 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
     setSportFilter('');
     setTypeFilter('');
     setGenderFilter('');
+    setMinAgeFilter('');
+    setMaxAgeFilter('');
     setLocationText('');
     setUserLat(null);
     setUserLng(null);
@@ -177,6 +186,12 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
         <View style={{ flex: 1 }}>
           <FormSelect label="" options={GENDER_OPTIONS} value={genderFilter} onSelect={(o) => setGenderFilter(String(o.value))} placeholder="Gender" />
         </View>
+      </View>
+
+      {/* Age filter */}
+      <View style={styles.ageRow}>
+        <TextInput style={[styles.ageInput]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAgeFilter} onChangeText={setMinAgeFilter} keyboardType="number-pad" />
+        <TextInput style={[styles.ageInput]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAgeFilter} onChangeText={setMaxAgeFilter} keyboardType="number-pad" />
       </View>
 
       {/* Location */}
@@ -263,6 +278,24 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.sm,
+  },
+  ageRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+  },
+  ageInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.cream,
   },
   locationRow: {
     flexDirection: 'row',

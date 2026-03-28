@@ -109,6 +109,7 @@ export function EventDetailsScreen(): JSX.Element {
       }
 
       setEvent(eventResponse);
+      navigation.setOptions({ headerTitle: eventResponse.title });
       setParticipants(participantsData.participants);
       setRosters(participantsData.rosters ?? []);
       setParticipantsLoaded(true);
@@ -709,11 +710,6 @@ export function EventDetailsScreen(): JSX.Element {
   if (isLoading && !event) {
     return (
       <View style={styles.container}>
-        <ScreenHeader
-          title=""
-          showBack={true}
-          onBackPress={() => navigation.goBack()}
-        />
         <LoadingSpinner />
       </View>
     );
@@ -722,11 +718,6 @@ export function EventDetailsScreen(): JSX.Element {
   if (error && !event) {
     return (
       <View style={styles.container}>
-        <ScreenHeader
-          title=""
-          showBack={true}
-          onBackPress={() => navigation.goBack()}
-        />
         <ErrorDisplay
           message={error}
           onRetry={() => loadEvent()}
@@ -738,11 +729,6 @@ export function EventDetailsScreen(): JSX.Element {
   if (!event) {
     return (
       <View style={styles.container}>
-        <ScreenHeader
-          title=""
-          showBack={true}
-          onBackPress={() => navigation.goBack()}
-        />
         <ErrorDisplay
           message="Event not found"
           onRetry={() => loadEvent()}
@@ -757,13 +743,6 @@ export function EventDetailsScreen(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title=""
-        showBack={true}
-        onBackPress={() => (navigation as any).navigate('Home', { screen: 'HomeScreen' })}
-        rightComponent={undefined}
-      />
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

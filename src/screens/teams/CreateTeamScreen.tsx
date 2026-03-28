@@ -66,6 +66,8 @@ export function CreateTeamScreen() {
   const [visibility, setVisibility] = useState<'private' | 'public' | ''>('');
   const [maxPlayers, setMaxPlayers] = useState('');
   const [gender, setGender] = useState('');
+  const [minAge, setMinAge] = useState('');
+  const [maxAge, setMaxAge] = useState('');
   const [price, setPrice] = useState('0');
 
   // ── Invitations ──
@@ -195,6 +197,11 @@ export function CreateTeamScreen() {
           <>
             <Text style={styles.stepLabel}>Gender</Text>
             <FormSelect label="" options={GENDER_OPTIONS} value={gender} onSelect={(o) => setGender(String(o.value))} placeholder="Open to All" />
+            <Text style={styles.stepLabel}>Age Limit</Text>
+            <View style={styles.row}>
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
+            </View>
           </>
         )}
 

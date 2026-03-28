@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
@@ -63,6 +65,8 @@ export function TabSearchModal({
   const [query, setQuery] = useState('');
   const [selectedSport, setSelectedSport] = useState<SportType | null>(null);
   const [selectedGender, setSelectedGender] = useState('');
+  const [minAgeFilter, setMinAgeFilter] = useState('');
+  const [maxAgeFilter, setMaxAgeFilter] = useState('');
   const [results, setResults] = useState<TabSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -78,6 +82,8 @@ export function TabSearchModal({
       setQuery('');
       setSelectedSport(null);
       setSelectedGender('');
+      setMinAgeFilter('');
+      setMaxAgeFilter('');
       setResults([]);
     }
   }, [visible]);
@@ -86,7 +92,7 @@ export function TabSearchModal({
   useEffect(() => {
     if (!visible) return;
     const timer = setTimeout(async () => {
-      if (!query.trim() && !selectedSport && !selectedGender) { setResults([]); return; }
+      if (!query.trim() && !selectedSport && !selectedGender && !minAgeFilter && !maxAgeFilter) { setResults([]); return; }
       setLoading(true);
       try {
         const res = await onSearch(query, selectedSport, selectedGender || undefined);
@@ -95,7 +101,7 @@ export function TabSearchModal({
       setLoading(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, selectedSport, selectedGender, visible]);
+  }, [query, selectedSport, selectedGender, minAgeFilter, maxAgeFilter, visible]);
 
   if (!visible) return null;
 
@@ -109,6 +115,12 @@ export function TabSearchModal({
         <View style={{ flex: 1 }}>
           <FormSelect label="" options={GENDER_OPTIONS} value={selectedGender} onSelect={(o) => setSelectedGender(String(o.value))} placeholder="All Genders" />
         </View>
+      </View>
+
+      {/* Age filter */}
+      <View style={styles.ageRow}>
+        <TextInput style={styles.ageInput} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAgeFilter} onChangeText={setMinAgeFilter} keyboardType="number-pad" />
+        <TextInput style={styles.ageInput} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAgeFilter} onChangeText={setMaxAgeFilter} keyboardType="number-pad" />
       </View>
 
       {/* Results */}
@@ -159,8 +171,28 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   filterRow: {
+    flexDirection: 'row',
+    gap: 8,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
+  },
+  ageRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+  ageInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.cream,
   },
   centered: {
     flex: 1,
