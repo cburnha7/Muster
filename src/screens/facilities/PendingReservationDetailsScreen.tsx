@@ -261,8 +261,8 @@ export function PendingReservationDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.white },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,9 +270,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 56,
     paddingBottom: 12,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   backButton: { width: 40, height: 40, justifyContent: 'center' },
   headerTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.ink },
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   documentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 14,
     gap: 12,

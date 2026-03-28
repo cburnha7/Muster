@@ -289,7 +289,7 @@ export const AssignFacilityScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   centered: {
     flex: 1,

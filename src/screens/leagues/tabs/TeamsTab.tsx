@@ -181,7 +181,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   listContent: {
     paddingVertical: 8,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },

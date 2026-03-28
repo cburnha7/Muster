@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   dependentBadge: {
-    backgroundColor: `${colors.court}20`,
+    backgroundColor: `${colors.gold}20`,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   dependentBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.court,
+    color: colors.gold,
   },
   overlay: {
     flex: 1,

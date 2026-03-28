@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     maxWidth: 220,
     gap: 5,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   name: {
     fontFamily: fonts.label,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   dropdown: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     minWidth: 220,
     maxWidth: 280,

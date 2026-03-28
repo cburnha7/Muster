@@ -153,7 +153,7 @@ export function RedeemCodeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.white },
   content: { padding: 16, paddingBottom: 40 },
   header: {
     flexDirection: 'row',

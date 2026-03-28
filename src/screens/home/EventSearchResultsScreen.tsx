@@ -125,7 +125,7 @@ export function EventSearchResultsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -133,9 +133,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xxxl + Spacing.lg,
     paddingBottom: Spacing.md,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   backBtn: {
     padding: 4,

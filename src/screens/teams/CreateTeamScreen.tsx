@@ -270,7 +270,7 @@ export function CreateTeamScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.cream },
+  screen: { flex: 1, backgroundColor: colors.white },
   content: { padding: 16, paddingTop: 8 },
   stepLabel: {
     fontFamily: fonts.label,
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   row: { flexDirection: 'row', gap: 10 },
   toggleBtn: {
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: colors.cream,
+    borderColor: colors.white,
     gap: 6,
   },
   toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
     maxHeight: 240,
   },
   dropdownRow: {
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
   avatar: { width: 24, height: 24, borderRadius: 12 },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
 });

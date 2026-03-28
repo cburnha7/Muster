@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     paddingHorizontal: 14,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     gap: 6,
   },
   facilityName: {

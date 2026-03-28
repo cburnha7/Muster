@@ -51,7 +51,7 @@ export function BookingConflictModal({
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
               <View style={styles.iconWrap}>
-                <Ionicons name="warning" size={28} color={colors.court} />
+                <Ionicons name="warning" size={28} color={colors.gold} />
               </View>
               <Text style={styles.title}>Some Slots Unavailable</Text>
               <Text style={styles.subtitle}>
@@ -112,7 +112,7 @@ export function BookingConflictModal({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modal: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', padding: Spacing.xl, borderBottomWidth: 1, borderBottomColor: '#EEE' },
   iconWrap: {
     width: 56, height: 56, borderRadius: 28,
-    backgroundColor: `${colors.court}15`, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: `${colors.gold}15`, alignItems: 'center', justifyContent: 'center',
   },
   title: { fontFamily: fonts.heading, ...typeScale.h2, color: colors.ink, marginTop: Spacing.sm },
   subtitle: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint, marginTop: 4, textAlign: 'center' },
@@ -144,5 +144,5 @@ const styles = StyleSheet.create({
     flex: 2, ...ComponentStyles.button.primary,
     alignItems: 'center', justifyContent: 'center',
   },
-  bookBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.chalk },
+  bookBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.surface },
 });

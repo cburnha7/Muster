@@ -19,9 +19,9 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.cream },
+  headerStyle: { backgroundColor: colors.white },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
+  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
 };
 
 export function LeaguesStackNavigator() {

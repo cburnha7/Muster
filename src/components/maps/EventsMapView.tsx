@@ -70,7 +70,7 @@ export function EventsMapView({ events, userBookedEventIds, onEventPress }: Even
                 latitude: event.facility!.latitude!,
                 longitude: event.facility!.longitude!,
               }}
-              pinColor={isUserBooked ? colors.court : colors.pine}
+              pinColor={isUserBooked ? colors.gold : colors.pine}
               onPress={() => setSelectedEvent(event)}
             />
           );
@@ -102,6 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
 });

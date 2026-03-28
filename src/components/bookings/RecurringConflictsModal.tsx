@@ -62,7 +62,7 @@ export function RecurringConflictsModal({
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onCancel} />
         <View style={styles.card}>
           <View style={styles.header}>
-            <Ionicons name="alert-circle" size={28} color={colors.court} />
+            <Ionicons name="alert-circle" size={28} color={colors.gold} />
             <Text style={styles.title}>Some Dates Unavailable</Text>
           </View>
 
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 24,
     width: '100%',

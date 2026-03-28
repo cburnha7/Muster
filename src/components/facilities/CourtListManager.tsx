@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     color: colors.pine,
   },
   statusTextInactive: {
-    color: colors.chalk,
+    color: colors.surface,
   },
   courtActions: {
     flexDirection: 'row',
@@ -235,6 +235,6 @@ const styles = StyleSheet.create({
   emptyStateButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
 });

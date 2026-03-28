@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 9999,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   pillActive: {
     backgroundColor: colors.pine,

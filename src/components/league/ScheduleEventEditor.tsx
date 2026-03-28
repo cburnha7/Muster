@@ -405,7 +405,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',

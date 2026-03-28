@@ -177,7 +177,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
       
       <View style={[styles.cell, styles.statCell]}>
         <View style={styles.ratingContainer}>
-          <Ionicons name="star" size={12} color={colors.court} />
+          <Ionicons name="star" size={12} color={colors.gold} />
           <Text style={styles.ratingText}>
             {item.stats.averageRating.toFixed(1)}
           </Text>
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.court,
+    color: colors.gold,
   },
   scoreText: {
     fontWeight: '700',

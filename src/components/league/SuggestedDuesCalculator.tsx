@@ -144,7 +144,7 @@ export const SuggestedDuesCalculator: React.FC<SuggestedDuesCalculatorProps> = (
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.pineLight,

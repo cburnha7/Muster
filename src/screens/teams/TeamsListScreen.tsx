@@ -161,7 +161,7 @@ export function TeamsListScreen() {
       {/* FAB — hidden for dependents */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
-          <Ionicons name="add" size={28} color={colors.chalk} />
+          <Ionicons name="add" size={28} color={colors.surface} />
         </TouchableOpacity>
       )}
 
@@ -187,7 +187,7 @@ export function TeamsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   filterRow: {
     paddingHorizontal: Spacing.lg,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   joinButtonText: {
     fontFamily: fonts.ui,
-    color: colors.chalk,
+    color: colors.surface,
     fontSize: 14,
   },
 });

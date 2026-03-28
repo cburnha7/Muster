@@ -345,7 +345,7 @@ export function TimeSlotPicker({
                     </View>
                   )}
                   {selectedSlotIds.includes(slot.id) && (
-                    <Ionicons name="checkmark-circle" size={24} color={colors.chalk} />
+                    <Ionicons name="checkmark-circle" size={24} color={colors.surface} />
                   )}
                 </View>
               </View>
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   slotDisabled: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     opacity: 0.5,
   },
   slotContent: {
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   legend: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 8,
   },

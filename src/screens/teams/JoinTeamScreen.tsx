@@ -257,7 +257,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   content: {
     flex: 1,

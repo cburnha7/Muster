@@ -523,7 +523,7 @@ const ReviewRow: React.FC<{ label: string; value: string; highlight?: boolean }>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   centered: {
     flex: 1,
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.chalk,
+    borderBottomColor: colors.surface,
   },
   reviewLabel: {
     fontFamily: fonts.label,

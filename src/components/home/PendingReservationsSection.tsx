@@ -272,13 +272,13 @@ const styles = StyleSheet.create({
   expandedContent: {
     marginTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.cream,
+    borderTopColor: colors.white,
     paddingTop: Spacing.md,
   },
   documentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: Spacing.sm,
     marginBottom: Spacing.md,

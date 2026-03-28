@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   flagBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 12,

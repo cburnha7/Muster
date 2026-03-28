@@ -524,7 +524,7 @@ export function CourtAvailabilityScreen() {
         {availabilityData && availabilityData.slots.some((s) => s.status === 'available') && (
           <View style={styles.toggleRow}>
             <View style={styles.toggleLabel}>
-              <Ionicons name="sunny" size={18} color={colors.court} />
+              <Ionicons name="sunny" size={18} color={colors.gold} />
               <Text style={styles.toggleText}>Book the Whole Day</Text>
             </View>
             <Switch
@@ -585,7 +585,7 @@ export function CourtAvailabilityScreen() {
               <Text style={styles.legendText}>Blocked</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.court }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.gold }]} />
               <Text style={styles.legendText}>Selected</Text>
             </View>
           </View>
@@ -643,7 +643,7 @@ export function CourtAvailabilityScreen() {
                 ? `Book Recurring ${recurringConfig.frequency === 'weekly' ? 'Weekly' : 'Monthly'}`
                 : `Book ${cartSlots.length} Slot${cartSlots.length !== 1 ? 's' : ''}`}
             </Text>
-            <Ionicons name="arrow-forward" size={20} color={colors.chalk} />
+            <Ionicons name="arrow-forward" size={20} color={colors.surface} />
           </TouchableOpacity>
         </View>
       )}
@@ -691,11 +691,11 @@ export function CourtAvailabilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.white },
   scrollView: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
   loadingText: { marginTop: Spacing.md, ...TextStyles.body, color: colors.inkFaint },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream, padding: Spacing.xxl },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white, padding: Spacing.xxl },
   emptyTitle: { ...TextStyles.h3, color: colors.ink, marginTop: Spacing.lg },
   emptySubtitle: { ...TextStyles.body, color: colors.inkFaint, textAlign: 'center', marginTop: Spacing.sm },
   header: { padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: '#EEE' },
@@ -710,12 +710,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', borderRadius: 12, padding: Spacing.md,
     marginRight: Spacing.md, borderWidth: 2, borderColor: '#EEE', minWidth: 140,
   },
-  courtCardSelected: { borderColor: colors.pine, backgroundColor: colors.cream },
+  courtCardSelected: { borderColor: colors.pine, backgroundColor: colors.white },
   courtCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
   courtName: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink },
   courtNameSelected: { color: colors.pine },
   courtBadge: {
-    backgroundColor: colors.court, borderRadius: 10,
+    backgroundColor: colors.gold, borderRadius: 10,
     minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
   },
   courtBadgeText: { fontFamily: fonts.label, fontSize: 10, color: '#FFF' },
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: Spacing.lg, borderTopWidth: 1, borderTopColor: '#EEE',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   footerSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   footerStats: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -761,5 +761,5 @@ const styles = StyleSheet.create({
     ...ComponentStyles.button.primary,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
   },
-  bookButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.chalk },
+  bookButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
 });

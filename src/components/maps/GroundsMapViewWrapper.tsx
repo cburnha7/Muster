@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     paddingHorizontal: 32,
   },
   webFallbackTitle: {

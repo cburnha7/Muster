@@ -48,7 +48,7 @@ export function UpsellModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="lock-open-outline" size={28} color={colors.court} />
+              <Ionicons name="lock-open-outline" size={28} color={colors.gold} />
             </View>
             <Text style={styles.title}>Upgrade to {planInfo.label}</Text>
             <Text style={styles.price}>{planInfo.price}</Text>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: `${colors.court}20`,
+    backgroundColor: `${colors.gold}20`,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,

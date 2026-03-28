@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   badgeWarning: {
-    backgroundColor: colors.courtLight,
+    backgroundColor: colors.goldLight,
   },
   badgeDanger: {
     backgroundColor: colors.heart,

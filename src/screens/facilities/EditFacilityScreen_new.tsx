@@ -633,7 +633,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Ionicons name="warning" size={32} color={colors.court} />
+              <Ionicons name="warning" size={32} color={colors.gold} />
               <Text style={styles.modalTitle}>Grounds Already Exist</Text>
             </View>
 

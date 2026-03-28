@@ -105,8 +105,8 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
         </View>
       ) : isPending ? (
         <View style={styles.statusRow}>
-          <View style={[styles.badge, { backgroundColor: `${colors.court}20` }]}>
-            <Text style={[styles.badgeText, { color: colors.court }]}>Pending</Text>
+          <View style={[styles.badge, { backgroundColor: `${colors.gold}20` }]}>
+            <Text style={[styles.badgeText, { color: colors.gold }]}>Pending</Text>
           </View>
           <Text style={styles.hint}>Your account is under review. You can resume onboarding if needed.</Text>
           <TouchableOpacity style={styles.button} onPress={handleOnboard} disabled={onboarding} activeOpacity={0.7}>

@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

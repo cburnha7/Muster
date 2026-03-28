@@ -8,7 +8,7 @@ const PLACEHOLDERS: Record<string, string> = {
   Home: "Who's in?",
   Teams: 'Looking for a team?',
   Leagues: 'Looking for a league?',
-  Facilities: 'Search grounds...',
+  Facilities: 'Need a spot?',
   Profile: "Who's in?",
 };
 

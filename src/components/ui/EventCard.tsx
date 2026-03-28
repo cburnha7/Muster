@@ -70,7 +70,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
   const getRatingBadgeColor = (rating: number) => {
     if (rating >= 80) return colors.heart;
-    if (rating >= 50) return colors.court;
+    if (rating >= 50) return colors.gold;
     return colors.pine;
   };
 
@@ -103,7 +103,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         )}
         {isInviteOnly && (
           <View style={styles.inviteOnlyBadge}>
-            <Ionicons name="lock-closed" size={12} color={colors.court} />
+            <Ionicons name="lock-closed" size={12} color={colors.gold} />
             <Text style={styles.inviteOnlyText}>Invite Only</Text>
           </View>
         )}
@@ -313,12 +313,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: colors.court + '20',
+    backgroundColor: colors.gold + '20',
     borderWidth: 1,
-    borderColor: colors.court,
+    borderColor: colors.gold,
   },
   inviteOnlyText: {
-    color: colors.court,
+    color: colors.gold,
     fontSize: 10,
     fontWeight: '600',
     marginLeft: 4,

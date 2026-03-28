@@ -148,7 +148,7 @@ export const CreateMatchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   loadingContainer: {
     flex: 1,

@@ -630,8 +630,8 @@ export function CreateFacilityScreen(): JSX.Element {
                 setRequiresBookingConfirmation(val);
                 if (!val) setRequiresInsurance(false);
               }}
-              trackColor={{ false: colors.cream, true: colors.pineLight }}
-              thumbColor={requiresBookingConfirmation ? colors.pine : colors.chalk}
+              trackColor={{ false: colors.white, true: colors.pineLight }}
+              thumbColor={requiresBookingConfirmation ? colors.pine : colors.surface}
             />
           </View>
         </View>
@@ -649,8 +649,8 @@ export function CreateFacilityScreen(): JSX.Element {
             <Switch
               value={requiresInsurance}
               onValueChange={setRequiresInsurance}
-              trackColor={{ false: colors.cream, true: colors.pineLight }}
-              thumbColor={requiresInsurance ? colors.pine : colors.chalk}
+              trackColor={{ false: colors.white, true: colors.pineLight }}
+              thumbColor={requiresInsurance ? colors.pine : colors.surface}
             />
           </View>
         </View>
@@ -898,7 +898,7 @@ export function CreateFacilityScreen(): JSX.Element {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Ionicons name="warning" size={32} color={colors.court} />
+              <Ionicons name="warning" size={32} color={colors.gold} />
               <Text style={styles.modalTitle}>Grounds Already Exist</Text>
             </View>
 
@@ -967,7 +967,7 @@ export function CreateFacilityScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -1059,7 +1059,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1180,7 +1180,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1206,7 +1206,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   duplicateCard: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,

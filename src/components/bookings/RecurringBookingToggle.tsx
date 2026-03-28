@@ -63,7 +63,7 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
           value={value.enabled}
           onValueChange={handleToggle}
           trackColor={{ false: `${colors.inkFaint}40`, true: `${colors.pine}60` }}
-          thumbColor={value.enabled ? colors.pine : colors.chalk}
+          thumbColor={value.enabled ? colors.pine : colors.surface}
         />
       </View>
 
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: `${colors.inkFaint}30`,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   dateText: {
     fontFamily: fonts.body,

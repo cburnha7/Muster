@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     gap: 6,
   },
   title: {

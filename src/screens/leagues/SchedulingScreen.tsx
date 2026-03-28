@@ -487,7 +487,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   centered: {
     flex: 1,

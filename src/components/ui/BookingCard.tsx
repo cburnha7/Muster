@@ -96,7 +96,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         )}
         {booking.status === BookingStatus.PENDING_APPROVAL && (
           <View style={styles.pendingApprovalBadge}>
-            <Ionicons name="time-outline" size={11} color={colors.bronze} />
+            <Ionicons name="time-outline" size={11} color={colors.gold} />
             <Text style={styles.pendingApprovalText}>PENDING</Text>
           </View>
         )}
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   containerLive: {
     borderWidth: 1.5,
-    borderColor: colors.court,
+    borderColor: colors.gold,
   },
   containerPast: {
     borderWidth: 1.5,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   liveBadgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   },
   bookingInfo: {
     borderTopWidth: 1,
-    borderTopColor: colors.chalk,
+    borderTopColor: colors.surface,
     paddingTop: 8,
     marginTop: 12,
   },
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   pendingApprovalText: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.bronze,
+    color: colors.gold,
     letterSpacing: 0.5,
   },
 });

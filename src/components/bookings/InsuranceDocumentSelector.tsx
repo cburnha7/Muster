@@ -129,13 +129,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   loadingContainer: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
   },
   warningCard: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   documentCard: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: Spacing.sm,

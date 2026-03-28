@@ -30,11 +30,11 @@ const TYPE_CONFIG: Record<TransactionType, { label: string; icon: keyof typeof I
   capture: { label: 'Capture', icon: 'checkmark-circle-outline', color: colors.pine },
   surplus_payout: { label: 'Surplus Payout', icon: 'arrow-up-outline', color: colors.pine },
   shortfall_charge: { label: 'Shortfall Charge', icon: 'arrow-down-outline', color: colors.heart },
-  refund: { label: 'Refund', icon: 'return-down-back-outline', color: colors.bronze },
+  refund: { label: 'Refund', icon: 'return-down-back-outline', color: colors.gold },
 };
 
 const STATUS_COLOR: Record<TransactionStatus, string> = {
-  pending: colors.bronze,
+  pending: colors.gold,
   completed: colors.pine,
   failed: colors.heart,
 };
@@ -72,7 +72,7 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
       ) : (
         transactions.map((tx: EscrowTransaction) => {
           const config = TYPE_CONFIG[tx.type] ?? TYPE_CONFIG.authorization;
-          const statusColor = STATUS_COLOR[tx.status] ?? colors.bronze;
+          const statusColor = STATUS_COLOR[tx.status] ?? colors.gold;
 
           return (
             <View
@@ -108,11 +108,11 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   sectionTitle: {
     fontFamily: fonts.label,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   iconCircle: {
     width: 40,

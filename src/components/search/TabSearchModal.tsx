@@ -88,11 +88,10 @@ export function TabSearchModal({
     }
   }, [visible]);
 
-  // Debounced search
+  // Search — runs on every filter change and on open
   useEffect(() => {
     if (!visible) return;
     const timer = setTimeout(async () => {
-      if (!query.trim() && !selectedSport && !selectedGender && !minAgeFilter && !maxAgeFilter) { setResults([]); return; }
       setLoading(true);
       try {
         const res = await onSearch(query, selectedSport, selectedGender || undefined);
@@ -126,7 +125,7 @@ export function TabSearchModal({
       {/* Results */}
       {loading ? (
         <View style={styles.centered}><ActivityIndicator color={colors.pine} /></View>
-      ) : results.length === 0 && (query.trim() || selectedSport) ? (
+      ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
           <Text style={styles.emptyText}>No results found</Text>
@@ -167,7 +166,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     zIndex: 100,
   },
   filterRow: {
@@ -192,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   centered: {
     flex: 1,

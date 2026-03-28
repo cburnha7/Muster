@@ -510,7 +510,7 @@ export const ManageLeagueScreen: React.FC = () => {
                   .filter((m) => m.status === 'pending' && m.memberType === 'roster')
                   .map((membership) => (
                     <View key={membership.id} style={styles.pendingInvitationItem}>
-                      <Ionicons name="time-outline" size={18} color={colors.court} />
+                      <Ionicons name="time-outline" size={18} color={colors.gold} />
                       <Text style={styles.pendingInvitationName}>
                         {(membership as any).team?.name || 'Unknown Roster'}
                       </Text>
@@ -559,7 +559,7 @@ export const ManageLeagueScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   statusBadgePending: {
-    backgroundColor: colors.courtLight,
+    backgroundColor: colors.goldLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,

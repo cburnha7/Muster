@@ -39,7 +39,7 @@ function getTypeColor(type: string): string {
   switch (type) {
     case 'dues_received': return colors.pine;
     case 'court_cost': return colors.heart;
-    case 'refund': return colors.court;
+    case 'refund': return colors.gold;
     default: return colors.inkFaint;
   }
 }

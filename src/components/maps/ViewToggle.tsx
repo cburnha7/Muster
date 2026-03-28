@@ -24,7 +24,7 @@ export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
         <Ionicons
           name="list"
           size={20}
-          color={viewMode === 'list' ? colors.chalk : colors.ink}
+          color={viewMode === 'list' ? colors.surface : colors.ink}
         />
       </TouchableOpacity>
       <TouchableOpacity
@@ -35,7 +35,7 @@ export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
         <Ionicons
           name="map"
           size={20}
-          color={viewMode === 'map' ? colors.chalk : colors.ink}
+          color={viewMode === 'map' ? colors.surface : colors.ink}
         />
       </TouchableOpacity>
     </View>
@@ -45,7 +45,7 @@ export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 2,
   },

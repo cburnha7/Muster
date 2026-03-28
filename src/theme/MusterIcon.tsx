@@ -19,7 +19,7 @@ const variantConfig = {
     rightFig:    colors.navy,
   },
   light: {
-    bg:          colors.bronze,
+    bg:          colors.gold,
     groundLine:  colors.navy,
     leftFig:     colors.pine,
     centreFig:   colors.heart,
@@ -30,7 +30,7 @@ const variantConfig = {
     groundLine:  'rgba(255,255,255,0.3)',
     leftFig:     'rgba(255,255,255,0.55)',
     centreFig:   '#ffffff',
-    rightFig:    colors.bronzeLight,
+    rightFig:    colors.goldLight,
   },
 } as const;
 

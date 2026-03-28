@@ -165,7 +165,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
                     <Ionicons
                       name={homeRosterId === roster.id ? 'home' : 'home-outline'}
                       size={20}
-                      color={homeRosterId === roster.id ? colors.court : colors.inkFaint}
+                      color={homeRosterId === roster.id ? colors.gold : colors.inkFaint}
                     />
                   </TouchableOpacity>
                 )}
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   homeBadge: {
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',

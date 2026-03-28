@@ -887,7 +887,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 accessibilityRole="button"
                 accessibilityLabel="Select end date"
               >
-                <Ionicons name="calendar-outline" size={20} color={colors.court} />
+                <Ionicons name="calendar-outline" size={20} color={colors.gold} />
                 <Text style={[styles.datePickerText, !endDate && styles.datePickerPlaceholder]}>
                   {endDate ? formatDateDisplay(endDate) : 'Select an end date'}
                 </Text>
@@ -1190,7 +1190,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             accessibilityRole="button"
             accessibilityLabel="Select registration cutoff date"
           >
-            <Ionicons name="lock-closed-outline" size={20} color={colors.court} />
+            <Ionicons name="lock-closed-outline" size={20} color={colors.gold} />
             <Text style={[styles.datePickerText, !registrationCutoffDate && styles.datePickerPlaceholder]}>
               {registrationCutoffDate ? formatDateDisplay(registrationCutoffDate) : 'Select a cutoff date'}
             </Text>
@@ -1287,7 +1287,7 @@ const styles = StyleSheet.create({
   formatHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     gap: 8,
@@ -1301,7 +1301,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   scrollView: {
     flex: 1,
@@ -1580,7 +1580,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
@@ -1621,7 +1621,7 @@ const styles = StyleSheet.create({
   invitedRostersTitle: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.court,
+    color: colors.gold,
   },
   invitedRosterItem: {
     flexDirection: 'row',
@@ -1631,13 +1631,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.courtLight,
+    borderColor: colors.goldLight,
   },
   invitedRosterIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1645,7 +1645,7 @@ const styles = StyleSheet.create({
   invitedRosterStatus: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.court,
+    color: colors.gold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 2,
@@ -1659,7 +1659,7 @@ const styles = StyleSheet.create({
   rosterSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',

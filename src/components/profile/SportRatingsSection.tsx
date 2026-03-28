@@ -42,7 +42,7 @@ const getTopLabel = (percentile: number | null): string => {
 
 const getPercentileColor = (percentile: number | null): string => {
   if (percentile == null) return colors.inkFaint;
-  if (percentile >= 90) return colors.court;
+  if (percentile >= 90) return colors.gold;
   if (percentile >= 70) return colors.pine;
   if (percentile >= 50) return colors.navy;
   return colors.inkFaint;
@@ -94,7 +94,7 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
               accessibilityRole="button"
               accessibilityLabel={`${formatSportName(r.sportType)} ratings, ${isExpanded ? 'collapse' : 'expand'}`}
             >
-              <Ionicons name="trophy-outline" size={18} color={colors.court} />
+              <Ionicons name="trophy-outline" size={18} color={colors.gold} />
               <Text style={styles.sportName}>{formatSportName(r.sportType)}</Text>
               <View style={styles.rowRight}>
                 {summaryPercentile != null && (
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   percentileCard: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',

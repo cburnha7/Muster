@@ -117,7 +117,7 @@ export function BulkBookingConfirmationModal({
             )}
 
             <View style={styles.notice}>
-              <Ionicons name="information-circle" size={18} color={colors.court} />
+              <Ionicons name="information-circle" size={18} color={colors.gold} />
               <Text style={styles.noticeText}>
                 Cancellations must be made at least 2 hours before start time.
               </Text>
@@ -135,7 +135,7 @@ export function BulkBookingConfirmationModal({
                 <Text style={styles.confirmBtnText}>
                   {loading ? 'Booking...' : `Confirm ${cartSlots.length} Slot${cartSlots.length !== 1 ? 's' : ''}`}
                 </Text>
-                {!loading && <Ionicons name="checkmark-circle" size={18} color={colors.chalk} />}
+                {!loading && <Ionicons name="checkmark-circle" size={18} color={colors.surface} />}
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -148,7 +148,7 @@ export function BulkBookingConfirmationModal({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modal: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -180,8 +180,8 @@ const styles = StyleSheet.create({
   notice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
     marginHorizontal: Spacing.lg, marginBottom: Spacing.lg,
-    padding: Spacing.sm, borderLeftWidth: 3, borderLeftColor: colors.court,
-    backgroundColor: `${colors.court}10`, borderRadius: 8,
+    padding: Spacing.sm, borderLeftWidth: 3, borderLeftColor: colors.gold,
+    backgroundColor: `${colors.gold}10`, borderRadius: 8,
   },
   noticeText: { flex: 1, fontFamily: fonts.body, ...typeScale.bodySm, color: colors.ink },
   buttons: { flexDirection: 'row', gap: Spacing.md, paddingHorizontal: Spacing.lg },
@@ -191,5 +191,5 @@ const styles = StyleSheet.create({
     flex: 2, ...ComponentStyles.button.primary,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
-  confirmBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.chalk },
+  confirmBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.surface },
 });

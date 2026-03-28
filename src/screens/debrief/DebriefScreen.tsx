@@ -209,7 +209,7 @@ export function DebriefScreen(): JSX.Element {
                   <Ionicons
                     name={star <= facilityRating ? 'star' : 'star-outline'}
                     size={36}
-                    color={star <= facilityRating ? colors.court : colors.inkFaint}
+                    color={star <= facilityRating ? colors.gold : colors.inkFaint}
                   />
                 </TouchableOpacity>
               ))}
@@ -253,15 +253,15 @@ export function DebriefScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.white },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: colors.chalk,
+    borderBottomColor: colors.surface,
   },
   backButton: { marginRight: Spacing.md },
   headerText: { flex: 1 },
@@ -287,8 +287,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   participantCardSaluted: {
-    borderColor: colors.court,
-    backgroundColor: colors.court + '10',
+    borderColor: colors.gold,
+    backgroundColor: colors.gold + '10',
   },
   avatar: { width: 56, height: 56, borderRadius: 28 },
   avatarPlaceholder: {
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.lg,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: '#FFFFFF',
   },

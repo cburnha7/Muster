@@ -193,7 +193,7 @@ const rankingsStyles = StyleSheet.create({
   controls: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },

@@ -93,7 +93,7 @@ export const ResetPasswordScreen: React.FC = () => {
     if (/[^A-Za-z0-9]/.test(password)) score++;
 
     if (score <= 2) return { strength: 'Weak', color: colors.heart };
-    if (score <= 3) return { strength: 'Fair', color: colors.court };
+    if (score <= 3) return { strength: 'Fair', color: colors.gold };
     if (score <= 4) return { strength: 'Good', color: colors.navy };
     return { strength: 'Strong', color: colors.pine };
   };

@@ -182,7 +182,7 @@ export function RentalConfirmationModal({
                     ]}
                   >
                     {policyAcknowledged && (
-                      <Ionicons name="checkmark" size={14} color={colors.chalk} />
+                      <Ionicons name="checkmark" size={14} color={colors.surface} />
                     )}
                   </View>
                   <Text style={styles.acknowledgementText}>
@@ -192,7 +192,7 @@ export function RentalConfirmationModal({
               </View>
             ) : (
               <View style={styles.noticeContainer}>
-                <Ionicons name="information-circle" size={20} color={colors.court} />
+                <Ionicons name="information-circle" size={20} color={colors.gold} />
                 <Text style={styles.noticeText}>
                   Cancellations must be made at least 2 hours before the start time for a full refund.
                 </Text>
@@ -228,7 +228,7 @@ export function RentalConfirmationModal({
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={isConfirmDisabled ? colors.inkFaint : colors.chalk}
+                  color={isConfirmDisabled ? colors.inkFaint : colors.surface}
                 />
               </TouchableOpacity>
             </View>
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   priceRow: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     marginTop: Spacing.sm,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -328,12 +328,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     padding: Spacing.md,
     marginHorizontal: Spacing.lg,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.court,
+    borderLeftColor: colors.gold,
   },
   policyContainer: {
     marginHorizontal: Spacing.lg,
@@ -371,14 +371,14 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
   confirmButtonDisabled: {
     backgroundColor: colors.inkFaint,
     opacity: 0.6,
   },
   confirmButtonTextDisabled: {
-    color: colors.chalk,
+    color: colors.surface,
   },
   acknowledgementRow: {
     flexDirection: 'row',

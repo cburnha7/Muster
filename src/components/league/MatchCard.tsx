@@ -172,7 +172,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, style }) =
             </View>
           ) : (
             <View style={styles.winnerBadge}>
-              <Ionicons name="trophy" size={14} color={colors.court} />
+              <Ionicons name="trophy" size={14} color={colors.gold} />
               <Text style={styles.winnerText}>
                 {match.outcome === 'home_win' 
                   ? match.homeTeam?.name 
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   winnerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.court,
+    color: colors.gold,
   },
   drawBadge: {
     backgroundColor: '#F0F0F0',

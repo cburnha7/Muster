@@ -10,7 +10,7 @@ export const calendarTheme = {
   textSectionTitleColor: colors.ink,
   selectedDayBackgroundColor: colors.pine,
   selectedDayTextColor: '#FFFFFF',
-  todayTextColor: colors.court,
+  todayTextColor: colors.gold,
   dayTextColor: colors.ink,
   textDisabledColor: colors.inkFaint,
   dotColor: colors.pine,

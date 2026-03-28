@@ -171,7 +171,7 @@ export function LeaguesBrowserScreen() {
       {/* FAB */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
-          <Ionicons name="add" size={28} color={colors.chalk} />
+          <Ionicons name="add" size={28} color={colors.surface} />
         </TouchableOpacity>
       )}
 
@@ -192,7 +192,7 @@ export function LeaguesBrowserScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   filterRow: {
     paddingHorizontal: Spacing.lg,

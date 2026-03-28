@@ -616,7 +616,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           {/* Pending roster invitations the commissioner can confirm (their own rosters) */}
           {pendingUserRosterInvitations.length > 0 && (
             <View style={styles.commissionerInviteBanner}>
-              <Ionicons name="mail-outline" size={20} color={colors.court} />
+              <Ionicons name="mail-outline" size={20} color={colors.gold} />
               <View style={styles.invitationBannerContent}>
                 <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
                 {pendingUserRosterInvitations.map((inv) => {
@@ -855,7 +855,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
                     const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
                     return (
                       <View key={m.id} style={styles.roRosterItem}>
-                        <View style={[styles.roRosterIcon, { backgroundColor: colors.court }]}>
+                        <View style={[styles.roRosterIcon, { backgroundColor: colors.gold }]}>
                           <Ionicons name="time-outline" size={18} color="#FFFFFF" />
                         </View>
                         <View style={styles.roRosterInfo}>
@@ -981,7 +981,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.white },
   scrollView: { flex: 1 },
   ledgerSection: { paddingHorizontal: 16, paddingBottom: 24 },
   formSection: { backgroundColor: '#FFFFFF', marginBottom: 12 },
@@ -1001,7 +1001,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold, fontSize: 14, color: colors.pine,
   },
   countBadge: {
-    backgroundColor: colors.court, borderRadius: 10,
+    backgroundColor: colors.gold, borderRadius: 10,
     minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 6,
   },
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
   memberStats: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint },
   statusBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
   statusActive: { backgroundColor: '#EDF7F0' },
-  statusPending: { backgroundColor: colors.courtLight },
+  statusPending: { backgroundColor: colors.goldLight },
   statusText: { fontFamily: fonts.label, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
   statusTextActive: { color: colors.pine },
   statusTextPending: { color: colors.ink },
@@ -1076,13 +1076,13 @@ const styles = StyleSheet.create({
   matchupCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: '#FFF8EE', borderRadius: 10, padding: 14, marginBottom: 8,
-    borderWidth: 1, borderColor: colors.courtLight,
+    borderWidth: 1, borderColor: colors.goldLight,
   },
   matchupInfo: { flex: 1, marginRight: 12 },
   matchupTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
   matchupRosters: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
   unscheduledBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  unscheduledText: { fontFamily: fonts.label, fontSize: 11, color: colors.court, textTransform: 'uppercase' },
+  unscheduledText: { fontFamily: fonts.label, fontSize: 11, color: colors.gold, textTransform: 'uppercase' },
   // Event action buttons
   eventActions: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, gap: 8 },
   createEventBtn: {
@@ -1092,9 +1092,9 @@ const styles = StyleSheet.create({
   createEventBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.pine },
   viewMatchupsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.court, borderRadius: 10, paddingVertical: 12,
+    borderWidth: 2, borderColor: colors.gold, borderRadius: 10, paddingVertical: 12,
   },
-  viewMatchupsBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.court },
+  viewMatchupsBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.gold },
   // Event card styles
   eventCard: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
@@ -1184,7 +1184,7 @@ const styles = StyleSheet.create({
   },
   headerStats: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.cream, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
+    backgroundColor: colors.white, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontFamily: fonts.semibold, fontSize: 18, color: colors.ink },
@@ -1196,11 +1196,11 @@ const styles = StyleSheet.create({
   // Invitation banner
   invitationBanner: {
     flexDirection: 'row', backgroundColor: '#FFF8EE', paddingHorizontal: 16, paddingVertical: 14,
-    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.court,
+    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.gold,
   },
   commissionerInviteBanner: {
     flexDirection: 'row', backgroundColor: '#FFF8EE', paddingHorizontal: 16, paddingVertical: 14,
-    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.court,
+    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.gold,
   },
   invitationBannerContent: { flex: 1, marginLeft: 12 },
   invitationBannerTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, marginBottom: 6 },
@@ -1226,7 +1226,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   rosterListIcon: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: `${colors.court}18`,
+    width: 36, height: 36, borderRadius: 18, backgroundColor: `${colors.gold}18`,
     alignItems: 'center', justifyContent: 'center', marginRight: 12,
   },
   rosterListInfo: { flex: 1 },
@@ -1238,10 +1238,10 @@ const styles = StyleSheet.create({
   },
   rosterListMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   invitedBadge: {
-    backgroundColor: `${colors.court}18`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8,
+    backgroundColor: `${colors.gold}18`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8,
   },
   invitedBadgeText: {
-    fontFamily: fonts.label, fontSize: 11, color: colors.court,
+    fontFamily: fonts.label, fontSize: 11, color: colors.gold,
   },
   // ── Read-only form styles (non-commissioner view) ───────────────
   roForm: {
@@ -1380,7 +1380,7 @@ const styles = StyleSheet.create({
   roRosterSectionTitleInvited: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.court,
+    color: colors.gold,
     marginBottom: 4,
   },
   roRosterDescription: {

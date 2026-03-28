@@ -542,7 +542,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps): JS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   content: {
     paddingBottom: Spacing.lg,
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   bookButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
   parkingInfo: {
     flexDirection: 'row',
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '95%',
     height: '90%',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.soft,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   modalTitle: {
     fontSize: 18,

@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -234,7 +234,7 @@ export function EventsListScreen(): React.JSX.Element {
 
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
-          <Ionicons name="add" size={28} color={colors.chalk} />
+          <Ionicons name="add" size={28} color={colors.surface} />
         </TouchableOpacity>
       )}
 
@@ -287,7 +287,7 @@ export function EventsListScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream },
+  container: { flex: 1, backgroundColor: colors.white },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 16 },
   sectionHeader: {
@@ -431,14 +431,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine,
     borderRadius: 8,
   },
-  retryButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.chalk },
+  retryButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end' as const,
   },
   modalContent: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -469,13 +469,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.inkFaint,
   },
   sportChipSelected: { backgroundColor: colors.pine, borderColor: colors.pine },
   sportChipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
-  sportChipTextSelected: { color: colors.chalk },
+  sportChipTextSelected: { color: colors.surface },
   modalActions: {
     flexDirection: 'row' as const,
     padding: Spacing.lg,
@@ -499,5 +499,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine,
     alignItems: 'center' as const,
   },
-  applyButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.chalk },
+  applyButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
 });

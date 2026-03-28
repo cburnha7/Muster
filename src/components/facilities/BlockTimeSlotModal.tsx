@@ -246,7 +246,7 @@ export function BlockTimeSlotModal({
               onPress={handleBlockSlot}
               disabled={loading}
             >
-              <Ionicons name="close-circle" size={20} color={colors.chalk} />
+              <Ionicons name="close-circle" size={20} color={colors.surface} />
               <Text style={styles.blockButtonText}>
                 {loading ? 'Blocking...' : 'Block Slot'}
               </Text>
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   blockButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
   buttonDisabled: {
     opacity: 0.5,

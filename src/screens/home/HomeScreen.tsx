@@ -422,7 +422,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -442,10 +442,11 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   sectionInner: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
   },
   calendar: {
     borderRadius: 12,
+    marginHorizontal: 16,
     marginBottom: Spacing.md,
     overflow: 'hidden',
   },
@@ -502,7 +503,7 @@ const styles = StyleSheet.create({
     paddingBottom: 70,
   },
   inboxModal: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     maxHeight: '80%',
     overflow: 'hidden',
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   inboxTitle: {
     fontFamily: fonts.heading,

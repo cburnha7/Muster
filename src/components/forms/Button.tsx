@@ -61,7 +61,7 @@ export const Button: React.FC<ButtonProps> = ({
       case 'secondary':
         return colors.surface;
       case 'accent':
-        return colors.court;
+        return colors.gold;
       case 'destructive':
         return colors.heart;
       default:

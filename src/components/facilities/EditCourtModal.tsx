@@ -240,7 +240,7 @@ export function EditCourtModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   header: {
     flexDirection: 'row',

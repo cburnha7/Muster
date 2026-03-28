@@ -163,7 +163,7 @@ export function ManageGroundScreen() {
 
           <TouchableOpacity style={styles.actionCard} onPress={handleEditMap}>
             <View style={styles.actionIcon}>
-              <Ionicons name="map-outline" size={24} color={colors.court} />
+              <Ionicons name="map-outline" size={24} color={colors.gold} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Edit Facility Map</Text>
@@ -232,7 +232,7 @@ export function ManageGroundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,

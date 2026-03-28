@@ -61,7 +61,7 @@ export function CancellationPolicyDisplay({
           <Ionicons
             name={teamPenaltyPct === 0 ? 'checkmark-circle-outline' : 'alert-circle-outline'}
             size={16}
-            color={teamPenaltyPct === 0 ? colors.pine : colors.court}
+            color={teamPenaltyPct === 0 ? colors.pine : colors.gold}
           />
           <Text style={styles.text}>{penaltyLine}</Text>
         </View>
@@ -81,7 +81,7 @@ export function CancellationPolicyDisplay({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.navy + '30',

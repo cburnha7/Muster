@@ -26,8 +26,8 @@ const statusConfig: Record<BalanceStatus, { label: string; bg: string; color: st
   },
   low: {
     label: 'Low',
-    bg: colors.courtLight + '30',
-    color: colors.court,
+    bg: colors.goldLight + '30',
+    color: colors.gold,
     icon: 'warning',
   },
   blocked: {

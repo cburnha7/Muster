@@ -226,14 +226,14 @@ export function MyRentalsScreen() {
         {/* Status Badge */}
         <View style={styles.badgeRow}>
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Ionicons name={statusIcon} size={16} color={colors.chalk} />
+            <Ionicons name={statusIcon} size={16} color={colors.surface} />
             <Text style={styles.statusText}>{rental.status.toUpperCase()}</Text>
           </View>
 
           {/* Cancellation Pending Badge */}
           {rental.cancellationStatus === 'pending' && (
             <View style={[styles.statusBadge, styles.cancellationPendingBadge]}>
-              <Ionicons name="hourglass-outline" size={14} color={colors.chalk} />
+              <Ionicons name="hourglass-outline" size={14} color={colors.surface} />
               <Text style={styles.cancellationPendingText}>CANCELLATION PENDING</Text>
             </View>
           )}
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   countText: {
     ...TextStyles.caption,
-    color: colors.chalk,
+    color: colors.surface,
     fontWeight: '700',
   },
   rentalCard: {
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...TextStyles.caption,
-    color: colors.chalk,
+    color: colors.surface,
     fontWeight: '700',
   },
   badgeRow: {
@@ -498,14 +498,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   cancellationPendingBadge: {
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
   },
   cancellationPendingText: {
     fontFamily: fonts.label,
     fontSize: 10,
     lineHeight: 14,
     letterSpacing: 1.8,
-    color: colors.chalk,
+    color: colors.surface,
   },
   facilityName: {
     ...TextStyles.h4,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderRadius: 8,
   },
   courtName: {
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: colors.pine,
     borderRadius: 8,
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: colors.heart,
     borderRadius: 8,
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
     marginTop: Spacing.sm,
     padding: Spacing.sm,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderRadius: 6,
   },
   cancellationText: {

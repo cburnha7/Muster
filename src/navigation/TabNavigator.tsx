@@ -109,7 +109,7 @@ export function TabNavigator(): JSX.Element {
         headerShown: true,
         headerTitle: () => <HeaderSearchPill routeName={route.name} />,
         headerStyle: {
-          backgroundColor: colors.cream,
+          backgroundColor: colors.white,
           shadowColor: 'transparent',
           elevation: 0,
           borderBottomWidth: 0,
@@ -207,6 +207,8 @@ export function TabNavigator(): JSX.Element {
         options={({ route }) => ({
           tabBarLabel: 'Grounds',
           headerShown: isRootScreen(route),
+          headerRight: () => <HeaderUserSelector />,
+          headerRightContainerStyle: { paddingRight: 16 },
         })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {

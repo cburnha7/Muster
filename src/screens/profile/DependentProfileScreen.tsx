@@ -205,7 +205,7 @@ export function DependentProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Salutes Received</Text>
           <View style={styles.statCard}>
-            <Ionicons name="hand-left-outline" size={24} color={colors.court} />
+            <Ionicons name="hand-left-outline" size={24} color={colors.gold} />
             <Text style={styles.statValue}>{profile.salutesReceived}</Text>
             <Text style={styles.statLabel}>
               {profile.salutesReceived === 1 ? 'Salute' : 'Salutes'}
@@ -287,7 +287,7 @@ export function DependentProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: fonts.display,
     fontSize: 24,
-    color: colors.court,
+    color: colors.gold,
   },
   statLabel: {
     fontFamily: fonts.body,

@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   rosterSection: {
     marginBottom: 16,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 12,
   },
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pendingBadge: {
-    backgroundColor: colors.court + '20',
+    backgroundColor: colors.gold + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.court,
+    color: colors.gold,
   },
   emptyText: {
     fontFamily: fonts.body,

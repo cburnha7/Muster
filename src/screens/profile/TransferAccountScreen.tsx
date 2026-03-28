@@ -140,7 +140,7 @@ export function TransferAccountScreen() {
         >
           {/* Permanent action warning */}
           <View style={styles.warningCard}>
-            <Ionicons name="warning-outline" size={24} color={colors.court} />
+            <Ionicons name="warning-outline" size={24} color={colors.gold} />
             <View style={styles.warningTextContainer}>
               <Text style={styles.warningTitle}>This action is permanent</Text>
               <Text style={styles.warningBody}>
@@ -209,7 +209,7 @@ export function TransferAccountScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   flex: {
     flex: 1,
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   },
   warningCard: {
     flexDirection: 'row',
-    backgroundColor: colors.court + '15',
+    backgroundColor: colors.gold + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: colors.court + '30',
+    borderColor: colors.gold + '30',
   },
   warningTextContainer: {
     flex: 1,

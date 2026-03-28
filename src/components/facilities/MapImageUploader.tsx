@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   requirementsList: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
   },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   mapImage: {
     width: '100%',
     height: 400,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
   },
   imageOverlay: {
     flexDirection: 'row',
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   changeButton: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.pine,
   },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     color: colors.pine,
   },
   removeButton: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.heart,
   },

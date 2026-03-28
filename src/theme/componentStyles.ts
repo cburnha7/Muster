@@ -54,6 +54,6 @@ export const ComponentStyles = {
   /** Global app background */
   screenBackground: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
 } as const;

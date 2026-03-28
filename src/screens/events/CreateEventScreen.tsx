@@ -379,7 +379,7 @@ export function CreateEventScreen() {
                     <Ionicons
                       name={isSelected ? 'checkbox' : 'square-outline'}
                       size={20}
-                      color={isSelected ? colors.pine : canSelect ? colors.inkFaint : colors.cream}
+                      color={isSelected ? colors.pine : canSelect ? colors.inkFaint : colors.white}
                     />
                     <Text style={[styles.timeRowText, isSelected && styles.timeRowTextSelected]}>
                       {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
@@ -511,7 +511,7 @@ export function CreateEventScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.cream },
+  screen: { flex: 1, backgroundColor: colors.white },
   content: { padding: 16, paddingTop: 8 },
   stepLabel: {
     fontFamily: fonts.label,
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   calendar: {
     borderRadius: 12,
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
     overflow: 'hidden',
   },
   timeRow: {
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   timeRowSelected: {
     backgroundColor: colors.pine + '0D',
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: colors.cream,
+    borderColor: colors.white,
     gap: 6,
   },
   toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
     maxHeight: 240,
   },
   dropdownRow: {
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
   avatar: { width: 24, height: 24, borderRadius: 12 },
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
 });

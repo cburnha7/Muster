@@ -26,8 +26,8 @@ const statusConfig: Record<DuesStatus, { label: string; bg: string; color: strin
   },
   pending: {
     label: 'Pending',
-    bg: colors.courtLight + '30',
-    color: colors.court,
+    bg: colors.goldLight + '30',
+    color: colors.gold,
     icon: 'time',
   },
   unpaid: {

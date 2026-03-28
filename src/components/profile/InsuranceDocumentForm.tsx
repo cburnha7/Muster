@@ -327,7 +327,7 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.chalk,
+    borderBottomColor: colors.surface,
   },
   headerTitle: {
     fontFamily: fonts.heading,
@@ -363,10 +363,10 @@ const styles = StyleSheet.create({
     color: colors.heart,
   },
   filePicker: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.chalk,
+    borderColor: colors.surface,
     borderStyle: 'dashed',
     overflow: 'hidden',
   },
@@ -403,10 +403,10 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.sm,
   },
   textInput: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.chalk,
+    borderColor: colors.surface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 14,
     fontFamily: fonts.body,
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.chalk,
+    borderTopColor: colors.surface,
   },
   submitButton: {
     backgroundColor: colors.pine,

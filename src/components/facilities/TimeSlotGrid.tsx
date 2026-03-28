@@ -37,7 +37,7 @@ export function TimeSlotGrid({
 }: TimeSlotGridProps) {
   const getSlotColor = (slot: TimeSlot, isSelected: boolean): string => {
     if (isSelected) {
-      return colors.court;
+      return colors.gold;
     }
     
     switch (slot.status) {
@@ -151,7 +151,7 @@ export function TimeSlotGrid({
                   <Ionicons
                     name={getSlotIcon(slot)}
                     size={12}
-                    color={colors.chalk}
+                    color={colors.surface}
                   />
                   <Text style={styles.statusBadgeText}>{getSlotLabel(slot)}</Text>
                 </View>
@@ -179,7 +179,7 @@ export function TimeSlotGrid({
 
               {isSelected && (
                 <View style={styles.selectedIndicator}>
-                  <Ionicons name="checkmark-circle" size={20} color={colors.court} />
+                  <Ionicons name="checkmark-circle" size={20} color={colors.gold} />
                 </View>
               )}
             </TouchableOpacity>
@@ -206,8 +206,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   slotCardSelected: {
-    backgroundColor: colors.chalk,
-    borderColor: colors.court,
+    backgroundColor: colors.surface,
+    borderColor: colors.gold,
   },
   slotHeader: {
     flexDirection: 'row',
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
   courtInfo: {
     flexDirection: 'row',

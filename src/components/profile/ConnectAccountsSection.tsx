@@ -184,7 +184,7 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
 function StatusBadge({ status }: { status: OnboardingStatus }) {
   const config = {
     active: { label: 'Active', bg: `${colors.pine}20`, color: colors.pine },
-    pending: { label: 'Pending', bg: `${colors.court}20`, color: colors.court },
+    pending: { label: 'Pending', bg: `${colors.gold}20`, color: colors.gold },
     not_set_up: { label: 'Not Set Up', bg: `${colors.inkFaint}20`, color: colors.inkFaint },
   }[status];
 

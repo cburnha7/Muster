@@ -194,10 +194,10 @@ export const PublicEventDetailScreen: React.FC = () => {
             accessibilityLabel="Join for this event"
           >
             {registering ? (
-              <ActivityIndicator size="small" color={colors.chalk} />
+              <ActivityIndicator size="small" color={colors.surface} />
             ) : (
               <>
-                <Ionicons name="add-circle-outline" size={20} color={colors.chalk} />
+                <Ionicons name="add-circle-outline" size={20} color={colors.surface} />
                 <Text style={styles.joinButtonText}>Join</Text>
               </>
             )}
@@ -212,7 +212,7 @@ export const PublicEventDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   centered: {
     flex: 1,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     marginVertical: Spacing.sm,
   },
   statsRow: {
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusPending: {
-    backgroundColor: colors.court + '20',
+    backgroundColor: colors.gold + '20',
   },
   statusConfirmed: {
     backgroundColor: colors.pine + '20',
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.chalk,
+    color: colors.surface,
   },
   footer: {
     position: 'absolute',
@@ -358,9 +358,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.md,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.chalk,
+    borderTopColor: colors.surface,
   },
   joinButton: {
     flexDirection: 'row',
@@ -377,6 +377,6 @@ const styles = StyleSheet.create({
   joinButtonText: {
     fontFamily: fonts.ui,
     fontSize: 17,
-    color: colors.chalk,
+    color: colors.surface,
   },
 });

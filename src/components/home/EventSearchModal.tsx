@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: SCREEN_HEIGHT * 0.92,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
+    borderBottomColor: colors.white,
   },
   closeBtn: {
     padding: 4,
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   chipSelected: {
     backgroundColor: colors.pine,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 14 : 10,
     borderWidth: 1.5,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   locationInput: {
     flex: 1,
@@ -374,8 +374,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.cream,
-    backgroundColor: colors.chalk,
+    borderTopColor: colors.white,
+    backgroundColor: colors.surface,
   },
   searchButton: {
     flexDirection: 'row',

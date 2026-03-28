@@ -694,8 +694,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                 setRequiresBookingConfirmation(val);
                 if (!val) setRequiresInsurance(false);
               }}
-              trackColor={{ false: colors.cream, true: colors.pineLight }}
-              thumbColor={requiresBookingConfirmation ? colors.pine : colors.chalk}
+              trackColor={{ false: colors.white, true: colors.pineLight }}
+              thumbColor={requiresBookingConfirmation ? colors.pine : colors.surface}
             />
           </View>
         </View>
@@ -713,8 +713,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
             <Switch
               value={requiresInsurance}
               onValueChange={setRequiresInsurance}
-              trackColor={{ false: colors.cream, true: colors.pineLight }}
-              thumbColor={requiresInsurance ? colors.pine : colors.chalk}
+              trackColor={{ false: colors.white, true: colors.pineLight }}
+              thumbColor={requiresInsurance ? colors.pine : colors.surface}
             />
           </View>
         </View>
@@ -824,7 +824,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                 onPress={() => setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })}
               >
                 <View style={[styles.checkbox, newCourt.isIndoor && styles.checkboxChecked]}>
-                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.chalk} />}
+                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.surface} />}
                 </View>
                 <Text style={styles.checkboxLabel}>Indoor Court</Text>
               </TouchableOpacity>
@@ -916,7 +916,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   sportChipTextSelected: {
-    color: colors.chalk,
+    color: colors.surface,
     fontWeight: '600',
   },
   errorText: {
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
@@ -1056,7 +1056,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteButtonText: {
-    color: colors.chalk,
+    color: colors.surface,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1138,7 +1138,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   cancelButtonText: {
     ...TextStyles.body,
@@ -1151,7 +1151,7 @@ const styles = StyleSheet.create({
   addCourtButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
   deleteModalOverlay: {
     flex: 1,
@@ -1172,7 +1172,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
@@ -1202,7 +1202,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelDeleteButton: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   cancelDeleteButtonText: {
     ...TextStyles.body,
@@ -1215,7 +1215,7 @@ const styles = StyleSheet.create({
   confirmDeleteButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
   insuranceToggleRow: {
     flexDirection: 'row',

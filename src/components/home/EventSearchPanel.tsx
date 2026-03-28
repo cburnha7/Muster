@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     zIndex: 50,
   },
   filterRow: {
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   locationRow: {
     flexDirection: 'row',
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     gap: 6,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   locationText: {
     flex: 1,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   proximityRow: {
     flexDirection: 'row',
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   proxChipActive: {
     backgroundColor: colors.pine,

@@ -200,19 +200,17 @@ export function FacilitiesListScreen() {
         onPress={() => handleFacilityPress(item)}
         activeOpacity={0.7}
       >
+        {/* Owner badge — top right */}
+        {item.ownerId === currentUser?.id && (
+          <View style={styles.ownerBadge}>
+            <Ionicons name="star" size={10} color="#FFFFFF" />
+            <Text style={styles.ownerText}>Owner</Text>
+          </View>
+        )}
         <View style={styles.cardContent}>
           <View style={styles.facilityHeader}>
-            <View style={styles.numberBadge}>
-              <Text style={styles.numberText}>{index + 1}</Text>
-            </View>
             <View style={styles.facilityTitleContainer}>
               <Text style={styles.facilityName} numberOfLines={1}>{item.name}</Text>
-              {item.ownerId === currentUser?.id && (
-                <View style={styles.ownerBadge}>
-                  <Ionicons name="star" size={12} color={colors.court} />
-                  <Text style={styles.ownerText}>Your Ground</Text>
-                </View>
-              )}
             </View>
           </View>
           <View style={styles.facilityInfo}>
@@ -234,9 +232,10 @@ export function FacilitiesListScreen() {
             </View>
           )}
           <View style={styles.facilityFooter}>
+            <View style={{ flex: 1 }} />
             {item.rating && item.rating > 0 && (
               <View style={styles.rating}>
-                <Ionicons name="star" size={14} color={colors.court} />
+                <Ionicons name="star" size={14} color={colors.gold} />
                 <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
               </View>
             )}
@@ -357,7 +356,7 @@ export function FacilitiesListScreen() {
       {/* FAB — hidden for dependents */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
-          <Ionicons name="add" size={28} color={colors.chalk} />
+          <Ionicons name="add" size={28} color={colors.surface} />
         </TouchableOpacity>
       )}
 
@@ -378,7 +377,7 @@ export function FacilitiesListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -392,7 +391,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     gap: 6,
   },
   sectionTitle: {
@@ -417,7 +416,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -483,19 +482,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   ownerBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5E6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
+    backgroundColor: '#E8A030',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 3,
+    zIndex: 1,
   },
   ownerText: {
-    fontSize: 12,
-    color: colors.court,
-    fontWeight: '600',
-    marginLeft: 4,
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontFamily: fonts.label,
   },
   facilityInfo: {
     flexDirection: 'row',
@@ -588,7 +590,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -625,7 +627,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.inkFaint,
   },
@@ -638,7 +640,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   sportChipTextSelected: {
-    color: colors.chalk,
+    color: colors.surface,
     fontWeight: '500',
   },
   modalActions: {
@@ -671,6 +673,6 @@ const styles = StyleSheet.create({
   applyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.chalk,
+    color: colors.surface,
   },
 });

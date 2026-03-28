@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   modal: {
     width: '90%',
     maxWidth: 500,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 5,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   detailsContainer: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },

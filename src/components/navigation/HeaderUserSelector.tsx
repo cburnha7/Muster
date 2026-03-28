@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   menu: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     minWidth: 200,
     maxWidth: 260,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     marginHorizontal: 14,
   },
 });

@@ -210,7 +210,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   centered: {
     flex: 1,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.chalk,
+    borderBottomColor: colors.surface,
   },
   detailLabel: {
     fontFamily: fonts.label,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     color: colors.pine,
   },
   statusTextUnpaid: {
-    color: colors.court,
+    color: colors.gold,
   },
   successCard: {
     flexDirection: 'row',

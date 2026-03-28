@@ -538,7 +538,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
           {isPendingInvite && (
             <View style={styles.invitationBanner}>
               <View style={styles.invitationBannerIcon}>
-                <Ionicons name="mail-outline" size={24} color={colors.court} />
+                <Ionicons name="mail-outline" size={24} color={colors.gold} />
               </View>
               <View style={styles.invitationBannerContent}>
                 <Text style={styles.invitationBannerTitle}>You've been invited!</Text>
@@ -739,7 +739,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                     onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: true } })}
                   >
                     <View style={styles.listCardContent}>
-                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.court : colors.pine} />
+                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.gold : colors.pine} />
                       <View style={styles.listCardText}>
                         <Text style={styles.listCardTitle}>{league.name}</Text>
                         <Text style={styles.listCardSub}>{league.sportType}</Text>
@@ -881,7 +881,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -902,18 +902,18 @@ const styles = StyleSheet.create({
   // Invitation banner
   invitationBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.courtLight + '20',
+    backgroundColor: colors.goldLight + '20',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.courtLight + '40',
+    borderColor: colors.goldLight + '40',
     gap: 12,
   },
   invitationBannerIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.courtLight + '30',
+    backgroundColor: colors.goldLight + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -932,12 +932,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   infoBox: {
-    backgroundColor: colors.courtLight + '20',
+    backgroundColor: colors.goldLight + '20',
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: colors.courtLight + '40',
+    borderColor: colors.goldLight + '40',
   },
   infoText: {
     fontSize: 14,
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   privateBadge: {
-    backgroundColor: colors.courtLight + '20',
+    backgroundColor: colors.goldLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
   privateBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.court,
+    color: colors.gold,
   },
   addMembersDescription: {
     fontSize: 14,
@@ -1064,7 +1064,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   pendingBadge: {
-    backgroundColor: colors.courtLight + '30',
+    backgroundColor: colors.goldLight + '30',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -1072,7 +1072,7 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.court,
+    color: colors.gold,
   },
   memberActions: {
     flexDirection: 'row',
@@ -1147,7 +1147,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   listCardPending: {
-    borderColor: colors.courtLight,
+    borderColor: colors.goldLight,
     backgroundColor: '#FFF8EE',
   },
   listCardRight: {
@@ -1156,7 +1156,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pendingLeagueBadge: {
-    backgroundColor: colors.courtLight,
+    backgroundColor: colors.goldLight,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -1218,7 +1218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
     borderRadius: 12,
     paddingVertical: 12,
   },
@@ -1368,7 +1368,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.cream,
+    borderColor: colors.white,
   },
   editRow: {
     flexDirection: 'row',
@@ -1383,7 +1383,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
-    borderColor: colors.cream,
+    borderColor: colors.white,
     gap: 6,
   },
   editToggleActive: {

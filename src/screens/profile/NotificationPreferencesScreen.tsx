@@ -182,7 +182,7 @@ export function NotificationPreferencesScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   content: {
     padding: 16,

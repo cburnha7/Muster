@@ -328,13 +328,13 @@ export function DiscoveryScreen({ navigation }: DiscoveryScreenProps): JSX.Eleme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   loadingText: {
     marginTop: 16,

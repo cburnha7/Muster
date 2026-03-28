@@ -687,7 +687,7 @@ export function EventDetailsScreen(): JSX.Element {
 
   const getRatingBadgeColor = (rating: number) => {
     if (rating >= 80) return colors.heart;
-    if (rating >= 50) return colors.court;
+    if (rating >= 50) return colors.gold;
     return colors.pine;
   };
 
@@ -831,7 +831,7 @@ export function EventDetailsScreen(): JSX.Element {
                 activeOpacity={0.7}
               >
                 <View style={styles.leagueBadge}>
-                  <Ionicons name="trophy" size={16} color={colors.court} />
+                  <Ionicons name="trophy" size={16} color={colors.gold} />
                   <Text style={styles.leagueBadgeText}>LEAGUE MATCH</Text>
                 </View>
                 
@@ -1246,7 +1246,7 @@ export function EventDetailsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -1299,7 +1299,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: colors.court,
+    borderLeftColor: colors.gold,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
@@ -1310,14 +1310,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.courtLight + '20',
+    backgroundColor: colors.goldLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     marginBottom: 12,
   },
   leagueBadgeText: {
-    color: colors.court,
+    color: colors.gold,
     fontSize: 12,
     fontWeight: '700',
     marginLeft: 4,
@@ -1394,9 +1394,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
+    fontSize: 16,
     color: colors.ink,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   description: {
     fontSize: 16,
@@ -1487,7 +1487,7 @@ const styles = StyleSheet.create({
   },
   saluteCount: {
     fontSize: 14,
-    color: colors.court,
+    color: colors.gold,
     fontWeight: '600',
   },
   saluteInstructions: {
@@ -1507,7 +1507,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: colors.chalk,
+    borderBottomColor: colors.surface,
   },
   rosterSaluteLabel: {
     fontFamily: fonts.label,
@@ -1539,8 +1539,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   participantCardSaluted: {
-    borderColor: colors.court,
-    backgroundColor: colors.courtLight + '10',
+    borderColor: colors.gold,
+    backgroundColor: colors.goldLight + '10',
   },
   participantCardDisabled: {
     opacity: 0.5,
@@ -1575,7 +1575,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -1617,7 +1617,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitSalutesButton: {
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1699,7 +1699,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalSalutedBadge: {
-    backgroundColor: colors.courtLight + '20',
+    backgroundColor: colors.goldLight + '20',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1708,7 +1708,7 @@ const styles = StyleSheet.create({
   modalSalutedText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.court,
+    color: colors.gold,
   },
   modalDescription: {
     fontSize: 16,
@@ -1718,7 +1718,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   modalButtonPrimary: {
-    backgroundColor: colors.court,
+    backgroundColor: colors.gold,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,

@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   loadingContainer: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   emptyCard: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   documentCard: {
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: Spacing.sm,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     marginTop: Spacing.sm,
-    backgroundColor: colors.chalk,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.pine,
