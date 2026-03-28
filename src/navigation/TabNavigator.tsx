@@ -8,6 +8,7 @@ import { RootState } from '../store/store';
 import { colors } from '../theme';
 import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
 import { HeaderUserSelector } from '../components/navigation/HeaderUserSelector';
+import { searchEventBus } from '../utils/searchEventBus';
 
 // Direct imports instead of lazy loading for web compatibility
 import { HomeStackNavigator } from './stacks/HomeStackNavigator';
@@ -141,6 +142,7 @@ export function TabNavigator(): JSX.Element {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            searchEventBus.emitClose();
             navigation.navigate('Home', { screen: 'HomeScreen' });
           },
         })}
@@ -150,10 +152,13 @@ export function TabNavigator(): JSX.Element {
         component={TeamsStackNavigator}
         options={{
           tabBarLabel: 'Rosters',
+          headerRight: () => <HeaderUserSelector />,
+          headerRightContainerStyle: { paddingRight: 16 },
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            searchEventBus.emitClose();
             navigation.navigate('Teams', { screen: 'TeamsList' });
           },
         })}
@@ -167,6 +172,7 @@ export function TabNavigator(): JSX.Element {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            searchEventBus.emitClose();
             navigation.navigate('Leagues', { screen: 'LeaguesBrowser' });
           },
         })}
@@ -180,6 +186,7 @@ export function TabNavigator(): JSX.Element {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            searchEventBus.emitClose();
             navigation.navigate('Facilities', { screen: 'FacilitiesList' });
           },
         })}
@@ -193,6 +200,7 @@ export function TabNavigator(): JSX.Element {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            searchEventBus.emitClose();
             navigation.navigate('Profile', { screen: 'ProfileScreen' });
           },
         })}

@@ -52,7 +52,10 @@ export const LeaguesBrowserScreen: React.FC = () => {
     const unsub = searchEventBus.subscribeTab('Leagues', () => {
       setSearchModalVisible(true);
     });
-    return unsub;
+    const unsubClose = searchEventBus.subscribeClose(() => {
+      setSearchModalVisible(false);
+    });
+    return () => { unsub(); unsubClose(); };
   }, []);
 
   const handleSearchLeagues = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {

@@ -212,12 +212,15 @@ export function HomeScreen() {
     }, [authLoading])
   );
 
-  // Listen for openSearch event from the header search pill — toggle
+  // Listen for openSearch event from the header search pill
   useEffect(() => {
     const unsubscribe = searchEventBus.subscribe(() => {
-      setSearchModalVisible((prev) => !prev);
+      setSearchModalVisible(true);
     });
-    return unsubscribe;
+    const unsubClose = searchEventBus.subscribeClose(() => {
+      setSearchModalVisible(false);
+    });
+    return () => { unsubscribe(); unsubClose(); };
   }, []);
 
   useEffect(() => {

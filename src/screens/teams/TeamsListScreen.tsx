@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -11,8 +11,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
+import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { TeamCard } from '../../components/ui/TeamCard';
-import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
@@ -25,11 +25,19 @@ import { useDependentContext } from '../../hooks/useDependentContext';
 import { useActiveUserId } from '../../hooks/useActiveUserId';
 import { searchEventBus } from '../../utils/searchEventBus';
 
-interface Section {
-  title: string;
-  data: Team[];
-  emptyMessage: string;
-}
+const SPORT_OPTIONS: SelectOption[] = [
+  { label: 'All Sports', value: '' },
+  { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Other', value: SportType.OTHER },
+];
 
 export function TeamsListScreen() {
   const navigation = useNavigation();
@@ -43,185 +51,121 @@ export function TeamsListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [sportFilter, setSportFilter] = useState('');
   const [searchModalVisible, setSearchModalVisible] = useState(false);
 
-  // Open search modal when header pill is tapped
+  // Search modal toggle
   useEffect(() => {
-    const unsub = searchEventBus.subscribeTab('Teams', () => {
-      setSearchModalVisible(true);
-    });
-    return unsub;
+    const unsub = searchEventBus.subscribeTab('Teams', () => setSearchModalVisible(true));
+    const unsubClose = searchEventBus.subscribeClose(() => setSearchModalVisible(false));
+    return () => { unsub(); unsubClose(); };
   }, []);
 
-  const handleSearchRosters = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {
-    try {
-      const filters: any = {};
-      if (sport) filters.sportType = sport;
-      const res = await teamService.getTeams(filters, { page: 1, limit: 30 });
-      return (res.data || [])
-        .filter((t: Team) => !query.trim() || t.name.toLowerCase().includes(query.toLowerCase()))
-        .map((t: Team) => ({ id: t.id, name: t.name, subtitle: t.sportType }));
-    } catch { return []; }
-  }, []);
-
-  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
-    (navigation as any).navigate('TeamDetails', { teamId: result.id });
-  }, [navigation]);
-
+  // Load data
   const loadData = useCallback(async () => {
     try {
       const [myRes, allRes] = await Promise.all([
         userService.getUserTeams(),
         teamService.getTeams({}, { page: 1, limit: 100 }),
       ]);
-
       const myTeams = myRes?.data ?? [];
       const myTeamIds = new Set(myTeams.map((t) => t.id));
-
-      setMyRosters([...myTeams]);
+      setMyRosters(myTeams);
       dispatch(setUserTeams(myTeams));
-      // Public rosters: public, user is not a member, exclude private
-      setPublicRosters(
-        (allRes?.data ?? []).filter((t) => t.isPublic && !myTeamIds.has(t.id))
-      );
+      setPublicRosters((allRes?.data ?? []).filter((t) => t.isPublic && !myTeamIds.has(t.id)));
     } catch (err: any) {
-      console.error('Error loading rosters:', err);
       setError(err.message || 'Failed to load rosters');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [dispatch]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [loadData])
-  );
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+  useEffect(() => { loadData(); }, [effectiveUserId]);
 
-  // Re-fetch when active user context changes (guardian ↔ dependent)
-  React.useEffect(() => {
-    loadData();
-  }, [effectiveUserId]);
+  const handleRefresh = useCallback(() => { setRefreshing(true); loadData(); }, [loadData]);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadData();
-  }, [loadData]);
+  // Unified list: my rosters + public rosters, filtered by sport
+  const allRosters = useMemo(() => {
+    const merged = [...myRosters, ...publicRosters];
+    // Dedupe by id
+    const seen = new Set<string>();
+    const unique = merged.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
+    // Sport filter
+    const filtered = sportFilter
+      ? unique.filter((t) => t.sportType === sportFilter || (t.sportTypes || []).includes(sportFilter as SportType))
+      : unique;
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [myRosters, publicRosters, sportFilter]);
 
-  const handleTeamPress = (team: Team) => {
-    (navigation as any).navigate('TeamDetails', { teamId: team.id });
-  };
+  const handleTeamPress = (team: Team) => (navigation as any).navigate('TeamDetails', { teamId: team.id });
+  const handleCreateTeam = () => (navigation as any).navigate('CreateTeam');
+  const handleJoinTeam = () => (navigation as any).navigate('JoinTeam');
 
-  const handleCreateTeam = () => {
-    (navigation as any).navigate('CreateTeam');
-  };
-
-  const handleJoinTeam = () => {
-    (navigation as any).navigate('JoinTeam');
-  };
-
-  const handleSearch = useCallback(async (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      loadData();
-      return;
-    }
+  // Search modal handlers
+  const handleSearchRosters = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {
     try {
-      setLoading(true);
-      const response = await teamService.searchTeams(query, {}, { page: 1, limit: 50 });
-      const myRes = await userService.getUserTeams();
-      const myTeamIds = new Set((myRes?.data ?? []).map((t) => t.id));
-      const myTeamsList = myRes?.data ?? [];
-      dispatch(setUserTeams(myTeamsList));
-      const results = response.results ?? [];
-      setMyRosters(myTeamsList.filter((t) =>
-        t.name.toLowerCase().includes(query.toLowerCase())
-      ));
-      setPublicRosters(results.filter((t) => t.isPublic && !myTeamIds.has(t.id)));
-    } catch (err: any) {
-      setError(err.message || 'Search failed');
-    } finally {
-      setLoading(false);
-    }
-  }, [loadData]);
+      const filters: any = {};
+      if (sport) filters.sportType = sport;
+      const res = await teamService.getTeams(filters, { page: 1, limit: 30 });
+      // Show only public rosters and rosters user is invited to
+      const myIds = new Set(myRosters.map((t) => t.id));
+      return (res.data || [])
+        .filter((t: Team) => {
+          const nameMatch = !query.trim() || t.name.toLowerCase().includes(query.toLowerCase());
+          const isRelevant = t.isPublic || myIds.has(t.id);
+          return nameMatch && isRelevant;
+        })
+        .map((t: Team) => ({ id: t.id, name: t.name, subtitle: t.sportType }));
+    } catch { return []; }
+  }, [myRosters]);
 
-  const filterBySearch = (teams: Team[]) => {
-    if (!searchQuery.trim()) return teams;
-    const q = searchQuery.toLowerCase();
-    return teams.filter((t) => t.name.toLowerCase().includes(q));
-  };
-
-  const sections: Section[] = [
-    {
-      title: 'My Rosters',
-      data: [...filterBySearch(myRosters)].sort((a, b) => a.name.localeCompare(b.name)),
-      emptyMessage: searchQuery ? 'No matching rosters' : 'You haven\'t joined any rosters yet',
-    },
-    {
-      title: 'Public Rosters',
-      data: [...filterBySearch(publicRosters)].sort((a, b) => a.name.localeCompare(b.name)),
-      emptyMessage: searchQuery ? 'No matching public rosters' : 'No public rosters available',
-    },
-  ];
+  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
+    (navigation as any).navigate('TeamDetails', { teamId: result.id });
+  }, [navigation]);
 
   if (error && !myRosters.length && !publicRosters.length) {
-    return (
-      <View style={styles.container}>
-        <ErrorDisplay message={error} onRetry={loadData} />
-      </View>
-    );
+    return <View style={styles.container}><ErrorDisplay message={error} onRetry={loadData} /></View>;
   }
 
   if (loading && !refreshing && !myRosters.length && !publicRosters.length) {
-    return (
-      <View style={styles.container}>
-        <LoadingSpinner />
-      </View>
-    );
+    return <View style={styles.container}><LoadingSpinner /></View>;
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
-        }
-      >
-        {sections.map((section) => (
-          <CollapsibleSection
-            key={section.title}
-            title={section.title}
-            count={section.data.length}
-          >
-            {section.data.length === 0 ? (
-              <View style={styles.emptySection}>
-                <Text style={styles.emptySectionText}>{section.emptyMessage}</Text>
-              </View>
-            ) : (
-              section.data.map((item) => (
-                <TeamCard
-                  key={item.id}
-                  team={item}
-                  onPress={() => handleTeamPress(item)}
-                  currentUserId={user?.id ?? undefined}
-                />
-              ))
-            )}
-          </CollapsibleSection>
-        ))}
-      </ScrollView>
+      {/* Sport filter */}
+      <View style={styles.filterRow}>
+        <FormSelect label="" options={SPORT_OPTIONS} value={sportFilter} onSelect={(o) => setSportFilter(String(o.value))} placeholder="All Sports" />
+      </View>
 
-      {/* FAB — hidden for dependents (create roster not allowed) */}
+      {/* Roster list */}
+      <FlatList
+        data={allRosters}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TeamCard team={item} onPress={() => handleTeamPress(item)} currentUserId={user?.id ?? undefined} />
+        )}
+        contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="people-outline" size={40} color={colors.inkFaint} />
+            <Text style={styles.emptyText}>No rosters found</Text>
+          </View>
+        }
+      />
+
+      {/* FAB — hidden for dependents */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateTeam}>
           <Ionicons name="add" size={28} color={colors.chalk} />
         </TouchableOpacity>
       )}
 
-      {/* Join with Code — dependents CAN join rosters */}
+      {/* Join with Code */}
       <TouchableOpacity style={[styles.joinButton, isDependent && { bottom: 20 }]} onPress={handleJoinTeam}>
         <Text style={styles.joinButtonText}>Join with Code</Text>
       </TouchableOpacity>
@@ -243,27 +187,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.cream,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    backgroundColor: colors.cream,
-    gap: Spacing.sm,
-  },
-  searchBar: {
-    flex: 1,
+  filterRow: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   listContent: {
     paddingBottom: 100,
   },
-  emptySection: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+  empty: {
     alignItems: 'center',
+    paddingVertical: 40,
+    gap: 8,
   },
-  emptySectionText: {
+  emptyText: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.inkFaint,
   },
   fab: {

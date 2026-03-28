@@ -23,40 +23,27 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
   const [query, setQuery] = useState('');
   const inputRef = useRef<TextInput>(null);
 
-  // Listen for toggle events
+  // Close on tab press
   useEffect(() => {
-    if (isHome) {
-      const unsub = searchEventBus.subscribe(() => {
-        setActive((prev) => {
-          const next = !prev;
-          if (next) setTimeout(() => inputRef.current?.focus(), 100);
-          else { setQuery(''); searchEventBus.emitQuery(''); }
-          return next;
-        });
-      });
-      return unsub;
-    } else {
-      const unsub = searchEventBus.subscribeTab(routeName, () => {
-        setActive((prev) => {
-          const next = !prev;
-          if (next) setTimeout(() => inputRef.current?.focus(), 100);
-          else { setQuery(''); searchEventBus.emitQuery(''); }
-          return next;
-        });
-      });
-      return unsub;
-    }
-  }, [routeName, isHome]);
-
-  // When navigating away from Home, close
-  useEffect(() => {
-    if (!isHome && active) {
+    const unsub = searchEventBus.subscribeClose(() => {
       setActive(false);
       setQuery('');
-    }
+      searchEventBus.emitQuery('');
+    });
+    return unsub;
+  }, []);
+
+  // When route changes (switching tabs), deactivate
+  useEffect(() => {
+    setActive(false);
+    setQuery('');
   }, [routeName]);
 
   const handlePress = () => {
+    // Activate the pill and open the modal
+    setActive(true);
+    setTimeout(() => inputRef.current?.focus(), 100);
+    // Tell the screen to open its search panel
     if (isHome) {
       searchEventBus.emit();
     } else {
@@ -69,7 +56,6 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
     searchEventBus.emitQuery(text);
   };
 
-  // Active state: show a real TextInput
   if (active) {
     return (
       <View style={styles.pillActive}>
@@ -93,7 +79,6 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
     );
   }
 
-  // Inactive state: tappable pill
   return (
     <TouchableOpacity style={styles.pill} onPress={handlePress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={placeholder}>
       <Ionicons name="search" size={18} color={colors.inkFaint} />

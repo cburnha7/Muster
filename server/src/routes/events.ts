@@ -665,6 +665,56 @@ router.post('/', requireNonDependent, async (req, res) => {
       return event;
     });
 
+    // ── Post-creation: populate invitedUserIds for inbox ──
+    try {
+      const eventType = result.eventType;
+      const restrictedToTeams = (eventData.eligibility?.restrictedToTeams || []) as string[];
+      const existingInvited = (result.invitedUserIds || []) as string[];
+      let newInvitedIds: string[] = [...existingInvited];
+
+      if (eventType === 'game' && restrictedToTeams.length > 0) {
+        // Game: invite the managers (captains/co-captains) of each roster
+        const managers = await prisma.teamMember.findMany({
+          where: {
+            teamId: { in: restrictedToTeams },
+            role: { in: ['captain', 'co_captain'] },
+            status: 'active',
+          },
+          select: { userId: true },
+        });
+        managers.forEach((m) => {
+          if (!newInvitedIds.includes(m.userId) && m.userId !== result.organizerId) {
+            newInvitedIds.push(m.userId);
+          }
+        });
+      } else if ((eventType === 'pickup' || eventType === 'practice') && restrictedToTeams.length > 0) {
+        // Pickup/Practice with roster invites: expand roster members into invitedUserIds
+        const members = await prisma.teamMember.findMany({
+          where: {
+            teamId: { in: restrictedToTeams },
+            status: 'active',
+          },
+          select: { userId: true },
+        });
+        members.forEach((m) => {
+          if (!newInvitedIds.includes(m.userId) && m.userId !== result.organizerId) {
+            newInvitedIds.push(m.userId);
+          }
+        });
+      }
+
+      // Update invitedUserIds if we added anyone
+      if (newInvitedIds.length > existingInvited.length) {
+        await prisma.event.update({
+          where: { id: result.id },
+          data: { invitedUserIds: newInvitedIds },
+        });
+      }
+    } catch (inviteErr) {
+      console.error('Failed to populate invitedUserIds:', inviteErr);
+      // Non-fatal — event was still created
+    }
+
     res.status(201).json(result);
   } catch (error) {
     console.error('Create event error:', error);
@@ -736,6 +786,52 @@ router.put('/:id', async (req, res) => {
       ScheduleGeneratorService.markEventScheduled(id).catch(err => {
         console.error('Error sending schedule notifications:', err);
       });
+    }
+
+    // ── Post-update: refresh invitedUserIds for inbox ──
+    try {
+      const eventType = event.eventType;
+      const restrictedToTeams = (event.eligibilityRestrictedToTeams || []) as string[];
+      const existingInvited = (event.invitedUserIds || []) as string[];
+      let newInvitedIds: string[] = [...existingInvited];
+
+      if (eventType === 'game' && restrictedToTeams.length > 0) {
+        const managers = await prisma.teamMember.findMany({
+          where: {
+            teamId: { in: restrictedToTeams },
+            role: { in: ['captain', 'co_captain'] },
+            status: 'active',
+          },
+          select: { userId: true },
+        });
+        managers.forEach((m) => {
+          if (!newInvitedIds.includes(m.userId) && m.userId !== event.organizerId) {
+            newInvitedIds.push(m.userId);
+          }
+        });
+      } else if ((eventType === 'pickup' || eventType === 'practice') && restrictedToTeams.length > 0) {
+        const members = await prisma.teamMember.findMany({
+          where: {
+            teamId: { in: restrictedToTeams },
+            status: 'active',
+          },
+          select: { userId: true },
+        });
+        members.forEach((m) => {
+          if (!newInvitedIds.includes(m.userId) && m.userId !== event.organizerId) {
+            newInvitedIds.push(m.userId);
+          }
+        });
+      }
+
+      if (newInvitedIds.length > existingInvited.length) {
+        await prisma.event.update({
+          where: { id },
+          data: { invitedUserIds: newInvitedIds },
+        });
+      }
+    } catch (inviteErr) {
+      console.error('Failed to refresh invitedUserIds on edit:', inviteErr);
     }
 
     res.json(event);

@@ -59,7 +59,10 @@ export function FacilitiesListScreen() {
     const unsub = searchEventBus.subscribeTab('Facilities', () => {
       setSearchModalVisible(true);
     });
-    return unsub;
+    const unsubClose = searchEventBus.subscribeClose(() => {
+      setSearchModalVisible(false);
+    });
+    return () => { unsub(); unsubClose(); };
   }, []);
 
   const handleSearchGrounds = useCallback(async (query: string, sport: any): Promise<TabSearchResult[]> => {
