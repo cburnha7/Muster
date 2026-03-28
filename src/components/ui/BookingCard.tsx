@@ -206,16 +206,10 @@ const styles = StyleSheet.create({
     position: 'relative' as const,
   },
   containerCancelled: {
-    borderWidth: 1.5,
-    borderColor: colors.heart,
   },
   containerLive: {
-    borderWidth: 1.5,
-    borderColor: colors.gold,
   },
   containerPast: {
-    borderWidth: 1.5,
-    borderColor: colors.navy,
   },
   bubbleStack: {
     position: 'absolute' as const,

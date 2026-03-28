@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,

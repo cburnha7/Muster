@@ -81,7 +81,7 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
 
   return (
     <TouchableOpacity style={styles.pill} onPress={handlePress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={placeholder}>
-      <Ionicons name="search" size={18} color={colors.inkFaint} />
+      <Ionicons name="search" size={18} color={colors.inkSoft} />
       <Text style={styles.text}>{placeholder}</Text>
     </TouchableOpacity>
   );
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.inkFaint,
+    fontSize: 17,
+    color: colors.inkSoft,
   },
 });
