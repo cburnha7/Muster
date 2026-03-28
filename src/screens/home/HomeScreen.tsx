@@ -18,7 +18,6 @@ import { Calendar, DateData } from 'react-native-calendars';
 // Components
 import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
-import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
 import { EventSearchPanel } from '../../components/home/EventSearchPanel';
 import { InboxSection } from '../../components/home/InboxSection';
 
@@ -324,7 +323,6 @@ export function HomeScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
         }
       >
-        {user?.id && <PendingReservationsSection ownerId={user.id} />}
 
         {/* Calendar */}
         <View style={styles.sectionInner}>

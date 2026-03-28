@@ -9,12 +9,21 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { PurchaseHistorySection } from '../../components/profile/PurchaseHistorySection';
+import { UserConnectSection } from '../../components/profile/UserConnectSection';
+import { ConnectAccountsSection } from '../../components/profile/ConnectAccountsSection';
+import { DependentsSection } from '../../components/profile/DependentsSection';
 import { userService } from '../../services/api/UserService';
 import { loggingService } from '../../services/LoggingService';
-import { colors } from '../../theme';
+import { useAuth } from '../../context/AuthContext';
+import { useDependentContext } from '../../hooks/useDependentContext';
+import { colors, fonts } from '../../theme';
 
 export function SettingsScreen(): JSX.Element {
   const navigation = useNavigation();
+  const { user: authUser } = useAuth();
+  const { isDependent } = useDependentContext();
   const [darkMode, setDarkMode] = useState(false);
   const [locationServices, setLocationServices] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -151,20 +160,27 @@ export function SettingsScreen(): JSX.Element {
         </TouchableOpacity>
       </View>
 
-      {/* Account Actions */}
+      {/* Account */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
+
+        {/* Purchase History */}
+        {authUser?.id && <PurchaseHistorySection userId={authUser.id} />}
+
+        {/* Payment Account */}
+        {!isDependent && authUser?.id && <UserConnectSection userId={authUser.id} />}
+
+        {/* Stripe Connect */}
+        {!isDependent && authUser?.id && <ConnectAccountsSection userId={authUser.id} />}
+
+        {/* Remove Dependents */}
+        {!isDependent && <DependentsSection />}
+
         <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <Text style={[styles.menuItemText, styles.logoutText]}>Logout</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={handleDeleteAccount}
-          disabled={deleting}
-        >
-          <Text style={[styles.menuItemText, styles.deleteText]}>
-            {deleting ? 'Deleting...' : 'Delete Account'}
-          </Text>
+        <TouchableOpacity style={styles.menuItem} onPress={handleDeleteAccount} disabled={deleting}>
+          <Text style={[styles.menuItemText, styles.deleteText]}>{deleting ? 'Deleting...' : 'Delete Account'}</Text>
         </TouchableOpacity>
       </View>
 

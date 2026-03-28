@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,11 +15,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from '../../utils/performance';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { ViewToggle } from '../../components/maps/ViewToggle';
+import { FormSelect } from '../../components/forms/FormSelect';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
-import { MyReservationsSection } from '../../components/profile/MyReservationsSection';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { facilityService } from '../../services/api/FacilityService';
+import { courtService, Rental } from '../../services/api/CourtService';
 import { colors, fonts, Spacing } from '../../theme';
 import { searchEventBus } from '../../utils/searchEventBus';
 import {
@@ -54,15 +55,21 @@ export function FacilitiesListScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [sportFilter, setSportFilter] = useState('');
+  const [freeOnly, setFreeOnly] = useState(false);
+  const [reservations, setReservations] = useState<Rental[]>([]);
+  const [reservationsModalVisible, setReservationsModalVisible] = useState(false);
 
   useEffect(() => {
     const unsub = searchEventBus.subscribeTab('Facilities', () => {
-      setSearchModalVisible(true);
+      // Inline search — just let the header pill handle text input
+      // The query comes via subscribeQuery
     });
+    const unsubQuery = searchEventBus.subscribeQuery((q) => setSearchQuery(q));
     const unsubClose = searchEventBus.subscribeClose(() => {
       setSearchModalVisible(false);
     });
-    return () => { unsub(); unsubClose(); };
+    return () => { unsub(); unsubQuery(); unsubClose(); };
   }, []);
 
   const handleSearchGrounds = useCallback(async (query: string, sport: any): Promise<TabSearchResult[]> => {
@@ -129,8 +136,25 @@ export function FacilitiesListScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await loadFacilities(true);
+    await loadReservations();
     setRefreshing(false);
   };
+
+  const loadReservations = useCallback(async () => {
+    if (!currentUser?.id) return;
+    try {
+      const rentals = await courtService.getMyRentals(currentUser.id, { upcoming: true });
+      // Filter to future only
+      const now = new Date();
+      const future = (rentals || []).filter((r: Rental) => {
+        if (!r.timeSlot?.date) return false;
+        return new Date(r.timeSlot.date) >= now;
+      });
+      setReservations(future);
+    } catch { setReservations([]); }
+  }, [currentUser?.id]);
+
+  useEffect(() => { loadReservations(); }, [loadReservations]);
 
   const debouncedSearch = useMemo(
     () => debounce(async (query: string) => {
@@ -191,6 +215,22 @@ export function FacilitiesListScreen() {
     [facilities]
   );
 
+  // Filtered + limited display list
+  const displayFacilities = useMemo(() => {
+    let list = [...sortedFacilities];
+    // Sport filter
+    if (sportFilter) list = list.filter((f) => (f.sportTypes || []).includes(sportFilter as SportType));
+    // Free only
+    if (freeOnly) list = list.filter((f) => !f.pricePerHour || f.pricePerHour === 0);
+    // Text search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((f) => f.name.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q));
+    }
+    // Limit to 10
+    return list.slice(0, 10);
+  }, [sortedFacilities, sportFilter, freeOnly, searchQuery]);
+
   const renderFacilityCard = (item: Facility, index: number) => {
     const formattedAddress = `${item.city}, ${item.state}`;
     return (
@@ -209,6 +249,9 @@ export function FacilitiesListScreen() {
         )}
         <View style={styles.cardContent}>
           <View style={styles.facilityHeader}>
+            <View style={styles.numberBadge}>
+              <Text style={styles.numberText}>{index + 1}</Text>
+            </View>
             <View style={styles.facilityTitleContainer}>
               <Text style={styles.facilityName} numberOfLines={1}>{item.name}</Text>
             </View>
@@ -308,6 +351,27 @@ export function FacilitiesListScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Sport filter + free toggle */}
+      <View style={styles.filterBar}>
+        <View style={{ flex: 1 }}>
+          <FormSelect label="" options={[
+            { label: 'All Sports', value: '' },
+            { label: 'Basketball', value: SportType.BASKETBALL },
+            { label: 'Pickleball', value: SportType.PICKLEBALL },
+            { label: 'Tennis', value: SportType.TENNIS },
+            { label: 'Soccer', value: SportType.SOCCER },
+            { label: 'Softball', value: SportType.SOFTBALL },
+            { label: 'Baseball', value: SportType.BASEBALL },
+            { label: 'Volleyball', value: SportType.VOLLEYBALL },
+            { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+            { label: 'Kickball', value: SportType.KICKBALL },
+          ]} value={sportFilter} onSelect={(o) => setSportFilter(String(o.value))} placeholder="Sport" />
+        </View>
+        <TouchableOpacity style={[styles.freeToggle, freeOnly && styles.freeToggleActive]} onPress={() => setFreeOnly(!freeOnly)}>
+          <Text style={[styles.freeToggleText, freeOnly && styles.freeToggleTextActive]}>Free</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -315,43 +379,74 @@ export function FacilitiesListScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
         }
       >
-        {/* Grounds section header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Grounds</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{facilities.length}</Text>
-          </View>
+        {/* Map */}
+        <View style={styles.mapContainer}>
+          <GroundsMapViewWrapper
+            grounds={displayFacilities}
+            onGroundPress={handleFacilityPress}
+          />
         </View>
 
-          {isLoading && !facilities.length ? (
-            <LoadingSpinner />
-          ) : viewMode === 'map' ? (
-            <View style={styles.mapContainer}>
-              <GroundsMapViewWrapper
-                grounds={facilities}
-                onGroundPress={handleFacilityPress}
-              />
-            </View>
-          ) : sortedFacilities.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="map-outline" size={64} color={colors.inkFaint} />
-              <Text style={styles.emptyTitle}>No Grounds Found</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery ? 'Try adjusting your search or filters' : 'Be the first to add a ground'}
-              </Text>
-            </View>
-          ) : (
-            sortedFacilities.map((item, index) => renderFacilityCard(item, index))
-          )}
-        
-
-        {/* My Reservations section */}
-        {currentUser?.id && (
-          <MyReservationsSection userId={currentUser.id} />
+        {/* Numbered facility list */}
+        {isLoading && !facilities.length ? (
+          <LoadingSpinner />
+        ) : displayFacilities.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="map-outline" size={48} color={colors.inkFaint} />
+            <Text style={styles.emptyTitle}>No grounds found</Text>
+          </View>
+        ) : (
+          displayFacilities.map((item, index) => renderFacilityCard(item, index))
         )}
 
         <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Reservations button */}
+      {reservations.length > 0 && (
+        <TouchableOpacity style={styles.reservationsBtn} onPress={() => setReservationsModalVisible(true)} activeOpacity={0.7}>
+          <Ionicons name="calendar-outline" size={18} color={colors.pine} />
+          <Text style={styles.reservationsBtnText}>Reservations ({reservations.length})</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+        </TouchableOpacity>
+      )}
+
+      {/* Reservations modal */}
+      <Modal visible={reservationsModalVisible} transparent animationType="fade" onRequestClose={() => setReservationsModalVisible(false)}>
+        <Pressable style={styles.resBackdrop} onPress={() => setReservationsModalVisible(false)}>
+          <View style={styles.resModal}>
+            <View style={styles.resHeader}>
+              <Text style={styles.resTitle}>Reservations</Text>
+              <TouchableOpacity onPress={() => setReservationsModalVisible(false)}>
+                <Ionicons name="close" size={22} color={colors.ink} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.resScroll} showsVerticalScrollIndicator={false}>
+              {reservations.map((r) => {
+                const isPending = r.status !== 'confirmed';
+                const facilityName = (r.timeSlot as any)?.court?.facility?.name || (r.timeSlot as any)?.court?.name || 'Ground';
+                const courtName = r.timeSlot?.court?.name || '';
+                const date = r.timeSlot?.date ? new Date(r.timeSlot.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
+                const formatT = (t: string) => { const [hh, mm] = t.split(':').map(Number); const h12 = (hh ?? 0) % 12 || 12; const ap = (hh ?? 0) >= 12 ? 'PM' : 'AM'; return `${h12}:${String(mm ?? 0).padStart(2, '0')} ${ap}`; };
+                const time = r.timeSlot ? `${formatT(r.timeSlot.startTime)} – ${formatT(r.timeSlot.endTime)}` : '';
+                return (
+                  <TouchableOpacity key={r.id} style={styles.resCard} onPress={() => { setReservationsModalVisible(false); (navigation as any).navigate('CourtAvailability', { facilityId: (r.timeSlot as any)?.court?.facilityId }); }} activeOpacity={0.7}>
+                    <View style={styles.resCardBody}>
+                      <View style={styles.resCardTop}>
+                        <Text style={styles.resCardFacility} numberOfLines={1}>{facilityName}</Text>
+                        {isPending && <View style={styles.pendingBadge}><Text style={styles.pendingBadgeText}>Pending</Text></View>}
+                      </View>
+                      <Text style={styles.resCardCourt}>{courtName}</Text>
+                      <Text style={styles.resCardMeta}>{date} · {time}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* FAB — hidden for dependents */}
       {!isDependent && (
@@ -378,6 +473,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    gap: 8,
+  },
+  freeToggle: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  freeToggleActive: {
+    backgroundColor: colors.pine,
+    borderColor: colors.pine,
+  },
+  freeToggleText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  freeToggleTextActive: {
+    color: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -675,4 +797,83 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.surface,
   },
+  reservationsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  reservationsBtnText: {
+    flex: 1,
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.pine,
+  },
+  resBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 70,
+  },
+  resModal: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    maxHeight: '80%',
+    overflow: 'hidden',
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  resHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  resTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.ink,
+  },
+  resScroll: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  resCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 6,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  resCardBody: { flex: 1 },
+  resCardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  resCardFacility: { fontFamily: fonts.label, fontSize: 15, color: colors.ink, flex: 1 },
+  pendingBadge: { backgroundColor: colors.goldTint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  pendingBadgeText: { fontFamily: fonts.label, fontSize: 10, color: colors.gold },
+  resCardCourt: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginTop: 2 },
+  resCardMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginTop: 1 },
 });

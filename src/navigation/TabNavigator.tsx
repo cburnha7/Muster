@@ -224,6 +224,8 @@ export function TabNavigator(): JSX.Element {
         options={({ route }) => ({
           tabBarLabel: 'Profile',
           headerShown: isRootScreen(route),
+          headerRight: () => <HeaderUserSelector />,
+          headerRightContainerStyle: { paddingRight: 16 },
         })}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
