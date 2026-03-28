@@ -272,17 +272,15 @@ export function FacilitiesListScreen() {
               {item.sportTypes.length > 3 && (
                 <Text style={styles.moreText}>+{item.sportTypes.length - 3}</Text>
               )}
+              <View style={{ flex: 1 }} />
+              {item.rating && item.rating > 0 && (
+                <View style={styles.rating}>
+                  <Ionicons name="star" size={14} color={colors.gold} />
+                  <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+                </View>
+              )}
             </View>
           )}
-          <View style={styles.facilityFooter}>
-            <View style={{ flex: 1 }} />
-            {item.rating && item.rating > 0 && (
-              <View style={styles.rating}>
-                <Ionicons name="star" size={14} color={colors.gold} />
-                <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
-              </View>
-            )}
-          </View>
         </View>
       </TouchableOpacity>
     );
@@ -477,8 +475,17 @@ const styles = StyleSheet.create({
   filterBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
     gap: 8,
   },
   freeToggle: {
@@ -564,13 +571,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
-    marginVertical: 8,
+    marginVertical: 6,
     marginHorizontal: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
   cardContent: {
     flex: 1,

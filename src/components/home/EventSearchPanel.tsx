@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { EventCard } from '../ui/EventCard';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
+import { EventsMapViewWrapper } from '../maps/EventsMapViewWrapper';
 import { colors, fonts, Spacing } from '../../theme';
 import { Event, SportType, EventType, EventStatus } from '../../types';
 import { eventService } from '../../services/api/EventService';
@@ -37,8 +38,6 @@ const EVENT_TYPE_OPTIONS: SelectOption[] = [
   { label: 'Practice', value: EventType.PRACTICE },
   { label: 'Pickup', value: EventType.PICKUP },
 ];
-
-const PROXIMITY_OPTIONS = [5, 10, 25, 50, 100];
 
 const GENDER_OPTIONS: SelectOption[] = [
   { label: 'All Genders', value: '' },
@@ -190,8 +189,8 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
 
       {/* Age filter */}
       <View style={styles.ageRow}>
-        <TextInput style={[styles.ageInput]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAgeFilter} onChangeText={setMinAgeFilter} keyboardType="number-pad" />
-        <TextInput style={[styles.ageInput]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAgeFilter} onChangeText={setMaxAgeFilter} keyboardType="number-pad" />
+        <TextInput style={styles.ageInput} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAgeFilter} onChangeText={setMinAgeFilter} keyboardType="number-pad" />
+        <TextInput style={styles.ageInput} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAgeFilter} onChangeText={setMaxAgeFilter} keyboardType="number-pad" />
       </View>
 
       {/* Location */}
@@ -214,20 +213,6 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
           )}
         </TouchableOpacity>
       </View>
-
-      {/* Proximity chips */}
-      {(userLat != null || locationText.trim()) && (
-        <View style={styles.proximityRow}>
-          {PROXIMITY_OPTIONS.map((mi) => {
-            const active = radiusMiles === mi;
-            return (
-              <TouchableOpacity key={mi} style={[styles.proxChip, active && styles.proxChipActive]} onPress={() => setRadiusMiles(mi)}>
-                <Text style={[styles.proxChipText, active && styles.proxChipTextActive]}>{mi} mi</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
 
       {/* Reset link */}
       {hasFilters && (
@@ -276,14 +261,30 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     gap: 8,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.sm,
+    marginHorizontal: 16,
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
   ageRow: {
     flexDirection: 'row',
     gap: 8,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.sm,
+    marginHorizontal: 16,
+    marginTop: 6,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
   ageInput: {
     flex: 1,
@@ -328,33 +329,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: colors.white,
-  },
-  proximityRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.sm,
-  },
-  proxChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: colors.white,
-  },
-  proxChipActive: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
-  },
-  proxChipText: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.ink,
-  },
-  proxChipTextActive: {
-    color: '#FFFFFF',
-    fontFamily: fonts.label,
   },
   resetRow: {
     alignItems: 'flex-end',
