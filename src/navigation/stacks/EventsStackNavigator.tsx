@@ -26,16 +26,10 @@ export function EventsStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="CreateEvent" 
         component={CreateEventScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="EditEvent" 
         component={EditEventScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
     </Stack.Navigator>
   );

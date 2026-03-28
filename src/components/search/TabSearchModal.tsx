@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  TextInput,
   FlatList,
+  TouchableOpacity,
   ActivityIndicator,
-  Dimensions,
-  Animated,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import { SportType } from '../../types';
+import { searchEventBus } from '../../utils/searchEventBus';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const TAB_BAR_HEIGHT = 60;
 
 const SPORT_LABELS: Record<string, string> = {
@@ -62,18 +59,16 @@ export function TabSearchModal({
   const [selectedSport, setSelectedSport] = useState<SportType | null>(null);
   const [results, setResults] = useState<TabSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [slideAnim] = useState(new Animated.Value(-SCREEN_HEIGHT));
 
+  // Listen for query from header pill
   useEffect(() => {
-    if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 65,
-        friction: 11,
-      }).start();
-    } else {
-      slideAnim.setValue(-SCREEN_HEIGHT);
+    const unsub = searchEventBus.subscribeQuery((q) => setQuery(q));
+    return unsub;
+  }, []);
+
+  // Reset when hidden
+  useEffect(() => {
+    if (!visible) {
       setQuery('');
       setSelectedSport(null);
       setResults([]);
@@ -98,34 +93,7 @@ export function TabSearchModal({
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn} accessibilityLabel="Close" accessibilityRole="button">
-          <Ionicons name="close" size={24} color={colors.ink} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Search input */}
-      <View style={styles.inputRow}>
-        <Ionicons name="search" size={18} color={colors.inkFaint} />
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor={colors.inkFaint}
-          value={query}
-          onChangeText={setQuery}
-          autoFocus
-          returnKeyType="search"
-        />
-        {query.length > 0 && (
-          <TouchableOpacity onPress={() => setQuery('')}>
-            <Ionicons name="close-circle" size={18} color={colors.inkFaint} />
-          </TouchableOpacity>
-        )}
-      </View>
-
+    <View style={styles.container}>
       {/* Sport filter chips */}
       <View style={styles.chipScroll}>
         <TouchableOpacity
@@ -175,7 +143,7 @@ export function TabSearchModal({
           showsVerticalScrollIndicator={false}
         />
       )}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -188,40 +156,6 @@ const styles = StyleSheet.create({
     bottom: TAB_BAR_HEIGHT,
     backgroundColor: colors.cream,
     zIndex: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Platform.OS === 'ios' ? 54 : 16,
-    paddingBottom: Spacing.sm,
-  },
-  title: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: colors.ink,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: Spacing.lg,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: colors.cream,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.ink,
   },
   chipScroll: {
     flexDirection: 'row',

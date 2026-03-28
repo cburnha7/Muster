@@ -27,16 +27,10 @@ export function TeamsStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="CreateTeam" 
         component={CreateTeamScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="JoinTeam" 
         component={JoinTeamScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="EventDetails" 

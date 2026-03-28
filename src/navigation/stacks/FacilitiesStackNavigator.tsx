@@ -33,16 +33,10 @@ export function FacilitiesStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="CreateFacility" 
         component={CreateFacilityScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="EditFacility" 
         component={EditFacilityScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="ManageGround" 
@@ -51,9 +45,6 @@ export function FacilitiesStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="AddCourt" 
         component={AddCourtScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="FacilityMapEditor" 

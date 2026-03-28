@@ -7,6 +7,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -146,6 +148,7 @@ export function HomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [inboxModalVisible, setInboxModalVisible] = useState(false);
 
   const isLoading = bookingsLoading;
 
@@ -159,6 +162,8 @@ export function HomeScreen() {
 
   // Ready to schedule leagues state
   const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<ReadyToScheduleLeague[]>([]);
+
+  const inboxCount = rosterInvitations.length + leagueInvitations.length + eventInvitations.length + readyToScheduleLeagues.length + debriefEvents.length + cancelRequests.length;
 
   const loadDebriefEvents = useCallback(async () => {
     try {
@@ -344,23 +349,14 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* Action items */}
-        <InboxSection
-          rosterInvitations={rosterInvitations}
-          leagueInvitations={leagueInvitations}
-          eventInvitations={eventInvitations}
-          readyToScheduleLeagues={readyToScheduleLeagues}
-          debriefEvents={debriefEvents}
-          cancelRequests={cancelRequests}
-          onRosterInvitationPress={handleRosterInvitationPress}
-          onLeagueInvitationPress={handleLeagueInvitationPress}
-          onEventInvitationPress={handleEventInvitationPress}
-          onScheduleLeaguePress={handleReadyToSchedulePress}
-          onDebriefPress={handleDebriefPress}
-          onApproveCancelRequest={handleApproveCancelRequest}
-          onDenyCancelRequest={handleDenyCancelRequest}
-          isCancelLoading={isApproving || isDenying}
-        />
+        {/* Inbox button */}
+        {inboxCount > 0 && (
+          <TouchableOpacity style={styles.inboxBtn} onPress={() => setInboxModalVisible(true)} activeOpacity={0.7}>
+            <Ionicons name="mail-outline" size={18} color={colors.pine} />
+            <Text style={styles.inboxBtnText}>Inbox ({inboxCount})</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+          </TouchableOpacity>
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -375,6 +371,38 @@ export function HomeScreen() {
       >
         <Ionicons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>
+
+      {/* Inbox modal */}
+      <Modal visible={inboxModalVisible} transparent animationType="fade" onRequestClose={() => setInboxModalVisible(false)}>
+        <Pressable style={styles.inboxBackdrop} onPress={() => setInboxModalVisible(false)}>
+          <View style={styles.inboxModal}>
+            <View style={styles.inboxHeader}>
+              <Text style={styles.inboxTitle}>Inbox</Text>
+              <TouchableOpacity onPress={() => setInboxModalVisible(false)}>
+                <Ionicons name="close" size={22} color={colors.ink} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.inboxScroll} showsVerticalScrollIndicator={false}>
+              <InboxSection
+                rosterInvitations={rosterInvitations}
+                leagueInvitations={leagueInvitations}
+                eventInvitations={eventInvitations}
+                readyToScheduleLeagues={readyToScheduleLeagues}
+                debriefEvents={debriefEvents}
+                cancelRequests={cancelRequests}
+                onRosterInvitationPress={(inv) => { setInboxModalVisible(false); handleRosterInvitationPress(inv); }}
+                onLeagueInvitationPress={(inv) => { setInboxModalVisible(false); handleLeagueInvitationPress(inv); }}
+                onEventInvitationPress={(inv) => { setInboxModalVisible(false); handleEventInvitationPress(inv); }}
+                onScheduleLeaguePress={(league) => { setInboxModalVisible(false); handleReadyToSchedulePress(league); }}
+                onDebriefPress={(booking) => { setInboxModalVisible(false); handleDebriefPress(booking); }}
+                onApproveCancelRequest={handleApproveCancelRequest}
+                onDenyCancelRequest={handleDenyCancelRequest}
+                isCancelLoading={isApproving || isDenying}
+              />
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
 
       <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
 
@@ -440,5 +468,62 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
+  },
+  inboxBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  inboxBtnText: {
+    flex: 1,
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.pine,
+  },
+  inboxBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 70,
+  },
+  inboxModal: {
+    backgroundColor: colors.chalk,
+    borderRadius: 16,
+    maxHeight: '80%',
+    overflow: 'hidden',
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  inboxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cream,
+  },
+  inboxTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.ink,
+  },
+  inboxScroll: {
+    paddingVertical: 8,
   },
 });

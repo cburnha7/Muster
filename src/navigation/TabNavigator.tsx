@@ -179,7 +179,7 @@ export function TabNavigator(): JSX.Element {
         }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            // Reset the Facilities stack to the list screen when tab is pressed
+            e.preventDefault();
             navigation.navigate('Facilities', { screen: 'FacilitiesList' });
           },
         })}

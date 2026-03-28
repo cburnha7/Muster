@@ -31,9 +31,6 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen 
         name="EditEvent" 
         component={EditEventScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
       <Stack.Screen 
         name="FacilityDetails" 
@@ -58,9 +55,6 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen
         name="CreateEvent"
         component={CreateEventScreen}
-        options={{
-          presentation: 'modal',
-        }}
       />
     </Stack.Navigator>
   );
