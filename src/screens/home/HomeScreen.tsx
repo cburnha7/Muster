@@ -17,7 +17,7 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { BookingCard } from '../../components/ui/BookingCard';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { PendingReservationsSection } from '../../components/home/PendingReservationsSection';
-import { EventSearchModal, EventSearchParams } from '../../components/home/EventSearchModal';
+import { EventSearchPanel } from '../../components/home/EventSearchPanel';
 import { InboxSection } from '../../components/home/InboxSection';
 
 // Services
@@ -207,10 +207,10 @@ export function HomeScreen() {
     }, [authLoading])
   );
 
-  // Listen for openSearch event from the header search pill
+  // Listen for openSearch event from the header search pill — toggle
   useEffect(() => {
     const unsubscribe = searchEventBus.subscribe(() => {
-      setSearchModalVisible(true);
+      setSearchModalVisible((prev) => !prev);
     });
     return unsubscribe;
   }, []);
@@ -289,20 +289,14 @@ export function HomeScreen() {
     (navigation as any).navigate('Leagues', { screen: 'LeagueScheduling', params: { leagueId: league.id } });
   }, [navigation]);
 
-  const handleSearchSubmit = useCallback((params: EventSearchParams) => {
-    setSearchModalVisible(false);
-    navigation.navigate('EventSearchResults', {
-      sportTypes: params.sportTypes,
-      locationQuery: params.locationQuery,
-      latitude: params.latitude,
-      longitude: params.longitude,
-      radiusMiles: params.radiusMiles,
-    });
-  }, [navigation]);
-
   const handleCreateEvent = useCallback(() => {
     setSearchModalVisible(false);
     navigation.navigate('CreateEvent', {});
+  }, [navigation]);
+
+  const handleSearchEventPress = useCallback((event: any) => {
+    setSearchModalVisible(false);
+    navigation.navigate('EventDetails', { eventId: event.id });
   }, [navigation]);
 
   if (authLoading || isLoading) {
@@ -383,11 +377,12 @@ export function HomeScreen() {
       </TouchableOpacity>
 
       <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
-      <EventSearchModal
+
+      {/* Search panel — drops down below header */}
+      <EventSearchPanel
         visible={searchModalVisible}
-        onClose={() => setSearchModalVisible(false)}
-        onSearch={handleSearchSubmit}
         onCreateEvent={handleCreateEvent}
+        onEventPress={handleSearchEventPress}
       />
     </View>
   );
