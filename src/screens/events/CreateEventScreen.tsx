@@ -144,13 +144,13 @@ export function CreateEventScreen() {
     const marks: Record<string, any> = {};
     datesForCourt.forEach((d) => {
       if (d === selectedDate) {
-        marks[d!] = { selected: true, selectedColor: colors.pine };
+        marks[d!] = { selected: true, selectedColor: colors.cobalt };
       } else {
-        marks[d!] = { marked: true, dotColor: colors.pine };
+        marks[d!] = { marked: true, dotColor: colors.cobalt };
       }
     });
     if (selectedDate && !datesForCourt.has(selectedDate)) {
-      marks[selectedDate] = { selected: true, selectedColor: colors.pine };
+      marks[selectedDate] = { selected: true, selectedColor: colors.cobalt };
     }
     return marks;
   }, [datesForCourt, selectedDate]);
@@ -304,7 +304,7 @@ export function CreateEventScreen() {
         {showCourt && (
           <>
             {loadingSlots ? (
-              <ActivityIndicator color={colors.pine} style={{ marginVertical: 12 }} />
+              <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 12 }} />
             ) : courts.length === 0 ? (
               <Text style={styles.hint}>No courts with available slots at this ground.</Text>
             ) : (
@@ -379,7 +379,7 @@ export function CreateEventScreen() {
                     <Ionicons
                       name={isSelected ? 'checkbox' : 'square-outline'}
                       size={20}
-                      color={isSelected ? colors.pine : canSelect ? colors.inkFaint : colors.white}
+                      color={isSelected ? colors.cobalt : canSelect ? colors.inkFaint : colors.white}
                     />
                     <Text style={[styles.timeRowText, isSelected && styles.timeRowTextSelected]}>
                       {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
@@ -449,7 +449,7 @@ export function CreateEventScreen() {
                 {inviteResults.slice(0, 8).map((item) => (
                   <TouchableOpacity key={item.id} style={styles.dropdownRow} onPress={() => addInvite(item)}>
                     {item.type === 'roster' ? (
-                      <Ionicons name="people" size={18} color={colors.pine} />
+                      <Ionicons name="people" size={18} color={colors.cobalt} />
                     ) : item.image ? (
                       <Image source={{ uri: item.image }} style={styles.avatar} />
                     ) : (
@@ -464,7 +464,7 @@ export function CreateEventScreen() {
               <View style={styles.chipRow}>
                 {invitedItems.map((item) => (
                   <View key={item.id} style={styles.inviteChip}>
-                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.pine} /> : <Ionicons name="person" size={14} color={colors.ink} />}
+                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.cobalt} /> : <Ionicons name="person" size={14} color={colors.ink} />}
                     <Text style={styles.inviteChipText}>{item.name}</Text>
                     <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
                   </View>
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.white,
   },
   timeRowSelected: {
-    backgroundColor: colors.pine + '0D',
+    backgroundColor: colors.cobalt + '0D',
   },
   timeRowDisabled: {
     opacity: 0.35,
@@ -574,12 +574,12 @@ const styles = StyleSheet.create({
   },
   timeRowTextSelected: {
     fontFamily: fonts.label,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   timeHint: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 6,
     textAlign: 'center',
   },
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
     gap: 6,
   },
-  toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
+  toggleBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
   toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
   toggleTextActive: { color: '#FFFFFF' },
   dropdown: {

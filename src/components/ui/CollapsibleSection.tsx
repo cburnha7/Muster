@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.pine}20`,
+    backgroundColor: `${colors.cobalt}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 });

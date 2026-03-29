@@ -43,6 +43,7 @@ import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, 
 import { League } from '../../types/league';
 import { colors, fonts } from '../../theme';
 import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
+import { PlayerCard } from '../../components/ui/PlayerCard';
 import { loggingService } from '../../services/LoggingService';
 interface TeamDetailsScreenProps {
   route: { params: { teamId: string; readOnly?: boolean } };
@@ -109,6 +110,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; firstName: string; lastName: string; profileImage?: string; dateOfBirth?: string; gender?: string } | null>(null);
 
   // Derived state
   const isMember = team?.members?.some(
@@ -465,7 +467,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
     return (
       <View key={member.userId} style={styles.memberItem}>
-        <View style={styles.memberInfo}>
+        <TouchableOpacity style={styles.memberInfo} activeOpacity={0.7} onPress={() => user && setSelectedPlayer({ id: member.userId, firstName: user.firstName, lastName: user.lastName, profileImage: user.profileImage, dateOfBirth: (user as any).dateOfBirth, gender: (user as any).gender })}>
           {user?.profileImage ? (
             <Image source={{ uri: user.profileImage }} style={styles.memberAvatar} />
           ) : (
@@ -492,7 +494,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             </View>
             <Text style={styles.memberRole}>{roleLabel}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
         {canManageTeam && !isCurrentUser && isPending && (
           <View style={styles.memberActions}>
             <TouchableOpacity
@@ -530,7 +532,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />
         }
       >
         <View style={styles.form}>
@@ -622,7 +624,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               {/* Members List */}
               <Text style={styles.membersTitle}>Players ({activeMembers.length}/{team.maxMembers})</Text>
               {activeMembers.map((member) => (
-                <View key={member.userId} style={styles.memberRow}>
+                <TouchableOpacity key={member.userId} style={styles.memberRow} activeOpacity={0.7} onPress={() => member.user && setSelectedPlayer({ id: member.userId, firstName: member.user.firstName, lastName: member.user.lastName, profileImage: member.user.profileImage, dateOfBirth: (member.user as any).dateOfBirth, gender: (member.user as any).gender })}>
                   {member.user?.profileImage ? (
                     <Image source={{ uri: member.user.profileImage }} style={styles.memberAvatar} />
                   ) : (
@@ -640,7 +642,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                       <Text style={styles.captainBadgeText}>Manager</Text>
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -739,7 +741,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                     onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: true } })}
                   >
                     <View style={styles.listCardContent}>
-                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.gold : colors.pine} />
+                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.gold : colors.cobalt} />
                       <View style={styles.listCardText}>
                         <Text style={styles.listCardTitle}>{league.name}</Text>
                         <Text style={styles.listCardSub}>{league.sportType}</Text>
@@ -770,7 +772,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                   onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
                 >
                   <View style={styles.listCardContent}>
-                    <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                    <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
                     <View style={styles.listCardText}>
                       <Text style={styles.listCardTitle}>{event.title}</Text>
                       <Text style={styles.listCardSub}>
@@ -873,6 +875,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         onCancel={() => setShowLeaveModal(false)}
         onConfirm={handleLeaveTeam}
       />
+
+      <PlayerCard
+        visible={!!selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        player={selectedPlayer}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -895,7 +903,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
+    fontSize: 16,
     color: colors.ink,
     marginBottom: 8,
   },
@@ -1036,7 +1044,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   memberAvatarPlaceholder: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1107,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   duesSummaryText: {
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   invitedDescription: {
@@ -1263,8 +1271,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   sportChipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   sportChipText: {
     fontSize: 14,
@@ -1320,14 +1328,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   memberAvatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   memberName: {
     flex: 1,
@@ -1387,8 +1395,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   editToggleActive: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   editToggleText: {
     fontFamily: fonts.ui,

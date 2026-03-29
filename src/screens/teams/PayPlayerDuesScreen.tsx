@@ -95,7 +95,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Loading dues information...</Text>
         </View>
       </View>
@@ -196,7 +196,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
       {!isPaid && isDependent && (
         <View style={styles.bottomBar}>
           <View style={styles.dependentNotice}>
-            <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
+            <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
             <Text style={styles.dependentNoticeText}>
               Payments for {activeName} must be made from the parent account.
             </Text>
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   retryButtonText: {
     fontFamily: fonts.ui,
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   payButtonDisabled: {
     opacity: 0.5,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   dependentNoticeText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.navy,
+    color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
     lineHeight: 20,

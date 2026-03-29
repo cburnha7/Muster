@@ -55,6 +55,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   buttonActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
 });

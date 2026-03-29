@@ -180,7 +180,7 @@ export function EventsListScreen(): React.JSX.Element {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />
         }
       >
         <View style={styles.sectionHeader}>
@@ -200,7 +200,7 @@ export function EventsListScreen(): React.JSX.Element {
           />
           <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
           <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
-            <Ionicons name="filter" size={24} color={colors.pine} />
+            <Ionicons name="filter" size={24} color={colors.cobalt} />
             {selectedSports.length > 0 && <View style={styles.filterBadge} />}
           </TouchableOpacity>
         </View>
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   countBadge: {
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   header: {
     flexDirection: 'row',
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   numberBadge: {
     width: 32, height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginRight: 12,
@@ -366,12 +366,12 @@ const styles = StyleSheet.create({
   },
   sportTag: {
     alignSelf: 'flex-start' as const,
-    backgroundColor: colors.pine + '15',
+    backgroundColor: colors.cobalt + '15',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  sportTagText: { fontFamily: fonts.label, fontSize: 13, color: colors.pine },
+  sportTagText: { fontFamily: fonts.label, fontSize: 13, color: colors.cobalt },
   detailRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 },
   detailText: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, flex: 1 },
   emptyState: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     right: 20, bottom: 20,
     width: 56, height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     shadowColor: colors.ink,
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 8,
   },
   retryButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.inkFaint,
   },
-  sportChipSelected: { backgroundColor: colors.pine, borderColor: colors.pine },
+  sportChipSelected: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
   sportChipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
   sportChipTextSelected: { color: colors.surface },
   modalActions: {
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center' as const,
   },
   applyButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },

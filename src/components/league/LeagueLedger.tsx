@@ -37,7 +37,7 @@ function getTypeIcon(type: string): string {
 
 function getTypeColor(type: string): string {
   switch (type) {
-    case 'dues_received': return colors.pine;
+    case 'dues_received': return colors.cobalt;
     case 'court_cost': return colors.heart;
     case 'refund': return colors.gold;
     default: return colors.inkFaint;
@@ -109,7 +109,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -142,7 +142,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
           <Text style={styles.balanceLabel}>BALANCE</Text>
           <Text style={[
             styles.balanceValue,
-            { color: currentBalance >= 0 ? colors.pine : colors.heart },
+            { color: currentBalance >= 0 ? colors.cobalt : colors.heart },
           ]}>
             {formatCurrency(currentBalance)}
           </Text>

@@ -53,7 +53,7 @@ export function InsuranceDocumentSelector({
       <View style={styles.container}>
         <Text style={styles.sectionTitle}>Insurance Document</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.pine} />
+          <ActivityIndicator size="small" color={colors.cobalt} />
         </View>
       </View>
     );
@@ -77,7 +77,7 @@ export function InsuranceDocumentSelector({
             accessibilityRole="button"
             accessibilityLabel="Go to Profile to add insurance document"
           >
-            <Ionicons name="arrow-forward-circle-outline" size={18} color={colors.pine} />
+            <Ionicons name="arrow-forward-circle-outline" size={18} color={colors.cobalt} />
             <Text style={styles.profileLinkText}>Add in Profile</Text>
           </TouchableOpacity>
         </View>
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   profileLinkText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: Spacing.xs,
   },
   documentCard: {
@@ -172,8 +172,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   documentCardSelected: {
-    borderColor: colors.pine,
-    backgroundColor: colors.pine + '0D',
+    borderColor: colors.cobalt,
+    backgroundColor: colors.cobalt + '0D',
   },
   radioOuter: {
     width: 20,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   documentInfo: {
     flex: 1,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   policyNameSelected: {
-    color: colors.pine,
+    color: colors.cobalt,
   },
   expiryDate: {
     fontFamily: fonts.body,

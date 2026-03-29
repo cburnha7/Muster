@@ -46,8 +46,8 @@ export function ConfirmModal({
     }
   };
 
-  const resolvedIconColor = iconColor || (variant === 'danger' ? colors.heart : colors.pine);
-  const confirmBg = variant === 'danger' ? colors.heart : colors.pine;
+  const resolvedIconColor = iconColor || (variant === 'danger' ? colors.heart : colors.cobalt);
+  const confirmBg = variant === 'danger' ? colors.heart : colors.cobalt;
 
   return (
     <Modal

@@ -146,7 +146,7 @@ export function BlockTimeSlotModal({
             <View style={styles.field}>
               <Text style={styles.label}>Date</Text>
               <View style={styles.dateDisplay}>
-                <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
                 <Text style={styles.dateText}>
                   {new Date(selectedDate).toLocaleDateString('en-US', {
                     weekday: 'long',
@@ -165,9 +165,9 @@ export function BlockTimeSlotModal({
                 style={styles.timeButton}
                 onPress={() => setShowStartPicker(true)}
               >
-                <Ionicons name="time-outline" size={20} color={colors.pine} />
+                <Ionicons name="time-outline" size={20} color={colors.cobalt} />
                 <Text style={styles.timeButtonText}>{formatTime12(formatTime24(startTime))}</Text>
-                <Ionicons name="chevron-down" size={20} color={colors.soft} />
+                <Ionicons name="chevron-down" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
               {showStartPicker && (
                 <DateTimePicker
@@ -188,9 +188,9 @@ export function BlockTimeSlotModal({
                 style={styles.timeButton}
                 onPress={() => setShowEndPicker(true)}
               >
-                <Ionicons name="time-outline" size={20} color={colors.pine} />
+                <Ionicons name="time-outline" size={20} color={colors.cobalt} />
                 <Text style={styles.timeButtonText}>{formatTime12(formatTime24(endTime))}</Text>
-                <Ionicons name="chevron-down" size={20} color={colors.soft} />
+                <Ionicons name="chevron-down" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
               {showEndPicker && (
                 <DateTimePicker
@@ -214,7 +214,7 @@ export function BlockTimeSlotModal({
                 value={blockReason}
                 onChangeText={setBlockReason}
                 placeholder="e.g., Maintenance, Private event, Weather conditions"
-                placeholderTextColor={colors.soft}
+                placeholderTextColor={colors.inkFaint}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -226,7 +226,7 @@ export function BlockTimeSlotModal({
 
             {/* Info Box */}
             <View style={styles.infoBox}>
-              <Ionicons name="information-circle" size={20} color={colors.navy} />
+              <Ionicons name="information-circle" size={20} color={colors.ink} />
               <Text style={styles.infoText}>
                 Blocked time slots cannot be booked by users. You can unblock them later if needed.
               </Text>
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: 4,
   },
   closeButton: {
@@ -347,17 +347,17 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: Spacing.xs,
   },
   infoBox: {
     flexDirection: 'row',
     gap: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: colors.navyLight + '20',
+    backgroundColor: colors.inkSoft + '20',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.navy + '40',
+    borderColor: colors.ink + '40',
   },
   infoText: {
     flex: 1,

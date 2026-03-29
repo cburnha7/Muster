@@ -69,7 +69,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
   if (courts.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="basketball-outline" size={64} color={colors.soft} />
+        <Ionicons name="basketball-outline" size={64} color={colors.inkFaint} />
         <Text style={styles.emptyStateTitle}>No Courts Yet</Text>
         <Text style={styles.emptyStateText}>
           Add courts or fields to start managing availability and rentals
@@ -107,7 +107,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               style={styles.courtActionButton}
               onPress={() => onEditCourt(court)}
             >
-              <Ionicons name="create-outline" size={20} color={colors.pine} />
+              <Ionicons name="create-outline" size={20} color={colors.cobalt} />
               <Text style={styles.courtActionText}>Edit</Text>
             </TouchableOpacity>
 
@@ -118,9 +118,9 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               <Ionicons
                 name={court.isActive ? 'pause-outline' : 'play-outline'}
                 size={20}
-                color={colors.navy}
+                color={colors.ink}
               />
-              <Text style={[styles.courtActionText, { color: colors.navy }]}>
+              <Text style={[styles.courtActionText, { color: colors.ink }]}>
                 {court.isActive ? 'Deactivate' : 'Activate'}
               </Text>
             </TouchableOpacity>
@@ -167,27 +167,27 @@ const styles = StyleSheet.create({
   },
   courtDetails: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginBottom: 4,
   },
   courtPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   statusBadge: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 16,
-    backgroundColor: colors.pineLight,
+    backgroundColor: colors.cobaltLight,
   },
   statusBadgeInactive: {
-    backgroundColor: colors.soft,
+    backgroundColor: colors.inkFaint,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   statusTextInactive: {
     color: colors.surface,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   courtActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   emptyState: {
     alignItems: 'center',
@@ -222,12 +222,12 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   emptyStateButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: 8,

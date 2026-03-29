@@ -69,7 +69,7 @@ export function BulkBookingConfirmationModal({
         <View style={styles.modal}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <Ionicons name="cart" size={28} color={colors.pine} />
+              <Ionicons name="cart" size={28} color={colors.cobalt} />
               <Text style={styles.title}>Confirm Booking</Text>
               <Text style={styles.subtitle}>
                 {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''} at {facilityName}
@@ -82,7 +82,7 @@ export function BulkBookingConfirmationModal({
                 return (
                   <View key={courtId} style={styles.courtGroup}>
                     <View style={styles.courtHeader}>
-                      <Ionicons name="basketball" size={16} color={colors.pine} />
+                      <Ionicons name="basketball" size={16} color={colors.cobalt} />
                       <Text style={styles.courtName}>{courtName}</Text>
                     </View>
                     {Array.from(dateMap.entries()).map(([date, slots]) => (
@@ -165,14 +165,14 @@ const styles = StyleSheet.create({
   dateLabel: { fontFamily: fonts.label, fontSize: 11, color: colors.inkFaint, textTransform: 'uppercase', marginBottom: 4 },
   slotRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
   slotTime: { fontFamily: fonts.body, ...typeScale.body, color: colors.ink },
-  slotPrice: { fontFamily: fonts.semibold, ...typeScale.body, color: colors.pine },
+  slotPrice: { fontFamily: fonts.semibold, ...typeScale.body, color: colors.cobalt },
   totalRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: Spacing.md, backgroundColor: `${colors.pine}10`, borderRadius: 12,
+    padding: Spacing.md, backgroundColor: `${colors.cobalt}10`, borderRadius: 12,
     marginHorizontal: Spacing.lg, marginBottom: Spacing.md,
   },
   totalLabel: { fontFamily: fonts.semibold, ...typeScale.h3, color: colors.ink },
-  totalPrice: { fontFamily: fonts.heading, ...typeScale.h2, color: colors.pine },
+  totalPrice: { fontFamily: fonts.heading, ...typeScale.h2, color: colors.cobalt },
   insuranceSection: {
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   noticeText: { flex: 1, fontFamily: fonts.body, ...typeScale.bodySm, color: colors.ink },
   buttons: { flexDirection: 'row', gap: Spacing.md, paddingHorizontal: Spacing.lg },
   cancelBtn: { flex: 1, ...ComponentStyles.button.secondary, alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
+  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt },
   confirmBtn: {
     flex: 2, ...ComponentStyles.button.primary,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,

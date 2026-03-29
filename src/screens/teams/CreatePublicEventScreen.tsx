@@ -263,7 +263,7 @@ export const CreatePublicEventScreen: React.FC = () => {
         <Ionicons
           name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
           size={24}
-          color={isSelected ? colors.pine : colors.inkFaint}
+          color={isSelected ? colors.cobalt : colors.inkFaint}
         />
         <Text style={styles.selectionPrimary}>{item.primary}</Text>
       </View>
@@ -277,7 +277,7 @@ export const CreatePublicEventScreen: React.FC = () => {
     if (loading) {
       return (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       );
@@ -357,7 +357,7 @@ export const CreatePublicEventScreen: React.FC = () => {
 
             {selectedTimeSlot && (
               <View style={styles.courtCostBanner}>
-                <Ionicons name="information-circle-outline" size={18} color={colors.navy} />
+                <Ionicons name="information-circle-outline" size={18} color={colors.ink} />
                 <Text style={styles.courtCostText}>
                   Court cost: ${selectedTimeSlot.price.toFixed(2)}
                 </Text>
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   stepDotActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     opacity: 1,
   },
   scrollView: {
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectionCardSelected: {
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
   },
   selectionCardHeader: {
     flexDirection: 'row',
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   reviewValueHighlight: {
-    color: colors.pine,
+    color: colors.cobalt,
   },
   reviewNote: {
     fontFamily: fonts.body,
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   primaryButtonDisabled: {
     opacity: 0.5,

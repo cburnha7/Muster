@@ -85,7 +85,7 @@ export function EventSearchResultsScreen() {
 
       {isLoading || isFetching ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
       ) : events.length === 0 ? (
         <View style={styles.centered}>
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginTop: Spacing.xl,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.ink,

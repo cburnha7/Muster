@@ -195,7 +195,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -235,13 +235,13 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       onPress={() => handleViewEvent(r.usedForEventId!)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="calendar" size={16} color={colors.navy} />
+                      <Ionicons name="calendar" size={16} color={colors.ink} />
                       <Text style={styles.viewEventText}>View Event</Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.slotActions}>
                       <TouchableOpacity style={styles.createButton} onPress={() => handleCreateEvent(r)} activeOpacity={0.7}>
-                        <Ionicons name="add-circle" size={16} color={colors.pine} />
+                        <Ionicons name="add-circle" size={16} color={colors.cobalt} />
                         <Text style={styles.createButtonText}>Create Event</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelReservation(r)} activeOpacity={0.7}>
@@ -343,13 +343,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: `${colors.pine}10`,
+    backgroundColor: `${colors.cobalt}10`,
     gap: 4,
   },
   createButtonText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   cancelButton: {
     flexDirection: 'row',
@@ -371,13 +371,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: `${colors.navy}10`,
+    backgroundColor: `${colors.ink}10`,
     gap: 4,
   },
   viewEventText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: colors.navy,
+    color: colors.ink,
   },
   pendingBadge: {
     flexDirection: 'row',

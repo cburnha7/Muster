@@ -250,7 +250,7 @@ export function TimeSlotPicker({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading available time slots...</Text>
       </View>
     );
@@ -259,7 +259,7 @@ export function TimeSlotPicker({
   if (slots.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="calendar-outline" size={48} color={colors.soft} />
+        <Ionicons name="calendar-outline" size={48} color={colors.inkFaint} />
         <Text style={styles.emptyTitle}>No Time Slots Available</Text>
         <Text style={styles.emptyText}>
           {isOwner
@@ -275,7 +275,7 @@ export function TimeSlotPicker({
   if (selectableCount === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="lock-closed-outline" size={48} color={colors.soft} />
+        <Ionicons name="lock-closed-outline" size={48} color={colors.inkFaint} />
         <Text style={styles.emptyTitle}>No Selectable Slots</Text>
         <Text style={styles.emptyText}>
           {isOwner
@@ -299,7 +299,7 @@ export function TimeSlotPicker({
 
       {!isOwner && (
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
           <Text style={styles.infoText}>
             {rentalMode 
               ? 'Select any of your reservations. You can select multiple non-sequential slots.'
@@ -310,7 +310,7 @@ export function TimeSlotPicker({
 
       {isOwner && selectedSlotIds.length > 0 && (
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.pine} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.cobalt} />
           <Text style={styles.infoText}>
             {selectedSlotIds.length} slot{selectedSlotIds.length > 1 ? 's' : ''} selected. Tap sequential slots to extend your event.
           </Text>
@@ -360,22 +360,22 @@ export function TimeSlotPicker({
           {isOwner ? (
             <>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.pine }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.cobalt }]} />
                 <Text style={styles.legendText}>Available</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.soft }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.inkFaint }]} />
                 <Text style={styles.legendText}>Unavailable</Text>
               </View>
             </>
           ) : (
             <>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.navy }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.ink }]} />
                 <Text style={styles.legendText}>Your Rental</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.soft }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.inkFaint }]} />
                 <Text style={styles.legendText}>Not Reserved</Text>
               </View>
             </>
@@ -402,20 +402,20 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   badge: {
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
     borderRadius: 12,
   },
   badgeText: {
     ...TextStyles.caption,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.navyLight + '20',
+    backgroundColor: colors.inkSoft + '20',
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.md,
@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   slotUserRental: {
-    backgroundColor: colors.navy + '10',
-    shadowColor: colors.navy,
+    backgroundColor: colors.ink + '10',
+    shadowColor: colors.ink,
     shadowOpacity: 0.12,
   },
   slotSelected: {
-    backgroundColor: colors.pine,
-    shadowColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    shadowColor: colors.cobalt,
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 3,
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   },
   slotPrice: {
     ...TextStyles.caption,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: 2,
   },
   slotBadges: {
@@ -494,10 +494,10 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
   },
   slotTextDisabled: {
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   rentalBadge: {
-    backgroundColor: colors.navy + '30',
+    backgroundColor: colors.ink + '30',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   rentalBadgeText: {
     ...TextStyles.caption,
     fontSize: 10,
-    color: colors.navy,
+    color: colors.ink,
     fontWeight: '600',
   },
   legend: {
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     ...TextStyles.caption,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   loadingContainer: {
     padding: Spacing.xl,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   emptyContainer: {
     padding: Spacing.xxl,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
     textAlign: 'center',
   },
 });

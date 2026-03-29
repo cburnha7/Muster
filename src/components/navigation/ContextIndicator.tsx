@@ -94,7 +94,7 @@ export function ContextIndicator() {
                     <Ionicons
                       name="person"
                       size={16}
-                      color={isActive ? colors.pine : colors.inkFaint}
+                      color={isActive ? colors.cobalt : colors.inkFaint}
                       style={styles.rowIcon}
                     />
                     <Text
@@ -104,7 +104,7 @@ export function ContextIndicator() {
                       {item.name}
                     </Text>
                     {isActive && (
-                      <Ionicons name="checkmark" size={18} color={colors.pine} />
+                      <Ionicons name="checkmark" size={18} color={colors.cobalt} />
                     )}
                   </TouchableOpacity>
                 );
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   activeRow: {
-    backgroundColor: colors.pine + '0D',
+    backgroundColor: colors.cobalt + '0D',
   },
   rowIcon: {
     marginRight: 8,
@@ -170,6 +170,6 @@ const styles = StyleSheet.create({
   },
   activeRowText: {
     fontFamily: fonts.label,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 });

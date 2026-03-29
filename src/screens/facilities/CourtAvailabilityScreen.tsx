@@ -443,7 +443,7 @@ export function CourtAvailabilityScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.pine} />
+        <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading courts...</Text>
       </View>
     );
@@ -486,7 +486,7 @@ export function CourtAvailabilityScreen() {
                     <Ionicons
                       name={court.isIndoor ? 'home' : 'sunny'}
                       size={20}
-                      color={selectedCourt?.id === court.id ? colors.pine : colors.inkFaint}
+                      color={selectedCourt?.id === court.id ? colors.cobalt : colors.inkFaint}
                     />
                     <Text style={[styles.courtName, selectedCourt?.id === court.id && styles.courtNameSelected]}>
                       {court.name}
@@ -530,8 +530,8 @@ export function CourtAvailabilityScreen() {
             <Switch
               value={wholeDayOn}
               onValueChange={handleWholeDayToggle}
-              trackColor={{ false: '#DDD', true: colors.pineLight }}
-              thumbColor={wholeDayOn ? colors.pine : '#F4F4F4'}
+              trackColor={{ false: '#DDD', true: colors.cobaltLight }}
+              thumbColor={wholeDayOn ? colors.cobalt : '#F4F4F4'}
             />
           </View>
         )}
@@ -549,7 +549,7 @@ export function CourtAvailabilityScreen() {
 
           {loadingSlots ? (
             <View style={styles.loadingSlotsContainer}>
-              <ActivityIndicator size="small" color={colors.pine} />
+              <ActivityIndicator size="small" color={colors.cobalt} />
               <Text style={styles.loadingSlotsText}>Loading time slots...</Text>
             </View>
           ) : availabilityData && availabilityData.slots.length > 0 ? (
@@ -573,11 +573,11 @@ export function CourtAvailabilityScreen() {
           <Text style={styles.legendTitle}>Legend</Text>
           <View style={styles.legendItems}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.pine }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.cobalt }]} />
               <Text style={styles.legendText}>Available</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.navy }]} />
+              <View style={[styles.legendDot, { backgroundColor: colors.ink }]} />
               <Text style={styles.legendText}>Reserved</Text>
             </View>
             <View style={styles.legendItem}>
@@ -619,7 +619,7 @@ export function CourtAvailabilityScreen() {
         <View style={styles.footer}>
           <View style={styles.footerSummary}>
             <View style={styles.footerStats}>
-              <Ionicons name="cart" size={18} color={colors.pine} />
+              <Ionicons name="cart" size={18} color={colors.cobalt} />
               <Text style={styles.footerStatsText}>
                 {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''}
                 {cartCourtCount > 1 ? ` Ã‚Â· ${cartCourtCount} courts` : ''}
@@ -704,23 +704,23 @@ const styles = StyleSheet.create({
   section: { padding: Spacing.lg },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   sectionTitle: { fontFamily: fonts.semibold, ...typeScale.h3, color: colors.ink, marginBottom: Spacing.md },
-  availabilityCount: { fontFamily: fonts.label, fontSize: 11, color: colors.pine },
+  availabilityCount: { fontFamily: fonts.label, fontSize: 11, color: colors.cobalt },
   courtList: { flexDirection: 'row' },
   courtCard: {
     backgroundColor: '#FFF', borderRadius: 12, padding: Spacing.md,
     marginRight: Spacing.md, borderWidth: 2, borderColor: '#EEE', minWidth: 140,
   },
-  courtCardSelected: { borderColor: colors.pine, backgroundColor: colors.white },
+  courtCardSelected: { borderColor: colors.cobalt, backgroundColor: colors.white },
   courtCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
   courtName: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink },
-  courtNameSelected: { color: colors.pine },
+  courtNameSelected: { color: colors.cobalt },
   courtBadge: {
     backgroundColor: colors.gold, borderRadius: 10,
     minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
   },
   courtBadgeText: { fontFamily: fonts.label, fontSize: 10, color: '#FFF' },
   courtSportType: { ...TextStyles.caption, color: colors.inkFaint, marginTop: Spacing.xs },
-  courtPrice: { ...TextStyles.body, color: colors.pine, fontWeight: '600', marginTop: Spacing.xs },
+  courtPrice: { ...TextStyles.body, color: colors.cobalt, fontWeight: '600', marginTop: Spacing.xs },
   calendar: {
     borderRadius: 12, backgroundColor: '#FFF',
     shadowColor: colors.ink, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4,
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
   footerSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   footerStats: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   footerStatsText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint },
-  footerPrice: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.pine },
+  footerPrice: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.cobalt },
   bookButton: {
     ...ComponentStyles.button.primary,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,

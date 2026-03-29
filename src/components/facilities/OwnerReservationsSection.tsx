@@ -112,7 +112,7 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -143,7 +143,7 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
                   onPress={() => handleViewEvent(r.usedForEventId!)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="calendar" size={14} color={colors.navy} />
+                  <Ionicons name="calendar" size={14} color={colors.ink} />
                   <Text style={styles.eventBadgeText}>Event Linked</Text>
                 </TouchableOpacity>
               ) : (
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   price: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   dateTime: {
     fontFamily: fonts.body,
@@ -220,13 +220,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: colors.navy + '15',
+    backgroundColor: colors.ink + '15',
     gap: 4,
   },
   eventBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.navy,
+    color: colors.ink,
   },
   noEventBadge: {
     flexDirection: 'row',

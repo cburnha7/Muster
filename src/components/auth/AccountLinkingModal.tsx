@@ -132,7 +132,7 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
 
           {/* Security Note */}
           <View style={styles.securityNote}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.navy} />
+            <Ionicons name="shield-checkmark-outline" size={16} color={colors.ink} />
             <Text style={styles.securityText}>
               Your password is required to verify your identity and link your accounts securely.
             </Text>
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: colors.navy,
+    borderLeftColor: colors.ink,
   },
   securityText: {
     ...TextStyles.caption,

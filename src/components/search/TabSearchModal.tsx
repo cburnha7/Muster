@@ -124,7 +124,7 @@ export function TabSearchModal({
 
       {/* Results */}
       {loading ? (
-        <View style={styles.centered}><ActivityIndicator color={colors.pine} /></View>
+        <View style={styles.centered}><ActivityIndicator color={colors.cobalt} /></View>
       ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingVertical: 16,
     gap: 8,
   },

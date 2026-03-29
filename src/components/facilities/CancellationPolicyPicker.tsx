@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   chipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   chipText: {
     fontFamily: fonts.body,

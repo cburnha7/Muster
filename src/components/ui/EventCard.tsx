@@ -71,7 +71,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
   const getRatingBadgeColor = (rating: number) => {
     if (rating >= 80) return colors.heart;
     if (rating >= 50) return colors.gold;
-    return colors.pine;
+    return colors.cobalt;
   };
 
   const availableSpots = event.maxParticipants - event.currentParticipants;
@@ -144,7 +144,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         <Ionicons 
           name="people" 
           size={16} 
-          color={isFullyBooked ? colors.heart : colors.pine} 
+          color={isFullyBooked ? colors.heart : colors.cobalt} 
         />
         <Text style={[
           styles.participantsText,
@@ -190,7 +190,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
         {event.rental && (
           <View style={styles.rentalIndicator}>
-            <Ionicons name="calendar" size={14} color={colors.pine} />
+            <Ionicons name="calendar" size={14} color={colors.cobalt} />
             <Text style={styles.rentalText} numberOfLines={1}>
               {event.rental.timeSlot.court.name}
             </Text>
@@ -220,7 +220,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
       {wasAutoOpened && (
         <View style={styles.autoOpenedBanner}>
-          <Ionicons name="megaphone-outline" size={14} color={colors.navy} />
+          <Ionicons name="megaphone-outline" size={14} color={colors.ink} />
           <Text style={styles.autoOpenedText}>
             Now open to public - was invite-only
           </Text>
@@ -289,19 +289,19 @@ const styles = StyleSheet.create({
   participantsTracker: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pine + '15',
+    backgroundColor: colors.cobalt + '15',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'flex-start',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.pine + '30',
+    borderColor: colors.cobalt + '30',
   },
   participantsText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: 6,
   },
   participantsFullText: {
@@ -394,35 +394,35 @@ const styles = StyleSheet.create({
   rentalIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pine + '10',
+    backgroundColor: colors.cobalt + '10',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.pine + '30',
+    borderColor: colors.cobalt + '30',
     alignSelf: 'flex-start',
   },
   rentalText: {
     fontSize: 12,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: 6,
     fontWeight: '600',
   },
   autoOpenedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.navy + '15',
+    backgroundColor: colors.ink + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: colors.navy + '30',
+    borderColor: colors.ink + '30',
   },
   autoOpenedText: {
     fontSize: 12,
-    color: colors.navy,
+    color: colors.ink,
     marginLeft: 6,
     fontWeight: '600',
   },

@@ -179,7 +179,7 @@ export function MapImageUploader({
       {showInstructions && (
         <View style={styles.instructionsCard}>
           <View style={styles.instructionHeader}>
-            <Ionicons name="information-circle" size={24} color={colors.navy} />
+            <Ionicons name="information-circle" size={24} color={colors.ink} />
             <Text style={styles.instructionTitle}>Upload Facility Map</Text>
           </View>
           <Text style={styles.instructionText}>
@@ -209,7 +209,7 @@ export function MapImageUploader({
               onPress={handlePickImage}
               disabled={disabled}
             >
-              <Ionicons name="images" size={20} color={colors.pine} />
+              <Ionicons name="images" size={20} color={colors.cobalt} />
               <Text style={styles.changeButtonText}>Change</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -228,7 +228,7 @@ export function MapImageUploader({
           onPress={handlePickImage}
           disabled={disabled}
         >
-          <Ionicons name="cloud-upload-outline" size={48} color={colors.soft} />
+          <Ionicons name="cloud-upload-outline" size={48} color={colors.inkFaint} />
           <Text style={styles.uploadPlaceholderTitle}>Upload Facility Map</Text>
           <Text style={styles.uploadPlaceholderText}>{placeholderText}</Text>
         </TouchableOpacity>
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   requirementItem: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginBottom: Spacing.xs,
   },
   imageContainer: {
@@ -309,12 +309,12 @@ const styles = StyleSheet.create({
   changeButton: {
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
   },
   changeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   removeButton: {
     backgroundColor: colors.surface,
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   uploadPlaceholderText: {
     fontSize: 15,
-    color: colors.soft,
+    color: colors.inkFaint,
     textAlign: 'center',
   },
 });

@@ -56,14 +56,14 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
     <View style={styles.container}>
       <View style={styles.toggleRow}>
         <View style={styles.toggleLabel}>
-          <Ionicons name="repeat" size={20} color={colors.pine} />
+          <Ionicons name="repeat" size={20} color={colors.cobalt} />
           <Text style={styles.toggleText}>Repeat Booking</Text>
         </View>
         <Switch
           value={value.enabled}
           onValueChange={handleToggle}
-          trackColor={{ false: `${colors.inkFaint}40`, true: `${colors.pine}60` }}
-          thumbColor={value.enabled ? colors.pine : colors.surface}
+          trackColor={{ false: `${colors.inkFaint}40`, true: `${colors.cobalt}60` }}
+          thumbColor={value.enabled ? colors.cobalt : colors.surface}
         />
       </View>
 
@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   freqButtonActive: {
-    backgroundColor: `${colors.pine}15`,
-    borderColor: colors.pine,
+    backgroundColor: `${colors.cobalt}15`,
+    borderColor: colors.cobalt,
   },
   freqText: {
     fontFamily: fonts.ui,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   freqTextActive: {
-    color: colors.pine,
+    color: colors.cobalt,
   },
   dateButton: {
     flexDirection: 'row',

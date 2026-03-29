@@ -26,16 +26,16 @@ interface EscrowTransaction {
 }
 
 const TYPE_CONFIG: Record<TransactionType, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  authorization: { label: 'Authorization', icon: 'card-outline', color: colors.navy },
-  capture: { label: 'Capture', icon: 'checkmark-circle-outline', color: colors.pine },
-  surplus_payout: { label: 'Surplus Payout', icon: 'arrow-up-outline', color: colors.pine },
+  authorization: { label: 'Authorization', icon: 'card-outline', color: colors.ink },
+  capture: { label: 'Capture', icon: 'checkmark-circle-outline', color: colors.cobalt },
+  surplus_payout: { label: 'Surplus Payout', icon: 'arrow-up-outline', color: colors.cobalt },
   shortfall_charge: { label: 'Shortfall Charge', icon: 'arrow-down-outline', color: colors.heart },
   refund: { label: 'Refund', icon: 'return-down-back-outline', color: colors.gold },
 };
 
 const STATUS_COLOR: Record<TransactionStatus, string> = {
   pending: colors.gold,
-  completed: colors.pine,
+  completed: colors.cobalt,
   failed: colors.heart,
 };
 
@@ -66,7 +66,7 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
       <Text style={styles.sectionTitle}>Escrow Transactions</Text>
 
       {isLoading ? (
-        <ActivityIndicator size="small" color={colors.pine} style={styles.loader} />
+        <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
       ) : transactions.length === 0 ? (
         <Text style={styles.emptyText}>No transactions</Text>
       ) : (

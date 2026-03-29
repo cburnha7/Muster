@@ -127,12 +127,12 @@ export function RedeemCodeScreen() {
                       onPress={() => setSelectedTier(tier.key)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name={tier.icon} size={24} color={active ? colors.pine : colors.inkFaint} />
+                      <Ionicons name={tier.icon} size={24} color={active ? colors.cobalt : colors.inkFaint} />
                       <View style={styles.tierInfo}>
                         <Text style={[styles.tierLabel, active && styles.tierLabelActive]}>{tier.label}</Text>
                         <Text style={styles.tierDesc}>{tier.desc}</Text>
                       </View>
-                      {active && <Ionicons name="checkmark-circle" size={22} color={colors.pine} />}
+                      {active && <Ionicons name="checkmark-circle" size={22} color={colors.cobalt} />}
                     </TouchableOpacity>
                   );
                 })}
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${colors.inkFaint}30`,
   },
-  inputDisabled: { backgroundColor: `${colors.pine}10`, borderColor: colors.pine },
+  inputDisabled: { backgroundColor: `${colors.cobalt}10`, borderColor: colors.cobalt },
   validateBtn: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 10,
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -203,13 +203,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
-  tierCardActive: { borderColor: colors.pine, backgroundColor: `${colors.pine}08` },
+  tierCardActive: { borderColor: colors.cobalt, backgroundColor: `${colors.cobalt}08` },
   tierInfo: { flex: 1, marginLeft: 12 },
   tierLabel: { fontFamily: fonts.ui, fontSize: 15, color: colors.ink },
-  tierLabelActive: { color: colors.pine },
+  tierLabelActive: { color: colors.cobalt },
   tierDesc: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
   primaryBtn: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

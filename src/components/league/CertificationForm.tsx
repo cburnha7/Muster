@@ -160,7 +160,7 @@ export const CertificationForm: React.FC<CertificationFormProps> = ({
           <Ionicons 
             name={bylawsFile ? 'document' : 'cloud-upload-outline'} 
             size={48} 
-            color={bylawsFile ? colors.pine : '#999'} 
+            color={bylawsFile ? colors.cobalt : '#999'} 
           />
           {bylawsFile ? (
             <View style={styles.fileInfo}>
@@ -226,7 +226,7 @@ export const CertificationForm: React.FC<CertificationFormProps> = ({
           onPress={addBoardMember}
           disabled={loading}
         >
-          <Ionicons name="add-circle-outline" size={24} color={colors.pine} />
+          <Ionicons name="add-circle-outline" size={24} color={colors.cobalt} />
           <Text style={styles.addButtonText}>Add Board Member</Text>
         </TouchableOpacity>
       </View>
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 16,
     borderWidth: 2,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     borderRadius: 12,
     borderStyle: 'dashed',
     gap: 8,
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   actions: {
     flexDirection: 'row',

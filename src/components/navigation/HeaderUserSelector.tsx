@@ -60,24 +60,24 @@ export function HeaderUserSelector() {
               style={[styles.row, !activeUserId && styles.rowActive]}
               onPress={() => handleSwitch(null)}
             >
-              <Ionicons name="person" size={16} color={!activeUserId ? colors.pine : colors.inkFaint} />
+              <Ionicons name="person" size={16} color={!activeUserId ? colors.cobalt : colors.inkFaint} />
               <Text style={[styles.rowText, !activeUserId && styles.rowTextActive]}>{guardian.firstName || 'Me'}</Text>
-              {!activeUserId && <Ionicons name="checkmark" size={18} color={colors.pine} />}
+              {!activeUserId && <Ionicons name="checkmark" size={18} color={colors.cobalt} />}
             </TouchableOpacity>
             {dependents.map((dep) => {
               const isActive = activeUserId === dep.id;
               return (
                 <TouchableOpacity key={dep.id} style={[styles.row, isActive && styles.rowActive]} onPress={() => handleSwitch(dep.id)}>
-                  <Ionicons name="person" size={16} color={isActive ? colors.pine : colors.inkFaint} />
+                  <Ionicons name="person" size={16} color={isActive ? colors.cobalt : colors.inkFaint} />
                   <Text style={[styles.rowText, isActive && styles.rowTextActive]}>{dep.firstName}</Text>
-                  {isActive && <Ionicons name="checkmark" size={18} color={colors.pine} />}
+                  {isActive && <Ionicons name="checkmark" size={18} color={colors.cobalt} />}
                 </TouchableOpacity>
               );
             })}
             <View style={styles.divider} />
             <TouchableOpacity style={styles.row} onPress={() => { setMenuVisible(false); (navigation as any).navigate('Profile', { screen: 'DependentForm', params: {} }); }}>
-              <Ionicons name="add-circle-outline" size={16} color={colors.pine} />
-              <Text style={[styles.rowText, { color: colors.pine }]}>Add Dependent</Text>
+              <Ionicons name="add-circle-outline" size={16} color={colors.cobalt} />
+              <Text style={[styles.rowText, { color: colors.cobalt }]}>Add Dependent</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rowActive: {
-    backgroundColor: colors.pine + '0D',
+    backgroundColor: colors.cobalt + '0D',
   },
   rowText: {
     flex: 1,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   rowTextActive: {
     fontFamily: fonts.label,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   divider: {
     height: 1,

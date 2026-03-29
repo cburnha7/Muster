@@ -550,7 +550,7 @@ export function CreateFacilityScreen(): JSX.Element {
               style={styles.addButton}
               onPress={() => setShowAddCourtModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color={colors.pine} style={{ marginRight: Spacing.xs }} />
+              <Ionicons name="add-circle" size={24} color={colors.cobalt} style={{ marginRight: Spacing.xs }} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -598,7 +598,7 @@ export function CreateFacilityScreen(): JSX.Element {
                         handleEditCourt(court.id);
                       }}
                     >
-                      <Ionicons name="pencil-outline" size={20} color={colors.pine} />
+                      <Ionicons name="pencil-outline" size={20} color={colors.cobalt} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -630,8 +630,8 @@ export function CreateFacilityScreen(): JSX.Element {
                 setRequiresBookingConfirmation(val);
                 if (!val) setRequiresInsurance(false);
               }}
-              trackColor={{ false: colors.white, true: colors.pineLight }}
-              thumbColor={requiresBookingConfirmation ? colors.pine : colors.surface}
+              trackColor={{ false: colors.white, true: colors.cobaltLight }}
+              thumbColor={requiresBookingConfirmation ? colors.cobalt : colors.surface}
             />
           </View>
         </View>
@@ -649,8 +649,8 @@ export function CreateFacilityScreen(): JSX.Element {
             <Switch
               value={requiresInsurance}
               onValueChange={setRequiresInsurance}
-              trackColor={{ false: colors.white, true: colors.pineLight }}
-              thumbColor={requiresInsurance ? colors.pine : colors.surface}
+              trackColor={{ false: colors.white, true: colors.cobaltLight }}
+              thumbColor={requiresInsurance ? colors.cobalt : colors.surface}
             />
           </View>
         </View>
@@ -1011,7 +1011,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   row: {
@@ -1035,7 +1035,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sportChipSelected: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   sportChipText: {
     ...TextStyles.body,
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
   },
   courtPrice: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   courtActions: {
@@ -1159,8 +1159,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   checkboxLabel: {
     ...TextStyles.body,
@@ -1188,7 +1188,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   addCourtButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   addCourtButtonText: {
     ...TextStyles.body,
@@ -1226,7 +1226,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   sportBadge: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 12,
@@ -1250,7 +1250,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   continueButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   continueButtonText: {
     ...TextStyles.body,

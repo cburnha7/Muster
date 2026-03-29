@@ -112,14 +112,14 @@ export const SuggestedDuesCalculator: React.FC<SuggestedDuesCalculatorProps> = (
       accessibilityLabel={`Suggested minimum dues: $${suggestedDues}`}
     >
       <View style={styles.header}>
-        <Ionicons name="calculator-outline" size={16} color={colors.pine} />
+        <Ionicons name="calculator-outline" size={16} color={colors.cobalt} />
         <Text style={styles.title}>Suggested Minimum Dues</Text>
       </View>
 
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={colors.pine}
+          color={colors.cobalt}
           style={styles.loader}
         />
       ) : error ? (
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.pineLight,
+    borderColor: colors.cobaltLight,
     padding: Spacing.lg,
     marginVertical: Spacing.md,
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   amount: {
     fontFamily: fonts.heading,

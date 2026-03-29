@@ -45,7 +45,7 @@ export function InsuranceDocumentsSection({
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -108,7 +108,7 @@ export function InsuranceDocumentsSection({
         accessibilityRole="button"
         accessibilityLabel="Add Insurance Document"
       >
-        <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
+        <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
         <Text style={styles.addButtonText}>Add Insurance Document</Text>
       </TouchableOpacity>
       </View>
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   badgeActive: {
-    backgroundColor: colors.pine + '1A', // 10% opacity pine
+    backgroundColor: colors.cobalt + '1A', // 10% opacity pine
   },
   badgeExpired: {
     backgroundColor: colors.inkFaint + '1A', // 10% opacity
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   badgeTextActive: {
-    color: colors.pine,
+    color: colors.cobalt,
   },
   badgeTextExpired: {
     color: colors.inkFaint,
@@ -215,13 +215,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: Spacing.sm,
   },
 });

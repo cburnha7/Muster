@@ -79,7 +79,7 @@ export function BookingConflictModal({
 
             {availableCount > 0 && (
               <View style={styles.availableNote}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.cobalt} />
                 <Text style={styles.availableText}>
                   {availableCount} slot{availableCount !== 1 ? 's are' : ' is'} still available
                 </Text>
@@ -134,12 +134,12 @@ const styles = StyleSheet.create({
   availableNote: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: Spacing.lg, marginBottom: Spacing.lg,
-    padding: Spacing.sm, backgroundColor: `${colors.pine}10`, borderRadius: 8,
+    padding: Spacing.sm, backgroundColor: `${colors.cobalt}10`, borderRadius: 8,
   },
-  availableText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.pine },
+  availableText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.cobalt },
   buttons: { flexDirection: 'row', gap: Spacing.md, paddingHorizontal: Spacing.lg },
   cancelBtn: { flex: 1, ...ComponentStyles.button.secondary, alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
+  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt },
   bookBtn: {
     flex: 2, ...ComponentStyles.button.primary,
     alignItems: 'center', justifyContent: 'center',

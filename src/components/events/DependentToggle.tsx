@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   pillActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   pillText: {
     fontFamily: fonts.ui,

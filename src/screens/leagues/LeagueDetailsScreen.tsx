@@ -13,7 +13,6 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LeagueForm } from '../../components/league/LeagueForm';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
@@ -67,6 +66,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('standings');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // Roster dues status (for paid leagues — visible to commissioner)
   const [rosterDuesMap, setRosterDuesMap] = useState<Map<string, boolean>>(new Map());
@@ -158,6 +158,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
   }, [leagueId, currentUser]);
 
   useFocusEffect(useCallback(() => { loadLeague(); }, [loadLeague]));
+
+  // Set dynamic header title to league name
+  React.useEffect(() => {
+    if (league?.name) {
+      (navigation as any).setOptions({ headerTitle: league.name });
+    }
+  }, [league?.name, navigation]);
 
   // ── Derived state ───────────────────────────────────────────────
   const isOperator = league ? (currentUser?.id === league.organizerId && !readOnly) : false;
@@ -441,7 +448,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
             accessibilityRole="button"
             accessibilityLabel={`Add ${roster.name}`}
           >
-            <Ionicons name="add-circle-outline" size={22} color={colors.pine} />
+            <Ionicons name="add-circle-outline" size={22} color={colors.cobalt} />
             <Text style={styles.addRosterName}>{roster.name}</Text>
           </TouchableOpacity>
         ))}
@@ -547,7 +554,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <Ionicons
             name={tab.icon as any}
             size={18}
-            color={activeTab === tab.key ? colors.pine : colors.inkFaint}
+            color={activeTab === tab.key ? colors.cobalt : colors.inkFaint}
           />
           <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
             {tab.label}
@@ -579,7 +586,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
   if (isLoading && !league) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="League" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <LoadingSpinner />
       </View>
     );
@@ -588,7 +594,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
   if (error && !league) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="League" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <ErrorDisplay message={error} onRetry={() => loadLeague()} />
       </View>
     );
@@ -597,62 +602,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
   if (!league) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="League" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <ErrorDisplay message="League not found" />
       </View>
     );
   }
 
-  // ── Commissioner view ───────────────────────────────────────────
-  if (isOperator) {
+  // ── Commissioner view (edit mode) ────────────────────────────────
+  if (isOperator && editMode) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title={league.name} leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.cobalt} />}
         >
-          {/* Pending roster invitations the commissioner can confirm (their own rosters) */}
-          {pendingUserRosterInvitations.length > 0 && (
-            <View style={styles.commissionerInviteBanner}>
-              <Ionicons name="mail-outline" size={20} color={colors.gold} />
-              <View style={styles.invitationBannerContent}>
-                <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
-                {pendingUserRosterInvitations.map((inv) => {
-                  const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
-                  return (
-                    <View key={inv.id} style={styles.invitationRow}>
-                      <Text style={styles.invitationText}>
-                        {rosterName} has been invited to this league
-                      </Text>
-                      <View style={styles.invitationActions}>
-                        <TouchableOpacity
-                          style={styles.confirmBtn}
-                          onPress={() => handleConfirmInvitation(inv)}
-                          disabled={isActionLoading}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Confirm ${rosterName}`}
-                        >
-                          <Text style={styles.confirmBtnText}>Confirm</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.declineBtnSmall}
-                          onPress={() => handleDeclineInvitation(inv)}
-                          disabled={isActionLoading}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Decline ${rosterName}`}
-                        >
-                          <Text style={styles.declineBtnSmallText}>Decline</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
           {/* Commissioner: Schedule button — navigate to Scheduling Screen */}
           <TouchableOpacity
             style={styles.scheduleBtn}
@@ -668,7 +631,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <LeagueForm
             initialData={league}
             onSubmit={handleUpdateLeague}
-            onCancel={() => navigation.goBack()}
+            onCancel={() => setEditMode(false)}
             onDelete={handleDeleteLeague}
             isEdit={true}
             loading={isUpdating}
@@ -747,12 +710,51 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title={league.name} leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.cobalt} />}
       >
+        {/* Pending roster invitations the commissioner can confirm */}
+        {isOperator && pendingUserRosterInvitations.length > 0 && (
+          <View style={styles.commissionerInviteBanner}>
+            <Ionicons name="mail-outline" size={20} color={colors.gold} />
+            <View style={styles.invitationBannerContent}>
+              <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
+              {pendingUserRosterInvitations.map((inv) => {
+                const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
+                return (
+                  <View key={inv.id} style={styles.invitationRow}>
+                    <Text style={styles.invitationText}>
+                      {rosterName} has been invited to this league
+                    </Text>
+                    <View style={styles.invitationActions}>
+                      <TouchableOpacity
+                        style={styles.confirmBtn}
+                        onPress={() => handleConfirmInvitation(inv)}
+                        disabled={isActionLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Confirm ${rosterName}`}
+                      >
+                        <Text style={styles.confirmBtnText}>Confirm</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.declineBtnSmall}
+                        onPress={() => handleDeclineInvitation(inv)}
+                        disabled={isActionLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Decline ${rosterName}`}
+                      >
+                        <Text style={styles.declineBtnSmallText}>Decline</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         <View style={styles.roForm}>
           {/* League Format */}
           <ReadOnlyField label="League Format" value={
@@ -881,7 +883,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 <Text style={styles.roRosterSectionTitle}>Rosters ({confirmedRosters.length})</Text>
                 {leaguePricingType === 'paid' && leagueDuesAmount != null && rosterDuesMap.size > 0 && (
                   <View style={styles.roDuesSummary}>
-                    <Ionicons name="cash-outline" size={14} color={colors.pine} />
+                    <Ionicons name="cash-outline" size={14} color={colors.cobalt} />
                     <Text style={styles.roDuesSummaryText}>
                       Season dues: ${(leagueDuesAmount / 100).toFixed(2)} · {
                         Array.from(rosterDuesMap.values()).filter(Boolean).length
@@ -974,8 +976,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
         </View>
       </ScrollView>
 
-      {/* Bottom action bar — Join Up for pending invitations */}
-      {renderActionBar()}
+      {/* Bottom action bar — Join Up for pending invitations, or Edit for commissioner */}
+      {isOperator ? (
+        <View style={styles.actionBar}>
+          <TouchableOpacity
+            style={styles.joinBtn}
+            onPress={() => setEditMode(true)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Edit league"
+          >
+            <Text style={styles.joinBtnText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+      ) : renderActionBar()}
     </View>
   );
 }
@@ -998,7 +1012,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 8,
   },
   countText: {
-    fontFamily: fonts.semibold, fontSize: 14, color: colors.pine,
+    fontFamily: fonts.semibold, fontSize: 14, color: colors.cobalt,
   },
   countBadge: {
     backgroundColor: colors.gold, borderRadius: 10,
@@ -1025,7 +1039,7 @@ const styles = StyleSheet.create({
   requestMeta: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
   requestActions: { flexDirection: 'row', gap: 8 },
   approveBtn: {
-    backgroundColor: colors.pine, borderRadius: 8, width: 34, height: 34,
+    backgroundColor: colors.cobalt, borderRadius: 8, width: 34, height: 34,
     alignItems: 'center', justifyContent: 'center',
   },
   declineBtn: {
@@ -1046,13 +1060,13 @@ const styles = StyleSheet.create({
   statusActive: { backgroundColor: '#EDF7F0' },
   statusPending: { backgroundColor: colors.goldLight },
   statusText: { fontFamily: fonts.label, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  statusTextActive: { color: colors.pine },
+  statusTextActive: { color: colors.cobalt },
   statusTextPending: { color: colors.ink },
   removeBtn: { padding: 6 },
   // Confirm / decline invitation
   confirmActions: { flexDirection: 'row', gap: 6 },
   confirmBtn: {
-    backgroundColor: colors.pine, borderRadius: 8,
+    backgroundColor: colors.cobalt, borderRadius: 8,
     paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center',
   },
   confirmBtnText: { fontFamily: fonts.ui, fontSize: 13, color: '#FFFFFF' },
@@ -1064,7 +1078,7 @@ const styles = StyleSheet.create({
   // Events section
   generateBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.pine, borderRadius: 10, marginHorizontal: 16,
+    backgroundColor: colors.cobalt, borderRadius: 10, marginHorizontal: 16,
     paddingVertical: 12, marginBottom: 12,
   },
   generateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
@@ -1087,9 +1101,9 @@ const styles = StyleSheet.create({
   eventActions: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, gap: 8 },
   createEventBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.pine, borderRadius: 10, paddingVertical: 12,
+    borderWidth: 2, borderColor: colors.cobalt, borderRadius: 10, paddingVertical: 12,
   },
-  createEventBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.pine },
+  createEventBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.cobalt },
   viewMatchupsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 2, borderColor: colors.gold, borderRadius: 10, paddingVertical: 12,
@@ -1112,7 +1126,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  addRosterName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.pine },
+  addRosterName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cobalt },
   // Tab bar
   tabBar: {
     flexDirection: 'row', backgroundColor: '#FFFFFF',
@@ -1123,16 +1137,16 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: 'center', paddingVertical: 10, gap: 2,
     borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: colors.pine },
+  tabActive: { borderBottomColor: colors.cobalt },
   tabLabel: { fontFamily: fonts.label, fontSize: 10, color: colors.inkFaint, textTransform: 'uppercase' },
-  tabLabelActive: { color: colors.pine },
+  tabLabelActive: { color: colors.cobalt },
   // Action bar (bottom)
   actionBar: {
     backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 12,
     borderTopWidth: 1, borderTopColor: '#E5E7EB',
   },
   joinBtn: {
-    backgroundColor: colors.pine, borderRadius: 12, paddingVertical: 14,
+    backgroundColor: colors.cobalt, borderRadius: 12, paddingVertical: 14,
     alignItems: 'center',
   },
   joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
@@ -1147,7 +1161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 12,
     marginHorizontal: 16,
     marginTop: 12,
@@ -1278,7 +1292,7 @@ const styles = StyleSheet.create({
   roProjectedEndValue: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 4,
   },
   roDayChipsRow: {
@@ -1297,8 +1311,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   roDayChipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   roDayChipText: {
     fontFamily: fonts.body,
@@ -1345,7 +1359,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
   },
   roTogglePillActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   roTogglePillText: {
     fontFamily: fonts.label,
@@ -1374,7 +1388,7 @@ const styles = StyleSheet.create({
   roRosterSectionTitle: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.pine,
+    color: colors.cobalt,
     marginBottom: 12,
   },
   roRosterSectionTitleInvited: {
@@ -1400,7 +1414,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 12,
@@ -1438,7 +1452,7 @@ const styles = StyleSheet.create({
   roDuesSummaryText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600' as const,
   },
   roBadgeRow: {
@@ -1458,7 +1472,7 @@ const styles = StyleSheet.create({
   roVisibilityText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.pine,
+    color: colors.cobalt,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
   },

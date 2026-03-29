@@ -181,9 +181,9 @@ export function EventSearchModal({ visible, onClose, onSearch, onCreateEvent }: 
             </View>
             <TouchableOpacity style={styles.currentLocationBtn} onPress={handleUseCurrentLocation} disabled={locationLoading} accessibilityRole="button">
               {locationLoading ? (
-                <ActivityIndicator size="small" color={colors.pine} />
+                <ActivityIndicator size="small" color={colors.cobalt} />
               ) : (
-                <Ionicons name="navigate" size={18} color={colors.pine} />
+                <Ionicons name="navigate" size={18} color={colors.cobalt} />
               )}
               <Text style={styles.currentLocationText}>Use my current location</Text>
             </TouchableOpacity>
@@ -216,7 +216,7 @@ export function EventSearchModal({ visible, onClose, onSearch, onCreateEvent }: 
               activeOpacity={0.8}
               accessibilityRole="button"
             >
-              <Ionicons name="add-circle-outline" size={22} color={colors.pine} />
+              <Ionicons name="add-circle-outline" size={22} color={colors.cobalt} />
               <View style={styles.createEventInfo}>
                 <Text style={styles.createEventTitle}>Create an Event</Text>
                 <Text style={styles.createEventSub}>Can't find what you're looking for? Host your own.</Text>
@@ -304,8 +304,8 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
   },
   chipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   chipText: {
     fontFamily: fonts.body,
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   currentLocationText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   createEventBtn: {
     flexDirection: 'row',
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxl,
     gap: 12,
     borderWidth: 1.5,
-    borderColor: colors.pine + '30',
+    borderColor: colors.cobalt + '30',
   },
   createEventInfo: {
     flex: 1,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   createEventTitle: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   createEventSub: {
     fontFamily: fonts.body,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 28,
     paddingVertical: 16,
     gap: Spacing.sm,

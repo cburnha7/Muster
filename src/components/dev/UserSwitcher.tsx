@@ -101,7 +101,7 @@ export function UserSwitcher() {
                   <Text style={styles.userEmail}>{user.email}</Text>
                 </View>
                 {currentUser.id === user.id && (
-                  <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
+                  <Ionicons name="checkmark-circle" size={24} color={colors.cobalt} />
                 )}
               </TouchableOpacity>
             ))}
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 30,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F4EE',
   },
   userOptionActive: {
-    backgroundColor: colors.pine + '15',
+    backgroundColor: colors.cobalt + '15',
     borderWidth: 2,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
   },
   userInfo: {
     flex: 1,

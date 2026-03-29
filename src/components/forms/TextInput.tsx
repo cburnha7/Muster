@@ -74,7 +74,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   const borderColor = error
     ? colors.heart
     : isFocused
-    ? colors.pine
+    ? colors.cobalt
     : colors.border;
 
   return (
@@ -92,7 +92,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           <Ionicons
             name={icon}
             size={20}
-            color={error ? colors.heart : colors.soft}
+            color={error ? colors.heart : colors.inkFaint}
             style={styles.icon}
           />
         )}
@@ -121,7 +121,7 @@ export const TextInput: React.FC<TextInputProps> = ({
             <Ionicons
               name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color={colors.soft}
+              color={colors.inkFaint}
             />
           </TouchableOpacity>
         )}

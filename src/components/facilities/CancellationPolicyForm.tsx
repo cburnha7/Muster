@@ -135,7 +135,7 @@ export function CancellationPolicyForm({ facilityId, onSaved }: CancellationPoli
       >
         {/* Info banner */}
         <View style={styles.infoBanner}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
           <Text style={styles.infoText}>
             Your cancellation policy is required before your facility can appear in booking flows.
             Changes only apply to future bookings.

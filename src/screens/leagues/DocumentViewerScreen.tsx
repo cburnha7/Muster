@@ -131,7 +131,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
           style={styles.downloadButton}
           disabled={!documentUrl}
         >
-          <Ionicons name="download-outline" size={24} color={colors.pine} />
+          <Ionicons name="download-outline" size={24} color={colors.cobalt} />
         </TouchableOpacity>
       ),
     });
@@ -140,7 +140,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.pine} />
+        <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading document...</Text>
       </View>
     );
@@ -149,7 +149,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (error || !documentUrl) {
     return (
       <View style={styles.centerContainer}>
-        <Ionicons name="document-text-outline" size={64} color={colors.soft} />
+        <Ionicons name="document-text-outline" size={64} color={colors.inkFaint} />
         <Text style={styles.errorTitle}>Failed to Load Document</Text>
         <Text style={styles.errorMessage}>
           {error || 'Document URL not available'}
@@ -158,7 +158,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.downloadFallbackButton} onPress={handleDownload}>
-          <Ionicons name="download-outline" size={20} color={colors.pine} />
+          <Ionicons name="download-outline" size={20} color={colors.cobalt} />
           <Text style={styles.downloadFallbackText}>Try Download Instead</Text>
         </TouchableOpacity>
       </View>
@@ -202,7 +202,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.webviewLoading}>
-            <ActivityIndicator size="large" color={colors.pine} />
+            <ActivityIndicator size="large" color={colors.cobalt} />
           </View>
         )}
         // Enable zoom and scroll
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   retryButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: 8,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   downloadFallbackText: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: Spacing.sm,
     fontWeight: '600',
   },
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Spacing.xl,
     right: Spacing.xl,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     width: 56,
     height: 56,
     borderRadius: 28,

@@ -104,7 +104,7 @@ export function DependentProfileScreen() {
           onBackPress={() => (navigation as any).goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
       </View>
     );
@@ -136,7 +136,7 @@ export function DependentProfileScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />
         }
       >
         {/* Profile Header */}
@@ -168,7 +168,7 @@ export function DependentProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel="Edit dependent profile"
             >
-              <Ionicons name="create-outline" size={18} color={colors.pine} />
+              <Ionicons name="create-outline" size={18} color={colors.cobalt} />
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
 
@@ -184,7 +184,7 @@ export function DependentProfileScreen() {
               <Ionicons
                 name="arrow-forward-circle-outline"
                 size={18}
-                color={canTransfer ? colors.navy : colors.inkFaint}
+                color={canTransfer ? colors.ink : colors.inkFaint}
               />
               <Text style={[styles.transferButtonText, !canTransfer && styles.transferButtonTextDisabled]}>
                 Transfer
@@ -224,7 +224,7 @@ export function DependentProfileScreen() {
           ) : (
             profile.eventHistory.map((event: any, index: number) => (
               <View key={event.id ?? index} style={styles.listItem}>
-                <Ionicons name="calendar-outline" size={18} color={colors.pine} />
+                <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {event.title ?? event.name ?? `Event ${index + 1}`}
                 </Text>
@@ -249,7 +249,7 @@ export function DependentProfileScreen() {
           ) : (
             profile.rosterMemberships.map((roster: any, index: number) => (
               <View key={roster.id ?? index} style={styles.listItem}>
-                <Ionicons name="people-outline" size={18} color={colors.pine} />
+                <Ionicons name="people-outline" size={18} color={colors.cobalt} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {roster.name ?? `Roster ${index + 1}`}
                 </Text>
@@ -269,7 +269,7 @@ export function DependentProfileScreen() {
           ) : (
             profile.leagueMemberships.map((league: any, index: number) => (
               <View key={league.id ?? index} style={styles.listItem}>
-                <Ionicons name="trophy-outline" size={18} color={colors.pine} />
+                <Ionicons name="trophy-outline" size={18} color={colors.cobalt} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {league.name ?? `League ${index + 1}`}
                 </Text>
@@ -359,12 +359,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
   },
   editButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: 4,
   },
   transferButton: {
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.navy,
+    borderColor: colors.ink,
   },
   transferButtonDisabled: {
     borderColor: colors.inkFaint + '40',
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   transferButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.navy,
+    color: colors.ink,
     marginLeft: 4,
   },
   transferButtonTextDisabled: {
