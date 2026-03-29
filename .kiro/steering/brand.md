@@ -12,9 +12,8 @@
 
 ## Logo
 - Use `<MusterIcon />` from `src/theme/MusterIcon.tsx`
-- Always render with `variant="dark"` on light/white backgrounds
-- Always render with `variant="light"` on dark backgrounds
-- Always render with `variant="grass"` on green backgrounds
+- Blue rounded square background (#2040E0), three white figures
+- No variants needed — icon is always blue square with white figures
 
 ## Theme files
 All UI must import tokens from `src/theme/` — never hardcode colors or fonts.
@@ -24,17 +23,21 @@ All UI must import tokens from `src/theme/` — never hardcode colors or fonts.
 - `src/theme/index.ts` — barrel export, import everything from here
 
 ## Colors
-- Primary green: `colors.pine` (#2D5F3F)
-- Green hover: `colors.pineLight` (#3D8C5E)
-- Primary red: `colors.heart` (#C0392B)
-- Red accent: `colors.vermillion` (#E05A20)
-- Primary blue / ink: `colors.navy` (#1B2A4A)
-- Salute accent: `colors.gold` (#D4A017)
-- Salute glow: `colors.goldLight` (#F0BE40)
+- PRIMARY — all buttons, CTAs, active states, nav: `colors.cobalt` (#2040E0)
+- PRIMARY hover: `colors.cobaltLight` (#3D56F0)
+- HIGHLIGHT green — success, open status, secondary actions: `colors.pine` (#2D5F3F)
+- SALUTE accent: `colors.gold` (#D4A017)
+- DESTRUCTIVE / errors: `colors.heart` (#C0392B)
 - App background: `colors.white` (#FFFFFF)
 - Card background: `colors.surface` (#F8F8F8)
-- Primary text: `colors.ink` (#1B2A4A)
+- Primary text: `colors.ink` (#0F1F3D)
 - Secondary text: `colors.inkSoft` (#4A5568)
+
+## Color usage rules
+- Use `colors.cobalt` everywhere green was previously used as the primary action color
+- Use `colors.pine` only for success states, "open" badges, and secondary highlights
+- Use `colors.gold` only for Salute-related UI elements
+- Use `colors.heart` only for errors, destructive actions, and Step Out
 
 ## Typography
 - Display / hero text: `fonts.display` — Fraunces 700

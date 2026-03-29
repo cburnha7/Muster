@@ -13,7 +13,6 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LeagueForm } from '../../components/league/LeagueForm';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
@@ -67,6 +66,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('standings');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // Roster dues status (for paid leagues — visible to commissioner)
   const [rosterDuesMap, setRosterDuesMap] = useState<Map<string, boolean>>(new Map());
@@ -158,6 +158,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
   }, [leagueId, currentUser]);
 
   useFocusEffect(useCallback(() => { loadLeague(); }, [loadLeague]));
+
+  // Set dynamic header title to league name
+  React.useEffect(() => {
+    if (league?.name) {
+      (navigation as any).setOptions({ headerTitle: league.name });
+    }
+  }, [league?.name, navigation]);
 
   // ── Derived state ───────────────────────────────────────────────
   const isOperator = league ? (currentUser?.id === league.organizerId && !readOnly) : false;
@@ -579,7 +586,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
   if (isLoading && !league) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="League" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <LoadingSpinner />
       </View>
     );
@@ -588,7 +594,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
   if (error && !league) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="League" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <ErrorDisplay message={error} onRetry={() => loadLeague()} />
       </View>
     );
@@ -597,62 +602,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
   if (!league) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title="League" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <ErrorDisplay message="League not found" />
       </View>
     );
   }
 
-  // ── Commissioner view ───────────────────────────────────────────
-  if (isOperator) {
+  // ── Commissioner view (edit mode) ────────────────────────────────
+  if (isOperator && editMode) {
     return (
       <View style={styles.container}>
-        <ScreenHeader title={league.name} leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
         >
-          {/* Pending roster invitations the commissioner can confirm (their own rosters) */}
-          {pendingUserRosterInvitations.length > 0 && (
-            <View style={styles.commissionerInviteBanner}>
-              <Ionicons name="mail-outline" size={20} color={colors.gold} />
-              <View style={styles.invitationBannerContent}>
-                <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
-                {pendingUserRosterInvitations.map((inv) => {
-                  const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
-                  return (
-                    <View key={inv.id} style={styles.invitationRow}>
-                      <Text style={styles.invitationText}>
-                        {rosterName} has been invited to this league
-                      </Text>
-                      <View style={styles.invitationActions}>
-                        <TouchableOpacity
-                          style={styles.confirmBtn}
-                          onPress={() => handleConfirmInvitation(inv)}
-                          disabled={isActionLoading}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Confirm ${rosterName}`}
-                        >
-                          <Text style={styles.confirmBtnText}>Confirm</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.declineBtnSmall}
-                          onPress={() => handleDeclineInvitation(inv)}
-                          disabled={isActionLoading}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Decline ${rosterName}`}
-                        >
-                          <Text style={styles.declineBtnSmallText}>Decline</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
           {/* Commissioner: Schedule button — navigate to Scheduling Screen */}
           <TouchableOpacity
             style={styles.scheduleBtn}
@@ -668,7 +631,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <LeagueForm
             initialData={league}
             onSubmit={handleUpdateLeague}
-            onCancel={() => navigation.goBack()}
+            onCancel={() => setEditMode(false)}
             onDelete={handleDeleteLeague}
             isEdit={true}
             loading={isUpdating}
@@ -747,12 +710,51 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title={league.name} leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.pine} />}
       >
+        {/* Pending roster invitations the commissioner can confirm */}
+        {isOperator && pendingUserRosterInvitations.length > 0 && (
+          <View style={styles.commissionerInviteBanner}>
+            <Ionicons name="mail-outline" size={20} color={colors.gold} />
+            <View style={styles.invitationBannerContent}>
+              <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
+              {pendingUserRosterInvitations.map((inv) => {
+                const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
+                return (
+                  <View key={inv.id} style={styles.invitationRow}>
+                    <Text style={styles.invitationText}>
+                      {rosterName} has been invited to this league
+                    </Text>
+                    <View style={styles.invitationActions}>
+                      <TouchableOpacity
+                        style={styles.confirmBtn}
+                        onPress={() => handleConfirmInvitation(inv)}
+                        disabled={isActionLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Confirm ${rosterName}`}
+                      >
+                        <Text style={styles.confirmBtnText}>Confirm</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.declineBtnSmall}
+                        onPress={() => handleDeclineInvitation(inv)}
+                        disabled={isActionLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Decline ${rosterName}`}
+                      >
+                        <Text style={styles.declineBtnSmallText}>Decline</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         <View style={styles.roForm}>
           {/* League Format */}
           <ReadOnlyField label="League Format" value={
@@ -974,8 +976,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
         </View>
       </ScrollView>
 
-      {/* Bottom action bar — Join Up for pending invitations */}
-      {renderActionBar()}
+      {/* Bottom action bar — Join Up for pending invitations, or Edit for commissioner */}
+      {isOperator ? (
+        <View style={styles.actionBar}>
+          <TouchableOpacity
+            style={styles.joinBtn}
+            onPress={() => setEditMode(true)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Edit league"
+          >
+            <Text style={styles.joinBtnText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+      ) : renderActionBar()}
     </View>
   );
 }

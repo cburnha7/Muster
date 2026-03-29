@@ -43,6 +43,7 @@ import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, 
 import { League } from '../../types/league';
 import { colors, fonts } from '../../theme';
 import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
+import { PlayerCard } from '../../components/ui/PlayerCard';
 import { loggingService } from '../../services/LoggingService';
 interface TeamDetailsScreenProps {
   route: { params: { teamId: string; readOnly?: boolean } };
@@ -109,6 +110,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; firstName: string; lastName: string; profileImage?: string; dateOfBirth?: string; gender?: string } | null>(null);
 
   // Derived state
   const isMember = team?.members?.some(
@@ -465,7 +467,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 
     return (
       <View key={member.userId} style={styles.memberItem}>
-        <View style={styles.memberInfo}>
+        <TouchableOpacity style={styles.memberInfo} activeOpacity={0.7} onPress={() => user && setSelectedPlayer({ id: member.userId, firstName: user.firstName, lastName: user.lastName, profileImage: user.profileImage, dateOfBirth: (user as any).dateOfBirth, gender: (user as any).gender })}>
           {user?.profileImage ? (
             <Image source={{ uri: user.profileImage }} style={styles.memberAvatar} />
           ) : (
@@ -492,7 +494,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
             </View>
             <Text style={styles.memberRole}>{roleLabel}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
         {canManageTeam && !isCurrentUser && isPending && (
           <View style={styles.memberActions}>
             <TouchableOpacity
@@ -622,7 +624,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
               {/* Members List */}
               <Text style={styles.membersTitle}>Players ({activeMembers.length}/{team.maxMembers})</Text>
               {activeMembers.map((member) => (
-                <View key={member.userId} style={styles.memberRow}>
+                <TouchableOpacity key={member.userId} style={styles.memberRow} activeOpacity={0.7} onPress={() => member.user && setSelectedPlayer({ id: member.userId, firstName: member.user.firstName, lastName: member.user.lastName, profileImage: member.user.profileImage, dateOfBirth: (member.user as any).dateOfBirth, gender: (member.user as any).gender })}>
                   {member.user?.profileImage ? (
                     <Image source={{ uri: member.user.profileImage }} style={styles.memberAvatar} />
                   ) : (
@@ -640,7 +642,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                       <Text style={styles.captainBadgeText}>Manager</Text>
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -873,6 +875,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         onCancel={() => setShowLeaveModal(false)}
         onConfirm={handleLeaveTeam}
       />
+
+      <PlayerCard
+        visible={!!selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        player={selectedPlayer}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -895,7 +903,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
+    fontSize: 16,
     color: colors.ink,
     marginBottom: 8,
   },

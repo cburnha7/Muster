@@ -6,13 +6,15 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  Modal,
+  Pressable,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
-import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
@@ -52,11 +54,12 @@ export function LeaguesBrowserScreen() {
   const [error, setError] = useState<string | null>(null);
   const [sportFilter, setSportFilter] = useState('');
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [pastModalVisible, setPastModalVisible] = useState(false);
 
   // Search modal toggle
   useEffect(() => {
     const unsub = searchEventBus.subscribeTab('Leagues', () => setSearchModalVisible(true));
-    const unsubClose = searchEventBus.subscribeClose(() => setSearchModalVisible(false));
+    const unsubClose = searchEventBus.subscribeClose(() => { setSearchModalVisible(false); setPastModalVisible(false); });
     return () => { unsub(); unsubClose(); };
   }, []);
 
@@ -157,13 +160,11 @@ export function LeaguesBrowserScreen() {
         }
         ListFooterComponent={
           pastLeagues.length > 0 ? (
-            <CollapsibleSection title="Past Seasons" count={pastLeagues.length} defaultExpanded={false}>
-              <View style={styles.pastList}>
-                {pastLeagues.map((league) => (
-                  <LeagueCard key={league.id} league={league} onPress={() => handleLeaguePress(league)} isOwner={league.organizerId === currentUser?.id} />
-                ))}
-              </View>
-            </CollapsibleSection>
+            <TouchableOpacity style={styles.pastBtn} onPress={() => setPastModalVisible(true)} activeOpacity={0.7}>
+              <Ionicons name="time-outline" size={18} color={colors.pine} />
+              <Text style={styles.pastBtnText}>Past Seasons</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+            </TouchableOpacity>
           ) : null
         }
       />
@@ -185,6 +186,33 @@ export function LeaguesBrowserScreen() {
         createLabel="Create League"
         onCreatePress={handleCreateLeague}
       />
+
+      {/* Past Seasons modal */}
+      <Modal visible={pastModalVisible} transparent animationType="fade" onRequestClose={() => setPastModalVisible(false)}>
+        <Pressable style={styles.pastBackdrop} onPress={() => setPastModalVisible(false)}>
+          <View style={styles.pastModal}>
+            <View style={styles.pastHeader}>
+              <Text style={styles.pastTitle}>Past Seasons</Text>
+              <TouchableOpacity onPress={() => setPastModalVisible(false)}>
+                <Ionicons name="close" size={22} color={colors.ink} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.pastScroll} showsVerticalScrollIndicator={false}>
+              {pastLeagues.map((league) => (
+                <LeagueCard
+                  key={league.id}
+                  league={league}
+                  onPress={() => { setPastModalVisible(false); handleLeaguePress(league); }}
+                  isOwner={league.organizerId === currentUser?.id}
+                />
+              ))}
+              {pastLeagues.length === 0 && (
+                <Text style={styles.emptyText}>No past seasons</Text>
+              )}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -202,8 +230,62 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 100,
   },
-  pastList: {
-    paddingBottom: 8,
+  pastBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  pastBtnText: {
+    flex: 1,
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.pine,
+  },
+  pastBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 70,
+  },
+  pastModal: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    maxHeight: '80%',
+    overflow: 'hidden',
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  pastHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.white,
+  },
+  pastTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.ink,
+  },
+  pastScroll: {
+    paddingVertical: 8,
   },
   empty: {
     alignItems: 'center',
