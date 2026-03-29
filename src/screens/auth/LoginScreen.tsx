@@ -304,12 +304,12 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 16,
   },
   tagline: {
     fontSize: 16,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: 4,
   },
   form: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginBottom: 24,
     lineHeight: 22,
   },
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginHorizontal: 12,
   },
   errorText: {
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   signUpContainer: {
@@ -370,10 +370,10 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     fontSize: 15,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   signUpLink: {
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
 });

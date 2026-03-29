@@ -71,7 +71,7 @@ export function GroundsMapView({ grounds, onGroundPress }: GroundsMapViewProps) 
                 latitude: ground.latitude!,
                 longitude: ground.longitude!,
               }}
-              pinColor={hasAvailableSlots ? colors.pine : colors.soft}
+              pinColor={hasAvailableSlots ? colors.cobalt : colors.inkFaint}
               onPress={() => setSelectedGround(ground)}
             />
           );

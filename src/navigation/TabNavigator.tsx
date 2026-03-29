@@ -123,7 +123,7 @@ export function TabNavigator(): JSX.Element {
         headerLeft: () => null,
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
-        tabBarActiveTintColor: colors.pine,
+        tabBarActiveTintColor: colors.cobalt,
         tabBarInactiveTintColor: '#8E8E93',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',

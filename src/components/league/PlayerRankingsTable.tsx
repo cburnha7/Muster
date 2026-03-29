@@ -70,7 +70,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
       <Ionicons 
         name={sortAscending ? 'arrow-up' : 'arrow-down'} 
         size={14} 
-        color={colors.pine} 
+        color={colors.cobalt} 
       />
     );
   };
@@ -210,7 +210,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
         ) : (
           <>
             <Text style={styles.loadMoreText}>Load More</Text>
-            <Ionicons name="chevron-down" size={16} color={colors.pine} />
+            <Ionicons name="chevron-down" size={16} color={colors.cobalt} />
           </>
         )}
       </TouchableOpacity>
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#F8F9FA',
     borderBottomWidth: 2,
-    borderBottomColor: colors.pine,
+    borderBottomColor: colors.cobalt,
   },
   row: {
     flexDirection: 'row',
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontWeight: '700',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   loadMoreButton: {
     flexDirection: 'row',
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   emptyState: {
     alignItems: 'center',

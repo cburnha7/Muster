@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     borderWidth: 1.5,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
   },
   activeInput: {
     flex: 1,

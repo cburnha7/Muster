@@ -42,17 +42,17 @@ export function TimeSlotGrid({
     
     switch (slot.status) {
       case 'available':
-        return colors.pine;
+        return colors.cobalt;
       case 'blocked':
         return colors.heart;
       case 'rented':
         // Check if rented by current user
         if (currentUserId && slot.rentalUserId === currentUserId) {
-          return colors.navy; // Blue for user's own rentals
+          return colors.ink; // Blue for user's own rentals
         }
-        return colors.soft; // Gray for other users' rentals
+        return colors.inkFaint; // Gray for other users' rentals
       default:
-        return colors.soft;
+        return colors.inkFaint;
     }
   };
 
@@ -110,7 +110,7 @@ export function TimeSlotGrid({
   if (timeSlots.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="time-outline" size={48} color={colors.soft} />
+        <Ionicons name="time-outline" size={48} color={colors.inkFaint} />
         <Text style={styles.emptyStateText}>No time slots available</Text>
         <Text style={styles.emptyStateSubtext}>
           Time slots will appear here once created
@@ -159,7 +159,7 @@ export function TimeSlotGrid({
 
               {showCourtName && slot.courtName && (
                 <View style={styles.courtInfo}>
-                  <Ionicons name="location-outline" size={14} color={colors.soft} />
+                  <Ionicons name="location-outline" size={14} color={colors.inkFaint} />
                   <Text style={styles.courtName}>{slot.courtName}</Text>
                 </View>
               )}
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   courtName: {
     fontSize: 13,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   blockReasonContainer: {
     flexDirection: 'row',
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: Spacing.xs,
     textAlign: 'center',
   },

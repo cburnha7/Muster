@@ -468,7 +468,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               style={styles.addButton}
               onPress={() => setShowAddCourtModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color={colors.pine} style={{ marginRight: Spacing.xs }} />
+              <Ionicons name="add-circle" size={24} color={colors.cobalt} style={{ marginRight: Spacing.xs }} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   row: {
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sportChipSelected: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   sportChipText: {
     ...TextStyles.body,
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   },
   courtPrice: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   removeButton: {
@@ -866,8 +866,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   checkboxLabel: {
     ...TextStyles.body,
@@ -897,7 +897,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   addCourtButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   addCourtButtonText: {
     ...TextStyles.body,
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   sportBadge: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 12,
@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   continueButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   continueButtonText: {
     ...TextStyles.body,

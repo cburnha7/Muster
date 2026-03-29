@@ -150,7 +150,7 @@ export function LeaguesBrowserScreen() {
           <LeagueCard league={item} onPress={() => handleLeaguePress(item)} isOwner={item.organizerId === currentUser?.id} />
         )}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -161,7 +161,7 @@ export function LeaguesBrowserScreen() {
         ListFooterComponent={
           pastLeagues.length > 0 ? (
             <TouchableOpacity style={styles.pastBtn} onPress={() => setPastModalVisible(true)} activeOpacity={0.7}>
-              <Ionicons name="time-outline" size={18} color={colors.pine} />
+              <Ionicons name="time-outline" size={18} color={colors.cobalt} />
               <Text style={styles.pastBtnText}>Past Seasons</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
             </TouchableOpacity>
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   pastBackdrop: {
     flex: 1,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,

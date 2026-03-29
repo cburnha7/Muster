@@ -532,7 +532,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />
         }
       >
         <View style={styles.form}>
@@ -741,7 +741,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                     onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: true } })}
                   >
                     <View style={styles.listCardContent}>
-                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.gold : colors.pine} />
+                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.gold : colors.cobalt} />
                       <View style={styles.listCardText}>
                         <Text style={styles.listCardTitle}>{league.name}</Text>
                         <Text style={styles.listCardSub}>{league.sportType}</Text>
@@ -772,7 +772,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
                   onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
                 >
                   <View style={styles.listCardContent}>
-                    <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                    <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
                     <View style={styles.listCardText}>
                       <Text style={styles.listCardTitle}>{event.title}</Text>
                       <Text style={styles.listCardSub}>
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   memberAvatarPlaceholder: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1115,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   duesSummaryText: {
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   invitedDescription: {
@@ -1271,8 +1271,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   sportChipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   sportChipText: {
     fontSize: 14,
@@ -1328,14 +1328,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   memberAvatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   memberName: {
     flex: 1,
@@ -1395,8 +1395,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   editToggleActive: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   editToggleText: {
     fontFamily: fonts.ui,

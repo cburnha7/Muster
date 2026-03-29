@@ -142,7 +142,7 @@ export function VotePlayersScreen(): JSX.Element {
             Select the players who performed well in this game. You can vote for multiple players.
           </Text>
           <View style={styles.voteCount}>
-            <Ionicons name="checkmark-circle" size={20} color={colors.pine} />
+            <Ionicons name="checkmark-circle" size={20} color={colors.cobalt} />
             <Text style={styles.voteCountText}>
               {selectedPlayers.size} {selectedPlayers.size === 1 ? 'vote' : 'votes'} selected
             </Text>
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   voteCountText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   participantsList: {
     padding: 16,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   participantCardSelected: {
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     backgroundColor: '#F0F9FF',
   },
   participantInfo: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -335,8 +335,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   footer: {
     padding: 16,

@@ -95,8 +95,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
         <RefreshControl
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
-          tintColor={colors.pine}
-          colors={[colors.pine]}
+          tintColor={colors.cobalt}
+          colors={[colors.cobalt]}
         />
       }
     >
@@ -114,12 +114,12 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
         <View style={styles.pointsContainer}>
           <View style={styles.pointsRow}>
             <View style={styles.pointsItem}>
-              <Ionicons name="trophy" size={20} color={colors.pine} />
+              <Ionicons name="trophy" size={20} color={colors.cobalt} />
               <Text style={styles.pointsLabel}>Win</Text>
               <Text style={styles.pointsValue}>{league.pointsConfig.win} pts</Text>
             </View>
             <View style={styles.pointsItem}>
-              <Ionicons name="remove-circle" size={20} color={colors.soft} />
+              <Ionicons name="remove-circle" size={20} color={colors.inkFaint} />
               <Text style={styles.pointsLabel}>Draw</Text>
               <Text style={styles.pointsValue}>{league.pointsConfig.draw} pts</Text>
             </View>
@@ -144,7 +144,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
             <View key={doc.id} style={styles.documentCard}>
               <View style={styles.documentInfo}>
                 <View style={styles.documentHeader}>
-                  <Ionicons name="document-text" size={24} color={colors.pine} />
+                  <Ionicons name="document-text" size={24} color={colors.cobalt} />
                   <View style={styles.documentDetails}>
                     <Text style={styles.documentName}>{doc.fileName}</Text>
                     <View style={styles.documentMeta}>
@@ -166,7 +166,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
                 onPress={() => handleViewDocument(doc)}
               >
                 <Text style={styles.viewButtonText}>View</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.pine} />
+                <Ionicons name="chevron-forward" size={16} color={colors.cobalt} />
               </TouchableOpacity>
             </View>
             );
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   pointsLabel: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     fontWeight: '500',
   },
   pointsValue: {
@@ -263,12 +263,12 @@ const styles = StyleSheet.create({
   },
   documentMetaText: {
     fontSize: 13,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   documentCategoryLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   viewButton: {
     flexDirection: 'row',
@@ -278,13 +278,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     gap: 4,
   },
   viewButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   emptyState: {
     flex: 1,

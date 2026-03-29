@@ -130,7 +130,7 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -183,7 +183,7 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
 
 function StatusBadge({ status }: { status: OnboardingStatus }) {
   const config = {
-    active: { label: 'Active', bg: `${colors.pine}20`, color: colors.pine },
+    active: { label: 'Active', bg: `${colors.cobalt}20`, color: colors.cobalt },
     pending: { label: 'Pending', bg: `${colors.gold}20`, color: colors.gold },
     not_set_up: { label: 'Not Set Up', bg: `${colors.inkFaint}20`, color: colors.inkFaint },
   }[status];
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   onboardButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: 8,

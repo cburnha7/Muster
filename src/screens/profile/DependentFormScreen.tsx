@@ -229,7 +229,7 @@ export function DependentFormScreen() {
           onBackPress={() => (navigation as any).goBack()}
         />
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
       </View>
     );
@@ -422,8 +422,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   chipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   chipIcon: {
     marginRight: 4,

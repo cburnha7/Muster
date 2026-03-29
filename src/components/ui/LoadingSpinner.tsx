@@ -9,7 +9,7 @@ interface LoadingSpinnerProps {
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 40,
-  color = colors.pine,
+  color = colors.cobalt,
 }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
 

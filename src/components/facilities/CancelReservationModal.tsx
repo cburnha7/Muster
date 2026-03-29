@@ -89,7 +89,7 @@ export function CancelReservationModal({
               style={styles.closeButton}
               disabled={isSubmitting}
             >
-              <Ionicons name="close" size={24} color={colors.soft} />
+              <Ionicons name="close" size={24} color={colors.inkFaint} />
             </TouchableOpacity>
           </View>
 
@@ -117,7 +117,7 @@ export function CancelReservationModal({
             <TextInput
               style={styles.input}
               placeholder="Please provide a reason for cancellation (minimum 10 characters)"
-              placeholderTextColor={colors.soft}
+              placeholderTextColor={colors.inkFaint}
               value={reason}
               onChangeText={setReason}
               multiline
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginBottom: Spacing.lg,
     lineHeight: 20,
   },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     ...TextStyles.caption,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: Spacing.xs,
     textAlign: 'right',
   },

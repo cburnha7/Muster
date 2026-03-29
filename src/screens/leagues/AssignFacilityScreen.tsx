@@ -141,7 +141,7 @@ export const AssignFacilityScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </View>
@@ -221,7 +221,7 @@ export const AssignFacilityScreen: React.FC = () => {
                   <Ionicons
                     name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                     size={24}
-                    color={isSelected ? colors.pine : colors.inkFaint}
+                    color={isSelected ? colors.cobalt : colors.inkFaint}
                   />
                   <Text style={styles.facilityName}>
                     {facility?.name ?? 'Unknown Facility'}
@@ -249,7 +249,7 @@ export const AssignFacilityScreen: React.FC = () => {
           testID="book-new-facility"
           accessibilityRole="button"
         >
-          <Ionicons name="add-circle-outline" size={22} color={colors.navy} />
+          <Ionicons name="add-circle-outline" size={22} color={colors.ink} />
           <Text style={styles.bookNewText}>Rent a new facility</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 8,
   },
   retryButtonText: {
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   rentalCardSelected: {
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
   },
   rentalCardHeader: {
     flexDirection: 'row',
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   rentalPrice: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: Spacing.xxxl,
     marginTop: Spacing.xs,
   },
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   bookNewText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.navy,
+    color: colors.ink,
     marginLeft: Spacing.sm,
   },
   bottomBar: {
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   assignButtonDisabled: {
     opacity: 0.5,

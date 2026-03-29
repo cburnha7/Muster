@@ -84,7 +84,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -98,8 +98,8 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
 
       {isActive ? (
         <View style={styles.statusRow}>
-          <View style={[styles.badge, { backgroundColor: `${colors.pine}20` }]}>
-            <Text style={[styles.badgeText, { color: colors.pine }]}>Active</Text>
+          <View style={[styles.badge, { backgroundColor: `${colors.cobalt}20` }]}>
+            <Text style={[styles.badgeText, { color: colors.cobalt }]}>Active</Text>
           </View>
           <Text style={styles.hint}>You can receive payments from bookings and join fees.</Text>
         </View>
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   button: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 10,
     borderRadius: 8,

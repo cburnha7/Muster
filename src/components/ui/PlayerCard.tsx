@@ -101,7 +101,7 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
 
           {/* Ratings */}
           {loading ? (
-            <ActivityIndicator color={colors.pine} style={{ marginVertical: 16 }} />
+            <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 16 }} />
           ) : ratings.length === 0 ? (
             <Text style={styles.noRatings}>No sport ratings yet</Text>
           ) : (
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     borderRadius: 36,
   },
   avatarFallback: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -240,6 +240,6 @@ const styles = StyleSheet.create({
   percentile: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 });

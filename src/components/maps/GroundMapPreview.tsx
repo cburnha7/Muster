@@ -14,12 +14,12 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-        <Ionicons name="close" size={24} color={colors.soft} />
+        <Ionicons name="close" size={24} color={colors.inkFaint} />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.content} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.header}>
-          <Ionicons name="business-outline" size={24} color={colors.pine} />
+          <Ionicons name="business-outline" size={24} color={colors.cobalt} />
           <Text style={styles.title} numberOfLines={1}>
             {ground.name}
           </Text>
@@ -27,14 +27,14 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
 
         <View style={styles.details}>
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color={colors.soft} />
+            <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
             <Text style={styles.detailText} numberOfLines={1}>
               {ground.street}, {ground.city}
             </Text>
           </View>
           {ground.courts && ground.courts.length > 0 && (
             <View style={styles.detailRow}>
-              <Ionicons name="grid-outline" size={16} color={colors.soft} />
+              <Ionicons name="grid-outline" size={16} color={colors.inkFaint} />
               <Text style={styles.detailText}>
                 {ground.courts.length} court{ground.courts.length !== 1 ? 's' : ''}
               </Text>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
     flex: 1,
   },
   footer: {
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     ...TextStyles.bodyLarge,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
 });

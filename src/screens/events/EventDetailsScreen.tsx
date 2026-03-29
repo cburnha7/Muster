@@ -626,7 +626,7 @@ export function EventDetailsScreen(): JSX.Element {
           return (
             <View key={roster.id} style={{ marginBottom: 16 }}>
               <View style={styles.rosterSaluteHeader}>
-                <Ionicons name="shield-outline" size={14} color={colors.pine} />
+                <Ionicons name="shield-outline" size={14} color={colors.cobalt} />
                 <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
                 {roster.isHome && (
                   <View style={styles.rosterSaluteHomeBadge}>
@@ -716,7 +716,7 @@ export function EventDetailsScreen(): JSX.Element {
   const getRatingBadgeColor = (rating: number) => {
     if (rating >= 80) return colors.heart;
     if (rating >= 50) return colors.gold;
-    return colors.pine;
+    return colors.cobalt;
   };
 
   // Get status color
@@ -797,7 +797,7 @@ export function EventDetailsScreen(): JSX.Element {
               )}
               {salutesSubmitted && (
                 <View style={styles.submittedBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color={colors.pine} />
+                  <Ionicons name="checkmark-circle" size={16} color={colors.cobalt} />
                   <Text style={styles.submittedText}>Submitted</Text>
                 </View>
               )}
@@ -834,7 +834,7 @@ export function EventDetailsScreen(): JSX.Element {
               </>
             ) : (
               <View style={styles.salutesSubmittedContainer}>
-                <Ionicons name="checkmark-circle" size={48} color={colors.pine} />
+                <Ionicons name="checkmark-circle" size={48} color={colors.cobalt} />
                 <Text style={styles.salutesSubmittedTitle}>Salutes Submitted!</Text>
                 <Text style={styles.salutesSubmittedDescription}>
                   You saluted {salutedParticipants.size} player{salutedParticipants.size > 1 ? 's' : ''} and their ratings have been updated.
@@ -865,7 +865,7 @@ export function EventDetailsScreen(): JSX.Element {
                 
                 <View style={styles.leagueContent}>
                   <View style={styles.leagueHeader}>
-                    <Ionicons name="shield-outline" size={20} color={colors.pine} />
+                    <Ionicons name="shield-outline" size={20} color={colors.cobalt} />
                     <Text style={styles.leagueName}>{leagueName}</Text>
                     <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
                   </View>
@@ -1215,11 +1215,11 @@ export function EventDetailsScreen(): JSX.Element {
               <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, lineHeight: 22 }}>{waiverStatus?.waiverText || 'Loading waiver...'}</Text>
             </ScrollView>
             <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }} onPress={() => setWaiverAgreed(!waiverAgreed)}>
-              <Ionicons name={waiverAgreed ? 'checkbox' : 'square-outline'} size={22} color={waiverAgreed ? colors.pine : colors.inkFaint} />
+              <Ionicons name={waiverAgreed ? 'checkbox' : 'square-outline'} size={22} color={waiverAgreed ? colors.cobalt : colors.inkFaint} />
               <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, flex: 1 }}>I have read and agree to this waiver</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={{ backgroundColor: waiverAgreed ? colors.pine : colors.inkFaint, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 8 }}
+              style={{ backgroundColor: waiverAgreed ? colors.cobalt : colors.inkFaint, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 8 }}
               disabled={!waiverAgreed || signingWaiver}
               onPress={async () => {
                 if (!currentUser?.id || !event?.facilityId) return;
@@ -1447,7 +1447,7 @@ const styles = StyleSheet.create({
   teamScore: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: 8,
   },
   vsText: {
@@ -1606,7 +1606,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterSaluteHomeBadge: {
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1614,7 +1614,7 @@ const styles = StyleSheet.create({
   rosterSaluteHomeBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   participantCard: {
     width: '30%',
@@ -1644,7 +1644,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1677,7 +1677,7 @@ const styles = StyleSheet.create({
   youBadge: {
     position: 'absolute',
     bottom: 8,
-    backgroundColor: colors.navy,
+    backgroundColor: colors.ink,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1690,7 +1690,7 @@ const styles = StyleSheet.create({
   submittedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pineLight + '20',
+    backgroundColor: colors.cobaltLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1699,7 +1699,7 @@ const styles = StyleSheet.create({
   submittedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   submitSalutesContainer: {
     marginTop: 20,
@@ -1734,7 +1734,7 @@ const styles = StyleSheet.create({
   salutesSubmittedTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 16,
     marginBottom: 8,
   },
@@ -1770,7 +1770,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -1858,14 +1858,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   compactMemberInitial: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   compactMemberName: {
     flex: 1,

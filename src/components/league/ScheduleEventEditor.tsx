@@ -211,7 +211,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
                   {item.name}
                 </Text>
                 {isSelected && (
-                  <Ionicons name="checkmark" size={20} color={colors.pine} />
+                  <Ionicons name="checkmark" size={20} color={colors.cobalt} />
                 )}
               </TouchableOpacity>
             );
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   title: {
     fontFamily: fonts.heading,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   footer: {
     padding: Spacing.lg,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.inkFaint + '20',
   },
   saveButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.md + 2,
     alignItems: 'center',
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   pickerCancelText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   pickerTitle: {
     fontFamily: fonts.heading,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.inkFaint + '10',
   },
   pickerOptionSelected: {
-    backgroundColor: colors.pine + '10',
+    backgroundColor: colors.cobalt + '10',
   },
   pickerOptionDisabled: {
     opacity: 0.4,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   },
   pickerOptionTextSelected: {
     fontFamily: fonts.semibold,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   pickerOptionTextDisabled: {
     color: colors.inkFaint,

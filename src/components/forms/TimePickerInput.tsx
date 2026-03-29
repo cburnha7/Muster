@@ -151,6 +151,6 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 });

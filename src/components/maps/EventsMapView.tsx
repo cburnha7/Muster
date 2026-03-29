@@ -70,7 +70,7 @@ export function EventsMapView({ events, userBookedEventIds, onEventPress }: Even
                 latitude: event.facility!.latitude!,
                 longitude: event.facility!.longitude!,
               }}
-              pinColor={isUserBooked ? colors.gold : colors.pine}
+              pinColor={isUserBooked ? colors.gold : colors.cobalt}
               onPress={() => setSelectedEvent(event)}
             />
           );

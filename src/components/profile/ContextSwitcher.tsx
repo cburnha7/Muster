@@ -115,7 +115,7 @@ export function ContextSwitcher() {
                 {guardian.firstName} {guardian.lastName}
               </Text>
               {!activeUserId && (
-                <Ionicons name="checkmark-circle" size={20} color={colors.pine} />
+                <Ionicons name="checkmark-circle" size={20} color={colors.cobalt} />
               )}
             </TouchableOpacity>
 
@@ -146,7 +146,7 @@ export function ContextSwitcher() {
                   <Ionicons
                     name="checkmark-circle"
                     size={20}
-                    color={colors.pine}
+                    color={colors.cobalt}
                   />
                 )}
               </TouchableOpacity>

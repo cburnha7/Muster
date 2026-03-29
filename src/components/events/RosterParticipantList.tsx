@@ -53,7 +53,7 @@ export const RosterParticipantList: React.FC<RosterParticipantListProps> = ({
         return (
           <View key={roster.id} style={styles.rosterSection}>
             <View style={styles.rosterHeader}>
-              <Ionicons name="shield-outline" size={16} color={colors.pine} />
+              <Ionicons name="shield-outline" size={16} color={colors.cobalt} />
               <Text style={styles.rosterName}>{roster.name}</Text>
               {roster.isHome && (
                 <View style={styles.homeBadge}>
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   homeBadge: {
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   homeBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   rosterCount: {
     fontFamily: fonts.label,

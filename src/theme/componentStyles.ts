@@ -10,7 +10,7 @@ import { Spacing } from './spacing';
 export const ComponentStyles = {
   button: {
     primary: {
-      backgroundColor: colors.pine,
+      backgroundColor: colors.cobalt,
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.lg,
       borderRadius: BorderRadius.lg,
@@ -21,7 +21,7 @@ export const ComponentStyles = {
       paddingHorizontal: Spacing.lg,
       borderRadius: BorderRadius.lg,
       borderWidth: 2,
-      borderColor: colors.pine,
+      borderColor: colors.cobalt,
     },
   },
 

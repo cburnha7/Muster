@@ -325,7 +325,7 @@ export const CreateLeagueScreen: React.FC = () => {
               <View style={styles.dropdown}>
                 {rosterResults.slice(0, 8).map((r) => (
                   <TouchableOpacity key={r.id} style={styles.dropdownRow} onPress={() => addRoster(r)}>
-                    <Ionicons name="people" size={18} color={colors.pine} />
+                    <Ionicons name="people" size={18} color={colors.cobalt} />
                     <Text style={styles.dropdownText}>{r.name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -335,7 +335,7 @@ export const CreateLeagueScreen: React.FC = () => {
               <View style={styles.chipRow}>
                 {invitedRosters.map((r) => (
                   <View key={r.id} style={styles.inviteChip}>
-                    <Ionicons name="people" size={14} color={colors.pine} />
+                    <Ionicons name="people" size={14} color={colors.cobalt} />
                     <Text style={styles.inviteChipText}>{r.name}</Text>
                     <TouchableOpacity onPress={() => removeRoster(r.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
                   </View>
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   autoName: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 6,
   },
   input: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
   },
-  dayChipActive: { backgroundColor: colors.pine, borderColor: colors.pine },
+  dayChipActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
   dayChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
   dayChipTextActive: { color: '#FFFFFF', fontFamily: fonts.label },
   toggleBtn: {
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 6,
   },
-  toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
+  toggleBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
   toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
   toggleTextActive: { color: '#FFFFFF' },
   dropdown: {

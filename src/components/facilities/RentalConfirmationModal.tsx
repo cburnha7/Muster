@@ -83,7 +83,7 @@ export function RentalConfirmationModal({
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Ionicons name="calendar-outline" size={32} color={colors.pine} />
+                <Ionicons name="calendar-outline" size={32} color={colors.cobalt} />
               </View>
               <Text style={styles.title}>
                 Confirm {slotCount > 1 ? `${slotCount} Rentals` : 'Rental'}
@@ -96,7 +96,7 @@ export function RentalConfirmationModal({
               {/* Facility */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="location" size={20} color={colors.pine} />
+                  <Ionicons name="location" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Facility</Text>
@@ -107,7 +107,7 @@ export function RentalConfirmationModal({
               {/* Court */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="basketball" size={20} color={colors.pine} />
+                  <Ionicons name="basketball" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Court</Text>
@@ -118,7 +118,7 @@ export function RentalConfirmationModal({
               {/* Date */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+                  <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date</Text>
@@ -129,7 +129,7 @@ export function RentalConfirmationModal({
               {/* Time */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="time-outline" size={20} color={colors.pine} />
+                  <Ionicons name="time-outline" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Time</Text>
@@ -146,7 +146,7 @@ export function RentalConfirmationModal({
               {/* Price */}
               <View style={[styles.detailRow, styles.priceRow]}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="cash-outline" size={20} color={colors.pine} />
+                  <Ionicons name="cash-outline" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Total Price</Text>
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
     textAlign: 'center',
   },
   detailsContainer: {
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     ...TextStyles.caption,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginBottom: 2,
   },
   detailValue: {
@@ -316,12 +316,12 @@ const styles = StyleSheet.create({
   },
   detailSubvalue: {
     ...TextStyles.caption,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginTop: 2,
   },
   priceValue: {
     ...TextStyles.h3,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '700',
   },
   noticeContainer: {
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   confirmButton: {
     flex: 2,
@@ -398,8 +398,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkboxChecked: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   acknowledgementText: {
     ...TextStyles.caption,

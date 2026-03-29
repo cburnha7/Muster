@@ -43,7 +43,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, curren
 
   return (
     <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(team)} activeOpacity={0.7}>
-      <Ionicons name={getSportIcon(sport) as any} size={22} color={colors.pine} />
+      <Ionicons name={getSportIcon(sport) as any} size={22} color={colors.cobalt} />
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>{team.name}</Text>
         <Text style={styles.meta}>

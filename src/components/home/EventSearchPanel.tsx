@@ -207,9 +207,9 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
         </View>
         <TouchableOpacity style={styles.gpsBtn} onPress={handleUseCurrentLocation} disabled={locationLoading}>
           {locationLoading ? (
-            <ActivityIndicator size="small" color={colors.pine} />
+            <ActivityIndicator size="small" color={colors.cobalt} />
           ) : (
-            <Ionicons name="navigate" size={16} color={colors.pine} />
+            <Ionicons name="navigate" size={16} color={colors.cobalt} />
           )}
         </TouchableOpacity>
       </View>
@@ -223,7 +223,7 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
 
       {/* Results */}
       {loading ? (
-        <View style={styles.centered}><ActivityIndicator color={colors.pine} /></View>
+        <View style={styles.centered}><ActivityIndicator color={colors.cobalt} /></View>
       ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingVertical: 16,
     gap: 8,
   },

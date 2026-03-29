@@ -54,7 +54,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-        <Ionicons name="close" size={24} color={colors.soft} />
+        <Ionicons name="close" size={24} color={colors.inkFaint} />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.content} onPress={onPress} activeOpacity={0.7}>
@@ -62,7 +62,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
           <Ionicons
             name={getSportIcon(event.sportType) as any}
             size={24}
-            color={colors.pine}
+            color={colors.cobalt}
           />
           <Text style={styles.title} numberOfLines={1}>
             {event.title}
@@ -71,13 +71,13 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
 
         <View style={styles.details}>
           <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={16} color={colors.soft} />
+            <Ionicons name="calendar-outline" size={16} color={colors.inkFaint} />
             <Text style={styles.detailText}>
               {dateTime.date} at {dateTime.time}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color={colors.soft} />
+            <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
             <Text style={styles.detailText} numberOfLines={1}>
               {event.facility?.name || 'Location TBD'}
             </Text>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
     flex: 1,
   },
   footer: {
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     ...TextStyles.bodyLarge,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
 });

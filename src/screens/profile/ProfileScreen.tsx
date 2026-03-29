@@ -48,7 +48,7 @@ export function ProfileScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />}
     >
       {/* Profile Card */}
       <View style={styles.profileCard}>
@@ -80,7 +80,7 @@ export function ProfileScreen() {
       {/* Edit + Settings */}
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.editBtn} onPress={() => (navigation as any).navigate('EditProfile')} activeOpacity={0.7}>
-          <Ionicons name="create-outline" size={18} color={colors.pine} />
+          <Ionicons name="create-outline" size={18} color={colors.cobalt} />
           <Text style={styles.editBtnText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.settingsBtn} onPress={() => (navigation as any).navigate('Settings')} activeOpacity={0.7}>
@@ -94,7 +94,7 @@ export function ProfileScreen() {
 
       {/* Redeem Code */}
       <TouchableOpacity style={styles.menuRow} onPress={() => (navigation as any).navigate('RedeemCode')} activeOpacity={0.7}>
-        <Ionicons name="gift-outline" size={20} color={colors.pine} />
+        <Ionicons name="gift-outline" size={20} color={colors.cobalt} />
         <Text style={styles.menuRowText}>Redeem Code</Text>
         <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
       </TouchableOpacity>
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     borderRadius: 45,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -180,13 +180,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     gap: 6,
   },
   editBtnText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   settingsBtn: {
     flex: 1,

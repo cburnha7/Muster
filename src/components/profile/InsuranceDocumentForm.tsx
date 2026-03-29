@@ -229,7 +229,7 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
             >
               {selectedFile ? (
                 <View style={styles.fileSelected}>
-                  <Ionicons name="document-attach" size={22} color={colors.pine} />
+                  <Ionicons name="document-attach" size={22} color={colors.cobalt} />
                   <Text style={styles.fileName} numberOfLines={1}>
                     {selectedFile.name}
                   </Text>
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.surface,
   },
   submitButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 14,
     flexDirection: 'row',

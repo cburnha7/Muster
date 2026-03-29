@@ -102,7 +102,7 @@ export const ForgotPasswordScreen: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={80} color={colors.pine} />
+            <Ionicons name="checkmark-circle" size={80} color={colors.cobalt} />
           </View>
           <Text style={styles.successTitle}>Check Your Email</Text>
           <Text style={styles.successMessage}>
@@ -145,7 +145,7 @@ export const ForgotPasswordScreen: React.FC = () => {
           onPress={handleBackToLogin}
           disabled={state.isLoading}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.pine} />
+          <Ionicons name="arrow-back" size={24} color={colors.cobalt} />
           <Text style={styles.backButtonText}>Back to Login</Text>
         </TouchableOpacity>
 
@@ -186,7 +186,7 @@ export const ForgotPasswordScreen: React.FC = () => {
         />
 
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.navy} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
           <Text style={styles.infoText}>
             The reset link will expire in 1 hour for security reasons.
           </Text>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: Spacing.sm,
     fontWeight: '600',
   },
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: Spacing.lg,
     borderLeftWidth: 4,
-    borderLeftColor: colors.navy,
+    borderLeftColor: colors.ink,
   },
   infoText: {
     ...TextStyles.caption,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   link: {
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
 });

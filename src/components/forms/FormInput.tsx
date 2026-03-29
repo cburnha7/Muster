@@ -66,7 +66,7 @@ export const FormInput: React.FC<FormInputProps> = ({
           <Ionicons
             name={leftIcon as any}
             size={20}
-            color={error ? colors.heart : isFocused ? colors.pine : colors.soft}
+            color={error ? colors.heart : isFocused ? colors.cobalt : colors.inkFaint}
             style={styles.leftIcon}
           />
         )}
@@ -93,7 +93,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={isSecure ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color={colors.soft}
+              color={colors.inkFaint}
             />
           </TouchableOpacity>
         )}
@@ -106,7 +106,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={rightIcon as any}
               size={20}
-              color={error ? colors.heart : isFocused ? colors.pine : colors.soft}
+              color={error ? colors.heart : isFocused ? colors.cobalt : colors.inkFaint}
             />
           </TouchableOpacity>
         )}
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     backgroundColor: '#FFFFFF',
   },
   inputContainerError: {

@@ -221,7 +221,7 @@ export function CreateTeamScreen() {
                 {inviteResults.slice(0, 8).map((item) => (
                   <TouchableOpacity key={item.id} style={styles.dropdownRow} onPress={() => addInvite(item)}>
                     {item.type === 'roster' ? (
-                      <Ionicons name="people" size={18} color={colors.pine} />
+                      <Ionicons name="people" size={18} color={colors.cobalt} />
                     ) : item.image ? (
                       <Image source={{ uri: item.image }} style={styles.avatar} />
                     ) : (
@@ -236,7 +236,7 @@ export function CreateTeamScreen() {
               <View style={styles.chipRow}>
                 {invitedItems.map((item) => (
                   <View key={item.id} style={styles.inviteChip}>
-                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.pine} /> : <Ionicons name="person" size={14} color={colors.ink} />}
+                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.cobalt} /> : <Ionicons name="person" size={14} color={colors.ink} />}
                     <Text style={styles.inviteChipText}>{item.name}</Text>
                     <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
                   </View>
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
     gap: 6,
   },
-  toggleBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
+  toggleBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
   toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
   toggleTextActive: { color: '#FFFFFF' },
   dropdown: {

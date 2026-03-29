@@ -118,7 +118,7 @@ export const CreateMatchScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Loading league data...</Text>
         </View>
       </View>
@@ -158,6 +158,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
 });

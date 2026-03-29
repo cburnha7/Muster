@@ -148,7 +148,7 @@ export function TeamsListScreen() {
           <TeamCard team={item} onPress={() => handleTeamPress(item)} currentUserId={user?.id ?? undefined} />
         )}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 84,
     right: 16,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderRadius: 24,

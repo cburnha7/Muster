@@ -101,15 +101,15 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
       return { label: 'Pending Cancellation', color: '#E8A030', icon: 'time-outline' };
     }
     if (r.usedForEventId) {
-      return { label: 'Used for Event', color: colors.pine, icon: 'checkmark-circle' };
+      return { label: 'Used for Event', color: colors.cobalt, icon: 'checkmark-circle' };
     }
-    return { label: 'Completed', color: colors.navy, icon: 'checkmark-done-circle' };
+    return { label: 'Completed', color: colors.ink, icon: 'checkmark-done-circle' };
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   price: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   courtName: {
     fontFamily: fonts.body,

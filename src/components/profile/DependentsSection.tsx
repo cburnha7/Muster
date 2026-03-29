@@ -79,7 +79,7 @@ export function DependentsSection() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
   }
@@ -124,7 +124,7 @@ export function DependentsSection() {
               accessibilityRole="button"
               accessibilityLabel={`Switch to ${dependent.firstName}`}
             >
-              <Ionicons name="swap-horizontal" size={14} color={colors.pine} />
+              <Ionicons name="swap-horizontal" size={14} color={colors.cobalt} />
               <Text style={styles.switchButtonText}>Switch</Text>
             </TouchableOpacity>
           </View>
@@ -138,7 +138,7 @@ export function DependentsSection() {
         accessibilityRole="button"
         accessibilityLabel="Add Dependent"
       >
-        <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
+        <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
         <Text style={styles.addButtonText}>Add Dependent</Text>
       </TouchableOpacity>
       </View>
@@ -223,13 +223,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: Spacing.sm,
   },
   switchButton: {
@@ -238,13 +238,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: `${colors.pine}15`,
+    backgroundColor: `${colors.cobalt}15`,
     marginLeft: Spacing.sm,
     gap: 4,
   },
   switchButtonText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 });

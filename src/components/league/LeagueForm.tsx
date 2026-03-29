@@ -827,9 +827,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     paddingHorizontal: 14,
                     paddingVertical: 8,
                     borderRadius: 20,
-                    backgroundColor: genderRestriction === opt.value ? colors.pine : '#F3F4F6',
+                    backgroundColor: genderRestriction === opt.value ? colors.cobalt : '#F3F4F6',
                     borderWidth: 1,
-                    borderColor: genderRestriction === opt.value ? colors.pine : '#E5E7EB',
+                    borderColor: genderRestriction === opt.value ? colors.cobalt : '#E5E7EB',
                   }}
                   onPress={() => setGenderRestriction(opt.value)}
                 >
@@ -853,7 +853,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             accessibilityRole="button"
             accessibilityLabel="Select season start date"
           >
-            <Ionicons name="calendar-outline" size={20} color={colors.pine} />
+            <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
             <Text style={[styles.datePickerText, !startDate && styles.datePickerPlaceholder]}>
               {startDate ? formatDateDisplay(startDate) : 'Select a date'}
             </Text>
@@ -1123,7 +1123,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 accessibilityLabel="Search rosters by name"
               />
               {isSearchingRosters && (
-                <ActivityIndicator size="small" color={colors.pine} style={styles.rosterSearchSpinner} />
+                <ActivityIndicator size="small" color={colors.cobalt} style={styles.rosterSearchSpinner} />
               )}
             </View>
 
@@ -1164,7 +1164,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         )}
                       </View>
                     </View>
-                    <Ionicons name="add-circle" size={24} color={colors.pine} />
+                    <Ionicons name="add-circle" size={24} color={colors.cobalt} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -1387,7 +1387,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   calendarDaySelected: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   calendarDayToday: {
     backgroundColor: '#EDF7F0',
@@ -1402,7 +1402,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
   },
   calendarDayTextToday: {
-    color: colors.pine,
+    color: colors.cobalt,
     fontFamily: fonts.semibold,
   },
   // Projected end date
@@ -1412,7 +1412,7 @@ const styles = StyleSheet.create({
   projectedEndValue: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 4,
   },
   // Toggle card
@@ -1454,7 +1454,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   toggleActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   toggleThumb: {
     width: 24,
@@ -1505,8 +1505,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   dayChipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   dayChipText: {
     fontFamily: fonts.body,
@@ -1549,7 +1549,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   rosterCountBadge: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -1584,7 +1584,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.pine + '40',
+    borderColor: colors.cobalt + '40',
   },
   addedRosterInfo: {
     flexDirection: 'row',
@@ -1595,7 +1595,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

@@ -90,8 +90,8 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   checkboxChecked: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   checkboxError: {
     borderColor: colors.heart,

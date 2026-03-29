@@ -426,7 +426,7 @@ export const ManageLeagueScreen: React.FC = () => {
               {/* Success feedback */}
               {inviteSuccess && (
                 <View style={styles.inviteSuccessContainer}>
-                  <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
+                  <Ionicons name="checkmark-circle" size={18} color={colors.cobalt} />
                   <Text style={styles.inviteSuccessText}>{inviteSuccess}</Text>
                 </View>
               )}
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   memberCount: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   loadingContainer: {
     padding: 32,
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   searchButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 8,
     width: 44,
     height: 44,
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
   inviteSuccessText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
     marginLeft: 6,
     flex: 1,
   },
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   inviteButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
   statusBadgeTextActive: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.pine,
+    color: colors.cobalt,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

@@ -371,7 +371,7 @@ export function FacilitiesListScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />
         }
       >
         {/* Map */}
@@ -400,7 +400,7 @@ export function FacilitiesListScreen() {
       {/* Reservations button */}
       {reservations.length > 0 && (
         <TouchableOpacity style={styles.reservationsBtn} onPress={() => setReservationsModalVisible(true)} activeOpacity={0.7}>
-          <Ionicons name="calendar-outline" size={18} color={colors.pine} />
+          <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
           <Text style={styles.reservationsBtnText}>Reservations ({reservations.length})</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
         </TouchableOpacity>
@@ -486,8 +486,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   freeToggleActive: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   freeToggleText: {
     fontFamily: fonts.ui,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.pine}20`,
+    backgroundColor: `${colors.cobalt}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   header: {
     flexDirection: 'row',
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -636,14 +636,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.pine + '15',
+    backgroundColor: colors.cobalt + '15',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
   sportTagText: {
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '500',
   },
   moreText: {
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.ink,
@@ -750,8 +750,8 @@ const styles = StyleSheet.create({
     borderColor: colors.inkFaint,
   },
   sportChipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   sportChipText: {
     fontSize: 14,
@@ -785,7 +785,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
   },
   applyButtonText: {
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   resBackdrop: {
     flex: 1,

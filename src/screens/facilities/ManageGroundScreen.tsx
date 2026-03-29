@@ -141,24 +141,24 @@ export function ManageGroundScreen() {
           
           <TouchableOpacity style={styles.actionCard} onPress={handleManageAvailability}>
             <View style={styles.actionIcon}>
-              <Ionicons name="calendar-outline" size={24} color={colors.pine} />
+              <Ionicons name="calendar-outline" size={24} color={colors.cobalt} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Manage Availability</Text>
               <Text style={styles.actionDescription}>Set availability and block time slots</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard} onPress={handleViewRentals}>
             <View style={styles.actionIcon}>
-              <Ionicons name="list-outline" size={24} color={colors.navy} />
+              <Ionicons name="list-outline" size={24} color={colors.ink} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>View Rentals</Text>
               <Text style={styles.actionDescription}>See all upcoming rentals</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard} onPress={handleEditMap}>
@@ -169,7 +169,7 @@ export function ManageGroundScreen() {
               <Text style={styles.actionTitle}>Edit Facility Map</Text>
               <Text style={styles.actionDescription}>Upload or update facility layout map</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard} onPress={handleCancellationPolicy}>
@@ -180,18 +180,18 @@ export function ManageGroundScreen() {
               <Text style={styles.actionTitle}>Cancellation Policy</Text>
               <Text style={styles.actionDescription}>Required before your ground can accept bookings</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard} onPress={handleViewEscrowLog}>
             <View style={styles.actionIcon}>
-              <Ionicons name="cash-outline" size={24} color={colors.pine} />
+              <Ionicons name="cash-outline" size={24} color={colors.cobalt} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Escrow Transactions</Text>
               <Text style={styles.actionDescription}>View escrow transaction logs for rentals</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.soft} />
+            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
           </TouchableOpacity>
         </View>
 
@@ -200,7 +200,7 @@ export function ManageGroundScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Courts & Fields</Text>
             <TouchableOpacity style={styles.addButton} onPress={handleAddCourt}>
-              <Ionicons name="add-circle" size={24} color={colors.pine} />
+              <Ionicons name="add-circle" size={24} color={colors.cobalt} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   actionCard: {
     flexDirection: 'row',
@@ -294,6 +294,6 @@ const styles = StyleSheet.create({
   },
   actionDescription: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
 });

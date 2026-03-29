@@ -33,7 +33,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
 
   return (
     <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(league)} activeOpacity={0.7}>
-      <Ionicons name={getSportIcon(league.sportType) as any} size={22} color={colors.pine} />
+      <Ionicons name={getSportIcon(league.sportType) as any} size={22} color={colors.cobalt} />
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>{seasonName}</Text>
         <Text style={styles.meta}>{formatSport(league.sportType)}</Text>

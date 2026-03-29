@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderLeftWidth: 4,
-    borderLeftColor: colors.pine,
+    borderLeftColor: colors.cobalt,
     marginTop: Spacing.xl,
   },
   nextStepsTitle: {

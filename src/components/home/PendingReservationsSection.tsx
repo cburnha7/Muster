@@ -113,7 +113,7 @@ export function PendingReservationsSection({ ownerId }: PendingReservationsSecti
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Pending Reservations</Text>
-        <ActivityIndicator size="small" color={colors.pine} style={styles.loader} />
+        <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
       </View>
     );
   }
@@ -173,7 +173,7 @@ export function PendingReservationsSection({ ownerId }: PendingReservationsSecti
                     accessibilityRole="link"
                     accessibilityLabel={`View insurance document: ${policyName || 'Insurance'}`}
                   >
-                    <Ionicons name="document-text-outline" size={18} color={colors.pine} />
+                    <Ionicons name="document-text-outline" size={18} color={colors.cobalt} />
                     <Text style={styles.documentText} numberOfLines={1}>
                       {policyName || 'Insurance Document'}
                     </Text>
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   approveButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   denyButton: {
     backgroundColor: colors.heart,

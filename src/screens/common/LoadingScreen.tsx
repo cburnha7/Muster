@@ -5,7 +5,7 @@ import { colors } from '../../theme';
 export function LoadingScreen(): JSX.Element {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color={colors.pine} />
+      <ActivityIndicator size="large" color={colors.cobalt} />
       <Text style={styles.text}>Loading...</Text>
     </View>
   );

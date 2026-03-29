@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   pastBadge: {
-    backgroundColor: colors.navy,
+    backgroundColor: colors.ink,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,

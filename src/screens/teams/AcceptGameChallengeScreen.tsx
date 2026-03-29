@@ -112,7 +112,7 @@ export const AcceptGameChallengeScreen: React.FC = () => {
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Loading challenge details...</Text>
         </View>
       </View>
@@ -225,7 +225,7 @@ export const AcceptGameChallengeScreen: React.FC = () => {
         {/* Status info */}
         {!isPending && (
           <View style={styles.statusCard}>
-            <Ionicons name="information-circle" size={20} color={colors.navy} />
+            <Ionicons name="information-circle" size={20} color={colors.ink} />
             <Text style={styles.statusText}>
               This challenge has already been {challenge.status === 'escrow_collecting' ? 'accepted' : challenge.status}.
             </Text>
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   retryButtonText: {
     fontFamily: fonts.ui,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   detailValueHighlight: {
-    color: colors.pine,
+    color: colors.cobalt,
   },
   shortfallCard: {
     backgroundColor: '#FFFFFF',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   acceptButtonDisabled: {
     opacity: 0.5,

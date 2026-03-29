@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pine + '20',
+    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 16,
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
     marginLeft: Spacing.xs,
   },
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   section: {
     backgroundColor: 'rgba(255,255,255,0.5)',
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: colors.soft,
+    color: colors.inkFaint,
     lineHeight: 24,
   },
   infoRow: {
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginLeft: Spacing.md,
     flex: 1,
   },
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     borderRadius: 8,
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.soft,
+    borderBottomColor: colors.inkFaint,
     backgroundColor: colors.white,
   },
   modalTitle: {

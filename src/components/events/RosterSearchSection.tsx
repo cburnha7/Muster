@@ -132,7 +132,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconWrap}>
-          <Ionicons name="shield" size={20} color={colors.pine} />
+          <Ionicons name="shield" size={20} color={colors.cobalt} />
         </View>
         <View style={styles.sectionHeaderText}>
           <Text style={styles.sectionTitle}>Rosters</Text>
@@ -220,7 +220,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
               accessibilityLabel="Search rosters by name"
             />
             {isSearching && (
-              <ActivityIndicator size="small" color={colors.pine} style={styles.searchSpinner} />
+              <ActivityIndicator size="small" color={colors.cobalt} style={styles.searchSpinner} />
             )}
           </View>
 
@@ -262,7 +262,7 @@ export const RosterSearchSection: React.FC<RosterSearchSectionProps> = ({
                       )}
                     </View>
                   </View>
-                  <Ionicons name="add-circle" size={24} color={colors.pine} />
+                  <Ionicons name="add-circle" size={24} color={colors.cobalt} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,

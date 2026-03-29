@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
-    color: colors.soft,
+    color: colors.inkFaint,
     lineHeight: 22,
   },
   divider: {
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 14,
-    color: colors.soft,
+    color: colors.inkFaint,
     marginHorizontal: 12,
   },
   checkboxLabel: {
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   link: {
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   errorText: {
@@ -525,6 +525,6 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 15,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
 });

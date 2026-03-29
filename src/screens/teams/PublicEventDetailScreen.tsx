@@ -89,7 +89,7 @@ export const PublicEventDetailScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader title="Event Details" showBack onBackPress={() => navigation.goBack()} />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
       </View>
     );
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine + '20',
   },
   statusHost: {
-    backgroundColor: colors.navy + '20',
+    backgroundColor: colors.ink + '20',
   },
   statusText: {
     fontFamily: fonts.label,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 8,
   },
   retryButtonText: {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingVertical: 14,
     borderRadius: 10,
   },

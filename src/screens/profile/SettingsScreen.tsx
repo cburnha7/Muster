@@ -93,11 +93,11 @@ export function SettingsScreen(): JSX.Element {
         <Text style={styles.sectionTitle}>App Settings</Text>
         <View style={styles.settingItem}>
           <Text style={styles.settingLabel}>Dark Mode</Text>
-          <Switch value={darkMode} onValueChange={setDarkMode} trackColor={{ false: '#D1D5DB', true: colors.pineLight }} thumbColor={darkMode ? colors.pine : '#F3F4F6'} />
+          <Switch value={darkMode} onValueChange={setDarkMode} trackColor={{ false: '#D1D5DB', true: colors.cobaltLight }} thumbColor={darkMode ? colors.cobalt : '#F3F4F6'} />
         </View>
         <View style={styles.settingItem}>
           <Text style={styles.settingLabel}>Location Services</Text>
-          <Switch value={locationServices} onValueChange={setLocationServices} trackColor={{ false: '#D1D5DB', true: colors.pineLight }} thumbColor={locationServices ? colors.pine : '#F3F4F6'} />
+          <Switch value={locationServices} onValueChange={setLocationServices} trackColor={{ false: '#D1D5DB', true: colors.cobaltLight }} thumbColor={locationServices ? colors.cobalt : '#F3F4F6'} />
         </View>
       </View>
 
@@ -150,8 +150,8 @@ export function SettingsScreen(): JSX.Element {
                     {selectedDep?.id === dep.id && (
                       <View style={styles.depActions}>
                         <TouchableOpacity style={styles.depActionBtn} onPress={() => { setShowDependantsModal(false); setSelectedDep(null); (navigation as any).navigate('DependentProfile', { dependentId: dep.id }); }}>
-                          <Ionicons name="create-outline" size={16} color={colors.pine} />
-                          <Text style={[styles.depActionText, { color: colors.pine }]}>Manage</Text>
+                          <Ionicons name="create-outline" size={16} color={colors.cobalt} />
+                          <Text style={[styles.depActionText, { color: colors.cobalt }]}>Manage</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.depActionBtn} onPress={() => handleDeleteDependant(dep)}>
                           <Ionicons name="trash-outline" size={16} color={colors.heart} />
@@ -165,7 +165,7 @@ export function SettingsScreen(): JSX.Element {
             </ScrollView>
             {/* Add Dependant */}
             <TouchableOpacity style={styles.addDepBtn} onPress={() => { setShowDependantsModal(false); (navigation as any).navigate('DependentForm', {}); }}>
-              <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
+              <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
               <Text style={styles.addDepText}>Add Dependant</Text>
             </TouchableOpacity>
           </View>
@@ -217,12 +217,12 @@ const styles = StyleSheet.create({
   modalScroll: { paddingHorizontal: 16, paddingVertical: 8 },
   emptyText: { fontFamily: fonts.body, fontSize: 15, color: colors.inkFaint, textAlign: 'center', paddingVertical: 20 },
   depRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
-  depAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.pine, alignItems: 'center', justifyContent: 'center' },
+  depAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.cobalt, alignItems: 'center', justifyContent: 'center' },
   depAvatarText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
   depName: { flex: 1, fontFamily: fonts.body, fontSize: 16, color: colors.ink },
   depActions: { flexDirection: 'row', gap: 12, paddingVertical: 8, paddingLeft: 46 },
   depActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: colors.surface },
   depActionText: { fontFamily: fonts.ui, fontSize: 13 },
   addDepBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderTopWidth: 1, borderTopColor: colors.border },
-  addDepText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
+  addDepText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt },
 });

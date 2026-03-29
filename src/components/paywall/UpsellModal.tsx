@@ -58,7 +58,7 @@ export function UpsellModal({
           <ScrollView style={styles.featuresList} bounces={false}>
             {planInfo.features.map((feature, i) => (
               <View key={i} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.cobalt} />
                 <Text style={styles.featureText}>{feature}</Text>
               </View>
             ))}
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   price: {
     fontFamily: fonts.display,
     ...typeScale.h3,
-    color: colors.pine,
+    color: colors.cobalt,
     marginTop: 4,
   },
   featuresList: {
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   upgradeButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',

@@ -56,7 +56,7 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.pine} />
+        <ActivityIndicator size="small" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading courts...</Text>
       </View>
     );
@@ -65,7 +65,7 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
   if (courts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color={colors.soft} />
+        <Ionicons name="alert-circle-outline" size={48} color={colors.inkFaint} />
         <Text style={styles.emptyText}>No courts available at this facility</Text>
       </View>
     );
@@ -90,7 +90,7 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
                 <Ionicons
                   name={court.isIndoor ? 'home' : 'sunny'}
                   size={20}
-                  color={selectedCourtId === court.id ? colors.pine : colors.ink}
+                  color={selectedCourtId === court.id ? colors.cobalt : colors.ink}
                 />
                 <Text
                   style={[
@@ -102,23 +102,23 @@ export function CourtSelector({ facilityId, selectedCourtId, onCourtSelect }: Co
                 </Text>
               </View>
               {selectedCourtId === court.id && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
+                <Ionicons name="checkmark-circle" size={24} color={colors.cobalt} />
               )}
             </View>
             <View style={styles.courtCardDetails}>
               <View style={styles.courtDetail}>
-                <Ionicons name="basketball-outline" size={16} color={colors.soft} />
+                <Ionicons name="basketball-outline" size={16} color={colors.inkFaint} />
                 <Text style={styles.courtDetailText}>{court.sportType}</Text>
               </View>
               <View style={styles.courtDetail}>
-                <Ionicons name="people-outline" size={16} color={colors.soft} />
+                <Ionicons name="people-outline" size={16} color={colors.inkFaint} />
                 <Text style={styles.courtDetailText}>Capacity: {court.capacity}</Text>
               </View>
               <View style={styles.courtDetail}>
                 <Ionicons
                   name={court.isIndoor ? 'home-outline' : 'sunny-outline'}
                   size={16}
-                  color={colors.soft}
+                  color={colors.inkFaint}
                 />
                 <Text style={styles.courtDetailText}>
                   {court.isIndoor ? 'Indoor' : 'Outdoor'}
@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   courtCardSelected: {
-    backgroundColor: colors.pine + '10',
-    shadowColor: colors.pine,
+    backgroundColor: colors.cobalt + '10',
+    shadowColor: colors.cobalt,
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 3,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   courtNameSelected: {
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '700',
   },
   courtCardDetails: {
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   courtDetailText: {
     ...TextStyles.caption,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   loadingContainer: {
     padding: Spacing.xl,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   emptyContainer: {
     padding: Spacing.xxl,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TextStyles.body,
-    color: colors.soft,
+    color: colors.inkFaint,
     textAlign: 'center',
   },
 });

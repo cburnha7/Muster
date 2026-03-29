@@ -8,16 +8,16 @@ export const calendarTheme = {
   backgroundColor: '#FFFFFF',
   calendarBackground: '#FFFFFF',
   textSectionTitleColor: colors.ink,
-  selectedDayBackgroundColor: colors.pine,
+  selectedDayBackgroundColor: colors.cobalt,
   selectedDayTextColor: '#FFFFFF',
   todayTextColor: colors.gold,
   dayTextColor: colors.ink,
   textDisabledColor: colors.inkFaint,
-  dotColor: colors.pine,
+  dotColor: colors.cobalt,
   selectedDotColor: '#FFFFFF',
-  arrowColor: colors.pine,
+  arrowColor: colors.cobalt,
   monthTextColor: colors.ink,
-  indicatorColor: colors.pine,
+  indicatorColor: colors.cobalt,
   textDayFontFamily: 'System',
   textMonthFontFamily: 'System',
   textDayHeaderFontFamily: 'System',
@@ -33,10 +33,10 @@ export const calendarTheme = {
  * Marking colors for calendar dates
  */
 export const calendarMarkingColors = {
-  available: colors.pine,      // Green dot for available dates
-  blocked: colors.heart,         // Red dot for blocked dates
-  rented: colors.navy,            // Blue dot for rented dates
-  selected: colors.pine,        // Green circle for selected date
+  available: colors.cobalt,        // Blue dot for available dates
+  blocked: colors.heart,           // Red dot for blocked dates
+  rented: colors.ink,             // Navy dot for rented dates
+  selected: colors.cobalt,         // Blue circle for selected date
 };
 
 /**

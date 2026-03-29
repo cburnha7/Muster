@@ -104,7 +104,7 @@ export function PendingReservationDetailsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.pine} />
+        <ActivityIndicator size="large" color={colors.cobalt} />
       </View>
     );
   }
@@ -214,7 +214,7 @@ export function PendingReservationDetailsScreen() {
               accessibilityRole="link"
               accessibilityLabel={`View insurance document: ${insuranceDoc.policyName || 'Insurance'}`}
             >
-              <Ionicons name="document-text-outline" size={22} color={colors.pine} />
+              <Ionicons name="document-text-outline" size={22} color={colors.cobalt} />
               <View style={styles.documentInfo}>
                 <Text style={styles.documentName} numberOfLines={1}>
                   {insuranceDoc.policyName || 'Insurance Document'}
@@ -306,11 +306,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   documentInfo: { flex: 1 },
-  documentName: { fontFamily: fonts.label, fontSize: 14, color: colors.pine },
+  documentName: { fontFamily: fonts.label, fontSize: 14, color: colors.cobalt },
   documentProvider: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   actionButton: { flex: 1, paddingVertical: 14, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  approveBtn: { backgroundColor: colors.pine },
+  approveBtn: { backgroundColor: colors.cobalt },
   denyBtn: { backgroundColor: colors.heart },
   actionBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
 });

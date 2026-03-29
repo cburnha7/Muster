@@ -154,7 +154,7 @@ export const RecordMatchResultScreen: React.FC = () => {
           onLeftPress={handleCancel}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Loading match data...</Text>
         </View>
       </View>
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: colors.soft,
+    color: colors.inkFaint,
   },
   errorContainer: {
     flex: 1,

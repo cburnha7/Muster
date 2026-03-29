@@ -123,7 +123,7 @@ export function DebriefScreen(): JSX.Element {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.pine} />
+        <ActivityIndicator size="large" color={colors.cobalt} />
       </View>
     );
   }
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#FFFFFF',
   },
   submitButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: Spacing.lg,
     alignItems: 'center',

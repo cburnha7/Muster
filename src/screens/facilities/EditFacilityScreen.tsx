@@ -634,7 +634,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               style={styles.addButton}
               onPress={() => setShowAddCourtModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color={colors.pine} style={{ marginRight: Spacing.xs }} />
+              <Ionicons name="add-circle" size={24} color={colors.cobalt} style={{ marginRight: Spacing.xs }} />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -661,7 +661,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                   <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
                 </View>
                 <View style={styles.courtActions} pointerEvents="box-none">
-                  <Ionicons name="create-outline" size={20} color={colors.pine} style={{ marginRight: Spacing.sm }} />
+                  <Ionicons name="create-outline" size={20} color={colors.cobalt} style={{ marginRight: Spacing.sm }} />
                   <TouchableOpacity
                     style={styles.removeButton}
                     activeOpacity={0.7}
@@ -703,8 +703,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                 setRequiresBookingConfirmation(val);
                 if (!val) setRequiresInsurance(false);
               }}
-              trackColor={{ false: colors.white, true: colors.pineLight }}
-              thumbColor={requiresBookingConfirmation ? colors.pine : colors.surface}
+              trackColor={{ false: colors.white, true: colors.cobaltLight }}
+              thumbColor={requiresBookingConfirmation ? colors.cobalt : colors.surface}
             />
           </View>
         </View>
@@ -722,8 +722,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
             <Switch
               value={requiresInsurance}
               onValueChange={setRequiresInsurance}
-              trackColor={{ false: colors.white, true: colors.pineLight }}
-              thumbColor={requiresInsurance ? colors.pine : colors.surface}
+              trackColor={{ false: colors.white, true: colors.cobaltLight }}
+              thumbColor={requiresInsurance ? colors.cobalt : colors.surface}
             />
           </View>
         </View>
@@ -739,8 +739,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
             <Switch
               value={waiverRequired}
               onValueChange={setWaiverRequired}
-              trackColor={{ false: colors.white, true: colors.pineLight }}
-              thumbColor={waiverRequired ? colors.pine : colors.surface}
+              trackColor={{ false: colors.white, true: colors.cobaltLight }}
+              thumbColor={waiverRequired ? colors.cobalt : colors.surface}
             />
           </View>
           {waiverRequired && (
@@ -1006,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   row: {
@@ -1030,7 +1030,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sportChipSelected: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   sportChipText: {
     ...TextStyles.body,
@@ -1078,7 +1078,7 @@ const styles = StyleSheet.create({
   },
   courtPrice: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   removeButton: {
@@ -1163,8 +1163,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   checkboxLabel: {
     ...TextStyles.body,
@@ -1192,7 +1192,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   addCourtButton: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   addCourtButtonText: {
     ...TextStyles.body,

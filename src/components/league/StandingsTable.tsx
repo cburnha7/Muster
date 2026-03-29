@@ -64,7 +64,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
       <Ionicons 
         name={sortAscending ? 'arrow-up' : 'arrow-down'} 
         size={14} 
-        color={colors.pine} 
+        color={colors.cobalt} 
       />
     );
   };
@@ -79,7 +79,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           let label = 'D';
           
           if (outcome === 'home_win' || outcome === 'away_win') {
-            color = colors.pine;
+            color = colors.cobalt;
             label = 'W';
           } else if (outcome === 'draw') {
             color = '#FF9500';
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#F8F9FA',
     borderBottomWidth: 2,
-    borderBottomColor: colors.pine,
+    borderBottomColor: colors.cobalt,
   },
   row: {
     flexDirection: 'row',
@@ -326,10 +326,10 @@ const styles = StyleSheet.create({
   },
   pointsText: {
     fontWeight: '700',
-    color: colors.pine,
+    color: colors.cobalt,
   },
   positiveGD: {
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   negativeGD: {

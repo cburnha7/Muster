@@ -115,7 +115,7 @@ export function HomeScreen() {
         customStyles: {
           container: {
             borderWidth: 1.5,
-            borderColor: colors.pine,
+            borderColor: colors.cobalt,
             borderRadius: 16,
           },
           text: { color: colors.ink },
@@ -127,7 +127,7 @@ export function HomeScreen() {
       selected: true,
       customStyles: {
         container: {
-          backgroundColor: colors.pine,
+          backgroundColor: colors.cobalt,
           borderRadius: 16,
         },
         text: { color: '#FFFFFF' },
@@ -320,7 +320,7 @@ export function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.pine} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />
         }
       >
 
@@ -353,7 +353,7 @@ export function HomeScreen() {
         {/* Inbox button */}
         {inboxCount > 0 && (
           <TouchableOpacity style={styles.inboxBtn} onPress={() => setInboxModalVisible(true)} activeOpacity={0.7}>
-            <Ionicons name="mail-outline" size={18} color={colors.pine} />
+            <Ionicons name="mail-outline" size={18} color={colors.cobalt} />
             <Text style={styles.inboxBtnText}>Inbox ({inboxCount})</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
           </TouchableOpacity>
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.ink,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   inboxBackdrop: {
     flex: 1,

@@ -32,11 +32,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, style }) =
   const getStatusColor = (status: MatchStatus) => {
     switch (status) {
       case 'scheduled':
-        return colors.navy;
+        return colors.ink;
       case 'in_progress':
         return '#FF9500';
       case 'completed':
-        return colors.pine;
+        return colors.cobalt;
       case 'cancelled':
         return '#FF3B30';
       default:
@@ -135,7 +135,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, style }) =
         {/* Event Link */}
         {match.event && (
           <View style={styles.eventLink}>
-            <Ionicons name="link-outline" size={14} color={colors.pine} />
+            <Ionicons name="link-outline" size={14} color={colors.cobalt} />
             <Text style={styles.eventText} numberOfLines={1}>
               Linked to event: {match.event.title}
             </Text>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   winningScore: {
-    color: colors.pine,
+    color: colors.cobalt,
   },
   divider: {
     alignItems: 'center',
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   eventText: {
     fontSize: 13,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '500',
     flex: 1,
   },

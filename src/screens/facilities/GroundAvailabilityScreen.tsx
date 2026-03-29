@@ -186,7 +186,7 @@ export function GroundAvailabilityScreen({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.pine} />
+        <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading availability...</Text>
       </View>
     );
@@ -220,7 +220,7 @@ export function GroundAvailabilityScreen({
             markedDates={{
               [selectedDate]: {
                 selected: true,
-                selectedColor: colors.pine,
+                selectedColor: colors.cobalt,
               },
             }}
             theme={calendarTheme}
@@ -271,7 +271,7 @@ export function GroundAvailabilityScreen({
                   }
                 }}
               >
-                <Ionicons name="add-circle" size={24} color={colors.pine} />
+                <Ionicons name="add-circle" size={24} color={colors.cobalt} />
                 <Text style={styles.addButtonText}>Block Slot</Text>
               </TouchableOpacity>
             </View>
@@ -283,7 +283,7 @@ export function GroundAvailabilityScreen({
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={64} color={colors.soft} />
+            <Ionicons name="calendar-outline" size={64} color={colors.inkFaint} />
             <Text style={styles.emptyStateText}>
               Select at least one court to view availability
             </Text>
@@ -294,7 +294,7 @@ export function GroundAvailabilityScreen({
           <Text style={styles.sectionTitle}>Legend</Text>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.pine }]} />
+              <View style={[styles.legendColor, { backgroundColor: colors.cobalt }]} />
               <Text style={styles.legendText}>Available</Text>
             </View>
             <View style={styles.legendItem}>
@@ -302,7 +302,7 @@ export function GroundAvailabilityScreen({
               <Text style={styles.legendText}>Blocked</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.navy }]} />
+              <View style={[styles.legendColor, { backgroundColor: colors.ink }]} />
               <Text style={styles.legendText}>Rented</Text>
             </View>
           </View>
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     ...TextStyles.body,
-    color: colors.pine,
+    color: colors.cobalt,
     fontWeight: '600',
   },
   courtSelector: {
@@ -420,8 +420,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   courtChipSelected: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   courtChipText: {
     ...TextStyles.body,

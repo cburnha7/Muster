@@ -335,7 +335,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.pine} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
       </SafeAreaView>
     );
@@ -440,7 +440,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
           accessibilityRole="button"
           accessibilityLabel="Add Game"
         >
-          <Ionicons name="add-circle-outline" size={20} color={colors.pine} />
+          <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
           <Text style={styles.addGameButtonText}>Add Game</Text>
         </TouchableOpacity>
 
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: BorderRadius.md,
   },
   retryButtonText: {
@@ -541,14 +541,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingVertical: Spacing.md + 2,
     borderRadius: BorderRadius.md,
     gap: Spacing.sm,
     ...Shadows.sm,
   },
   generateButtonDisabled: {
-    backgroundColor: colors.pineLight,
+    backgroundColor: colors.cobaltLight,
   },
   generateButtonText: {
     fontFamily: fonts.ui,
@@ -664,19 +664,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
-    borderColor: colors.pine,
+    borderColor: colors.cobalt,
     gap: Spacing.xs,
   },
   addGameButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
   confirmButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     ...Shadows.sm,
