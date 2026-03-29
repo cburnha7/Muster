@@ -113,6 +113,58 @@ router.get('/profile', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Upload profile image
+router.post('/profile/image', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    // For now, accept a base64 image or URL in the body
+    const { imageUrl, imageData } = req.body;
+    
+    let finalUrl = imageUrl;
+    
+    // If base64 data is provided, store it (in production this would go to S3/CloudStorage)
+    if (imageData && !imageUrl) {
+      // Store as a data URI for now — in production, upload to cloud storage
+      finalUrl = imageData;
+    }
+
+    if (!finalUrl) {
+      return res.status(400).json({ error: 'Image URL or data is required' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: finalUrl },
+      select: { id: true, profileImage: true },
+    });
+
+    res.json({ imageUrl: user.profileImage });
+  } catch (error) {
+    console.error('Upload profile image error:', error);
+    res.status(500).json({ error: 'Failed to upload profile image' });
+  }
+});
+
+// Delete profile image
+router.delete('/profile/image', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: null },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete profile image error:', error);
+    res.status(500).json({ error: 'Failed to delete profile image' });
+  }
+});
+
 // Get current user stats
 router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
   try {

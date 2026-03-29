@@ -58,7 +58,11 @@ export function EditProfileScreen(): JSX.Element {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [gender, setGender] = useState<string>('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [address, setAddress] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -94,6 +98,12 @@ export function EditProfileScreen(): JSX.Element {
       setSelectedSports(profileData.preferredSports || []);
       setGender((profileData as any).gender || '');
       setDateOfBirth(profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toISOString().split('T')[0] : '');
+      if (profileData.dateOfBirth) {
+        const d = new Date(profileData.dateOfBirth);
+        setBirthMonth(String(d.getUTCMonth() + 1));
+        setBirthDay(String(d.getUTCDate()));
+        setBirthYear(String(d.getUTCFullYear()));
+      }
       setAddress((profileData as any).address || '');
     } catch (err: any) {
       setError(err.message || 'Failed to load profile');
@@ -208,7 +218,7 @@ export function EditProfileScreen(): JSX.Element {
         phoneNumber: phoneNumber || undefined,
         gender: gender || undefined,
         preferredSports: selectedSports,
-        dateOfBirth: dateOfBirth || undefined,
+        dateOfBirth: (birthYear && birthMonth && birthDay) ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}` : undefined,
         address: address || undefined,
       } as any;
 
@@ -319,21 +329,50 @@ export function EditProfileScreen(): JSX.Element {
             placeholder="Prefer not to say"
           />
 
-          {/* Birthday */}
-          <FormInput
-            label="Birthday"
-            value={dateOfBirth}
-            onChangeText={setDateOfBirth}
-            placeholder="YYYY-MM-DD"
-          />
+          {/* Birthday — Month / Day / Year dropdowns */}
+          <Text style={{ fontFamily: fonts.body, fontSize: 16, fontWeight: '500', color: '#333', marginBottom: 8, marginTop: 8 }}>Birthday</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ flex: 1 }}>
+              <FormSelect label="" options={Array.from({ length: 12 }, (_, i) => ({ label: new Date(2000, i).toLocaleString('en', { month: 'long' }), value: String(i + 1) }))} value={birthMonth} onSelect={(o) => setBirthMonth(String(o.value))} placeholder="Month" />
+            </View>
+            <View style={{ flex: 0.6 }}>
+              <FormSelect label="" options={Array.from({ length: 31 }, (_, i) => ({ label: String(i + 1), value: String(i + 1) }))} value={birthDay} onSelect={(o) => setBirthDay(String(o.value))} placeholder="Day" />
+            </View>
+            <View style={{ flex: 0.8 }}>
+              <FormSelect label="" options={Array.from({ length: 80 }, (_, i) => { const y = new Date().getFullYear() - i; return { label: String(y), value: String(y) }; })} value={birthYear} onSelect={(o) => setBirthYear(String(o.value))} placeholder="Year" />
+            </View>
+          </View>
 
-          {/* Home Address */}
+          {/* Home Address — autocomplete */}
           <FormInput
             label="Home Address"
             value={address}
-            onChangeText={setAddress}
-            placeholder="Enter your address"
+            onChangeText={(text) => {
+              setAddress(text);
+              // Google Places autocomplete
+              if (text.length >= 3) {
+                const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                if (apiKey) {
+                  fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`)
+                    .then(r => r.json())
+                    .then(data => setAddressSuggestions((data.predictions || []).map((p: any) => p.description)))
+                    .catch(() => setAddressSuggestions([]));
+                }
+              } else {
+                setAddressSuggestions([]);
+              }
+            }}
+            placeholder="Start typing your address..."
           />
+          {addressSuggestions.length > 0 && (
+            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: colors.border, marginTop: -8, marginBottom: 8 }}>
+              {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
+                <TouchableOpacity key={idx} style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: idx < 4 ? 1 : 0, borderBottomColor: colors.border }} onPress={() => { setAddress(suggestion); setAddressSuggestions([]); }}>
+                  <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink }}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* Preferred Sports */}
           <Text style={styles.sportsLabel}>Preferred Sports</Text>
