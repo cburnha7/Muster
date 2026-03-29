@@ -11,9 +11,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, typeScale } from '../../theme';
 import { useValidatePromoCodeMutation, useRedeemPromoCodeMutation } from '../../store/api';
+import { setUser } from '../../store/slices/authSlice';
 
 const TIERS = [
   { key: 'player', label: 'Player', icon: 'person-outline' as const, desc: 'Access player features and stats tracking' },
@@ -23,6 +25,7 @@ const TIERS = [
 
 export function RedeemCodeScreen() {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const [code, setCode] = useState('');
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [validated, setValidated] = useState(false);
@@ -58,7 +61,11 @@ export function RedeemCodeScreen() {
     }
     setError(null);
     try {
-      await redeemPromoCode({ code: code.trim(), selectedTier }).unwrap();
+      const result = await redeemPromoCode({ code: code.trim(), selectedTier }).unwrap();
+      // Update auth state so feature gates pick up the new trial tier immediately
+      if (result) {
+        dispatch(setUser(result));
+      }
       setSuccessMsg(`You now have ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} access for 30 days.`);
     } catch (e: any) {
       setError(e?.data?.error || 'Redemption failed. Try again.');
