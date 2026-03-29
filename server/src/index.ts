@@ -183,16 +183,27 @@ app.use(async (err: any, req: express.Request, res: express.Response, next: expr
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Muster API server running on http://localhost:${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Initialize cron jobs (requires: npm install node-cron @types/node-cron)
-  // Uncomment the following lines after installing node-cron:
-  // import { initializeCronJobs } from './jobs';
-  // initializeCronJobs();
+// Global process error handlers — catch unhandled promise rejections and exceptions
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Start server only when run directly (not when imported by tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Muster API server running on http://localhost:${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+    // Initialize cron jobs (requires: npm install node-cron @types/node-cron)
+    // Uncomment the following lines after installing node-cron:
+    // import { initializeCronJobs } from './jobs';
+    // initializeCronJobs();
+  });
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -200,4 +211,4 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-export { prisma };
+export { app, prisma };

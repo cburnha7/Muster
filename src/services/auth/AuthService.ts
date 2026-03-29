@@ -1,20 +1,13 @@
 import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  LoginCredentials, 
-  RegisterData, 
-  AuthResponse, 
-  TokenResponse, 
+import TokenStorage from './TokenStorage';
+import {
+  LoginCredentials,
+  RegisterData,
+  AuthResponse,
+  TokenResponse,
   User,
   SportType,
 } from '../../types';
-
-// Storage keys for secure storage
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const USER_KEY = 'user_data';
-const EXPIRES_AT_KEY = 'token_expires_at';
 
 export interface AuthServiceConfig {
   baseURL: string;
@@ -39,11 +32,11 @@ export class AuthService {
     try {
       // Check if we're in development mode and want to use mock auth
       const useMockAuth = process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true';
-      
+
       if (useMockAuth) {
         // DEVELOPMENT MODE: Check localStorage for selected user, no default
         console.warn('⚠️ Using mock authentication - NOT FOR PRODUCTION');
-        
+
         let userId: string | null = null;
         let email: string | null = null;
         let firstName: string | null = null;
@@ -83,52 +76,29 @@ export class AuthService {
         this.token = 'mock_token_' + Date.now();
         this.refreshToken = 'mock_refresh_token_' + Date.now();
         this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-        
+
         console.log('👤 Mock user loaded:', email, userId);
         return true;
       }
-      
-      // Production code: Load from secure storage
-      if (Platform.OS === 'web') {
-        // Web: Use sessionStorage/localStorage
-        const token = sessionStorage.getItem(TOKEN_KEY);
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-        const userData = localStorage.getItem(USER_KEY);
-        const expiresAt = localStorage.getItem(EXPIRES_AT_KEY);
 
-        if (token && refreshToken && userData && expiresAt) {
-          this.token = token;
-          this.refreshToken = refreshToken;
-          this.currentUser = JSON.parse(userData);
-          this.expiresAt = new Date(expiresAt);
+      // Production code: Load from TokenStorage (unified storage layer)
+      const token = await TokenStorage.getAccessToken();
+      const refreshToken = await TokenStorage.getRefreshToken();
+      const user = await TokenStorage.getUser();
 
-          // Check if token needs refresh
-          if (this.shouldRefreshToken()) {
-            await this.refreshAccessToken();
-          }
+      if (token && refreshToken && user) {
+        this.token = token;
+        this.refreshToken = refreshToken;
+        this.currentUser = user;
+        // expiresAt is not stored in TokenStorage; rely on server 401 / JWT parsing
+        this.expiresAt = null;
 
-          return true;
+        // Check if token needs refresh
+        if (this.shouldRefreshToken()) {
+          await this.refreshAccessToken();
         }
-      } else {
-        // Native: Use SecureStore
-        const token = await SecureStore.getItemAsync(TOKEN_KEY);
-        const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-        const userData = await SecureStore.getItemAsync(USER_KEY);
-        const expiresAt = await SecureStore.getItemAsync(EXPIRES_AT_KEY);
 
-        if (token && refreshToken && userData && expiresAt) {
-          this.token = token;
-          this.refreshToken = refreshToken;
-          this.currentUser = JSON.parse(userData);
-          this.expiresAt = new Date(expiresAt);
-
-          // Check if token needs refresh
-          if (this.shouldRefreshToken()) {
-            await this.refreshAccessToken();
-          }
-
-          return true;
-        }
+        return true;
       }
 
       return false;
@@ -159,7 +129,7 @@ export class AuthService {
 
       const authResponse: AuthResponse = await response.json();
       await this.storeAuthData(authResponse);
-      
+
       return authResponse;
     } catch (error) {
       console.error('Login error:', error);
@@ -187,7 +157,7 @@ export class AuthService {
 
       const authResponse: AuthResponse = await response.json();
       await this.storeAuthData(authResponse);
-      
+
       return authResponse;
     } catch (error) {
       console.error('Registration error:', error);
@@ -245,7 +215,7 @@ export class AuthService {
 
       const tokenResponse: TokenResponse = await response.json();
       await this.storeTokenData(tokenResponse);
-      
+
       return tokenResponse;
     } catch (error) {
       console.error('Token refresh error:', error);
@@ -307,15 +277,11 @@ export class AuthService {
   }
 
   /**
-   * Get stored token from persistent storage (SecureStore / localStorage)
+   * Get stored token from persistent storage via TokenStorage
    */
   async getStoredToken(): Promise<string | null> {
     try {
-      if (Platform.OS === 'web') {
-        return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
-      } else {
-        return await SecureStore.getItemAsync(TOKEN_KEY);
-      }
+      return await TokenStorage.getAccessToken();
     } catch {
       return null;
     }
@@ -329,17 +295,11 @@ export class AuthService {
   }
 
   /**
-   * Get stored user from persistent storage (SecureStore / localStorage)
+   * Get stored user from persistent storage via TokenStorage
    */
   async getStoredUser(): Promise<User | null> {
     try {
-      let raw: string | null = null;
-      if (Platform.OS === 'web') {
-        raw = localStorage.getItem(USER_KEY);
-      } else {
-        raw = await SecureStore.getItemAsync(USER_KEY);
-      }
-      return raw ? JSON.parse(raw) : null;
+      return await TokenStorage.getUser();
     } catch {
       return null;
     }
@@ -391,7 +351,7 @@ export class AuthService {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return !!(this.token && this.currentUser && this.expiresAt && this.expiresAt > new Date());
+    return !!(this.token && this.currentUser);
   }
 
   /**
@@ -399,15 +359,15 @@ export class AuthService {
    */
   private shouldRefreshToken(): boolean {
     if (!this.expiresAt) return false;
-    
+
     const now = new Date();
     const refreshThreshold = new Date(this.expiresAt.getTime() - (this.config.tokenRefreshThreshold * 60 * 1000));
-    
+
     return now >= refreshThreshold;
   }
 
   /**
-   * Store authentication data securely
+   * Store authentication data via TokenStorage
    */
   private async storeAuthData(authResponse: AuthResponse): Promise<void> {
     this.token = authResponse.token;
@@ -415,73 +375,32 @@ export class AuthService {
     this.currentUser = authResponse.user;
     this.expiresAt = authResponse.expiresAt;
 
-    if (Platform.OS === 'web') {
-      // Web: Use sessionStorage/localStorage
-      sessionStorage.setItem(TOKEN_KEY, authResponse.token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, authResponse.refreshToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(authResponse.user));
-      localStorage.setItem(EXPIRES_AT_KEY, authResponse.expiresAt.toISOString());
-    } else {
-      // Native: Use SecureStore
-      await Promise.all([
-        SecureStore.setItemAsync(TOKEN_KEY, authResponse.token),
-        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, authResponse.refreshToken),
-        SecureStore.setItemAsync(USER_KEY, JSON.stringify(authResponse.user)),
-        SecureStore.setItemAsync(EXPIRES_AT_KEY, authResponse.expiresAt.toISOString()),
-      ]);
-    }
+    await TokenStorage.storeTokens(authResponse.token, authResponse.refreshToken);
+    await TokenStorage.storeUser(authResponse.user);
   }
 
   /**
-   * Store token data securely (for refresh operations)
+   * Store token data via TokenStorage (for refresh operations)
    */
   private async storeTokenData(tokenResponse: TokenResponse): Promise<void> {
     this.token = tokenResponse.token;
     this.refreshToken = tokenResponse.refreshToken;
     this.expiresAt = tokenResponse.expiresAt;
 
-    if (Platform.OS === 'web') {
-      // Web: Use sessionStorage/localStorage
-      sessionStorage.setItem(TOKEN_KEY, tokenResponse.token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, tokenResponse.refreshToken);
-      localStorage.setItem(EXPIRES_AT_KEY, tokenResponse.expiresAt.toISOString());
-    } else {
-      // Native: Use SecureStore
-      await Promise.all([
-        SecureStore.setItemAsync(TOKEN_KEY, tokenResponse.token),
-        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokenResponse.refreshToken),
-        SecureStore.setItemAsync(EXPIRES_AT_KEY, tokenResponse.expiresAt.toISOString()),
-      ]);
-    }
+    await TokenStorage.storeTokens(tokenResponse.token, tokenResponse.refreshToken);
   }
 
   /**
-   * Clear all stored authentication data
+   * Clear all stored authentication data via TokenStorage
    */
-  private async clearStoredAuth(): Promise<void> {
+  async clearStoredAuth(): Promise<void> {
     this.token = null;
     this.refreshToken = null;
     this.currentUser = null;
     this.expiresAt = null;
 
     try {
-      if (Platform.OS === 'web') {
-        // Use AsyncStorage for web
-        await Promise.all([
-          AsyncStorage.removeItem(TOKEN_KEY),
-          AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
-          AsyncStorage.removeItem(USER_KEY),
-          AsyncStorage.removeItem(EXPIRES_AT_KEY),
-        ]);
-      } else {
-        // Use SecureStore for native platforms
-        await Promise.all([
-          SecureStore.deleteItemAsync(TOKEN_KEY),
-          SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
-          SecureStore.deleteItemAsync(USER_KEY),
-          SecureStore.deleteItemAsync(EXPIRES_AT_KEY),
-        ]);
-      }
+      await TokenStorage.clearAll();
     } catch (error) {
       console.log('Storage clear failed:', error);
     }

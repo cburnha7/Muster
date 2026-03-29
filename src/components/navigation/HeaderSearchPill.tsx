@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TouchableOpacity, Text, TextInput, StyleSheet, Dimensions, View } from 'react-native';
+import { TouchableOpacity, Text, TextInput, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
 import { searchEventBus } from '../../utils';
@@ -23,7 +23,6 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
   const [query, setQuery] = useState('');
   const inputRef = useRef<TextInput>(null);
 
-  // Close on tab press
   useEffect(() => {
     const unsub = searchEventBus.subscribeClose(() => {
       setActive(false);
@@ -33,17 +32,14 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
     return unsub;
   }, []);
 
-  // When route changes (switching tabs), deactivate
   useEffect(() => {
     setActive(false);
     setQuery('');
   }, [routeName]);
 
   const handlePress = () => {
-    // Activate the pill and open the modal
     setActive(true);
     setTimeout(() => inputRef.current?.focus(), 100);
-    // Tell the screen to open its search panel
     if (isHome) {
       searchEventBus.emit();
     } else {
@@ -59,20 +55,20 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
   if (active) {
     return (
       <View style={styles.pillActive}>
-        <Ionicons name="search" size={18} color={colors.inkFaint} />
+        <Ionicons name="search" size={17} color={colors.outline} />
         <TextInput
           ref={inputRef}
           style={styles.activeInput}
           placeholder={placeholder}
-          placeholderTextColor={colors.inkFaint}
+          placeholderTextColor={colors.outline}
           value={query}
           onChangeText={handleChangeText}
           autoFocus
           returnKeyType="search"
         />
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => handleChangeText('')}>
-            <Ionicons name="close-circle" size={18} color={colors.inkFaint} />
+          <TouchableOpacity onPress={() => handleChangeText('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={17} color={colors.outline} />
           </TouchableOpacity>
         )}
       </View>
@@ -81,60 +77,46 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
 
   return (
     <TouchableOpacity style={styles.pill} onPress={handlePress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={placeholder}>
-      <Ionicons name="search" size={18} color={colors.inkSoft} />
-      <Text style={styles.text}>{placeholder}</Text>
+      <Ionicons name="search" size={17} color={colors.outline} />
+      <Text style={styles.text} numberOfLines={1}>{placeholder}</Text>
     </TouchableOpacity>
   );
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    width: SCREEN_WIDTH * 0.7,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 24,
+    backgroundColor: colors.surfaceContainer,
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 9999,
     gap: 8,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
   },
   pillActive: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    width: SCREEN_WIDTH * 0.7,
-    paddingHorizontal: 18,
+    backgroundColor: colors.surfaceContainerLowest,
+    flex: 1,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 24,
+    borderRadius: 9999,
     gap: 8,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-    borderWidth: 1.5,
-    borderColor: colors.cobalt,
+    borderWidth: 2,
+    borderColor: 'rgba(0, 82, 255, 0.25)',
   },
   activeInput: {
     flex: 1,
     fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.ink,
+    fontSize: 15,
+    color: colors.onSurface,
     padding: 0,
   },
   text: {
     fontFamily: fonts.body,
-    fontSize: 17,
-    color: colors.inkSoft,
+    fontSize: 15,
+    color: colors.outline,
+    flex: 1,
   },
 });

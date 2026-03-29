@@ -71,7 +71,7 @@ export interface MultiDotMarking {
  * sequentially. All colors contrast well against chalk/cream backgrounds.
  */
 export const PERSON_COLORS: string[] = [
-  '#2D5F3F', // pine — guardian
+  '#0052FF', // primary blue — guardian
   '#1B2A4A', // navy
   '#C4A882', // bronze
   '#9B59B6', // purple

@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { Alert, Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
+import TokenStorage from '../services/auth/TokenStorage';
 import { User } from '../types';
 import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser, clearAuth } from '../store/slices/authSlice';
 import { fetchSubscription, clearSubscription } from '../store/slices/subscriptionSlice';
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
         .then((res) => (res.ok ? res.json() : []))
         .then((data) => dispatch(setDependents(data)))
-        .catch(() => {}); // silent — DependentsSection will retry on profile
+        .catch((err) => console.warn('Failed to load dependents:', err));
     }
 
     if (reduxUser && process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
@@ -121,12 +122,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('AuthContext: Starting logout...');
       await authService.logout();
-      
+
+      // Ensure TokenStorage is fully cleared (covers both old and new key sets)
+      await TokenStorage.clearAll();
+
       // Dispatch Redux action to clear auth state
       dispatch(clearAuth());
       dispatch(clearSubscription());
       dispatch(resetContext());
-      
+
       console.log('AuthContext: Logout complete');
     } catch (error) {
       console.error('Logout error:', error);

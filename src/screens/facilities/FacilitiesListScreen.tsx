@@ -8,6 +8,8 @@ import {
   Modal,
   ScrollView,
   Pressable,
+  FlatList,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +17,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from '../../utils/performance';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { FormSelect } from '../../components/forms/FormSelect';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { facilityService } from '../../services/api/FacilityService';
@@ -39,10 +40,24 @@ import { Facility, SportType, FacilityFilters } from '../../types';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
+const SPORT_CHIP_OPTIONS = [
+  { label: 'All Sports', value: '' },
+  { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Kickball', value: SportType.KICKBALL },
+];
+
 export function FacilitiesListScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const route = useRoute();
+  const { width: windowWidth } = useWindowDimensions();
 
   const facilities = useSelector(selectFacilities);
   const filters = useSelector(selectFacilityFilters);
@@ -257,7 +272,7 @@ export function FacilitiesListScreen() {
             </View>
           </View>
           <View style={styles.facilityInfo}>
-            <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
+            <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
             <Text style={styles.facilityAddress} numberOfLines={1}>{formattedAddress}</Text>
           </View>
           {item.sportTypes && item.sportTypes.length > 0 && (
@@ -298,7 +313,7 @@ export function FacilitiesListScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Filter Grounds</Text>
             <TouchableOpacity onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={24} color={colors.ink} />
+              <Ionicons name="close" size={24} color={colors.onSurface} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.filterContent}>
@@ -349,29 +364,38 @@ export function FacilitiesListScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Sport filter + free toggle */}
-      <View style={styles.filterBar}>
-        <View style={{ flex: 1 }}>
-          <FormSelect label="" options={[
-            { label: 'All Sports', value: '' },
-            { label: 'Basketball', value: SportType.BASKETBALL },
-            { label: 'Pickleball', value: SportType.PICKLEBALL },
-            { label: 'Tennis', value: SportType.TENNIS },
-            { label: 'Soccer', value: SportType.SOCCER },
-            { label: 'Softball', value: SportType.SOFTBALL },
-            { label: 'Baseball', value: SportType.BASEBALL },
-            { label: 'Volleyball', value: SportType.VOLLEYBALL },
-            { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
-            { label: 'Kickball', value: SportType.KICKBALL },
-          ]} value={sportFilter} onSelect={(o) => setSportFilter(String(o.value))} placeholder="Sport" />
-        </View>
-      </View>
+      {/* Sport filter chips */}
+      <FlatList
+        horizontal
+        data={SPORT_CHIP_OPTIONS}
+        keyExtractor={(item) => item.value || '_all'}
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={styles.chipRow}
+        renderItem={({ item }) => {
+          const isActive = sportFilter === item.value;
+          return (
+            <TouchableOpacity
+              style={[styles.chip, isActive && styles.chipActive]}
+              onPress={() => setSportFilter(item.value)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
+      />
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          windowWidth > 600 && { maxWidth: 540, alignSelf: 'center' as const, width: '100%' as any },
+        ]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {/* Map */}
@@ -387,8 +411,9 @@ export function FacilitiesListScreen() {
           <LoadingSpinner />
         ) : displayFacilities.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="map-outline" size={48} color={colors.inkFaint} />
+            <Ionicons name="map-outline" size={48} color={colors.outlineVariant} />
             <Text style={styles.emptyTitle}>No grounds found</Text>
+            <Text style={styles.emptySubtitle}>Try adjusting your filters or search</Text>
           </View>
         ) : (
           displayFacilities.map((item, index) => renderFacilityCard(item, index))
@@ -399,10 +424,10 @@ export function FacilitiesListScreen() {
 
       {/* Reservations button */}
       {reservations.length > 0 && (
-        <TouchableOpacity style={styles.reservationsBtn} onPress={() => setReservationsModalVisible(true)} activeOpacity={0.7}>
-          <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
+        <TouchableOpacity style={styles.reservationsBtn} onPress={() => setReservationsModalVisible(true)} activeOpacity={0.85}>
+          <View style={styles.reservationsDot} />
           <Text style={styles.reservationsBtnText}>Reservations ({reservations.length})</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+          <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
       )}
 
@@ -413,7 +438,7 @@ export function FacilitiesListScreen() {
             <View style={styles.resHeader}>
               <Text style={styles.resTitle}>Reservations</Text>
               <TouchableOpacity onPress={() => setReservationsModalVisible(false)}>
-                <Ionicons name="close" size={22} color={colors.ink} />
+                <Ionicons name="close" size={22} color={colors.onSurface} />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.resScroll} showsVerticalScrollIndicator={false}>
@@ -434,7 +459,7 @@ export function FacilitiesListScreen() {
                       <Text style={styles.resCardCourt}>{courtName}</Text>
                       <Text style={styles.resCardMeta}>{date} · {time}</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                    <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
                   </TouchableOpacity>
                 );
               })}
@@ -446,7 +471,7 @@ export function FacilitiesListScreen() {
       {/* FAB — hidden for dependents */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
-          <Ionicons name="add" size={28} color={colors.surface} />
+          <Ionicons name="add" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       )}
 
@@ -467,36 +492,35 @@ export function FacilitiesListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
-  filterBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 4,
+
+  // ── Sport filter chips ──────────────────
+  chipRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 8,
+    alignItems: 'center' as any,
   },
-  freeToggle: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: colors.border,
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: colors.surfaceContainerLowest,
+    alignSelf: 'flex-start' as any,
   },
-  freeToggleActive: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
+  chipActive: {
+    backgroundColor: colors.primary,
   },
-  freeToggleText: {
-    fontFamily: fonts.ui,
+  chipText: {
+    fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.ink,
+    color: colors.onSurfaceVariant,
   },
-  freeToggleTextActive: {
+  chipTextActive: {
     color: '#FFFFFF',
   },
+
   scrollView: {
     flex: 1,
   },
@@ -509,17 +533,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     gap: 6,
   },
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
+    color: colors.onSurface,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.cobalt}20`,
+    backgroundColor: `${colors.primary}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -527,14 +551,14 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
+    color: colors.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -551,22 +575,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.heart,
+    backgroundColor: colors.error,
   },
   mapContainer: {
     height: 400,
   },
   facilityCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
     padding: 16,
-    marginVertical: 6,
+    marginBottom: 8,
     marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: 12,
   },
   cardContent: {
     flex: 1,
@@ -580,7 +600,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -594,9 +614,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   facilityName: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
+    fontSize: 16,
+    color: colors.onSurface,
     marginBottom: 4,
   },
   ownerBadge: {
@@ -605,7 +625,7 @@ const styles = StyleSheet.create({
     right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8A030',
+    backgroundColor: colors.primary,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
@@ -623,8 +643,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   facilityAddress: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     marginLeft: 6,
     flex: 1,
   },
@@ -636,19 +657,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.cobalt + '15',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: colors.primaryFixed,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 9999,
   },
   sportTagText: {
-    fontSize: 13,
-    color: colors.cobalt,
-    fontWeight: '500',
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.primary,
   },
   moreText: {
     fontSize: 13,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     fontWeight: '500',
   },
   facilityFooter: {
@@ -663,7 +684,7 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     marginLeft: 6,
     fontWeight: '500',
   },
@@ -674,32 +695,33 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xxl,
   },
   emptyTitle: {
+    fontFamily: fonts.heading,
     fontSize: 20,
-    fontWeight: '600',
-    color: colors.ink,
+    color: colors.onSurface,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
+    fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.inkFaint,
+    color: colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 24,
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.cobalt,
+    right: 24,
+    bottom: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
     elevation: 8,
   },
   modalOverlay: {
@@ -708,9 +730,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '80%',
   },
   modalHeader: {
@@ -718,21 +740,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.inkFaint,
   },
   modalTitle: {
+    fontFamily: fonts.heading,
     fontSize: 18,
-    fontWeight: '600',
-    color: colors.ink,
+    color: colors.onSurface,
   },
   filterContent: {
     padding: Spacing.lg,
   },
   filterLabel: {
+    fontFamily: fonts.headingSemi,
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: Spacing.md,
   },
   sportTypeContainer: {
@@ -744,76 +764,75 @@ const styles = StyleSheet.create({
   sportChip: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    backgroundColor: colors.white,
+    borderRadius: 9999,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
+    borderColor: colors.outlineVariant,
   },
   sportChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   sportChipText: {
     fontSize: 14,
-    color: colors.ink,
+    color: colors.onSurfaceVariant,
   },
   sportChipTextSelected: {
-    color: colors.surface,
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   modalActions: {
     flexDirection: 'row',
     padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.inkFaint,
     gap: 8,
   },
   clearButton: {
     flex: 1,
     paddingVertical: Spacing.md,
-    borderRadius: 8,
+    borderRadius: 9999,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
+    borderColor: colors.outlineVariant,
     alignItems: 'center',
   },
   clearButtonText: {
+    fontFamily: fonts.ui,
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
+    color: colors.onSurface,
   },
   applyButton: {
     flex: 1,
     paddingVertical: Spacing.md,
-    borderRadius: 8,
-    backgroundColor: colors.cobalt,
+    borderRadius: 9999,
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   applyButtonText: {
+    fontFamily: fonts.ui,
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.surface,
+    color: '#FFFFFF',
   },
   reservationsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 1,
+    borderRadius: 14,
+    gap: 10,
+  },
+  reservationsDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
   },
   reservationsBtnText: {
     flex: 1,
-    fontFamily: fonts.label,
-    fontSize: 15,
-    color: colors.cobalt,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurface,
   },
   resBackdrop: {
     flex: 1,
@@ -823,11 +842,11 @@ const styles = StyleSheet.create({
     paddingBottom: 70,
   },
   resModal: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 24,
     maxHeight: '80%',
     overflow: 'hidden',
-    shadowColor: colors.ink,
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -839,13 +858,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   resTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
+    color: colors.onSurface,
   },
   resScroll: {
     paddingVertical: 8,
@@ -854,22 +871,17 @@ const styles = StyleSheet.create({
   resCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 6,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
   },
   resCardBody: { flex: 1 },
   resCardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  resCardFacility: { fontFamily: fonts.label, fontSize: 15, color: colors.ink, flex: 1 },
+  resCardFacility: { fontFamily: fonts.label, fontSize: 15, color: colors.onSurface, flex: 1 },
   pendingBadge: { backgroundColor: colors.goldTint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   pendingBadgeText: { fontFamily: fonts.label, fontSize: 10, color: colors.gold },
-  resCardCourt: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginTop: 2 },
-  resCardMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginTop: 1 },
+  resCardCourt: { fontFamily: fonts.body, fontSize: 13, color: colors.onSurfaceVariant, marginTop: 2 },
+  resCardMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.onSurfaceVariant, marginTop: 1 },
 });

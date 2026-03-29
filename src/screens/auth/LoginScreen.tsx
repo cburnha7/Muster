@@ -21,8 +21,9 @@ import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { loginUser, loginWithSSO } from '../../store/slices/authSlice';
 import { ErrorMessages, SuccessMessages } from '../../constants/errorMessages';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
+
 export function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation();
@@ -80,7 +81,6 @@ export function LoginScreen() {
     setIsLoading(true);
 
     try {
-      // Use the new auth slice action
       await dispatch(
         loginUser({
           emailOrUsername: username.trim(),
@@ -90,11 +90,10 @@ export function LoginScreen() {
       ).unwrap();
 
       Alert.alert('Success', SuccessMessages.login.success);
-      // navigation.navigate('Home'); // Uncomment when navigation is configured
     } catch (error: any) {
       if (error.status === 401) {
         setErrors({ general: ErrorMessages.auth.invalidCredentials });
-        setPassword(''); // Clear password on invalid credentials
+        setPassword('');
       } else if (error.status === 429) {
         setErrors({ general: ErrorMessages.rateLimit.login });
       } else if (error.message === 'No internet connection') {
@@ -130,22 +129,20 @@ export function LoginScreen() {
       ).unwrap();
 
       Alert.alert('Success', SuccessMessages.login.ssoSuccess);
-      // navigation.navigate('Home'); // Uncomment when navigation is configured
     } catch (error: any) {
       if (error.message !== 'User cancelled') {
         if (error.status === 404) {
-          // No account found, navigate to registration
           Alert.alert(
             'Account Not Found',
             ErrorMessages.auth.ssoAccountNotFound,
             [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Sign Up', onPress: () => {} }, // navigation.navigate('Registration')
+              { text: 'Sign Up', onPress: () => {} },
             ]
           );
         } else {
-          const errorMsg = provider === 'apple' 
-            ? ErrorMessages.sso.appleFailed 
+          const errorMsg = provider === 'apple'
+            ? ErrorMessages.sso.appleFailed
             : ErrorMessages.sso.googleFailed;
           setErrors({ general: errorMsg });
         }
@@ -172,15 +169,17 @@ export function LoginScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Logo/Icon */}
+        {/* Brand mark */}
         <View style={styles.logoContainer}>
-          <MusterIcon size={240} variant="light" />
+          <MusterIcon size={140} variant="light" />
           <Text style={styles.appName}>Muster</Text>
+          <Text style={styles.tagline}>Find a game. Find your people.</Text>
         </View>
 
-        {/* Login Form */}
-        <View style={styles.form}>
+        {/* Form card — sits on a subtly different surface */}
+        <View style={styles.formCard}>
 
           {/* SSO Buttons - Only show on native platforms */}
           {Platform.OS !== 'web' && (
@@ -208,7 +207,9 @@ export function LoginScreen() {
 
           {/* General Error */}
           {errors.general && (
-            <Text style={styles.errorText}>{errors.general}</Text>
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{errors.general}</Text>
+            </View>
           )}
 
           {/* Username/Email Input */}
@@ -253,7 +254,7 @@ export function LoginScreen() {
               checked={rememberMe}
               onToggle={() => setRememberMe(!rememberMe)}
             />
-            <TouchableOpacity onPress={handleForgotPassword}>
+            <TouchableOpacity onPress={handleForgotPassword} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Text style={styles.forgotPassword}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
@@ -263,21 +264,22 @@ export function LoginScreen() {
             title="Sign In"
             onPress={handleLogin}
             variant="primary"
+            size="large"
             loading={isLoading}
             disabled={isLoading || ssoLoading !== null}
           />
-
-          {/* Sign Up Link */}
-          <TouchableOpacity
-            style={styles.signUpContainer}
-            onPress={handleNavigateToSignUp}
-          >
-            <Text style={styles.signUpText}>
-              Don't have an account?{' '}
-              <Text style={styles.signUpLink}>Sign Up</Text>
-            </Text>
-          </TouchableOpacity>
         </View>
+
+        {/* Sign Up Link */}
+        <TouchableOpacity
+          style={styles.signUpContainer}
+          onPress={handleNavigateToSignUp}
+        >
+          <Text style={styles.signUpText}>
+            Don't have an account?{' '}
+            <Text style={styles.signUpLink}>Sign Up</Text>
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -286,7 +288,7 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -294,41 +296,46 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 28,
+    paddingBottom: 32,
   },
+
+  // ── Brand mark ──────────────────────────
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
   },
   appName: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.cobalt,
-    marginTop: 16,
+    fontSize: 30,
+    fontFamily: fonts.heading,
+    color: colors.primary,
+    marginTop: 12,
+    letterSpacing: -0.5,
   },
   tagline: {
-    fontSize: 16,
-    color: colors.inkFaint,
+    fontSize: 15,
+    fontFamily: fonts.body,
+    color: colors.onSurfaceVariant,
     marginTop: 4,
   },
-  form: {
+
+  // ── Form card ───────────────────────────
+  formCard: {
     width: '100%',
     maxWidth: 400,
     alignSelf: 'center',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 24,
+    padding: 24,
+    // Ambient shadow
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
+    elevation: 3,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.inkFaint,
-    marginBottom: 24,
-    lineHeight: 22,
-  },
+
+  // ── Divider ─────────────────────────────
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -337,43 +344,58 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.outlineVariant,
+    opacity: 0.5,
   },
   dividerText: {
-    fontSize: 14,
-    color: colors.inkFaint,
-    marginHorizontal: 12,
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.outline,
+    marginHorizontal: 16,
+  },
+
+  // ── Error banner ────────────────────────
+  errorBanner: {
+    backgroundColor: colors.errorContainer,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   errorText: {
     fontSize: 14,
-    color: colors.heart,
+    fontFamily: fonts.body,
+    color: colors.onErrorContainer,
     textAlign: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 16,
   },
+
+  // ── Options row ─────────────────────────
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
     marginTop: -4,
   },
   forgotPassword: {
-    fontSize: 15,
-    color: colors.cobalt,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: fonts.headingSemi,
+    color: colors.primary,
   },
+
+  // ── Sign Up ─────────────────────────────
   signUpContainer: {
-    marginTop: 20,
+    marginTop: 28,
     alignItems: 'center',
     paddingVertical: 12,
   },
   signUpText: {
     fontSize: 15,
-    color: colors.inkFaint,
+    fontFamily: fonts.body,
+    color: colors.onSurfaceVariant,
   },
   signUpLink: {
-    color: colors.cobalt,
-    fontWeight: '600',
+    color: colors.primary,
+    fontFamily: fonts.headingSemi,
   },
 });

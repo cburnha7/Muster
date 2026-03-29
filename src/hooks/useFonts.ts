@@ -1,27 +1,24 @@
 /**
  * Custom hook for loading Muster brand fonts
- * Fraunces (serif) - Display and headings
- * Nunito (sans-serif) - UI and body text
+ * Plus Jakarta Sans — Headlines & display
+ * Inter — Body & UI text
  */
 
 import { useEffect, useState } from 'react';
 import * as Font from 'expo-font';
 import {
-  Fraunces_200ExtraLight,
-  Fraunces_200ExtraLight_Italic,
-  Fraunces_300Light,
-  Fraunces_300Light_Italic,
-  Fraunces_700Bold,
-  Fraunces_700Bold_Italic,
-  Fraunces_900Black,
-} from '@expo-google-fonts/fraunces';
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import {
-  Nunito_400Regular,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
-  Nunito_900Black,
-} from '@expo-google-fonts/nunito';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 export function useFonts() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -31,21 +28,18 @@ export function useFonts() {
     async function loadFonts() {
       try {
         await Font.loadAsync({
-          // Fraunces (serif) - Display and headings
-          Fraunces_200ExtraLight,
-          Fraunces_200ExtraLight_Italic,
-          Fraunces_300Light,
-          Fraunces_300Light_Italic,
-          Fraunces_700Bold,
-          Fraunces_700Bold_Italic,
-          Fraunces_900Black,
-          
-          // Nunito (sans-serif) - UI and body
-          Nunito_400Regular,
-          Nunito_600SemiBold,
-          Nunito_700Bold,
-          Nunito_800ExtraBold,
-          Nunito_900Black,
+          // Plus Jakarta Sans — Headlines & display
+          PlusJakartaSans_400Regular,
+          PlusJakartaSans_500Medium,
+          PlusJakartaSans_600SemiBold,
+          PlusJakartaSans_700Bold,
+          PlusJakartaSans_800ExtraBold,
+
+          // Inter — Body & UI text
+          Inter_400Regular,
+          Inter_500Medium,
+          Inter_600SemiBold,
+          Inter_700Bold,
         });
         setFontsLoaded(true);
       } catch (err) {

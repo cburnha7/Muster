@@ -1,12 +1,12 @@
-import axios, { 
-  AxiosInstance, 
-  AxiosRequestConfig, 
-  AxiosResponse, 
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
   AxiosError,
-  InternalAxiosRequestConfig 
+  InternalAxiosRequestConfig
 } from 'axios';
-import { authService } from '../auth/AuthService';
 import TokenStorage from '../auth/TokenStorage';
+import { acquireRefresh, performTokenRefresh } from '../auth/tokenRefreshLock';
 import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
 import { loggingService } from '../LoggingService';
@@ -76,26 +76,38 @@ export class BaseApiService {
     // Request interceptor for authentication and logging
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        console.log('🚀 BaseApiService interceptor running');
-        
+        if (__DEV__) {
+          console.log('🚀 BaseApiService interceptor running');
+        }
+
         // Add authentication token - read from TokenStorage for consistency
         let token = await TokenStorage.getAccessToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('🔐 API Request - Token attached:', token.substring(0, 20) + '...');
+          if (__DEV__) {
+            console.log('🔐 API Request - Token attached:', token.substring(0, 20) + '...');
+          }
         } else {
-          console.log('⚠️ API Request - No token available');
+          if (__DEV__) {
+            console.log('⚠️ API Request - No token available');
+          }
         }
 
         // DEVELOPMENT: Add x-user-id header for mock auth
         // Read user from TokenStorage instead of authService
         const currentUser = await TokenStorage.getUser();
-        console.log('👤 Current user from TokenStorage:', currentUser?.email, currentUser?.id);
+        if (__DEV__) {
+          console.log('👤 Current user from TokenStorage:', currentUser?.email, currentUser?.id);
+        }
         if (currentUser && currentUser.id) {
           config.headers['X-User-Id'] = currentUser.id;
-          console.log('🔐 API Request - User ID attached:', currentUser.id, currentUser.email);
+          if (__DEV__) {
+            console.log('🔐 API Request - User ID attached:', currentUser.id, currentUser.email);
+          }
         } else {
-          console.log('⚠️ API Request - No current user');
+          if (__DEV__) {
+            console.log('⚠️ API Request - No current user');
+          }
         }
 
         // Attach X-Active-User-Id header when acting on behalf of a dependent
@@ -139,15 +151,18 @@ export class BaseApiService {
           this.logError(error);
         }
 
-        // Handle token refresh for 401 errors
+        // Handle token refresh for 401 errors using the shared refresh lock
         if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
           try {
-            const refreshToken = await TokenStorage.getRefreshToken();
-            if (!refreshToken) {
+            const currentRefreshToken = await TokenStorage.getRefreshToken();
+            if (!currentRefreshToken) {
               throw new Error('No refresh token available');
             }
-            const tokens = await authService.refreshToken(refreshToken);
-            // Retry the original request with new token from TokenStorage
+
+            // Use the shared lock so RTK Query and Axios never race
+            const tokens = await acquireRefresh(() => performTokenRefresh(currentRefreshToken));
+
+            // Retry the original request with new token
             if (error.config) {
               error.config.headers.Authorization = `Bearer ${tokens.accessToken}`;
               // Re-attach user ID header
@@ -161,12 +176,12 @@ export class BaseApiService {
             // Any refresh failure (missing token or actual failure) — clear session
             console.error('🔒 Token refresh failed, clearing session:', refreshError.message || refreshError);
             await TokenStorage.clearAll();
-            
+
             // Dispatch a global event so the app can redirect to login
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
             }
-            
+
             // Reject with a clear auth error
             return Promise.reject({
               code: 'SESSION_EXPIRED',
