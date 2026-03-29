@@ -35,6 +35,7 @@ import cancelRequestRoutes from './routes/cancel-requests';
 import insuranceDocumentRoutes from './routes/insurance-documents';
 import reservationApprovalRoutes from './routes/reservation-approvals';
 import escrowTransactionRoutes from './routes/escrow-transactions';
+import waiverRoutes from './routes/waivers';
 import { registerLeagueLockMiddleware } from './middleware/league-lock';
 
 dotenv.config();
@@ -149,6 +150,7 @@ app.use('/api/cancel-requests', cancelRequestRoutes);
 app.use('/api/insurance-documents', insuranceDocumentRoutes);
 app.use('/api/reservation-approvals', reservationApprovalRoutes);
 app.use('/api/escrow-transactions', escrowTransactionRoutes);
+app.use('/api/waivers', waiverRoutes);
 
 // Error handling
 app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -84,6 +84,10 @@ export function EventDetailsScreen(): JSX.Element {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showStepOutModal, setShowStepOutModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+  const [waiverStatus, setWaiverStatus] = useState<{ required: boolean; signed: boolean; waiverVersion: string | null; waiverText?: string | null } | null>(null);
+  const [showWaiverModal, setShowWaiverModal] = useState(false);
+  const [waiverAgreed, setWaiverAgreed] = useState(false);
+  const [signingWaiver, setSigningWaiver] = useState(false);
 
   // Load event details
   const loadEvent = useCallback(async (isRefresh = false, skipCache = false) => {
@@ -115,6 +119,28 @@ export function EventDetailsScreen(): JSX.Element {
       setParticipants(participantsData.participants);
       setRosters(participantsData.rosters ?? []);
       setParticipantsLoaded(true);
+
+      // Fetch waiver status if event has a facility
+      if (eventResponse.facilityId && currentUser?.id) {
+        try {
+          const wRes = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/waivers/facility/${eventResponse.facilityId}/status?userId=${currentUser.id}`);
+          if (wRes.ok) {
+            const wData = await wRes.json();
+            if (wData.required && !wData.signed) {
+              // Also fetch waiver text
+              const tRes = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/waivers/facility/${eventResponse.facilityId}`);
+              if (tRes.ok) {
+                const tData = await tRes.json();
+                setWaiverStatus({ ...wData, waiverText: tData.waiverText });
+              } else {
+                setWaiverStatus(wData);
+              }
+            } else {
+              setWaiverStatus(wData);
+            }
+          }
+        } catch {}
+      }
       dispatch(setSelectedEvent(eventResponse));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load event';
@@ -1106,12 +1132,23 @@ export function EventDetailsScreen(): JSX.Element {
             disabled={isBooking}
           />
         ) : canBook ? (
-          <FormButton
-            title={`Join Up${event.price > 0 ? ` - ${event.price}` : ''}`}
-            onPress={handleBookEvent}
-            loading={isBooking}
-            disabled={isBooking}
-          />
+          <>
+            {waiverStatus?.required && !waiverStatus?.signed && (
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.goldTint, padding: 12, borderRadius: 10, marginBottom: 8, gap: 8 }} onPress={() => { setWaiverAgreed(false); setShowWaiverModal(true); }}>
+                <Ionicons name="shield-checkmark-outline" size={20} color={colors.gold} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: fonts.label, fontSize: 13, color: colors.ink }}>Waiver Required</Text>
+                  <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft }}>Read & Sign Waiver →</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            <FormButton
+              title={`Join Up${event.price > 0 ? ` - ${event.price}` : ''}`}
+              onPress={handleBookEvent}
+              loading={isBooking}
+              disabled={isBooking || (waiverStatus?.required === true && !waiverStatus?.signed)}
+            />
+          </>
         ) : (
           <FormButton
             title={
@@ -1168,6 +1205,49 @@ export function EventDetailsScreen(): JSX.Element {
         onClose={() => setSelectedPlayer(null)}
         player={selectedPlayer}
       />
+
+      {/* Waiver Modal */}
+      <Modal visible={showWaiverModal} transparent animationType="slide" onRequestClose={() => setShowWaiverModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%', padding: 20 }}>
+            <Text style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.ink, marginBottom: 12 }}>{event?.facility?.name || 'Facility'} Waiver</Text>
+            <ScrollView style={{ maxHeight: 300, marginBottom: 16 }}>
+              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, lineHeight: 22 }}>{waiverStatus?.waiverText || 'Loading waiver...'}</Text>
+            </ScrollView>
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }} onPress={() => setWaiverAgreed(!waiverAgreed)}>
+              <Ionicons name={waiverAgreed ? 'checkbox' : 'square-outline'} size={22} color={waiverAgreed ? colors.pine : colors.inkFaint} />
+              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, flex: 1 }}>I have read and agree to this waiver</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: waiverAgreed ? colors.pine : colors.inkFaint, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 8 }}
+              disabled={!waiverAgreed || signingWaiver}
+              onPress={async () => {
+                if (!currentUser?.id || !event?.facilityId) return;
+                setSigningWaiver(true);
+                try {
+                  const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/waivers/sign`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, facilityId: event.facilityId }),
+                  });
+                  if (resp.ok) {
+                    setWaiverStatus((prev) => prev ? { ...prev, signed: true } : prev);
+                    setShowWaiverModal(false);
+                  } else {
+                    Alert.alert('Error', 'Something went wrong. Please try again.');
+                  }
+                } catch { Alert.alert('Error', 'Something went wrong. Please try again.'); }
+                setSigningWaiver(false);
+              }}
+            >
+              <Text style={{ fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' }}>{signingWaiver ? 'Signing...' : 'Sign & Continue'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 8 }} onPress={() => setShowWaiverModal(false)}>
+              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Salute Modal */}
       <Modal

@@ -619,7 +619,7 @@ router.put('/:id', requireNonDependent, async (req, res) => {
       'street', 'city', 'state', 'zipCode', 'country', 'latitude', 'longitude',
       'noticeWindowHours', 'teamPenaltyPct', 'penaltyDestination', 'policyVersion',
       'cancellationPolicyHours', 'stripeConnectAccountId', 'requiresInsurance',
-      'requiresBookingConfirmation',
+      'requiresBookingConfirmation', 'waiverRequired', 'waiverText',
     ];
 
     const updateData: Record<string, any> = {};
@@ -672,6 +672,19 @@ router.put('/:id', requireNonDependent, async (req, res) => {
         incrementChanged = true;
         oldIncrement = currentFacility.slotIncrementMinutes;
       }
+    }
+
+    // Auto-bump waiverVersion if waiverText changed
+    if (updateData.waiverText !== undefined) {
+      const current = await prisma.facility.findUnique({ where: { id }, select: { waiverText: true } });
+      if (current && updateData.waiverText !== current.waiverText) {
+        updateData.waiverVersion = new Date().toISOString();
+      }
+    }
+    // If waiverRequired is turned off, clear waiver fields
+    if (updateData.waiverRequired === false) {
+      updateData.waiverText = null;
+      updateData.waiverVersion = null;
     }
 
     // Update facility

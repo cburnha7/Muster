@@ -82,6 +82,7 @@ model User {
   cancelRequests         CancelRequest[]
 
   insuranceDocuments     InsuranceDocument[]
+  waiverSignatures       WaiverSignature[]
 
   // Self-referential relation for guardian/dependent accounts
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
@@ -221,6 +222,11 @@ model Facility {
   // Booking confirmation requirement
   requiresBookingConfirmation Boolean @default(false)
 
+  // Waiver
+  waiverRequired Boolean  @default(false)
+  waiverText     String?  // Full waiver content (plain text or markdown)
+  waiverVersion  String?  // ISO timestamp — bumped every time waiverText changes
+
   // Foreign Keys
   ownerId String
 
@@ -236,6 +242,7 @@ model Facility {
   accessImages      FacilityAccessImage[]
   courts            FacilityCourt[]
   cancelRequests    CancelRequest[]
+  waiverSignatures  WaiverSignature[]
 
   @@map("facilities")
 }
@@ -1304,4 +1311,25 @@ model EscrowTransaction {
   @@index([rentalId])
   @@index([type])
   @@map("escrow_transactions")
+}
+
+
+model WaiverSignature {
+  id            String   @id @default(uuid())
+  signedAt      DateTime @default(now())
+  ipAddress     String?  // Captured for legal defensibility
+  waiverVersion String   // Snapshot of facility.waiverVersion at time of signing
+
+  // Foreign Keys
+  userId     String
+  facilityId String
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, facilityId, waiverVersion])
+  @@index([userId])
+  @@index([facilityId])
+  @@map("waiver_signatures")
 }

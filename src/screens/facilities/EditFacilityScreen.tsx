@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   Switch,
+  TextInput,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +26,7 @@ import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
 import { updateFacility, removeFacility } from '../../store/slices/facilitiesSlice';
 import { SportType, CreateFacilityData, Facility } from '../../types';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, fonts, Spacing, TextStyles } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
 interface CourtFormData {
@@ -70,6 +71,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   const [hoursOfOperation, setHoursOfOperation] = useState<DayHours[]>([]);
   const [requiresInsurance, setRequiresInsurance] = useState(false);
   const [requiresBookingConfirmation, setRequiresBookingConfirmation] = useState(false);
+  const [waiverRequired, setWaiverRequired] = useState(false);
+  const [waiverText, setWaiverText] = useState('');
+  const [originalWaiverText, setOriginalWaiverText] = useState('');
   
   const [formData, setFormData] = useState<Partial<CreateFacilityData>>({
     name: '',
@@ -170,6 +174,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       // Prepopulate insurance requirement
       setRequiresInsurance(facility.requiresInsurance === true);
       setRequiresBookingConfirmation(facility.requiresBookingConfirmation === true);
+      setWaiverRequired((facility as any).waiverRequired === true);
+      setWaiverText((facility as any).waiverText || '');
+      setOriginalWaiverText((facility as any).waiverText || '');
       
       // Load hours of operation from availabilitySlots
       if (facility.availabilitySlots && facility.availabilitySlots.length > 0) {
@@ -357,6 +364,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
         requiresInsurance,
         requiresBookingConfirmation,
+        waiverRequired,
+        waiverText: waiverRequired ? waiverText : null,
       };
 
       const updatedFacility = await facilityService.updateFacility(facilityId, facilityData as any);
@@ -719,6 +728,43 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           </View>
         </View>
         )}
+
+        {/* Waiver Section */}
+        <View style={styles.section}>
+          <View style={styles.insuranceToggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.insuranceLabel}>Require Waiver</Text>
+              <Text style={styles.insuranceDescription}>Players must sign a waiver before attending events at this facility.</Text>
+            </View>
+            <Switch
+              value={waiverRequired}
+              onValueChange={setWaiverRequired}
+              trackColor={{ false: colors.white, true: colors.pineLight }}
+              thumbColor={waiverRequired ? colors.pine : colors.surface}
+            />
+          </View>
+          {waiverRequired && (
+            <View style={{ marginTop: 12 }}>
+              <Text style={styles.insuranceLabel}>Waiver Document</Text>
+              <Text style={styles.insuranceDescription}>Players will be required to read and accept this waiver before joining events. Uploading a new version will require all players to re-sign.</Text>
+              {originalWaiverText && waiverText !== originalWaiverText && (
+                <View style={{ backgroundColor: colors.goldTint, padding: 10, borderRadius: 8, marginTop: 8, marginBottom: 8 }}>
+                  <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.gold }}>Saving a new waiver will invalidate all previously signed waivers. Players will be prompted to re-sign before their next event.</Text>
+                </View>
+              )}
+              <TextInput
+                style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, minHeight: 120, fontFamily: fonts.body, fontSize: 14, color: colors.ink, textAlignVertical: 'top', marginTop: 8, borderWidth: 1, borderColor: colors.border }}
+                multiline
+                numberOfLines={6}
+                placeholder="Enter your full waiver text here…"
+                placeholderTextColor={colors.inkFaint}
+                value={waiverText}
+                onChangeText={setWaiverText}
+              />
+              <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginTop: 4, textAlign: 'right' }}>{waiverText.length} characters</Text>
+            </View>
+          )}
+        </View>
 
         {/* Submit Button */}
         <View style={styles.buttonContainer}>
