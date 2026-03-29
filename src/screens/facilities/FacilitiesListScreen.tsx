@@ -365,9 +365,6 @@ export function FacilitiesListScreen() {
             { label: 'Kickball', value: SportType.KICKBALL },
           ]} value={sportFilter} onSelect={(o) => setSportFilter(String(o.value))} placeholder="Sport" />
         </View>
-        <TouchableOpacity style={[styles.freeToggle, freeOnly && styles.freeToggleActive]} onPress={() => setFreeOnly(!freeOnly)}>
-          <Text style={[styles.freeToggleText, freeOnly && styles.freeToggleTextActive]}>Free</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView

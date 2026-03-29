@@ -15,19 +15,30 @@ import { userService } from '../../services/api/UserService';
 import { User, UpdateProfileData } from '../../types';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
-import { FormSelect } from '../../components/forms/FormSelect';
+import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { loggingService } from '../../services/LoggingService';import { validateEmail, validatePhoneNumber } from '../../utils/validation';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
+import { SportType } from '../../types';
 
-const SPORT_OPTIONS = [
-  { label: 'Basketball', value: 'basketball' },
-  { label: 'Soccer', value: 'soccer' },
-  { label: 'Tennis', value: 'tennis' },
-  { label: 'Volleyball', value: 'volleyball' },
-  { label: 'Badminton', value: 'badminton' },
-  { label: 'Other', value: 'other' },
+const SPORT_OPTIONS: SelectOption[] = [
+  { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Other', value: SportType.OTHER },
+];
+
+const GENDER_OPTIONS: SelectOption[] = [
+  { label: 'Prefer not to say', value: '' },
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
 ];
 
 export function EditProfileScreen(): JSX.Element {
@@ -46,6 +57,8 @@ export function EditProfileScreen(): JSX.Element {
   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [gender, setGender] = useState<string>('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [address, setAddress] = useState('');
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -80,6 +93,8 @@ export function EditProfileScreen(): JSX.Element {
       setProfileImage(profileData.profileImage);
       setSelectedSports(profileData.preferredSports || []);
       setGender((profileData as any).gender || '');
+      setDateOfBirth(profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toISOString().split('T')[0] : '');
+      setAddress((profileData as any).address || '');
     } catch (err: any) {
       setError(err.message || 'Failed to load profile');
     } finally {
@@ -193,7 +208,9 @@ export function EditProfileScreen(): JSX.Element {
         phoneNumber: phoneNumber || undefined,
         gender: gender || undefined,
         preferredSports: selectedSports,
-      };
+        dateOfBirth: dateOfBirth || undefined,
+        address: address || undefined,
+      } as any;
 
       await userService.updateProfile(updates);
       Alert.alert('Success', 'Profile updated successfully', [
@@ -294,47 +311,52 @@ export function EditProfileScreen(): JSX.Element {
           />
 
           {/* Gender */}
-          <View style={styles.genderSection}>
-            <Text style={styles.sportsLabel}>Gender</Text>
-            <View style={styles.sportsList}>
-              {[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => (
-                <TouchableOpacity
-                  key={opt.value}
-                  style={[styles.sportTag, gender === opt.value && styles.sportTagSelected]}
-                  onPress={() => setGender(gender === opt.value ? '' : opt.value)}
-                >
-                  <Text style={[styles.sportTagText, gender === opt.value && styles.sportTagTextSelected]}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+          <FormSelect
+            label="Gender"
+            options={GENDER_OPTIONS}
+            value={gender}
+            onSelect={(o) => setGender(String(o.value))}
+            placeholder="Prefer not to say"
+          />
+
+          {/* Birthday */}
+          <FormInput
+            label="Birthday"
+            value={dateOfBirth}
+            onChangeText={setDateOfBirth}
+            placeholder="YYYY-MM-DD"
+          />
+
+          {/* Home Address */}
+          <FormInput
+            label="Home Address"
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Enter your address"
+          />
 
           {/* Preferred Sports */}
-          <View style={styles.sportsSection}>
-            <Text style={styles.sportsLabel}>Preferred Sports</Text>
-            <View style={styles.sportsList}>
-              {SPORT_OPTIONS.map((sport) => (
-                <TouchableOpacity
-                  key={sport.value}
+          <Text style={styles.sportsLabel}>Preferred Sports</Text>
+          <View style={styles.sportsList}>
+            {SPORT_OPTIONS.map((sport) => (
+              <TouchableOpacity
+                key={String(sport.value)}
+                style={[
+                  styles.sportTag,
+                  selectedSports.includes(String(sport.value)) && styles.sportTagSelected,
+                ]}
+                onPress={() => toggleSport(String(sport.value))}
+              >
+                <Text
                   style={[
-                    styles.sportTag,
-                    selectedSports.includes(sport.value) && styles.sportTagSelected,
+                    styles.sportTagText,
+                    selectedSports.includes(String(sport.value)) && styles.sportTagTextSelected,
                   ]}
-                  onPress={() => toggleSport(sport.value)}
                 >
-                  <Text
-                    style={[
-                      styles.sportTagText,
-                      selectedSports.includes(sport.value) && styles.sportTagTextSelected,
-                    ]}
-                  >
-                    {sport.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  {sport.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           {/* Save Button */}

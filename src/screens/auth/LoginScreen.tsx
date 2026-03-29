@@ -175,15 +175,12 @@ export function LoginScreen() {
       >
         {/* Logo/Icon */}
         <View style={styles.logoContainer}>
-          <MusterIcon size={120} variant="light" />
+          <MusterIcon size={240} variant="light" />
           <Text style={styles.appName}>Muster</Text>
-          <Text style={styles.tagline}>Find a game. Find your people.</Text>
         </View>
 
         {/* Login Form */}
         <View style={styles.form}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
 
           {/* SSO Buttons - Only show on native platforms */}
           {Platform.OS !== 'web' && (

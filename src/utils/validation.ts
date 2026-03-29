@@ -23,6 +23,15 @@ export interface ValidationResult {
   errors: ValidationError[];
 }
 
+// ── Simple validators ──
+export function validateEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function validatePhoneNumber(phone: string): boolean {
+  return /^\+?[\d\s\-().]{7,20}$/.test(phone);
+}
+
 // Event validation
 export function validateEventData(data: CreateEventData): ValidationResult {
   const errors: ValidationError[] = [];
