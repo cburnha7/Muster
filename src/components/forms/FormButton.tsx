@@ -6,8 +6,9 @@ import {
   ActivityIndicator,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 
 interface FormButtonProps {
   title: string;
@@ -34,75 +35,21 @@ export const FormButton: React.FC<FormButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const getButtonStyle = () => {
-    const baseStyle = [styles.button, styles[size]];
-    
-    switch (variant) {
-      case 'primary':
-        baseStyle.push(styles.primary);
-        break;
-      case 'secondary':
-        baseStyle.push(styles.secondary);
-        break;
-      case 'outline':
-        baseStyle.push(styles.outline);
-        break;
-      case 'muted':
-        baseStyle.push(styles.muted);
-        break;
-      case 'danger':
-        baseStyle.push(styles.danger);
-        break;
-    }
-    
-    if (disabled || loading) {
-      baseStyle.push(styles.disabled);
-    }
-    
-    return baseStyle;
-  };
-
-  const getTextStyle = () => {
-    const baseStyle = [styles.text, styles[`${size}Text`]];
-    
-    switch (variant) {
-      case 'primary':
-        baseStyle.push(styles.primaryText);
-        break;
-      case 'secondary':
-        baseStyle.push(styles.secondaryText);
-        break;
-      case 'outline':
-        baseStyle.push(styles.outlineText);
-        break;
-      case 'muted':
-        baseStyle.push(styles.mutedText);
-        break;
-      case 'danger':
-        baseStyle.push(styles.dangerText);
-        break;
-    }
-    
-    if (disabled || loading) {
-      baseStyle.push(styles.disabledText);
-    }
-    
-    return baseStyle;
-  };
+  const isDisabled = disabled || loading;
 
   const getIconColor = () => {
-    if (disabled || loading) return '#999';
-    
+    if (isDisabled) return colors.outline;
+
     switch (variant) {
       case 'primary':
       case 'danger':
         return '#FFFFFF';
       case 'secondary':
-        return colors.ink;
+        return colors.onSurface;
       case 'outline':
-        return colors.pine;
+        return colors.primary;
       case 'muted':
-        return colors.ink;
+        return colors.onSurface;
       default:
         return '#FFFFFF';
     }
@@ -110,62 +57,106 @@ export const FormButton: React.FC<FormButtonProps> = ({
 
   const getIconSize = () => {
     switch (size) {
-      case 'small':
-        return 16;
-      case 'medium':
-        return 18;
-      case 'large':
-        return 20;
-      default:
-        return 18;
+      case 'small': return 16;
+      case 'medium': return 18;
+      case 'large': return 20;
+      default: return 18;
     }
   };
 
-  return (
-    <TouchableOpacity
-      style={[...getButtonStyle(), style]}
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.7}
-    >
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator
-            size="small"
-            color={getIconColor()}
-            style={styles.loader}
-          />
-        ) : (
-          leftIcon && (
-            <Ionicons
-              name={leftIcon as any}
-              size={getIconSize()}
-              color={getIconColor()}
-              style={styles.leftIcon}
-            />
-          )
-        )}
-        
-        <Text style={[...getTextStyle(), textStyle]}>
-          {title}
-        </Text>
-        
-        {rightIcon && !loading && (
+  const sizeStyle = size === 'small' ? styles.small : size === 'large' ? styles.large : styles.medium;
+  const textSizeStyle = size === 'small' ? styles.smallText : size === 'large' ? styles.largeText : styles.mediumText;
+
+  const content = (
+    <View style={styles.content}>
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={getIconColor()}
+          style={styles.leftIcon}
+        />
+      ) : (
+        leftIcon && (
           <Ionicons
-            name={rightIcon as any}
+            name={leftIcon as any}
             size={getIconSize()}
             color={getIconColor()}
-            style={styles.rightIcon}
+            style={styles.leftIcon}
           />
-        )}
-      </View>
+        )
+      )}
+      <Text
+        style={[
+          styles.text,
+          textSizeStyle,
+          variant === 'primary' && styles.primaryText,
+          variant === 'secondary' && styles.secondaryText,
+          variant === 'outline' && styles.outlineText,
+          variant === 'muted' && styles.mutedText,
+          variant === 'danger' && styles.dangerText,
+          isDisabled && styles.disabledText,
+          textStyle,
+        ]}
+      >
+        {title}
+      </Text>
+      {rightIcon && !loading && (
+        <Ionicons
+          name={rightIcon as any}
+          size={getIconSize()}
+          color={getIconColor()}
+          style={styles.rightIcon}
+        />
+      )}
+    </View>
+  );
+
+  // Primary variant gets the glow gradient
+  if (variant === 'primary' && !isDisabled) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={isDisabled}
+        activeOpacity={0.85}
+        style={style}
+      >
+        <LinearGradient
+          colors={['#0052FF', '#003EC7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.button, sizeStyle, styles.primary]}
+        >
+          {content}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.button,
+        sizeStyle,
+        variant === 'primary' && styles.primaryFlat,
+        variant === 'secondary' && styles.secondary,
+        variant === 'outline' && styles.outline,
+        variant === 'muted' && styles.muted,
+        variant === 'danger' && styles.danger,
+        isDisabled && styles.disabled,
+        style,
+      ]}
+      onPress={onPress}
+      disabled={isDisabled}
+      activeOpacity={0.85}
+    >
+      {content}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -175,95 +166,84 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontWeight: '600',
+    fontFamily: fonts.ui,
     textAlign: 'center',
+    letterSpacing: -0.1,
   },
-  
+
   // Size variants
   small: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 36,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    minHeight: 40,
   },
   medium: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    minHeight: 48,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    minHeight: 52,
   },
   large: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    minHeight: 56,
+    paddingHorizontal: 32,
+    paddingVertical: 18,
+    minHeight: 58,
   },
-  
+
   // Text sizes
-  smallText: {
-    fontSize: 14,
-  },
-  mediumText: {
-    fontSize: 16,
-  },
-  largeText: {
-    fontSize: 18,
-  },
-  
+  smallText: { fontSize: 14 },
+  mediumText: { fontSize: 16 },
+  largeText: { fontSize: 18 },
+
   // Color variants
   primary: {
-    backgroundColor: colors.pine,
+    // gradient handles background
+  },
+  primaryFlat: {
+    backgroundColor: colors.surfaceContainerHigh,
   },
   primaryText: {
     color: '#FFFFFF',
   },
-  
+
   secondary: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surfaceContainerLow,
   },
   secondaryText: {
-    color: colors.ink,
+    color: colors.onSurface,
   },
-  
+
   outline: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.pine,
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
   },
   outlineText: {
-    color: colors.pine,
+    color: colors.primary,
   },
-  
+
   muted: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.inkFaint,
   },
   mutedText: {
-    color: colors.ink,
+    color: colors.onSurfaceVariant,
   },
-  
+
   danger: {
-    backgroundColor: colors.heart,
+    backgroundColor: colors.error,
   },
   dangerText: {
     color: '#FFFFFF',
   },
-  
-  // Disabled state
+
+  // Disabled
   disabled: {
-    backgroundColor: '#E0E0E0',
-    borderColor: '#E0E0E0',
+    backgroundColor: colors.surfaceDim,
+    borderColor: colors.surfaceDim,
   },
   disabledText: {
-    color: '#999',
+    color: colors.outline,
   },
-  
+
   // Icons
-  leftIcon: {
-    marginRight: 8,
-  },
-  rightIcon: {
-    marginLeft: 8,
-  },
-  loader: {
-    marginRight: 8,
-  },
+  leftIcon: { marginRight: 8 },
+  rightIcon: { marginLeft: 8 },
 });

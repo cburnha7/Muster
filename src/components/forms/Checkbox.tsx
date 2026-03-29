@@ -7,7 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 
 interface CheckboxProps {
   label: string | React.ReactNode;
@@ -24,7 +24,6 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   error,
   accessibilityLabel,
 }) => {
-  // Ensure minimum touch target size
   const minSize = Platform.OS === 'ios' ? 44 : 48;
 
   return (
@@ -45,7 +44,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           ]}
         >
           {checked && (
-            <Ionicons name="checkmark" size={16} color={colors.textInverse} />
+            <Ionicons name="checkmark" size={14} color="#FFFFFF" />
           )}
         </View>
         <View style={styles.labelContainer}>
@@ -71,7 +70,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: Spacing.sm,
+    marginVertical: Spacing.xs,
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -79,35 +78,37 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderColor: colors.outlineVariant,
+    backgroundColor: colors.surfaceContainerLowest,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   checkboxChecked: {
-    backgroundColor: colors.pine,
-    borderColor: colors.pine,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   checkboxError: {
-    borderColor: colors.heart,
+    borderColor: colors.error,
   },
   labelContainer: {
     flex: 1,
   },
   label: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
+    fontSize: 15,
+    fontFamily: fonts.body,
+    color: colors.onSurfaceVariant,
     flexWrap: 'wrap',
   },
   errorText: {
-    ...TextStyles.caption,
-    color: colors.heart,
+    fontSize: 12,
+    fontFamily: fonts.body,
+    color: colors.error,
     marginTop: Spacing.xs,
-    marginLeft: 40, // Align with label (24px checkbox + 16px margin)
+    marginLeft: 30,
   },
 });

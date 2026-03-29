@@ -1,6 +1,8 @@
 /**
- * Spacing system for the Sports Booking App
- * Provides consistent spacing values throughout the app
+ * Spacing system — Breathable white space
+ *
+ * High-end design requires the "luxury of space."
+ * Use generous spacing to avoid cramming content.
  */
 
 export const Spacing = {
@@ -8,25 +10,19 @@ export const Spacing = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
-  huge: 40,
-  massive: 48,
+  xl: 24,       // standard section gap / card content separation
+  xxl: 32,
+  xxxl: 40,
+  huge: 48,
+  massive: 64,
 } as const;
 
 export type SpacingKey = keyof typeof Spacing;
 
-/**
- * Get spacing value by key
- */
 export function getSpacing(key: SpacingKey): number {
   return Spacing[key];
 }
 
-/**
- * Get multiple spacing values
- */
 export function getSpacings(...keys: SpacingKey[]): number[] {
   return keys.map(key => Spacing[key]);
 }

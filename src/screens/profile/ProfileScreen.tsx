@@ -9,10 +9,13 @@ import {
   Alert,
   Platform,
   RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
+import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
@@ -21,6 +24,7 @@ export function ProfileScreen() {
   const navigation = useNavigation();
   const { user: authUser, logout } = useAuth();
   const { isDependent } = useDependentContext();
+  const { width } = useWindowDimensions();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -44,11 +48,25 @@ export function ProfileScreen() {
     ? Math.floor((Date.now() - new Date(authUser.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
+  const contentMaxWidth = width > 600 ? 540 : undefined;
+
+  if (!authUser) {
+    return (
+      <View style={styles.container}>
+        <EmptyState
+          icon="person-outline"
+          title="Profile Unavailable"
+          subtitle="Unable to load your profile. Please try logging in again."
+        />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pine} />}
+      contentContainerStyle={[styles.content, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' as unknown as number } : undefined]}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       {/* Profile Card */}
       <View style={styles.profileCard}>
@@ -80,11 +98,11 @@ export function ProfileScreen() {
       {/* Edit + Settings */}
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.editBtn} onPress={() => (navigation as any).navigate('EditProfile')} activeOpacity={0.7}>
-          <Ionicons name="create-outline" size={18} color={colors.pine} />
+          <Ionicons name="create-outline" size={18} color="#FFFFFF" />
           <Text style={styles.editBtnText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.settingsBtn} onPress={() => (navigation as any).navigate('Settings')} activeOpacity={0.7}>
-          <Ionicons name="settings-outline" size={18} color={colors.inkSoft} />
+          <Ionicons name="settings-outline" size={18} color={colors.onSurfaceVariant} />
           <Text style={styles.settingsBtnText}>Settings</Text>
         </TouchableOpacity>
       </View>
@@ -94,14 +112,14 @@ export function ProfileScreen() {
 
       {/* Redeem Code */}
       <TouchableOpacity style={styles.menuRow} onPress={() => (navigation as any).navigate('RedeemCode')} activeOpacity={0.7}>
-        <Ionicons name="gift-outline" size={20} color={colors.pine} />
+        <Ionicons name="gift-outline" size={20} color={colors.primary} />
         <Text style={styles.menuRowText}>Redeem Code</Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+        <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
       </TouchableOpacity>
 
       {/* Log Out */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
-        <Ionicons name="log-out-outline" size={20} color={colors.heart} />
+        <Ionicons name="log-out-outline" size={20} color={colors.onErrorContainer} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
 
@@ -113,21 +131,21 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   content: {
     paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 14,
-    padding: 20,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
     elevation: 2,
   },
   profileRow: {
@@ -140,7 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: 45,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -157,18 +175,17 @@ const styles = StyleSheet.create({
   profileName: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: 4,
   },
   detailText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
+    color: colors.onSurfaceVariant,
     lineHeight: 20,
   },
   actionRow: {
     flexDirection: 'row',
-    marginHorizontal: 16,
     marginTop: 12,
     gap: 8,
   },
@@ -178,15 +195,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.pine,
+    borderRadius: 9999,
+    borderWidth: 0,
+    backgroundColor: colors.primary,
     gap: 6,
   },
   editBtnText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
+    color: '#FFFFFF',
   },
   settingsBtn: {
     flex: 1,
@@ -194,35 +211,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
+    borderRadius: 9999,
+    backgroundColor: colors.surfaceContainer,
     gap: 6,
   },
   settingsBtnText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.inkSoft,
+    color: colors.onSurfaceVariant,
   },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
     marginTop: 16,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 14,
   },
   menuRowText: {
     flex: 1,
-    fontFamily: fonts.ui,
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.onSurface,
     marginLeft: 10,
   },
   logoutBtn: {
@@ -230,17 +241,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 24,
-    marginHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.heart + '30',
+    backgroundColor: colors.errorContainer,
+    borderRadius: 9999,
+    borderWidth: 0,
   },
   logoutText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.heart,
+    color: colors.onErrorContainer,
     marginLeft: 8,
   },
 });

@@ -1,42 +1,42 @@
-import { colors } from '../theme';
+import { colors, fonts } from '../theme';
 
 /**
  * Calendar theme configuration for react-native-calendars
- * Matches Muster brand colors
+ * Matches Muster Kinetic Anchor design system
  */
 export const calendarTheme = {
-  backgroundColor: '#FFFFFF',
-  calendarBackground: '#FFFFFF',
-  textSectionTitleColor: colors.ink,
-  selectedDayBackgroundColor: colors.pine,
+  backgroundColor: 'transparent',
+  calendarBackground: 'transparent',
+  textSectionTitleColor: colors.onSurfaceVariant,
+  selectedDayBackgroundColor: colors.primary,
   selectedDayTextColor: '#FFFFFF',
-  todayTextColor: colors.gold,
-  dayTextColor: colors.ink,
-  textDisabledColor: colors.inkFaint,
-  dotColor: colors.pine,
+  todayTextColor: colors.primary,
+  dayTextColor: colors.onSurface,
+  textDisabledColor: colors.outlineVariant,
+  dotColor: colors.primary,
   selectedDotColor: '#FFFFFF',
-  arrowColor: colors.pine,
-  monthTextColor: colors.ink,
-  indicatorColor: colors.pine,
-  textDayFontFamily: 'System',
-  textMonthFontFamily: 'System',
-  textDayHeaderFontFamily: 'System',
+  arrowColor: colors.primary,
+  monthTextColor: colors.onSurface,
+  indicatorColor: colors.primary,
+  textDayFontFamily: fonts.body,
+  textMonthFontFamily: fonts.heading,
+  textDayHeaderFontFamily: fonts.headingSemi,
   textDayFontWeight: '400' as const,
-  textMonthFontWeight: '600' as const,
+  textMonthFontWeight: '700' as const,
   textDayHeaderFontWeight: '600' as const,
   textDayFontSize: 16,
   textMonthFontSize: 18,
-  textDayHeaderFontSize: 14,
+  textDayHeaderFontSize: 13,
 };
 
 /**
  * Marking colors for calendar dates
  */
 export const calendarMarkingColors = {
-  available: colors.pine,      // Green dot for available dates
-  blocked: colors.heart,         // Red dot for blocked dates
-  rented: colors.navy,            // Blue dot for rented dates
-  selected: colors.pine,        // Green circle for selected date
+  available: colors.primary,
+  blocked: colors.error,
+  rented: colors.onSurface,
+  selected: colors.primary,
 };
 
 /**
@@ -86,14 +86,14 @@ export function generateTimeSlots(
   incrementMinutes: number = 15
 ): string[] {
   const slots: string[] = [];
-  
+
   for (let hour = startHour; hour < endHour; hour++) {
     for (let minute = 0; minute < 60; minute += incrementMinutes) {
       const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       slots.push(timeString);
     }
   }
-  
+
   return slots;
 }
 
@@ -103,10 +103,10 @@ export function generateTimeSlots(
 export function calculateDuration(startTime: string, endTime: string): number {
   const [startHours, startMinutes] = startTime.split(':').map(Number);
   const [endHours, endMinutes] = endTime.split(':').map(Number);
-  
+
   const startTotalMinutes = startHours * 60 + startMinutes;
   const endTotalMinutes = endHours * 60 + endMinutes;
-  
+
   return endTotalMinutes - startTotalMinutes;
 }
 
@@ -116,7 +116,7 @@ export function calculateDuration(startTime: string, endTime: string): number {
 export function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  
+
   if (hours === 0) {
     return `${mins} min`;
   } else if (mins === 0) {
@@ -189,16 +189,14 @@ export function createMarkedDates(
   selectedDate?: string
 ): { [date: string]: MarkedDate } {
   const marked: { [date: string]: MarkedDate } = {};
-  
-  // Mark available dates
+
   availableDates.forEach(date => {
     marked[date] = {
       marked: true,
       dotColor: calendarMarkingColors.available,
     };
   });
-  
-  // Mark blocked dates
+
   blockedDates.forEach(date => {
     marked[date] = {
       marked: true,
@@ -207,16 +205,14 @@ export function createMarkedDates(
       disableTouchEvent: true,
     };
   });
-  
-  // Mark rented dates
+
   rentedDates.forEach(date => {
     marked[date] = {
       marked: true,
       dotColor: calendarMarkingColors.rented,
     };
   });
-  
-  // Mark selected date
+
   if (selectedDate) {
     marked[selectedDate] = {
       ...marked[selectedDate],
@@ -224,7 +220,7 @@ export function createMarkedDates(
       selectedColor: calendarMarkingColors.selected,
     };
   }
-  
+
   return marked;
 }
 

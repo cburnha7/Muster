@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
 import { API_BASE_URL } from '../services/api/config';
 import TokenStorage from '../services/auth/TokenStorage';
+import { acquireRefresh, performTokenRefresh } from '../services/auth/tokenRefreshLock';
 import { clearAuth, setTokens } from './slices/authSlice';
 import { SchedulePreviewEvent, ConfirmableEvent } from '../types/scheduling';
 
@@ -26,7 +27,9 @@ const baseQuery = fetchBaseQuery({
       const currentUser = authService.getCurrentUser();
       if (currentUser?.id) {
         headers.set('X-User-Id', currentUser.id);
-        console.log('🔑 Setting X-User-Id header:', currentUser.id);
+        if (__DEV__) {
+          console.log('🔑 Setting X-User-Id header:', currentUser.id);
+        }
       }
     }
 
@@ -42,98 +45,54 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
-// Track if we're currently refreshing to prevent multiple simultaneous refresh attempts
-let isRefreshing = false;
-let refreshPromise: Promise<any> | null = null;
-
-// Base query with re-authentication logic
+// Base query with re-authentication logic using the shared refresh lock
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
-  
-  // If we get a 401, try to refresh the token
+
+  // If we get a 401, try to refresh the token via the shared lock
   if (result.error && result.error.status === 401) {
-    console.log('🔄 401 error detected, attempting token refresh...');
-    
-    // If already refreshing, wait for that refresh to complete
-    if (isRefreshing && refreshPromise) {
-      console.log('⏳ Refresh already in progress, waiting...');
-      await refreshPromise;
-      // Retry the original request with the new token
-      result = await baseQuery(args, api, extraOptions);
-      return result;
-    }
-    
-    // Start refresh process
-    isRefreshing = true;
-    
+    console.log('🔄 RTK Query: 401 error detected, attempting token refresh...');
+
     try {
       // Get refresh token from Redux state first, then fallback to TokenStorage
       let refreshToken = (api.getState() as RootState).auth.refreshToken;
-      
+
       if (!refreshToken) {
         console.log('⚠️ No refresh token in Redux, checking TokenStorage...');
         refreshToken = await TokenStorage.getRefreshToken();
       }
-      
+
       if (!refreshToken) {
         console.error('❌ No refresh token available, clearing session...');
-        // Clear auth state silently (user is already logged out)
         await TokenStorage.clearAll();
         api.dispatch(clearAuth());
-        isRefreshing = false;
-        refreshPromise = null;
         return result;
       }
-      
-      console.log('🔑 Refresh token found, calling refresh endpoint...');
-      
-      // Create the refresh promise
-      refreshPromise = baseQuery(
-        {
-          url: '/auth/refresh',
-          method: 'POST',
-          body: {
-            refreshToken,
-          },
-        },
-        api,
-        extraOptions
-      );
-      
-      const refreshResult = await refreshPromise;
-      
-      if (refreshResult.data) {
-        const tokenData = refreshResult.data as { accessToken: string; refreshToken: string };
-        console.log('✅ Token refresh successful');
-        
-        // Store new tokens in TokenStorage
-        await TokenStorage.storeTokens(tokenData.accessToken, tokenData.refreshToken);
-        
-        // Update Redux state
-        api.dispatch(setTokens({
-          accessToken: tokenData.accessToken,
-          refreshToken: tokenData.refreshToken,
-        }));
-        
-        // Retry the original query with new token
-        result = await baseQuery(args, api, extraOptions);
-      } else {
-        console.error('❌ Token refresh failed, clearing session...');
-        // Refresh failed, clear session silently
-        await TokenStorage.clearAll();
-        api.dispatch(clearAuth());
-      }
+
+      console.log('🔑 Refresh token found, acquiring shared refresh lock...');
+
+      // Use the shared lock — if BaseApiService (Axios) is already refreshing,
+      // this will wait for that same promise instead of firing a second request.
+      const tokenData = await acquireRefresh(() => performTokenRefresh(refreshToken!));
+
+      console.log('✅ Token refresh successful');
+
+      // Update Redux state with new tokens
+      api.dispatch(setTokens({
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken,
+      }));
+
+      // Retry the original query with new token
+      result = await baseQuery(args, api, extraOptions);
     } catch (error) {
       console.error('❌ Token refresh error:', error);
       // Clear session on any error
       await TokenStorage.clearAll();
       api.dispatch(clearAuth());
-    } finally {
-      isRefreshing = false;
-      refreshPromise = null;
     }
   }
-  
+
   return result;
 };
 

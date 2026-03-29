@@ -8,7 +8,7 @@ import {
   TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 
 interface FormInputProps extends TextInputProps {
   label?: string;
@@ -54,7 +54,7 @@ export const FormInput: React.FC<FormInputProps> = ({
           {required && <Text style={styles.required}> *</Text>}
         </Text>
       )}
-      
+
       <View
         style={[
           styles.inputContainer,
@@ -66,11 +66,11 @@ export const FormInput: React.FC<FormInputProps> = ({
           <Ionicons
             name={leftIcon as any}
             size={20}
-            color={error ? colors.heart : isFocused ? colors.pine : colors.soft}
+            color={error ? colors.error : isFocused ? colors.primary : colors.outline}
             style={styles.leftIcon}
           />
         )}
-        
+
         <TextInput
           style={[
             styles.input,
@@ -80,11 +80,14 @@ export const FormInput: React.FC<FormInputProps> = ({
           ]}
           secureTextEntry={isSecure}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholderTextColor="#999"
+          onBlur={() => {
+            setIsFocused(false);
+            textInputProps.onBlur?.(undefined as any);
+          }}
+          placeholderTextColor={colors.outline}
           {...textInputProps}
         />
-        
+
         {showPasswordToggle && (
           <TouchableOpacity
             onPress={handleToggleSecure}
@@ -93,11 +96,11 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={isSecure ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color={colors.soft}
+              color={colors.outline}
             />
           </TouchableOpacity>
         )}
-        
+
         {rightIcon && !showPasswordToggle && (
           <TouchableOpacity
             onPress={onRightIconPress}
@@ -106,12 +109,12 @@ export const FormInput: React.FC<FormInputProps> = ({
             <Ionicons
               name={rightIcon as any}
               size={20}
-              color={error ? colors.heart : isFocused ? colors.pine : colors.soft}
+              color={error ? colors.error : isFocused ? colors.primary : colors.outline}
             />
           </TouchableOpacity>
         )}
       </View>
-      
+
       {error && (
         <Text style={[styles.error, errorStyle]}>{error}</Text>
       )}
@@ -121,51 +124,45 @@ export const FormInput: React.FC<FormInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
+    fontSize: 14,
+    fontFamily: fonts.headingSemi,
+    color: colors.onSurface,
     marginBottom: 8,
+    letterSpacing: -0.1,
   },
   required: {
-    color: colors.heart,
+    color: colors.error,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    backgroundColor: colors.surfaceContainer,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'transparent',
     paddingHorizontal: 16,
-    minHeight: 48,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    minHeight: 52,
   },
   inputContainerFocused: {
-    borderColor: colors.pine,
-    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(0, 82, 255, 0.2)',
+    backgroundColor: colors.surfaceContainerLowest,
   },
   inputContainerError: {
-    borderColor: colors.heart,
-    backgroundColor: '#FFF5F5',
+    borderColor: 'rgba(186, 26, 26, 0.2)',
+    backgroundColor: colors.errorContainer,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: colors.ink,
-    paddingVertical: 12,
+    fontFamily: fonts.body,
+    color: colors.onSurface,
+    paddingVertical: 14,
   },
   inputWithLeftIcon: {
-    marginLeft: 8,
+    marginLeft: 10,
   },
   inputWithRightIcon: {
     marginRight: 8,
@@ -178,8 +175,9 @@ const styles = StyleSheet.create({
     marginLeft: 0,
   },
   error: {
-    fontSize: 14,
-    color: colors.heart,
-    marginTop: 4,
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.error,
+    marginTop: 6,
   },
 });

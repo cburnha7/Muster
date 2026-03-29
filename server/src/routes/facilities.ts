@@ -13,6 +13,7 @@ import {
 } from '../services/ImageUploadService';
 import { isValidPolicyHours } from '../services/cancellation-window';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import { sendError, ErrorCode, asyncHandler } from '../utils/errors';
 
 const router = Router();
 const timeSlotGenerator = new TimeSlotGeneratorService();
@@ -607,7 +608,24 @@ router.put('/:id', requireNonDependent, async (req, res) => {
     const { id } = req.params;
     const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, requiresBookingConfirmation, ...rawData } = req.body;
 
-    // TODO: Add authorization check - only owner can update
+    // Authorization check - only owner can update
+    const userId = (req as any).user?.userId || req.headers['x-user-id'] as string;
+    if (!userId) {
+      return sendError(res, 401, ErrorCode.UNAUTHORIZED, 'Authentication required');
+    }
+
+    const existingFacility = await prisma.facility.findUnique({
+      where: { id },
+      select: { ownerId: true },
+    });
+
+    if (!existingFacility) {
+      return sendError(res, 404, ErrorCode.NOT_FOUND, 'Facility not found');
+    }
+
+    if (existingFacility.ownerId !== userId) {
+      return sendError(res, 403, ErrorCode.FORBIDDEN, 'Only the facility owner can update this facility');
+    }
 
     // Whitelist only known Facility columns to prevent Prisma "Unknown arg" errors
     const ALLOWED_FIELDS = [
@@ -769,20 +787,29 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // TODO: Add authorization check - only owner can delete
+    // Authorization check - only owner can delete
+    const userId = (req as any).user?.userId || req.headers['x-user-id'] as string;
+    if (!userId) {
+      return sendError(res, 401, ErrorCode.UNAUTHORIZED, 'Authentication required');
+    }
 
-    // Check if facility exists
+    // Check if facility exists and verify ownership
     const facility = await prisma.facility.findUnique({
       where: { id },
-      select: { 
+      select: {
         id: true,
+        ownerId: true,
         facilityMapUrl: true,
         facilityMapThumbnailUrl: true,
       },
     });
 
     if (!facility) {
-      return res.status(404).json({ error: 'Facility not found' });
+      return sendError(res, 404, ErrorCode.NOT_FOUND, 'Facility not found');
+    }
+
+    if (facility.ownerId !== userId) {
+      return sendError(res, 403, ErrorCode.FORBIDDEN, 'Only the facility owner can delete this facility');
     }
 
     // Check for future rentals

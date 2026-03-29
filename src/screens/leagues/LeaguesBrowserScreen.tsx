@@ -6,12 +6,13 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
-import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
@@ -27,12 +28,12 @@ import { useDependentContext } from '../../hooks/useDependentContext';
 
 type LeagueItem = any;
 
-const SPORT_OPTIONS: SelectOption[] = [
-  { label: 'All Sports', value: '' },
+const SPORTS = [
+  { label: 'All', value: '' },
   { label: 'Basketball', value: SportType.BASKETBALL },
-  { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Tennis', value: SportType.TENNIS },
   { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
   { label: 'Softball', value: SportType.SOFTBALL },
   { label: 'Baseball', value: SportType.BASEBALL },
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
@@ -45,6 +46,7 @@ export function LeaguesBrowserScreen() {
   const currentUser = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
   const { isDependent } = useDependentContext();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [myLeagues, setMyLeagues] = useState<LeagueItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,6 +126,8 @@ export function LeaguesBrowserScreen() {
     (navigation as any).navigate('LeagueDetails', { leagueId: result.id });
   }, [navigation]);
 
+  const contentMaxWidth = screenWidth > 600 ? 540 : undefined;
+
   if (error && !myLeagues.length) {
     return <View style={styles.container}><ErrorDisplay message={error} onRetry={loadData} /></View>;
   }
@@ -134,36 +138,63 @@ export function LeaguesBrowserScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Sport filter */}
-      <View style={styles.filterRow}>
-        <FormSelect label="" options={SPORT_OPTIONS} value={sportFilter} onSelect={(o) => setSportFilter(String(o.value))} placeholder="All Sports" />
-      </View>
+      {/* Sport filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={[styles.chipRow, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const } : undefined]}
+      >
+        {SPORTS.map((sport) => (
+          <TouchableOpacity
+            key={sport.value}
+            style={[styles.chip, sportFilter === sport.value && styles.chipActive]}
+            onPress={() => setSportFilter(sport.value)}
+          >
+            <Text style={[styles.chipText, sportFilter === sport.value && styles.chipTextActive]}>
+              {sport.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       {/* Active leagues */}
       <FlatList
         data={activeLeagues}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <LeagueCard league={item} onPress={() => handleLeaguePress(item)} isOwner={item.organizerId === currentUser?.id} />
+          <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
+            <LeagueCard league={item} onPress={() => handleLeaguePress(item)} isOwner={item.organizerId === currentUser?.id} />
+          </View>
         )}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.pine} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          activeLeagues.length > 0 ? (
+            <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
+              <Text style={styles.sectionTitle}>Active</Text>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="trophy-outline" size={40} color={colors.inkFaint} />
-            <Text style={styles.emptyText}>No active leagues</Text>
+            <Ionicons name="trophy-outline" size={40} color={colors.outlineVariant} />
+            <Text style={styles.emptyTitle}>No active leagues</Text>
+            <Text style={styles.emptySubtitle}>Join or create a league to get started</Text>
           </View>
         }
         ListFooterComponent={
           pastLeagues.length > 0 ? (
-            <CollapsibleSection title="Past Seasons" count={pastLeagues.length} defaultExpanded={false}>
-              <View style={styles.pastList}>
-                {pastLeagues.map((league) => (
-                  <LeagueCard key={league.id} league={league} onPress={() => handleLeaguePress(league)} isOwner={league.organizerId === currentUser?.id} />
-                ))}
-              </View>
-            </CollapsibleSection>
+            <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
+              <CollapsibleSection title="Past Seasons" count={pastLeagues.length} defaultExpanded={false}>
+                <View style={styles.pastList}>
+                  {pastLeagues.map((league) => (
+                    <LeagueCard key={league.id} league={league} onPress={() => handleLeaguePress(league)} isOwner={league.organizerId === currentUser?.id} />
+                  ))}
+                </View>
+              </CollapsibleSection>
+            </View>
           ) : null
         }
       />
@@ -171,7 +202,7 @@ export function LeaguesBrowserScreen() {
       {/* FAB */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
-          <Ionicons name="add" size={28} color={colors.surface} />
+          <Ionicons name="add" size={26} color={'#FFFFFF'} />
         </TouchableOpacity>
       )}
 
@@ -192,14 +223,43 @@ export function LeaguesBrowserScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
-  filterRow: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 4,
+  chipRow: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: colors.surfaceContainerLowest,
+    alignSelf: 'flex-start' as any,
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
+  },
+  chipText: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+  },
+  chipTextActive: {
+    color: '#FFFFFF',
+  },
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.onSurface,
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   listContent: {
+    paddingHorizontal: 20,
     paddingBottom: 100,
   },
   pastList: {
@@ -210,22 +270,27 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     gap: 8,
   },
-  emptyText: {
+  emptyTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 17,
+    color: colors.onSurface,
+  },
+  emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
+    color: colors.onSurfaceVariant,
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.pine,
+    right: 24,
+    bottom: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.ink,
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
