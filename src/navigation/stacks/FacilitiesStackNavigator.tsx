@@ -18,11 +18,13 @@ const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: false,
+  headerBackVisible: true,
+  headerBackTitleVisible: false,
+  headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
+  headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
+  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
 };
 
 export function FacilitiesStackNavigator(): JSX.Element {
@@ -32,13 +34,13 @@ export function FacilitiesStackNavigator(): JSX.Element {
       <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
       <Stack.Screen name="CreateFacility" component={CreateFacilityScreen} options={{ headerShown: false }} />
       <Stack.Screen name="EditFacility" component={EditFacilityScreen} options={{ ...detailHeader, headerTitle: 'Edit Ground' }} />
-      <Stack.Screen name="ManageGround" component={ManageGroundScreen} options={{ ...detailHeader, headerTitle: 'Manage' }} />
-      <Stack.Screen name="AddCourt" component={AddCourtScreen} options={{ ...detailHeader, headerTitle: 'Add Court' }} />
-      <Stack.Screen name="FacilityMapEditor" component={FacilityMapEditorScreen} options={{ ...detailHeader, headerTitle: 'Map Editor' }} />
-      <Stack.Screen name="GroundAvailability" component={GroundAvailabilityScreen} options={{ ...detailHeader, headerTitle: 'Availability' }} />
+      <Stack.Screen name="ManageGround" component={ManageGroundScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AddCourt" component={AddCourtScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="FacilityMapEditor" component={FacilityMapEditorScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="GroundAvailability" component={GroundAvailabilityScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CourtAvailability" component={CourtAvailabilityScreen} options={{ ...detailHeader, headerTitle: 'Court' }} />
-      <Stack.Screen name="MyRentals" component={MyRentalsScreen} options={{ ...detailHeader, headerTitle: 'My Rentals' }} />
-      <Stack.Screen name="CancellationPolicy" component={CancellationPolicyScreen} options={{ ...detailHeader, headerTitle: 'Policy' }} />
+      <Stack.Screen name="MyRentals" component={MyRentalsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CancellationPolicy" component={CancellationPolicyScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

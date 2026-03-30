@@ -17,11 +17,13 @@ const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: false,
+  headerBackVisible: true,
+  headerBackTitleVisible: false,
+  headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
+  headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
+  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
 };
 
 export function ProfileStackNavigator(): JSX.Element {
@@ -32,10 +34,10 @@ export function ProfileStackNavigator(): JSX.Element {
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ ...detailHeader, headerTitle: 'Settings' }} />
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} options={{ ...detailHeader, headerTitle: 'Notifications' }} />
       <Stack.Screen name="UserStats" component={UserStatsScreen} options={{ ...detailHeader, headerTitle: 'Stats' }} />
-      <Stack.Screen name="BookingHistory" component={BookingHistoryScreen} options={{ ...detailHeader, headerTitle: 'History' }} />
+      <Stack.Screen name="BookingHistory" component={BookingHistoryScreen} options={{ headerShown: false }} />
       <Stack.Screen name="DependentForm" component={DependentFormScreen} options={{ ...detailHeader, headerTitle: 'Dependent' }} />
       <Stack.Screen name="DependentProfile" component={DependentProfileScreen} options={{ ...detailHeader, headerTitle: 'Dependent' }} />
-      <Stack.Screen name="TransferAccount" component={TransferAccountScreen} options={{ ...detailHeader, headerTitle: 'Transfer' }} />
+      <Stack.Screen name="TransferAccount" component={TransferAccountScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RedeemCode" component={RedeemCodeScreen} options={{ ...detailHeader, headerTitle: 'Redeem Code' }} />
     </Stack.Navigator>
   );

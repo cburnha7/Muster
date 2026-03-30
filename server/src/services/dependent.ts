@@ -32,7 +32,8 @@ export async function createDependent(
   guardianId: string,
   data: CreateDependentInput,
 ) {
-  const dateOfBirth = new Date(data.dateOfBirth);
+  // Parse as local midnight to avoid UTC date-shift in western timezones
+  const dateOfBirth = new Date(data.dateOfBirth + 'T00:00:00');
 
   // Validate age < 18
   validateDependentAge(dateOfBirth, 'create-edit');
@@ -43,6 +44,8 @@ export async function createDependent(
       lastName: data.lastName,
       dateOfBirth,
       profileImage: data.profileImage ?? null,
+      sportPreferences: data.sportPreferences ?? [],
+      ...(data.gender ? { gender: data.gender } : {}),
       isDependent: true,
       guardianId,
       email: null,
@@ -112,6 +115,8 @@ export async function getDependentProfile(
       lastName: true,
       profileImage: true,
       dateOfBirth: true,
+      gender: true,
+      sportPreferences: true,
       isDependent: true,
       guardianId: true,
     },
@@ -185,16 +190,14 @@ export async function getDependentProfile(
       }),
     ]);
 
-  // Derive sport preferences from sport ratings
-  const sportPreferences = sportRatings.map((r) => r.sportType);
-
   return {
     id: dependent.id,
     firstName: dependent.firstName,
     lastName: dependent.lastName,
     profileImage: dependent.profileImage,
     dateOfBirth: dependent.dateOfBirth.toISOString(),
-    sportPreferences,
+    gender: dependent.gender,
+    sportPreferences: dependent.sportPreferences,
     sportRatings,
     eventHistory,
     salutesReceived: salutesCount,
@@ -240,15 +243,17 @@ export async function updateDependent(
 
   // Validate age < 18 if DOB is being changed
   if (data.dateOfBirth) {
-    validateDependentAge(new Date(data.dateOfBirth), 'create-edit');
+    validateDependentAge(new Date(data.dateOfBirth + 'T00:00:00'), 'create-edit');
   }
 
   // Build update payload — only include provided fields
   const updateData: Record<string, any> = {};
   if (data.firstName !== undefined) updateData.firstName = data.firstName;
   if (data.lastName !== undefined) updateData.lastName = data.lastName;
-  if (data.dateOfBirth !== undefined) updateData.dateOfBirth = new Date(data.dateOfBirth);
+  if (data.dateOfBirth !== undefined) updateData.dateOfBirth = new Date(data.dateOfBirth + 'T00:00:00');
   if (data.profileImage !== undefined) updateData.profileImage = data.profileImage;
+  if (data.sportPreferences !== undefined) updateData.sportPreferences = data.sportPreferences;
+  if (data.gender !== undefined) updateData.gender = data.gender;
 
   const updated = await prisma.user.update({
     where: { id: dependentId },

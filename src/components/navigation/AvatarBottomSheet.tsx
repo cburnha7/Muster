@@ -39,7 +39,7 @@ export function AvatarBottomSheet() {
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
 
-  const snapPoints = useMemo(() => ['60%', '85%'], []);
+  const snapPoints = useMemo(() => ['55%', '80%'], []);
 
   useEffect(() => {
     registerSheet({
@@ -110,7 +110,11 @@ export function AvatarBottomSheet() {
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {/* ── Identity Header ──────────────────── */}
-        <View style={styles.identityRow}>
+        <TouchableOpacity
+          style={styles.identityRow}
+          onPress={() => navigateTo('ProfileScreen')}
+          activeOpacity={0.7}
+        >
           {(user as any)?.profileImage ? (
             <Image source={{ uri: (user as any).profileImage }} style={styles.avatar} />
           ) : (
@@ -124,14 +128,8 @@ export function AvatarBottomSheet() {
             </Text>
             <Text style={styles.userEmail}>{user.email}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => navigateTo('EditProfile')}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="create-outline" size={20} color={colors.onSurfaceVariant} />
-          </TouchableOpacity>
-        </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.outlineVariant} />
+        </TouchableOpacity>
 
         {/* ── Playing As (conditional) ─────────── */}
         {showPlayingAs && (
@@ -188,6 +186,13 @@ export function AvatarBottomSheet() {
                   {isActive && (
                     <Ionicons name="checkmark" size={20} color={colors.secondary} />
                   )}
+                  <TouchableOpacity
+                    onPress={() => navigateTo('DependentProfile', { dependentId: dep.id })}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={styles.editDepBtn}
+                  >
+                    <Ionicons name="create-outline" size={16} color={colors.onSurfaceVariant} />
+                  </TouchableOpacity>
                 </TouchableOpacity>
               );
             })}
@@ -206,18 +211,8 @@ export function AvatarBottomSheet() {
           </>
         )}
 
-        {/* ── Menu Items ──────────────────────── */}
+        {/* ── Quick Actions ────────────────────── */}
         <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.menuRow}
-          onPress={() => navigateTo('ProfileScreen')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="person-outline" size={20} color={colors.onSurface} />
-          <Text style={styles.menuText}>My profile</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
-        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.menuRow}
@@ -226,7 +221,7 @@ export function AvatarBottomSheet() {
         >
           <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
+          <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -236,31 +231,23 @@ export function AvatarBottomSheet() {
         >
           <Ionicons name="settings-outline" size={20} color={colors.onSurface} />
           <Text style={styles.menuText}>Settings</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuRow}
-          onPress={() => navigateTo('RedeemCode')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="ticket-outline" size={20} color={colors.onSurface} />
-          <Text style={styles.menuText}>Redeem a code</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
+          <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
         </TouchableOpacity>
 
         {/* ── Plan Section ────────────────────── */}
-        <View style={styles.divider} />
-        <View style={styles.planRow}>
-          <Text style={styles.planText}>
-            Plan: <Text style={styles.planTier}>{tierName}</Text>
-          </Text>
-          {isFreeTier && (
-            <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.7}>
-              <Text style={styles.upgradeBtnText}>Upgrade</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        {isFreeTier && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.planRow}>
+              <Text style={styles.planText}>
+                Plan: <Text style={styles.planTier}>{tierName}</Text>
+              </Text>
+              <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.7}>
+                <Text style={styles.upgradeBtnText}>Upgrade</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
 
         {/* ── Log Out ─────────────────────────── */}
         <View style={styles.divider} />
@@ -330,14 +317,11 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     marginTop: 1,
   },
-  editBtn: {
-    padding: 8,
-  },
 
   // ── Divider ───────────────────────────
   divider: {
-    height: 1,
-    backgroundColor: colors.outlineVariant,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.outlineVariant + '80',
     marginVertical: 8,
   },
 
@@ -397,6 +381,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.onSurfaceVariant,
     marginRight: 8,
+  },
+  editDepBtn: {
+    padding: 6,
+    marginLeft: 4,
   },
   addChildAvatar: {
     backgroundColor: colors.surfaceContainer,

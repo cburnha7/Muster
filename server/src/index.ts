@@ -91,7 +91,9 @@ const corsOptions: cors.CorsOptions = {
   origin: [
     'https://muster-ecru.vercel.app',
     'http://localhost:3000',
+    'http://localhost:8081',
     'http://localhost:19006',
+    'http://localhost:19000',
     ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [])
   ],
   credentials: true,

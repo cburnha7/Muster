@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
 import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { colors, fonts, Spacing } from '../../theme';
@@ -133,7 +134,7 @@ export function LeaguesBrowserScreen() {
   }
 
   if (loading && !refreshing && !myLeagues.length) {
-    return <View style={styles.container}><LoadingSpinner /></View>;
+    return <View style={styles.container}>{Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}</View>;
   }
 
   return (

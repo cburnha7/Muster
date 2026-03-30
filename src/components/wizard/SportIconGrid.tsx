@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../theme';
 import { ALL_SPORTS, SportDefinition } from '../../constants/sports';
 
 const COLS = 3;
-const OUTER_PAD = 16; // component owns its horizontal padding
-const GAP = 8;
+const GAP = 10;
 
 interface SportIconGridProps {
   selected: string | string[];
@@ -21,32 +20,30 @@ export function SportIconGrid({
   multiSelect: _multiSelect = false,
   sports,
 }: SportIconGridProps) {
-  const { width: screenWidth } = useWindowDimensions();
-  const itemWidth = (screenWidth - OUTER_PAD * 2 - GAP * (COLS - 1)) / COLS;
-
   const options = sports || ALL_SPORTS;
   const selectedSet = new Set(Array.isArray(selected) ? selected : selected ? [selected] : []);
 
   return (
-    <View style={[styles.grid, { paddingHorizontal: OUTER_PAD }]}>
+    <View style={styles.grid}>
       {options.map((sport) => {
         const isSelected = selectedSet.has(sport.key);
         return (
-          <TouchableOpacity
-            key={sport.key}
-            style={[styles.card, { width: itemWidth }, isSelected && styles.cardSelected]}
-            onPress={() => onSelect(sport.key)}
-            activeOpacity={0.75}
-          >
-            <Text style={styles.emoji}>{sport.emoji}</Text>
-            <Text
-              style={[styles.label, isSelected && styles.labelSelected]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
+          <View key={sport.key} style={styles.cellWrapper}>
+            <TouchableOpacity
+              style={[styles.card, isSelected && styles.cardSelected]}
+              onPress={() => onSelect(sport.key)}
+              activeOpacity={0.75}
             >
-              {sport.label}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.emoji}>{sport.emoji}</Text>
+              <Text
+                style={[styles.label, isSelected && styles.labelSelected]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {sport.label}
+              </Text>
+            </TouchableOpacity>
+          </View>
         );
       })}
     </View>
@@ -57,32 +54,37 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: GAP,
+    marginHorizontal: -GAP / 2,
+  },
+  cellWrapper: {
+    width: `${100 / COLS}%` as any,
+    paddingHorizontal: GAP / 2,
+    paddingVertical: GAP / 2,
   },
   card: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 4,
     borderRadius: 14,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardSelected: {
-    backgroundColor: colors.primaryContainer,
+    backgroundColor: colors.primary,
   },
   emoji: {
-    fontSize: 30,
-    marginBottom: 5,
-    lineHeight: 36,
+    fontSize: 32,
+    marginBottom: 6,
+    lineHeight: 38,
   },
   label: {
     fontFamily: fonts.label,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
+    fontSize: 13,
+    color: colors.onSurface,
     textAlign: 'center',
   },
   labelSelected: {
-    color: colors.primary,
+    color: '#FFFFFF',
     fontFamily: fonts.ui,
   },
 });

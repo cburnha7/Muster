@@ -93,19 +93,6 @@ export function TabNavigator() {
   ) => {
     let iconName: keyof typeof Ionicons.glyphMap;
 
-    if (route.name === 'Facilities') {
-      const stadiumIcon = focused ? 'stadium' : 'stadium-outline';
-      return (
-        <View style={styles.tabIconContainer}>
-          <MaterialCommunityIcons
-            name={stadiumIcon}
-            size={size + 2}
-            color={color}
-          />
-        </View>
-      );
-    }
-
     switch (route.name) {
       case 'Home':
         iconName = focused ? 'home' : 'home-outline';
@@ -114,13 +101,26 @@ export function TabNavigator() {
         iconName = focused ? 'people' : 'people-outline';
         break;
       case 'Messages':
-        iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+        iconName = focused ? 'chatbubble' : 'chatbubble-outline';
         break;
       case 'Leagues':
         iconName = focused ? 'trophy' : 'trophy-outline';
         break;
       default:
         iconName = 'help-outline';
+    }
+
+    // Grounds tab uses MaterialCommunityIcons for the stadium icon
+    if (route.name === 'Facilities') {
+      return (
+        <View style={styles.tabIconContainer}>
+          <MaterialCommunityIcons
+            name={focused ? 'stadium' : 'stadium-outline'}
+            size={size - 1}
+            color={color}
+          />
+        </View>
+      );
     }
 
     return (
@@ -141,7 +141,7 @@ export function TabNavigator() {
             headerShown: true,
             header: () => isRootScreen(route) ? <CustomHeader routeName={route.name} /> : null,
             tabBarIcon: ({ focused, color }) =>
-              getTabBarIcon(route, focused, color, 22),
+              getTabBarIcon(route, focused, color, 24),
             tabBarActiveTintColor: colors.primary,
             tabBarInactiveTintColor: colors.outline,
             tabBarShowLabel: true,
@@ -244,18 +244,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderTopWidth: 0,
     paddingBottom: 20,
-    paddingTop: 8,
-    height: 80,
+    paddingTop: 10,
+    height: 84,
     shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
     elevation: 4,
   },
   tabBarLabel: {
-    fontFamily: fonts.body,
-    fontSize: 11,
-    marginTop: 2,
+    fontFamily: fonts.ui,
+    fontSize: 10,
+    letterSpacing: 0.1,
+    marginTop: 4,
   },
   tabBarItem: {
     gap: 2,

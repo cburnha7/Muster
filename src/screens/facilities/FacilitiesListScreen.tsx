@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from '../../utils/performance';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
@@ -408,7 +409,7 @@ export function FacilitiesListScreen() {
 
         {/* Numbered facility list */}
         {isLoading && !facilities.length ? (
-          <LoadingSpinner />
+          <View>{Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}</View>
         ) : displayFacilities.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="map-outline" size={48} color={colors.outlineVariant} />

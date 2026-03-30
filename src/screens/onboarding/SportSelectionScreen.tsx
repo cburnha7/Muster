@@ -8,22 +8,15 @@ import {
   Animated,
   Platform,
   SafeAreaView,
-  Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import type { OnboardingIntent } from '../../navigation/types';
 
 const TOTAL_STEPS = 5;
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_GAP = 12;
-const HORIZONTAL_PAD = 28;
-const CARD_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PAD * 2 - CARD_GAP) / 2;
-
-import { ALL_SPORTS } from '../../constants/sports';
-
-const SPORT_OPTIONS = ALL_SPORTS;
+const HORIZONTAL_PAD = 24;
 
 export const SportSelectionScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -100,32 +93,11 @@ export const SportSelectionScreen: React.FC = () => {
               We'll personalize your feed and recommendations
             </Text>
 
-            <View style={styles.grid}>
-              {SPORT_OPTIONS.map((sport) => {
-                const isSelected = selected.includes(sport.key);
-                return (
-                  <TouchableOpacity
-                    key={sport.key}
-                    style={[
-                      styles.sportCard,
-                      isSelected && styles.sportCardSelected,
-                    ]}
-                    onPress={() => toggleSport(sport.key)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.sportEmoji}>{sport.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.sportLabel,
-                        isSelected && styles.sportLabelSelected,
-                      ]}
-                    >
-                      {sport.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <SportIconGrid
+              selected={selected}
+              onSelect={toggleSport}
+              multiSelect
+            />
           </ScrollView>
         </Animated.View>
 
@@ -206,36 +178,6 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     lineHeight: 24,
     marginBottom: 32,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: CARD_GAP,
-  },
-  sportCard: {
-    width: CARD_WIDTH,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 20,
-    paddingVertical: 28,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sportCardSelected: {
-    backgroundColor: colors.primary,
-  },
-  sportEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
-  sportLabel: {
-    fontSize: 15,
-    fontFamily: fonts.headingSemi,
-    color: colors.onSurface,
-    textAlign: 'center',
-  },
-  sportLabelSelected: {
-    color: '#FFFFFF',
   },
   bottomSection: {
     paddingBottom: Platform.OS === 'ios' ? 16 : 24,

@@ -9,39 +9,44 @@ interface SystemMessageProps {
 }
 
 export function SystemMessage({ content, priority }: SystemMessageProps) {
+  const isUrgent = priority === 'URGENT';
+
   return (
     <View style={styles.container}>
-      <View style={[styles.bubble, priority === 'URGENT' && styles.urgentBubble]}>
-        <Text style={[styles.text, priority === 'URGENT' && styles.urgentText]}>{content}</Text>
-      </View>
+      <View style={[styles.line, isUrgent && styles.lineUrgent]} />
+      <Text style={[styles.text, isUrgent && styles.textUrgent]} numberOfLines={2}>
+        {content}
+      </Text>
+      <View style={[styles.line, isUrgent && styles.lineUrgent]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    gap: 12,
   },
-  bubble: {
-    backgroundColor: colors.surfaceContainer,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 12,
+  line: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.outlineVariant,
   },
-  urgentBubble: {
-    backgroundColor: '#FFF8E7',
-    borderWidth: 1,
-    borderColor: '#F59E0B40',
+  lineUrgent: {
+    backgroundColor: '#F59E0B60',
   },
   text: {
     fontFamily: fonts.body,
     fontSize: 12,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
+    flexShrink: 1,
   },
-  urgentText: {
+  textUrgent: {
     color: '#92400E',
+    fontFamily: fonts.label,
   },
 });
