@@ -931,11 +931,11 @@ router.get('/onboarding', authMiddleware, async (req, res) => {
 // ---------------------------------------------------------------------------
 // PUT /onboarding — Mark user onboarding as complete
 // ---------------------------------------------------------------------------
-router.put('/onboarding', authMiddleware, async (req, res) => {
+router.put('/onboarding', optionalAuthMiddleware, async (req, res) => {
   try {
-    const userId = resolveUserId(req);
+    const userId = resolveUserId(req) || req.body?.userId;
     if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(400).json({ error: 'User ID required' });
     }
 
     const user = await prisma.user.findUnique({
