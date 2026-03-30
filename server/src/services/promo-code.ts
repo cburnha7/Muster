@@ -5,7 +5,7 @@
  * that grant users free tier trials (Player, Host, or Facility).
  */
 
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { TIER_HIERARCHY } from '../utils/effective-tier';
 
 const VALID_TIERS = ['player', 'host', 'facility'];

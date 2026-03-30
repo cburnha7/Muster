@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { ScheduleGeneratorService } from '../services/ScheduleGeneratorService';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 
@@ -719,6 +719,25 @@ router.post('/', requireNonDependent, async (req, res) => {
     try {
       const { MessagingService } = await import('../services/MessagingService');
       await MessagingService.createGameThread(result.id, result.organizerId, result.title);
+
+      // If the event is linked to teams, auto-post in their team chats
+      const linkedTeams = result.eligibilityRestrictedToTeams ?? [];
+      if (linkedTeams.length > 0) {
+        const organizer = await prisma.user.findUnique({ where: { id: result.organizerId }, select: { firstName: true, lastName: true } });
+        const dateStr = new Date(result.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const timeStr = new Date(result.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        for (const tId of linkedTeams) {
+          try {
+            const teamConv = await MessagingService.getConversationForTeam(tId);
+            if (teamConv && organizer) {
+              await MessagingService.postSystemMessage(
+                teamConv.id,
+                `${organizer.firstName} ${organizer.lastName} created ${result.title} for ${dateStr} ${timeStr}`
+              );
+            }
+          } catch { /* non-critical */ }
+        }
+      }
     } catch (msgErr) {
       console.error('Failed to create game thread:', msgErr);
     }
@@ -1358,6 +1377,98 @@ router.get('/:id/salutes/me', async (req, res) => {
   } catch (error) {
     console.error('Get user salutes error:', error);
     res.status(500).json({ error: 'Failed to get user salutes' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/events/send-reminders — cron job: send 24h and 1h game reminders
+// Called periodically (every 15 min) to post system messages in game threads
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/send-reminders', async (req, res) => {
+  try {
+    const now = new Date();
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const in1h = new Date(now.getTime() + 60 * 60 * 1000);
+
+    const { MessagingService } = await import('../services/MessagingService');
+
+    // 24-hour reminders
+    const upcoming24h = await prisma.event.findMany({
+      where: {
+        startTime: { gte: now, lte: in24h },
+        status: 'UPCOMING',
+        reminderSent24h: { not: true },
+      },
+      include: {
+        facility: { select: { name: true } },
+        _count: { select: { gameParticipations: true } },
+      },
+    });
+
+    for (const event of upcoming24h) {
+      const conv = await MessagingService.getConversationForEvent(event.id);
+      if (conv) {
+        const dateStr = new Date(event.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        const timeStr = new Date(event.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const venue = event.facility?.name ?? event.location ?? 'TBD';
+        const count = event._count.gameParticipations;
+        const max = event.maxParticipants ?? '?';
+        await MessagingService.postSystemMessage(
+          conv.id,
+          `GAME DAY TOMORROW\n${event.title}\n${dateStr} ${timeStr}\n${venue}\n${count}/${max} players confirmed`,
+          'URGENT'
+        );
+      }
+      await prisma.event.update({ where: { id: event.id }, data: { reminderSent24h: true } });
+    }
+
+    // 1-hour reminders
+    const upcoming1h = await prisma.event.findMany({
+      where: {
+        startTime: { gte: now, lte: in1h },
+        status: 'UPCOMING',
+        reminderSent1h: { not: true },
+      },
+      include: { facility: { select: { name: true } } },
+    });
+
+    for (const event of upcoming1h) {
+      const conv = await MessagingService.getConversationForEvent(event.id);
+      if (conv) {
+        const venue = event.facility?.name ?? event.location ?? 'TBD';
+        await MessagingService.postSystemMessage(
+          conv.id,
+          `Game starts in 1 hour at ${venue}. See you there!`,
+          'URGENT'
+        );
+      }
+      await prisma.event.update({ where: { id: event.id }, data: { reminderSent1h: true } });
+    }
+
+    // Post-game messages for completed events
+    const completed = await prisma.event.findMany({
+      where: {
+        status: 'COMPLETED',
+        postGameMessageSent: { not: true },
+      },
+    });
+
+    for (const event of completed) {
+      const conv = await MessagingService.getConversationForEvent(event.id);
+      if (conv) {
+        await MessagingService.postSystemMessage(conv.id, 'Good game! How did everyone play?');
+      }
+      await prisma.event.update({ where: { id: event.id }, data: { postGameMessageSent: true } });
+    }
+
+    res.json({
+      reminders24h: upcoming24h.length,
+      reminders1h: upcoming1h.length,
+      postGame: completed.length,
+    });
+  } catch (error) {
+    console.error('Send reminders error:', error);
+    res.status(500).json({ error: 'Failed to send reminders' });
   }
 });
 

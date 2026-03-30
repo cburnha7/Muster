@@ -27,6 +27,10 @@ import { InboxSection } from '../../components/home/InboxSection';
 import { NextUpCard } from '../../components/home/NextUpCard';
 import { UpcomingRow } from '../../components/home/UpcomingRow';
 import { EmptyHomeState } from '../../components/home/EmptyHomeState';
+import { LiveGameBanner } from '../../components/home/LiveGameBanner';
+import { FamilyPulseSection } from '../../components/home/FamilyPulseSection';
+import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
+import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
@@ -61,6 +65,7 @@ export function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { isLoading: authLoading, user: currentUser } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
+  const { pendingMilestone, dismissMilestone } = useMilestoneCheck();
 
   const isWide = screenWidth > 600;
   const contentMaxWidth = isWide ? 540 : undefined;
@@ -193,6 +198,16 @@ export function HomeScreen() {
       return aTime - bTime;
     });
   }, [allBookings, organizedEvents, currentUser]);
+
+  // Live game = any booking currently in progress
+  const liveGameBooking = useMemo(() => {
+    const now = new Date();
+    return allBookings.find((b) => {
+      if (!b.event?.startTime || !b.event?.endTime) return false;
+      if (b.status === 'cancelled') return false;
+      return new Date(b.event.startTime) <= now && now <= new Date(b.event.endTime);
+    }) || null;
+  }, [allBookings]);
 
   // Next up = first future booking
   const nextUpBooking = futureBookings[0] || null;
@@ -505,6 +520,14 @@ export function HomeScreen() {
       >
         <View style={[styles.inner, contentMaxWidth && { maxWidth: contentMaxWidth, width: '100%' }]}>
 
+          {/* ── Live game banner ────────────────── */}
+          {liveGameBooking && (
+            <LiveGameBanner
+              booking={liveGameBooking}
+              onPress={handleBookingPress}
+            />
+          )}
+
           {/* ── Cards view: Next Up + Upcoming ──── */}
           {hasEvents ? (
             <>
@@ -524,6 +547,9 @@ export function HomeScreen() {
               onCreateEvent={handleCreateEvent}
             />
           )}
+
+          {/* ── Family pulse (guardians only) ───── */}
+          <FamilyPulseSection />
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
@@ -701,6 +727,14 @@ export function HomeScreen() {
         onCreateEvent={handleCreateEvent}
         onEventPress={handleSearchEventPress}
       />
+
+      {/* Milestone celebration overlay */}
+      {pendingMilestone && (
+        <MilestoneOverlay
+          milestone={pendingMilestone}
+          onDismiss={dismissMilestone}
+        />
+      )}
     </View>
   );
 }

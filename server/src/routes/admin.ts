@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { verificationService } from '../services/VerificationService';
 import { authMiddleware } from '../middleware/auth';
 import { create, list } from '../services/promo-code';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 

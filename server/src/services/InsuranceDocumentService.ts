@@ -7,7 +7,7 @@
 
 import path from 'path';
 import fs from 'fs';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { NotificationService } from './NotificationService';
 
 // Allowed MIME types for insurance documents

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { generateOccurrences, RecurringFrequency } from '../services/recurring-bookings';
 import { evaluateCancellationWindow } from '../services/cancellation-window';
 import { createCancelRequest } from '../services/cancel-request';

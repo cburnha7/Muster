@@ -117,7 +117,7 @@ export const CreateLeagueScreen: React.FC = () => {
             .filter((t: any) => t.name.toLowerCase().includes(rosterQuery.toLowerCase()))
             .map((t: any) => ({ id: t.id, name: t.name }))
         );
-      } catch { setRosterResults([]); }
+      } catch (e) { console.warn('Search failed:', e); setRosterResults([]); }
     }, 300);
     return () => clearTimeout(timer);
   }, [rosterQuery, sport]);
@@ -164,7 +164,7 @@ export const CreateLeagueScreen: React.FC = () => {
       for (const roster of invitedRosters) {
         try {
           await leagueService.inviteRoster(newLeague.id, roster.id, user.id);
-        } catch {}
+        } catch (err) { console.warn('Failed to invite roster:', roster.id, (err as Error).message); }
       }
 
       setCreatedLeagueId(newLeague.id);

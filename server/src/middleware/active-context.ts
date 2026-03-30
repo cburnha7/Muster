@@ -10,7 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 
 /** Simple in-memory cache for guardian→dependent ownership checks. */
 const guardianCache = new Map<string, { valid: boolean; ts: number }>();

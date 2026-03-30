@@ -8,7 +8,7 @@
  * Requirements: 1.2, 1.3, 1.4, 1.5, 2.1, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3
  */
 
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { validateDependentAge } from '../utils/age-validation';
 import type {
   CreateDependentInput,

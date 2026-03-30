@@ -8,6 +8,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { LeagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { TeamStanding, Season } from '../../../types';
+import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../../theme';
 
 interface StandingsTabProps {
@@ -77,9 +78,9 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
     setSelectedSeasonId(option.value === 'all' ? undefined : option.value as string);
   };
 
+  const navigation = useNavigation();
   const handleTeamPress = (teamId: string) => {
-    // TODO: Navigate to roster details
-    console.log('Roster pressed:', teamId);
+    (navigation as any).navigate('TeamDetails', { teamId });
   };
 
   const seasonOptions: SelectOption[] = [

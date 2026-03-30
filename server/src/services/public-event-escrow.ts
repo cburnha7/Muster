@@ -13,7 +13,7 @@
  */
 
 import Stripe from 'stripe';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { stripe } from './stripe-connect';
 import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
 import { snapshotPolicy } from './cancellation';

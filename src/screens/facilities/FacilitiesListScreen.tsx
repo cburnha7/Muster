@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
+    fontSize: 18,
     color: colors.onSurface,
     flex: 1,
   },
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 10,

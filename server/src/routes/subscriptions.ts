@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 

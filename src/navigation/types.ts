@@ -46,6 +46,7 @@ export type MainTabParamList = {
 
 export type MessagesStackParamList = {
   ConversationList: undefined;
+  NewConversation: undefined;
   Chat: {
     conversationId: string;
     title: string;

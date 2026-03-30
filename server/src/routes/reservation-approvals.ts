@@ -10,7 +10,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { NotificationService } from '../services/NotificationService';
 
 const router = Router();

@@ -1,7 +1,7 @@
 export { colors } from './colors';
 export type { ColorKey } from './colors';
 
-export { fonts, fontAssets, typeScale, TextStyles } from './typography';
+export { fonts, typeScale, TextStyles } from './typography';
 export type { FontKey, TypeScaleKey } from './typography';
 
 export { brand, salute, errorCodes } from './brand';

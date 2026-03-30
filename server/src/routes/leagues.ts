@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { NotificationService } from '../services/NotificationService';
 import { ScheduleGeneratorService, LeagueWithRosters } from '../services/ScheduleGeneratorService';
 import { checkLeagueReady } from '../jobs/league-ready-check';
@@ -9,7 +9,6 @@ import { requireNonDependent } from '../middleware/require-non-dependent';
 import { LeagueDeletionService } from '../services/LeagueDeletionService';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const leagueDeletionService = new LeagueDeletionService();
 
 // GET /api/leagues - Get all leagues with filtering and pagination

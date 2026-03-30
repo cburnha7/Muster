@@ -242,7 +242,7 @@ export function AvatarBottomSheet() {
               <Text style={styles.planText}>
                 Plan: <Text style={styles.planTier}>{tierName}</Text>
               </Text>
-              <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.7} onPress={() => { close(); (navigation as any).navigate('RedeemCode'); }}>
                 <Text style={styles.upgradeBtnText}>Upgrade</Text>
               </TouchableOpacity>
             </View>

@@ -123,8 +123,8 @@ export function ChatScreen() {
               setShowNewMessagesPill(true);
             }
           }
-        } catch {
-          // silently fail polling
+        } catch (err) {
+          console.warn('Chat polling failed:', (err as Error).message);
         }
       }, 5000);
 
@@ -149,6 +149,13 @@ export function ChatScreen() {
 
   const handleSend = async (text: string) => {
     if (!currentUserId) return;
+
+    // Captain /announce command — sends as URGENT priority
+    const isAnnouncement = text.startsWith('/announce ');
+    const content = isAnnouncement ? text.slice('/announce '.length).trim() : text;
+    if (!content) return;
+    const priority = isAnnouncement ? 'URGENT' : 'NORMAL';
+
     const tempId = `temp_${Date.now()}`;
     const optimistic: Message = {
       id: tempId,
@@ -156,8 +163,8 @@ export function ChatScreen() {
       senderId: currentUserId,
       sender: null,
       type: 'USER',
-      priority: 'NORMAL',
-      content: text,
+      priority,
+      content,
       replyToId: null,
       replyTo: null,
       isEdited: false,
@@ -172,7 +179,7 @@ export function ChatScreen() {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
 
     try {
-      const sent = await conversationService.sendMessage(conversationId, text);
+      const sent = await conversationService.sendMessage(conversationId, content);
       dispatch(confirmOptimisticMessage({ conversationId, tempId, message: sent }));
     } catch {
       dispatch(markOptimisticError({ conversationId, tempId }));

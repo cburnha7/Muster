@@ -37,7 +37,7 @@ import {
   selectBookingsError,
 } from '../../store/slices/bookingsSlice';
 import { Booking, BookingStatus } from '../../types';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 
 type BookingFilter = 'all' | 'upcoming' | 'past' | 'cancelled';
 
@@ -392,8 +392,8 @@ export function BookingsListScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={colors.cobalt}
-              colors={[colors.cobalt]}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           }
           onEndReached={loadMoreBookings}
@@ -420,7 +420,7 @@ export function BookingsListScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   filterTabs: {
     flexDirection: 'row',
@@ -436,20 +436,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.sm,
-    borderRadius: 20,
+    borderRadius: 9999,
     marginHorizontal: 2,
   },
   activeFilterTab: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
   },
   filterTabText: {
     fontSize: 14,
     color: colors.inkFaint,
-    fontWeight: '500',
+    fontFamily: fonts.label,
   },
   activeFilterTabText: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
   },
   emptyContainer: {
     flexGrow: 1,
@@ -466,13 +466,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
     color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: 16,
+    fontFamily: fonts.body,
     color: colors.inkFaint,
     textAlign: 'center',
     lineHeight: 24,
@@ -481,12 +482,12 @@ const styles = StyleSheet.create({
   browseButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.cobalt,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 9999,
   },
   browseButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
     color: '#FFFFFF',
   },
   footer: {

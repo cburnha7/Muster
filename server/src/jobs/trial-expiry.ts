@@ -12,7 +12,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { NotificationService } from '../services/NotificationService';
 
 export interface TrialExpiryMetrics {

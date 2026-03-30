@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -78,7 +78,6 @@ function validateStripeEnv(): void {
 validateStripeEnv();
 
 const app = express();
-const prisma = new PrismaClient();
 registerLeagueLockMiddleware(prisma);
 const PORT = process.env.PORT || 3000;
 

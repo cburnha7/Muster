@@ -285,7 +285,7 @@ export function EventsListScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1, backgroundColor: colors.background },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 16 },
   sectionHeader: {
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 24,
+    fontSize: 18,
     color: colors.ink,
     flex: 1,
   },
@@ -332,11 +332,11 @@ const styles = StyleSheet.create({
   mapContainer: { height: 400 },
   eventCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     marginRight: 12,
   },
-  numberText: { fontSize: 16, color: '#FFFFFF', fontWeight: '700' as const },
+  numberText: { fontSize: 16, color: '#FFFFFF', fontFamily: fonts.heading },
   eventName: {
     fontFamily: fonts.label,
     fontSize: 18,
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     backgroundColor: colors.cobalt,
-    borderRadius: 8,
+    borderRadius: 9999,
   },
   retryButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
   modalOverlay: {
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   clearButton: {
     flex: 1,
     paddingVertical: Spacing.md,
-    borderRadius: 8,
+    borderRadius: 9999,
     borderWidth: 1,
     borderColor: colors.inkFaint,
     alignItems: 'center' as const,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   applyButton: {
     flex: 1,
     paddingVertical: Spacing.md,
-    borderRadius: 8,
+    borderRadius: 9999,
     backgroundColor: colors.cobalt,
     alignItems: 'center' as const,
   },

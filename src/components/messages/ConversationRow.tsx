@@ -101,9 +101,22 @@ export function ConversationRow({ conversation, onPress, onMute, onPin }: Conver
       onPress={() => onPress(conversation)}
       activeOpacity={0.7}
     >
-      <View style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}>
-        <Ionicons name={getConversationIcon(conversation.type)} size={20} color={iconColor} />
-      </View>
+      {conversation.type === 'DIRECT_MESSAGE' ? (
+        (() => {
+          const other = conversation.participants.find((p) => p.userId !== conversation.myParticipant?.userId);
+          const initial = other?.user?.firstName?.charAt(0)?.toUpperCase() ?? '?';
+          const profileImg = other?.user?.profileImage;
+          return (
+            <View style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}>
+              <Text style={[styles.dmInitial, { color: iconColor }]}>{initial}</Text>
+            </View>
+          );
+        })()
+      ) : (
+        <View style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}>
+          <Ionicons name={getConversationIcon(conversation.type)} size={20} color={iconColor} />
+        </View>
+      )}
 
       <View style={styles.body}>
         <View style={styles.topRow}>
@@ -184,6 +197,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+  },
+  dmInitial: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
   },
   body: { flex: 1, gap: 3 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

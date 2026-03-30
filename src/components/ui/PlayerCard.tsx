@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   toggleBtnActive: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,

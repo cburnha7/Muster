@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, fonts } from '../../theme';
 
 interface ScreenHeaderProps {
   title: string;
@@ -37,8 +38,8 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   onRightPress,
   leftText,
   rightText,
-  backgroundColor = '#FFFFFF',
-  textColor = '#333333',
+  backgroundColor = colors.background,
+  textColor = colors.onSurface,
   showBorder = true,
   style,
   showBack = false,
@@ -64,10 +65,10 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       ]}
     >
       <StatusBar
-        barStyle={backgroundColor === '#FFFFFF' ? 'dark-content' : 'light-content'}
+        barStyle={backgroundColor === colors.background || backgroundColor === '#FFFFFF' ? 'dark-content' : 'light-content'}
         backgroundColor={backgroundColor}
       />
-      
+
       <View style={styles.header}>
         <View style={styles.leftSection}>
           {(effectiveLeftIcon || leftText) && (
@@ -134,8 +135,8 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderBottomColor: '#E5E5EA',
-    shadowColor: '#000',
+    borderBottomColor: colors.outlineVariant,
+    shadowColor: '#191C1E',
     shadowOffset: {
       width: 0,
       height: 1,
@@ -173,16 +174,16 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: fonts.label,
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    fontWeight: '400',
+    fontFamily: fonts.body,
     textAlign: 'center',
     marginTop: 2,
     opacity: 0.7,

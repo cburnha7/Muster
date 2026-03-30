@@ -76,6 +76,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -227,10 +228,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
         setIsLoading(true);
         await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents(), loadPlayerDuesStatus()]);
         if (isMounted) setIsLoading(false);
+        // Fetch unread count for team chat (best-effort, don't block)
+        try {
+          const convs = await conversationService.getConversations('TEAM_CHAT');
+          const teamConv = convs.find((c) => c.entityId === teamId);
+          if (teamConv && isMounted) setChatUnreadCount(teamConv.unreadCount ?? 0);
+        } catch { /* non-critical */ }
       };
       load();
       return () => { isMounted = false; };
-    }, [loadTeamDetails, loadTeamLeagues, loadTeamEvents, loadPlayerDuesStatus])
+    }, [loadTeamDetails, loadTeamLeagues, loadTeamEvents, loadPlayerDuesStatus, teamId])
   );
 
   const handleRefresh = async () => {
@@ -494,22 +501,20 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 style={styles.chatBtn}
                 onPress={async () => {
                   try {
-                    const convs = await conversationService.getConversations('TEAM_CHAT');
-                    const teamConv = convs.find((c) => c.entityId === teamId);
-                    if (teamConv) {
-                      (navigation as any).navigate('Messages', {
-                        screen: 'Chat',
-                        params: { conversationId: teamConv.id, title: team.name ?? 'Team Chat', type: 'TEAM_CHAT' },
-                      });
-                    }
+                    const conv = await conversationService.getOrCreateTeamChat(teamId);
+                    (navigation as any).navigate('Messages', {
+                      screen: 'Chat',
+                      params: { conversationId: conv.id, title: team.name ?? 'Team Chat', type: 'TEAM_CHAT' },
+                    });
                   } catch (e) {
                     console.error('Navigate to chat error:', e);
+                    Alert.alert('Error', 'Could not open team chat. Please try again.');
                   }
                 }}
                 activeOpacity={0.8}
               >
                 <Ionicons name="chatbubbles-outline" size={18} color={colors.cobalt} />
-                <Text style={styles.chatBtnText}>Team Chat</Text>
+                <Text style={styles.chatBtnText}>Team Chat{chatUnreadCount > 0 ? ` · ${chatUnreadCount} new` : ''}</Text>
               </TouchableOpacity>
             )}
 
@@ -524,17 +529,40 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                   Your team needs more players — share the code to grow
                 </Text>
               )}
-              {activeMembers.map((m) => (
-                <PersonRow
-                  key={m.userId}
-                  name={m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown'}
-                  {...(m.role === TeamRole.CAPTAIN ? { role: 'Captain' } : m.role === TeamRole.CO_CAPTAIN ? { role: 'Co-Captain' } : {})}
-                  {...(!readOnly && isManagerRole && duesAmount != null && playerDuesMap.size > 0
-                    ? { rightElement: <DuesStatusBadge status={playerDuesMap.get(m.userId) ?? 'unpaid'} /> }
-                    : {})}
-                  onPress={() => openPlayerCard(m)}
-                />
-              ))}
+              {activeMembers.map((m) => {
+                const isMe = m.userId === currentUser?.id;
+                const showDues = !readOnly && isManagerRole && duesAmount != null && playerDuesMap.size > 0;
+                return (
+                  <PersonRow
+                    key={m.userId}
+                    name={m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown'}
+                    {...(m.role === TeamRole.CAPTAIN ? { role: 'Captain' } : m.role === TeamRole.CO_CAPTAIN ? { role: 'Co-Captain' } : {})}
+                    {...(showDues
+                      ? { rightElement: <DuesStatusBadge status={playerDuesMap.get(m.userId) ?? 'unpaid'} /> }
+                      : !isMe
+                      ? { rightElement: (
+                          <TouchableOpacity
+                            onPress={async () => {
+                              try {
+                                const conv = await conversationService.getDM(m.userId);
+                                (navigation as any).navigate('Messages', {
+                                  screen: 'Chat',
+                                  params: { conversationId: conv.id, title: m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Chat', type: 'DIRECT_MESSAGE' },
+                                });
+                              } catch (e: any) {
+                                Alert.alert('Cannot message', e?.data?.error || 'Could not start conversation');
+                              }
+                            }}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Ionicons name="chatbubble-outline" size={18} color={colors.primary} />
+                          </TouchableOpacity>
+                        )}
+                      : {})}
+                    onPress={() => openPlayerCard(m)}
+                  />
+                );
+              })}
               {pendingMembers.length > 0 && (
                 <>
                   <Text style={styles.pendingHeader}>Pending</Text>

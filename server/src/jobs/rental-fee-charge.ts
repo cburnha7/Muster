@@ -7,7 +7,7 @@
  * for each eligible rental.
  */
 
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { EscrowTransactionService } from '../services/EscrowTransactionService';
 
 export interface RentalFeeChargeMetrics {

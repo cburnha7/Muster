@@ -5,7 +5,7 @@
  * Used before booking confirmation to verify entities have sufficient funds.
  */
 
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { getConnectAccountBalance } from './stripe-connect';
 import { NotificationService } from './NotificationService';
 
