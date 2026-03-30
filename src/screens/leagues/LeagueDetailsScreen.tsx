@@ -552,16 +552,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   // ── FixedBottomCTA logic ─────────────────────────────────────────
   const renderBottomCTA = () => {
-    // Commissioner: "Manage league"
+    // Commissioner: "Edit League" + "Delete League"
     if (isOperator) {
-      return (
-        <FixedBottomCTA
-          label="Manage league"
-          onPress={() => setEditMode(true)}
-          variant="primary"
-          loading={isActionLoading}
-        />
-      );
+      return null; // Buttons are now in the scroll content
     }
 
     // Has pending invite: "Accept invitation"
@@ -793,6 +786,18 @@ export function LeagueDetailsScreen(): React.ReactElement {
             )}
           </>
         )}
+
+        {/* Edit / Delete for commissioner */}
+        {isOperator && (
+          <View style={styles.ownerActions}>
+            <TouchableOpacity style={styles.ownerEditBtn} onPress={() => setEditMode(true)} activeOpacity={0.7}>
+              <Text style={styles.ownerEditBtnText}>Edit League</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ownerDeleteBtn} onPress={handleDeleteLeague} activeOpacity={0.7}>
+              <Text style={styles.ownerDeleteBtnText}>Delete League</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* Fixed bottom CTA */}
@@ -988,6 +993,36 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: colors.heart, borderRadius: 12, paddingVertical: 14,
   },
   deleteBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.heart },
+  // Owner edit/delete actions
+  ownerActions: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    gap: 10,
+  },
+  ownerEditBtn: {
+    backgroundColor: colors.cobalt,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  ownerEditBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  ownerDeleteBtn: {
+    borderWidth: 2,
+    borderColor: colors.heart,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  ownerDeleteBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.heart,
+  },
   // Read-only league header
   leagueHeader: {
     backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 16, marginBottom: 12,

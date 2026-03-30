@@ -102,6 +102,30 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     (navigation as any).navigate('EditFacility', { facilityId });
   };
 
+  const handleDeleteGround = () => {
+    if (!selectedFacility) return;
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`)) {
+        doDeleteGround();
+      }
+    } else {
+      Alert.alert('Delete Ground', `Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: doDeleteGround },
+      ]);
+    }
+  };
+
+  const doDeleteGround = async () => {
+    try {
+      await facilityService.deleteFacility(facilityId);
+      navigation.goBack();
+    } catch (err: any) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete ground';
+      Alert.alert('Error', msg);
+    }
+  };
+
   const handleEventPress = (event: Event) => {
     (navigation as any).navigate('EventDetails', { eventId: event.id });
   };
@@ -382,26 +406,33 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           </DetailCard>
         )}
 
+        {/* Edit / Delete for owner */}
+        {isOwner && (
+          <View style={styles.ownerActions}>
+            <TouchableOpacity style={styles.ownerEditBtn} onPress={handleEdit} activeOpacity={0.7}>
+              <Text style={styles.ownerEditBtnText}>Edit Ground</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ownerDeleteBtn} onPress={handleDeleteGround} activeOpacity={0.7}>
+              <Text style={styles.ownerDeleteBtnText}>Delete Ground</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
       </ScrollView>
 
-      {/* Fixed bottom CTA */}
-      <FixedBottomCTA
-        label={isOwner ? 'Manage facility' : 'Book a court'}
-        onPress={
-          isOwner
-            ? handleEdit
-            : () =>
-                (navigation as any).navigate('CourtAvailability', {
-                  facilityId: facility.id,
-                  facilityName: facility.name,
-                })
-        }
-        variant="primary"
-        {...(isOwner ? {
-          secondaryLabel: 'Edit details',
-          onSecondaryPress: () => (navigation as any).navigate('EditFacility', { facilityId: facility.id }),
-        } : {})}
-      />
+      {/* Fixed bottom CTA — non-owners only */}
+      {!isOwner && (
+        <FixedBottomCTA
+          label="Book a court"
+          onPress={() =>
+            (navigation as any).navigate('CourtAvailability', {
+              facilityId: facility.id,
+              facilityName: facility.name,
+            })
+          }
+          variant="primary"
+        />
+      )}
 
       {/* Full-size map modal */}
       <Modal
@@ -630,5 +661,35 @@ const styles = StyleSheet.create({
   fullMapImage: {
     width: '100%',
     height: 600,
+  },
+  // Owner edit/delete actions
+  ownerActions: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    gap: 10,
+  },
+  ownerEditBtn: {
+    backgroundColor: colors.cobalt,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  ownerEditBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  ownerDeleteBtn: {
+    borderWidth: 2,
+    borderColor: colors.heart,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  ownerDeleteBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.heart,
   },
 });

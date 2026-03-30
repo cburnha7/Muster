@@ -733,9 +733,9 @@ export function EventDetailsScreen() {
     ctaVariant = 'disabled';
     ctaAction = () => {};
   } else if (isOrganizer) {
-    ctaLabel = 'Edit game';
-    ctaVariant = 'primary';
-    ctaAction = handleEditEvent;
+    ctaLabel = "You're hosting";
+    ctaVariant = 'confirmed';
+    ctaAction = () => {};
   } else if (isUserBooked) {
     ctaLabel = "You're in ✓";
     ctaVariant = 'confirmed';
@@ -1045,22 +1045,7 @@ export function EventDetailsScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Organizer actions */}
-          {isUpcoming && isOrganizer && (
-            <View style={styles.organizerActions}>
-              <TouchableOpacity style={styles.organizerActionBtn} onPress={handleEditEvent}>
-                <Ionicons name="create-outline" size={16} color={colors.primary} />
-                <Text style={styles.organizerActionBtnText}>Edit Event</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.organizerActionBtn, styles.organizerActionBtnDanger]}
-                onPress={() => setShowCancelModal(true)}
-              >
-                <Ionicons name="trash-outline" size={16} color={colors.error} />
-                <Text style={[styles.organizerActionBtnText, { color: colors.error }]}>Delete Event</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* Organizer actions removed — now at bottom of scroll */}
         </DetailCard>
 
         {/* Description (if exists) */}
@@ -1069,6 +1054,18 @@ export function EventDetailsScreen() {
             <Text style={styles.description}>{event.description}</Text>
           </DetailCard>
         ) : null}
+
+        {/* Edit / Delete for organizer */}
+        {isUpcoming && isOrganizer && (
+          <View style={styles.ownerActions}>
+            <TouchableOpacity style={styles.ownerEditBtn} onPress={handleEditEvent} activeOpacity={0.7}>
+              <Text style={styles.ownerEditBtnText}>Edit Event</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ownerDeleteBtn} onPress={() => setShowCancelModal(true)} activeOpacity={0.7}>
+              <Text style={styles.ownerDeleteBtnText}>Delete Event</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       {/* FixedBottomCTA — hidden for past events */}
@@ -1380,29 +1377,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.inkSoft,
   },
-  // Organizer action buttons inside details card
-  organizerActions: {
-    flexDirection: 'row',
+  // Owner edit/delete actions (bottom of scroll)
+  ownerActions: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
     gap: 10,
-    marginTop: 12,
   },
-  organizerActionBtn: {
-    flex: 1,
-    flexDirection: 'row',
+  ownerEditBtn: {
+    backgroundColor: colors.cobalt,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: colors.primary + '12',
   },
-  organizerActionBtnDanger: {
-    backgroundColor: colors.error + '12',
-  },
-  organizerActionBtnText: {
+  ownerEditBtnText: {
     fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.primary,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  ownerDeleteBtn: {
+    borderWidth: 2,
+    borderColor: colors.heart,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  ownerDeleteBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.heart,
   },
   // Participants Grid Styles (salute grid — kept exactly as-is)
   participantsHeader: {
