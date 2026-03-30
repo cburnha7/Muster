@@ -94,24 +94,20 @@ export function CreateTeamScreen() {
     }
   }, [sport]);
 
-  // ── Invite search ──
+  // ── Invite search — players only ──
   useEffect(() => {
     if (!inviteQuery.trim()) { setInviteResults([]); return; }
     const timer = setTimeout(async () => {
       try {
-        const rostersRes = await teamService.getTeams(undefined, { page: 1, limit: 10 });
         let players: any[] = [];
         try {
-          const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?q=${encodeURIComponent(inviteQuery)}&limit=10`);
+          const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
           const json = await resp.json();
           players = Array.isArray(json) ? json : json.data || [];
         } catch {}
-        const rosterItems: InviteItem[] = (rostersRes.data || [])
-          .filter((t: any) => t.name.toLowerCase().includes(inviteQuery.toLowerCase()))
-          .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }));
         const playerItems: InviteItem[] = players
           .map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }));
-        setInviteResults([...rosterItems, ...playerItems]);
+        setInviteResults(playerItems);
       } catch { setInviteResults([]); }
     }, 300);
     return () => clearTimeout(timer);
@@ -239,16 +235,31 @@ export function CreateTeamScreen() {
         ),
       },
       {
-        key: 'invite',
-        headline: 'Invite players',
-        subtitle: 'Search for players or rosters to invite (optional)',
-        validate: () => true, // All optional
+        key: 'price',
+        headline: 'Set a join fee',
+        subtitle: 'How much does it cost to join this roster?',
+        validate: () => true,
         content: (
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.fieldLabel}>Search</Text>
+            <Text style={styles.fieldLabel}>Join fee</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.pricePrefix}>$</Text>
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="0 for free" placeholderTextColor={colors.outline} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+            </View>
+          </ScrollView>
+        ),
+      },
+      {
+        key: 'invite',
+        headline: 'Invite players',
+        subtitle: 'Search for players to invite (optional)',
+        validate: () => true,
+        content: (
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <Text style={styles.fieldLabel}>Search players</Text>
             <TextInput
               style={styles.input}
-              placeholder="Search rosters or players..."
+              placeholder="Search by name..."
               placeholderTextColor={colors.outline}
               value={inviteQuery}
               onChangeText={setInviteQuery}
@@ -257,9 +268,7 @@ export function CreateTeamScreen() {
               <View style={styles.dropdown}>
                 {inviteResults.slice(0, 8).map((item) => (
                   <TouchableOpacity key={item.id} style={styles.dropdownRow} onPress={() => addInvite(item)}>
-                    {item.type === 'roster' ? (
-                      <Ionicons name="people" size={18} color={colors.primary} />
-                    ) : item.image ? (
+                    {item.image ? (
                       <Image source={{ uri: item.image }} style={styles.avatar} />
                     ) : (
                       <Ionicons name="person" size={18} color={colors.outline} />
@@ -270,61 +279,24 @@ export function CreateTeamScreen() {
               </View>
             )}
             {invitedItems.length > 0 && (
-              <View style={styles.chipRow}>
+              <View style={styles.invitedList}>
                 {invitedItems.map((item) => (
-                  <View key={item.id} style={styles.inviteChip}>
-                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.primary} /> : <Ionicons name="person" size={14} color={colors.onSurface} />}
-                    <Text style={styles.inviteChipText}>{item.name}</Text>
-                    <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.outline} /></TouchableOpacity>
+                  <View key={item.id} style={styles.invitedRow}>
+                    {item.image ? (
+                      <Image source={{ uri: item.image }} style={styles.invitedAvatar} />
+                    ) : (
+                      <View style={styles.invitedAvatarFallback}>
+                        <Ionicons name="person" size={16} color="#FFFFFF" />
+                      </View>
+                    )}
+                    <Text style={styles.invitedName}>{item.name}</Text>
+                    <TouchableOpacity onPress={() => removeInvite(item.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="close-circle" size={20} color={colors.outline} />
+                    </TouchableOpacity>
                   </View>
                 ))}
               </View>
             )}
-
-            <Text style={[styles.fieldLabel, { marginTop: 24 }]}>Join fee</Text>
-            <TextInput style={styles.input} placeholder="0 for free" placeholderTextColor={colors.outline} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
-          </ScrollView>
-        ),
-      },
-      {
-        key: 'review',
-        headline: 'Review and create',
-        subtitle: 'Make sure everything looks good',
-        validate: () => name.trim().length >= 2 && !!sport,
-        content: (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.reviewCard}>
-              <View style={styles.reviewRow}>
-                <Text style={styles.reviewEmoji}>{getSportEmoji(sport)}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.reviewName}>{name.trim() || 'Untitled Team'}</Text>
-                  <Text style={styles.reviewMeta}>
-                    {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace('_', ' ') : ''} · {visibility === 'public' ? 'Public' : 'Private'} · {maxPlayers || '10'} players max
-                  </Text>
-                </View>
-              </View>
-
-              {gender && (
-                <View style={styles.reviewDetailRow}>
-                  <Text style={styles.reviewDetailLabel}>Gender</Text>
-                  <Text style={styles.reviewDetailValue}>{gender === 'male' ? 'Male Only' : gender === 'female' ? 'Female Only' : 'Open to All'}</Text>
-                </View>
-              )}
-
-              {(minAge || maxAge) && (
-                <View style={styles.reviewDetailRow}>
-                  <Text style={styles.reviewDetailLabel}>Age range</Text>
-                  <Text style={styles.reviewDetailValue}>{minAge || 'Any'} – {maxAge || 'Any'}</Text>
-                </View>
-              )}
-
-              {invitedItems.length > 0 && (
-                <View style={styles.reviewDetailRow}>
-                  <Text style={styles.reviewDetailLabel}>Invites</Text>
-                  <Text style={styles.reviewDetailValue}>{invitedItems.length} invited</Text>
-                </View>
-              )}
-            </View>
           </ScrollView>
         ),
       },
@@ -439,6 +411,34 @@ const styles = StyleSheet.create({
   },
   dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.onSurface, flex: 1 },
   avatar: { width: 24, height: 24, borderRadius: 12 },
+
+  // ── Price row ──
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pricePrefix: { fontFamily: fonts.ui, fontSize: 18, color: colors.onSurface },
+
+  // ── Invited players list ──
+  invitedList: { marginTop: 16, gap: 8 },
+  invitedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerLowest,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  invitedAvatar: { width: 32, height: 32, borderRadius: 16 },
+  invitedAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  invitedName: { flex: 1, fontFamily: fonts.body, fontSize: 15, color: colors.onSurface },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   inviteChip: {
     flexDirection: 'row',
