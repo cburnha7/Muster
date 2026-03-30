@@ -36,7 +36,7 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen name="EventSearchResults" component={EventSearchResultsScreen} options={{ ...detailHeader, headerTitle: 'Results' }} />
       <Stack.Screen name="Debrief" component={DebriefScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PendingReservationDetails" component={PendingReservationDetailsScreen} options={{ ...detailHeader, headerTitle: 'Reservation' }} />
-      <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ ...detailHeader, headerTitle: 'New Event' }} />
+      <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
