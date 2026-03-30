@@ -16,7 +16,7 @@ const getBaseURL = () => {
     return 'http://localhost:3000/api';
   }
   
-  // Production fallback
+  // Production fallback — should be overridden by EXPO_PUBLIC_API_URL in .env.production
   return 'https://muster-production.up.railway.app/api';
 };
 
