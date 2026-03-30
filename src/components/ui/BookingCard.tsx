@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
+import { PressableCard } from './PressableCard';
 
 interface BookingCardProps {
   booking: Booking;
@@ -64,7 +65,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   })();
 
   return (
-    <TouchableOpacity
+    <PressableCard
       style={[
         styles.container,
         isCancelled && styles.containerCancelled,
@@ -73,7 +74,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         style,
       ]}
       onPress={() => onPress?.(booking)}
-      activeOpacity={0.7}
       disabled={!onPress}
     >
       {/* Bubble stack — top-right, vertical */}
@@ -186,19 +186,19 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         )}
       </View>
 
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     paddingRight: 90,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3.84,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
     color: colors.ink,
     flex: 1,
   },
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   liveBadgePillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.display,
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   cancelledBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.display,
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   },
   pastBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.display,
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -289,6 +289,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
+    fontFamily: fonts.body,
     color: colors.inkFaint,
     marginLeft: 8,
     flex: 1,
@@ -305,15 +306,17 @@ const styles = StyleSheet.create({
   },
   participants: {
     fontSize: 13,
+    fontFamily: fonts.body,
     color: colors.inkFaint,
   },
   price: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: fonts.headingSemi,
     color: colors.ink,
   },
   pendingLabel: {
     fontSize: 12,
+    fontFamily: fonts.body,
     color: colors.inkFaint,
     fontStyle: 'italic',
   },
@@ -325,9 +328,9 @@ const styles = StyleSheet.create({
     borderColor: colors.inkFaint,
   },
   cancelText: {
+    fontFamily: fonts.ui,
     color: colors.inkFaint,
     fontSize: 13,
-    fontWeight: '600',
   },
   bookingInfo: {
     borderTopWidth: 1,
@@ -337,10 +340,12 @@ const styles = StyleSheet.create({
   },
   bookingDate: {
     fontSize: 12,
+    fontFamily: fonts.body,
     color: colors.inkFaint,
   },
   cancelledDate: {
     fontSize: 12,
+    fontFamily: fonts.body,
     color: colors.heart,
   },
   pendingApprovalBadge: {
@@ -354,7 +359,7 @@ const styles = StyleSheet.create({
   },
   pendingApprovalText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: fonts.display,
     color: colors.gold,
     letterSpacing: 0.5,
   },

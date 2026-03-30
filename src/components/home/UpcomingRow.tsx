@@ -67,6 +67,12 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
                   <Text style={styles.locationText} numberOfLines={1}>{event.facility.name}</Text>
                 </View>
               )}
+
+              {/* You're in badge */}
+              <View style={styles.youreInBadge}>
+                <Ionicons name="checkmark-circle" size={12} color={colors.secondary} />
+                <Text style={styles.youreInText}>You're in</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -153,5 +159,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.outline,
     flex: 1,
+  },
+  youreInBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  youreInText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.secondary,
   },
 });

@@ -184,7 +184,7 @@ export function CreateEventScreen() {
             const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
             const json = await resp.json();
             players = Array.isArray(json) ? json : json.data || [];
-          } catch {}
+          } catch (err) { console.warn('Invite search failed:', (err as Error).message); }
           const rosterItems: InviteItem[] = (rostersRes.data || [])
             .filter((t: any) => t.name.toLowerCase().includes(inviteQuery.toLowerCase()))
             .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }));

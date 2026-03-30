@@ -164,7 +164,7 @@ export const CreateLeagueScreen: React.FC = () => {
       for (const roster of invitedRosters) {
         try {
           await leagueService.inviteRoster(newLeague.id, roster.id, user.id);
-        } catch {}
+        } catch (err) { console.warn('Failed to invite roster:', roster.id, (err as Error).message); }
       }
 
       setCreatedLeagueId(newLeague.id);

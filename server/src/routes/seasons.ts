@@ -1,10 +1,9 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../index';
 import { calculateAvgCourtCost } from '../services/balance';
 import { calculateSuggestedDues } from '../services/suggested-dues';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/seasons - Get all seasons with filtering and pagination
 router.get('/', async (req: Request, res: Response) => {

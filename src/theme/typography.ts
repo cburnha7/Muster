@@ -2,33 +2,10 @@
 // Plus Jakarta Sans — Headlines: geometric clarity, aggressive bold weights
 // Inter — Body: high x-height workhorse for glance-and-go legibility
 
-import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-} from '@expo-google-fonts/plus-jakarta-sans';
-
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from '@expo-google-fonts/inter';
-
-// ── Font map for useFonts() ──────────────────────
-export const fontAssets = {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  PlusJakartaSans_800ExtraBold,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-};
+// NOTE: Font *assets* (ttf files for useFonts) are loaded in src/hooks/useFonts.ts.
+// This file only contains font *names* (strings) and type scale constants.
+// Keeping them separate prevents @expo-google-fonts ESM/CJS import issues
+// from crashing the entire theme module on web.
 
 // ── Font family names ────────────────────────────
 export const fonts = {

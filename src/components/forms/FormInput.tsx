@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInputProps,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
@@ -23,7 +24,7 @@ interface FormInputProps extends TextInputProps {
   errorStyle?: any;
 }
 
-export const FormInput: React.FC<FormInputProps> = ({
+export const FormInput = forwardRef<any, FormInputProps>(({
   label,
   error,
   required = false,
@@ -36,7 +37,9 @@ export const FormInput: React.FC<FormInputProps> = ({
   errorStyle,
   secureTextEntry,
   ...textInputProps
-}) => {
+}, ref) => {
+  const inputRef = useRef<any>(null);
+  useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }));
   const [isSecure, setIsSecure] = useState(secureTextEntry);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -72,10 +75,12 @@ export const FormInput: React.FC<FormInputProps> = ({
         )}
 
         <TextInput
+          ref={inputRef}
           style={[
             styles.input,
             leftIcon && styles.inputWithLeftIcon,
             (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
+            Platform.OS === 'web' && { outlineStyle: 'none' as any },
             inputStyle,
           ]}
           secureTextEntry={isSecure}
@@ -120,7 +125,7 @@ export const FormInput: React.FC<FormInputProps> = ({
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   inputDisabled: { backgroundColor: `${colors.primary}10`, borderColor: colors.primary },
   validateBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 10,
+    borderRadius: 9999,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1.5,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   tierDesc: { fontFamily: fonts.body, fontSize: 13, color: colors.outline, marginTop: 2 },
   primaryBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 9999,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 20,

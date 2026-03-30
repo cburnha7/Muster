@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,8 @@ export function TransferAccountScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const passwordRef = useRef<any>(null);
+  const confirmPasswordRef = useRef<any>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -167,9 +169,12 @@ export function TransferAccountScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
           />
 
           <FormInput
+            ref={passwordRef}
             label="Password"
             placeholder="Enter password (min 8 characters)"
             value={password}
@@ -178,9 +183,12 @@ export function TransferAccountScreen() {
             required
             leftIcon="lock-closed-outline"
             secureTextEntry
+            returnKeyType="next"
+            onSubmitEditing={() => confirmPasswordRef.current?.focus()}
           />
 
           <FormInput
+            ref={confirmPasswordRef}
             label="Confirm Password"
             placeholder="Re-enter password"
             value={confirmPassword}
@@ -189,6 +197,8 @@ export function TransferAccountScreen() {
             required
             leftIcon="lock-closed-outline"
             secureTextEntry
+            returnKeyType="go"
+            onSubmitEditing={handleSubmit}
           />
 
           {/* Submit */}

@@ -51,8 +51,6 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/events/${id}`,
     BOOK: (id: string) => `/events/${id}/book`,
     PARTICIPANTS: (id: string) => `/events/${id}/participants`,
-    NEARBY: '/events/nearby',
-    RECOMMENDED: '/events/recommended',
   },
 
   // Facilities
@@ -60,9 +58,7 @@ export const API_ENDPOINTS = {
     BASE: '/facilities',
     BY_ID: (id: string) => `/facilities/${id}`,
     EVENTS: (id: string) => `/facilities/${id}/events`,
-    IMAGES: (id: string) => `/facilities/${id}/images`,
     CANCELLATION_POLICY: (id: string) => `/facilities/${id}/cancellation-policy`,
-    NEARBY: '/facilities/nearby',
   },
 
   // Users
@@ -74,7 +70,6 @@ export const API_ENDPOINTS = {
     EVENTS: '/users/events',
     TEAMS: '/users/teams',
     LEAGUES: '/users/leagues',
-    NOTIFICATIONS: '/users/notifications',
     ONBOARDING: '/users/onboarding',
     INTENTS: '/users/intents',
   },
@@ -85,19 +80,15 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/teams/${id}`,
     JOIN: (id: string) => `/teams/${id}/join`,
     LEAVE: (id: string) => `/teams/${id}/leave`,
-    INVITE: (id: string) => `/teams/${id}/invite`,
+    ADD_MEMBER: (id: string) => `/teams/${id}/add-member`,
     REMOVE_MEMBER: (teamId: string, userId: string) => `/teams/${teamId}/members/${userId}`,
     EVENTS: (id: string) => `/teams/${id}/events`,
-    UPDATE_ROLE: (teamId: string, userId: string) => `/teams/${teamId}/members/${userId}/role`,
-    NEARBY: '/teams/nearby',
-    RECOMMENDED: '/teams/recommended',
   },
 
   // Bookings
   BOOKINGS: {
     BASE: '/bookings',
     BY_ID: (id: string) => `/bookings/${id}`,
-    CANCEL: (id: string) => `/bookings/${id}/cancel`,
   },
 
   // Debrief
@@ -110,16 +101,7 @@ export const API_ENDPOINTS = {
   // Search
   SEARCH: {
     BASE: '/search',
-    EVENTS: '/search/events',
-    FACILITIES: '/search/facilities',
     TEAMS: '/search/teams',
-  },
-
-  // Notifications
-  NOTIFICATIONS: {
-    REGISTER: '/notifications/register',
-    PREFERENCES: '/notifications/preferences',
-    TEST: '/notifications/test',
   },
 
   CONVERSATIONS: {

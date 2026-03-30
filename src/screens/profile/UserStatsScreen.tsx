@@ -4,15 +4,13 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { userService } from '../../services/api/UserService';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
+import { formatSport } from '../../utils/sportUtils';
 
 interface UserStats {
   totalBookings: number;
@@ -36,7 +34,6 @@ interface Achievement {
 }
 
 export function UserStatsScreen(): JSX.Element {
-  const navigation = useNavigation();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,63 +60,60 @@ export function UserStatsScreen(): JSX.Element {
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  if (error) {
-    return <ErrorDisplay message={error} onRetry={loadStatsAndAchievements} />;
-  }
-
-  if (!stats) {
-    return <ErrorDisplay message="No statistics available" onRetry={loadStatsAndAchievements} />;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorDisplay message={error} onRetry={loadStatsAndAchievements} />;
+  if (!stats) return <ErrorDisplay message="No statistics available" onRetry={loadStatsAndAchievements} />;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Overview Stats */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Overview</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Ionicons name="calendar-outline" size={32} color="#3B82F6" />
-            <Text style={styles.statValue}>{stats.totalBookings}</Text>
-            <Text style={styles.statLabel}>Total Bookings</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Ionicons name="trophy-outline" size={32} color="#F59E0B" />
-            <Text style={styles.statValue}>{stats.totalEventsOrganized}</Text>
-            <Text style={styles.statLabel}>Events Organized</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Ionicons name="people-outline" size={32} color="#10B981" />
-            <Text style={styles.statValue}>{stats.totalTeams}</Text>
-            <Text style={styles.statLabel}>Teams Joined</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Ionicons name="star-outline" size={32} color="#8B5CF6" />
-            <Text style={styles.statValue}>
-              {stats.averageRating ? stats.averageRating.toFixed(1) : 'N/A'}
-            </Text>
-            <Text style={styles.statLabel}>Average Rating</Text>
-          </View>
+      <Text style={styles.sectionHeader}>Overview</Text>
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+          <Text style={styles.statValue}>{stats.totalBookings}</Text>
+          <Text style={styles.statLabel}>Bookings</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="flag-outline" size={24} color={colors.secondary} />
+          <Text style={styles.statValue}>{stats.totalEventsOrganized}</Text>
+          <Text style={styles.statLabel}>Organized</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="people-outline" size={24} color="#8B5CF6" />
+          <Text style={styles.statValue}>{stats.totalTeams}</Text>
+          <Text style={styles.statLabel}>Teams</Text>
         </View>
       </View>
 
-      {/* Financial Stats */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Financial</Text>
+      {/* Rating */}
+      {stats.averageRating != null && (
+        <>
+          <Text style={styles.sectionHeader}>Rating</Text>
+          <View style={styles.card}>
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={20} color="#F59E0B" />
+              <Text style={styles.ratingValue}>{stats.averageRating.toFixed(1)}</Text>
+              <Text style={styles.ratingMeta}>from {stats.reviewCount} review{stats.reviewCount !== 1 ? 's' : ''}</Text>
+            </View>
+          </View>
+        </>
+      )}
+
+      {/* Financial */}
+      <Text style={styles.sectionHeader}>Financial</Text>
+      <View style={styles.card}>
         <View style={styles.financialRow}>
           <View style={styles.financialItem}>
             <Text style={styles.financialLabel}>Total Spent</Text>
-            <Text style={[styles.financialValue, styles.spentValue]}>
+            <Text style={[styles.financialValue, { color: colors.error }]}>
               ${stats.totalSpent.toFixed(2)}
             </Text>
           </View>
           <View style={styles.financialDivider} />
           <View style={styles.financialItem}>
             <Text style={styles.financialLabel}>Total Earned</Text>
-            <Text style={[styles.financialValue, styles.earnedValue]}>
+            <Text style={[styles.financialValue, { color: colors.secondary }]}>
               ${stats.totalEarned.toFixed(2)}
             </Text>
           </View>
@@ -128,74 +122,62 @@ export function UserStatsScreen(): JSX.Element {
 
       {/* Favorite Sports */}
       {stats.favoritesSports && stats.favoritesSports.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Favorite Sports</Text>
-          <View style={styles.sportsList}>
-            {stats.favoritesSports.map((sport, index) => (
-              <View key={index} style={styles.sportTag}>
-                <Text style={styles.sportTagText}>{sport}</Text>
-              </View>
-            ))}
+        <>
+          <Text style={styles.sectionHeader}>Favorite Sports</Text>
+          <View style={styles.card}>
+            <View style={styles.sportsList}>
+              {stats.favoritesSports.map((sport, index) => (
+                <View key={index} style={styles.sportTag}>
+                  <Text style={styles.sportTagText}>{formatSport(sport)}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        </>
       )}
 
       {/* Achievements */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Achievements</Text>
+      <Text style={styles.sectionHeader}>Achievements</Text>
+      <View style={styles.card}>
         {achievements.length === 0 ? (
-          <View style={styles.emptyAchievements}>
-            <Ionicons name="medal-outline" size={48} color="#D1D5DB" />
+          <View style={styles.emptySection}>
+            <Ionicons name="medal-outline" size={40} color={colors.outlineVariant} />
             <Text style={styles.emptyText}>No achievements yet</Text>
-            <Text style={styles.emptySubtext}>
-              Keep participating in events to unlock achievements!
-            </Text>
+            <Text style={styles.emptySubtext}>Keep playing to unlock achievements!</Text>
           </View>
         ) : (
-          <View style={styles.achievementsList}>
-            {achievements.map((achievement) => (
-              <View key={achievement.id} style={styles.achievementCard}>
-                <View style={styles.achievementIcon}>
-                  <Text style={styles.achievementIconText}>{achievement.icon}</Text>
-                </View>
-                <View style={styles.achievementInfo}>
-                  <Text style={styles.achievementName}>{achievement.name}</Text>
-                  <Text style={styles.achievementDescription}>{achievement.description}</Text>
-                  {achievement.progress !== undefined && achievement.maxProgress && (
-                    <View style={styles.progressContainer}>
-                      <View style={styles.progressBar}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              width: `${(achievement.progress / achievement.maxProgress) * 100}%`,
-                            },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.progressText}>
-                        {achievement.progress}/{achievement.maxProgress}
-                      </Text>
-                    </View>
-                  )}
-                  <Text style={styles.achievementDate}>
-                    Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
-                  </Text>
-                </View>
+          achievements.map((achievement) => (
+            <View key={achievement.id} style={styles.achievementRow}>
+              <View style={styles.achievementIcon}>
+                <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
               </View>
-            ))}
-          </View>
+              <View style={styles.achievementInfo}>
+                <Text style={styles.achievementName}>{achievement.name}</Text>
+                <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                {achievement.progress != null && achievement.maxProgress && (
+                  <View style={styles.progressRow}>
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressFill, { width: `${(achievement.progress / achievement.maxProgress) * 100}%` as any }]} />
+                    </View>
+                    <Text style={styles.progressText}>{achievement.progress}/{achievement.maxProgress}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ))
         )}
       </View>
 
-      {/* Activity Summary */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Activity Summary</Text>
-        <View style={styles.summaryItem}>
+      {/* Activity */}
+      <Text style={styles.sectionHeader}>Activity</Text>
+      <View style={styles.card}>
+        <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Reviews Given</Text>
           <Text style={styles.summaryValue}>{stats.reviewCount}</Text>
         </View>
       </View>
+
+      <View style={{ height: 32 }} />
     </ScrollView>
   );
 }
@@ -203,51 +185,83 @@ export function UserStatsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
-  section: {
+  content: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  sectionHeader: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  card: {
     backgroundColor: '#FFFFFF',
-    marginTop: 16,
-    marginHorizontal: 16,
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 16,
-  },
-  statsGrid: {
+
+  // Stats row
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
   statCard: {
     flex: 1,
-    minWidth: '45%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.white,
-    borderRadius: 8,
+    gap: 6,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   statValue: {
+    fontFamily: fonts.heading,
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginTop: 8,
-    marginBottom: 4,
+    color: colors.onSurface,
+    letterSpacing: -0.5,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
+
+  // Rating
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ratingValue: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.onSurface,
+  },
+  ratingMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+  },
+
+  // Financial
   financialRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -255,136 +269,132 @@ const styles = StyleSheet.create({
   financialItem: {
     flex: 1,
     alignItems: 'center',
+    gap: 4,
   },
   financialLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
   },
   financialValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  spentValue: {
-    color: '#EF4444',
-  },
-  earnedValue: {
-    color: '#10B981',
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    letterSpacing: -0.3,
   },
   financialDivider: {
-    width: 1,
-    height: 60,
-    backgroundColor: '#E5E7EB',
+    width: StyleSheet.hairlineWidth,
+    height: 48,
+    backgroundColor: colors.outlineVariant,
   },
+
+  // Sports
   sportsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   sportTag: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 12,
+    backgroundColor: colors.primaryFixed,
+    paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 9999,
   },
   sportTagText: {
-    fontSize: 14,
-    color: '#3B82F6',
-    fontWeight: '500',
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.primary,
   },
-  emptyAchievements: {
+
+  // Empty
+  emptySection: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingVertical: 24,
+    gap: 8,
   },
   emptyText: {
+    fontFamily: fonts.headingSemi,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginTop: 12,
+    color: colors.onSurfaceVariant,
   },
   emptySubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 4,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
     textAlign: 'center',
   },
-  achievementsList: {
-    gap: 12,
-  },
-  achievementCard: {
+
+  // Achievements
+  achievementRow: {
     flexDirection: 'row',
-    padding: 12,
-    backgroundColor: colors.white,
-    borderRadius: 8,
+    paddingVertical: 12,
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant + '60',
   },
   achievementIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FEF3C7',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primaryFixed,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  achievementIconText: {
-    fontSize: 24,
+  achievementEmoji: {
+    fontSize: 22,
   },
   achievementInfo: {
     flex: 1,
+    gap: 2,
   },
   achievementName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
+    fontFamily: fonts.headingSemi,
+    fontSize: 15,
+    color: colors.onSurface,
   },
-  achievementDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
+  achievementDesc: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
   },
-  progressContainer: {
+  progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    gap: 8,
+    marginTop: 4,
   },
-  progressBar: {
+  progressTrack: {
     flex: 1,
-    height: 6,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 3,
-    marginRight: 8,
+    height: 4,
+    backgroundColor: colors.surfaceContainerHigh,
+    borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#3B82F6',
-    borderRadius: 3,
+    backgroundColor: colors.primary,
+    borderRadius: 2,
   },
   progressText: {
-    fontSize: 12,
-    color: '#6B7280',
-    minWidth: 40,
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
   },
-  achievementDate: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  summaryItem: {
+
+  // Summary
+  summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    paddingVertical: 4,
   },
   summaryLabel: {
-    fontSize: 16,
-    color: '#1F2937',
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.onSurface,
   },
   summaryValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#3B82F6',
+    fontFamily: fonts.headingSemi,
+    fontSize: 15,
+    color: colors.primary,
   },
 });

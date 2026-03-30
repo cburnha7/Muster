@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -66,6 +66,9 @@ export function EditProfileScreen(): JSX.Element {
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const lastNameRef = useRef<any>(null);
+  const emailRef = useRef<any>(null);
+  const phoneRef = useRef<any>(null);
 
   useEffect(() => {
     loadProfile();
@@ -291,17 +294,23 @@ export function EditProfileScreen(): JSX.Element {
             onChangeText={setFirstName}
             placeholder="Enter your first name"
             error={errors.firstName}
+            returnKeyType="next"
+            onSubmitEditing={() => lastNameRef.current?.focus()}
           />
 
           <FormInput
+            ref={lastNameRef}
             label="Last Name"
             value={lastName}
             onChangeText={setLastName}
             placeholder="Enter your last name"
             error={errors.lastName}
+            returnKeyType="next"
+            onSubmitEditing={() => emailRef.current?.focus()}
           />
 
           <FormInput
+            ref={emailRef}
             label="Email"
             value={email}
             onChangeText={setEmail}
@@ -309,15 +318,19 @@ export function EditProfileScreen(): JSX.Element {
             keyboardType="email-address"
             autoCapitalize="none"
             error={errors.email}
+            returnKeyType="next"
+            onSubmitEditing={() => phoneRef.current?.focus()}
           />
 
           <FormInput
+            ref={phoneRef}
             label="Phone Number (Optional)"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             placeholder="Enter your phone number"
             keyboardType="phone-pad"
             error={errors.phoneNumber}
+            returnKeyType="done"
           />
 
           {/* Gender */}

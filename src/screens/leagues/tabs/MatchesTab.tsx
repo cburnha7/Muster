@@ -124,8 +124,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
   };
 
   const handleMatchPress = (match: Match) => {
-    // TODO: Navigate to match details
-    console.log('Match pressed:', match.id);
+    (navigation as any).navigate('RecordMatchResult', { matchId: match.id, leagueId });
   };
 
   const handleCreateMatch = () => {

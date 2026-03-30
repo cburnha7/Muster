@@ -123,8 +123,8 @@ export function ChatScreen() {
               setShowNewMessagesPill(true);
             }
           }
-        } catch {
-          // silently fail polling
+        } catch (err) {
+          console.warn('Chat polling failed:', (err as Error).message);
         }
       }, 5000);
 

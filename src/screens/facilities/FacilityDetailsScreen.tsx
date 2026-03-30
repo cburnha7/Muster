@@ -24,7 +24,7 @@ import {
   setSelectedFacility,
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 import { Event, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';

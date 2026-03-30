@@ -119,21 +119,16 @@ export class UserService extends BaseApiService {
     return this.get<any[]>(API_ENDPOINTS.USERS.LEAGUES);
   }
 
-  /**
-   * Update notification preferences
-   */
-  async updateNotificationPreferences(
-    preferences: NotificationPreferences
-  ): Promise<NotificationPreferences> {
-    return this.put<NotificationPreferences>(API_ENDPOINTS.USERS.NOTIFICATIONS, preferences);
-  }
+  // TODO: Notification preferences - no backend route exists (API_ENDPOINTS.USERS.NOTIFICATIONS was removed)
+  // async updateNotificationPreferences(
+  //   preferences: NotificationPreferences
+  // ): Promise<NotificationPreferences> {
+  //   return this.put<NotificationPreferences>('/users/notifications', preferences);
+  // }
 
-  /**
-   * Get notification preferences
-   */
-  async getNotificationPreferences(): Promise<NotificationPreferences> {
-    return this.get<NotificationPreferences>(API_ENDPOINTS.USERS.NOTIFICATIONS);
-  }
+  // async getNotificationPreferences(): Promise<NotificationPreferences> {
+  //   return this.get<NotificationPreferences>('/users/notifications');
+  // }
 
   /**
    * Get user statistics

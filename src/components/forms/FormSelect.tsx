@@ -9,6 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, fonts } from '../../theme';
 
 export interface SelectOption {
   label: string;
@@ -92,7 +93,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         {item.label}
       </Text>
       {item.value === value && (
-        <Ionicons name="checkmark" size={20} color="#007AFF" />
+        <Ionicons name="checkmark" size={20} color={colors.primary} />
       )}
     </TouchableOpacity>
   );
@@ -128,7 +129,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         <Ionicons
           name="chevron-down"
           size={20}
-          color={disabled ? '#999' : error ? '#FF3B30' : '#666'}
+          color={disabled ? colors.outline : error ? colors.error : colors.onSurfaceVariant}
         />
       </TouchableOpacity>
 
@@ -169,10 +170,10 @@ export const FormSelect: React.FC<FormSelectProps> = ({
                   }}
                 >
                   {footerOption.icon && (
-                    <Ionicons name={footerOption.icon as any} size={20} color="#007AFF" style={{ marginRight: 10 }} />
+                    <Ionicons name={footerOption.icon as any} size={20} color={colors.primary} style={{ marginRight: 10 }} />
                   )}
                   <Text style={styles.footerOptionText}>{footerOption.label}</Text>
-                  <Ionicons name="arrow-forward" size={16} color="#007AFF" />
+                  <Ionicons name="arrow-forward" size={16} color={colors.primary} />
                 </TouchableOpacity>
               ) : null
             }
@@ -189,57 +190,59 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontFamily: fonts.label,
+    color: colors.onSurface,
     marginBottom: 8,
   },
   required: {
-    color: '#FF3B30',
+    color: colors.error,
   },
   select: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: colors.outlineVariant,
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 48,
-    shadowColor: '#000',
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
   selectError: {
-    borderColor: '#FF3B30',
-    backgroundColor: '#FFF5F5',
+    borderColor: colors.error,
+    backgroundColor: colors.errorContainer,
   },
   selectDisabled: {
-    backgroundColor: '#F0F0F0',
-    borderColor: '#D0D0D0',
+    backgroundColor: colors.surfaceContainerLow,
+    borderColor: colors.outlineVariant,
   },
   selectText: {
     fontSize: 16,
-    color: '#333',
+    fontFamily: fonts.body,
+    color: colors.onSurface,
     flex: 1,
   },
   placeholderText: {
-    color: '#999',
+    color: colors.outline,
   },
   selectTextDisabled: {
-    color: '#999',
+    color: colors.outline,
   },
   error: {
     fontSize: 14,
-    color: '#FF3B30',
+    fontFamily: fonts.body,
+    color: colors.error,
     marginTop: 4,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -248,16 +251,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.surfaceContainerLow,
   },
   cancelText: {
     fontSize: 16,
-    color: '#007AFF',
+    fontFamily: fonts.ui,
+    color: colors.primary,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: fonts.headingSemi,
+    color: colors.onSurface,
   },
   placeholder: {
     width: 60, // Same width as cancel button for centering
@@ -272,25 +276,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.surfaceContainerLow,
   },
   optionSelected: {
-    backgroundColor: '#F0F8FF',
+    backgroundColor: colors.primaryFixed,
   },
   optionDisabled: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: colors.surfaceContainerLow,
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    fontFamily: fonts.body,
+    color: colors.onSurface,
     flex: 1,
   },
   optionTextSelected: {
-    color: '#007AFF',
-    fontWeight: '500',
+    color: colors.primary,
+    fontFamily: fonts.label,
   },
   optionTextDisabled: {
-    color: '#999',
+    color: colors.outline,
   },
   footerOption: {
     flexDirection: 'row',
@@ -298,13 +303,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    backgroundColor: '#F8F9FA',
+    borderTopColor: colors.outlineVariant,
+    backgroundColor: colors.surfaceContainerLow,
   },
   footerOptionText: {
     fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
+    fontFamily: fonts.ui,
+    color: colors.primary,
     flex: 1,
   },
 });

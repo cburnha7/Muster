@@ -230,11 +230,11 @@ export function EditEventScreen(): JSX.Element {
                 const u = await resp.json();
                 pending.push({ userId: u.id, firstName: u.firstName, lastName: u.lastName, profileImage: u.profileImage, status: 'invited' });
               }
-            } catch {}
+            } catch (err) { console.warn('Failed to fetch user:', uid, (err as Error).message); }
           }
         }
         setPlayers([...confirmed, ...pending]);
-      } catch {}
+      } catch (err) { console.warn('Failed to load players:', (err as Error).message); }
     })();
   }, [event, eventId]);
 
@@ -257,7 +257,7 @@ export function EditEventScreen(): JSX.Element {
             const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
             const json = await resp.json();
             searchPlayers = Array.isArray(json) ? json : json.data || [];
-          } catch {}
+          } catch (err) { console.warn('Player search failed:', (err as Error).message); }
           setInviteResults(
             searchPlayers.map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }))
           );
