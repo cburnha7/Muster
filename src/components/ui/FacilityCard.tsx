@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PressableCard } from './PressableCard';
 import { Facility, SportType } from '../../types';
 import { colors, fonts } from '../../theme';
 
@@ -53,10 +54,9 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
   const formatAddress = () => `${facility.street}, ${facility.city}, ${facility.state}`;
 
   return (
-    <TouchableOpacity
+    <PressableCard
       style={[styles.container, style]}
       onPress={() => onPress?.(facility)}
-      activeOpacity={0.85}
     >
       {facility.imageUrl && (
         <Image source={{ uri: facility.imageUrl }} style={styles.image} resizeMode="cover" />
@@ -112,7 +112,7 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
           </View>
         )}
       </View>
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 

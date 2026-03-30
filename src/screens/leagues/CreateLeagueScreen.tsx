@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
+import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { CreationWizard, WizardStep } from '../../components/wizard/CreationWizard';
 import { SportIconGrid } from '../../components/wizard/SportIconGrid';
@@ -258,23 +259,19 @@ export const CreateLeagueScreen: React.FC = () => {
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fieldLabel}>Start Date</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.onSurfaceVariant}
+              <DatePickerInput
+                label="Start Date"
                 value={startDate}
-                onChangeText={setStartDate}
+                onChange={setStartDate}
+                required
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fieldLabel}>End Date</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.onSurfaceVariant}
+              <DatePickerInput
+                label="End Date"
                 value={endDate}
-                onChangeText={setEndDate}
+                onChange={setEndDate}
+                required
               />
             </View>
           </View>

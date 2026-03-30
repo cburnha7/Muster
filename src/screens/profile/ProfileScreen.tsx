@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,94 +9,76 @@ import {
   Alert,
   Platform,
   RefreshControl,
-  Switch,
   useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
-import { DependentsSection } from '../../components/profile/DependentsSection';
-import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { PressableCard } from '../../components/ui/PressableCard';
+import { SkeletonRow } from '../../components/ui/SkeletonBox';
+import { colors, fonts } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
-import { useDependentContext } from '../../hooks/useDependentContext';
 import { userService } from '../../services/api/UserService';
-import { setUser } from '../../store/slices/authSlice';
-import type { OnboardingIntent } from '../../navigation/types';
+import { teamService } from '../../services/api/TeamService';
+import { getSportEmoji } from '../../constants/sports';
+import { getSportColor } from '../../constants/sportColors';
+import type { Team, Event } from '../../types';
 
-// ── Intent card definitions (same as onboarding) ─────────
-interface IntentOption {
-  key: OnboardingIntent;
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  subtitle: string;
+// ── Helpers ──
+
+function formatEventDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-const INTENT_OPTIONS: IntentOption[] = [
-  { key: 'PLAYER', icon: 'basketball-outline', title: 'Find games to play', subtitle: 'Browse and join pickup games near me' },
-  { key: 'CAPTAIN', icon: 'clipboard-outline', title: 'Organize my team', subtitle: 'Manage rosters and schedule games' },
-  { key: 'GUARDIAN', icon: 'people-outline', title: "Manage my kid's sports", subtitle: 'Schedules, RSVPs, and logistics' },
-  { key: 'COMMISSIONER', icon: 'trophy-outline', title: 'Run a league', subtitle: 'Organize seasons, standings, and playoffs' },
-  { key: 'FACILITY_OWNER', icon: 'business-outline', title: 'List my facility', subtitle: 'Manage courts, bookings, and availability' },
-];
-
-import { ALL_SPORTS } from '../../constants/sports';
-const SPORT_OPTIONS = ALL_SPORTS;
-
-const UPGRADE_INTENTS: OnboardingIntent[] = ['COMMISSIONER', 'FACILITY_OWNER'];
+// ── Screen ──
 
 export function ProfileScreen() {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
   const { user: authUser, logout } = useAuth();
-  const { isDependent } = useDependentContext();
   const { width } = useWindowDimensions();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [intents, setIntents] = useState<string[]>(authUser?.intents ?? []);
-  const [sportPrefs, setSportPrefs] = useState<string[]>(authUser?.sportPreferences ?? []);
-  const [upgradeNote, setUpgradeNote] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ games: number; salutes: number; teams: number } | null>(null);
+  const [recentGames, setRecentGames] = useState<Event[]>([]);
+  const [myTeams, setMyTeams] = useState<Team[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+  const loadProfileData = useCallback(async () => {
+    try {
+      const [statsData, teamsData, eventsData] = await Promise.all([
+        userService.getUserStats().catch((e) => { console.warn('Stats fetch failed:', e); return null; }),
+        userService.getUserTeams().catch((e) => { console.warn('Teams fetch failed:', e); return { data: [] }; }),
+        userService.getUserEvents('completed', { limit: 5 }).catch((e) => { console.warn('Events fetch failed:', e); return { data: [] }; }),
+      ]);
+
+      const teams: Team[] = (teamsData as any)?.data ?? [];
+      const events: Event[] = (eventsData as any)?.data ?? [];
+
+      setMyTeams(teams);
+      setRecentGames(events);
+      setStats({
+        games: statsData?.totalBookings ?? events.length,
+        salutes: 0, // Debrief salutes not yet wired
+        teams: teams.length, // Use actual team count, not stats endpoint
+      });
+    } catch {
+      // Silently fail — show zeros
+      setStats({ games: 0, salutes: 0, teams: 0 });
+    } finally {
+      setLoadingStats(false);
+    }
   }, []);
 
-  // ── Intent toggle handler ──────────────────────────
-  const handleToggleIntent = useCallback(async (key: string) => {
-    const wasOn = intents.includes(key);
-    const next = wasOn ? intents.filter((k) => k !== key) : [...intents, key];
-    setIntents(next);
+  useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
 
-    // Show upgrade note when toggling on premium intents
-    if (!wasOn && UPGRADE_INTENTS.includes(key as OnboardingIntent)) {
-      setUpgradeNote('This may require an upgraded plan');
-      setTimeout(() => setUpgradeNote(null), 3000);
-    }
-
-    try {
-      const { user } = await userService.updateIntents(next);
-      if (user) dispatch(setUser(user));
-    } catch {
-      // Revert on failure
-      setIntents(intents);
-    }
-  }, [intents, dispatch]);
-
-  // ── Sport chip toggle handler ──────────────────────
-  const handleToggleSport = useCallback(async (key: string) => {
-    const wasOn = sportPrefs.includes(key);
-    const next = wasOn ? sportPrefs.filter((k) => k !== key) : [...sportPrefs, key];
-    setSportPrefs(next);
-
-    try {
-      await userService.updatePreferences({ preferredSports: next });
-    } catch {
-      setSportPrefs(sportPrefs);
-    }
-  }, [sportPrefs]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadProfileData();
+    setRefreshing(false);
+  }, [loadProfileData]);
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
@@ -108,10 +90,6 @@ export function ProfileScreen() {
       ]);
     }
   };
-
-  const age = authUser?.dateOfBirth
-    ? Math.floor((Date.now() - new Date(authUser.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-    : null;
 
   const contentMaxWidth = width > 600 ? 540 : undefined;
 
@@ -127,131 +105,151 @@ export function ProfileScreen() {
     );
   }
 
+  const sportPrefs = authUser?.sportPreferences ?? [];
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' as unknown as number } : undefined]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+      showsVerticalScrollIndicator={false}
     >
-      {/* Profile Card */}
-      <View style={styles.profileCard}>
-        <View style={styles.profileRow}>
-          {authUser?.profileImage ? (
+      {/* ── Identity Card ──────────────────────────── */}
+      <View style={styles.identityCard}>
+        <View style={styles.identityTop}>
+          {authUser.profileImage ? (
             <Image source={{ uri: authUser.profileImage }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
               <Text style={styles.avatarInitial}>
-                {authUser?.firstName?.[0]?.toUpperCase() || '?'}
+                {authUser.firstName?.[0]?.toUpperCase() || '?'}
               </Text>
             </View>
           )}
-          <View style={styles.profileDetails}>
-            <Text style={styles.profileName}>{authUser?.firstName} {authUser?.lastName}</Text>
-            {(authUser as any)?.gender && (
-              <Text style={styles.detailText}>
-                {(authUser as any).gender === 'male' ? 'Male' : (authUser as any).gender === 'female' ? 'Female' : (authUser as any).gender}
-              </Text>
+          <View style={styles.identityInfo}>
+            <Text style={styles.profileName}>{authUser.firstName} {authUser.lastName}</Text>
+            {(authUser as any)?.address && (
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={13} color={colors.onSurfaceVariant} />
+                <Text style={styles.locationText} numberOfLines={1}>{(authUser as any).address}</Text>
+              </View>
             )}
-            {age != null && <Text style={styles.detailText}>{age} years old</Text>}
-            {authUser?.email && <Text style={styles.detailText}>{authUser.email}</Text>}
-            {authUser?.phoneNumber && <Text style={styles.detailText}>{authUser.phoneNumber}</Text>}
-            {(authUser as any)?.address && <Text style={styles.detailText}>{(authUser as any).address}</Text>}
           </View>
         </View>
-      </View>
 
-      {/* Edit + Settings */}
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.editBtn} onPress={() => (navigation as any).navigate('EditProfile')} activeOpacity={0.7}>
-          <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-          <Text style={styles.editBtnText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingsBtn} onPress={() => (navigation as any).navigate('Settings')} activeOpacity={0.7}>
-          <Ionicons name="settings-outline" size={18} color={colors.onSurfaceVariant} />
-          <Text style={styles.settingsBtnText}>Settings</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Sport Ratings */}
-      {authUser?.id && <SportRatingsSection userId={authUser.id} />}
-
-      {/* ── How I Use Muster ───────────────────────── */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>How I Use Muster</Text>
-      </View>
-      <View style={styles.intentList}>
-        {INTENT_OPTIONS.map((option) => {
-          const isOn = intents.includes(option.key);
-          return (
-            <TouchableOpacity
-              key={option.key}
-              style={styles.intentRow}
-              onPress={() => handleToggleIntent(option.key)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.intentIconCircle, isOn && styles.intentIconCircleActive]}>
-                <Ionicons name={option.icon} size={20} color={isOn ? '#FFFFFF' : colors.primary} />
+        {/* Sport badges */}
+        {sportPrefs.length > 0 && (
+          <View style={styles.sportBadges}>
+            {sportPrefs.map((key) => (
+              <View key={key} style={styles.sportBadge}>
+                <Text style={styles.sportBadgeEmoji}>{getSportEmoji(key)}</Text>
               </View>
-              <View style={styles.intentTextBlock}>
-                <Text style={styles.intentTitle}>{option.title}</Text>
-                <Text style={styles.intentSubtitle}>{option.subtitle}</Text>
-              </View>
-              <Switch
-                value={isOn}
-                onValueChange={() => handleToggleIntent(option.key)}
-                trackColor={{ false: colors.surfaceContainerHigh, true: colors.secondaryContainer }}
-                thumbColor={isOn ? colors.secondary : colors.surfaceDim}
-              />
-            </TouchableOpacity>
-          );
-        })}
+            ))}
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={styles.editLink}
+          onPress={() => (navigation as any).navigate('EditProfile')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="create-outline" size={15} color={colors.primary} />
+          <Text style={styles.editLinkText}>Edit profile</Text>
+        </TouchableOpacity>
       </View>
-      {upgradeNote && (
-        <View style={styles.upgradeNote}>
-          <Ionicons name="information-circle-outline" size={16} color={colors.onSurfaceVariant} />
-          <Text style={styles.upgradeNoteText}>{upgradeNote}</Text>
+
+      {/* ── Stats Row ──────────────────────────────── */}
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{loadingStats ? '-' : stats?.games ?? 0}</Text>
+          <Text style={styles.statLabel}>Games</Text>
         </View>
-      )}
-
-      {/* ── Sports ─────────────────────────────────── */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Sports</Text>
-      </View>
-      <View style={styles.sportChipGrid}>
-        {SPORT_OPTIONS.map((sport) => {
-          const isOn = sportPrefs.includes(sport.key);
-          return (
-            <TouchableOpacity
-              key={sport.key}
-              style={[styles.sportChip, isOn && styles.sportChipActive]}
-              onPress={() => handleToggleSport(sport.key)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.sportChipText, isOn && styles.sportChipTextActive]}>
-                {sport.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* ── Family (visible when GUARDIAN intent is on) ── */}
-      {intents.includes('GUARDIAN') && (
-        <View style={styles.familySection}>
-          <DependentsSection />
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{loadingStats ? '-' : stats?.salutes ?? 0}</Text>
+          <Text style={styles.statLabel}>Salutes</Text>
         </View>
-      )}
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{loadingStats ? '-' : stats?.teams ?? 0}</Text>
+          <Text style={styles.statLabel}>Teams</Text>
+        </View>
+      </View>
 
-      {/* Redeem Code */}
-      <TouchableOpacity style={styles.menuRow} onPress={() => (navigation as any).navigate('RedeemCode')} activeOpacity={0.7}>
-        <Ionicons name="gift-outline" size={20} color={colors.primary} />
-        <Text style={styles.menuRowText}>Redeem Code</Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
-      </TouchableOpacity>
+      {/* ── Recent Games ───────────────────────────── */}
+      <Text style={styles.sectionTitle}>Recent Games</Text>
+      <View style={styles.sectionCard}>
+        {loadingStats ? (
+          Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
+        ) : recentGames.length === 0 ? (
+          <View style={styles.emptySection}>
+            <Ionicons name="calendar-outline" size={32} color={colors.outlineVariant} />
+            <Text style={styles.emptyText}>No games played yet</Text>
+            <TouchableOpacity onPress={() => (navigation as any).getParent()?.navigate('Home', { screen: 'HomeScreen' })} activeOpacity={0.7}>
+              <Text style={styles.emptyAction}>Find one nearby</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          recentGames.map((event, idx) => {
+            const sport = (event as any).sportType ?? '';
+            const sportColor = getSportColor(sport);
+            return (
+              <PressableCard
+                key={event.id}
+                style={[styles.gameRow, idx === recentGames.length - 1 && styles.gameRowLast]}
+                onPress={() => (navigation as any).navigate('Home', { screen: 'EventDetails', params: { eventId: event.id } })}
+              >
+                <View style={[styles.sportDot, { backgroundColor: sportColor }]} />
+                <View style={styles.gameInfo}>
+                  <Text style={styles.gameName} numberOfLines={1}>{event.title}</Text>
+                  <Text style={styles.gameMeta} numberOfLines={1}>
+                    {formatEventDate(event.startTime as any)} {(event as any).facility?.name ? `· ${(event as any).facility.name}` : ''}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={colors.outlineVariant} />
+              </PressableCard>
+            );
+          })
+        )}
+      </View>
 
-      {/* Log Out */}
+      {/* ── Teams ──────────────────────────────────── */}
+      <Text style={styles.sectionTitle}>Teams</Text>
+      <View style={styles.sectionCard}>
+        {loadingStats ? (
+          Array.from({ length: 2 }).map((_, i) => <SkeletonRow key={i} />)
+        ) : myTeams.length === 0 ? (
+          <View style={styles.emptySection}>
+            <Ionicons name="people-outline" size={32} color={colors.outlineVariant} />
+            <Text style={styles.emptyText}>No teams yet</Text>
+            <TouchableOpacity onPress={() => (navigation as any).getParent()?.navigate('Teams', { screen: 'TeamsList' })} activeOpacity={0.7}>
+              <Text style={styles.emptyAction}>Join or create one</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          myTeams.map((team, idx) => {
+            const sport = (team.sportTypes?.[0] ?? (team as any).sportType ?? '') as string;
+            return (
+              <PressableCard
+                key={team.id}
+                style={[styles.gameRow, idx === myTeams.length - 1 && styles.gameRowLast]}
+                onPress={() => (navigation as any).getParent()?.navigate('Teams', { screen: 'TeamDetails', params: { teamId: team.id } })}
+              >
+                <View style={[styles.teamIconCircle, { backgroundColor: getSportColor(sport) + '18' }]}>
+                  <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
+                </View>
+                <View style={styles.gameInfo}>
+                  <Text style={styles.gameName} numberOfLines={1}>{team.name}</Text>
+                  <Text style={styles.gameMeta}>{team.members?.length ?? 0} players</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={colors.outlineVariant} />
+              </PressableCard>
+            );
+          })
+        )}
+      </View>
+
+      {/* ── Log Out ────────────────────────────────── */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
-        <Ionicons name="log-out-outline" size={20} color={colors.onErrorContainer} />
+        <Ionicons name="log-out-outline" size={18} color={colors.error} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
 
@@ -270,24 +268,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  profileCard: {
-    backgroundColor: colors.surfaceContainerLowest,
+
+  // ── Identity Card ──────────────────────────────
+  identityCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 24,
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 2,
+    padding: 20,
   },
-  profileRow: {
+  identityTop: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
   },
   avatarPlaceholder: {
     backgroundColor: colors.primary,
@@ -296,185 +291,178 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontFamily: fonts.ui,
-    fontSize: 36,
+    fontSize: 28,
     color: '#FFFFFF',
   },
-  profileDetails: {
+  identityInfo: {
     flex: 1,
     marginLeft: 16,
-    gap: 2,
+    gap: 4,
   },
   profileName: {
     fontFamily: fonts.heading,
     fontSize: 22,
     color: colors.onSurface,
-    marginBottom: 4,
+    letterSpacing: -0.3,
   },
-  detailText: {
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationText: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.onSurfaceVariant,
-    lineHeight: 20,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    marginTop: 12,
-    gap: 8,
-  },
-  editBtn: {
     flex: 1,
+  },
+  sportBadges: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 9999,
-    borderWidth: 0,
-    backgroundColor: colors.primary,
+    flexWrap: 'wrap',
     gap: 6,
+    marginTop: 14,
   },
-  editBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  settingsBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 9999,
+  sportBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     backgroundColor: colors.surfaceContainer,
-    gap: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  settingsBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
+  sportBadgeEmoji: {
+    fontSize: 16,
   },
-  menuRow: {
+  editLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 14,
+    gap: 4,
+    marginTop: 14,
+    alignSelf: 'flex-start',
   },
-  menuRowText: {
+  editLinkText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.primary,
+  },
+
+  // ── Stats Row ──────────────────────────────────
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  statCard: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.onSurface,
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // ── Section ────────────────────────────────────
+  sectionTitle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 16,
+    color: colors.onSurface,
+    marginTop: 24,
+    marginBottom: 10,
+    letterSpacing: -0.2,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+
+  // ── Game / Team Rows ───────────────────────────
+  gameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant + '50',
+  },
+  gameRowLast: {
+    borderBottomWidth: 0,
+  },
+  sportDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  teamIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamEmoji: {
+    fontSize: 18,
+  },
+  gameInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  gameName: {
     fontFamily: fonts.body,
     fontSize: 15,
     color: colors.onSurface,
-    marginLeft: 10,
   },
+  gameMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+  },
+
+  // ── Empty States ───────────────────────────────
+  emptySection: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  emptyText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+  },
+  emptyAction: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.primary,
+    marginTop: 4,
+  },
+
+  // ── Log Out ────────────────────────────────────
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 32,
     paddingVertical: 14,
-    backgroundColor: colors.errorContainer,
-    borderRadius: 9999,
-    borderWidth: 0,
-  },
-  logoutText: {
-    fontFamily: fonts.ui,
-    fontSize: 15,
-    color: colors.onErrorContainer,
-    marginLeft: 8,
-  },
-
-  // ── Section headers ────────────────────────────────
-  sectionHeader: {
-    marginTop: 28,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.onSurface,
-    letterSpacing: -0.3,
-  },
-
-  // ── How I Use Muster ──────────────────────────────
-  intentList: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  intentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  intentIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.primaryFixed,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  intentIconCircleActive: {
-    backgroundColor: colors.primary,
-  },
-  intentTextBlock: {
-    flex: 1,
-  },
-  intentTitle: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 14,
-    color: colors.onSurface,
-    marginBottom: 1,
-  },
-  intentSubtitle: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
-    lineHeight: 16,
-  },
-  upgradeNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    gap: 6,
-    paddingHorizontal: 4,
-  },
-  upgradeNoteText: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.onSurfaceVariant,
-  },
-
-  // ── Sports chips ──────────────────────────────────
-  sportChipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
   },
-  sportChip: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 9999,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-  },
-  sportChipActive: {
-    backgroundColor: colors.primary,
-  },
-  sportChipText: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 13,
-    color: colors.onSurface,
-  },
-  sportChipTextActive: {
-    color: '#FFFFFF',
-  },
-
-  // ── Family section ────────────────────────────────
-  familySection: {
-    marginTop: 20,
+  logoutText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.error,
   },
 });

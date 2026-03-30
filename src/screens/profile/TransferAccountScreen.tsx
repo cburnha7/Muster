@@ -17,6 +17,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { useAuth } from '../../context/AuthContext';
 import { resetContext } from '../../store/slices/contextSlice';
+import { API_BASE_URL } from '../../services/api/config';
 import { colors, fonts, Spacing } from '../../theme';
 
 /**
@@ -85,7 +86,7 @@ export function TransferAccountScreen() {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/dependents/${dependentId}/transfer`,
+        `${API_BASE_URL}/dependents/${dependentId}/transfer`,
         {
           method: 'POST',
           headers: {
@@ -209,7 +210,7 @@ export function TransferAccountScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
   warningCard: {
     flexDirection: 'row',
     backgroundColor: colors.tertiary + '15',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,

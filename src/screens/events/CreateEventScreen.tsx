@@ -515,7 +515,7 @@ export function CreateEventScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
+  screen: { flex: 1, backgroundColor: colors.background },
   sectionHeadline: {
     fontFamily: fonts.heading,
     fontSize: 20,

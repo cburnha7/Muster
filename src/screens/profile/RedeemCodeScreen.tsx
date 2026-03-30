@@ -75,14 +75,6 @@ export function RedeemCodeScreen() {
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Redeem Code</Text>
-          <View style={{ width: 24 }} />
-        </View>
 
         {successMsg ? (
           <View style={styles.successCard}>
@@ -160,16 +152,8 @@ export function RedeemCodeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
-  content: { padding: 16, paddingBottom: 40 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-    paddingTop: Platform.OS === 'ios' ? 8 : 0,
-  },
-  headerTitle: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.onSurface },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 20, paddingBottom: 40 },
   label: { fontFamily: fonts.label, fontSize: 13, color: colors.outline, textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: {
