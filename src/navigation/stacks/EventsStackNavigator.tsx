@@ -13,16 +13,16 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.white },
+  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
+  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
 };
 
 export function EventsStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="EventsList" component={EventsListScreen} />
-      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: 'Event' }} />
+      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
       <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ ...detailHeader, headerTitle: 'New Event' }} />
       <Stack.Screen name="EditEvent" component={EditEventScreen} options={{ ...detailHeader, headerTitle: 'Edit Event' }} />
     </Stack.Navigator>

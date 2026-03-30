@@ -25,26 +25,46 @@ const getSportIcon = (sportType: SportType): string => {
   }
 };
 
+const getSportColor = (sportType: SportType): string => {
+  switch (sportType) {
+    case SportType.BASKETBALL: return '#E86825';
+    case SportType.SOCCER: return '#006D32';
+    case SportType.TENNIS:
+    case SportType.PICKLEBALL: return '#C4A017';
+    case SportType.VOLLEYBALL: return '#8B5CF6';
+    case SportType.SOFTBALL:
+    case SportType.BASEBALL: return '#BA1A1A';
+    case SportType.FLAG_FOOTBALL: return '#0052FF';
+    default: return colors.primary;
+  }
+};
+
 const formatSport = (s: string): string =>
   s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
 
 export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner, style }) => {
   const seasonName = league.seasonName || league.name;
+  const sportColor = getSportColor(league.sportType);
 
   return (
-    <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(league)} activeOpacity={0.7}>
-      <Ionicons name={getSportIcon(league.sportType) as any} size={22} color={colors.cobalt} />
+    <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(league)} activeOpacity={0.85}>
+      <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
+        <Ionicons name={getSportIcon(league.sportType) as any} size={20} color={sportColor} />
+      </View>
+
       <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={1}>{seasonName}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>{seasonName}</Text>
+          {isOwner && (
+            <View style={styles.commissionerBadge}>
+              <Text style={styles.commissionerText}>Commissioner</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.meta}>{formatSport(league.sportType)}</Text>
       </View>
-      {isOwner && (
-        <View style={styles.badge}>
-          <Ionicons name="star" size={10} color="#FFFFFF" />
-          <Text style={styles.badgeText}>Commissioner</Text>
-        </View>
-      )}
-      <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+
+      <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
     </TouchableOpacity>
   );
 };
@@ -53,45 +73,50 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginBottom: 6,
-    gap: 10,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingVertical: 14,
+    marginBottom: 8,
+    gap: 12,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
     flex: 1,
+    gap: 2,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   name: {
-    fontFamily: fonts.label,
+    fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.onSurface,
+    flexShrink: 1,
+  },
+  commissionerBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+  },
+  commissionerText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontFamily: fonts.label,
+    letterSpacing: 0.4,
   },
   meta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 1,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8A030',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 8,
-    gap: 3,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontFamily: fonts.label,
+    color: colors.onSurfaceVariant,
   },
 });

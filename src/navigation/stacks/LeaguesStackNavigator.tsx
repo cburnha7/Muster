@@ -19,17 +19,17 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.white },
+  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
+  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
 };
 
 export function LeaguesStackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="LeaguesBrowser" component={LeaguesBrowserScreen} />
-      <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} options={{ ...detailHeader, headerTitle: 'League' }} />
-      <Stack.Screen name="CreateLeague" component={CreateLeagueScreen} options={{ ...detailHeader, headerTitle: 'New League' }} />
+      <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
+      <Stack.Screen name="CreateLeague" component={CreateLeagueScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ManageLeague" component={ManageLeagueScreen} options={{ ...detailHeader, headerTitle: 'Manage' }} />
       <Stack.Screen name="CreateMatch" component={CreateMatchScreen} options={{ ...detailHeader, headerTitle: 'New Match' }} />
       <Stack.Screen name="RecordMatchResult" component={RecordMatchResultScreen} options={{ ...detailHeader, headerTitle: 'Record Result' }} />

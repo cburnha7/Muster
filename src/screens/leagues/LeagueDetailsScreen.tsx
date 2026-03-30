@@ -19,46 +19,76 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { LeagueService } from '../../services/api/LeagueService';
 import { leagueService } from '../../services/api/LeagueService';
-import { leagueDuesService, RosterDuesStatusItem } from '../../services/api/LeagueDuesService';
+import { conversationService } from '../../services/api/ConversationService';
 import { userService } from '../../services/api/UserService';
 import { cacheService } from '../../services/api/CacheService';
-import { SportType, Team, Event, UpdateLeagueData, TeamRole } from '../../types';
+import { Team, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
 import { colors, fonts } from '../../theme';
-import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
-import { BalanceStatusBadge, BalanceStatus } from '../../components/dues/BalanceStatusBadge';
 import { LeagueLedger } from '../../components/league/LeagueLedger';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { loggingService } from '../../services/LoggingService';
-
-/** Shape returned by GET /api/leagues/:id/events */
-interface LeagueEvent extends Event {
-  assignedRosters: Array<{ id: string; name: string }>;
-  scheduledStatus?: string;
-}
+import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import { getSportColor } from '../../constants/sportColors';
 
 // Import tab components
 import { StandingsTab } from './tabs/StandingsTab';
 import { MatchesTab } from './tabs/MatchesTab';
 import { PlayersTab } from './tabs/PlayersTab';
 import { TeamsTab } from './tabs/TeamsTab';
-import { InfoTab } from './tabs/InfoTab';
 
 type TabKey = 'standings' | 'matches' | 'players' | 'teams' | 'info';
+
+// ── Local format helpers ─────────────────────────────────────────────────────
+
+function formatDateShort(date?: Date | string | null): string {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatTime(time?: string | null): string {
+  if (!time) return '';
+  // time may be "HH:MM" or "HH:MM:SS"
+  const parts = time.split(':');
+  const hours = parseInt(parts[0] ?? '0', 10);
+  const minutes = parts[1] ?? '00';
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const h = hours % 12 || 12;
+  return `${h}:${minutes} ${period}`;
+}
+
+function buildSeasonSummary(league: League): string {
+  const parts: string[] = [];
+  if (league.preferredGameDays?.length) {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    parts.push('Games on ' + league.preferredGameDays.map((d) => dayNames[d]).join(', '));
+  }
+  if (league.preferredTimeWindowStart && league.preferredTimeWindowEnd) {
+    parts.push(`${formatTime(league.preferredTimeWindowStart)}–${formatTime(league.preferredTimeWindowEnd)}`);
+  }
+  if (league.startDate) {
+    parts.push('Starts ' + formatDateShort(league.startDate));
+  }
+  if (league.seasonGameCount) {
+    parts.push(`${league.seasonGameCount} games`);
+  }
+  return parts.join(' · ') || 'Schedule TBD';
+}
 
 export function LeagueDetailsScreen(): React.ReactElement {
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId, readOnly } = (route.params as any) || {};
 
-  const currentUser = useSelector((state: RootState) => state.auth.user);
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const currentUser = useSelector((state: RootState) => state.auth?.user);
+  const isAuthenticated = useSelector((state: RootState) => state.auth?.isAuthenticated);
   const userRosters = useSelector(selectUserTeams) as Team[];
 
   const [league, setLeague] = useState<League | null>(null);
   const [members, setMembers] = useState<LeagueMembership[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<LeagueEvent[]>([]);
   const [fetchedUserRosters, setFetchedUserRosters] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -68,13 +98,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [isUpdating, setIsUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  // Roster dues status (for paid leagues — visible to commissioner)
-  const [rosterDuesMap, setRosterDuesMap] = useState<Map<string, boolean>>(new Map());
-  const [leagueDuesAmount, setLeagueDuesAmount] = useState<number | null>(null);
-  const [leaguePricingType, setLeaguePricingType] = useState<string>('free');
-
-  // Balance status per roster (visible to commissioner)
-  const [rosterBalanceMap, setRosterBalanceMap] = useState<Map<string, BalanceStatus>>(new Map());
 
   // ── Data loading ────────────────────────────────────────────────
   const loadLeague = useCallback(async (isRefresh = false) => {
@@ -91,7 +114,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
       setError(null);
 
       const svc = new LeagueService();
-      const [leagueData, membersResponse, eventsData, userTeamsRes] = await Promise.all([
+      const [leagueData, membersResponse, , userTeamsRes] = await Promise.all([
         svc.getLeagueById(leagueId, true),
         svc.getMembers(leagueId, 1, 100, true), // includePending for commissioner
         svc.getLeagueEvents(leagueId),
@@ -104,51 +127,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
       // membersResponse is { leagueType, data, pagination } — extract the data array
       const membersData = (membersResponse as any).data || membersResponse.data || [];
       setMembers(Array.isArray(membersData) ? membersData : []);
-      setUpcomingEvents((eventsData as LeagueEvent[]) || []);
       setFetchedUserRosters((userTeamsRes as any)?.data ?? []);
 
-      // Load roster dues status for paid leagues
-      try {
-        const leagueAny = typedLeague as any;
-        if (leagueAny.pricingType === 'paid' && leagueAny.seasons?.length > 0) {
-          const activeSeason = leagueAny.seasons.find((s: any) => s.isActive);
-          if (activeSeason) {
-            const duesResult = await leagueDuesService.getLeagueRosterStatus(leagueId, activeSeason.id);
-            setLeaguePricingType(duesResult.pricingType);
-            setLeagueDuesAmount(duesResult.duesAmount);
-            const map = new Map<string, boolean>();
-            for (const r of duesResult.rosters) {
-              map.set(r.rosterId, r.paid);
-            }
-            setRosterDuesMap(map);
-          }
-        }
-      } catch {
-        // Dues status is supplementary — don't block the screen
-      }
-
-      // Load balance status per roster (for commissioner view)
-      try {
-        const leagueAny = typedLeague as any;
-        const activeSeason = leagueAny.seasons?.find((s: any) => s.isActive);
-        const avgCourtCost = activeSeason?.avgCourtCost;
-        if (avgCourtCost && avgCourtCost > 0) {
-          const rosterMembers = (Array.isArray(membersData) ? membersData : [])
-            .filter((m: any) => m.memberType === 'roster' && m.status === 'active');
-          const balanceMap = new Map<string, BalanceStatus>();
-          for (const m of rosterMembers) {
-            const rosterId = m.team?.id || m.memberId;
-            // Derive balance status from avgCourtCost thresholds on the client side
-            // In a real implementation this would call an API endpoint
-            // For now, default to 'funded' — the server-side recalculation (task 10.5)
-            // will provide actual statuses via an API
-            balanceMap.set(rosterId, 'funded');
-          }
-          setRosterBalanceMap(balanceMap);
-        }
-      } catch {
-        // Balance status is supplementary — don't block the screen
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load league');
     } finally {
@@ -159,12 +139,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   useFocusEffect(useCallback(() => { loadLeague(); }, [loadLeague]));
 
-  // Set dynamic header title to league name
-  React.useEffect(() => {
-    if (league?.name) {
-      (navigation as any).setOptions({ headerTitle: league.name });
-    }
-  }, [league?.name, navigation]);
 
   // ── Derived state ───────────────────────────────────────────────
   const isOperator = league ? (currentUser?.id === league.organizerId && !readOnly) : false;
@@ -202,22 +176,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
     : pendingFromLeague;
 
   // ── Helpers ─────────────────────────────────────────────────────
-  const getSportIcon = (sportType: string) => {
-    switch (sportType) {
-      case SportType.BASKETBALL: case 'basketball': return 'basketball-outline';
-      case SportType.SOCCER: case 'soccer': return 'football-outline';
-      case SportType.TENNIS: case 'tennis':
-      case SportType.PICKLEBALL: case 'pickleball':
-      case SportType.BADMINTON: case 'badminton': return 'tennisball-outline';
-      case SportType.VOLLEYBALL: case 'volleyball': return 'american-football-outline';
-      case SportType.SOFTBALL: case 'softball':
-      case SportType.BASEBALL: case 'baseball': return 'baseball-outline';
-      case SportType.FLAG_FOOTBALL: case 'flag_football': return 'flag-outline';
-      case SportType.KICKBALL: case 'kickball': return 'football-outline';
-      default: return 'fitness-outline';
-    }
-  };
-
   const formatSkillLevel = (level?: string): string => {
     if (!level) return 'Open';
     switch (level.toLowerCase()) {
@@ -227,12 +185,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
       case 'all_levels': return 'All Levels';
       default: return level.charAt(0).toUpperCase() + level.slice(1).replace(/_/g, ' ');
     }
-  };
-
-  const formatDate = (date?: Date | string) => {
-    if (!date) return 'TBD';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   // ── Commissioner actions ────────────────────────────────────────
@@ -424,117 +376,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
     }
   };
 
-  // ── Render helpers ──────────────────────────────────────────────
-
-  const renderAddRosterOption = () => {
-    // Hide in readOnly mode
-    if (readOnly) return null;
-    if (isOperator || eligibleRosters.length === 0) return null;
-    // Only show if user has some connection to the league (pending invitation or active member)
-    const userHasConnection = pendingUserRosterInvitations.length > 0 ||
-      members.some((m) => m.memberType === 'roster' && userOwnedRosters.some((r) => r.id === m.memberId));
-    if (!userHasConnection) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Add a Roster</Text>
-        <Text style={styles.sectionSubtext}>Select one of your rosters to add to this league</Text>
-        {eligibleRosters.map((roster) => (
-          <TouchableOpacity
-            key={roster.id}
-            style={styles.addRosterItem}
-            onPress={() => handleAddRosterToLeague(roster)}
-            disabled={isActionLoading}
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${roster.name}`}
-          >
-            <Ionicons name="add-circle-outline" size={22} color={colors.cobalt} />
-            <Text style={styles.addRosterName}>{roster.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  const renderActionBar = () => {
-    // Show Join Up + Decline for pending roster invitations (works in both readOnly and normal mode)
-    if (pendingUserRosterInvitations.length > 0) {
-      return (
-        <View style={styles.actionBar}>
-          <TouchableOpacity
-            style={styles.joinBtn}
-            onPress={() => handleConfirmInvitation(pendingUserRosterInvitations[0]!)}
-            disabled={isActionLoading}
-            accessibilityRole="button"
-            accessibilityLabel="Confirm"
-          >
-            <Text style={styles.joinBtnText}>Confirm</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.stepOutBtn, { marginTop: 8 }]}
-            onPress={() => handleDeclineInvitation(pendingUserRosterInvitations[0]!)}
-            disabled={isActionLoading}
-            accessibilityRole="button"
-            accessibilityLabel="Decline invitation"
-          >
-            <Text style={styles.stepOutBtnText}>Decline</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    if (readOnly) return null;
-
-    if (isOperator) return null;
-    if (!isAuthenticated || !currentUser) return null;
-
-    // Show We're Out if user's roster is active in the league
-    const userActiveRosterInLeague = members.find(
-      (m) => m.memberType === 'roster' && m.status === 'active' &&
-        userOwnedRosters.some((r) => r.id === m.memberId)
-    );
-
-    if (userActiveRosterInLeague) {
-      return (
-        <View style={styles.actionBar}>
-          <TouchableOpacity
-            style={styles.stepOutBtn}
-            onPress={() => handleStepOut(userActiveRosterInLeague.memberId)}
-            disabled={isActionLoading}
-            accessibilityRole="button"
-            accessibilityLabel="Leave league"
-          >
-            <Text style={styles.stepOutBtnText}>Leave</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    // Show Join Up if user has eligible roster not yet in the league
-    if (hasEligibleRoster) {
-      const userRosterInLeague = members.some(
-        (m) => m.memberType === 'roster' && userOwnedRosters.some((r) => r.id === m.memberId)
-      );
-      if (!userRosterInLeague) {
-        return (
-          <View style={styles.actionBar}>
-            <TouchableOpacity
-              style={styles.joinBtn}
-              onPress={handleJoinTeamLeague}
-              disabled={isActionLoading}
-              accessibilityRole="button"
-              accessibilityLabel="Join"
-            >
-              <Text style={styles.joinBtnText}>Join</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      }
-    }
-
-    return null;
-  };
-
   const renderTabBar = () => (
     <View style={styles.tabBar}>
       {([
@@ -563,24 +404,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
       ))}
     </View>
   );
-
-  const renderTabContent = () => {
-    if (!league) return null;
-    switch (activeTab) {
-      case 'standings':
-        return <StandingsTab leagueId={leagueId} />;
-      case 'matches':
-        return <MatchesTab leagueId={leagueId} isOperator={isOperator} />;
-      case 'players':
-        return <PlayersTab leagueId={leagueId} />;
-      case 'teams':
-        return <TeamsTab leagueId={leagueId} />;
-      case 'info':
-        return <InfoTab league={league} />;
-      default:
-        return null;
-    }
-  };
 
   // ── Loading / Error states ──────────────────────────────────────
   if (isLoading && !league) {
@@ -676,7 +499,6 @@ export function LeagueDetailsScreen(): React.ReactElement {
   }
 
   // ── Non-commissioner view ───────────────────────────────────────
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Derive roster lists — prefer league.memberships (from GET /leagues/:id), fall back to members state
   const leagueMemberships: any[] = (league as any)?.memberships || [];
@@ -684,29 +506,113 @@ export function LeagueDetailsScreen(): React.ReactElement {
     ? leagueMemberships.filter((m: any) => m.memberType === 'roster')
     : members.filter((m) => m.memberType === 'roster');
   const confirmedRosters = allRosterData.filter((m: any) => m.status === 'active');
-  const invitedRostersList = allRosterData.filter((m: any) => m.status === 'pending');
+  const invitedRosters = allRosterData.filter((m: any) => m.status === 'pending');
 
-  const projectedEndDate = (() => {
-    if (!league?.startDate || !league?.seasonLength) return '';
-    const len = typeof league.seasonLength === 'number' ? league.seasonLength : parseInt(String(league.seasonLength));
-    if (isNaN(len) || len < 1) return '';
-    const start = new Date(league.startDate as any);
-    if (isNaN(start.getTime())) return '';
-    const end = new Date(start);
-    if (league.scheduleFrequency === 'monthly') {
-      end.setMonth(end.getMonth() + len);
-    } else {
-      end.setDate(end.getDate() + len * 7);
-    }
-    return end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  })();
+  // Labels for HeroSection badges
+  const sportLabel = league.sportType
+    ? league.sportType.charAt(0).toUpperCase() + league.sportType.slice(1).replace(/_/g, ' ')
+    : '';
+  const skillLabel = formatSkillLevel(league.skillLevel);
+  const formatLabel = (league as any).leagueFormat === 'season' ? 'Season'
+    : (league as any).leagueFormat === 'season_with_playoffs' ? 'Season + Playoffs'
+    : (league as any).leagueFormat === 'tournament' ? 'Tournament'
+    : '';
+  const statusLabel = league.isActive ? 'In progress' : 'Registration open';
 
-  const ReadOnlyField = ({ label, value }: { label: string; value: string }) => (
-    <View style={styles.roField}>
-      <Text style={styles.roFieldLabel}>{label}</Text>
-      <Text style={styles.roFieldValue}>{value || '—'}</Text>
-    </View>
+  // Season summary subline for hero
+  const seasonSummaryLine = [
+    confirmedRosters.length ? `${confirmedRosters.length} teams` : null,
+    league.startDate ? `Starts ${formatDateShort(league.startDate)}` : null,
+  ].filter(Boolean).join(' · ') || undefined;
+
+  // hasSeasonInfo: true if buildSeasonSummary has real content
+  const hasSeasonInfo = !!(
+    league.preferredGameDays?.length ||
+    (league.preferredTimeWindowStart && league.preferredTimeWindowEnd) ||
+    league.startDate ||
+    league.seasonGameCount
   );
+
+  // Max roster count from league config
+  const leagueAny = league as any;
+  const maxRosters: number | null = leagueAny.maxRosters ?? leagueAny.teamCount ?? null;
+  const registrationOpen = !league.isActive;
+  const spotsRemaining = maxRosters != null ? maxRosters - confirmedRosters.length : 0;
+
+  // Commissioner info
+  const commissioner: { name: string } | null = league.organizer
+    ? { name: (league.organizer as any).displayName || (league.organizer as any).name || (league.organizer as any).email || 'Commissioner' }
+    : null;
+
+  // User's active roster in the league (for "Leave" logic)
+  const userActiveRosterInLeague = members.find(
+    (m) => m.memberType === 'roster' && m.status === 'active' &&
+      userOwnedRosters.some((r) => r.id === m.memberId)
+  );
+
+  // ── FixedBottomCTA logic ─────────────────────────────────────────
+  const renderBottomCTA = () => {
+    // Commissioner: "Manage league"
+    if (isOperator) {
+      return (
+        <FixedBottomCTA
+          label="Manage league"
+          onPress={() => setEditMode(true)}
+          variant="primary"
+          loading={isActionLoading}
+        />
+      );
+    }
+
+    // Has pending invite: "Accept invitation"
+    if (pendingUserRosterInvitations.length > 0) {
+      return (
+        <FixedBottomCTA
+          label="Accept invitation"
+          onPress={() => handleConfirmInvitation(pendingUserRosterInvitations[0]!)}
+          variant="primary"
+          loading={isActionLoading}
+          secondaryLabel="Decline"
+          onSecondaryPress={() => handleDeclineInvitation(pendingUserRosterInvitations[0]!)}
+        />
+      );
+    }
+
+    if (readOnly) return null;
+    if (!isAuthenticated || !currentUser) return null;
+
+    // Already registered: "You're registered ✓" with a "Leave" option
+    if (userActiveRosterInLeague) {
+      return (
+        <FixedBottomCTA
+          label="You're registered ✓"
+          onPress={() => {}}
+          variant="confirmed"
+          secondaryLabel="Leave league"
+          onSecondaryPress={() => handleStepOut(userActiveRosterInLeague.memberId)}
+        />
+      );
+    }
+
+    // Registration open + eligible user: "Register your team"
+    if (hasEligibleRoster && registrationOpen) {
+      const userRosterInLeague = members.some(
+        (m) => m.memberType === 'roster' && userOwnedRosters.some((r) => r.id === m.memberId)
+      );
+      if (!userRosterInLeague) {
+        return (
+          <FixedBottomCTA
+            label="Register your team"
+            onPress={handleJoinTeamLeague}
+            variant="primary"
+            loading={isActionLoading}
+          />
+        );
+      }
+    }
+
+    return null;
+  };
 
   return (
     <View style={styles.container}>
@@ -755,241 +661,142 @@ export function LeagueDetailsScreen(): React.ReactElement {
           </View>
         )}
 
-        <View style={styles.roForm}>
-          {/* League Format */}
-          <ReadOnlyField label="League Format" value={
-            (league as any).leagueFormat === 'season' ? 'Season' :
-            (league as any).leagueFormat === 'season_with_playoffs' ? 'Season with Playoffs' :
-            (league as any).leagueFormat === 'tournament' ? 'Tournament' : '—'
-          } />
+        {/* HeroSection — always visible above the tab bar */}
+        <HeroSection
+          title={league.name}
+          sportColor={getSportColor(league.sportType)}
+          badges={[
+            { label: sportLabel },
+            { label: skillLabel },
+            { label: formatLabel },
+            { label: statusLabel },
+          ].filter((b) => b.label && b.label !== '—' && b.label !== '')}
+          {...(league.description ? { headline: league.description.slice(0, 80) + (league.description.length > 80 ? '…' : '') } : {})}
+          {...(seasonSummaryLine ? { subline: seasonSummaryLine } : {})}
+        />
 
-          {/* Core fields */}
-          <ReadOnlyField label="League Name" value={league.name} />
-          <ReadOnlyField label="Description" value={league.description || ''} />
-          <ReadOnlyField label="Sport" value={league.sportType ? league.sportType.charAt(0).toUpperCase() + league.sportType.slice(1).replace(/_/g, ' ') : ''} />
-          <ReadOnlyField label="Skill Level" value={formatSkillLevel(league.skillLevel)} />
+        {/* League Channel Chat button */}
+        {(isOperator || userActiveRosterInLeague) && (
+          <TouchableOpacity
+            style={styles.chatBtn}
+            onPress={async () => {
+              try {
+                const convs = await conversationService.getConversations('LEAGUE_CHANNEL');
+                const leagueConv = convs.find((c) => c.entityId === leagueId);
+                if (leagueConv) {
+                  (navigation as any).navigate('Messages', {
+                    screen: 'Chat',
+                    params: { conversationId: leagueConv.id, title: league.name ?? 'League Channel', type: 'LEAGUE_CHANNEL' },
+                  });
+                }
+              } catch (e) {
+                console.error('Navigate to chat error:', e);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="chatbubbles-outline" size={18} color={colors.cobalt} />
+            <Text style={styles.chatBtnText}>League Channel</Text>
+          </TouchableOpacity>
+        )}
 
-          {/* Season Start Date */}
-          <ReadOnlyField label="Season Start Date" value={formatDate(league.startDate)} />
+        {/* Tab bar below hero */}
+        {renderTabBar()}
 
-          {/* Game Frequency */}
-          <ReadOnlyField label="Game Frequency" value={
-            (league as any).gameFrequency === 'all_at_once' ? 'All at Once' :
-            (league as any).gameFrequency === 'weekly' ? 'Weekly' :
-            (league as any).gameFrequency === 'monthly' ? 'Monthly' :
-            league.scheduleFrequency ? league.scheduleFrequency.charAt(0).toUpperCase() + league.scheduleFrequency.slice(1) : '—'
-          } />
+        {/* Tab content */}
+        {activeTab === 'standings' && (
+          <StandingsTab leagueId={leagueId} />
+        )}
 
-          {/* Season Length — Season and Season with Playoffs only */}
-          {((league as any).leagueFormat === 'season' || (league as any).leagueFormat === 'season_with_playoffs') && (
-            <ReadOnlyField
-              label={`Season Length${league.scheduleFrequency ? ` (${league.scheduleFrequency === 'weekly' ? 'weeks' : 'months'})` : ''}`}
-              value={league.seasonLength != null ? String(league.seasonLength) : ''}
-            />
-          )}
+        {activeTab === 'matches' && (
+          <MatchesTab leagueId={leagueId} isOperator={isOperator} />
+        )}
 
-          {/* Number of Games per Roster — Season and Season with Playoffs only */}
-          {((league as any).leagueFormat === 'season' || (league as any).leagueFormat === 'season_with_playoffs') && (
-            <ReadOnlyField label="Games per Roster" value={league.seasonGameCount != null ? String(league.seasonGameCount) : ''} />
-          )}
+        {activeTab === 'players' && (
+          <PlayersTab leagueId={leagueId} />
+        )}
 
-          {/* Playoff fields — Season with Playoffs only */}
-          {(league as any).leagueFormat === 'season_with_playoffs' && (
-            <>
-              <ReadOnlyField label="Playoff Rosters" value={(league as any).playoffTeamCount != null ? String((league as any).playoffTeamCount) : '—'} />
-              <ReadOnlyField label="Playoff Format" value={
-                (league as any).eliminationFormat === 'single_elimination' ? 'Single Elimination' :
-                (league as any).eliminationFormat === 'double_elimination' ? 'Double Elimination' : '—'
-              } />
-            </>
-          )}
+        {activeTab === 'teams' && (
+          <TeamsTab leagueId={leagueId} />
+        )}
 
-          {/* Tournament fields */}
-          {(league as any).leagueFormat === 'tournament' && (
-            <ReadOnlyField label="Elimination Format" value={
-              (league as any).eliminationFormat === 'single_elimination' ? 'Single Elimination' :
-              (league as any).eliminationFormat === 'double_elimination' ? 'Double Elimination' : '—'
-            } />
-          )}
-
-          {/* Projected End Date */}
-          <View style={styles.roProjectedEndRow}>
-            <Text style={styles.roFieldLabel}>Projected End Date</Text>
-            <Text style={styles.roProjectedEndValue}>
-              {projectedEndDate || 'Not available'}
-            </Text>
-          </View>
-
-          {/* Schedule fields */}
-          <ReadOnlyField label="Suggested Roster Size" value={league.suggestedRosterSize != null ? String(league.suggestedRosterSize) : (league.minimumRosterSize != null ? String(league.minimumRosterSize) : '')} />
-
-          {/* Game Day */}
-          <Text style={styles.roFieldLabel}>Game Day</Text>
-          <View style={styles.roDayChipsRow}>
-            {dayLabels.map((label, idx) => {
-              const isSelected = league.preferredGameDays?.includes(idx);
-              return (
-                <View key={idx} style={[styles.roDayChip, isSelected && styles.roDayChipSelected]}>
-                  <Text style={[styles.roDayChipText, isSelected && styles.roDayChipTextSelected]}>{label}</Text>
-                </View>
-              );
-            })}
-          </View>
-
-          {/* Time Range */}
-          <ReadOnlyField label="Time Range Start" value={league.preferredTimeWindowStart || ''} />
-          <ReadOnlyField label="Time Range End" value={league.preferredTimeWindowEnd || ''} />
-
-          {/* Registration Cutoff */}
-          <ReadOnlyField label="Registration Cutoff" value={league.registrationCloseDate ? formatDate(league.registrationCloseDate) : ''} />
-
-          {/* Roster Lists */}
-              {/* Invited Rosters */}
-              {invitedRostersList.length > 0 && (
-                <View style={styles.roRosterSection}>
-                  <Text style={styles.roRosterSectionTitleInvited}>Invited ({invitedRostersList.length})</Text>
-                  <Text style={styles.roRosterDescription}>These rosters have been invited but haven't joined yet.</Text>
-                  {invitedRostersList.map((m: any) => {
-                    const team = m.team;
-                    const name = team?.name || m.memberId;
-                    const sport = team?.sportType || '';
-                    const isPrivate = team?.isPrivate === true;
-                    const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
-                    return (
-                      <View key={m.id} style={styles.roRosterItem}>
-                        <View style={[styles.roRosterIcon, { backgroundColor: colors.gold }]}>
-                          <Ionicons name="time-outline" size={18} color="#FFFFFF" />
-                        </View>
-                        <View style={styles.roRosterInfo}>
-                          <Text style={styles.roRosterName}>{name}</Text>
-                          <Text style={styles.roRosterMeta}>
-                            {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : ''}
-                            {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
-                          </Text>
-                        </View>
-                        <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
-                          <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
-                            {isPrivate ? 'Private' : 'Public'}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-
-              {/* Confirmed Rosters */}
-              <View style={styles.roRosterSection}>
-                <Text style={styles.roRosterSectionTitle}>Rosters ({confirmedRosters.length})</Text>
-                {leaguePricingType === 'paid' && leagueDuesAmount != null && rosterDuesMap.size > 0 && (
-                  <View style={styles.roDuesSummary}>
-                    <Ionicons name="cash-outline" size={14} color={colors.cobalt} />
-                    <Text style={styles.roDuesSummaryText}>
-                      Season dues: ${(leagueDuesAmount / 100).toFixed(2)} · {
-                        Array.from(rosterDuesMap.values()).filter(Boolean).length
-                      }/{rosterDuesMap.size} paid
-                    </Text>
-                  </View>
-                )}
-                {confirmedRosters.length > 0 ? (
-                  confirmedRosters.map((m: any) => {
-                    const team = m.team;
-                    const name = team?.name || m.memberId;
-                    const sport = team?.sportType || '';
-                    const isPrivate = team?.isPrivate === true;
-                    const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
-                    const rosterId = team?.id || m.memberId;
-                    const hasDuesData = leaguePricingType === 'paid' && rosterDuesMap.size > 0;
-                    const rosterPaid = rosterDuesMap.get(rosterId);
-                    const balanceStatus = rosterBalanceMap.get(rosterId);
-                    return (
-                      <View key={m.id} style={styles.roRosterItem}>
-                        <View style={styles.roRosterIcon}>
-                          <Ionicons name="shield-outline" size={18} color="#FFFFFF" />
-                        </View>
-                        <View style={styles.roRosterInfo}>
-                          <Text style={styles.roRosterName}>{name}</Text>
-                          <Text style={styles.roRosterMeta}>
-                            {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : ''}
-                            {!isPrivate && playerCount > 0 ? ` · ${playerCount} players` : ''}
-                          </Text>
-                        </View>
-                        <View style={styles.roBadgeRow}>
-                          {balanceStatus && (
-                            <BalanceStatusBadge status={balanceStatus} compact={hasDuesData} />
-                          )}
-                          {hasDuesData ? (
-                            <DuesStatusBadge status={rosterPaid ? 'paid' : 'unpaid'} />
-                          ) : !balanceStatus ? (
-                            <View style={[styles.roVisibilityBadge, isPrivate && styles.roVisibilityBadgePrivate]}>
-                              <Text style={[styles.roVisibilityText, isPrivate && styles.roVisibilityTextPrivate]}>
-                                {isPrivate ? 'Private' : 'Public'}
-                              </Text>
-                            </View>
-                          ) : null}
-                        </View>
-                      </View>
-                    );
-                  })
-                ) : (
-                  <Text style={styles.roRosterEmpty}>No rosters yet.</Text>
-                )}
-              </View>
-
-          {/* Track Standings — display only, hidden for tournament format */}
-          {league.leagueFormat !== 'tournament' && (
+        {activeTab === 'info' && (
           <>
-          <View style={styles.roToggleCard}>
-            <View style={styles.roToggleRow}>
-              <View style={styles.roToggleInfo}>
-                <Text style={styles.roToggleLabel}>Track Standings</Text>
-                <Text style={styles.roToggleDescription}>
-                  Record wins, draws, and losses to maintain a league standings table
-                </Text>
-              </View>
-              <View style={[styles.roTogglePill, league.trackStandings !== false && styles.roTogglePillActive]}>
-                <Text style={[styles.roTogglePillText, league.trackStandings !== false && styles.roTogglePillTextActive]}>
-                  {league.trackStandings !== false ? 'On' : 'Off'}
-                </Text>
-              </View>
-            </View>
-          </View>
+            {/* Season card — only show if there are real values */}
+            {hasSeasonInfo && (
+              <DetailCard title="The season" delay={0}>
+                <Text style={styles.seasonSummary}>{buildSeasonSummary(league)}</Text>
+              </DetailCard>
+            )}
 
-          {/* Points Config — only when tracking standings */}
-          {league.trackStandings !== false && league.pointsConfig && (
-            <View style={styles.roPointsSection}>
-              <ReadOnlyField label="Points for Win" value={String(league.pointsConfig.win)} />
-              <ReadOnlyField label="Points for Draw" value={String(league.pointsConfig.draw)} />
-              <ReadOnlyField label="Points for Loss" value={String(league.pointsConfig.loss)} />
-            </View>
-          )}
+            {/* Teams card */}
+            <DetailCard title={`Teams (${confirmedRosters.length})`} delay={50}>
+              {confirmedRosters.length === 0 ? (
+                <Text style={styles.emptyMsg}>No teams registered yet</Text>
+              ) : (
+                confirmedRosters.map((m: any) => {
+                  const team = m.team;
+                  const name = team?.name || m.memberId;
+                  const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
+                  const teamId = team?.id || m.memberId;
+                  return (
+                    <PersonRow
+                      key={m.id}
+                      name={name}
+                      subtitle={`${playerCount} players`}
+                      onPress={() => (navigation as any).navigate('TeamDetails', { teamId })}
+                    />
+                  );
+                })
+              )}
+              {registrationOpen && maxRosters != null && spotsRemaining > 0 && (
+                <Text style={styles.spotsText}>{spotsRemaining} spots remaining</Text>
+              )}
+            </DetailCard>
 
-          {/* Standings table — if tracking standings */}
-          {league.trackStandings !== false && (
-            <View style={styles.roStandingsSection}>
-              <StandingsTab leagueId={leagueId} />
-            </View>
-          )}
+            {/* Invited teams — if commissioner */}
+            {isOperator && invitedRosters.length > 0 && (
+              <DetailCard title="Pending invitations" delay={100}>
+                {invitedRosters.map((m: any) => {
+                  const team = m.team;
+                  const name = team?.name || m.memberId;
+                  return (
+                    <PersonRow
+                      key={m.id}
+                      name={name}
+                      role="Pending"
+                    />
+                  );
+                })}
+              </DetailCard>
+            )}
+
+            {/* Commissioner card */}
+            {commissioner && (
+              <DetailCard title="Commissioner" delay={150}>
+                <PersonRow
+                  name={commissioner.name}
+                  role="Commissioner"
+                />
+              </DetailCard>
+            )}
+
+            {/* Add roster section (if user has eligible rosters not in league) */}
+            {eligibleRosters.length > 0 && registrationOpen && !readOnly && (
+              <DetailCard title="Join with your team" delay={200}>
+                {eligibleRosters.map((r) => (
+                  <TouchableOpacity key={r.id} onPress={() => handleAddRosterToLeague(r)} style={styles.joinRosterRow}>
+                    <Text style={styles.joinRosterName}>{r.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </DetailCard>
+            )}
           </>
-          )}
-
-        </View>
+        )}
       </ScrollView>
 
-      {/* Bottom action bar — Join Up for pending invitations, or Edit for commissioner */}
-      {isOperator ? (
-        <View style={styles.actionBar}>
-          <TouchableOpacity
-            style={styles.joinBtn}
-            onPress={() => setEditMode(true)}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Edit league"
-          >
-            <Text style={styles.joinBtnText}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-      ) : renderActionBar()}
+      {/* Fixed bottom CTA */}
+      {renderBottomCTA()}
     </View>
   );
 }
@@ -1140,7 +947,7 @@ const styles = StyleSheet.create({
   tabActive: { borderBottomColor: colors.cobalt },
   tabLabel: { fontFamily: fonts.label, fontSize: 10, color: colors.inkFaint, textTransform: 'uppercase' },
   tabLabelActive: { color: colors.cobalt },
-  // Action bar (bottom)
+  // Action bar (bottom) — kept for backwards compat
   actionBar: {
     backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 12,
     borderTopWidth: 1, borderTopColor: '#E5E7EB',
@@ -1257,226 +1064,50 @@ const styles = StyleSheet.create({
   invitedBadgeText: {
     fontFamily: fonts.label, fontSize: 11, color: colors.gold,
   },
-  // ── Read-only form styles (non-commissioner view) ───────────────
-  roForm: {
-    padding: 16,
+  // Info tab — new design system styles
+  seasonSummary: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    lineHeight: 22,
   },
-  roField: {
-    marginBottom: 16,
-  },
-  roFieldLabel: {
+  emptyMsg: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
-    marginBottom: 4,
-    fontWeight: '600',
+    color: colors.inkFaint,
+    paddingVertical: 4,
   },
-  roFieldValueBox: {
-    // kept for backwards compat but no longer used by ReadOnlyField
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+  spotsText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.cobalt,
+    marginTop: 8,
+  },
+  joinRosterRow: {
     paddingVertical: 12,
-    backgroundColor: '#FAFAFA',
-  },
-  roFieldValue: {
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.ink,
-    marginTop: 2,
-  },
-  roProjectedEndRow: {
-    marginBottom: 16,
-  },
-  roProjectedEndValue: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    color: colors.cobalt,
-    marginTop: 4,
-  },
-  roDayChipsRow: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 4,
-    marginBottom: 16,
-    marginTop: 4,
-  },
-  roDayChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  roDayChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
-  roDayChipText: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkFaint,
-    fontWeight: '600' as const,
-  },
-  roDayChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  roToggleCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  roToggleRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-  },
-  roToggleInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  roToggleLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  roToggleDescription: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  roTogglePill: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    backgroundColor: '#E0E0E0',
-  },
-  roTogglePillActive: {
-    backgroundColor: colors.cobalt,
-  },
-  roTogglePillText: {
-    fontFamily: fonts.label,
-    fontSize: 12,
-    color: colors.inkFaint,
-  },
-  roTogglePillTextActive: {
-    color: '#FFFFFF',
-  },
-  roPointsSection: {
-    marginBottom: 8,
-  },
-  roStandingsSection: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  // Roster list styles (read-only view)
-  roRosterSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  roRosterSectionTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    color: colors.cobalt,
-    marginBottom: 12,
-  },
-  roRosterSectionTitleInvited: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    color: colors.gold,
-    marginBottom: 4,
-  },
-  roRosterDescription: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginBottom: 12,
-  },
-  roRosterItem: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  roRosterIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.cobalt,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginRight: 12,
-  },
-  roRosterInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
-  roRosterName: {
+  joinRosterName: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.cobalt,
   },
-  roRosterMeta: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  roRosterEmpty: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.inkFaint,
-    paddingVertical: 8,
-  },
-  roDuesSummary: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  chatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.cobalt + '12',
     gap: 8,
-    backgroundColor: '#EDF7F0',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
   },
-  roDuesSummaryText: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.cobalt,
-    fontWeight: '600' as const,
-  },
-  roBadgeRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-  },
-  roVisibilityBadge: {
-    backgroundColor: '#EDF7F0',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  roVisibilityBadgePrivate: {
-    backgroundColor: '#F5F0F0',
-  },
-  roVisibilityText: {
+  chatBtnText: {
     fontFamily: fonts.label,
-    fontSize: 11,
+    fontSize: 14,
     color: colors.cobalt,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-  },
-  roVisibilityTextPrivate: {
-    color: colors.inkFaint,
   },
 });

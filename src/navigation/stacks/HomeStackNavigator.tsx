@@ -18,18 +18,18 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.white },
+  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
+  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
 };
 
 export function HomeStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={({ route }) => ({ ...detailHeader, headerTitle: (route.params as any)?.eventTitle || 'Event' })} />
-      <Stack.Screen name="EditEvent" component={EditEventScreen} options={({ route }) => ({ ...detailHeader, headerTitle: (route.params as any)?.eventTitle || 'Edit Event' })} />
-      <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ ...detailHeader, headerTitle: 'Ground' }} />
+      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
+      <Stack.Screen name="EditEvent" component={EditEventScreen} options={{ ...detailHeader, headerTitle: 'Edit Event' }} />
+      <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
       <Stack.Screen name="SearchResults" component={SearchResultsScreen} options={{ ...detailHeader, headerTitle: 'Search' }} />
       <Stack.Screen name="EventSearchResults" component={EventSearchResultsScreen} options={{ ...detailHeader, headerTitle: 'Results' }} />
       <Stack.Screen name="Debrief" component={DebriefScreen} options={{ ...detailHeader, headerTitle: 'Debrief' }} />

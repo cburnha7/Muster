@@ -1273,7 +1273,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   insuranceToggleLabel: {
-    fontFamily: 'Nunito_800ExtraBold',
+    fontFamily: 'PlusJakartaSans_600SemiBold',
     fontSize: 15,
     lineHeight: 22,
     color: colors.ink,

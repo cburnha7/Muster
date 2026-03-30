@@ -12,6 +12,7 @@ let ErrorBoundary: React.ComponentType<{ children: React.ReactNode }>;
 let useFontsHook: () => { fontsLoaded: boolean; error: Error | null };
 let themeColors: { cream: string };
 
+let GestureHandlerRootView: React.ComponentType<{ style?: any; children: React.ReactNode }>;
 let importError: string | null = null;
 
 const imports: string[] = [];
@@ -55,6 +56,11 @@ if (!importError) try {
   imports.push('theme ✓');
 } catch (e: any) { importError = `theme: ${e?.message}`; }
 
+if (!importError) try {
+  GestureHandlerRootView = require('react-native-gesture-handler').GestureHandlerRootView;
+  imports.push('GestureHandler ✓');
+} catch (e: any) { importError = `GestureHandler: ${e?.message}`; }
+
 if (importError) {
   console.error('App import error:', importError);
   console.log('Loaded so far:', imports.join(', '));
@@ -78,12 +84,12 @@ function AppContent() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: cream }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: cream }}>
       <NavigationContainer>
         <RootNavigator />
       </NavigationContainer>
       <StatusBar style="dark" />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

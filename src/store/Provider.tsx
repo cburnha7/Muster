@@ -46,7 +46,7 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
 
   return (
     <Provider store={store}>
-      {isReady ? children : <View style={{ flex: 1, backgroundColor: '#EEEBE3' }} />}
+      {isReady ? children : <View style={{ flex: 1, backgroundColor: '#F7F9FB' }} />}
     </Provider>
   );
 };

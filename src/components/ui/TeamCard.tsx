@@ -26,6 +26,20 @@ const getSportIcon = (sportType: SportType): string => {
   }
 };
 
+const getSportColor = (sportType: SportType): string => {
+  switch (sportType) {
+    case SportType.BASKETBALL: return '#E86825';
+    case SportType.SOCCER: return '#006D32';
+    case SportType.TENNIS:
+    case SportType.PICKLEBALL: return '#C4A017';
+    case SportType.VOLLEYBALL: return '#8B5CF6';
+    case SportType.SOFTBALL:
+    case SportType.BASEBALL: return '#BA1A1A';
+    case SportType.FLAG_FOOTBALL: return '#0052FF';
+    default: return colors.primary;
+  }
+};
+
 const formatSport = (sportType: SportType): string =>
   sportType.charAt(0).toUpperCase() + sportType.slice(1).replace(/_/g, ' ');
 
@@ -33,6 +47,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, curren
   const sport = team.sportTypes?.[0] || team.sportType;
   const availableSlots = team.maxMembers - team.members.length;
   const isFull = availableSlots <= 0;
+  const sportColor = getSportColor(sport);
 
   const isManager = currentUserId && (
     team.captainId === currentUserId ||
@@ -42,21 +57,34 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, curren
   );
 
   return (
-    <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(team)} activeOpacity={0.7}>
-      <Ionicons name={getSportIcon(sport) as any} size={22} color={colors.cobalt} />
+    <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(team)} activeOpacity={0.85}>
+      {/* Sport icon with tinted background */}
+      <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
+        <Ionicons name={getSportIcon(sport) as any} size={20} color={sportColor} />
+      </View>
+
+      {/* Team info */}
       <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={1}>{team.name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>{team.name}</Text>
+          {isManager && (
+            <View style={styles.managerBadge}>
+              <Text style={styles.managerText}>Manager</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.meta}>
-          {formatSport(sport)} · {isFull ? 'Full' : `${availableSlots} spots`}
+          {formatSport(sport)}{' '}
+          <Text style={styles.metaDot}>&middot;</Text>{' '}
+          {isFull ? (
+            <Text style={styles.metaFull}>Full</Text>
+          ) : (
+            <Text>{team.members.length}/{team.maxMembers} players</Text>
+          )}
         </Text>
       </View>
-      {isManager && (
-        <View style={styles.managerBadge}>
-          <Ionicons name="star" size={10} color="#FFFFFF" />
-          <Text style={styles.managerText}>Manager</Text>
-        </View>
-      )}
-      <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+
+      <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
     </TouchableOpacity>
   );
 };
@@ -65,45 +93,56 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginBottom: 6,
-    gap: 10,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingVertical: 14,
+    marginBottom: 8,
+    gap: 12,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   body: {
     flex: 1,
+    gap: 2,
   },
-  name: {
-    fontFamily: fonts.label,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  meta: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 1,
-  },
-  managerBadge: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8A030',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 8,
-    gap: 3,
+    gap: 8,
+  },
+  name: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 15,
+    color: colors.onSurface,
+    flexShrink: 1,
+  },
+  managerBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
   },
   managerText: {
     color: '#FFFFFF',
     fontSize: 10,
     fontFamily: fonts.label,
+    letterSpacing: 0.4,
+  },
+  meta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+  },
+  metaDot: {
+    color: colors.outlineVariant,
+  },
+  metaFull: {
+    color: colors.error,
   },
 });

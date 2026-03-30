@@ -51,6 +51,15 @@ model User {
   trialNotified7d Boolean  @default(false)
   trialNotified1d Boolean  @default(false)
 
+  // Onboarding
+  onboardingComplete  Boolean   @default(false)
+  intents             String[]  @default([])
+  sportPreferences    String[]  @default([])
+  locationCity        String?
+  locationState       String?
+  locationLat         Float?
+  locationLng         Float?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -88,6 +97,12 @@ model User {
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
   dependents User[] @relation("GuardianDependents")
 
+  // Messaging relations
+  conversationParticipants ConversationParticipant[] @relation("ConversationParticipants")
+  sentMessages             Message[]                 @relation("SentMessages")
+  messageReactions         MessageReaction[]         @relation("MessageReactions")
+
+  @@index([guardianId])
   @@map("users")
 }
 
@@ -159,6 +174,14 @@ model Event {
   salutes                 Salute[]
   matches                 Match[]
 
+  @@index([organizerId])
+  @@index([facilityId])
+  @@index([startTime])
+  @@index([rentalId])
+  @@index([timeSlotId])
+  @@index([sportType, startTime])
+  @@index([status, startTime])
+  @@index([facilityId, startTime])
   @@map("events")
 }
 
@@ -244,6 +267,8 @@ model Facility {
   cancelRequests    CancelRequest[]
   waiverSignatures  WaiverSignature[]
 
+  @@index([latitude, longitude])
+  @@index([ownerId, isActive])
   @@map("facilities")
 }
 
@@ -280,6 +305,7 @@ model Team {
   rosterStrikes     RosterStrike[]
   duesPayments      PlayerDuesPayment[] @relation("RosterDuesPayments")
 
+  @@index([leagueId])
   @@map("teams")
 }
 
@@ -378,6 +404,7 @@ model TeamMember {
   team Team @relation(fields: [teamId], references: [id])
 
   @@unique([userId, teamId])
+  @@index([teamId, status])
   @@map("team_members")
 }
 
@@ -422,6 +449,15 @@ model Booking {
   rental       FacilityRental?      @relation(fields: [rentalId], references: [id])
   participants BookingParticipant[]
 
+  @@index([userId])
+  @@index([eventId])
+  @@index([facilityId])
+  @@index([status])
+  @@index([courtId])
+  @@index([rentalId])
+  @@index([userId, status])
+  @@index([eventId, status])
+  @@index([eventId, userId, status])
   @@map("bookings")
 }
 
@@ -463,6 +499,8 @@ model Review {
   user     User     @relation(fields: [userId], references: [id])
   facility Facility @relation(fields: [facilityId], references: [id])
 
+  @@index([userId])
+  @@index([facilityId])
   @@map("reviews")
 }
 
@@ -547,6 +585,7 @@ model FacilityRateSchedule {
   // Relations
   facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
+  @@index([facilityId])
   @@map("facility_rate_schedules")
 }
 
@@ -568,6 +607,7 @@ model FacilityAvailability {
   // Relations
   facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
+  @@index([facilityId])
   @@map("facility_availability")
 }
 
@@ -584,6 +624,7 @@ model FacilityAccessImage {
   // Relations
   facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
+  @@index([facilityId])
   @@map("facility_access_images")
 }
 
@@ -684,6 +725,7 @@ model FacilityCourt {
   timeSlots    FacilityTimeSlot[]
   bookings     Booking[]
 
+  @@index([facilityId])
   @@map("facility_courts")
 }
 
@@ -879,6 +921,7 @@ model LeagueMembership {
   @@index([teamId])
   @@index([seasonId])
   @@index([userId])
+  @@index([leagueId, status])
   @@map("league_memberships")
 }
 
@@ -936,6 +979,8 @@ model Match {
   @@index([homeTeamId])
   @@index([awayTeamId])
   @@index([scheduledAt])
+  @@index([eventId])
+  @@index([rentalId])
   @@map("matches")
 }
 
@@ -1011,6 +1056,7 @@ model LeagueDocument {
   uploader User   @relation("DocumentUploader", fields: [uploadedBy], references: [id])
 
   @@index([leagueId])
+  @@index([uploadedBy])
   @@map("league_documents")
 }
 
@@ -1037,6 +1083,7 @@ model CertificationDocument {
   uploader User   @relation("CertificationUploader", fields: [uploadedBy], references: [id])
 
   @@index([leagueId])
+  @@index([uploadedBy])
   @@map("certification_documents")
 }
 
@@ -1332,4 +1379,93 @@ model WaiverSignature {
   @@index([userId])
   @@index([facilityId])
   @@map("waiver_signatures")
+}
+
+// ─── Messaging ───────────────────────────────────────────────────────────────
+
+enum ConversationType {
+  TEAM_CHAT
+  GAME_THREAD
+  LEAGUE_CHANNEL
+  DIRECT_MESSAGE
+}
+
+enum ParticipantRole {
+  MEMBER
+  ADMIN
+}
+
+enum MessageType {
+  USER
+  SYSTEM
+}
+
+enum MessagePriority {
+  NORMAL
+  URGENT
+}
+
+model Conversation {
+  id                   String                    @id @default(uuid())
+  type                 ConversationType
+  entityId             String?
+  name                 String?
+  parentConversationId String?
+  parent               Conversation?             @relation("SubChannels", fields: [parentConversationId], references: [id])
+  subChannels          Conversation[]            @relation("SubChannels")
+  pinnedMessageId      String?
+  isArchived           Boolean                   @default(false)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  participants         ConversationParticipant[]
+  messages             Message[]
+}
+
+model ConversationParticipant {
+  id             String          @id @default(uuid())
+  conversationId String
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User            @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime        @default(now())
+  lastReadAt     DateTime?
+  isMuted        Boolean         @default(false)
+  role           ParticipantRole @default(MEMBER)
+  createdAt      DateTime        @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId, conversationId])
+  @@index([conversationId])
+}
+
+model Message {
+  id             String          @id @default(uuid())
+  conversationId String
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String?
+  sender         User?           @relation("SentMessages", fields: [senderId], references: [id], onDelete: SetNull)
+  type           MessageType     @default(USER)
+  priority       MessagePriority @default(NORMAL)
+  content        String
+  replyToId      String?
+  replyTo        Message?        @relation("Replies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        Message[]       @relation("Replies")
+  isEdited       Boolean         @default(false)
+  editedAt       DateTime?
+  createdAt      DateTime        @default(now())
+  reactions      MessageReaction[]
+
+  @@index([conversationId, createdAt])
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("MessageReactions", fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
 }

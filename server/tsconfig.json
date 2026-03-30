@@ -29,6 +29,5 @@
     "src/prisma/seed.ts",
     "src/middleware/rateLimiter.test.ts",
     "src/services/__tests__"
-  ],
-  "extends": "expo/tsconfig.base"
+  ]
 }

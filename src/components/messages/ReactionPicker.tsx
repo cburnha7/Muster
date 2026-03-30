@@ -1,0 +1,61 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors } from '../../theme';
+
+const EMOJIS = ['🔥', '👍', '👏', '😂'] as const;
+
+interface ReactionPickerProps {
+  onSelect: (emoji: string) => void;
+  onDismiss: () => void;
+}
+
+export function ReactionPicker({ onSelect, onDismiss }: ReactionPickerProps) {
+  return (
+    <TouchableOpacity style={styles.overlay} onPress={onDismiss} activeOpacity={1}>
+      <View style={styles.picker}>
+        {EMOJIS.map((emoji) => (
+          <TouchableOpacity
+            key={emoji}
+            style={styles.emojiBtn}
+            onPress={() => { onSelect(emoji); onDismiss(); }}
+          >
+            <Text style={styles.emoji}>{emoji}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    zIndex: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  picker: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 32,
+    padding: 8,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  emojiBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoji: {
+    fontSize: 26,
+  },
+});

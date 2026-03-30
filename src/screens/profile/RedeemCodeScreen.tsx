@@ -78,7 +78,7 @@ export function RedeemCodeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <Ionicons name="arrow-back" size={24} color={colors.ink} />
+            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Redeem Code</Text>
           <View style={{ width: 24 }} />
@@ -86,7 +86,7 @@ export function RedeemCodeScreen() {
 
         {successMsg ? (
           <View style={styles.successCard}>
-            <Ionicons name="checkmark-circle" size={48} color={colors.pine} />
+            <Ionicons name="checkmark-circle" size={48} color={colors.secondary} />
             <Text style={styles.successText}>{successMsg}</Text>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
               <Text style={styles.primaryBtnText}>Back to Profile</Text>
@@ -100,7 +100,7 @@ export function RedeemCodeScreen() {
               <TextInput
                 style={[styles.input, validated && styles.inputDisabled]}
                 placeholder="Enter your code"
-                placeholderTextColor={colors.inkFaint}
+                placeholderTextColor={colors.outline}
                 value={code}
                 onChangeText={(t) => { setCode(t); setError(null); setValidated(false); setSelectedTier(null); }}
                 autoCapitalize="characters"
@@ -127,12 +127,12 @@ export function RedeemCodeScreen() {
                       onPress={() => setSelectedTier(tier.key)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name={tier.icon} size={24} color={active ? colors.cobalt : colors.inkFaint} />
+                      <Ionicons name={tier.icon} size={24} color={active ? colors.primary : colors.outline} />
                       <View style={styles.tierInfo}>
                         <Text style={[styles.tierLabel, active && styles.tierLabelActive]}>{tier.label}</Text>
                         <Text style={styles.tierDesc}>{tier.desc}</Text>
                       </View>
-                      {active && <Ionicons name="checkmark-circle" size={22} color={colors.cobalt} />}
+                      {active && <Ionicons name="checkmark-circle" size={22} color={colors.primary} />}
                     </TouchableOpacity>
                   );
                 })}
@@ -160,7 +160,7 @@ export function RedeemCodeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
   content: { padding: 16, paddingBottom: 40 },
   header: {
     flexDirection: 'row',
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingTop: Platform.OS === 'ios' ? 8 : 0,
   },
-  headerTitle: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.ink },
-  label: { fontFamily: fonts.label, fontSize: 13, color: colors.inkFaint, textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
+  headerTitle: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.onSurface },
+  label: { fontFamily: fonts.label, fontSize: 13, color: colors.outline, textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: {
     flex: 1,
@@ -180,19 +180,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
+    color: colors.onSurface,
     borderWidth: 1,
-    borderColor: `${colors.inkFaint}30`,
+    borderColor: `${colors.outline}30`,
   },
-  inputDisabled: { backgroundColor: `${colors.cobalt}10`, borderColor: colors.cobalt },
+  inputDisabled: { backgroundColor: `${colors.primary}10`, borderColor: colors.primary },
   validateBtn: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
   validateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#fff' },
-  error: { fontFamily: fonts.body, fontSize: 13, color: colors.heart, marginTop: 6 },
+  error: { fontFamily: fonts.body, fontSize: 13, color: colors.error, marginTop: 6 },
   tierCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -203,13 +203,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
-  tierCardActive: { borderColor: colors.cobalt, backgroundColor: `${colors.cobalt}08` },
+  tierCardActive: { borderColor: colors.primary, backgroundColor: `${colors.primary}08` },
   tierInfo: { flex: 1, marginLeft: 12 },
-  tierLabel: { fontFamily: fonts.ui, fontSize: 15, color: colors.ink },
-  tierLabelActive: { color: colors.cobalt },
-  tierDesc: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
+  tierLabel: { fontFamily: fonts.ui, fontSize: 15, color: colors.onSurface },
+  tierLabelActive: { color: colors.primary },
+  tierDesc: { fontFamily: fonts.body, fontSize: 13, color: colors.outline, marginTop: 2 },
   primaryBtn: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -218,5 +218,5 @@ const styles = StyleSheet.create({
   primaryBtnDisabled: { opacity: 0.5 },
   primaryBtnText: { fontFamily: fonts.ui, fontSize: 16, color: '#fff' },
   successCard: { alignItems: 'center', marginTop: 40, gap: 16 },
-  successText: { fontFamily: fonts.body, ...typeScale.body, color: colors.ink, textAlign: 'center' },
+  successText: { fontFamily: fonts.body, ...typeScale.body, color: colors.onSurface, textAlign: 'center' },
 });

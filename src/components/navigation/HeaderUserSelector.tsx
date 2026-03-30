@@ -1,88 +1,64 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   TouchableOpacity,
   Text,
   View,
   Image,
-  Modal,
-  Pressable,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
-import { selectActiveUserId, selectDependents, setActiveUser } from '../../store/slices/contextSlice';
+import { useAvatarSheet } from '../../context/AvatarSheetContext';
+import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
 import { colors, fonts } from '../../theme';
+
+const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
 
 export function HeaderUserSelector() {
   const { user: guardian } = useAuth();
-  const dispatch = useDispatch();
-  const navigation = useNavigation();
+  const { open } = useAvatarSheet();
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
-  const [menuVisible, setMenuVisible] = useState(false);
 
   if (!guardian) return null;
 
-  const activeDep = activeUserId ? dependents.find((d) => d.id === activeUserId) : null;
-  const displayName = activeDep ? activeDep.firstName : guardian.firstName || 'Me';
-  const profileImage = (activeDep as any)?.profileImage || (guardian as any)?.profileImage;
-  const initial = displayName.charAt(0).toUpperCase();
+  // Resolve the active display person
+  const activeDep = activeUserId
+    ? dependents.find((d) => d.id === activeUserId)
+    : null;
+  const depIndex = activeDep
+    ? dependents.findIndex((d) => d.id === activeUserId)
+    : -1;
 
-  const handleSwitch = (userId: string | null) => {
-    dispatch(setActiveUser(userId));
-    setMenuVisible(false);
-  };
+  const displayName = activeDep ? activeDep.firstName : guardian.firstName || 'Me';
+  const profileImage = activeDep?.profileImage || (guardian as any)?.profileImage;
+  const initial = displayName.charAt(0).toUpperCase();
+  const avatarColor = activeDep
+    ? DEPENDENT_COLORS[depIndex % DEPENDENT_COLORS.length]
+    : colors.primary;
+
+  // Connect to notification count when available
+  const hasUnreadNotifications = false;
 
   return (
-    <>
+    <View style={styles.avatarContainer}>
       <TouchableOpacity
         style={styles.avatarBtn}
-        onPress={() => setMenuVisible(true)}
+        onPress={open}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityLabel={`Viewing as ${displayName}`}
+        accessibilityLabel={`Account menu. Viewing as ${displayName}`}
       >
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.avatarImg} />
         ) : (
-          <View style={styles.avatarFallback}>
+          <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]}>
             <Text style={styles.avatarInitial}>{initial}</Text>
           </View>
         )}
       </TouchableOpacity>
-
-      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menu}>
-            <TouchableOpacity
-              style={[styles.row, !activeUserId && styles.rowActive]}
-              onPress={() => handleSwitch(null)}
-            >
-              <Ionicons name="person" size={16} color={!activeUserId ? colors.cobalt : colors.inkFaint} />
-              <Text style={[styles.rowText, !activeUserId && styles.rowTextActive]}>{guardian.firstName || 'Me'}</Text>
-              {!activeUserId && <Ionicons name="checkmark" size={18} color={colors.cobalt} />}
-            </TouchableOpacity>
-            {dependents.map((dep) => {
-              const isActive = activeUserId === dep.id;
-              return (
-                <TouchableOpacity key={dep.id} style={[styles.row, isActive && styles.rowActive]} onPress={() => handleSwitch(dep.id)}>
-                  <Ionicons name="person" size={16} color={isActive ? colors.cobalt : colors.inkFaint} />
-                  <Text style={[styles.rowText, isActive && styles.rowTextActive]}>{dep.firstName}</Text>
-                  {isActive && <Ionicons name="checkmark" size={18} color={colors.cobalt} />}
-                </TouchableOpacity>
-              );
-            })}
-            <View style={styles.divider} />
-            <TouchableOpacity style={styles.row} onPress={() => { setMenuVisible(false); (navigation as any).navigate('Profile', { screen: 'DependentForm', params: {} }); }}>
-              <Ionicons name="add-circle-outline" size={16} color={colors.cobalt} />
-              <Text style={[styles.rowText, { color: colors.cobalt }]}>Add Dependent</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
-    </>
+      {hasUnreadNotifications && <View style={styles.notifDot} />}
+    </View>
   );
 }
 
@@ -102,7 +78,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -111,49 +86,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FFFFFF',
   },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
-    paddingTop: 90,
-    paddingRight: 16,
+  avatarContainer: {
+    width: 44,
+    height: 44,
   },
-  menu: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    minWidth: 200,
-    maxWidth: 260,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    overflow: 'hidden',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    gap: 8,
-  },
-  rowActive: {
-    backgroundColor: colors.cobalt + '0D',
-  },
-  rowText: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  rowTextActive: {
-    fontFamily: fonts.label,
-    color: colors.cobalt,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.white,
-    marginHorizontal: 14,
+  notifDot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.error,
+    borderWidth: 2,
+    borderColor: colors.surfaceContainerLowest,
   },
 });

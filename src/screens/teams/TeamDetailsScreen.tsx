@@ -6,27 +6,21 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
-  KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   RefreshControl,
-  Switch,
   TextInput,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { FormInput } from '../../components/forms/FormInput';
 import { FormSelect } from '../../components/forms/FormSelect';
-import { FormButton } from '../../components/forms/FormButton';
 import { AddMemberSearch } from '../../components/teams/AddMemberSearch';
 import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { teamService } from '../../services/api/TeamService';
-import { playerDuesService, PlayerDuesStatusItem } from '../../services/api/PlayerDuesService';
+import { conversationService } from '../../services/api/ConversationService';
+import { playerDuesService } from '../../services/api/PlayerDuesService';
 import { cacheService } from '../../services/api/CacheService';
 import {
   setSelectedTeam,
@@ -34,17 +28,16 @@ import {
   removeTeam,
   joinTeam as joinTeamAction,
   leaveTeam as leaveTeamAction,
-  removeTeamMember,
-  updateTeamMemberRole,
 } from '../../store/slices/teamsSlice';
-import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { selectUser } from '../../store/slices/authSlice';
-import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, User, Event } from '../../types';
-import { League } from '../../types/league';
+import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, Event, User } from '../../types';
 import { colors, fonts } from '../../theme';
 import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
 import { PlayerCard } from '../../components/ui/PlayerCard';
 import { loggingService } from '../../services/LoggingService';
+import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import { getSportColor } from '../../constants/sportColors';
+
 interface TeamDetailsScreenProps {
   route: { params: { teamId: string; readOnly?: boolean } };
 }
@@ -70,12 +63,8 @@ const skillLevelOptions = [
   { label: 'Advanced', value: SkillLevel.ADVANCED },
 ];
 
-const visibilityOptions = [
-  { label: 'Public (Anyone can find and join)', value: true },
-  { label: 'Private (Invite only)', value: false },
-];
 
-export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Element {
+export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const { teamId, readOnly } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -96,7 +85,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const [formSkillLevel, setFormSkillLevel] = useState<SkillLevel>(SkillLevel.ALL_LEVELS);
   const [formMaxMembers, setFormMaxMembers] = useState('10');
   const [formIsPublic, setFormIsPublic] = useState(true);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [_formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Related data
   const [leagues, setLeagues] = useState<any[]>([]);
@@ -105,7 +94,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   // Dues status (visible to roster manager)
   const [playerDuesMap, setPlayerDuesMap] = useState<Map<string, DuesStatus>>(new Map());
   const [duesAmount, setDuesAmount] = useState<number | null>(null);
-  const [activeSeason, setActiveSeason] = useState<any>(null);
+  const [_activeSeason, setActiveSeason] = useState<any>(null);
 
   // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -120,7 +109,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const isCaptain = currentMember?.role === TeamRole.CAPTAIN;
   const isManagerRole = isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN;
   const [editMode, setEditMode] = useState(false);
-  const canManageTeam = !readOnly && isManagerRole && editMode;
   const isPendingInvite = team?.members?.some(
     (m) => m.userId === currentUser?.id && m.status === MemberStatus.PENDING
   );
@@ -128,6 +116,27 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   const activeMembers = team?.members?.filter((m) => m.status === MemberStatus.ACTIVE) || [];
   const pendingMembers = team?.members?.filter((m) => m.status === MemberStatus.PENDING) || [];
   const allMemberIds = team?.members?.map((m) => m.userId) || [];
+
+  // Upcoming events (future only, sorted ascending)
+  const upcomingEvents = events
+    .filter((e) => new Date(e.startTime) >= new Date())
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+  // Set header "Edit" button for managers
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () =>
+        !readOnly && isManagerRole ? (
+          <TouchableOpacity
+            onPress={() => setEditMode(true)}
+            style={{ marginRight: 16 }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontFamily: fonts.ui, fontSize: 16, color: colors.cobalt }}>Edit</Text>
+          </TouchableOpacity>
+        ) : null,
+    });
+  }, [navigation, readOnly, isManagerRole]);
 
   // Sync form state when team loads
   useEffect(() => {
@@ -151,7 +160,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
       const teamData = await teamService.getTeam(teamId);
       setTeam(teamData);
       dispatch(setSelectedTeam(teamData));
-      navigation.setOptions({ headerTitle: teamData.name });
       setError(null);
     } catch (err: any) {
       console.error('Error loading roster details:', err);
@@ -314,6 +322,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     }
   };
 
+  // Accept invitation — same as joining
+  const handleConfirmInvite = handleJoinTeam;
+
   const handleDeclineInvitation = async () => {
     loggingService.logButton('Decline Invitation', 'TeamDetailsScreen', { teamId });
 
@@ -372,71 +383,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     }
   };
 
-  // ── Player management ──
-  const handleRemoveMember = async (member: TeamMember) => {
-    const isPending = member.status === MemberStatus.PENDING;
-
-    const removeMember = async () => {
-      // Optimistic update — remove from UI immediately
-      const previousTeam = team;
-      setTeam(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          members: prev.members.filter(m => m.userId !== member.userId),
-        };
-      });
-
-      try {
-        await teamService.removeFromTeam(teamId, member.userId);
-        dispatch(removeTeamMember({ teamId, memberId: member.userId }));
-      } catch (err: any) {
-        // Revert on failure
-        setTeam(previousTeam);
-        Alert.alert('Error', err.message || 'Failed to remove player.');
-      }
-    };
-
-    // For pending invites, remove immediately without confirmation
-    if (isPending) {
-      await removeMember();
-      return;
-    }
-
-    Alert.alert(
-      'Remove Player',
-      `Remove ${member.user?.firstName || 'this player'} from the roster?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: removeMember },
-      ]
-    );
-  };
-
-  const handleChangeRole = (member: TeamMember) => {
-    const newRole = member.role === TeamRole.CO_CAPTAIN ? TeamRole.MEMBER : TeamRole.CO_CAPTAIN;
-    const roleLabel = newRole === TeamRole.CO_CAPTAIN ? 'Co-Captain' : 'Player';
-    Alert.alert(
-      'Change Role',
-      `Set ${member.user?.firstName || 'this player'} as ${roleLabel}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            try {
-              await teamService.updateMemberRole(teamId, member.userId, newRole);
-              dispatch(updateTeamMemberRole({ teamId, memberId: member.userId, role: newRole }));
-              await loadTeamDetails();
-            } catch (err: any) {
-              Alert.alert('Error', err.message || 'Failed to update role.');
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleAddMemberDirectly = async (user: User) => {
     try {
       const newMember = await teamService.addMemberDirectly(teamId, user.id);
@@ -454,64 +400,45 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
     }
   };
 
-  // ── Render helpers ──
-  const renderMember = (member: TeamMember, isPending: boolean) => {
+  // ── Open player card ──
+  const openPlayerCard = (member: TeamMember) => {
     const user = member.user;
-    const isCurrentUser = member.userId === currentUser?.id;
-    const roleLabel =
-      member.role === TeamRole.CAPTAIN
-        ? 'Captain'
-        : member.role === TeamRole.CO_CAPTAIN
-        ? 'Co-Captain'
-        : 'Player';
-
-    return (
-      <View key={member.userId} style={styles.memberItem}>
-        <TouchableOpacity style={styles.memberInfo} activeOpacity={0.7} onPress={() => user && setSelectedPlayer({ id: member.userId, firstName: user.firstName, lastName: user.lastName, profileImage: user.profileImage, dateOfBirth: (user as any).dateOfBirth, gender: (user as any).gender })}>
-          {user?.profileImage ? (
-            <Image source={{ uri: user.profileImage }} style={styles.memberAvatar} />
-          ) : (
-            <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
-              <Text style={styles.memberAvatarText}>
-                {user?.firstName?.[0] || '?'}
-              </Text>
-            </View>
-          )}
-          <View style={styles.memberDetails}>
-            <View style={styles.memberNameRow}>
-              <Text style={styles.memberName}>
-                {user?.firstName} {user?.lastName}
-                {isCurrentUser ? ' (You)' : ''}
-              </Text>
-              {isPending && (
-                <View style={styles.pendingBadge}>
-                  <Text style={styles.pendingBadgeText}>✉️ Invited</Text>
-                </View>
-              )}
-              {!isPending && canManageTeam && duesAmount != null && playerDuesMap.size > 0 && (
-                <DuesStatusBadge status={playerDuesMap.get(member.userId) ?? 'unpaid'} />
-              )}
-            </View>
-            <Text style={styles.memberRole}>{roleLabel}</Text>
-          </View>
-        </TouchableOpacity>
-        {canManageTeam && !isCurrentUser && isPending && (
-          <View style={styles.memberActions}>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => handleRemoveMember(member)}
-            >
-              <Ionicons name="close-circle" size={22} color={colors.heart} />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    );
+    if (!user) return;
+    setSelectedPlayer({
+      id: member.userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      ...(user.profileImage !== undefined ? { profileImage: user.profileImage } : {}),
+      ...(typeof (user as any).dateOfBirth === 'string' ? { dateOfBirth: (user as any).dateOfBirth } : {}),
+      ...(typeof (user as any).gender === 'string' ? { gender: (user as any).gender } : {}),
+    });
   };
+
+  // ── Derived display values ──
+  const sportLabel = (() => {
+    const sports = team?.sportTypes && team.sportTypes.length > 0
+      ? team.sportTypes
+      : (team?.sportType ? [team.sportType] : []);
+    return sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ') || 'Sport';
+  })();
+
+  const skillLabel = (team?.skillLevel || 'all_levels')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+  const managerName = (() => {
+    const captainMember = team?.members?.find((m) => m.role === TeamRole.CAPTAIN);
+    if (captainMember?.user) return `${captainMember.user.firstName} ${captainMember.user.lastName}`;
+    if (team?.captain) return `${team.captain.firstName} ${team.captain.lastName}`;
+    return 'Unknown';
+  })();
+
+  const formatDate = (dateStr: string | Date) =>
+    new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
   // ── Loading / Error states ──
   if (isLoading) {
-    return <LoadingSpinner message="Loading roster..." />;
+    return <LoadingSpinner />;
   }
 
   if (error || !team) {
@@ -523,334 +450,352 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />
         }
       >
-        <View style={styles.form}>
-          {/* ── Invitation Banner (when user has pending invite) ── */}
-          {isPendingInvite && (
-            <View style={styles.invitationBanner}>
-              <View style={styles.invitationBannerIcon}>
-                <Ionicons name="mail-outline" size={24} color={colors.gold} />
-              </View>
-              <View style={styles.invitationBannerContent}>
-                <Text style={styles.invitationBannerTitle}>You've been invited!</Text>
-                <Text style={styles.invitationBannerText}>
-                  You've been invited to join this roster. Review the details below and decide if you'd like to join.
+        {/* ── Invitation Banner ── */}
+        {isPendingInvite && (
+          <View style={styles.invitationBanner}>
+            <View style={styles.invitationBannerIcon}>
+              <Ionicons name="mail-outline" size={24} color={colors.gold} />
+            </View>
+            <View style={styles.invitationBannerContent}>
+              <Text style={styles.invitationBannerTitle}>You've been invited!</Text>
+              <Text style={styles.invitationBannerText}>
+                You've been invited to join this roster. Review the details below and decide if you'd like to join.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {!editMode ? (
+          <>
+            {/* ── HeroSection ── */}
+            <HeroSection
+              title={team.name}
+              sportColor={getSportColor(team.sportType || team.sportTypes?.[0])}
+              badges={[
+                { label: sportLabel },
+                { label: skillLabel },
+                team.isPublic ? { label: 'Public' } : { label: 'Private' },
+              ]}
+              headline={`${activeMembers.length} / ${team.maxMembers ?? '∞'} players`}
+              subline={`Managed by ${managerName}`}
+            />
+
+            {/* ── Team Chat button ── */}
+            {isMember && (
+              <TouchableOpacity
+                style={styles.chatBtn}
+                onPress={async () => {
+                  try {
+                    const convs = await conversationService.getConversations('TEAM_CHAT');
+                    const teamConv = convs.find((c) => c.entityId === teamId);
+                    if (teamConv) {
+                      (navigation as any).navigate('Messages', {
+                        screen: 'Chat',
+                        params: { conversationId: teamConv.id, title: team.name ?? 'Team Chat', type: 'TEAM_CHAT' },
+                      });
+                    }
+                  } catch (e) {
+                    console.error('Navigate to chat error:', e);
+                  }
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="chatbubbles-outline" size={18} color={colors.cobalt} />
+                <Text style={styles.chatBtnText}>Team Chat</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* ── Teammates card ── */}
+            <DetailCard
+              title="Your teammates"
+              delay={50}
+              {...(!readOnly && isManagerRole ? { action: { label: 'Invite', onPress: () => setEditMode(true) } } : {})}
+            >
+              {activeMembers.length <= 1 && (
+                <Text style={styles.emptyMsg}>
+                  Your team needs more players — share the code to grow
                 </Text>
-              </View>
-            </View>
-          )}
-
-          {/* ── Read-only Roster Detail (event-detail style) ── */}
-          {!canManageTeam && (
-            <View style={styles.readOnlySection}>
-              {/* Sport */}
-              <View style={styles.detailRow}>
-                <Ionicons name="fitness-outline" size={20} color="#666" />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Sport</Text>
-                  <Text style={styles.detailValue}>
-                    {(() => {
-                      const sports = team.sportTypes && team.sportTypes.length > 0
-                        ? team.sportTypes
-                        : (team.sportType ? [team.sportType] : []);
-                      return sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ');
-                    })()}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Manager */}
-              <View style={styles.detailRow}>
-                <Ionicons name="person-circle-outline" size={20} color="#666" />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Manager</Text>
-                  <Text style={styles.detailValue}>
-                    {(() => {
-                      const captainMember = team.members?.find((m) => m.role === TeamRole.CAPTAIN);
-                      if (captainMember?.user) return `${captainMember.user.firstName} ${captainMember.user.lastName}`;
-                      if (team.captain) return `${team.captain.firstName} ${team.captain.lastName}`;
-                      return 'Unknown';
-                    })()}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Price */}
-              {team.joinFee != null && team.joinFee > 0 && (
-                <View style={styles.detailRow}>
-                  <Ionicons name="cash-outline" size={20} color="#666" />
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Join Fee</Text>
-                    <Text style={styles.detailValue}>${team.joinFee}</Text>
-                  </View>
-                </View>
               )}
-
-              {/* Skill Level */}
-              <View style={styles.detailRow}>
-                <Ionicons name="bar-chart-outline" size={20} color="#666" />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Skill Level</Text>
-                  <Text style={styles.detailValue}>
-                    {(team.skillLevel || 'all_levels').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Gender */}
-              {(team as any).genderRestriction && (
-                <View style={styles.detailRow}>
-                  <Ionicons name="male-female-outline" size={20} color="#666" />
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Gender</Text>
-                    <Text style={styles.detailValue}>
-                      {(team as any).genderRestriction === 'male' ? 'Male Only' : (team as any).genderRestriction === 'female' ? 'Female Only' : 'Open to All'}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Members List */}
-              <Text style={styles.membersTitle}>Players ({activeMembers.length}/{team.maxMembers})</Text>
-              {activeMembers.map((member) => (
-                <TouchableOpacity key={member.userId} style={styles.memberRow} activeOpacity={0.7} onPress={() => member.user && setSelectedPlayer({ id: member.userId, firstName: member.user.firstName, lastName: member.user.lastName, profileImage: member.user.profileImage, dateOfBirth: (member.user as any).dateOfBirth, gender: (member.user as any).gender })}>
-                  {member.user?.profileImage ? (
-                    <Image source={{ uri: member.user.profileImage }} style={styles.memberAvatar} />
-                  ) : (
-                    <View style={styles.memberAvatarFallback}>
-                      <Text style={styles.memberAvatarInitial}>
-                        {member.user?.firstName?.[0] || '?'}
-                      </Text>
-                    </View>
-                  )}
-                  <Text style={styles.memberName}>
-                    {member.user ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown'}
-                  </Text>
-                  {member.role === TeamRole.CAPTAIN && (
-                    <View style={styles.captainBadge}>
-                      <Text style={styles.captainBadgeText}>Manager</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+              {activeMembers.map((m) => (
+                <PersonRow
+                  key={m.userId}
+                  name={m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown'}
+                  {...(m.role === TeamRole.CAPTAIN ? { role: 'Captain' } : m.role === TeamRole.CO_CAPTAIN ? { role: 'Co-Captain' } : {})}
+                  {...(!readOnly && isManagerRole && duesAmount != null && playerDuesMap.size > 0
+                    ? { rightElement: <DuesStatusBadge status={playerDuesMap.get(m.userId) ?? 'unpaid'} /> }
+                    : {})}
+                  onPress={() => openPlayerCard(m)}
+                />
               ))}
-            </View>
-          )}
+              {pendingMembers.length > 0 && (
+                <>
+                  <Text style={styles.pendingHeader}>Pending</Text>
+                  {pendingMembers.map((m) => (
+                    <PersonRow
+                      key={m.userId}
+                      name={m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown'}
+                      role="Invited"
+                    />
+                  ))}
+                </>
+              )}
 
-          {/* ── Editable Roster (progressive disclosure like create) ── */}
-          {canManageTeam && (() => {
-            // Progressive visibility: downstream hides when upstream changes
-            const nameOk = formName.trim().length >= 2;
-            const sportOk = nameOk && !!formSportType;
-            const visOk = sportOk; // visibility is always shown once sport is set (both buttons visible)
-            const visSelected = formIsPublic !== undefined; // always true in edit since it has a value
-            const maxOk = visOk && visSelected && !!formMaxMembers && parseInt(formMaxMembers) > 0;
-            const skillOk = maxOk;
-
-            return (
-              <View style={styles.editSection}>
-                <Text style={styles.editStepLabel}>Roster Name</Text>
-                <TextInput style={styles.editInput} value={formName} onChangeText={setFormName} placeholder="Roster name" placeholderTextColor={colors.inkFaint} />
-
-                {nameOk && (
-                  <>
-                    <Text style={styles.editStepLabel}>Sport</Text>
-                    <FormSelect label="" options={sportTypeOptions} value={formSportType} onSelect={(o) => { setFormSportType(o.value as SportType); setFormSportTypes([o.value as SportType]); }} placeholder="Select a sport..." />
-                  </>
-                )}
-
-                {sportOk && (
-                  <>
-                    <Text style={styles.editStepLabel}>Visibility</Text>
-                    <View style={styles.editRow}>
-                      <TouchableOpacity style={[styles.editToggle, !formIsPublic && styles.editToggleActive]} onPress={() => setFormIsPublic(false)}>
-                        <Ionicons name="lock-closed-outline" size={16} color={!formIsPublic ? '#FFF' : colors.ink} />
-                        <Text style={[styles.editToggleText, !formIsPublic && styles.editToggleTextActive]}>Private</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={[styles.editToggle, formIsPublic && styles.editToggleActive]} onPress={() => setFormIsPublic(true)}>
-                        <Ionicons name="globe-outline" size={16} color={formIsPublic ? '#FFF' : colors.ink} />
-                        <Text style={[styles.editToggleText, formIsPublic && styles.editToggleTextActive]}>Public</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </>
-                )}
-
-                {visOk && (
-                  <>
-                    <Text style={styles.editStepLabel}>Max Players</Text>
-                    <TextInput style={styles.editInput} value={formMaxMembers} onChangeText={(v) => { const n = parseInt(v, 10); if (!isNaN(n) || v === '') setFormMaxMembers(v === '' ? '' : String(n)); }} placeholder="e.g. 15" placeholderTextColor={colors.inkFaint} keyboardType="number-pad" />
-                  </>
-                )}
-
-                {maxOk && (
-                  <>
-                    <Text style={styles.editStepLabel}>Skill Level</Text>
-                    <FormSelect label="" options={skillLevelOptions} value={formSkillLevel} onSelect={(o) => setFormSkillLevel(o.value as SkillLevel)} placeholder="All Levels" />
-                  </>
-                )}
-              </View>
-            );
-          })()}
-
-          {/* ── Invites Section (managers only, visible when all fields filled) ── */}
-          {canManageTeam && formName.trim().length >= 2 && !!formSportType && !!formMaxMembers && parseInt(formMaxMembers) > 0 && (
-            <View style={styles.addMembersSection}>
-              <Text style={styles.editStepLabel}>Invite Players</Text>
-              <AddMemberSearch
-                onAddMember={handleAddMemberDirectly}
-                existingMemberIds={allMemberIds}
-              />
-            </View>
-          )}
-
-          {/* Invited list for non-managers (read-only) */}
-          {!canManageTeam && pendingMembers.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Invited ({pendingMembers.length})
-              </Text>
-              <Text style={styles.invitedDescription}>
-                These players have been invited but haven't joined yet.
-              </Text>
-              {pendingMembers.map((m) => renderMember(m, true))}
-            </View>
-          )}
-
-          {/* ── Leagues ── */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Leagues ({leagues.length})</Text>
-            {leagues.length === 0 ? (
-              <Text style={styles.emptyText}>Not part of any leagues yet.</Text>
-            ) : (
-              leagues.map((league: any) => {
-                const isPending = league.membership?.status === 'pending';
-                return (
-                  <TouchableOpacity
-                    key={league.id}
-                    style={[styles.listCard, isPending && styles.listCardPending]}
-                    onPress={() => (navigation as any).navigate('Leagues', { screen: 'LeagueDetails', params: { leagueId: league.id, readOnly: true } })}
-                  >
-                    <View style={styles.listCardContent}>
-                      <Ionicons name="trophy-outline" size={20} color={isPending ? colors.gold : colors.cobalt} />
-                      <View style={styles.listCardText}>
-                        <Text style={styles.listCardTitle}>{league.name}</Text>
-                        <Text style={styles.listCardSub}>{league.sportType}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.listCardRight}>
-                      {isPending && (
-                        <View style={styles.pendingLeagueBadge}>
-                          <Text style={styles.pendingLeagueBadgeText}>Pending</Text>
-                        </View>
-                      )}
-                      <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
-                    </View>
-                  </TouchableOpacity>
-                );
-              })
-            )}
-          </View>
-
-          {/* ── Upcoming Events ── */}
-          {events.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Upcoming Events ({events.length})</Text>
-              {events.map((event) => (
+              {/* Leave link for regular members (non-captain) */}
+              {isMember && !isCaptain && (
                 <TouchableOpacity
-                  key={event.id}
-                  style={styles.listCard}
-                  onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
+                  onPress={() => setShowLeaveModal(true)}
+                  style={styles.leaveLink}
+                  activeOpacity={0.7}
                 >
-                  <View style={styles.listCardContent}>
-                    <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
-                    <View style={styles.listCardText}>
-                      <Text style={styles.listCardTitle}>{event.title}</Text>
-                      <Text style={styles.listCardSub}>
-                        {new Date(event.startTime).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+                  <Text style={styles.leaveLinkText}>Leave team</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          )}
+              )}
+            </DetailCard>
 
-          {/* ── Action Buttons ── */}
-          <View style={styles.actionsSection}>
-            {/* Edit button — shown to managers when in read-only view */}
-            {!readOnly && isManagerRole && !editMode && (
-              <FormButton
-                title="Edit"
-                onPress={() => setEditMode(true)}
-                variant="outline"
-                leftIcon="create-outline"
-              />
+            {/* ── Leagues card ── */}
+            {leagues.length > 0 && (
+              <DetailCard title="Leagues" delay={100}>
+                {leagues.map((league: any) => {
+                  const isPending = league.membership?.status === 'pending';
+                  return (
+                    <TouchableOpacity
+                      key={league.id}
+                      onPress={() =>
+                        (navigation as any).navigate('Leagues', {
+                          screen: 'LeagueDetails',
+                          params: { leagueId: league.id, readOnly: true },
+                        })
+                      }
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.leagueRow, isPending && styles.leagueRowPending]}>
+                        <Ionicons
+                          name="trophy-outline"
+                          size={20}
+                          color={isPending ? colors.gold : colors.cobalt}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.leagueName}>{league.name}</Text>
+                          <Text style={styles.leagueSport}>{league.sportType}</Text>
+                        </View>
+                        {isPending && (
+                          <View style={styles.pendingLeagueBadge}>
+                            <Text style={styles.pendingLeagueBadgeText}>Pending</Text>
+                          </View>
+                        )}
+                        <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </DetailCard>
             )}
 
-            {readOnly && isPendingInvite && (
-              <>
-                <FormButton
-                  title="Confirm"
-                  onPress={handleJoinTeam}
-                  leftIcon="add-circle-outline"
-                />
-                <FormButton
-                  title="Decline"
-                  onPress={handleDeclineInvitation}
-                  variant="outline"
-                  leftIcon="close-circle-outline"
-                />
-              </>
-            )}
+            {/* ── Upcoming games card ── */}
+            <DetailCard title="Upcoming games" delay={150}>
+              {upcomingEvents.length === 0 ? (
+                <Text style={styles.emptyMsg}>No games scheduled yet</Text>
+              ) : (
+                upcomingEvents.slice(0, 3).map((event) => (
+                  <TouchableOpacity
+                    key={event.id}
+                    onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
+                    style={styles.eventRow}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.eventDate}>{formatDate(event.startTime)}</Text>
+                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
+                  </TouchableOpacity>
+                ))
+              )}
+            </DetailCard>
 
-            {!readOnly && canManageTeam && (
-              <FormButton
-                title={isSaving ? 'Saving...' : 'Update Roster'}
-                onPress={handleUpdateTeam}
-                disabled={isSaving}
-                loading={isSaving}
-              />
-            )}
-
-            {!readOnly && !isMember && !currentMember && (
-              <FormButton
-                title="Join"
-                onPress={handleJoinTeam}
-                leftIcon="add-circle-outline"
-              />
-            )}
-
-            {!readOnly && isMember && !isCaptain && (
-              <FormButton
-                title="Leave"
-                onPress={() => setShowLeaveModal(true)}
-                variant="muted"
-                leftIcon="exit-outline"
-              />
-            )}
-
+            {/* ── Delete link for captain (bottom of scroll) ── */}
             {!readOnly && isCaptain && (
-              <FormButton
-                title="Delete Roster"
+              <TouchableOpacity
                 onPress={() => setShowDeleteModal(true)}
-                variant="danger"
-                leftIcon="trash-outline"
-              />
+                style={styles.deleteLink}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.deleteLinkText}>Delete roster</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          /* ── Edit mode: progressive disclosure form ── */
+          <View style={[styles.editSection, { padding: 20 }]}>
+            {(() => {
+              const nameOk = formName.trim().length >= 2;
+              const sportOk = nameOk && !!formSportType;
+              const visOk = sportOk;
+              const visSelected = formIsPublic !== undefined;
+              const maxOk = visOk && visSelected && !!formMaxMembers && parseInt(formMaxMembers) > 0;
+
+              return (
+                <>
+                  <Text style={styles.editStepLabel}>Roster Name</Text>
+                  <TextInput
+                    style={styles.editInput}
+                    value={formName}
+                    onChangeText={setFormName}
+                    placeholder="Roster name"
+                    placeholderTextColor={colors.inkFaint}
+                  />
+
+                  {nameOk && (
+                    <>
+                      <Text style={styles.editStepLabel}>Sport</Text>
+                      <FormSelect
+                        label=""
+                        options={sportTypeOptions}
+                        value={formSportType}
+                        onSelect={(o) => {
+                          setFormSportType(o.value as SportType);
+                          setFormSportTypes([o.value as SportType]);
+                        }}
+                        placeholder="Select a sport..."
+                      />
+                    </>
+                  )}
+
+                  {sportOk && (
+                    <>
+                      <Text style={styles.editStepLabel}>Visibility</Text>
+                      <View style={styles.editRow}>
+                        <TouchableOpacity
+                          style={[styles.editToggle, !formIsPublic && styles.editToggleActive]}
+                          onPress={() => setFormIsPublic(false)}
+                        >
+                          <Ionicons
+                            name="lock-closed-outline"
+                            size={16}
+                            color={!formIsPublic ? '#FFF' : colors.ink}
+                          />
+                          <Text
+                            style={[
+                              styles.editToggleText,
+                              !formIsPublic && styles.editToggleTextActive,
+                            ]}
+                          >
+                            Private
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.editToggle, formIsPublic && styles.editToggleActive]}
+                          onPress={() => setFormIsPublic(true)}
+                        >
+                          <Ionicons
+                            name="globe-outline"
+                            size={16}
+                            color={formIsPublic ? '#FFF' : colors.ink}
+                          />
+                          <Text
+                            style={[
+                              styles.editToggleText,
+                              formIsPublic && styles.editToggleTextActive,
+                            ]}
+                          >
+                            Public
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
+
+                  {visOk && (
+                    <>
+                      <Text style={styles.editStepLabel}>Max Players</Text>
+                      <TextInput
+                        style={styles.editInput}
+                        value={formMaxMembers}
+                        onChangeText={(v) => {
+                          const n = parseInt(v, 10);
+                          if (!isNaN(n) || v === '') setFormMaxMembers(v === '' ? '' : String(n));
+                        }}
+                        placeholder="e.g. 15"
+                        placeholderTextColor={colors.inkFaint}
+                        keyboardType="number-pad"
+                      />
+                    </>
+                  )}
+
+                  {maxOk && (
+                    <>
+                      <Text style={styles.editStepLabel}>Skill Level</Text>
+                      <FormSelect
+                        label=""
+                        options={skillLevelOptions}
+                        value={formSkillLevel}
+                        onSelect={(o) => setFormSkillLevel(o.value as SkillLevel)}
+                        placeholder="All Levels"
+                      />
+                    </>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* ── Invite Players (visible when all fields filled) ── */}
+            {formName.trim().length >= 2 && !!formSportType && !!formMaxMembers && parseInt(formMaxMembers) > 0 && (
+              <View style={styles.addMembersSection}>
+                <Text style={styles.editStepLabel}>Invite Players</Text>
+                <AddMemberSearch
+                  onAddMember={handleAddMemberDirectly}
+                  existingMemberIds={allMemberIds}
+                />
+              </View>
             )}
           </View>
-        </View>
+        )}
       </ScrollView>
+
+      {/* ── Fixed Bottom CTA ── */}
+      {!editMode && (
+        <>
+          {!isMember && !isPendingInvite && (
+            <FixedBottomCTA
+              label="Join this team"
+              onPress={handleJoinTeam}
+              variant="primary"
+            />
+          )}
+          {isPendingInvite && (
+            <FixedBottomCTA
+              label="Accept invitation"
+              onPress={handleConfirmInvite}
+              variant="primary"
+              secondaryLabel="Decline"
+              onSecondaryPress={handleDeclineInvitation}
+            />
+          )}
+          {isCaptain && (
+            <FixedBottomCTA
+              label="Manage team"
+              onPress={() => setEditMode(true)}
+              variant="primary"
+            />
+          )}
+        </>
+      )}
+      {editMode && (
+        <FixedBottomCTA
+          label="Save changes"
+          onPress={handleUpdateTeam}
+          variant="primary"
+          loading={isSaving}
+          secondaryLabel="Cancel"
+          onSecondaryPress={() => setEditMode(false)}
+        />
+      )}
 
       {/* ── Modals ── */}
       <ConfirmModal
@@ -881,7 +826,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
         onClose={() => setSelectedPlayer(null)}
         player={selectedPlayer}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -889,23 +834,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps): JSX.Elemen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  form: {
-    padding: 20,
-    gap: 16,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 16,
-    color: colors.ink,
-    marginBottom: 8,
+    backgroundColor: colors.background,
   },
   // Invitation banner
   invitationBanner: {
@@ -913,6 +842,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.goldLight + '20',
     borderRadius: 12,
     padding: 16,
+    margin: 16,
+    marginBottom: 0,
     borderWidth: 1,
     borderColor: colors.goldLight + '40',
     gap: 12,
@@ -939,229 +870,55 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     lineHeight: 20,
   },
-  infoBox: {
-    backgroundColor: colors.goldLight + '20',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: colors.goldLight + '40',
-  },
-  infoText: {
+  // Teammates card
+  emptyMsg: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
-    lineHeight: 20,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  toggleInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  toggleLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  toggleDescription: {
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  // Invites / Add members section
-  addMembersSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  addMembersHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  addMembersTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  privateBadge: {
-    backgroundColor: colors.goldLight + '20',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  privateBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.gold,
-  },
-  addMembersDescription: {
-    fontSize: 14,
-    color: colors.inkFaint,
-    lineHeight: 20,
-  },
-  pendingMembersContainer: {
-    gap: 8,
-  },
-  pendingMembersTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  // Member items
-  memberItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 8,
-  },
-  memberInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  memberAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  memberAvatarPlaceholder: {
-    backgroundColor: colors.cobalt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  memberAvatarText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  memberDetails: {
-    flex: 1,
-  },
-  memberNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  memberName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.ink,
-  },
-  memberRole: {
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  pendingBadge: {
-    backgroundColor: colors.goldLight + '30',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  pendingBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.gold,
-  },
-  memberActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  roleButton: {
-    padding: 4,
-  },
-  removeButton: {
-    padding: 4,
-  },
-  // Section
-  section: {
-    marginTop: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.onSurfaceVariant,
     fontStyle: 'italic',
     textAlign: 'center',
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
-  duesSummaryBanner: {
+  pendingHeader: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  // Leave link
+  leaveLink: {
+    alignSelf: 'center',
+    marginTop: 12,
+    paddingVertical: 6,
+  },
+  leaveLinkText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.error,
+  },
+  // Leagues card
+  leagueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#EDF7F0',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
-  },
-  duesSummaryText: {
-    fontSize: 13,
-    color: colors.cobalt,
-    fontWeight: '600',
-  },
-  invitedDescription: {
-    fontSize: 13,
-    color: colors.inkFaint,
-    marginBottom: 8,
-  },
-  // List cards (leagues / events)
-  listCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 8,
-  },
-  listCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    paddingVertical: 10,
     gap: 12,
   },
-  listCardText: {
-    flex: 1,
+  leagueRowPending: {
+    opacity: 0.8,
   },
-  listCardTitle: {
+  leagueName: {
+    fontFamily: fonts.ui,
     fontSize: 15,
-    fontWeight: '600',
-    color: colors.ink,
+    color: colors.onSurface,
   },
-  listCardSub: {
+  leagueSport: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  listCardPending: {
-    borderColor: colors.goldLight,
-    backgroundColor: '#FFF8EE',
-  },
-  listCardRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    color: colors.onSurfaceVariant,
+    marginTop: 1,
   },
   pendingLeagueBadge: {
     backgroundColor: colors.goldLight,
@@ -1176,183 +933,42 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  // Actions
-  actionsSection: {
-    marginTop: 16,
+  // Events card
+  eventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
     gap: 12,
   },
-  // Read-only header
-  readOnlyHeader: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  readOnlyHeaderTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  readOnlySportBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EDF7F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  readOnlyHeaderInfo: {
-    flex: 1,
-  },
-  readOnlyName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.ink,
-  },
-  readOnlyMeta: {
-    fontSize: 14,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  readOnlyDescription: {
-    fontSize: 15,
-    color: colors.ink,
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  readOnlyStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingVertical: 12,
-  },
-  readOnlyStatItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  readOnlyStatValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  readOnlyStatLabel: {
-    fontSize: 12,
-    color: colors.inkFaint,
-    marginTop: 2,
-  },
-  readOnlyStatDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: '#E5E7EB',
-  },
-  sportFieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 4,
-  },
-  sportChipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sportChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
-  sportChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.inkFaint,
-  },
-  sportChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  // ── Read-only detail styles (event-detail style) ──
-  readOnlySection: {
-    gap: 4,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 8,
-    gap: 12,
-  },
-  detailContent: {
-    flex: 1,
-  },
-  detailLabel: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.inkFaint,
-  },
-  detailValue: {
+  eventDate: {
     fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    width: 48,
+  },
+  eventTitle: {
+    fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink,
-    marginTop: 1,
+    color: colors.onSurface,
+    flex: 1,
   },
-  membersTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.ink,
-    marginTop: 16,
-    marginBottom: 8,
+  // Delete link
+  deleteLink: {
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
   },
-  memberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    gap: 10,
-  },
-  memberAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  memberAvatarFallback: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.cobalt + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  memberAvatarInitial: {
+  deleteLinkText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
+    color: colors.error,
   },
-  memberName: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.ink,
-  },
-  captainBadge: {
-    backgroundColor: '#E8A030',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  captainBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontFamily: fonts.label,
+  // Invites / Add members section
+  addMembersSection: {
+    marginTop: 16,
+    gap: 12,
   },
   // ── Edit mode styles (matches create roster) ──
   editSection: {
@@ -1405,5 +1021,34 @@ const styles = StyleSheet.create({
   },
   editToggleTextActive: {
     color: '#FFFFFF',
+  },
+  // Legacy retained for badge rendering compatibility
+  pendingBadge: {
+    backgroundColor: colors.goldLight + '30',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  pendingBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.gold,
+  },
+  chatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.cobalt + '12',
+    gap: 8,
+  },
+  chatBtnText: {
+    fontFamily: fonts.label,
+    fontSize: 14,
+    color: colors.cobalt,
   },
 });

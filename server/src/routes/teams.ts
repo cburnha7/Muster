@@ -351,6 +351,16 @@ router.post('/', optionalAuthMiddleware, requireNonDependent, async (req, res) =
       },
     });
 
+    // Messaging hook: create team chat
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      if (creatorId) {
+        await MessagingService.createTeamChat(team.id, creatorId, team.name);
+      }
+    } catch (msgErr) {
+      console.error('Failed to create team chat:', msgErr);
+    }
+
     // Map isPrivate to isPublic for frontend
     if (completeTeam) {
       const { isPrivate: priv, ...restTeam } = completeTeam;
@@ -426,6 +436,19 @@ router.delete('/:id/members/:userId', async (req, res) => {
       where: { id: membership.id },
     });
 
+    // Messaging hook: remove from team chat
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      const conv = await MessagingService.getConversationForTeam(id);
+      if (conv) {
+        const removedUser = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+        await MessagingService.removeParticipant(conv.id, userId);
+        if (removedUser) await MessagingService.postSystemMessage(conv.id, `${removedUser.firstName} ${removedUser.lastName} left the team`);
+      }
+    } catch (msgErr) {
+      console.error('Failed to update team chat on leave:', msgErr);
+    }
+
     res.status(204).send();
   } catch (error) {
     console.error('Remove member error:', error);
@@ -495,6 +518,19 @@ router.post('/:id/join', async (req, res) => {
       });
     }
 
+    // Messaging hook: add to team chat
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      const conv = await MessagingService.getConversationForTeam(id);
+      if (conv) {
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+        await MessagingService.addParticipant(conv.id, userId, 'MEMBER');
+        if (user) await MessagingService.postSystemMessage(conv.id, `${user.firstName} ${user.lastName} joined the team`);
+      }
+    } catch (msgErr) {
+      console.error('Failed to update team chat on join:', msgErr);
+    }
+
     res.status(201).json(member);
   } catch (error) {
     console.error('Join team error:', error);
@@ -525,6 +561,19 @@ router.post('/:id/leave', async (req, res) => {
     }
 
     await prisma.teamMember.delete({ where: { id: member.id } });
+
+    // Messaging hook: remove from team chat
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      const conv = await MessagingService.getConversationForTeam(id);
+      if (conv) {
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+        await MessagingService.removeParticipant(conv.id, userId);
+        if (user) await MessagingService.postSystemMessage(conv.id, `${user.firstName} ${user.lastName} left the team`);
+      }
+    } catch (msgErr) {
+      console.error('Failed to update team chat on leave:', msgErr);
+    }
 
     res.status(204).send();
   } catch (error) {

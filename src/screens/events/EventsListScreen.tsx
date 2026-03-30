@@ -14,6 +14,7 @@ import { debounce } from '../../utils/performance';
 
 import { SearchBar } from '../../components/ui/SearchBar';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
 import { colors, fonts, Spacing } from '../../theme';
@@ -165,13 +166,10 @@ export function EventsListScreen(): React.JSX.Element {
   if (eventsError && events.length === 0) {
     return (
       <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={colors.heart} />
-          <Text style={styles.errorText}>Unable to load events. Pull down to refresh.</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetchEvents()}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorDisplay
+          message="Unable to load events. Pull down to refresh."
+          onRetry={() => refetchEvents()}
+        />
       </View>
     );
   }

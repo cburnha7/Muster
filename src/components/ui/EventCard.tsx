@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Event, SportType, SkillLevel } from '../../types';
 import { EventEligibilityService } from '../../services/events/EventEligibilityService';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 
 interface EventCardProps {
   event: Event;
@@ -34,44 +34,32 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
-      case SportType.BASKETBALL:
-        return 'basketball-outline';
-      case SportType.SOCCER:
-        return 'football-outline';
+      case SportType.BASKETBALL: return 'basketball-outline';
+      case SportType.SOCCER: return 'football-outline';
       case SportType.TENNIS:
-      case SportType.PICKLEBALL:
-        return 'tennisball-outline';
-      case SportType.VOLLEYBALL:
-        return 'american-football-outline';
+      case SportType.PICKLEBALL: return 'tennisball-outline';
+      case SportType.VOLLEYBALL: return 'american-football-outline';
       case SportType.SOFTBALL:
-      case SportType.BASEBALL:
-        return 'baseball-outline';
-      case SportType.FLAG_FOOTBALL:
-        return 'flag-outline';
-      case SportType.KICKBALL:
-        return 'football-outline';
-      default:
-        return 'fitness-outline';
+      case SportType.BASEBALL: return 'baseball-outline';
+      case SportType.FLAG_FOOTBALL: return 'flag-outline';
+      case SportType.KICKBALL: return 'football-outline';
+      default: return 'fitness-outline';
     }
   };
 
   const getSkillLevelColor = (skillLevel: SkillLevel) => {
     switch (skillLevel) {
-      case SkillLevel.BEGINNER:
-        return '#34C759';
-      case SkillLevel.INTERMEDIATE:
-        return '#FF9500';
-      case SkillLevel.ADVANCED:
-        return '#FF3B30';
-      default:
-        return '#007AFF';
+      case SkillLevel.BEGINNER: return '#34C759';
+      case SkillLevel.INTERMEDIATE: return colors.gold;
+      case SkillLevel.ADVANCED: return colors.error;
+      default: return colors.primary;
     }
   };
 
   const getRatingBadgeColor = (rating: number) => {
     if (rating >= 80) return colors.heart;
     if (rating >= 50) return colors.gold;
-    return colors.cobalt;
+    return colors.primary;
   };
 
   const availableSpots = event.maxParticipants - event.currentParticipants;
@@ -83,15 +71,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
     <TouchableOpacity
       style={[styles.container, colorIndicator ? styles.containerWithIndicator : undefined, style]}
       onPress={() => onPress?.(event)}
-      activeOpacity={0.7}
+      activeOpacity={0.85}
     >
       {colorIndicator && (
-        <View
-          style={[
-            styles.colorIndicatorStripe,
-            { backgroundColor: colorIndicator },
-          ]}
-        />
+        <View style={[styles.colorIndicatorStripe, { backgroundColor: colorIndicator }]} />
       )}
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
@@ -108,66 +91,41 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           </View>
         )}
         {event.minPlayerRating != null && event.minPlayerRating > 0 && (
-          <View
-            style={[
-              styles.skillBadge,
-              { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
-            ]}
-          >
-            <Text style={styles.skillText}>
-              {event.minPlayerRating}+ RATING
-            </Text>
+          <View style={[styles.skillBadge, { backgroundColor: getRatingBadgeColor(event.minPlayerRating) }]}>
+            <Text style={styles.skillText}>{event.minPlayerRating}+ RATING</Text>
           </View>
         )}
       </View>
 
       <View style={styles.header}>
         <View style={styles.sportInfo}>
-          <Ionicons
-            name={getSportIcon(event.sportType) as any}
-            size={24}
-            color="#007AFF"
-          />
-          <Text style={styles.title} numberOfLines={1}>
-            {event.title}
-          </Text>
+          <Ionicons name={getSportIcon(event.sportType) as any} size={24} color={colors.primary} />
+          <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
         </View>
       </View>
 
       <View style={[
         styles.participantsTracker,
-        isFullyBooked && {
-          backgroundColor: colors.heart + '15',
-          borderColor: colors.heart + '30',
-        }
+        isFullyBooked && { backgroundColor: colors.error + '15', borderColor: colors.error + '30' }
       ]}>
-        <Ionicons 
-          name="people" 
-          size={16} 
-          color={isFullyBooked ? colors.heart : colors.cobalt} 
-        />
-        <Text style={[
-          styles.participantsText,
-          isFullyBooked && styles.participantsFullText
-        ]}>
+        <Ionicons name="people" size={16} color={isFullyBooked ? colors.error : colors.primary} />
+        <Text style={[styles.participantsText, isFullyBooked && styles.participantsFullText]}>
           {event.currentParticipants}/{event.maxParticipants} players
         </Text>
       </View>
 
-      <Text style={styles.description} numberOfLines={2}>
-        {event.description}
-      </Text>
+      <Text style={styles.description} numberOfLines={2}>{event.description}</Text>
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color="#666" />
+          <Ionicons name="calendar-outline" size={16} color={colors.onSurfaceVariant} />
           <Text style={styles.detailText}>
             {formatDate(event.startTime)} at {formatTime(event.startTime)}
           </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Ionicons name="hourglass-outline" size={16} color="#666" />
+          <Ionicons name="hourglass-outline" size={16} color={colors.onSurfaceVariant} />
           <Text style={styles.detailText}>
             {(() => {
               const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
@@ -182,7 +140,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         </View>
 
         <View style={styles.detailRow}>
-          <Ionicons name="location-outline" size={16} color="#666" />
+          <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
           <Text style={styles.detailText} numberOfLines={1}>
             {event.facility?.name || 'Location TBD'}
           </Text>
@@ -190,16 +148,14 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
         {event.rental && (
           <View style={styles.rentalIndicator}>
-            <Ionicons name="calendar" size={14} color={colors.cobalt} />
-            <Text style={styles.rentalText} numberOfLines={1}>
-              {event.rental.timeSlot.court.name}
-            </Text>
+            <Ionicons name="calendar" size={14} color={colors.primary} />
+            <Text style={styles.rentalText} numberOfLines={1}>{event.rental.timeSlot.court.name}</Text>
           </View>
         )}
 
         {event.eligibility && (
           <View style={styles.detailRow}>
-            <Ionicons name="shield-checkmark-outline" size={16} color="#FF9500" />
+            <Ionicons name="shield-checkmark-outline" size={16} color={colors.gold} />
             <Text style={styles.eligibilityText} numberOfLines={1}>
               {EventEligibilityService.getEligibilitySummary(event.eligibility, event.minPlayerRating).join(', ')}
             </Text>
@@ -220,10 +176,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
       {wasAutoOpened && (
         <View style={styles.autoOpenedBanner}>
-          <Ionicons name="megaphone-outline" size={14} color={colors.ink} />
-          <Text style={styles.autoOpenedText}>
-            Now open to public - was invite-only
-          </Text>
+          <Ionicons name="megaphone-outline" size={14} color={colors.onSurface} />
+          <Text style={styles.autoOpenedText}>Now open to public - was invite-only</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -232,20 +186,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
     padding: 16,
     paddingRight: 90,
-    marginVertical: 8,
+    marginVertical: 6,
     marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
     position: 'relative' as const,
   },
   containerWithIndicator: {
@@ -257,8 +203,8 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
   },
   bubbleStack: {
     position: 'absolute' as const,
@@ -280,32 +226,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
     marginLeft: 8,
     flex: 1,
   },
   participantsTracker: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobalt + '15',
+    backgroundColor: colors.primary + '15',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'flex-start',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt + '30',
+    borderColor: colors.primary + '30',
   },
   participantsText: {
+    fontFamily: fonts.label,
     fontSize: 13,
-    fontWeight: '600',
-    color: colors.cobalt,
+    color: colors.primary,
     marginLeft: 6,
   },
   participantsFullText: {
-    color: colors.heart,
+    color: colors.error,
   },
   inviteOnlyBadge: {
     flexDirection: 'row',
@@ -319,8 +265,8 @@ const styles = StyleSheet.create({
   },
   inviteOnlyText: {
     color: colors.gold,
+    fontFamily: fonts.label,
     fontSize: 10,
-    fontWeight: '600',
     marginLeft: 4,
   },
   skillBadge: {
@@ -330,12 +276,13 @@ const styles = StyleSheet.create({
   },
   skillText: {
     color: '#FFFFFF',
+    fontFamily: fonts.label,
     fontSize: 10,
-    fontWeight: '600',
   },
   description: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -348,14 +295,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   detailText: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     marginLeft: 8,
     flex: 1,
-  },
-  fullText: {
-    color: '#FF3B30',
-    fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
@@ -363,81 +307,79 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
+    fontFamily: fonts.heading,
     fontSize: 18,
-    fontWeight: '700',
-    color: '#007AFF',
+    color: colors.primary,
   },
   statusBadge: {
-    backgroundColor: '#E8F5E8',
+    backgroundColor: colors.secondaryContainer,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
   fullBadge: {
-    backgroundColor: '#FFE8E8',
+    backgroundColor: colors.error + '15',
   },
   statusText: {
+    fontFamily: fonts.label,
     fontSize: 12,
-    fontWeight: '600',
-    color: '#34C759',
+    color: colors.secondary,
   },
   fullStatusText: {
-    color: '#FF3B30',
+    color: colors.error,
   },
   eligibilityText: {
+    fontFamily: fonts.body,
     fontSize: 13,
-    color: '#FF9500',
+    color: colors.gold,
     marginLeft: 8,
     flex: 1,
-    fontWeight: '500',
   },
   rentalIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobalt + '10',
+    backgroundColor: colors.primary + '10',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.cobalt + '30',
+    borderColor: colors.primary + '30',
     alignSelf: 'flex-start',
   },
   rentalText: {
+    fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.cobalt,
+    color: colors.primary,
     marginLeft: 6,
-    fontWeight: '600',
   },
   autoOpenedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.ink + '15',
+    backgroundColor: colors.surfaceContainer,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     marginTop: 8,
-    borderWidth: 1,
-    borderColor: colors.ink + '30',
   },
   autoOpenedText: {
+    fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.ink,
+    color: colors.onSurface,
     marginLeft: 6,
-    fontWeight: '600',
   },
   hostBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8A030',
+    backgroundColor: colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 9999,
     gap: 4,
   },
   hostBadgeText: {
     color: '#FFFFFF',
+    fontFamily: fonts.label,
     fontSize: 10,
-    fontWeight: '700',
   },
 });

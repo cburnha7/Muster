@@ -18,7 +18,7 @@ import {
   TokenResponse,
 } from '../../types/auth';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? 'http://localhost:3000/api' : 'https://muster-production.up.railway.app/api');
 
 // Network timeout in milliseconds (30 seconds)
 const NETWORK_TIMEOUT = 30000;
@@ -386,7 +386,9 @@ class AuthService {
    * Synchronous method for interceptors (backward compatibility)
    */
   getToken(): string | null {
-    console.log('🔑 getToken() called, cache:', this.tokenCache ? `${this.tokenCache.substring(0, 20)}...` : 'null');
+    if (__DEV__) {
+      console.log('🔑 getToken() called, cache:', this.tokenCache ? `${this.tokenCache.substring(0, 20)}...` : 'null');
+    }
     return this.tokenCache;
   }
 

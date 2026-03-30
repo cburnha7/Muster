@@ -140,7 +140,7 @@ export function TransferAccountScreen() {
         >
           {/* Permanent action warning */}
           <View style={styles.warningCard}>
-            <Ionicons name="warning-outline" size={24} color={colors.gold} />
+            <Ionicons name="warning-outline" size={24} color={colors.tertiary} />
             <View style={styles.warningTextContainer}>
               <Text style={styles.warningTitle}>This action is permanent</Text>
               <Text style={styles.warningBody}>
@@ -209,7 +209,7 @@ export function TransferAccountScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   flex: {
     flex: 1,
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   },
   warningCard: {
     flexDirection: 'row',
-    backgroundColor: colors.gold + '15',
+    backgroundColor: colors.tertiary + '15',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: colors.gold + '30',
+    borderColor: colors.tertiary + '30',
   },
   warningTextContainer: {
     flex: 1,
@@ -234,19 +234,19 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: 4,
   },
   warningBody: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.onSurfaceFaint,
     lineHeight: 20,
   },
   sectionLabel: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: Spacing.sm,
   },
   submitContainer: {

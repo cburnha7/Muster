@@ -79,7 +79,7 @@ export function DependentsSection() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={colors.cobalt} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   }
@@ -90,7 +90,7 @@ export function DependentsSection() {
 
       {dependents.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Ionicons name="people-outline" size={32} color={colors.inkFaint} />
+          <Ionicons name="people-outline" size={32} color={colors.outline} />
           <Text style={styles.emptyText}>
             No dependents added yet. Add a dependent to manage their account.
           </Text>
@@ -109,13 +109,13 @@ export function DependentsSection() {
                 <Image source={{ uri: dependent.profileImage }} style={styles.avatar} />
               ) : (
                 <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                  <Ionicons name="person" size={20} color={colors.inkFaint} />
+                  <Ionicons name="person" size={20} color={colors.outline} />
                 </View>
               )}
               <Text style={styles.dependentName}>
                 {dependent.firstName} {dependent.lastName}
               </Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+              <Ionicons name="chevron-forward" size={18} color={colors.outline} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.switchButton}
@@ -124,7 +124,7 @@ export function DependentsSection() {
               accessibilityRole="button"
               accessibilityLabel={`Switch to ${dependent.firstName}`}
             >
-              <Ionicons name="swap-horizontal" size={14} color={colors.cobalt} />
+              <Ionicons name="swap-horizontal" size={14} color={colors.secondary} />
               <Text style={styles.switchButtonText}>Switch</Text>
             </TouchableOpacity>
           </View>
@@ -138,7 +138,7 @@ export function DependentsSection() {
         accessibilityRole="button"
         accessibilityLabel="Add Dependent"
       >
-        <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
+        <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
         <Text style={styles.addButtonText}>Add Dependent</Text>
       </TouchableOpacity>
       </View>
@@ -151,22 +151,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   loadingContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
   },
   emptyCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -175,18 +175,18 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.outline,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
   dependentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   dependentName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.onSurface,
     flex: 1,
     marginLeft: Spacing.md,
   },
@@ -220,16 +220,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     marginTop: Spacing.sm,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.cobalt,
+    borderColor: colors.primary,
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
+    color: colors.primary,
     marginLeft: Spacing.sm,
   },
   switchButton: {
@@ -238,13 +238,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: `${colors.cobalt}15`,
+    backgroundColor: `${colors.secondary}15`,
     marginLeft: Spacing.sm,
     gap: 4,
   },
   switchButtonText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.cobalt,
+    color: colors.secondary,
   },
 });

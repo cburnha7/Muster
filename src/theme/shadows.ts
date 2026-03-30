@@ -1,6 +1,8 @@
 /**
- * Shadow system for the Sports Booking App
- * Provides consistent elevation and shadow styles
+ * Shadow system — Ambient Shadows
+ *
+ * Uses tinted blue-grey (on_surface) instead of pure black.
+ * Higher blur, lower opacity for natural light diffusion.
  */
 
 export const Shadows = {
@@ -12,40 +14,37 @@ export const Shadows = {
     elevation: 0,
   },
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 1,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 2,
   },
   lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
   },
   xl: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.10,
+    shadowRadius: 40,
+    elevation: 8,
   },
 } as const;
 
 export type ShadowKey = keyof typeof Shadows;
 
-/**
- * Get shadow style by key
- */
 export function getShadow(key: ShadowKey) {
   return Shadows[key];
 }

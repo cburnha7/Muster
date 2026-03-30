@@ -1,461 +1,408 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { registerUser, registerWithSSO } from '../../store/slices/authSlice';
 import { loggingService } from '../../services/LoggingService';
 
-interface RegistrationState {
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-  agreedToTerms: boolean;
-  ssoProvider: 'apple' | 'google' | null;
-  ssoToken: string | null;
-  ssoUserId: string | null;
-  isLoading: boolean;
-  ssoLoading: 'apple' | 'google' | null;
-  errors: {
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    username?: string;
-    password?: string;
-    confirmPassword?: string;
-    agreedToTerms?: string;
-    general?: string;
-  };
-}
+const TOTAL_STEPS = 3;
 
 export const RegistrationScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  const [state, setState] = useState<RegistrationState>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    agreedToTerms: false,
-    ssoProvider: null,
-    ssoToken: null,
-    ssoUserId: null,
-    isLoading: false,
-    ssoLoading: null,
-    errors: {},
-  });
-
-  const updateField = (field: keyof RegistrationState, value: any) => {
-    setState((prev) => ({ ...prev, [field]: value }));
-  };
+  const [step, setStep] = useState(0);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState<'apple' | 'google' | null>(null);
+  const [ssoProvider, setSsoProvider] = useState<'apple' | 'google' | null>(null);
+  const [ssoToken, setSsoToken] = useState<string | null>(null);
+  const [ssoUserId, setSsoUserId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
   const updateError = (field: string, error: string | undefined) => {
-    setState((prev) => ({
-      ...prev,
-      errors: { ...prev.errors, [field]: error },
-    }));
+    setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
-  const validateField = (field: string, value: string) => {
-    let error: string | null = null;
+  const clearErrors = () => setErrors({});
 
-    switch (field) {
-      case 'firstName':
-        error = ValidationService.validateFirstName(value);
-        break;
-      case 'lastName':
-        error = ValidationService.validateLastName(value);
-        break;
-      case 'email':
-        error = ValidationService.validateEmail(value);
-        break;
-      case 'username':
-        error = ValidationService.validateUsername(value);
-        break;
-      case 'password':
-        error = ValidationService.validatePassword(value);
-        break;
-      case 'confirmPassword':
-        error = ValidationService.validateConfirmPassword(state.password, value);
-        break;
+  // ── Step transition ─────────────────────
+  const transitionTo = (nextStep: number) => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 120,
+      useNativeDriver: true,
+    }).start(() => {
+      setStep(nextStep);
+      clearErrors();
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  // ── Validation per step ─────────────────
+  const validateStep = (): boolean => {
+    const newErrors: Record<string, string | undefined> = {};
+
+    if (step === 0) {
+      const fnErr = ValidationService.validateFirstName(firstName);
+      const lnErr = ValidationService.validateLastName(lastName);
+      if (fnErr) newErrors.firstName = fnErr;
+      if (lnErr) newErrors.lastName = lnErr;
+    } else if (step === 1) {
+      const emErr = ValidationService.validateEmail(email);
+      const unErr = ValidationService.validateUsername(username);
+      if (emErr) newErrors.email = emErr;
+      if (unErr) newErrors.username = unErr;
+    } else if (step === 2) {
+      if (!ssoProvider) {
+        const pwErr = ValidationService.validatePassword(password);
+        if (pwErr) newErrors.password = pwErr;
+      }
+      if (!agreedToTerms) {
+        newErrors.agreedToTerms = 'You must agree to continue';
+      }
     }
 
-    updateError(field, error || undefined);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const validateForm = (): boolean => {
-    const errors = ValidationService.validateRegistrationForm({
-      firstName: state.firstName,
-      lastName: state.lastName,
-      email: state.email,
-      username: state.username,
-      password: state.ssoProvider ? '' : state.password,
-      confirmPassword: state.ssoProvider ? '' : state.confirmPassword,
-      agreedToTerms: state.agreedToTerms,
-    });
+  // ── Continue ────────────────────────────
+  const handleContinue = () => {
+    if (!validateStep()) return;
 
-    // Log each validation failure
-    Object.entries(errors).forEach(([field, msg]) => {
-      if (msg) loggingService.logValidation('RegistrationScreen', field, 'invalid', msg);
-    });
-
-    setState((prev) => ({ ...prev, errors }));
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleManualRegistration = async () => {
-    if (!validateForm()) {
-      return;
+    if (step < TOTAL_STEPS - 1) {
+      transitionTo(step + 1);
+    } else {
+      handleSubmit();
     }
+  };
+
+  // ── Back ────────────────────────────────
+  const handleBack = () => {
+    if (step > 0) {
+      transitionTo(step - 1);
+    } else {
+      navigation.navigate('Login' as never);
+    }
+  };
+
+  // ── Submit ──────────────────────────────
+  const handleSubmit = async () => {
+    if (!validateStep()) return;
 
     loggingService.logButton('Create Account', 'RegistrationScreen');
-
-    updateField('isLoading', true);
-    updateError('general', undefined);
+    setIsLoading(true);
+    clearErrors();
 
     try {
-      const result = await dispatch(
-        registerUser({
-          firstName: state.firstName,
-          lastName: state.lastName,
-          email: state.email,
-          username: state.username,
-          password: state.password,
-          agreedToTerms: state.agreedToTerms,
-        })
-      ).unwrap();
+      if (ssoProvider) {
+        await dispatch(
+          registerWithSSO({
+            provider: ssoProvider,
+            providerToken: ssoToken!,
+            providerUserId: ssoUserId!,
+            email,
+            firstName,
+            lastName,
+            username,
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          registerUser({
+            firstName,
+            lastName,
+            email,
+            username,
+            password,
+            agreedToTerms,
+          })
+        ).unwrap();
+      }
 
-      // Navigate to home screen on success
-      Alert.alert('Success', 'Welcome to Muster!');
-      // navigation.navigate('Home'); // Uncomment when navigation is configured
+      Alert.alert('Welcome to Muster!', "You're all set.");
     } catch (error: any) {
       if (error.status === 409) {
-        if (error.message.includes('email')) {
-          updateError('email', 'This email is already registered');
-        } else if (error.message.includes('username')) {
-          updateError('username', 'This username is taken');
+        if (error.message?.includes('email')) {
+          updateError('general', 'This email is already registered');
+          transitionTo(1);
+        } else if (error.message?.includes('username')) {
+          updateError('general', 'This username is taken');
+          transitionTo(1);
         }
       } else if (error.message === 'No internet connection') {
-        updateError('general', 'No internet connection. Please check your network and try again');
-      } else if (error.message === 'Request timed out') {
-        updateError('general', 'Request timed out. Please try again');
+        updateError('general', 'No internet connection. Check your network and try again.');
       } else {
-        updateError('general', error.message || 'Registration failed. Please try again');
+        updateError('general', error.message || 'Something went wrong. Please try again.');
       }
     } finally {
-      updateField('isLoading', false);
+      setIsLoading(false);
     }
   };
 
-  const handleSSORegistration = async (provider: 'apple' | 'google') => {
-    updateField('ssoLoading', provider);
-    updateError('general', undefined);
+  // ── SSO ─────────────────────────────────
+  const handleSSO = async (provider: 'apple' | 'google') => {
+    setSsoLoading(provider);
+    clearErrors();
 
     try {
       const userData = provider === 'apple'
         ? await SSOService.signInWithApple()
         : await SSOService.signInWithGoogle();
 
-      // Pre-populate form with SSO data
-      setState((prev) => ({
-        ...prev,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        ssoProvider: provider,
-        ssoToken: userData.providerToken,
-        ssoUserId: userData.providerId,
-        ssoLoading: null,
-      }));
+      setFirstName(userData.firstName);
+      setLastName(userData.lastName);
+      setEmail(userData.email);
+      setSsoProvider(provider);
+      setSsoToken(userData.providerToken);
+      setSsoUserId(userData.providerId);
+      setSsoLoading(null);
+      // Skip to username step (name & email filled by SSO)
+      transitionTo(1);
     } catch (error: any) {
-      updateField('ssoLoading', null);
+      setSsoLoading(null);
       if (error.message !== 'User cancelled') {
-        updateError('general', `Sign in with ${provider === 'apple' ? 'Apple' : 'Google'} failed. Please try again`);
+        updateError('general', `Sign in with ${provider === 'apple' ? 'Apple' : 'Google'} failed`);
       }
     }
-  };
-
-  const handleSSOComplete = async () => {
-    if (!state.username.trim()) {
-      updateError('username', 'Username is required');
-      return;
-    }
-
-    if (!state.agreedToTerms) {
-      updateError('agreedToTerms', 'You must agree to the Terms of Service and Privacy Policy');
-      return;
-    }
-
-    updateField('isLoading', true);
-    updateError('general', undefined);
-
-    try {
-      const result = await dispatch(
-        registerWithSSO({
-          provider: state.ssoProvider!,
-          providerToken: state.ssoToken!,
-          providerUserId: state.ssoUserId!,
-          email: state.email,
-          firstName: state.firstName,
-          lastName: state.lastName,
-          username: state.username,
-        })
-      ).unwrap();
-
-      Alert.alert('Success', 'Welcome to Muster!');
-      // navigation.navigate('Home'); // Uncomment when navigation is configured
-    } catch (error: any) {
-      if (error.status === 409) {
-        if (error.message.includes('email')) {
-          // Show account linking modal
-          // TODO: Implement AccountLinkingModal
-          updateError('general', 'An account with this email already exists. Account linking coming soon.');
-        } else if (error.message.includes('username')) {
-          updateError('username', 'This username is taken');
-        }
-      } else {
-        updateError('general', error.message || 'Registration failed. Please try again');
-      }
-    } finally {
-      updateField('isLoading', false);
-    }
-  };
-
-  const handleNavigateToLogin = () => {
-    navigation.navigate('Login' as never);
   };
 
   const handleOpenTerms = () => {
-    // TODO: Open Terms of Service
     Alert.alert('Terms of Service', 'Terms of Service will be displayed here');
   };
 
   const handleOpenPrivacy = () => {
-    // TODO: Open Privacy Policy
     Alert.alert('Privacy Policy', 'Privacy Policy will be displayed here');
   };
 
-  const isFormValid = () => {
-    if (state.ssoProvider) {
-      return state.username.trim() && state.agreedToTerms;
-    }
-    
-    // First check if all required fields are filled
-    if (
-      !state.firstName.trim() ||
-      !state.lastName.trim() ||
-      !state.email.trim() ||
-      !state.username.trim() ||
-      !state.password.trim() ||
-      !state.confirmPassword.trim() ||
-      !state.agreedToTerms
-    ) {
-      return false;
-    }
-    
-    // Then validate each field to check for errors
-    const firstNameError = ValidationService.validateFirstName(state.firstName);
-    const lastNameError = ValidationService.validateLastName(state.lastName);
-    const emailError = ValidationService.validateEmail(state.email);
-    const usernameError = ValidationService.validateUsername(state.username);
-    const passwordError = ValidationService.validatePassword(state.password);
-    const confirmPasswordError = ValidationService.validateConfirmPassword(state.password, state.confirmPassword);
-    
-    // Return true only if no validation errors exist
-    return !firstNameError && !lastNameError && !emailError && !usernameError && !passwordError && !confirmPasswordError;
-  };
+  // ── Step content ────────────────────────
+  const stepConfig = [
+    {
+      title: "What's your name?",
+      subtitle: 'So other players know who you are.',
+    },
+    {
+      title: 'Set up your account',
+      subtitle: "We'll use this to identify you on Muster.",
+    },
+    {
+      title: ssoProvider ? 'Almost there' : 'Secure your account',
+      subtitle: ssoProvider
+        ? 'Agree to our terms to get started.'
+        : 'Choose a strong password to protect your account.',
+    },
+  ];
+
+  const { title, subtitle } = stepConfig[step];
+
+  const isLastStep = step === TOTAL_STEPS - 1;
+  const ctaLabel = isLastStep ? 'Create Account' : 'Continue';
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join Muster to find games and connect with players</Text>
+      <View style={styles.content}>
+        {/* Top bar: back + progress */}
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
+          </TouchableOpacity>
+
+          <View style={styles.progressBar}>
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.progressDot,
+                  i <= step && styles.progressDotActive,
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Spacer to balance back button */}
+          <View style={styles.backButton} />
         </View>
 
-        {!state.ssoProvider && Platform.OS !== 'web' && (
-          <>
-            <SSOButton
-              provider="apple"
-              onPress={() => handleSSORegistration('apple')}
-              isLoading={state.ssoLoading === 'apple'}
-              disabled={state.isLoading || state.ssoLoading !== null}
-            />
-            <SSOButton
-              provider="google"
-              onPress={() => handleSSORegistration('google')}
-              isLoading={state.ssoLoading === 'google'}
-              disabled={state.isLoading || state.ssoLoading !== null}
-            />
+        {/* Animated step content */}
+        <Animated.View style={[styles.inner, { opacity: fadeAnim }]}>
+          {/* Header */}
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+          {/* General error */}
+          {errors.general && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{errors.general}</Text>
             </View>
-          </>
-        )}
+          )}
 
-        <FormInput
-          label="First Name"
-          value={state.firstName}
-          onChangeText={(text) => updateField('firstName', text)}
-          placeholder="Enter your first name"
-          error={state.errors.firstName}
-          onBlur={() => validateField('firstName', state.firstName)}
-          leftIcon="person-outline"
-          editable={!state.isLoading && !state.ssoProvider}
-          autoCapitalize="words"
-        />
+          {/* Step 0: Name */}
+          {step === 0 && (
+            <View style={styles.fields}>
+              {/* SSO option */}
+              {!ssoProvider && Platform.OS !== 'web' && (
+                <>
+                  <SSOButton
+                    provider="apple"
+                    onPress={() => handleSSO('apple')}
+                    isLoading={ssoLoading === 'apple'}
+                    disabled={isLoading || ssoLoading !== null}
+                  />
+                  <SSOButton
+                    provider="google"
+                    onPress={() => handleSSO('google')}
+                    isLoading={ssoLoading === 'google'}
+                    disabled={isLoading || ssoLoading !== null}
+                  />
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+                </>
+              )}
 
-        <FormInput
-          label="Last Name"
-          value={state.lastName}
-          onChangeText={(text) => updateField('lastName', text)}
-          placeholder="Enter your last name"
-          error={state.errors.lastName}
-          onBlur={() => validateField('lastName', state.lastName)}
-          leftIcon="person-outline"
-          editable={!state.isLoading && !state.ssoProvider}
-          autoCapitalize="words"
-        />
+              <FormInput
+                value={firstName}
+                onChangeText={(text) => { setFirstName(text); updateError('firstName', undefined); }}
+                placeholder="First name"
+                error={errors.firstName}
+                autoCapitalize="words"
+                autoFocus
+              />
+              <FormInput
+                value={lastName}
+                onChangeText={(text) => { setLastName(text); updateError('lastName', undefined); }}
+                placeholder="Last name"
+                error={errors.lastName}
+                autoCapitalize="words"
+              />
+            </View>
+          )}
 
-        <FormInput
-          label="Email"
-          value={state.email}
-          onChangeText={(text) => updateField('email', text)}
-          placeholder="Enter your email"
-          error={state.errors.email}
-          onBlur={() => validateField('email', state.email)}
-          leftIcon="mail-outline"
-          editable={!state.isLoading && !state.ssoProvider}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+          {/* Step 1: Account */}
+          {step === 1 && (
+            <View style={styles.fields}>
+              <FormInput
+                value={email}
+                onChangeText={(text) => { setEmail(text); updateError('email', undefined); }}
+                placeholder="Email address"
+                error={errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!ssoProvider}
+                autoFocus={!ssoProvider}
+              />
+              <FormInput
+                value={username}
+                onChangeText={(text) => { setUsername(text); updateError('username', undefined); }}
+                placeholder="Choose a username"
+                error={errors.username}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus={!!ssoProvider}
+              />
+            </View>
+          )}
 
-        <FormInput
-          label="Username"
-          value={state.username}
-          onChangeText={(text) => updateField('username', text)}
-          placeholder="Choose a username"
-          error={state.errors.username}
-          onBlur={() => validateField('username', state.username)}
-          leftIcon="at"
-          editable={!state.isLoading}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+          {/* Step 2: Security + Terms */}
+          {step === 2 && (
+            <View style={styles.fields}>
+              {!ssoProvider && (
+                <FormInput
+                  value={password}
+                  onChangeText={(text) => { setPassword(text); updateError('password', undefined); }}
+                  placeholder="Create a password"
+                  error={errors.password}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoFocus
+                />
+              )}
 
-        {!state.ssoProvider && (
-          <>
-            <FormInput
-              label="Password"
-              value={state.password}
-              onChangeText={(text) => updateField('password', text)}
-              placeholder="Create a password"
-              error={state.errors.password}
-              onBlur={() => validateField('password', state.password)}
-              leftIcon="lock-closed-outline"
-              secureTextEntry
-              editable={!state.isLoading}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+              <View style={styles.termsSection}>
+                <Checkbox
+                  label={
+                    <Text style={styles.checkboxLabel}>
+                      I agree to the{' '}
+                      <Text style={styles.link} onPress={handleOpenTerms}>
+                        Terms of Service
+                      </Text>
+                      {' '}and{' '}
+                      <Text style={styles.link} onPress={handleOpenPrivacy}>
+                        Privacy Policy
+                      </Text>
+                    </Text>
+                  }
+                  checked={agreedToTerms}
+                  onToggle={() => { setAgreedToTerms(!agreedToTerms); updateError('agreedToTerms', undefined); }}
+                  error={errors.agreedToTerms}
+                />
+              </View>
+            </View>
+          )}
+        </Animated.View>
 
-            <FormInput
-              label="Confirm Password"
-              value={state.confirmPassword}
-              onChangeText={(text) => updateField('confirmPassword', text)}
-              placeholder="Confirm your password"
-              error={state.errors.confirmPassword}
-              onBlur={() => validateField('confirmPassword', state.confirmPassword)}
-              leftIcon="lock-closed-outline"
-              secureTextEntry
-              editable={!state.isLoading}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </>
-        )}
+        {/* Fixed bottom CTA */}
+        <View style={styles.bottomSection}>
+          <FormButton
+            title={ctaLabel}
+            onPress={handleContinue}
+            variant="primary"
+            size="large"
+            loading={isLoading}
+          />
 
-        <Checkbox
-          label={
-            <Text style={styles.checkboxLabel}>
-              I agree to the{' '}
-              <Text style={styles.link} onPress={handleOpenTerms}>
-                Terms of Service
+          {step === 0 && (
+            <TouchableOpacity
+              style={styles.loginLink}
+              onPress={() => navigation.navigate('Login' as never)}
+            >
+              <Text style={styles.loginLinkText}>
+                Already have an account?{' '}
+                <Text style={styles.link}>Log In</Text>
               </Text>
-              {' '}and{' '}
-              <Text style={styles.link} onPress={handleOpenPrivacy}>
-                Privacy Policy
-              </Text>
-            </Text>
-          }
-          checked={state.agreedToTerms}
-          onToggle={() => updateField('agreedToTerms', !state.agreedToTerms)}
-          error={state.errors.agreedToTerms}
-        />
-
-        {state.errors.general && (
-          <Text style={styles.errorText}>{state.errors.general}</Text>
-        )}
-
-        <FormButton
-          title={state.ssoProvider ? 'Complete Registration' : 'Create Account'}
-          onPress={state.ssoProvider ? handleSSOComplete : handleManualRegistration}
-          variant="primary"
-          loading={state.isLoading}
-          disabled={!isFormValid()}
-        />
-
-        <FormButton
-          title="Cancel"
-          onPress={handleNavigateToLogin}
-          variant="secondary"
-          disabled={state.isLoading}
-          style={{ marginTop: 12 }}
-        />
-
-        <TouchableOpacity
-          style={styles.loginLink}
-          onPress={handleNavigateToLogin}
-          disabled={state.isLoading}
-        >
-          <Text style={styles.loginLinkText}>
-            Already have an account?{' '}
-            <Text style={styles.link}>Log In</Text>
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -463,30 +410,75 @@ export const RegistrationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
-  scrollView: {
+  content: {
     flex: 1,
+    paddingHorizontal: 28,
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 20,
+
+  // ── Top bar ─────────────────────────────
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 56 : 16,
+    paddingBottom: 12,
   },
-  header: {
-    marginBottom: 24,
-    marginTop: 8,
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  progressBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.outlineVariant,
+  },
+  progressDotActive: {
+    backgroundColor: colors.primary,
+    width: 24,
+    borderRadius: 4,
+  },
+
+  // ── Inner (animated) ────────────────────
+  inner: {
+    flex: 1,
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'center',
+    paddingTop: 24,
+  },
+
+  // ── Header ──────────────────────────────
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: colors.ink,
+    fontFamily: fonts.heading,
+    color: colors.onSurface,
+    letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
-    color: colors.inkFaint,
-    lineHeight: 22,
+    fontSize: 16,
+    fontFamily: fonts.body,
+    color: colors.onSurfaceVariant,
+    lineHeight: 24,
+    marginBottom: 32,
   },
+
+  // ── Fields ──────────────────────────────
+  fields: {
+    // Container for step fields
+  },
+
+  // ── SSO / Divider ──────────────────────
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -495,36 +487,63 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.outlineVariant,
+    opacity: 0.4,
   },
   dividerText: {
-    fontSize: 14,
-    color: colors.inkFaint,
-    marginHorizontal: 12,
+    fontSize: 13,
+    fontFamily: fonts.body,
+    color: colors.outline,
+    marginHorizontal: 16,
   },
-  checkboxLabel: {
-    fontSize: 15,
-    color: colors.ink,
-    lineHeight: 20,
-  },
-  link: {
-    color: colors.cobalt,
-    fontWeight: '600',
+
+  // ── Error banner ────────────────────────
+  errorBanner: {
+    backgroundColor: colors.errorContainer,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 20,
   },
   errorText: {
     fontSize: 14,
-    color: colors.heart,
+    fontFamily: fonts.body,
+    color: colors.onErrorContainer,
     textAlign: 'center',
-    marginVertical: 12,
-    paddingHorizontal: 16,
   },
+
+  // ── Terms ───────────────────────────────
+  termsSection: {
+    marginTop: 4,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    fontFamily: fonts.body,
+    color: colors.onSurfaceVariant,
+    lineHeight: 20,
+  },
+  link: {
+    color: colors.primary,
+    fontFamily: fonts.headingSemi,
+  },
+
+  // ── Bottom section ──────────────────────
+  bottomSection: {
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingTop: 12,
+  },
+
+  // ── Login link ──────────────────────────
   loginLink: {
     marginTop: 20,
     alignItems: 'center',
-    paddingVertical: 12,
   },
   loginLinkText: {
     fontSize: 15,
-    color: colors.inkFaint,
+    fontFamily: fonts.body,
+    color: colors.onSurfaceVariant,
   },
 });
