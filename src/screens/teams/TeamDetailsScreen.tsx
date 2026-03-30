@@ -619,15 +619,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               )}
             </DetailCard>
 
-            {/* ── Delete link for captain (bottom of scroll) ── */}
+            {/* ── Edit / Delete for captain ── */}
             {!readOnly && isCaptain && (
-              <TouchableOpacity
-                onPress={() => setShowDeleteModal(true)}
-                style={styles.deleteLink}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.deleteLinkText}>Delete roster</Text>
-              </TouchableOpacity>
+              <View style={styles.ownerActions}>
+                <TouchableOpacity style={styles.ownerEditBtn} onPress={() => setEditMode(true)} activeOpacity={0.7}>
+                  <Text style={styles.ownerEditBtnText}>Edit Roster</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.ownerDeleteBtn} onPress={() => setShowDeleteModal(true)} activeOpacity={0.7}>
+                  <Text style={styles.ownerDeleteBtnText}>Delete Roster</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </>
         ) : (
@@ -775,13 +776,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               variant="primary"
               secondaryLabel="Decline"
               onSecondaryPress={handleDeclineInvitation}
-            />
-          )}
-          {isCaptain && (
-            <FixedBottomCTA
-              label="Manage team"
-              onPress={() => setEditMode(true)}
-              variant="primary"
             />
           )}
         </>
@@ -952,18 +946,35 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     flex: 1,
   },
-  // Delete link
-  deleteLink: {
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
+  // Owner edit/delete actions
+  ownerActions: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    gap: 10,
   },
-  deleteLinkText: {
+  ownerEditBtn: {
+    backgroundColor: colors.cobalt,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  ownerEditBtnText: {
     fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.error,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  ownerDeleteBtn: {
+    borderWidth: 2,
+    borderColor: colors.heart,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  ownerDeleteBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.heart,
   },
   // Invites / Add members section
   addMembersSection: {

@@ -7,11 +7,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  TextInput,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
@@ -22,8 +25,9 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
+import { teamService } from '../../services/api/TeamService';
 import { updateEvent } from '../../store/slices/eventsSlice';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -65,6 +69,21 @@ interface FormErrors {
   [key: string]: string;
 }
 
+interface InviteItem {
+  id: string;
+  name: string;
+  type: 'roster' | 'player';
+  image?: string;
+}
+
+interface InvitedPlayer {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  profileImage?: string;
+  status: 'confirmed' | 'invited';
+}
+
 export function EditEventScreen(): JSX.Element {
   const navigation = useNavigation();
   const route = useRoute();
@@ -96,6 +115,11 @@ export function EditEventScreen(): JSX.Element {
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Invite state
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [inviteResults, setInviteResults] = useState<InviteItem[]>([]);
+  const [players, setPlayers] = useState<InvitedPlayer[]>([]);
 
   // Form options
   const sportTypeOptions: SelectOption[] = [
@@ -179,6 +203,80 @@ export function EditEventScreen(): JSX.Element {
     }
   };
 
+  // Load participants + invited users
+  useEffect(() => {
+    if (!event) return;
+    (async () => {
+      try {
+        const data = await eventService.getEventParticipants(eventId, true);
+        const confirmed: InvitedPlayer[] = (data.participants || []).map((p: any) => ({
+          userId: p.userId,
+          firstName: p.user?.firstName || 'Unknown',
+          lastName: p.user?.lastName || '',
+          profileImage: p.user?.profileImage,
+          status: 'confirmed' as const,
+        }));
+        // Fetch invited users who haven't joined yet
+        const invitedIds: string[] = event.invitedUserIds || [];
+        const confirmedIds = new Set(confirmed.map((p) => p.userId));
+        const pendingIds = invitedIds.filter((id) => !confirmedIds.has(id));
+        let pending: InvitedPlayer[] = [];
+        if (pendingIds.length > 0) {
+          // Fetch user details for pending invites
+          for (const uid of pendingIds) {
+            try {
+              const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/${uid}`);
+              if (resp.ok) {
+                const u = await resp.json();
+                pending.push({ userId: u.id, firstName: u.firstName, lastName: u.lastName, profileImage: u.profileImage, status: 'invited' });
+              }
+            } catch {}
+          }
+        }
+        setPlayers([...confirmed, ...pending]);
+      } catch {}
+    })();
+  }, [event, eventId]);
+
+  // Invite search
+  useEffect(() => {
+    if (!inviteQuery.trim()) { setInviteResults([]); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const isGame = formData.eventType === EventType.GAME;
+        if (isGame) {
+          const res = await teamService.getTeams(undefined, { page: 1, limit: 15 });
+          setInviteResults(
+            (res.data || [])
+              .filter((t: any) => t.name.toLowerCase().includes(inviteQuery.toLowerCase()))
+              .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }))
+          );
+        } else {
+          let searchPlayers: any[] = [];
+          try {
+            const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
+            const json = await resp.json();
+            searchPlayers = Array.isArray(json) ? json : json.data || [];
+          } catch {}
+          setInviteResults(
+            searchPlayers.map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }))
+          );
+        }
+      } catch { setInviteResults([]); }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [inviteQuery, formData.eventType]);
+
+  const addInvite = (item: InviteItem) => {
+    if (players.some((p) => p.userId === item.id)) return;
+    setPlayers((prev) => [...prev, { userId: item.id, firstName: item.name.split(' ')[0] || item.name, lastName: item.name.split(' ').slice(1).join(' '), profileImage: item.image, status: 'invited' }]);
+    setInviteQuery(''); setInviteResults([]);
+  };
+
+  const removeInvite = (userId: string) => {
+    setPlayers((prev) => prev.filter((p) => p.userId !== userId || p.status === 'confirmed'));
+  };
+
   // Get facility options
   const facilityOptions: SelectOption[] = facilities.map(facility => ({
     label: facility.name,
@@ -207,10 +305,6 @@ export function EditEventScreen(): JSX.Element {
     // Required fields
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
     }
 
     if (!formData.sportType) {
@@ -315,7 +409,8 @@ export function EditEventScreen(): JSX.Element {
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
         status: formData.status as EventStatus,
-      };
+        invitedUserIds: players.filter((p) => p.status === 'invited').map((p) => p.userId),
+      } as any;
 
       const updatedEvent = await eventService.updateEvent(event.id, updateData);
       dispatch(updateEvent(updatedEvent));
@@ -432,17 +527,6 @@ export function EditEventScreen(): JSX.Element {
             value={formData.title}
             onChangeText={(value) => handleInputChange('title', value)}
             error={errors.title}
-            required
-          />
-
-          <FormInput
-            label="Description"
-            placeholder="Describe your event"
-            value={formData.description}
-            onChangeText={(value) => handleInputChange('description', value)}
-            error={errors.description}
-            multiline
-            numberOfLines={3}
             required
           />
 
@@ -597,6 +681,63 @@ export function EditEventScreen(): JSX.Element {
               <Text style={styles.infoLabel}>Created: {new Date(event.createdAt).toLocaleDateString()}</Text>
             </View>
           )}
+
+          {/* Players list */}
+          {players.length > 0 && (
+            <View style={styles.playersSection}>
+              <Text style={styles.playersSectionTitle}>Players</Text>
+              {players.map((p) => (
+                <View key={p.userId} style={styles.playerRow}>
+                  {p.profileImage ? (
+                    <Image source={{ uri: p.profileImage }} style={styles.playerAvatar} />
+                  ) : (
+                    <View style={styles.playerAvatarFallback}>
+                      <Ionicons name="person" size={16} color="#FFFFFF" />
+                    </View>
+                  )}
+                  <Text style={styles.playerName}>{p.firstName} {p.lastName}</Text>
+                  {p.status === 'invited' && (
+                    <>
+                      <View style={styles.invitedBadge}>
+                        <Text style={styles.invitedBadgeText}>Invited</Text>
+                      </View>
+                      <TouchableOpacity onPress={() => removeInvite(p.userId)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Ionicons name="close-circle" size={20} color={colors.inkFaint} />
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Invite search */}
+          <View style={styles.inviteSection}>
+            <Text style={styles.playersSectionTitle}>Invite Players</Text>
+            <TextInput
+              style={styles.inviteInput}
+              placeholder={formData.eventType === EventType.GAME ? 'Search rosters...' : 'Search players...'}
+              placeholderTextColor={colors.inkFaint}
+              value={inviteQuery}
+              onChangeText={setInviteQuery}
+            />
+            {inviteResults.length > 0 && (
+              <View style={styles.inviteDropdown}>
+                {inviteResults.slice(0, 8).map((item) => (
+                  <TouchableOpacity key={item.id} style={styles.inviteDropdownRow} onPress={() => addInvite(item)}>
+                    {item.type === 'roster' ? (
+                      <Ionicons name="people" size={18} color={colors.cobalt} />
+                    ) : item.image ? (
+                      <Image source={{ uri: item.image }} style={styles.inviteDropdownAvatar} />
+                    ) : (
+                      <Ionicons name="person" size={18} color={colors.inkFaint} />
+                    )}
+                    <Text style={styles.inviteDropdownText}>{item.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -702,5 +843,95 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 4,
+  },
+  // ── Players & Invite ──
+  playersSection: {
+    marginTop: 20,
+  },
+  playersSectionTitle: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.inkSoft,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  playerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+  },
+  playerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  playerAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.cobalt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playerName: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  invitedBadge: {
+    backgroundColor: colors.gold + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  invitedBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.gold,
+  },
+  inviteSection: {
+    marginTop: 20,
+  },
+  inviteInput: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  inviteDropdown: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxHeight: 240,
+  },
+  inviteDropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  inviteDropdownAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  inviteDropdownText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    flex: 1,
   },
 });
