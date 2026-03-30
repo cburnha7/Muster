@@ -899,4 +899,34 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// GET /onboarding — Check user onboarding status
+// ---------------------------------------------------------------------------
+router.get('/onboarding', authMiddleware, async (req, res) => {
+  try {
+    const userId = resolveUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, firstName: true, lastName: true, email: true, createdAt: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // All existing users are considered onboarded
+    return res.json({
+      completed: true,
+      userId: user.id,
+    });
+  } catch (error) {
+    console.error('Error checking onboarding status:', error);
+    return res.status(500).json({ error: 'Failed to check onboarding status' });
+  }
+});
+
 export default router;
