@@ -12,12 +12,15 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
 
 
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { useAuth } from '../../context/AuthContext';
+import { setDependents } from '../../store/slices/contextSlice';
+import { API_BASE_URL } from '../../services/api/config';
 import { colors, fonts, Spacing } from '../../theme';
 import { SportType } from '../../types';
 import { CreateDependentInput, UpdateDependentInput, DependentProfile } from '../../types/dependent';
@@ -90,6 +93,7 @@ function isValidDateString(value: string): boolean {
 export function DependentFormScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const dispatch = useDispatch();
   const { user: authUser } = useAuth();
 
   const params = (route.params as { dependentId?: string }) || {};
@@ -120,7 +124,7 @@ export function DependentFormScreen() {
     const fetchDependent = async () => {
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/dependents/${dependentId}`,
+          `${API_BASE_URL}/dependents/${dependentId}`,
           { headers: { 'X-User-Id': authUser.id } }
         );
         if (!response.ok) throw new Error('Failed to load dependent');
@@ -130,7 +134,7 @@ export function DependentFormScreen() {
         setDateOfBirth(data.dateOfBirth.split('T')[0]); // ISO to YYYY-MM-DD
         setSportPreferences(data.sportPreferences ?? []);
         setProfileImage(data.profileImage ?? '');
-        setGender((data as any).gender ?? '');
+        setGender(data.gender ?? '');
       } catch {
         Alert.alert('Error', 'Could not load dependent details. Please try again.');
         (navigation as any).goBack();
@@ -169,14 +173,47 @@ export function DependentFormScreen() {
     return Object.keys(newErrors).length === 0;
   }, [firstName, lastName, dateOfBirth]);
 
+  // Clear field-level errors as the user types / selects
+  useEffect(() => {
+    if (errors.firstName && firstName.trim()) setErrors((prev) => ({ ...prev, firstName: undefined }));
+  }, [firstName]);
+  useEffect(() => {
+    if (errors.lastName && lastName.trim()) setErrors((prev) => ({ ...prev, lastName: undefined }));
+  }, [lastName]);
+  useEffect(() => {
+    if (errors.dateOfBirth && dateOfBirth) setErrors((prev) => ({ ...prev, dateOfBirth: undefined }));
+  }, [dateOfBirth]);
+
+  /** Refresh the Redux dependent list so the context switcher picks up changes. */
+  const refreshDependents = async () => {
+    if (!authUser?.id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/dependents`, {
+        headers: { 'X-User-Id': authUser.id },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        dispatch(setDependents(data));
+      }
+    } catch {
+      // Non-critical — the list will refresh next login
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!validate() || !authUser?.id) return;
+    if (!validate()) return;
+
+    if (!authUser?.id) {
+      Alert.alert('Session Expired', 'Please log in again to add a dependent.');
+      return;
+    }
 
     setIsSubmitting(true);
+    setErrors({});
     try {
       const url = isEditMode
-        ? `${process.env.EXPO_PUBLIC_API_URL}/dependents/${dependentId}`
-        : `${process.env.EXPO_PUBLIC_API_URL}/dependents`;
+        ? `${API_BASE_URL}/dependents/${dependentId}`
+        : `${API_BASE_URL}/dependents`;
 
       const method = isEditMode ? 'PUT' : 'POST';
 
@@ -202,19 +239,31 @@ export function DependentFormScreen() {
         const errorData = await response.json().catch(() => null);
         const message =
           errorData?.error ?? errorData?.message ?? 'Something went wrong. Please try again.';
-        Alert.alert('Error', message);
+
+        // Surface known validation errors inline instead of a generic alert
+        if (message.toLowerCase().includes('under 18')) {
+          setErrors((prev) => ({ ...prev, dateOfBirth: message }));
+        } else if (message.includes('Missing required fields')) {
+          setErrors((prev) => ({ ...prev, general: message }));
+        } else {
+          setErrors((prev) => ({ ...prev, general: message }));
+        }
         return;
       }
 
+      // Refresh the context-switcher list so the new dependent appears immediately
+      await refreshDependents();
+
       Alert.alert(
-        'Success',
+        isEditMode ? 'Updated' : 'Dependent Added',
         isEditMode
-          ? 'Dependent profile updated.'
-          : 'Dependent added successfully.',
+          ? `${firstName}'s profile has been updated.`
+          : `${firstName} has been added to your family.`,
         [{ text: 'OK', onPress: () => (navigation as any).goBack() }]
       );
-    } catch {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } catch (err: any) {
+      console.error('Dependent submit error:', err);
+      setErrors({ general: 'Could not reach the server. Check your connection and try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -352,6 +401,14 @@ export function DependentFormScreen() {
             keyboardType="url"
           />
 
+          {/* General error */}
+          {errors.general && (
+            <View style={styles.generalErrorContainer}>
+              <Ionicons name="alert-circle" size={16} color={colors.error} />
+              <Text style={styles.generalErrorText}>{errors.general}</Text>
+            </View>
+          )}
+
           {/* Submit */}
           <View style={styles.submitContainer}>
             <FormButton
@@ -433,6 +490,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.error,
     marginTop: 4,
+  },
+  generalErrorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.error + '10',
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+    marginBottom: 8,
+  },
+  generalErrorText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: fonts.body,
+    color: colors.error,
   },
   submitContainer: {
     marginTop: Spacing.md,

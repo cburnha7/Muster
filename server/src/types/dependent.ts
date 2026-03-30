@@ -59,6 +59,7 @@ export interface DependentSummary {
  * Extends DependentSummary with detailed data scoped to the dependent.
  */
 export interface DependentProfile extends DependentSummary {
+  gender?: string | null;
   sportPreferences: string[];
   sportRatings: any[];
   eventHistory: any[];
