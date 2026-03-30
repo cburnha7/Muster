@@ -400,8 +400,8 @@ model TeamMember {
   teamId String
 
   // Relations
-  user User @relation(fields: [userId], references: [id])
-  team Team @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([userId, teamId])
   @@index([teamId, status])
@@ -442,8 +442,8 @@ model Booking {
   rentalId   String?
 
   // Relations
-  user         User                 @relation(fields: [userId], references: [id])
-  event        Event?               @relation(fields: [eventId], references: [id])
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event        Event?               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   facility     Facility?            @relation(fields: [facilityId], references: [id])
   court        FacilityCourt?       @relation(fields: [courtId], references: [id])
   rental       FacilityRental?      @relation(fields: [rentalId], references: [id])
@@ -496,8 +496,8 @@ model Review {
   facilityId String
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id])
-  facility Facility @relation(fields: [facilityId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([facilityId])
@@ -820,7 +820,7 @@ model FacilityRental {
   attachedInsuranceDocumentId String?
 
   // Relations
-  user         User             @relation(fields: [userId], references: [id])
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   timeSlot     FacilityTimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
   usedForEvent Event?           @relation("RentalUsedForEvent", fields: [usedForEventId], references: [id])
   attachedInsuranceDocument InsuranceDocument? @relation(fields: [attachedInsuranceDocumentId], references: [id])
@@ -1148,8 +1148,8 @@ model TeamTransaction {
   
   // Relations
   team   Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user   User?           @relation(fields: [userId], references: [id])
-  rental FacilityRental? @relation(fields: [rentalId], references: [id])
+  user   User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rental FacilityRental? @relation(fields: [rentalId], references: [id], onDelete: SetNull)
   
   @@index([teamId])
   @@index([userId])
@@ -1310,9 +1310,10 @@ model PromoCodeRedemption {
   selectedTier String
   redeemedAt   DateTime @default(now())
 
-  user      User      @relation("UserRedemptions", fields: [userId], references: [id])
-  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+  user      User      @relation("UserRedemptions", fields: [userId], references: [id], onDelete: Cascade)
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, promoCodeId])
   @@index([userId])
   @@index([promoCodeId])
   @@map("promo_code_redemptions")

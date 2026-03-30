@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
-import { Team, SportType } from '../../types';
+import { Team } from '../../types';
 import { colors, fonts } from '../../theme';
+import { getSportIcon, formatSport } from '../../utils/sportUtils';
+import { getSportColor } from '../../constants/sportColors';
 
 interface TeamCardProps {
   team: Team;
@@ -12,37 +14,6 @@ interface TeamCardProps {
   compact?: boolean;
   currentUserId?: string | undefined;
 }
-
-const getSportIcon = (sportType: SportType): string => {
-  switch (sportType) {
-    case SportType.BASKETBALL: return 'basketball-outline';
-    case SportType.SOCCER: return 'football-outline';
-    case SportType.TENNIS:
-    case SportType.PICKLEBALL: return 'tennisball-outline';
-    case SportType.VOLLEYBALL: return 'american-football-outline';
-    case SportType.SOFTBALL:
-    case SportType.BASEBALL: return 'baseball-outline';
-    case SportType.FLAG_FOOTBALL: return 'flag-outline';
-    default: return 'fitness-outline';
-  }
-};
-
-const getSportColor = (sportType: SportType): string => {
-  switch (sportType) {
-    case SportType.BASKETBALL: return '#E86825';
-    case SportType.SOCCER: return '#006D32';
-    case SportType.TENNIS:
-    case SportType.PICKLEBALL: return '#C4A017';
-    case SportType.VOLLEYBALL: return '#8B5CF6';
-    case SportType.SOFTBALL:
-    case SportType.BASEBALL: return '#BA1A1A';
-    case SportType.FLAG_FOOTBALL: return '#0052FF';
-    default: return colors.primary;
-  }
-};
-
-const formatSport = (sportType: SportType): string =>
-  sportType.charAt(0).toUpperCase() + sportType.slice(1).replace(/_/g, ' ');
 
 export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, currentUserId }) => {
   const sport = team.sportTypes?.[0] || team.sportType;

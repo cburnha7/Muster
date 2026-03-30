@@ -81,7 +81,7 @@ export class TeamService extends BaseApiService {
    */
   async inviteToTeam(teamId: string, userId: string, message?: string): Promise<void> {
     const data = { userId, message };
-    return this.post<void>(API_ENDPOINTS.TEAMS.INVITE(teamId), data);
+    return this.post<void>(API_ENDPOINTS.TEAMS.ADD_MEMBER(teamId), data);
   }
 
   /**
@@ -91,13 +91,11 @@ export class TeamService extends BaseApiService {
     return this.delete<void>(API_ENDPOINTS.TEAMS.REMOVE_MEMBER(teamId, userId));
   }
 
-  /**
-   * Update a team member's role
-   */
-  async updateMemberRole(teamId: string, userId: string, role: TeamRole): Promise<TeamMember> {
-    const data = { role };
-    return this.put<TeamMember>(API_ENDPOINTS.TEAMS.UPDATE_ROLE(teamId, userId), data);
-  }
+  // TODO: updateMemberRole - no backend route exists (API_ENDPOINTS.TEAMS.UPDATE_ROLE was removed)
+  // async updateMemberRole(teamId: string, userId: string, role: TeamRole): Promise<TeamMember> {
+  //   const data = { role };
+  //   return this.put<TeamMember>(`/teams/${teamId}/members/${userId}/role`, data);
+  // }
 
   /**
    * Search teams with advanced filters
@@ -132,7 +130,7 @@ export class TeamService extends BaseApiService {
       ...filters,
     };
 
-    return this.get<Team[]>(API_ENDPOINTS.TEAMS.NEARBY, { params });
+    return this.get<Team[]>(API_ENDPOINTS.TEAMS.BASE, { params });
   }
 
   /**
@@ -140,7 +138,7 @@ export class TeamService extends BaseApiService {
    */
   async getRecommendedTeams(limit: number = 10): Promise<Team[]> {
     const params = { limit };
-    return this.get<Team[]>(API_ENDPOINTS.TEAMS.RECOMMENDED, { params });
+    return this.get<Team[]>(API_ENDPOINTS.TEAMS.BASE, { params });
   }
 
   /**

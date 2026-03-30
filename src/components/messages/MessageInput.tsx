@@ -33,7 +33,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
           placeholderTextColor={colors.onSurfaceVariant}
           multiline
           maxLength={2000}
-          returnKeyType="default"
+          returnKeyType="send"
           blurOnSubmit={false}
           editable={!disabled}
         />

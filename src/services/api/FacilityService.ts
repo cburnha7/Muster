@@ -90,7 +90,7 @@ export class FacilityService extends BaseApiService {
       ...pagination,
     };
 
-    return this.get<SearchResult<Facility>>(API_ENDPOINTS.SEARCH.FACILITIES, { params });
+    return this.get<SearchResult<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
   }
 
   /**
@@ -109,7 +109,7 @@ export class FacilityService extends BaseApiService {
       ...filters,
     };
 
-    return this.get<Facility[]>(API_ENDPOINTS.FACILITIES.NEARBY, { params });
+    return this.get<Facility[]>(API_ENDPOINTS.FACILITIES.BASE, { params });
   }
 
   /**
@@ -140,7 +140,7 @@ export class FacilityService extends BaseApiService {
     });
 
     return this.uploadFile<string[]>(
-      API_ENDPOINTS.FACILITIES.IMAGES(facilityId),
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`,
       formData,
       onProgress
     );
@@ -150,7 +150,7 @@ export class FacilityService extends BaseApiService {
    * Delete facility image
    */
   async deleteFacilityImage(facilityId: string, imageUrl: string): Promise<void> {
-    return this.delete<void>(`${API_ENDPOINTS.FACILITIES.IMAGES(facilityId)}`, {
+    return this.delete<void>(`${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`, {
       data: { imageUrl },
     });
   }

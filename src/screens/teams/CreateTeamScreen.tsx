@@ -104,11 +104,11 @@ export function CreateTeamScreen() {
           const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
           const json = await resp.json();
           players = Array.isArray(json) ? json : json.data || [];
-        } catch {}
+        } catch (err) { console.warn('Player search failed:', (err as Error).message); }
         const playerItems: InviteItem[] = players
           .map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }));
         setInviteResults(playerItems);
-      } catch { setInviteResults([]); }
+      } catch (err) { console.warn('Invite search failed:', (err as Error).message); setInviteResults([]); }
     }, 300);
     return () => clearTimeout(timer);
   }, [inviteQuery]);

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -220,8 +221,8 @@ export function SettingsScreen(): JSX.Element {
       {/* Account */}
       <Text style={styles.sectionHeader}>Account</Text>
       <View style={styles.card}>
-        <MenuRow icon="shield-checkmark-outline" label="Privacy Policy" />
-        <MenuRow icon="document-text-outline" label="Terms of Service" />
+        <MenuRow icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => Linking.openURL('https://muster.app/privacy')} />
+        <MenuRow icon="document-text-outline" label="Terms of Service" onPress={() => Linking.openURL('https://muster.app/terms')} />
         <MenuRow icon="download-outline" label="Export My Data" onPress={handleExportData} />
         <MenuRow icon="ticket-outline" label="Redeem a Code" onPress={() => (navigation as any).navigate('RedeemCode')} />
         <MenuRow icon="log-out-outline" label="Log Out" onPress={handleLogout} color={colors.onSurfaceVariant} chevron={false} />
@@ -240,8 +241,8 @@ export function SettingsScreen(): JSX.Element {
       <Text style={styles.sectionHeader}>About</Text>
       <View style={styles.card}>
         <MenuRow icon="information-circle-outline" label="Version" value="1.0.0" chevron={false} />
-        <MenuRow icon="help-circle-outline" label="Help & Support" />
-        <MenuRow icon="star-outline" label="Rate the App" isLast />
+        <MenuRow icon="help-circle-outline" label="Help & Support" onPress={() => Linking.openURL('mailto:support@muster.app?subject=Help%20%26%20Support')} />
+        <MenuRow icon="star-outline" label="Rate the App" onPress={() => Linking.openURL('https://muster.app/rate')} isLast />
       </View>
 
     </ScrollView>
@@ -272,10 +273,15 @@ const styles = StyleSheet.create({
   // ── Cards ──
   card: {
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    borderRadius: 14,
+    marginHorizontal: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 2,
+    shadowColor: '#191C1E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   embeddedSection: {
     overflow: 'hidden',

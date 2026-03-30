@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, fonts } from '../../theme';
@@ -85,16 +85,37 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
           </View>
         </View>
 
-        {/* Bottom row: participants + arrow */}
+        {/* Bottom row: participants + avatars + arrow */}
         <View style={styles.bottomRow}>
-          <View style={styles.participantInfo}>
-            <Ionicons name="people-outline" size={15} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.participantText}>
-              {event.currentParticipants}/{event.maxParticipants} players
-              {spotsLeft > 0 && spotsLeft <= 3 && (
-                <Text style={styles.spotsText}> ({spotsLeft} left)</Text>
-              )}
-            </Text>
+          <View style={styles.participantCol}>
+            <View style={styles.participantInfo}>
+              <Ionicons name="people-outline" size={15} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.participantText}>
+                {event.currentParticipants}/{event.maxParticipants} players
+              </Text>
+            </View>
+            {/* Avatar stack */}
+            {event.participants && event.participants.length > 0 && (
+              <View style={styles.avatarRow}>
+                {event.participants.slice(0, 4).map((p, i) => (
+                  <View key={p.userId} style={[styles.avatarCircle, i > 0 && { marginLeft: -6 }]}>
+                    {p.user?.profileImage ? (
+                      <Image source={{ uri: p.user.profileImage }} style={styles.avatarImg} />
+                    ) : (
+                      <Text style={styles.avatarInitial}>{p.user?.firstName?.charAt(0) ?? '?'}</Text>
+                    )}
+                  </View>
+                ))}
+                {event.participants.length > 4 && (
+                  <View style={[styles.avatarCircle, { marginLeft: -6, backgroundColor: 'rgba(255,255,255,0.3)' }]}>
+                    <Text style={styles.avatarInitial}>+{event.participants.length - 4}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+            {spotsLeft > 0 && spotsLeft <= 3 && (
+              <Text style={styles.fillingFast}>Filling fast — {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</Text>
+            )}
           </View>
           <View style={styles.arrowCircle}>
             <Ionicons name="arrow-forward" size={16} color={live ? colors.secondary : colors.primary} />
@@ -175,8 +196,12 @@ const styles = StyleSheet.create({
   bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     marginTop: 2,
+  },
+  participantCol: {
+    gap: 6,
+    flex: 1,
   },
   participantInfo: {
     flexDirection: 'row',
@@ -188,8 +213,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.7)',
   },
-  spotsText: {
-    color: colors.secondaryContainer,
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    overflow: 'hidden',
+  },
+  avatarImg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  avatarInitial: {
+    fontFamily: fonts.label,
+    fontSize: 9,
+    color: '#FFFFFF',
+  },
+  fillingFast: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: '#FCD34D',
+    letterSpacing: 0.2,
   },
   arrowCircle: {
     width: 32,

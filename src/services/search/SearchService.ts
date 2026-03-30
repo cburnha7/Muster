@@ -128,7 +128,7 @@ export class SearchService extends BaseApiService {
       endDate: filters?.endDate?.toISOString(),
     };
 
-    return this.get<SearchResult<Event>>(API_ENDPOINTS.SEARCH.EVENTS, { params });
+    return this.get<SearchResult<Event>>(API_ENDPOINTS.EVENTS.BASE, { params });
   }
 
   /**
@@ -145,7 +145,7 @@ export class SearchService extends BaseApiService {
       ...pagination,
     };
 
-    return this.get<SearchResult<Facility>>(API_ENDPOINTS.SEARCH.FACILITIES, { params });
+    return this.get<SearchResult<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
   }
 
   /**
@@ -211,7 +211,7 @@ export class SearchService extends BaseApiService {
       endDate: filters?.endDate?.toISOString(),
     };
 
-    return this.get<Event[]>(API_ENDPOINTS.EVENTS.NEARBY, { params });
+    return this.get<Event[]>(API_ENDPOINTS.EVENTS.BASE, { params });
   }
 
   /**
@@ -230,7 +230,7 @@ export class SearchService extends BaseApiService {
       ...filters,
     };
 
-    return this.get<Facility[]>(API_ENDPOINTS.FACILITIES.NEARBY, { params });
+    return this.get<Facility[]>(API_ENDPOINTS.FACILITIES.BASE, { params });
   }
 
   /**
@@ -249,7 +249,7 @@ export class SearchService extends BaseApiService {
       ...filters,
     };
 
-    return this.get<Team[]>(API_ENDPOINTS.TEAMS.NEARBY, { params });
+    return this.get<Team[]>(API_ENDPOINTS.TEAMS.BASE, { params });
   }
 
   /**
@@ -274,7 +274,7 @@ export class SearchService extends BaseApiService {
    */
   async getRecommendedEvents(limit: number = 10): Promise<Event[]> {
     const params = { limit };
-    return this.get<Event[]>(API_ENDPOINTS.EVENTS.RECOMMENDED, { params });
+    return this.get<Event[]>(API_ENDPOINTS.EVENTS.BASE, { params });
   }
 
   /**
@@ -282,7 +282,7 @@ export class SearchService extends BaseApiService {
    */
   async getRecommendedTeams(limit: number = 10): Promise<Team[]> {
     const params = { limit };
-    return this.get<Team[]>(API_ENDPOINTS.TEAMS.RECOMMENDED, { params });
+    return this.get<Team[]>(API_ENDPOINTS.TEAMS.BASE, { params });
   }
 
   /**

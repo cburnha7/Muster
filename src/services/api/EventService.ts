@@ -206,7 +206,7 @@ export class EventService extends BaseApiService {
       endDate: filters?.endDate?.toISOString(),
     };
 
-    return this.get<SearchResult<Event>>(API_ENDPOINTS.SEARCH.EVENTS, { params });
+    return this.get<SearchResult<Event>>(API_ENDPOINTS.EVENTS.BASE, { params });
   }
 
   /**
@@ -228,7 +228,7 @@ export class EventService extends BaseApiService {
       endDate: filters?.endDate?.toISOString(),
     };
 
-    return this.get<Event[]>(API_ENDPOINTS.EVENTS.NEARBY, { params });
+    return this.get<Event[]>(API_ENDPOINTS.EVENTS.BASE, { params });
   }
 
   /**
@@ -236,7 +236,7 @@ export class EventService extends BaseApiService {
    */
   async getRecommendedEvents(limit: number = 10): Promise<Event[]> {
     const params = { limit };
-    return this.get<Event[]>(API_ENDPOINTS.EVENTS.RECOMMENDED, { params });
+    return this.get<Event[]>(API_ENDPOINTS.EVENTS.BASE, { params });
   }
 
   /**

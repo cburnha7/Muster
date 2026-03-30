@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAvatarSheet } from '../../context/AvatarSheetContext';
 import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
 import { colors, fonts } from '../../theme';
+import type { RootState } from '../../store/store';
 
 const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
 
@@ -37,8 +38,9 @@ export function HeaderUserSelector() {
     ? DEPENDENT_COLORS[depIndex % DEPENDENT_COLORS.length]
     : colors.primary;
 
-  // Connect to notification count when available
-  const hasUnreadNotifications = false;
+  // Show unread dot when there are unread messages
+  const unreadCount = useSelector((state: RootState) => state.messaging?.unreadCount ?? 0);
+  const hasUnreadNotifications = unreadCount > 0;
 
   return (
     <View style={styles.avatarContainer}>
