@@ -267,6 +267,53 @@ conversationsRouter.post('/event/:eventId', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// POST /api/conversations/league/:leagueId — get or create league General channel
+// ─────────────────────────────────────────────────────────────────────────────
+conversationsRouter.post('/league/:leagueId', async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { leagueId } = req.params;
+
+    // Find existing General channel (no parentConversationId)
+    let conversation = await prisma.conversation.findFirst({
+      where: { type: 'LEAGUE_CHANNEL', entityId: leagueId, parentConversationId: null },
+      include: { participants: true },
+    });
+
+    if (!conversation) {
+      // Create league channels if they don't exist
+      const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { name: true, organizerId: true } });
+      if (!league) return res.status(404).json({ error: 'League not found' });
+
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.createLeagueChannels(leagueId, league.organizerId, league.name || 'League');
+
+      conversation = await prisma.conversation.findFirst({
+        where: { type: 'LEAGUE_CHANNEL', entityId: leagueId, parentConversationId: null },
+        include: { participants: true },
+      });
+    }
+
+    if (!conversation) {
+      return res.status(500).json({ error: 'Failed to create league channel' });
+    }
+
+    // Add current user as participant if not already
+    const isParticipant = conversation.participants.some((p) => p.userId === userId);
+    if (!isParticipant) {
+      await prisma.conversationParticipant.create({
+        data: { conversationId: conversation.id, userId, role: 'MEMBER' },
+      });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error('Get/create league channel error:', error);
+    res.status(500).json({ error: 'Failed to get or create league channel' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET /api/conversations — list my conversations
 // ─────────────────────────────────────────────────────────────────────────────
 conversationsRouter.get('/', async (req, res) => {

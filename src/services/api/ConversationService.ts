@@ -61,6 +61,10 @@ class ConversationServiceClass extends BaseApiService {
     return this.post<Conversation>(API_ENDPOINTS.CONVERSATIONS.GET_OR_CREATE_EVENT(eventId), {});
   }
 
+  async getOrCreateLeagueChannel(leagueId: string): Promise<Conversation> {
+    return this.post<Conversation>(API_ENDPOINTS.CONVERSATIONS.GET_OR_CREATE_LEAGUE(leagueId), {});
+  }
+
   async getDM(userId: string): Promise<Conversation> {
     return this.get<Conversation>(API_ENDPOINTS.CONVERSATIONS.DM(userId));
   }
