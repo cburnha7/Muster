@@ -478,7 +478,7 @@ export function EventDetailsScreen() {
       [{ text: 'OK' }]
     );
 
-    // TODO: Call API to save salute
+    // TODO: wire to API when endpoint exists
     // await eventService.saluteParticipant(event.id, selectedParticipant.userId);
   };
 
@@ -498,7 +498,7 @@ export function EventDetailsScreen() {
     // Show success message
     Alert.alert('Salute Removed', 'You can salute someone else now.');
 
-    // TODO: Call API to remove salute
+    // TODO: wire to API when endpoint exists
     // await eventService.unsaluteParticipant(event.id, selectedParticipant.userId);
   };
 
@@ -802,16 +802,14 @@ export function EventDetailsScreen() {
             style={styles.chatBtn}
             onPress={async () => {
               try {
-                const convs = await conversationService.getConversations('GAME_THREAD');
-                const eventConv = convs.find((c) => c.entityId === eventId);
-                if (eventConv) {
-                  (navigation as any).navigate('Messages', {
-                    screen: 'Chat',
-                    params: { conversationId: eventConv.id, title: event.title ?? 'Game Thread', type: 'GAME_THREAD' },
-                  });
-                }
+                const conv = await conversationService.getOrCreateGameThread(eventId);
+                (navigation as any).navigate('Messages', {
+                  screen: 'Chat',
+                  params: { conversationId: conv.id, title: event.title ?? 'Game Thread', type: 'GAME_THREAD' },
+                });
               } catch (e) {
                 console.error('Navigate to chat error:', e);
+                Alert.alert('Error', 'Could not open game thread. Please try again.');
               }
             }}
             activeOpacity={0.8}

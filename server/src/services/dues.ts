@@ -7,7 +7,7 @@
  */
 
 import Stripe from 'stripe';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { stripe, calculatePlatformFee } from './stripe-connect';
 import { generateIdempotencyKey } from '../utils/idempotency';
 import { recalculateBalanceStatuses } from './balance';

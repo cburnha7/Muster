@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
 import type { Message } from '../../types/messaging';
 
@@ -86,7 +87,18 @@ export function MessageBubble({
             </View>
           )}
 
-          <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, message.sendError && styles.bubbleError]}>
+          <View style={[
+            styles.bubble,
+            isOwn ? styles.bubbleOwn : styles.bubbleOther,
+            message.sendError && styles.bubbleError,
+            message.priority === 'URGENT' && styles.bubbleAnnouncement,
+          ]}>
+            {message.priority === 'URGENT' && (
+              <View style={styles.announceHeader}>
+                <Ionicons name="megaphone" size={12} color={colors.tertiary} />
+                <Text style={styles.announceLabel}>Announcement</Text>
+              </View>
+            )}
             <Text style={[styles.content, isOwn && styles.contentOwn]}>{message.content}</Text>
             {(showTimestamp || message.isSending || message.sendError) && (
               <View style={styles.metaRow}>
@@ -191,6 +203,22 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   bubbleError: { opacity: 0.6 },
+  bubbleAnnouncement: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.tertiary,
+  },
+  announceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  announceLabel: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    color: colors.tertiary,
+    textTransform: 'uppercase',
+  },
   content: {
     fontFamily: fonts.body,
     fontSize: 15,

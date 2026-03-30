@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { calculateAvgCourtCost } from '../services/balance';
 import { calculateSuggestedDues } from '../services/suggested-dues';
 

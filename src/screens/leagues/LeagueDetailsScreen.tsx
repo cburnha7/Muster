@@ -674,16 +674,14 @@ export function LeagueDetailsScreen(): React.ReactElement {
             style={styles.chatBtn}
             onPress={async () => {
               try {
-                const convs = await conversationService.getConversations('LEAGUE_CHANNEL');
-                const leagueConv = convs.find((c) => c.entityId === leagueId);
-                if (leagueConv) {
-                  (navigation as any).navigate('Messages', {
-                    screen: 'Chat',
-                    params: { conversationId: leagueConv.id, title: league.name ?? 'League Channel', type: 'LEAGUE_CHANNEL' },
-                  });
-                }
+                const conv = await conversationService.getOrCreateLeagueChannel(leagueId);
+                (navigation as any).navigate('Messages', {
+                  screen: 'Chat',
+                  params: { conversationId: conv.id, title: league.name ?? 'League Channel', type: 'LEAGUE_CHANNEL' },
+                });
               } catch (e) {
                 console.error('Navigate to chat error:', e);
+                Alert.alert('Error', 'Could not open league channel. Please try again.');
               }
             }}
             activeOpacity={0.8}

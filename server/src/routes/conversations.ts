@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 
 export const conversationsRouter = Router();
@@ -64,13 +64,11 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
       return res.status(400).json({ error: 'Cannot DM yourself' });
     }
 
-    // Verify shared context (shared team, event, or league)
-    const [sharedTeam, sharedEvent, sharedLeague] = await Promise.all([
+    // Verify shared context (shared team or event)
+    const [sharedTeam, sharedEvent] = await Promise.all([
       prisma.teamMember.findFirst({
         where: {
-          team: {
-            members: { some: { userId: myId } },
-          },
+          team: { members: { some: { userId: myId, status: 'active' } } },
           userId: otherId,
           status: 'active',
         },
@@ -81,15 +79,9 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
           userId: otherId,
         },
       }),
-      prisma.leagueMembership.findFirst({
-        where: {
-          league: { memberships: { some: { userId: myId } } },
-          userId: otherId,
-        },
-      }),
     ]);
 
-    if (!sharedTeam && !sharedEvent && !sharedLeague) {
+    if (!sharedTeam && !sharedEvent) {
       return res.status(403).json({ error: 'No shared context with this user' });
     }
 
@@ -141,6 +133,183 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
   } catch (error) {
     console.error('Get/create DM error:', error);
     res.status(500).json({ error: 'Failed to get or create DM' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/conversations/team/:teamId — get or create team conversation
+// ─────────────────────────────────────────────────────────────────────────────
+conversationsRouter.post('/team/:teamId', async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { teamId } = req.params;
+
+    // Verify user is a member of this team
+    const membership = await prisma.teamMember.findFirst({
+      where: { teamId, userId, status: 'active' },
+    });
+    if (!membership) return res.status(403).json({ error: 'Not a team member' });
+
+    // Check for existing conversation
+    let conversation = await prisma.conversation.findFirst({
+      where: { type: 'TEAM_CHAT', entityId: teamId },
+      include: {
+        participants: {
+          include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+        },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+      },
+    });
+
+    if (!conversation) {
+      // Create conversation and add ALL current team members
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        include: { members: { where: { status: 'active' }, select: { userId: true, role: true } } },
+      });
+      if (!team) return res.status(404).json({ error: 'Team not found' });
+
+      conversation = await prisma.conversation.create({
+        data: {
+          type: 'TEAM_CHAT',
+          entityId: teamId,
+          name: team.name,
+          participants: {
+            create: team.members.map((m) => ({
+              userId: m.userId,
+              role: m.role === 'captain' || m.role === 'manager' ? 'ADMIN' : 'MEMBER',
+            })),
+          },
+        },
+        include: {
+          participants: {
+            include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+          },
+          messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+        },
+      });
+
+      // Post welcome system message
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.postSystemMessage(conversation.id, `Team chat created for ${team.name}`);
+    } else {
+      // Ensure current user is a participant (they may have joined after conversation was created)
+      const isParticipant = conversation.participants.some((p) => p.userId === userId);
+      if (!isParticipant) {
+        await prisma.conversationParticipant.create({
+          data: { conversationId: conversation.id, userId, role: 'MEMBER' },
+        });
+      }
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error('Get/create team conversation error:', error);
+    res.status(500).json({ error: 'Failed to get or create team conversation' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/conversations/event/:eventId — get or create game thread
+// ─────────────────────────────────────────────────────────────────────────────
+conversationsRouter.post('/event/:eventId', async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { eventId } = req.params;
+
+    // Check for existing conversation
+    let conversation = await prisma.conversation.findFirst({
+      where: { type: 'GAME_THREAD', entityId: eventId },
+      include: {
+        participants: {
+          include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+        },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+      },
+    });
+
+    if (!conversation) {
+      const event = await prisma.event.findUnique({ where: { id: eventId }, select: { title: true, organizerId: true } });
+      if (!event) return res.status(404).json({ error: 'Event not found' });
+
+      conversation = await prisma.conversation.create({
+        data: {
+          type: 'GAME_THREAD',
+          entityId: eventId,
+          name: event.title,
+          participants: { create: { userId: event.organizerId, role: 'ADMIN' } },
+        },
+        include: {
+          participants: {
+            include: { user: { select: { id: true, firstName: true, lastName: true, profileImage: true } } },
+          },
+          messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { sender: { select: { id: true, firstName: true, lastName: true } } } },
+        },
+      });
+
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.postSystemMessage(conversation.id, `Game thread created for ${event.title}`);
+    }
+
+    // Ensure current user is a participant
+    const isParticipant = conversation.participants.some((p) => p.userId === userId);
+    if (!isParticipant) {
+      await prisma.conversationParticipant.create({
+        data: { conversationId: conversation.id, userId, role: 'MEMBER' },
+      });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error('Get/create game thread error:', error);
+    res.status(500).json({ error: 'Failed to get or create game thread' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/conversations/league/:leagueId — get or create league General channel
+// ─────────────────────────────────────────────────────────────────────────────
+conversationsRouter.post('/league/:leagueId', async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const { leagueId } = req.params;
+
+    // Find existing General channel (no parentConversationId)
+    let conversation = await prisma.conversation.findFirst({
+      where: { type: 'LEAGUE_CHANNEL', entityId: leagueId, parentConversationId: null },
+      include: { participants: true },
+    });
+
+    if (!conversation) {
+      // Create league channels if they don't exist
+      const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { name: true, organizerId: true } });
+      if (!league) return res.status(404).json({ error: 'League not found' });
+
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.createLeagueChannels(leagueId, league.organizerId, league.name || 'League');
+
+      conversation = await prisma.conversation.findFirst({
+        where: { type: 'LEAGUE_CHANNEL', entityId: leagueId, parentConversationId: null },
+        include: { participants: true },
+      });
+    }
+
+    if (!conversation) {
+      return res.status(500).json({ error: 'Failed to create league channel' });
+    }
+
+    // Add current user as participant if not already
+    const isParticipant = conversation.participants.some((p) => p.userId === userId);
+    if (!isParticipant) {
+      await prisma.conversationParticipant.create({
+        data: { conversationId: conversation.id, userId, role: 'MEMBER' },
+      });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error('Get/create league channel error:', error);
+    res.status(500).json({ error: 'Failed to get or create league channel' });
   }
 });
 

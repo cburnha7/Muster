@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 
 export const MessagingService = {
   // Create a TEAM_CHAT conversation for a newly created team
@@ -16,6 +16,8 @@ export const MessagingService = {
         },
       },
     });
+    // Post welcome message so the conversation isn't empty
+    await this.postSystemMessage(conversation.id, `Welcome to ${teamName}! This is your team chat.`);
     return conversation;
   },
 
@@ -34,6 +36,7 @@ export const MessagingService = {
         },
       },
     });
+    await this.postSystemMessage(conversation.id, `Game thread created for ${eventTitle}`);
     return conversation;
   },
 

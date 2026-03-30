@@ -12,7 +12,7 @@
  */
 
 import express, { Request, Response } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { stripe, calculatePlatformFee } from '../services/stripe-connect';
 import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
 import { capturePublicEventEscrow, facilityCancelPublicEvent } from '../services/public-event-escrow';

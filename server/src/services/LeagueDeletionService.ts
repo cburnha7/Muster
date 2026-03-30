@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { stripe } from '../services/stripe-connect';
 import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
 

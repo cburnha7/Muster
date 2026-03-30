@@ -7,7 +7,7 @@
 
 import { Router, Request, Response } from 'express';
 import Stripe from 'stripe';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { getStripe } from '../services/stripe-connect';
 
 const router = Router();

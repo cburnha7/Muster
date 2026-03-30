@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 
 export async function hasValidWaiver(userId: string, facilityId: string): Promise<boolean> {
   const facility = await prisma.facility.findUnique({

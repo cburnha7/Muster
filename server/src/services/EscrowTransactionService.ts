@@ -6,7 +6,7 @@
  * enters the cancellation window.
  */
 
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { stripe, calculatePlatformFee } from './stripe-connect';
 import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
 

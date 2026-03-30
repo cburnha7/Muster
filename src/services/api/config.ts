@@ -107,6 +107,9 @@ export const API_ENDPOINTS = {
   CONVERSATIONS: {
     BASE: '/conversations',
     BY_ID: (id: string) => `/conversations/${id}`,
+    GET_OR_CREATE_TEAM: (teamId: string) => `/conversations/team/${teamId}`,
+    GET_OR_CREATE_EVENT: (eventId: string) => `/conversations/event/${eventId}`,
+    GET_OR_CREATE_LEAGUE: (leagueId: string) => `/conversations/league/${leagueId}`,
     MESSAGES: (id: string) => `/conversations/${id}/messages`,
     SEND_MESSAGE: (id: string) => `/conversations/${id}/messages`,
     READ: (id: string) => `/conversations/${id}/read`,

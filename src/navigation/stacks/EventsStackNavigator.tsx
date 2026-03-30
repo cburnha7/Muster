@@ -25,7 +25,7 @@ export function EventsStackNavigator(): JSX.Element {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="EventsList" component={EventsListScreen} />
       <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
-      <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ ...detailHeader, headerTitle: 'New Event' }} />
+      <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ headerShown: false }} />
       <Stack.Screen name="EditEvent" component={EditEventScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

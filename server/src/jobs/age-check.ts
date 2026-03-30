@@ -14,7 +14,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { isUnder18 } from '../utils/age-validation';
 import { NotificationService } from '../services/NotificationService';
 

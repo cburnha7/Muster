@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
 import { SkeletonConversationRow } from '../../components/ui/SkeletonBox';
 import { ConversationRow } from '../../components/messages/ConversationRow';
+import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
 import { conversationService } from '../../services/api/ConversationService';
 import { setConversations, setLoadingConversations, setError, setUnreadCount } from '../../store/slices/messagingSlice';
 import type { RootState } from '../../store/store';
@@ -129,27 +130,24 @@ export function ConversationListScreen() {
     });
   };
 
-  // Filter by search query and exclude empty conversations
+  // Filter by search query
   const filtered = conversations.filter((c) => {
-    // Hide conversations with no messages
-    if (!c.messages || c.messages.length === 0) return false;
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const name = (c.name ?? '').toLowerCase();
-      const lastMsg = c.messages[0]?.content.toLowerCase() ?? '';
+      const lastMsg = c.messages?.[0]?.content?.toLowerCase() ?? '';
       if (!name.includes(q) && !lastMsg.includes(q)) return false;
     }
     return true;
   });
 
-  // Sort: unreads (non-muted) first, then by most recent message
+  // Sort: unreads (non-muted) first, then by most recent message/update
   const sorted = [...filtered].sort((a, b) => {
     const aUnread = a.unreadCount > 0 && !a.myParticipant?.isMuted ? 1 : 0;
     const bUnread = b.unreadCount > 0 && !b.myParticipant?.isMuted ? 1 : 0;
     if (aUnread !== bUnread) return bUnread - aUnread;
-    const aTime = a.messages[0]?.createdAt ?? a.updatedAt;
-    const bTime = b.messages[0]?.createdAt ?? b.updatedAt;
+    const aTime = a.messages?.[0]?.createdAt ?? a.updatedAt;
+    const bTime = b.messages?.[0]?.createdAt ?? b.updatedAt;
     return new Date(bTime).getTime() - new Date(aTime).getTime();
   });
 
@@ -232,6 +230,14 @@ export function ConversationListScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={renderEmptyState}
+      />
+
+      {/* Compose FAB — must be after FlatList so it renders on top */}
+      <FloatingActionButton
+        icon="create-outline"
+        onPress={() => navigation.navigate('NewConversation')}
+        backgroundColor={colors.primary}
+        iconColor="#FFFFFF"
       />
     </View>
   );

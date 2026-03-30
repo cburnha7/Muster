@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import AuthService from '../services/AuthService';
 import TokenService from '../services/TokenService';
 import EmailService from '../services/EmailService';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import crypto from 'crypto';
 import {
   RegisterRequest,
