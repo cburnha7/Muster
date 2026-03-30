@@ -11,11 +11,13 @@ const Stack = createNativeStackNavigator<EventsStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: false,
+  headerBackVisible: true,
+  headerBackTitleVisible: false,
+  headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
+  headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
+  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
 };
 
 export function EventsStackNavigator(): JSX.Element {
@@ -24,7 +26,7 @@ export function EventsStackNavigator(): JSX.Element {
       <Stack.Screen name="EventsList" component={EventsListScreen} />
       <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
       <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ ...detailHeader, headerTitle: 'New Event' }} />
-      <Stack.Screen name="EditEvent" component={EditEventScreen} options={{ ...detailHeader, headerTitle: 'Edit Event' }} />
+      <Stack.Screen name="EditEvent" component={EditEventScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

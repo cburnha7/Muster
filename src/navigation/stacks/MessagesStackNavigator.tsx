@@ -10,10 +10,12 @@ const Stack = createNativeStackNavigator<MessagesStackParamList>();
 const detailHeader = {
   headerShown: true,
   headerBackVisible: true,
+  headerBackTitleVisible: false,
+  headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
+  headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
+  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
 };
 
 export function MessagesStackNavigator() {

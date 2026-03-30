@@ -8,11 +8,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
 import { MessageBubble } from '../../components/messages/MessageBubble';
 import { SystemMessage } from '../../components/messages/SystemMessage';
@@ -67,9 +71,10 @@ export function ChatScreen() {
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showReactions, setShowReactions] = useState(false);
+  const [showNewMessagesPill, setShowNewMessagesPill] = useState(false);
   const listRef = useRef<FlatList>(null);
-  // Track current message ids for polling dedup without stale closure
   const messageIdsRef = useRef<Set<string>>(new Set());
+  const isAtBottomRef = useRef(true);
 
   useEffect(() => {
     messageIdsRef.current = new Set(messages.map((m) => m.id));
@@ -84,7 +89,6 @@ export function ChatScreen() {
     try {
       const page = await conversationService.getMessages(conversationId);
       dispatch(setMessages({ conversationId, messages: page.messages, nextCursor: page.nextCursor }));
-      // Mark as read
       await conversationService.markRead(conversationId);
       dispatch(markConversationRead(conversationId));
     } catch (err: any) {
@@ -93,7 +97,6 @@ export function ChatScreen() {
     }
   }, [conversationId, dispatch]);
 
-  // Load pinned message content
   useEffect(() => {
     if (conversation?.pinnedMessageId) {
       const pinned = messages.find((m) => m.id === conversation.pinnedMessageId);
@@ -108,14 +111,17 @@ export function ChatScreen() {
       dispatch(setActiveConversation(conversationId));
       loadMessages();
 
-      // Polling: refresh messages every 5 seconds while chat is open
-      // TODO: replace with Socket.IO room subscription when WebSocket layer is added
       const interval = setInterval(async () => {
         try {
           const page = await conversationService.getMessages(conversationId);
           const newMsgs = page.messages.filter((m) => !messageIdsRef.current.has(m.id));
           if (newMsgs.length > 0) {
             dispatch(setMessages({ conversationId, messages: page.messages, nextCursor: page.nextCursor }));
+            if (isAtBottomRef.current) {
+              setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+            } else {
+              setShowNewMessagesPill(true);
+            }
           }
         } catch {
           // silently fail polling
@@ -161,7 +167,9 @@ export function ChatScreen() {
       isSending: true,
     };
     dispatch(appendOptimisticMessage({ conversationId, message: optimistic }));
-    listRef.current?.scrollToEnd({ animated: true });
+    isAtBottomRef.current = true;
+    setShowNewMessagesPill(false);
+    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
 
     try {
       const sent = await conversationService.sendMessage(conversationId, text);
@@ -182,13 +190,41 @@ export function ChatScreen() {
     if (!selectedMessage) return;
     try {
       await conversationService.addReaction(selectedMessage.id, emoji);
-      // Refresh messages to get updated reactions
       const page = await conversationService.getMessages(conversationId);
       dispatch(setMessages({ conversationId, messages: page.messages, nextCursor: page.nextCursor }));
     } catch (err: any) {
       console.error('Reaction error:', err);
     }
     setSelectedMessage(null);
+  };
+
+  const handleToggleReaction = async (messageId: string, emoji: string, hasMe: boolean) => {
+    try {
+      if (hasMe) {
+        await conversationService.removeReaction(messageId, emoji);
+      } else {
+        await conversationService.addReaction(messageId, emoji);
+      }
+      const page = await conversationService.getMessages(conversationId);
+      dispatch(setMessages({ conversationId, messages: page.messages, nextCursor: page.nextCursor }));
+    } catch (err: any) {
+      console.error('Toggle reaction error:', err);
+    }
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    const atBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 60;
+    isAtBottomRef.current = atBottom;
+    if (atBottom && showNewMessagesPill) {
+      setShowNewMessagesPill(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    listRef.current?.scrollToEnd({ animated: true });
+    setShowNewMessagesPill(false);
+    isAtBottomRef.current = true;
   };
 
   // Build render items with day headers
@@ -206,6 +242,36 @@ export function ChatScreen() {
     }
     renderItems.push({ kind: 'message', message: msg });
   }
+
+  // Find the last own message index for read receipts
+  let lastOwnMessageIdx = -1;
+  for (let i = renderItems.length - 1; i >= 0; i--) {
+    const item = renderItems[i];
+    if (item?.kind === 'message' && item.message.senderId === currentUserId && item.message.type === 'USER') {
+      lastOwnMessageIdx = i;
+      break;
+    }
+  }
+
+  // Determine read receipt status for the last own message
+  const getReadReceipt = (): 'sending' | 'sent' | 'read' | null => {
+    if (lastOwnMessageIdx === -1) return null;
+    const item = renderItems[lastOwnMessageIdx];
+    if (item?.kind !== 'message') return null;
+    const msg = item.message;
+    if (msg.isSending) return 'sending';
+    if (msg.sendError) return null;
+    // For DMs, check if the other participant has read
+    if (type === 'DIRECT_MESSAGE' && conversation) {
+      const other = conversation.participants.find((p) => p.userId !== currentUserId);
+      if (other?.lastReadAt && new Date(other.lastReadAt) >= new Date(msg.createdAt)) {
+        return 'read';
+      }
+    }
+    return 'sent';
+  };
+
+  const readReceiptStatus = getReadReceipt();
 
   const renderItem = ({ item, index }: { item: RenderItem; index: number }) => {
     if (item.kind === 'dayHeader') {
@@ -228,12 +294,28 @@ export function ChatScreen() {
     const prevMsg = prevItem?.kind === 'message' ? prevItem.message : null;
     const showSender = !isOwn && (!prevMsg || prevMsg.senderId !== message.senderId || prevMsg.type === 'SYSTEM');
 
+    // Show avatar only on first message of consecutive group (same logic as showSender)
+    const showAvatar = showSender;
+
+    // Show timestamp only on last message of consecutive group
+    const nextItem = renderItems[index + 1];
+    const nextMsg = nextItem?.kind === 'message' ? nextItem.message : null;
+    const showTimestamp = !nextMsg || nextMsg.senderId !== message.senderId || nextMsg.type === 'SYSTEM' || nextItem?.kind === 'dayHeader';
+
+    // Read receipt only on the very last own message
+    const showReadReceipt = index === lastOwnMessageIdx ? readReceiptStatus : null;
+
     return (
       <MessageBubble
         message={message}
         isOwn={isOwn}
         showSender={showSender}
+        showAvatar={showAvatar}
+        showTimestamp={showTimestamp}
+        showReadReceipt={showReadReceipt}
+        currentUserId={currentUserId}
         onLongPress={handleLongPress}
+        onToggleReaction={handleToggleReaction}
       />
     );
   };
@@ -266,28 +348,40 @@ export function ChatScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
-          ref={listRef}
-          data={renderItems}
-          keyExtractor={getItemKey}
-          renderItem={renderItem}
-          onEndReached={loadOlder}
-          onEndReachedThreshold={0.2}
-          ListHeaderComponent={
-            isLoadingMsgs && messages.length > 0 ? (
-              <ActivityIndicator size="small" color={colors.primary} style={{ margin: 12 }} />
-            ) : null
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyChat}>
-              <Text style={styles.emptyChatText}>
-                No messages yet. Start the {conversationTypeName().toLowerCase()}!
-              </Text>
-            </View>
-          }
-          contentContainerStyle={styles.listContent}
-          onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
-        />
+        <View style={{ flex: 1 }}>
+          <FlatList
+            ref={listRef}
+            data={renderItems}
+            keyExtractor={getItemKey}
+            renderItem={renderItem}
+            onEndReached={loadOlder}
+            onEndReachedThreshold={0.2}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            ListHeaderComponent={
+              isLoadingMsgs && messages.length > 0 ? (
+                <ActivityIndicator size="small" color={colors.primary} style={{ margin: 12 }} />
+              ) : null
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyChat}>
+                <Text style={styles.emptyChatText}>
+                  No messages yet. Start the {conversationTypeName().toLowerCase()}!
+                </Text>
+              </View>
+            }
+            contentContainerStyle={styles.listContent}
+            onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
+          />
+
+          {/* New messages pill */}
+          {showNewMessagesPill && (
+            <TouchableOpacity style={styles.newMessagesPill} onPress={scrollToBottom} activeOpacity={0.85}>
+              <Ionicons name="arrow-down" size={14} color="#FFFFFF" />
+              <Text style={styles.newMessagesPillText}>New messages</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
 
       <MessageInput onSend={handleSend} />
@@ -331,5 +425,27 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
+  },
+  newMessagesPill: {
+    position: 'absolute',
+    bottom: 8,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  newMessagesPillText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: '#FFFFFF',
   },
 });

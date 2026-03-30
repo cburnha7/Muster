@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
 import type { Conversation } from '../../types/messaging';
@@ -7,6 +8,8 @@ import type { Conversation } from '../../types/messaging';
 interface ConversationRowProps {
   conversation: Conversation;
   onPress: (conversation: Conversation) => void;
+  onMute?: (conversation: Conversation) => void;
+  onPin?: (conversation: Conversation) => void;
 }
 
 function getConversationIcon(type: Conversation['type']): keyof typeof Ionicons.glyphMap {
@@ -47,14 +50,57 @@ function formatTimestamp(iso: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function ConversationRow({ conversation, onPress }: ConversationRowProps) {
+export function ConversationRow({ conversation, onPress, onMute, onPin }: ConversationRowProps) {
   const lastMsg = conversation.messages[0];
   const hasUnread = conversation.unreadCount > 0 && !conversation.myParticipant?.isMuted;
+  const isMuted = conversation.myParticipant?.isMuted ?? false;
   const iconColor = getConversationColor(conversation.type);
   const displayName = getDisplayName(conversation);
+  const isSystemPreview = lastMsg?.type === 'SYSTEM';
+  const swipeableRef = useRef<Swipeable>(null);
 
-  return (
-    <TouchableOpacity style={styles.row} onPress={() => onPress(conversation)} activeOpacity={0.7}>
+  const renderLeftActions = (_progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+    const scale = dragX.interpolate({ inputRange: [0, 80], outputRange: [0.5, 1], extrapolate: 'clamp' });
+    return (
+      <TouchableOpacity
+        style={styles.swipeActionLeft}
+        onPress={() => { swipeableRef.current?.close(); onMute?.(conversation); }}
+        activeOpacity={0.8}
+      >
+        <Animated.View style={[styles.swipeActionContent, { transform: [{ scale }] }]}>
+          <Ionicons name={isMuted ? 'volume-high' : 'volume-mute'} size={22} color="#FFFFFF" />
+          <Text style={styles.swipeActionText}>{isMuted ? 'Unmute' : 'Mute'}</Text>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderRightActions = (_progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+    const scale = dragX.interpolate({ inputRange: [-80, 0], outputRange: [1, 0.5], extrapolate: 'clamp' });
+    return (
+      <TouchableOpacity
+        style={styles.swipeActionRight}
+        onPress={() => { swipeableRef.current?.close(); onPin?.(conversation); }}
+        activeOpacity={0.8}
+      >
+        <Animated.View style={[styles.swipeActionContent, { transform: [{ scale }] }]}>
+          <Ionicons name="pin" size={22} color="#FFFFFF" />
+          <Text style={styles.swipeActionText}>Pin</Text>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const rowContent = (
+    <TouchableOpacity
+      style={[
+        styles.row,
+        hasUnread && styles.rowUnread,
+        isMuted && styles.rowMuted,
+      ]}
+      onPress={() => onPress(conversation)}
+      activeOpacity={0.7}
+    >
       <View style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}>
         <Ionicons name={getConversationIcon(conversation.type)} size={20} color={iconColor} />
       </View>
@@ -71,9 +117,16 @@ export function ConversationRow({ conversation, onPress }: ConversationRowProps)
           )}
         </View>
         <View style={styles.bottomRow}>
-          <Text style={[styles.preview, hasUnread && styles.previewUnread]} numberOfLines={1}>
+          <Text
+            style={[
+              styles.preview,
+              hasUnread && styles.previewUnread,
+              isSystemPreview && styles.previewSystem,
+            ]}
+            numberOfLines={1}
+          >
             {lastMsg
-              ? lastMsg.type === 'SYSTEM'
+              ? isSystemPreview
                 ? lastMsg.content
                 : `${lastMsg.sender?.firstName ?? ''}: ${lastMsg.content}`
               : 'No messages yet'}
@@ -85,12 +138,27 @@ export function ConversationRow({ conversation, onPress }: ConversationRowProps)
               </Text>
             </View>
           )}
-          {conversation.myParticipant?.isMuted && (
+          {isMuted && (
             <Ionicons name="volume-mute-outline" size={14} color={colors.onSurfaceVariant} />
           )}
         </View>
       </View>
     </TouchableOpacity>
+  );
+
+  if (!onMute && !onPin) return rowContent;
+
+  return (
+    <Swipeable
+      ref={swipeableRef}
+      {...(onMute ? { renderLeftActions } : {})}
+      {...(onPin ? { renderRightActions } : {})}
+      overshootLeft={false}
+      overshootRight={false}
+      friction={2}
+    >
+      {rowContent}
+    </Swipeable>
   );
 }
 
@@ -102,6 +170,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     backgroundColor: colors.surfaceContainerLowest,
+  },
+  rowUnread: {
+    backgroundColor: colors.primary + '08',
+  },
+  rowMuted: {
+    opacity: 0.5,
   },
   iconCircle: {
     width: 48,
@@ -130,6 +204,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   previewUnread: { color: colors.onSurface, fontFamily: fonts.label },
+  previewSystem: { fontStyle: 'italic' },
   badge: {
     backgroundColor: colors.primary,
     borderRadius: 10,
@@ -140,4 +215,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: { fontFamily: fonts.label, fontSize: 11, color: '#FFFFFF' },
+  swipeActionLeft: {
+    backgroundColor: colors.onSurfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    width: 90,
+  },
+  swipeActionRight: {
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingHorizontal: 20,
+    width: 90,
+  },
+  swipeActionContent: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeActionText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: '#FFFFFF',
+  },
 });

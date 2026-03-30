@@ -13,9 +13,10 @@ import {
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
+
 import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../services/api/config';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { DependentProfile } from '../../types/dependent';
 
@@ -56,7 +57,7 @@ export function DependentProfileScreen() {
     if (!authUser?.id || !dependentId) return;
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/dependents/${dependentId}`,
+        `${API_BASE_URL}/dependents/${dependentId}`,
         { headers: { 'X-User-Id': authUser.id } }
       );
       if (!response.ok) throw new Error('Failed to fetch dependent profile');
@@ -69,6 +70,13 @@ export function DependentProfileScreen() {
       setRefreshing(false);
     }
   }, [authUser?.id, dependentId]);
+
+  // Update nav header with dependent's name
+  useEffect(() => {
+    if (profile) {
+      navigation.setOptions({ headerTitle: `${profile.firstName} ${profile.lastName}` });
+    }
+  }, [navigation, profile]);
 
   useEffect(() => {
     fetchProfile();
@@ -98,11 +106,6 @@ export function DependentProfileScreen() {
   if (loading) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader
-          title="Dependent Profile"
-          showBack
-          onBackPress={() => (navigation as any).goBack()}
-        />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -113,11 +116,6 @@ export function DependentProfileScreen() {
   if (!profile) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader
-          title="Dependent Profile"
-          showBack
-          onBackPress={() => (navigation as any).goBack()}
-        />
         <View style={styles.loadingContainer}>
           <Text style={styles.emptyText}>Could not load profile.</Text>
         </View>
@@ -127,11 +125,6 @@ export function DependentProfileScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader
-        title={`${profile.firstName} ${profile.lastName}`}
-        showBack
-        onBackPress={() => (navigation as any).goBack()}
-      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -222,15 +215,15 @@ export function DependentProfileScreen() {
               <Text style={styles.emptyCardText}>No events yet</Text>
             </View>
           ) : (
-            profile.eventHistory.map((event: any, index: number) => (
-              <View key={event.id ?? index} style={styles.listItem}>
+            profile.eventHistory.map((booking: any, index: number) => (
+              <View key={booking.id ?? index} style={styles.listItem}>
                 <Ionicons name="calendar-outline" size={18} color={colors.primary} />
                 <Text style={styles.listItemText} numberOfLines={1}>
-                  {event.title ?? event.name ?? `Event ${index + 1}`}
+                  {booking.event?.title ?? `Event ${index + 1}`}
                 </Text>
-                {event.date && (
+                {booking.event?.startTime && (
                   <Text style={styles.listItemDate}>
-                    {new Date(event.date).toLocaleDateString()}
+                    {new Date(booking.event.startTime).toLocaleDateString()}
                   </Text>
                 )}
               </View>
@@ -247,11 +240,11 @@ export function DependentProfileScreen() {
               <Text style={styles.emptyCardText}>Not a member of any Rosters</Text>
             </View>
           ) : (
-            profile.rosterMemberships.map((roster: any, index: number) => (
-              <View key={roster.id ?? index} style={styles.listItem}>
+            profile.rosterMemberships.map((member: any, index: number) => (
+              <View key={member.id ?? index} style={styles.listItem}>
                 <Ionicons name="people-outline" size={18} color={colors.primary} />
                 <Text style={styles.listItemText} numberOfLines={1}>
-                  {roster.name ?? `Roster ${index + 1}`}
+                  {member.team?.name ?? `Roster ${index + 1}`}
                 </Text>
               </View>
             ))
@@ -267,11 +260,11 @@ export function DependentProfileScreen() {
               <Text style={styles.emptyCardText}>Not a member of any Leagues</Text>
             </View>
           ) : (
-            profile.leagueMemberships.map((league: any, index: number) => (
-              <View key={league.id ?? index} style={styles.listItem}>
+            profile.leagueMemberships.map((membership: any, index: number) => (
+              <View key={membership.id ?? index} style={styles.listItem}>
                 <Ionicons name="trophy-outline" size={18} color={colors.primary} />
                 <Text style={styles.listItemText} numberOfLines={1}>
-                  {league.name ?? `League ${index + 1}`}
+                  {membership.league?.name ?? `League ${index + 1}`}
                 </Text>
               </View>
             ))

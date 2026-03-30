@@ -19,6 +19,8 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
     setText('');
   };
 
+  const hasText = text.trim().length > 0;
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.container}>
@@ -35,14 +37,16 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
           blurOnSubmit={false}
           editable={!disabled}
         />
-        <TouchableOpacity
-          style={[styles.sendBtn, (!text.trim() || disabled) && styles.sendBtnDisabled]}
-          onPress={handleSend}
-          disabled={!text.trim() || disabled}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-up" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
+        {hasText && (
+          <TouchableOpacity
+            style={[styles.sendBtn, disabled && styles.sendBtnDisabled]}
+            onPress={handleSend}
+            disabled={disabled}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-up" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

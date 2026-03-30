@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PressableCard } from './PressableCard';
 import { Team, SportType } from '../../types';
 import { colors, fonts } from '../../theme';
 
@@ -57,7 +58,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, curren
   );
 
   return (
-    <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(team)} activeOpacity={0.85}>
+    <PressableCard style={[styles.card, style]} onPress={() => onPress?.(team)}>
       {/* Sport icon with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
         <Ionicons name={getSportIcon(sport) as any} size={20} color={sportColor} />
@@ -85,7 +86,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, curren
       </View>
 
       <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 

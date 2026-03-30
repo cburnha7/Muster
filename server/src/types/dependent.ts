@@ -17,6 +17,7 @@ export interface CreateDependentInput {
   dateOfBirth: string; // ISO 8601 date
   sportPreferences: string[];
   profileImage?: string;
+  gender?: string;
 }
 
 /**
@@ -30,6 +31,7 @@ export interface UpdateDependentInput {
   dateOfBirth?: string;
   sportPreferences?: string[];
   profileImage?: string;
+  gender?: string;
 }
 
 /**
@@ -57,6 +59,7 @@ export interface DependentSummary {
  * Extends DependentSummary with detailed data scoped to the dependent.
  */
 export interface DependentProfile extends DependentSummary {
+  gender?: string | null;
   sportPreferences: string[];
   sportRatings: any[];
   eventHistory: any[];

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PressableCard } from './PressableCard';
 import { SportType } from '../../types';
 import { colors, fonts } from '../../theme';
 
@@ -47,7 +48,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
   const sportColor = getSportColor(league.sportType);
 
   return (
-    <TouchableOpacity style={[styles.card, style]} onPress={() => onPress?.(league)} activeOpacity={0.85}>
+    <PressableCard style={[styles.card, style]} onPress={() => onPress?.(league)}>
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
         <Ionicons name={getSportIcon(league.sportType) as any} size={20} color={sportColor} />
       </View>
@@ -65,7 +66,7 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
       </View>
 
       <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 

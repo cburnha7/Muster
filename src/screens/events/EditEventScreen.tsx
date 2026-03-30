@@ -16,6 +16,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { TimePickerInput } from '../../components/forms/TimePickerInput';
+import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
@@ -482,11 +483,10 @@ export function EditEventScreen(): JSX.Element {
           />
 
           <View style={styles.dateTimeRow}>
-            <FormInput
+            <DatePickerInput
               label="Start Date"
-              placeholder="YYYY-MM-DD"
               value={formData.startDate}
-              onChangeText={(value) => handleInputChange('startDate', value)}
+              onChange={(value) => handleInputChange('startDate', value)}
               error={errors.startDate}
               containerStyle={styles.dateInput}
               required
@@ -503,11 +503,10 @@ export function EditEventScreen(): JSX.Element {
           </View>
 
           <View style={styles.dateTimeRow}>
-            <FormInput
+            <DatePickerInput
               label="End Date"
-              placeholder="YYYY-MM-DD"
               value={formData.endDate}
-              onChangeText={(value) => handleInputChange('endDate', value)}
+              onChange={(value) => handleInputChange('endDate', value)}
               error={errors.endDate}
               containerStyle={styles.dateInput}
               required
