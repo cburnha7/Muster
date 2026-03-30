@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { colors, fonts } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface SportRating {
   sportType: string;
@@ -32,7 +33,7 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
     (async () => {
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/users/sport-ratings/${userId}`
+          `${API_BASE_URL}/users/sport-ratings/${userId}`
         );
         if (!response.ok) throw new Error('Failed');
         const data: SportRating[] = await response.json();

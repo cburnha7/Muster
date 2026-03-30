@@ -17,6 +17,7 @@ import {
   useDenyReservationMutation,
 } from '../../store/api/insuranceDocumentsApi';
 import { HomeStackParamList } from '../../navigation/types';
+import { API_BASE_URL } from '../../services/api/config';
 
 type ScreenRouteProp = RouteProp<HomeStackParamList, 'PendingReservationDetails'>;
 
@@ -49,8 +50,7 @@ export function PendingReservationDetailsScreen() {
   const loadRental = useCallback(async () => {
     try {
       setLoading(true);
-      const API_URL = process.env.EXPO_PUBLIC_API_URL;
-      const response = await fetch(`${API_URL}/rentals/${rentalId}`);
+      const response = await fetch(`${API_BASE_URL}/rentals/${rentalId}`);
       if (!response.ok) throw new Error('Failed to load reservation');
       const data = await response.json();
       setRental(data);

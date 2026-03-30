@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing, TextStyles } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import { formatTime12 } from '../../utils/calendarUtils';
+import { API_BASE_URL } from '../../services/api/config';
 
 type MyRentalsScreenNavigationProp = NativeStackNavigationProp<
   FacilitiesStackParamList,
@@ -71,7 +72,7 @@ export function MyRentalsScreen() {
       const userId = 'temp-user-id';
 
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/rentals/my-rentals?userId=${userId}`
+        `${API_BASE_URL}/rentals/my-rentals?userId=${userId}`
       );
 
       if (!response.ok) {
@@ -137,7 +138,7 @@ export function MyRentalsScreen() {
       const userId = 'temp-user-id';
 
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/rentals/${rentalId}`,
+        `${API_BASE_URL}/rentals/${rentalId}`,
         {
           method: 'DELETE',
           headers: {

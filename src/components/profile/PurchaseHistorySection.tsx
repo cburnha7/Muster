@@ -9,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface PastReservation {
   id: string;
@@ -52,7 +53,7 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
   const loadPurchases = async () => {
     try {
       setLoading(true);
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/rentals/my-rentals?userId=${userId}`;
+      const url = `${API_BASE_URL}/rentals/my-rentals?userId=${userId}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to load purchase history');
       const data: PastReservation[] = await response.json();

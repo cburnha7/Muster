@@ -10,7 +10,8 @@
 
 import TokenStorage from './auth/TokenStorage';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from './api/config';
+const API_URL = API_BASE_URL;
 const FLUSH_INTERVAL = 10_000; // 10 seconds
 const MAX_QUEUE = 200;
 

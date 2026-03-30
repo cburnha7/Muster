@@ -409,6 +409,6 @@ export class AuthService {
 
 // Create and export a singleton instance
 export const authService = new AuthService({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: (() => { try { return require('../api/config').API_BASE_URL; } catch { return 'http://localhost:3000/api'; } })(),
   tokenRefreshThreshold: 5, // Refresh token 5 minutes before expiry
 });

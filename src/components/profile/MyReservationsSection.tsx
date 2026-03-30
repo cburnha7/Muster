@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { CancelReservationModal } from '../facilities/CancelReservationModal';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -62,7 +63,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   const loadReservations = async () => {
     try {
       setLoading(true);
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/rentals/my-rentals?userId=${userId}&upcoming=true`;
+      const url = `${API_BASE_URL}/rentals/my-rentals?userId=${userId}&upcoming=true`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to load reservations');
       const data = await response.json();
@@ -108,7 +109,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   const handleConfirmCancellation = async (reason: string) => {
     if (!selectedReservation) return;
     try {
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/rentals/${selectedReservation.id}/request-cancellation`;
+      const url = `${API_BASE_URL}/rentals/${selectedReservation.id}/request-cancellation`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

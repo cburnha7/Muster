@@ -43,6 +43,7 @@ import {
   BookingStatus,
 } from '../../types';
 import type { Match } from '../../types/league';
+import { API_BASE_URL } from '../../services/api/config';
 
 function formatDateHero(dateInput: string | Date): string {
   const d = new Date(dateInput as any);
@@ -128,12 +129,12 @@ export function EventDetailsScreen() {
       // Fetch waiver status if event has a facility
       if (eventResponse.facilityId && currentUser?.id) {
         try {
-          const wRes = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/waivers/facility/${eventResponse.facilityId}/status?userId=${currentUser.id}`);
+          const wRes = await fetch(`${API_BASE_URL}/waivers/facility/${eventResponse.facilityId}/status?userId=${currentUser.id}`);
           if (wRes.ok) {
             const wData = await wRes.json();
             if (wData.required && !wData.signed) {
               // Also fetch waiver text
-              const tRes = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/waivers/facility/${eventResponse.facilityId}`);
+              const tRes = await fetch(`${API_BASE_URL}/waivers/facility/${eventResponse.facilityId}`);
               if (tRes.ok) {
                 const tData = await tRes.json();
                 setWaiverStatus({ ...wData, waiverText: tData.waiverText });
@@ -1119,7 +1120,7 @@ export function EventDetailsScreen() {
                 if (!currentUser?.id || !event?.facilityId) return;
                 setSigningWaiver(true);
                 try {
-                  const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/waivers/sign`, {
+                  const resp = await fetch(`${API_BASE_URL}/waivers/sign`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: currentUser.id, facilityId: event.facilityId }),

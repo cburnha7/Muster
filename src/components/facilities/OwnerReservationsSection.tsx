@@ -10,6 +10,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface OwnerRental {
   id: string;
@@ -47,7 +48,7 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
     try {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/rentals/facilities/${facilityId}/rentals?status=confirmed&startDate=${today}`;
+      const url = `${API_BASE_URL}/rentals/facilities/${facilityId}/rentals?status=confirmed&startDate=${today}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to load reservations');
       const data: OwnerRental[] = await response.json();

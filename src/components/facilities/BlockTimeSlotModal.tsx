@@ -14,6 +14,7 @@ import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing } from '../../theme';
 import { formatTime24, formatTime12 } from '../../utils/calendarUtils';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface BlockTimeSlotModalProps {
   visible: boolean;
@@ -82,7 +83,7 @@ export function BlockTimeSlotModal({
       setLoading(true);
 
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${courtId}/slots/block`,
+        `${API_BASE_URL}/facilities/${facilityId}/courts/${courtId}/slots/block`,
         {
           method: 'POST',
           headers: {
