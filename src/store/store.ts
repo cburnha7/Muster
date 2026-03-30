@@ -7,6 +7,7 @@ import { eventsApi } from './api/eventsApi';
 import { cancelRequestsApi } from './api/cancelRequestsApi';
 import { insuranceDocumentsApi } from './api/insuranceDocumentsApi';
 import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice, subscriptionSlice, contextSlice, scheduleSlice } from './slices';
+import messagingReducer from './slices/messagingSlice';
 import { contextRecoveryMiddleware } from './middleware/contextRecovery';
 
 // Transform to handle cache expiration and selective persistence
@@ -63,6 +64,7 @@ const rootReducer = combineReducers({
   subscription: subscriptionSlice,
   context: contextSlice,
   schedule: scheduleSlice,
+  messaging: messagingReducer,
   api: api.reducer,
   eventsApi: eventsApi.reducer,
   cancelRequestsApi: cancelRequestsApi.reducer,

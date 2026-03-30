@@ -88,7 +88,7 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
           leftIcon="arrow-back"
           onLeftPress={() => navigation.goBack()}
         />
-        <LoadingSpinner message="Loading deletion preview..." />
+        <LoadingSpinner />
       </View>
     );
   }

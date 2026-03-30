@@ -96,6 +96,10 @@ export const colors = {
   textInverse:  '#FFFFFF',
   fieldBackground: '#ECEEF0',
   fieldBorder:  '#C3C6CF',
+  // cobalt alias for primary (backward compat with older screens)
+  cobalt:       '#0052FF',
+  cobaltLight:  '#3375FF',
+  cobaltDark:   '#003EC7',
 } as const;
 
 export type ColorKey = keyof typeof colors;

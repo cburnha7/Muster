@@ -62,12 +62,12 @@ export function ContextIndicator() {
         accessibilityRole="button"
         accessibilityLabel={`Active account: ${displayName}. ${hasDependents ? 'Tap to switch.' : ''}`}
       >
-        <Ionicons name="person" size={14} color={colors.ink} />
+        <Ionicons name="person" size={14} color={colors.onSurface} />
         <Text style={styles.name} numberOfLines={1}>
           {displayName}
         </Text>
         {hasDependents && (
-          <Ionicons name="chevron-down" size={14} color={colors.ink} />
+          <Ionicons name="chevron-down" size={14} color={colors.onSurface} />
         )}
       </TouchableOpacity>
 
@@ -94,7 +94,7 @@ export function ContextIndicator() {
                     <Ionicons
                       name="person"
                       size={16}
-                      color={isActive ? colors.cobalt : colors.inkFaint}
+                      color={isActive ? colors.primary : colors.onSurfaceVariant}
                       style={styles.rowIcon}
                     />
                     <Text
@@ -104,7 +104,7 @@ export function ContextIndicator() {
                       {item.name}
                     </Text>
                     {isActive && (
-                      <Ionicons name="checkmark" size={18} color={colors.cobalt} />
+                      <Ionicons name="checkmark" size={18} color={colors.primary} />
                     )}
                   </TouchableOpacity>
                 );
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.onSurface,
     flexShrink: 1,
   },
   backdrop: {
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   activeRow: {
-    backgroundColor: colors.cobalt + '0D',
+    backgroundColor: colors.primary + '0D',
   },
   rowIcon: {
     marginRight: 8,
@@ -166,10 +166,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.ink,
+    color: colors.onSurface,
   },
   activeRowText: {
     fontFamily: fonts.label,
-    color: colors.cobalt,
+    color: colors.primary,
   },
 });

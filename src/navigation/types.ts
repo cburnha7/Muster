@@ -5,13 +5,26 @@ export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
+  // Profile screens (accessible from avatar bottom sheet on any tab)
+  ProfileScreen: undefined;
+  EditProfile: undefined;
+  Settings: undefined;
+  NotificationPreferences: undefined;
+  DependentForm: { dependentId?: string };
+  DependentProfile: { dependentId: string };
+  TransferAccount: { dependentId: string };
+  RedeemCode: undefined;
 };
 
 // Onboarding Stack Types
+export type OnboardingIntent = 'PLAYER' | 'CAPTAIN' | 'GUARDIAN' | 'COMMISSIONER' | 'FACILITY_OWNER';
+
 export type OnboardingStackParamList = {
-  Welcome: undefined;
-  FeatureOverview: undefined;
-  GetStarted: undefined;
+  IntentSelection: undefined;
+  SportSelection: { intents: string[] };
+  LocationSetup: { intents: string[]; sports: string[] };
+  PersonaSetup: { intents: string[]; sports: string[]; locationCity?: string; locationState?: string; locationLat?: number; locationLng?: number };
+  ProfileFinish: { intents: string[]; sports: string[]; locationCity?: string; locationState?: string; locationLat?: number; locationLng?: number; personaAction?: string };
 };
 
 // Auth Stack Types
@@ -27,8 +40,17 @@ export type MainTabParamList = {
   Home: NavigatorScreenParams<HomeStackParamList>;
   Facilities: NavigatorScreenParams<FacilitiesStackParamList>;
   Teams: NavigatorScreenParams<TeamsStackParamList>;
+  Messages: NavigatorScreenParams<MessagesStackParamList>;
   Leagues: NavigatorScreenParams<LeaguesStackParamList>;
-  Profile: NavigatorScreenParams<ProfileStackParamList>;
+};
+
+export type MessagesStackParamList = {
+  ConversationList: undefined;
+  Chat: {
+    conversationId: string;
+    title: string;
+    type: string;
+  };
 };
 
 // Individual Tab Stack Types
@@ -165,6 +187,8 @@ export type ProfileStackParamList = {
   EditProfile: undefined;
   Settings: undefined;
   NotificationPreferences: undefined;
+  UserStats: undefined;
+  BookingHistory: undefined;
   DependentForm: { dependentId?: string };
   DependentProfile: { dependentId: string };
   TransferAccount: { dependentId: string };

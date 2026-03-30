@@ -10,6 +10,7 @@ import {
   Modal,
   Pressable,
   useWindowDimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -37,14 +38,14 @@ import { useAuth } from '../../context/AuthContext';
 // Store
 import { selectUser } from '../../store/slices/authSlice';
 import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
-import { useGetUserBookingsQuery, useCancelBookingMutation } from '../../store/api/eventsApi';
+import { useGetUserBookingsQuery, useCancelBookingMutation, useGetEventsQuery, useBookEventMutation } from '../../store/api/eventsApi';
 import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
 
 // Theme
 import { colors, fonts, Spacing } from '../../theme';
 
 // Types
-import { Booking } from '../../types';
+import { Booking, Event, Team, EventStatus } from '../../types';
 import { HomeStackParamList } from '../../navigation/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -52,6 +53,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PersonFilter } from '../../types/eventsCalendar';
 import { formatDateForCalendar, calendarTheme } from '../../utils/calendarUtils';
 import { searchEventBus } from '../../utils/searchEventBus';
+import { getSportEmoji } from '../../constants/sports';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
 
@@ -85,11 +87,46 @@ export function HomeScreen() {
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
+  const [bookEventMutation] = useBookEventMutation();
 
   // Cancel requests hooks
   const { data: cancelRequests = [] } = useGetPendingCancelRequestsQuery(user?.id || '', { skip: !user?.id });
   const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
   const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
+
+  // Discover events query (games near you, filtered by sport preferences)
+  const sportPrefs = user?.sportPreferences;
+  const {
+    data: discoverData,
+    isLoading: discoverLoading,
+    refetch: refetchDiscover,
+  } = useGetEventsQuery({
+    filters: {
+      status: EventStatus.ACTIVE,
+      ...(sportPrefs && sportPrefs.length > 0 ? { sportTypes: sportPrefs.join(',') } : {}),
+    },
+    pagination: { page: 1, limit: 6 },
+  });
+
+  const discoverEvents = useMemo(() => {
+    const events = discoverData?.data || [];
+    // Exclude events the user is already booked into
+    const bookedEventIds = new Set((bookingsData?.data || []).map((b) => b.eventId));
+    return events.filter((e) => !bookedEventIds.has(e.id));
+  }, [discoverData, bookingsData]);
+
+  // User teams state
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
+
+  const loadUserTeams = useCallback(async () => {
+    try {
+      const result = await userService.getUserTeams({ page: 1, limit: 10 });
+      setUserTeams(result.data || []);
+    } catch (err) {
+      console.warn('Failed to fetch user teams:', err);
+      setUserTeams([]);
+    }
+  }, []);
 
   // DependentToggle state
   const [activeFilter, setActiveFilter] = useState<PersonFilter>({
@@ -229,17 +266,19 @@ export function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
-    await Promise.all([refetchBookings(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues()]);
+    await Promise.all([refetchBookings(), refetchDiscover(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues(), loadUserTeams()]);
     setIsRefreshing(false);
-  }, [refetchBookings, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues]);
+  }, [refetchBookings, refetchDiscover, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues, loadUserTeams]);
 
   useFocusEffect(
     useCallback(() => {
       if (!authLoading) {
         refetchBookings();
+        refetchDiscover();
         loadDebriefEvents();
         loadInvitations();
         loadReadyToScheduleLeagues();
+        loadUserTeams();
       }
     }, [authLoading])
   );
@@ -253,9 +292,11 @@ export function HomeScreen() {
   useEffect(() => {
     if (!authLoading) {
       refetchBookings();
+      refetchDiscover();
       loadDebriefEvents();
       loadInvitations();
       loadReadyToScheduleLeagues();
+      loadUserTeams();
     }
   }, [activeUserId]);
 
@@ -324,6 +365,32 @@ export function HomeScreen() {
     (navigation as any).navigate('Leagues', { screen: 'LeagueScheduling', params: { leagueId: league.id } });
   }, [navigation]);
 
+  // ── Discover helpers ─────────────────────────
+
+  const formatEventTime = useCallback((dateStr: string | Date) => {
+    const d = new Date(dateStr);
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const hours = d.getHours();
+    const mins = d.getMinutes();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    const h = hours % 12 || 12;
+    return `${days[d.getDay()]} ${h}${mins > 0 ? ':' + mins.toString().padStart(2, '0') : ''}${ampm}`;
+  }, []);
+
+  const handleJoinEvent = useCallback(async (eventId: string) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'You must be logged in to join a game.');
+      return;
+    }
+    try {
+      await bookEventMutation({ eventId, userId: user.id }).unwrap();
+      Alert.alert('Joined!', 'You have been added to the game.');
+    } catch (err: any) {
+      const msg = err?.data?.message || 'Failed to join game. Please try again.';
+      Alert.alert('Error', msg);
+    }
+  }, [bookEventMutation, user?.id]);
+
   const handleCreateEvent = useCallback(() => {
     setSearchModalVisible(false);
     navigation.navigate('CreateEvent', {});
@@ -388,6 +455,73 @@ export function HomeScreen() {
               userName={currentUser?.firstName}
               onCreateEvent={handleCreateEvent}
             />
+          )}
+
+          {/* ── Games near you ─────────────────── */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Games near you</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Events' as any)}>
+              <Text style={styles.seeAll}>See all</Text>
+            </TouchableOpacity>
+          </View>
+
+          {discoverLoading ? (
+            <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} />
+          ) : discoverEvents.length > 0 ? (
+            discoverEvents.map((event) => (
+              <TouchableOpacity
+                key={event.id}
+                style={styles.discoverCard}
+                onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
+                activeOpacity={0.8}
+              >
+                <View style={styles.discoverIcon}>
+                  <Text style={{ fontSize: 20 }}>{getSportEmoji(event.sportType)}</Text>
+                </View>
+                <View style={styles.discoverInfo}>
+                  <Text style={styles.discoverTitle} numberOfLines={1}>{event.title}</Text>
+                  <Text style={styles.discoverMeta} numberOfLines={1}>
+                    {formatEventTime(event.startTime)} {'\u00B7'} {event.facility?.name || 'TBD'} {'\u00B7'} {event.currentParticipants}/{event.maxParticipants || '\u221E'}
+                  </Text>
+                </View>
+                <TouchableOpacity style={styles.joinBtn} onPress={() => handleJoinEvent(event.id)}>
+                  <Text style={styles.joinBtnText}>Join</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.discoverEmpty}>
+              <Text style={styles.discoverEmptyText}>No games near you yet</Text>
+              <TouchableOpacity style={styles.hostFirstBtn} onPress={handleCreateEvent}>
+                <Text style={styles.hostFirstBtnText}>Host the first one</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* ── Your teams ─────────────────────── */}
+          {userTeams.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Your teams</Text>
+                <TouchableOpacity onPress={() => (navigation as any).navigate('Teams')}>
+                  <Text style={styles.seeAll}>See all</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.teamsRow}>
+                {userTeams.map((team) => (
+                  <TouchableOpacity
+                    key={team.id}
+                    style={styles.teamCard}
+                    onPress={() => (navigation as any).navigate('Teams', { screen: 'TeamDetails', params: { teamId: team.id } })}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ fontSize: 24 }}>{getSportEmoji(team.sportType)}</Text>
+                    <Text style={styles.teamCardName} numberOfLines={1}>{team.name}</Text>
+                    <Text style={styles.teamCardMeta}>{team.members?.length || '\u2014'} members</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
           )}
 
           {/* ── Inbox ──────────────────────────── */}
@@ -599,6 +733,117 @@ const styles = StyleSheet.create({
     color: colors.outline,
     textAlign: 'center',
     paddingVertical: 24,
+  },
+
+  // ── Section headers ────────────────────
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 28,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.onSurface,
+  },
+  seeAll: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 14,
+    color: colors.primary,
+  },
+
+  // ── Discover cards ────────────────────
+  discoverCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+    gap: 12,
+  },
+  discoverIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  discoverInfo: {
+    flex: 1,
+  },
+  discoverTitle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 15,
+    color: colors.onSurface,
+  },
+  discoverMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  joinBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  joinBtnText: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 14,
+    color: colors.primary,
+  },
+
+  // ── Discover empty ────────────────────
+  discoverEmpty: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+  },
+  discoverEmptyText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+    marginBottom: 12,
+  },
+  hostFirstBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 9999,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  hostFirstBtnText: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+
+  // ── Teams row ─────────────────────────
+  teamsRow: {
+    marginBottom: 8,
+  },
+  teamCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 12,
+    width: 140,
+    alignItems: 'center',
+    gap: 6,
+  },
+  teamCardName: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 14,
+    color: colors.onSurface,
+    textAlign: 'center',
+  },
+  teamCardMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
   },
 
   // ── FAB ─────────────────────────────────

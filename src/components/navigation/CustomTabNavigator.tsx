@@ -8,7 +8,7 @@ import { MainTabParamList } from '../../navigation/types';
 import { HomeStackNavigator } from '../../navigation/stacks/HomeStackNavigator';
 import { FacilitiesStackNavigator } from '../../navigation/stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from '../../navigation/stacks/TeamsStackNavigator';
-import { ProfileStackNavigator } from '../../navigation/stacks/ProfileStackNavigator';
+
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -62,9 +62,6 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         break;
       case 'Teams':
         iconName = focused ? 'people' : 'people-outline';
-        break;
-      case 'Profile':
-        iconName = focused ? 'person' : 'person-outline';
         break;
       default:
         iconName = 'help-outline';
@@ -130,13 +127,6 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         component={TeamsStackNavigator}
         options={{
           tabBarLabel: 'Rosters',
-        }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileStackNavigator}
-        options={{
-          tabBarLabel: 'Profile',
         }}
       />
     </Tab.Navigator>

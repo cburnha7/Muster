@@ -1,13 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Modal,
   Switch,
 } from 'react-native';
@@ -16,17 +15,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
 import { FormInput } from '../../components/forms/FormInput';
-import { FormButton } from '../../components/forms/FormButton';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
+import { CreationWizard, WizardStep } from '../../components/wizard/CreationWizard';
+import { SportIconGrid } from '../../components/wizard/SportIconGrid';
+import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
+import { getSportEmoji } from '../../constants/sports';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
 import { addFacility, selectFacilities } from '../../store/slices/facilitiesSlice';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { SportType, CreateFacilityData, Facility } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, Spacing, fonts } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
 // Global flag to prevent multiple submissions
@@ -48,7 +50,7 @@ interface DayHours {
   isClosed: boolean;
 }
 
-export function CreateFacilityScreen(): JSX.Element {
+export function CreateFacilityScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
@@ -61,6 +63,8 @@ export function CreateFacilityScreen(): JSX.Element {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = React.useRef(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdFacilityId, setCreatedFacilityId] = useState<string | null>(null);
   const [duplicates, setDuplicates] = useState<Facility[]>([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [courts, setCourts] = useState<CourtFormData[]>([]);
@@ -68,7 +72,7 @@ export function CreateFacilityScreen(): JSX.Element {
   const [showEditCourtModal, setShowEditCourtModal] = useState(false);
   const [editingCourtId, setEditingCourtId] = useState<string | null>(null);
   const [hoursOfOperation, setHoursOfOperation] = useState<DayHours[]>([]);
-  
+
   const [formData, setFormData] = useState<Partial<CreateFacilityData>>({
     name: '',
     description: '',
@@ -196,10 +200,10 @@ export function CreateFacilityScreen(): JSX.Element {
   };
 
   const handleRemoveCourt = (courtId: string) => {
-    console.log('🗑️ handleRemoveCourt called with:', courtId);
+    console.log('handleRemoveCourt called with:', courtId);
     setCourts(prevCourts => {
       const filtered = prevCourts.filter((c) => c.id !== courtId);
-      console.log('🗑️ Filtered courts:', filtered.length, 'from', prevCourts.length);
+      console.log('Filtered courts:', filtered.length, 'from', prevCourts.length);
       return filtered;
     });
   };
@@ -246,7 +250,7 @@ export function CreateFacilityScreen(): JSX.Element {
 
   const createFacility = useCallback(async () => {
     try {
-      console.log('🏗️ Creating facility...');
+      console.log('Creating facility...');
       const facilityData = {
         name: formData.name || '',
         description: formData.description || '',
@@ -275,14 +279,14 @@ export function CreateFacilityScreen(): JSX.Element {
         requiresBookingConfirmation,
       };
 
-      console.log('📤 Sending facility creation request...');
+      console.log('Sending facility creation request...');
       const newFacility = await facilityService.createFacility(facilityData as any);
-      console.log('✅ Facility created:', newFacility.id);
+      console.log('Facility created:', newFacility.id);
 
       // Create courts if any were added
       const createdCourts = [];
       if (courts.length > 0) {
-        console.log(`🏟️ Creating ${courts.length} courts...`);
+        console.log(`Creating ${courts.length} courts...`);
         for (let i = 0; i < courts.length; i++) {
           const court = courts[i];
           if (court) {
@@ -295,7 +299,7 @@ export function CreateFacilityScreen(): JSX.Element {
               displayOrder: i,
             });
             createdCourts.push(createdCourt);
-            console.log(`✅ Court ${i + 1} created:`, createdCourt.id);
+            console.log(`Court ${i + 1} created:`, createdCourt.id);
           }
         }
       }
@@ -306,22 +310,17 @@ export function CreateFacilityScreen(): JSX.Element {
         courts: createdCourts,
       };
       dispatch(addFacility(facilityWithCourts));
-      console.log('✅ Facility added to Redux with', createdCourts.length, 'courts');
+      console.log('Facility added to Redux with', createdCourts.length, 'courts');
 
-      // Reset submitting state before navigation
+      // Reset submitting state and show success
       setIsSubmitting(false);
       isSubmittingRef.current = false;
       isCreatingFacility = false;
+      setCreatedFacilityId(newFacility.id);
+      setShowSuccess(true);
 
-      // Navigate back with refresh parameter to force list reload
-      console.log('🧭 Navigating back...');
-      navigation.navigate('Facilities' as never, { 
-        screen: 'FacilitiesList',
-        params: { refresh: Date.now() }
-      } as never);
-      
     } catch (err: any) {
-      console.error('❌ Create facility error:', err);
+      console.error('Create facility error:', err);
       setIsSubmitting(false);
       isSubmittingRef.current = false;
       isCreatingFacility = false;
@@ -331,11 +330,11 @@ export function CreateFacilityScreen(): JSX.Element {
 
   const handleSubmit = useCallback(async () => {
     const timestamp = Date.now();
-    console.log(`🔘 [${timestamp}] handleSubmit called, isSubmitting:`, isSubmitting, 'ref:', isSubmittingRef.current, 'global:', isCreatingFacility);
-    
+    console.log(`[${timestamp}] handleSubmit called, isSubmitting:`, isSubmitting, 'ref:', isSubmittingRef.current, 'global:', isCreatingFacility);
+
     // Triple check - state, ref, AND global flag
     if (isSubmitting || isSubmittingRef.current || isCreatingFacility) {
-      console.log(`⚠️ [${timestamp}] Already submitting, ignoring duplicate call`);
+      console.log(`[${timestamp}] Already submitting, ignoring duplicate call`);
       return;
     }
 
@@ -357,7 +356,7 @@ export function CreateFacilityScreen(): JSX.Element {
     }
 
     try {
-      console.log(`🔒 [${timestamp}] Setting all flags to true`);
+      console.log(`[${timestamp}] Setting all flags to true`);
       loggingService.logButton('Create Ground', 'CreateFacilityScreen');
       setIsSubmitting(true);
       isSubmittingRef.current = true;
@@ -371,7 +370,7 @@ export function CreateFacilityScreen(): JSX.Element {
       });
 
       if (duplicateCheck.length > 0) {
-        console.log(`⚠️ [${timestamp}] Duplicates found, showing modal`);
+        console.log(`[${timestamp}] Duplicates found, showing modal`);
         setDuplicates(duplicateCheck);
         setShowDuplicateModal(true);
         setIsSubmitting(false);
@@ -382,7 +381,7 @@ export function CreateFacilityScreen(): JSX.Element {
 
       await createFacility();
     } catch (err: any) {
-      console.error(`❌ [${timestamp}] handleSubmit error:`, err);
+      console.error(`[${timestamp}] handleSubmit error:`, err);
       Alert.alert('Error', err.message || 'Failed to create ground');
       setIsSubmitting(false);
       isSubmittingRef.current = false;
@@ -403,275 +402,401 @@ export function CreateFacilityScreen(): JSX.Element {
     }
   };
 
-  return (
-    <>
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {/* Basic Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+  // ── Wizard Steps ──────────────────────────────────────────────
 
-          <FormInput
-            label="Ground Name *"
+  const wizardSteps: WizardStep[] = useMemo(() => [
+    // Step 1: Name your facility
+    {
+      key: 'name',
+      headline: 'Name your facility',
+      subtitle: 'Give your ground a name and pick which sports it supports.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <TextInput
+            style={styles.textInput}
             value={formData.name || ''}
             onChangeText={(value) => updateField('name', value)}
-            placeholder="Enter ground name"
-            error={errors.name || ''}
+            placeholder="Facility name"
+            placeholderTextColor={colors.outline}
           />
-
-          <FormInput
-            label="Description *"
+          <TextInput
+            style={[styles.textInput, styles.textArea]}
             value={formData.description || ''}
             onChangeText={(value) => updateField('description', value)}
-            placeholder="Describe your ground"
+            placeholder="Describe your facility"
+            placeholderTextColor={colors.outline}
             multiline
             numberOfLines={4}
-            error={errors.description || ""}
+            textAlignVertical="top"
           />
-        </View>
+          <Text style={styles.fieldLabel}>Sport types</Text>
+          <SportIconGrid
+            selected={formData.sportTypes || []}
+            onSelect={(sport) => toggleSportType(sport as SportType)}
+            multiSelect
+          />
+        </ScrollView>
+      ),
+      validate: () =>
+        !!(formData.name?.trim()) &&
+        !!(formData.description?.trim()) &&
+        (formData.sportTypes || []).length > 0,
+    },
 
-        {/* Address */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Address</Text>
-
-          <FormInput
-            label="Street Address *"
+    // Step 2: Where is it?
+    {
+      key: 'location',
+      headline: 'Where is it?',
+      subtitle: 'Enter the street address so players can find you.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <TextInput
+            style={styles.textInput}
             value={formData.address?.street || ''}
             onChangeText={(value) => updateNestedField('address', 'street', value)}
-            placeholder="123 Main St"
-            error={errors.street || ""}
+            placeholder="Street address"
+            placeholderTextColor={colors.outline}
           />
-
-          <FormInput
-            label="City *"
+          <TextInput
+            style={styles.textInput}
             value={formData.address?.city || ''}
             onChangeText={(value) => updateNestedField('address', 'city', value)}
             placeholder="City"
-            error={errors.city || ""}
+            placeholderTextColor={colors.outline}
           />
-
           <View style={styles.row}>
-            <View style={styles.halfWidth}>
-              <FormInput
-                label="State *"
-                value={formData.address?.state || ''}
-                onChangeText={(value) => updateNestedField('address', 'state', value)}
-                placeholder="State"
-                error={errors.state || ""}
-              />
-            </View>
-            <View style={styles.halfWidth}>
-              <FormInput
-                label="ZIP Code *"
-                value={formData.address?.zipCode || ''}
-                onChangeText={(value) => updateNestedField('address', 'zipCode', value)}
-                placeholder="12345"
-                keyboardType="numeric"
-                error={errors.zipCode || ""}
-              />
-            </View>
+            <TextInput
+              style={[styles.textInput, styles.halfInput]}
+              value={formData.address?.state || ''}
+              onChangeText={(value) => updateNestedField('address', 'state', value)}
+              placeholder="State"
+              placeholderTextColor={colors.outline}
+            />
+            <TextInput
+              style={[styles.textInput, styles.halfInput]}
+              value={formData.address?.zipCode || ''}
+              onChangeText={(value) => updateNestedField('address', 'zipCode', value)}
+              placeholder="ZIP code"
+              placeholderTextColor={colors.outline}
+              keyboardType="numeric"
+            />
           </View>
-        </View>
+        </ScrollView>
+      ),
+      validate: () =>
+        !!(formData.address?.street?.trim()) &&
+        !!(formData.address?.city?.trim()) &&
+        !!(formData.address?.state?.trim()) &&
+        !!(formData.address?.zipCode?.trim()),
+    },
 
-        {/* Contact Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-
-          <FormInput
-            label="Name"
+    // Step 3: Contact info
+    {
+      key: 'contact',
+      headline: 'Contact info',
+      subtitle: 'Optional details so players can reach you.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <TextInput
+            style={styles.textInput}
             value={formData.contactInfo?.name || ''}
             onChangeText={(value) => updateNestedField('contactInfo', 'name', value)}
-            placeholder="John Doe"
+            placeholder="Contact name"
+            placeholderTextColor={colors.outline}
           />
-
-          <FormInput
-            label="Phone"
+          <TextInput
+            style={styles.textInput}
             value={formData.contactInfo?.phone || ''}
             onChangeText={(value) => updateNestedField('contactInfo', 'phone', value)}
-            placeholder="(555) 123-4567"
+            placeholder="Phone number"
+            placeholderTextColor={colors.outline}
             keyboardType="phone-pad"
           />
-
-          <FormInput
-            label="Email"
+          <TextInput
+            style={styles.textInput}
             value={formData.contactInfo?.email || ''}
             onChangeText={(value) => updateNestedField('contactInfo', 'email', value)}
-            placeholder="contact@ground.com"
+            placeholder="Email address"
+            placeholderTextColor={colors.outline}
             keyboardType="email-address"
             autoCapitalize="none"
           />
-
-          <FormInput
-            label="Website"
+          <TextInput
+            style={styles.textInput}
             value={formData.contactInfo?.website || ''}
             onChangeText={(value) => updateNestedField('contactInfo', 'website', value)}
-            placeholder="https://ground.com"
+            placeholder="Website URL"
+            placeholderTextColor={colors.outline}
             keyboardType="url"
             autoCapitalize="none"
           />
-        </View>
+        </ScrollView>
+      ),
+      validate: () => true,
+    },
 
-        {/* Sport Types */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sport Types *</Text>
-          {errors.sportTypes && <Text style={styles.errorText}>{errors.sportTypes}</Text>}
-          <View style={styles.sportTypeContainer}>
-            {Object.values(SportType).map((sport) => {
-              const isSelected = formData.sportTypes?.includes(sport);
-              return (
-                <TouchableOpacity
-                  key={sport}
-                  style={[styles.sportChip, isSelected && styles.sportChipSelected]}
-                  onPress={() => toggleSportType(sport)}
-                >
-                  <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
-                    {sport.charAt(0).toUpperCase() + sport.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+    // Step 4: Courts and settings
+    {
+      key: 'settings',
+      headline: 'Courts and settings',
+      subtitle: 'Add courts, set hours, and configure policies.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {/* Courts/Fields */}
+          <View style={styles.settingsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Courts / Fields</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowAddCourtModal(true)}
+              >
+                <Ionicons name="add-circle" size={24} color={colors.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.addButtonText}>Add Court</Text>
+              </TouchableOpacity>
+            </View>
 
-        {/* Hours of Operation */}
-        <HoursOfOperationSection
-          hours={hoursOfOperation}
-          onChange={setHoursOfOperation}
-        />
-
-        {/* Courts/Fields */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Courts/Fields</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => setShowAddCourtModal(true)}
-            >
-              <Ionicons name="add-circle" size={24} color={colors.cobalt} style={{ marginRight: Spacing.xs }} />
-              <Text style={styles.addButtonText}>Add Court</Text>
-            </TouchableOpacity>
-          </View>
-
-          {courts.length === 0 ? (
-            <Text style={styles.emptyText}>
-              No courts added yet. Add courts to set individual pricing.
-            </Text>
-          ) : (
-            <>
-              {courts.map((court) => (
-                <View key={court.id} style={styles.courtCard}>
-                  <View style={styles.courtInfo}>
-                    <Text style={styles.courtName}>{court.name}</Text>
-                    <Text style={styles.courtDetails}>
-                      {court.sportType.charAt(0).toUpperCase() + court.sportType.slice(1)} • 
-                      {court.isIndoor ? ' Indoor' : ' Outdoor'} • 
-                      Capacity: {court.capacity}
-                    </Text>
-                    <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
+            {courts.length === 0 ? (
+              <Text style={styles.emptyText}>
+                No courts added yet. Add courts to set individual pricing.
+              </Text>
+            ) : (
+              <>
+                {courts.map((court) => (
+                  <View key={court.id} style={styles.courtCard}>
+                    <View style={styles.courtInfo}>
+                      <Text style={styles.courtName}>{court.name}</Text>
+                      <Text style={styles.courtDetails}>
+                        {court.sportType.charAt(0).toUpperCase() + court.sportType.slice(1)} •
+                        {court.isIndoor ? ' Indoor' : ' Outdoor'} •
+                        Capacity: {court.capacity}
+                      </Text>
+                      <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
+                    </View>
+                    <View style={styles.courtActions}>
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        activeOpacity={0.7}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        onPress={() => {
+                          console.log('TRASH BUTTON CLICKED!', court.id);
+                          alert('Delete button clicked for: ' + court.name);
+                          handleRemoveCourt(court.id);
+                        }}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={20}
+                          color={colors.error}
+                          pointerEvents="none"
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          console.log('Edit button pressed for court:', court.id);
+                          handleEditCourt(court.id);
+                        }}
+                      >
+                        <Ionicons name="pencil-outline" size={20} color={colors.primary} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.courtActions}>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      onPress={() => {
-                        console.log('🗑️ TRASH BUTTON CLICKED!', court.id);
-                        alert('Delete button clicked for: ' + court.name);
-                        handleRemoveCourt(court.id);
-                      }}
-                    >
-                      <Ionicons 
-                        name="trash-outline" 
-                        size={20} 
-                        color={colors.heart}
-                        pointerEvents="none"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        console.log('✏️ Edit button pressed for court:', court.id);
-                        handleEditCourt(court.id);
-                      }}
-                    >
-                      <Ionicons name="pencil-outline" size={20} color={colors.cobalt} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-            </>
+                ))}
+              </>
+            )}
+          </View>
+
+          {/* Hours of Operation */}
+          <HoursOfOperationSection
+            hours={hoursOfOperation}
+            onChange={setHoursOfOperation}
+          />
+
+          {/* Cancellation Policy */}
+          <View style={styles.settingsSection}>
+            <CancellationPolicyPicker
+              value={formData.cancellationPolicyHours ?? null}
+              onChange={(val) => updateField('cancellationPolicyHours', val)}
+            />
+          </View>
+
+          {/* Booking Confirmation Requirement */}
+          <View style={styles.settingsSection}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleInfo}>
+                <Text style={styles.toggleLabel}>Requires Booking Confirmation</Text>
+                <Text style={styles.toggleDescription}>
+                  All reservation requests must be approved before they are confirmed
+                </Text>
+              </View>
+              <Switch
+                value={requiresBookingConfirmation}
+                onValueChange={(val) => {
+                  setRequiresBookingConfirmation(val);
+                  if (!val) setRequiresInsurance(false);
+                }}
+                trackColor={{ false: colors.surfaceContainerLowest, true: colors.primaryFixed }}
+                thumbColor={requiresBookingConfirmation ? colors.primary : colors.outline}
+              />
+            </View>
+          </View>
+
+          {/* Insurance Requirement -- only visible when confirmation is on */}
+          {requiresBookingConfirmation && (
+          <View style={styles.settingsSection}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleInfo}>
+                <Text style={styles.toggleLabel}>Requires Proof of Insurance</Text>
+                <Text style={styles.toggleDescription}>
+                  Renters must attach a valid insurance document when reserving a court
+                </Text>
+              </View>
+              <Switch
+                value={requiresInsurance}
+                onValueChange={setRequiresInsurance}
+                trackColor={{ false: colors.surfaceContainerLowest, true: colors.primaryFixed }}
+                thumbColor={requiresInsurance ? colors.primary : colors.outline}
+              />
+            </View>
+          </View>
           )}
-        </View>
 
-        {/* Cancellation Policy */}
-        <View style={styles.section}>
-          <CancellationPolicyPicker
-            value={formData.cancellationPolicyHours ?? null}
-            onChange={(val) => updateField('cancellationPolicyHours', val)}
-          />
-        </View>
+          {/* Spacer for scroll */}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      ),
+      validate: () => true,
+    },
 
-        {/* Booking Confirmation Requirement */}
-        <View style={styles.section}>
-          <View style={styles.insuranceToggleRow}>
-            <View style={styles.insuranceToggleInfo}>
-              <Text style={styles.insuranceToggleLabel}>Requires Booking Confirmation</Text>
-              <Text style={styles.insuranceToggleDescription}>
-                All reservation requests must be approved before they are confirmed
+    // Step 5: Review and list
+    {
+      key: 'review',
+      headline: 'Review and list',
+      subtitle: 'Double-check your details before going live.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.reviewCard}>
+            <Text style={styles.reviewName}>{formData.name}</Text>
+
+            <View style={styles.reviewRow}>
+              <Text style={styles.reviewLabel}>Address</Text>
+              <Text style={styles.reviewValue}>
+                {formData.address?.street}, {formData.address?.city}, {formData.address?.state} {formData.address?.zipCode}
               </Text>
             </View>
-            <Switch
-              value={requiresBookingConfirmation}
-              onValueChange={(val) => {
-                setRequiresBookingConfirmation(val);
-                if (!val) setRequiresInsurance(false);
-              }}
-              trackColor={{ false: colors.white, true: colors.cobaltLight }}
-              thumbColor={requiresBookingConfirmation ? colors.cobalt : colors.surface}
-            />
-          </View>
-        </View>
 
-        {/* Insurance Requirement — only visible when confirmation is on */}
-        {requiresBookingConfirmation && (
-        <View style={styles.section}>
-          <View style={styles.insuranceToggleRow}>
-            <View style={styles.insuranceToggleInfo}>
-              <Text style={styles.insuranceToggleLabel}>Requires Proof of Insurance</Text>
-              <Text style={styles.insuranceToggleDescription}>
-                Renters must attach a valid insurance document when reserving a court
+            <View style={styles.reviewDivider} />
+
+            <View style={styles.reviewRow}>
+              <Text style={styles.reviewLabel}>Sports</Text>
+              <Text style={styles.reviewValue}>
+                {(formData.sportTypes || []).map((s) => getSportEmoji(s)).join('  ')}
               </Text>
             </View>
-            <Switch
-              value={requiresInsurance}
-              onValueChange={setRequiresInsurance}
-              trackColor={{ false: colors.white, true: colors.cobaltLight }}
-              thumbColor={requiresInsurance ? colors.cobalt : colors.surface}
-            />
-          </View>
-        </View>
-        )}
 
-        {/* Submit Button */}
-        <View style={styles.buttonContainer}>
-          <FormButton
-            title="Create Ground"
-            onPress={handleSubmit}
-            loading={isSubmitting}
-            disabled={isSubmitting}
-          />
-          <FormButton
-            title="Cancel"
-            variant="secondary"
-            onPress={() => navigation.goBack()}
-            disabled={isSubmitting}
-          />
-        </View>
-      </ScrollView>
+            <View style={styles.reviewDivider} />
+
+            <View style={styles.reviewRow}>
+              <Text style={styles.reviewLabel}>Courts</Text>
+              <Text style={styles.reviewValue}>
+                {courts.length === 0 ? 'None' : `${courts.length} court${courts.length === 1 ? '' : 's'}`}
+              </Text>
+            </View>
+
+            {formData.contactInfo?.name || formData.contactInfo?.phone || formData.contactInfo?.email ? (
+              <>
+                <View style={styles.reviewDivider} />
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Contact</Text>
+                  <Text style={styles.reviewValue}>
+                    {[formData.contactInfo?.name, formData.contactInfo?.phone, formData.contactInfo?.email]
+                      .filter(Boolean)
+                      .join(' / ')}
+                  </Text>
+                </View>
+              </>
+            ) : null}
+
+            {requiresBookingConfirmation && (
+              <>
+                <View style={styles.reviewDivider} />
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Confirmation</Text>
+                  <Text style={styles.reviewValue}>Required</Text>
+                </View>
+              </>
+            )}
+
+            {requiresInsurance && (
+              <>
+                <View style={styles.reviewDivider} />
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Insurance</Text>
+                  <Text style={styles.reviewValue}>Required</Text>
+                </View>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      ),
+      validate: () => true,
+    },
+  ], [formData, courts, hoursOfOperation, requiresBookingConfirmation, requiresInsurance]);
+
+  // ── Success screen ────────────────────────────────────────────
+
+  const successEmoji = (formData.sportTypes && formData.sportTypes.length > 0)
+    ? getSportEmoji(formData.sportTypes[0] as string)
+    : '\u{1F3DF}\u{FE0F}';
+
+  const successScreen = (
+    <WizardSuccessScreen
+      emoji={successEmoji}
+      title={`${formData.name} is live!`}
+      summaryRows={[
+        { label: 'Address', value: `${formData.address?.city}, ${formData.address?.state}` },
+        { label: 'Sports', value: (formData.sportTypes || []).map((s) => getSportEmoji(s)).join('  ') },
+        { label: 'Courts', value: courts.length === 0 ? 'None' : `${courts.length}` },
+      ]}
+      actions={[
+        {
+          label: 'Go to facility',
+          icon: 'arrow-forward',
+          onPress: () => {
+            if (createdFacilityId) {
+              (navigation as any).navigate('FacilityDetail', { facilityId: createdFacilityId });
+            } else {
+              (navigation as any).navigate('Facilities', { screen: 'FacilitiesList', params: { refresh: Date.now() } });
+            }
+          },
+          variant: 'primary' as const,
+        },
+        {
+          label: 'Back to grounds',
+          icon: 'grid-outline',
+          onPress: () => {
+            (navigation as any).navigate('Facilities', { screen: 'FacilitiesList', params: { refresh: Date.now() } });
+          },
+          variant: 'secondary' as const,
+        },
+      ]}
+    />
+  );
+
+  // ── Render ────────────────────────────────────────────────────
+
+  return (
+    <>
+      <CreationWizard
+        steps={wizardSteps}
+        onComplete={handleSubmit}
+        onBack={() => navigation.goBack()}
+        isSubmitting={isSubmitting}
+        submitLabel="Create Ground"
+        showSuccess={showSuccess}
+        successScreen={successScreen}
+      />
 
       {/* Add Court Modal */}
       <Modal
@@ -685,11 +810,11 @@ export function CreateFacilityScreen(): JSX.Element {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Court/Field</Text>
               <TouchableOpacity onPress={() => setShowAddCourtModal(false)}>
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
+                <Ionicons name="close" size={24} color={colors.onSurface} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            <ScrollView style={styles.modalScrollContent}>
               <FormInput
                 label="Court Name *"
                 value={newCourt.name}
@@ -730,7 +855,7 @@ export function CreateFacilityScreen(): JSX.Element {
                 onPress={() => setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })}
               >
                 <View style={[styles.checkbox, newCourt.isIndoor && styles.checkboxChecked]}>
-                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.textInverse} />}
+                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.surfaceContainerLowest} />}
                 </View>
                 <Text style={styles.checkboxLabel}>Indoor Court</Text>
               </TouchableOpacity>
@@ -798,11 +923,11 @@ export function CreateFacilityScreen(): JSX.Element {
                   pricePerHour: 0,
                 });
               }}>
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
+                <Ionicons name="close" size={24} color={colors.onSurface} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            <ScrollView style={styles.modalScrollContent}>
               <FormInput
                 label="Court Name *"
                 value={newCourt.name}
@@ -843,7 +968,7 @@ export function CreateFacilityScreen(): JSX.Element {
                 onPress={() => setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })}
               >
                 <View style={[styles.checkbox, newCourt.isIndoor && styles.checkboxChecked]}>
-                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.textInverse} />}
+                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.surfaceContainerLowest} />}
                 </View>
                 <Text style={styles.checkboxLabel}>Indoor Court</Text>
               </TouchableOpacity>
@@ -896,8 +1021,8 @@ export function CreateFacilityScreen(): JSX.Element {
         onRequestClose={() => setShowDuplicateModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
+          <View style={styles.duplicateModalContent}>
+            <View style={styles.duplicateModalHeader}>
               <Ionicons name="warning" size={32} color={colors.gold} />
               <Text style={styles.modalTitle}>Grounds Already Exist</Text>
             </View>
@@ -949,7 +1074,6 @@ export function CreateFacilityScreen(): JSX.Element {
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
 
       <UpsellModal
         visible={showUpsell}
@@ -965,159 +1089,193 @@ export function CreateFacilityScreen(): JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    paddingBottom: 40,
-  },
-  section: {
-    backgroundColor: '#FFFFFF',
-    padding: Spacing.lg,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.md,
+  // ── Wizard step inputs ─────────────────────────────
+  textInput: {
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     borderRadius: 12,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontFamily: fonts.body,
+    color: colors.onSurface,
+    backgroundColor: colors.surfaceContainerLowest,
+    marginBottom: 14,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  fieldLabel: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+
+  // ── Step 4: Settings ──────────────────────────────
+  settingsSection: {
+    backgroundColor: colors.surfaceContainerLowest,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 14,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: 12,
   },
   sectionTitle: {
-    ...TextStyles.h3,
-    color: colors.textPrimary,
-  },
-  sectionSubtitle: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
-    marginBottom: Spacing.md,
+    fontFamily: fonts.heading,
+    fontSize: 17,
+    color: colors.onSurface,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   addButtonText: {
-    ...TextStyles.body,
-    color: colors.cobalt,
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.primary,
     fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
-    marginHorizontal: -Spacing.sm,
-  },
-  halfWidth: {
-    flex: 1,
-    paddingHorizontal: Spacing.sm,
-  },
-  sportTypeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  sportChip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    marginRight: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-  },
-  sportChipText: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
-  },
-  sportChipTextSelected: {
-    color: colors.textInverse,
-    fontWeight: '600',
-  },
-  errorText: {
-    ...TextStyles.caption,
-    color: colors.heart,
-    marginBottom: Spacing.sm,
   },
   emptyText: {
-    ...TextStyles.body,
-    color: colors.textTertiary,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
     textAlign: 'center',
-    paddingVertical: Spacing.lg,
+    paddingVertical: 16,
   },
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    padding: Spacing.md,
-    borderRadius: 8,
-    marginBottom: Spacing.sm,
+    backgroundColor: colors.background,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   courtInfo: {
     flex: 1,
   },
   courtName: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
-    marginBottom: Spacing.xs,
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.onSurface,
+    marginBottom: 2,
   },
   courtDetails: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
-    marginBottom: Spacing.xs,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    marginBottom: 2,
   },
   courtPrice: {
-    ...TextStyles.body,
-    color: colors.cobalt,
-    fontWeight: '600',
+    fontFamily: fonts.label,
+    fontSize: 14,
+    color: colors.primary,
   },
   courtActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   editButton: {
-    padding: Spacing.md,
-    marginRight: Spacing.xs,
+    padding: 8,
+    marginRight: 2,
   },
   removeButton: {
-    padding: Spacing.md,
+    padding: 8,
   },
-  helperText: {
-    ...TextStyles.caption,
-    color: colors.textTertiary,
-    marginTop: -Spacing.sm,
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  buttonContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.lg,
+  toggleInfo: {
+    flex: 1,
+    marginRight: 12,
   },
+  toggleLabel: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.onSurface,
+    marginBottom: 2,
+  },
+  toggleDescription: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+  },
+
+  // ── Step 5: Review ─────────────────────────────────
+  reviewCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: colors.onSurface,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewName: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.onSurface,
+    marginBottom: 16,
+  },
+  reviewRow: {
+    paddingVertical: 10,
+  },
+  reviewLabel: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    marginBottom: 2,
+  },
+  reviewValue: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.onSurface,
+  },
+  reviewDivider: {
+    height: 1,
+    backgroundColor: colors.outlineVariant,
+  },
+
+  // ── Modals ─────────────────────────────────────────
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.lg,
+    padding: 20,
   },
   addCourtModal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     width: '100%',
     maxWidth: 500,
     maxHeight: '90%',
   },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
+  modalScrollContent: {
+    padding: Spacing.lg,
+  },
+  duplicateModalContent: {
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     padding: Spacing.lg,
     width: '100%',
@@ -1130,18 +1288,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.outlineVariant,
+  },
+  duplicateModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   modalTitle: {
-    ...TextStyles.h3,
-    color: colors.textPrimary,
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.onSurface,
   },
   inputLabel: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
+    fontFamily: fonts.label,
+    fontSize: 14,
+    color: colors.onSurface,
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
+  },
+  sportTypeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  sportChip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    backgroundColor: colors.background,
+    marginRight: Spacing.sm,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  sportChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  sportChipText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+  },
+  sportChipTextSelected: {
+    color: colors.surfaceContainerLowest,
+    fontWeight: '600',
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -1153,24 +1346,25 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.outline,
     marginRight: Spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   checkboxLabel: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurface,
   },
   modalActions: {
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: colors.outlineVariant,
   },
   modalButton: {
     flex: 1,
@@ -1180,24 +1374,27 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   cancelButton: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   cancelButtonText: {
-    ...TextStyles.body,
+    fontFamily: fonts.ui,
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.onSurfaceVariant,
   },
   addCourtButton: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
   },
   addCourtButtonText: {
-    ...TextStyles.body,
+    fontFamily: fonts.ui,
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.textInverse,
+    color: colors.surfaceContainerLowest,
   },
   modalDescription: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
     marginBottom: Spacing.lg,
     textAlign: 'center',
   },
@@ -1206,19 +1403,23 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   duplicateCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   duplicateName: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.onSurface,
     marginBottom: Spacing.xs,
   },
   duplicateAddress: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
     marginBottom: Spacing.sm,
   },
   sportTypeRow: {
@@ -1226,7 +1427,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   sportBadge: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 12,
@@ -1234,14 +1435,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   sportBadgeText: {
-    ...TextStyles.caption,
-    color: colors.textInverse,
-    fontWeight: '600',
+    fontFamily: fonts.label,
     fontSize: 11,
+    color: colors.surfaceContainerLowest,
+    fontWeight: '600',
   },
   modalQuestion: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.onSurface,
     textAlign: 'center',
     marginBottom: Spacing.lg,
     fontWeight: '500',
@@ -1250,31 +1452,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   continueButton: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
   },
   continueButtonText: {
-    ...TextStyles.body,
+    fontFamily: fonts.ui,
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.textInverse,
-  },
-  insuranceToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  insuranceToggleInfo: {
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  insuranceToggleLabel: {
-    fontFamily: 'PlusJakartaSans_600SemiBold',
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.ink,
-    marginBottom: Spacing.xs,
-  },
-  insuranceToggleDescription: {
-    ...TextStyles.body,
-    color: colors.inkFaint,
+    color: colors.surfaceContainerLowest,
   },
 });

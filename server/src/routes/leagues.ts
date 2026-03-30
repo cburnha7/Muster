@@ -450,6 +450,14 @@ router.post('/', optionalAuthMiddleware, requireNonDependent, requirePlan('leagu
       }
     }
 
+    // Messaging hook: create league channels
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.createLeagueChannels(league.id, organizerId, league.name || 'League');
+    } catch (msgErr) {
+      console.error('Failed to create league channels:', msgErr);
+    }
+
     res.status(201).json(league);
   } catch (error) {
     console.error('Error creating league:', error);
@@ -1133,6 +1141,24 @@ router.put('/:id/join-requests/:requestId', async (req: Request, res: Response) 
         // Event-driven: check if league is now ready to schedule (Req 2.2)
         checkLeagueReady(id).catch(() => {});
 
+        // Messaging hook: add team members to league General channel
+        try {
+          const { MessagingService } = await import('../services/MessagingService');
+          const convs = await MessagingService.getConversationsForLeague(id);
+          const general = convs.find((c) => c.name?.includes('General'));
+          if (general && membership.team) {
+            const members = await prisma.teamMember.findMany({
+              where: { teamId: membership.team.id, status: 'active' },
+              select: { userId: true },
+            });
+            for (const member of members) {
+              await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
+            }
+          }
+        } catch (msgErr) {
+          console.error('Failed to add team to league channel:', msgErr);
+        }
+
         return res.json(result);
       }
 
@@ -1157,6 +1183,24 @@ router.put('/:id/join-requests/:requestId', async (req: Request, res: Response) 
 
       // Event-driven: check if league is now ready to schedule (Req 2.2)
       checkLeagueReady(id).catch(() => {});
+
+      // Messaging hook: add team members to league General channel
+      try {
+        const { MessagingService } = await import('../services/MessagingService');
+        const convs = await MessagingService.getConversationsForLeague(id);
+        const general = convs.find((c) => c.name?.includes('General'));
+        if (general && membership.team) {
+          const members = await prisma.teamMember.findMany({
+            where: { teamId: membership.team.id, status: 'active' },
+            select: { userId: true },
+          });
+          for (const member of members) {
+            await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
+          }
+        }
+      } catch (msgErr) {
+        console.error('Failed to add team to league channel:', msgErr);
+      }
 
       return res.json(updatedMembership);
     }
@@ -1379,6 +1423,24 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
         // Event-driven: check if league is now ready to schedule (Req 2.2)
         checkLeagueReady(id).catch(() => {});
 
+        // Messaging hook: add team members to league General channel
+        try {
+          const { MessagingService } = await import('../services/MessagingService');
+          const convs = await MessagingService.getConversationsForLeague(id);
+          const general = convs.find((c) => c.name?.includes('General'));
+          if (general && membership.team) {
+            const members = await prisma.teamMember.findMany({
+              where: { teamId: membership.team.id, status: 'active' },
+              select: { userId: true },
+            });
+            for (const member of members) {
+              await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
+            }
+          }
+        } catch (msgErr) {
+          console.error('Failed to add team to league channel:', msgErr);
+        }
+
         return res.json(result);
       }
 
@@ -1412,6 +1474,24 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
 
       // Event-driven: check if league is now ready to schedule (Req 2.2)
       checkLeagueReady(id).catch(() => {});
+
+      // Messaging hook: add team members to league General channel
+      try {
+        const { MessagingService } = await import('../services/MessagingService');
+        const convs = await MessagingService.getConversationsForLeague(id);
+        const general = convs.find((c) => c.name?.includes('General'));
+        if (general && membership.team) {
+          const members = await prisma.teamMember.findMany({
+            where: { teamId: membership.team.id, status: 'active' },
+            select: { userId: true },
+          });
+          for (const member of members) {
+            await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
+          }
+        }
+      } catch (msgErr) {
+        console.error('Failed to add team to league channel:', msgErr);
+      }
 
       return res.json(updatedMembership);
     }

@@ -781,6 +781,64 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Complete onboarding
+router.put('/onboarding', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { intents, sportPreferences, locationCity, locationState, locationLat, locationLng } = req.body;
+
+    if (!intents || !Array.isArray(intents) || intents.length === 0) {
+      return res.status(400).json({ error: 'At least one intent is required' });
+    }
+    if (!sportPreferences || !Array.isArray(sportPreferences) || sportPreferences.length === 0) {
+      return res.status(400).json({ error: 'At least one sport preference is required' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        intents,
+        sportPreferences,
+        locationCity: locationCity || null,
+        locationState: locationState || null,
+        locationLat: locationLat || null,
+        locationLng: locationLng || null,
+        onboardingComplete: true,
+      },
+    });
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Onboarding error:', error);
+    res.status(500).json({ error: 'Failed to complete onboarding' });
+  }
+});
+
+// Update user intents
+router.put('/intents', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { intents } = req.body;
+    if (!intents || !Array.isArray(intents) || intents.length === 0) {
+      return res.status(400).json({ error: 'At least one intent is required' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { intents },
+    });
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Update intents error:', error);
+    res.status(500).json({ error: 'Failed to update intents' });
+  }
+});
+
 // Get user profile by ID
 router.get('/:id', async (req, res) => {
   try {

@@ -69,7 +69,7 @@ export function ContextSwitcher() {
           <Image source={{ uri: activeImage }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Ionicons name="person" size={18} color={colors.inkFaint} />
+            <Ionicons name="person" size={18} color={colors.outline} />
           </View>
         )}
         <Text style={styles.activeName} numberOfLines={1}>
@@ -80,7 +80,7 @@ export function ContextSwitcher() {
             <Text style={styles.dependentBadgeText}>Dependent</Text>
           </View>
         )}
-        <Ionicons name="chevron-down" size={18} color={colors.inkFaint} />
+        <Ionicons name="chevron-down" size={18} color={colors.outline} />
       </TouchableOpacity>
 
       <Modal
@@ -108,14 +108,14 @@ export function ContextSwitcher() {
                 />
               ) : (
                 <View style={[styles.optionAvatar, styles.avatarPlaceholder]}>
-                  <Ionicons name="person" size={16} color={colors.inkFaint} />
+                  <Ionicons name="person" size={16} color={colors.outline} />
                 </View>
               )}
               <Text style={styles.optionName} numberOfLines={1}>
                 {guardian.firstName} {guardian.lastName}
               </Text>
               {!activeUserId && (
-                <Ionicons name="checkmark-circle" size={20} color={colors.cobalt} />
+                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
               )}
             </TouchableOpacity>
 
@@ -136,7 +136,7 @@ export function ContextSwitcher() {
                   />
                 ) : (
                   <View style={[styles.optionAvatar, styles.avatarPlaceholder]}>
-                    <Ionicons name="person" size={16} color={colors.inkFaint} />
+                    <Ionicons name="person" size={16} color={colors.outline} />
                   </View>
                 )}
                 <Text style={styles.optionName} numberOfLines={1}>
@@ -146,7 +146,7 @@ export function ContextSwitcher() {
                   <Ionicons
                     name="checkmark-circle"
                     size={20}
-                    color={colors.cobalt}
+                    color={colors.primary}
                   />
                 )}
               </TouchableOpacity>
@@ -167,16 +167,16 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: Spacing.sm,
   },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     padding: 14,
-    shadowColor: '#000',
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -195,12 +195,12 @@ const styles = StyleSheet.create({
   activeName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.onSurface,
     flex: 1,
     marginLeft: Spacing.md,
   },
   dependentBadge: {
-    backgroundColor: `${colors.gold}20`,
+    backgroundColor: `${colors.tertiary}20`,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   dependentBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.gold,
+    color: colors.tertiary,
   },
   overlay: {
     flex: 1,
@@ -218,12 +218,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dropdown: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     width: '85%',
     maxWidth: 360,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   dropdownTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   optionName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.onSurface,
     flex: 1,
     marginLeft: Spacing.md,
   },

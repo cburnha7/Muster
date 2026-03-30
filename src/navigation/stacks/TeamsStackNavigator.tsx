@@ -14,19 +14,19 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.white },
+  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
+  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
 };
 
 export function TeamsStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="TeamsList" component={TeamsListScreen} />
-      <Stack.Screen name="TeamDetails" component={TeamDetailsScreen} options={{ ...detailHeader, headerTitle: 'Roster' }} />
-      <Stack.Screen name="CreateTeam" component={CreateTeamScreen} options={{ ...detailHeader, headerTitle: 'New Roster' }} />
-      <Stack.Screen name="JoinTeam" component={JoinTeamScreen} options={{ ...detailHeader, headerTitle: 'Join Roster' }} />
-      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: 'Event' }} />
+      <Stack.Screen name="TeamDetails" component={TeamDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
+      <Stack.Screen name="CreateTeam" component={CreateTeamScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="JoinTeam" component={JoinTeamScreen} options={{ ...detailHeader, headerTitle: 'Join Team' }} />
+      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
     </Stack.Navigator>
   );
 }

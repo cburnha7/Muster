@@ -336,7 +336,7 @@ export const ManageLeagueScreen: React.FC = () => {
           
           {isLoadingMembers ? (
             <View style={styles.loadingContainer}>
-              <LoadingSpinner size="small" message="Loading rosters..." />
+              <LoadingSpinner size={24} />
             </View>
           ) : members.length === 0 ? (
             <View style={styles.emptyState}>

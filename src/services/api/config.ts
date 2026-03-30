@@ -75,6 +75,8 @@ export const API_ENDPOINTS = {
     TEAMS: '/users/teams',
     LEAGUES: '/users/leagues',
     NOTIFICATIONS: '/users/notifications',
+    ONBOARDING: '/users/onboarding',
+    INTENTS: '/users/intents',
   },
 
   // Teams
@@ -119,7 +121,25 @@ export const API_ENDPOINTS = {
     PREFERENCES: '/notifications/preferences',
     TEST: '/notifications/test',
   },
-} as const;
+
+  CONVERSATIONS: {
+    BASE: '/conversations',
+    BY_ID: (id: string) => `/conversations/${id}`,
+    MESSAGES: (id: string) => `/conversations/${id}/messages`,
+    SEND_MESSAGE: (id: string) => `/conversations/${id}/messages`,
+    READ: (id: string) => `/conversations/${id}/read`,
+    MUTE: (id: string) => `/conversations/${id}/mute`,
+    ARCHIVE: (id: string) => `/conversations/${id}/archive`,
+    PIN: (id: string, messageId: string) => `/conversations/${id}/pin/${messageId}`,
+    UNPIN: (id: string) => `/conversations/${id}/pin`,
+    UNREAD_COUNT: '/conversations/unread-count',
+    DM: (userId: string) => `/conversations/dm/${userId}`,
+  },
+  MESSAGES: {
+    REACTIONS: (messageId: string) => `/messages/${messageId}/reactions`,
+    REMOVE_REACTION: (messageId: string, emoji: string) => `/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+  },
+};
 
 /**
  * HTTP status codes for common scenarios

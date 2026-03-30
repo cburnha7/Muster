@@ -72,7 +72,7 @@ export function InsuranceDocumentSelector({
           </Text>
           <TouchableOpacity
             style={styles.profileLink}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => navigation.navigate('ProfileScreen')}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Go to Profile to add insurance document"

@@ -7,15 +7,17 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
-import { FormButton } from '../../components/forms/FormButton';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
+import { CreationWizard, WizardStep } from '../../components/wizard/CreationWizard';
+import { SportIconGrid } from '../../components/wizard/SportIconGrid';
+import { FormatCard } from '../../components/wizard/FormatCard';
+import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
+import { getSportEmoji } from '../../constants/sports';
 import { leagueService } from '../../services/api/LeagueService';
 import { teamService } from '../../services/api/TeamService';
 import { addLeague } from '../../store/slices/leaguesSlice';
@@ -23,12 +25,6 @@ import { selectUser } from '../../store/slices/authSlice';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { SportType, SkillLevel } from '../../types';
 import { colors, fonts } from '../../theme';
-
-const FORMAT_OPTIONS: SelectOption[] = [
-  { label: 'Season', value: 'season' },
-  { label: 'Season with Playoffs', value: 'season_with_playoffs' },
-  { label: 'Tournament', value: 'tournament' },
-];
 
 const SPORT_OPTIONS: SelectOption[] = [
   { label: 'Basketball', value: SportType.BASKETBALL },
@@ -67,6 +63,8 @@ export const CreateLeagueScreen: React.FC = () => {
   const { allowed: leagueAllowed, requiredPlan } = useFeatureGate('create_league');
   const [showUpsell, setShowUpsell] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
 
   // ── Step state ──
   const [leagueFormat, setLeagueFormat] = useState('');
@@ -88,21 +86,6 @@ export const CreateLeagueScreen: React.FC = () => {
   const [rosterQuery, setRosterQuery] = useState('');
   const [rosterResults, setRosterResults] = useState<RosterResult[]>([]);
   const [invitedRosters, setInvitedRosters] = useState<RosterResult[]>([]);
-
-  // ── Step visibility ──
-  const showHost = !!leagueFormat;
-  const showSport = showHost && host.trim().length >= 2;
-  const showStartDate = showSport && !!sport;
-  const showEndDate = showStartDate && !!startDate;
-  const showGamesPerSeason = showEndDate && !!endDate;
-  const showGameDays = showGamesPerSeason && !!gamesPerSeason && parseInt(gamesPerSeason) > 0;
-  const showTimeRange = showGameDays && gameDays.length > 0;
-  const showVisibility = showTimeRange && !!timeStart && !!timeEnd;
-  const showGender = visibility !== '';
-  const showAge = showGender;
-  const showSkill = showAge;
-  const showRosterSearch = !!skillLevel;
-  const showSubmit = showRosterSearch;
 
   // Auto-generate league name
   const leagueName = (() => {
@@ -183,9 +166,8 @@ export const CreateLeagueScreen: React.FC = () => {
         } catch {}
       }
 
-      Alert.alert('Success', 'League created!', [
-        { text: 'OK', onPress: () => (navigation as any).navigate('LeagueDetails', { leagueId: newLeague.id }) },
-      ]);
+      setCreatedLeagueId(newLeague.id);
+      setShowSuccess(true);
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Failed to create league');
     } finally {
@@ -193,259 +175,495 @@ export const CreateLeagueScreen: React.FC = () => {
     }
   };
 
+  // ── Helpers for review step ──
+  const formatLabel = leagueFormat === 'season' ? 'Season'
+    : leagueFormat === 'season_with_playoffs' ? 'Season with Playoffs'
+    : leagueFormat === 'tournament' ? 'Tournament' : '';
+
+  const gameDayLabels = gameDays.sort((a, b) => a - b).map(i => DAYS[i]).join(', ');
+  const skillLabel = SKILL_OPTIONS.find(o => o.value === skillLevel)?.label || 'All Levels';
+  const visibilityLabel = visibility === 'public' ? 'Public' : 'Private';
+
+  // ── Wizard steps ──
+  const steps: WizardStep[] = [
+    // Step 1: What kind of league?
+    {
+      key: 'kind',
+      headline: 'What kind of league?',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.fieldLabel}>Sport</Text>
+          <SportIconGrid selected={sport} onSelect={setSport} />
+
+          <Text style={[styles.fieldLabel, { marginTop: 24 }]}>Format</Text>
+          <FormatCard
+            emoji="📅"
+            title="Season"
+            description="Regular season, no playoffs"
+            selected={leagueFormat === 'season'}
+            onPress={() => setLeagueFormat('season')}
+          />
+          <FormatCard
+            emoji="🏆"
+            title="Season with Playoffs"
+            description="Regular season followed by elimination rounds"
+            selected={leagueFormat === 'season_with_playoffs'}
+            onPress={() => setLeagueFormat('season_with_playoffs')}
+          />
+          <FormatCard
+            emoji="⚡"
+            title="Tournament"
+            description="Single or double elimination bracket"
+            selected={leagueFormat === 'tournament'}
+            onPress={() => setLeagueFormat('tournament')}
+          />
+          <View style={{ height: 32 }} />
+        </ScrollView>
+      ),
+      validate: () => !!sport && !!leagueFormat,
+    },
+
+    // Step 2: Name your league
+    {
+      key: 'name',
+      headline: 'Name your league',
+      subtitle: 'Enter your organization name and we\'ll generate the league title.',
+      content: (
+        <View>
+          <Text style={styles.fieldLabel}>Host / Organization</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Burnham Bros"
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={host}
+            onChangeText={setHost}
+          />
+          {leagueName ? (
+            <View style={styles.previewCard}>
+              <Text style={styles.previewLabel}>League Name</Text>
+              <Text style={styles.previewValue}>{leagueName}</Text>
+            </View>
+          ) : null}
+        </View>
+      ),
+      validate: () => host.trim().length >= 2,
+    },
+
+    // Step 3: Schedule
+    {
+      key: 'schedule',
+      headline: 'Schedule',
+      subtitle: 'Set the season dates and game preferences.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fieldLabel}>Start Date</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.onSurfaceVariant}
+                value={startDate}
+                onChangeText={setStartDate}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fieldLabel}>End Date</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.onSurfaceVariant}
+                value={endDate}
+                onChangeText={setEndDate}
+              />
+            </View>
+          </View>
+
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Games Per Season</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 10"
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={gamesPerSeason}
+            onChangeText={setGamesPerSeason}
+            keyboardType="number-pad"
+          />
+
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Game Days</Text>
+          <View style={styles.daysRow}>
+            {DAYS.map((day, idx) => {
+              const active = gameDays.includes(idx);
+              return (
+                <TouchableOpacity
+                  key={day}
+                  style={[styles.dayChip, active && styles.dayChipActive]}
+                  onPress={() => toggleDay(idx)}
+                >
+                  <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>{day}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Time Window</Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Start (e.g. 18:00)"
+              placeholderTextColor={colors.onSurfaceVariant}
+              value={timeStart}
+              onChangeText={setTimeStart}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="End (e.g. 21:00)"
+              placeholderTextColor={colors.onSurfaceVariant}
+              value={timeEnd}
+              onChangeText={setTimeEnd}
+            />
+          </View>
+          <View style={{ height: 32 }} />
+        </ScrollView>
+      ),
+      validate: () =>
+        !!startDate && !!endDate &&
+        !!gamesPerSeason && parseInt(gamesPerSeason) > 0 &&
+        gameDays.length > 0 &&
+        !!timeStart && !!timeEnd,
+    },
+
+    // Step 4: Who can join?
+    {
+      key: 'eligibility',
+      headline: 'Who can join?',
+      subtitle: 'Set visibility and eligibility requirements.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.fieldLabel}>Visibility</Text>
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]}
+              onPress={() => setVisibility('private')}
+            >
+              <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFFFFF' : colors.onSurface} />
+              <Text style={[styles.toggleText, visibility === 'private' && styles.toggleTextActive]}>Private</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]}
+              onPress={() => setVisibility('public')}
+            >
+              <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFFFFF' : colors.onSurface} />
+              <Text style={[styles.toggleText, visibility === 'public' && styles.toggleTextActive]}>Public</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Gender Restriction</Text>
+          <FormSelect label="" options={GENDER_OPTIONS} value={gender} onSelect={(o) => setGender(String(o.value))} placeholder="Open to All" />
+
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Age Limits</Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Min age"
+              placeholderTextColor={colors.onSurfaceVariant}
+              value={minAge}
+              onChangeText={setMinAge}
+              keyboardType="number-pad"
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Max age"
+              placeholderTextColor={colors.onSurfaceVariant}
+              value={maxAge}
+              onChangeText={setMaxAge}
+              keyboardType="number-pad"
+            />
+          </View>
+
+          <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Skill Level</Text>
+          <FormSelect label="" options={SKILL_OPTIONS} value={skillLevel} onSelect={(o) => setSkillLevel(String(o.value))} placeholder="All Levels" />
+          <View style={{ height: 32 }} />
+        </ScrollView>
+      ),
+      validate: () => visibility !== '' && !!skillLevel,
+    },
+
+    // Step 5: Invite teams (optional)
+    {
+      key: 'invite',
+      headline: 'Invite teams',
+      subtitle: 'Search for rosters to invite. You can skip this step.',
+      content: (
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder="Search rosters..."
+            placeholderTextColor={colors.onSurfaceVariant}
+            value={rosterQuery}
+            onChangeText={setRosterQuery}
+          />
+          {rosterResults.length > 0 && (
+            <View style={styles.dropdown}>
+              {rosterResults.slice(0, 8).map((r) => (
+                <TouchableOpacity key={r.id} style={styles.dropdownRow} onPress={() => addRoster(r)}>
+                  <Ionicons name="people" size={18} color={colors.primary} />
+                  <Text style={styles.dropdownText}>{r.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+          {invitedRosters.length > 0 && (
+            <View style={styles.chipRow}>
+              {invitedRosters.map((r) => (
+                <View key={r.id} style={styles.inviteChip}>
+                  <Ionicons name="people" size={14} color={colors.primary} />
+                  <Text style={styles.inviteChipText}>{r.name}</Text>
+                  <TouchableOpacity onPress={() => removeRoster(r.id)}>
+                    <Ionicons name="close-circle" size={16} color={colors.onSurfaceVariant} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      ),
+      validate: () => true,
+    },
+
+    // Step 6: Review and launch
+    {
+      key: 'review',
+      headline: 'Review and launch',
+      subtitle: 'Double-check the details before creating your league.',
+      content: (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryHeader}>
+              <Text style={styles.summaryEmoji}>{getSportEmoji(sport)}</Text>
+              <Text style={styles.summaryTitle}>{leagueName || 'Your League'}</Text>
+            </View>
+
+            <View style={styles.summaryDivider} />
+
+            <SummaryRow label="Format" value={formatLabel} />
+            <SummaryRow label="Dates" value={startDate && endDate ? `${startDate} - ${endDate}` : '--'} />
+            <SummaryRow label="Game Days" value={gameDayLabels || '--'} />
+            <SummaryRow label="Time" value={timeStart && timeEnd ? `${timeStart} - ${timeEnd}` : '--'} />
+            <SummaryRow label="Visibility" value={visibilityLabel} />
+            <SummaryRow label="Skill Level" value={skillLabel} />
+            {invitedRosters.length > 0 && (
+              <SummaryRow label="Teams Invited" value={String(invitedRosters.length)} />
+            )}
+          </View>
+          <View style={{ height: 32 }} />
+        </ScrollView>
+      ),
+      validate: () => true,
+    },
+  ];
+
   // ── Render ──
   return (
     <>
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
-        {/* Step 1: League Format */}
-        <Text style={styles.stepLabel}>League Format</Text>
-        <FormSelect label="" options={FORMAT_OPTIONS} value={leagueFormat} onSelect={(o) => setLeagueFormat(String(o.value))} placeholder="Select format..." />
-
-        {/* Step 2: Host */}
-        {showHost && (
-          <>
-            <Text style={styles.stepLabel}>Host</Text>
-            <TextInput style={styles.input} placeholder="e.g. Burnham Bros" placeholderTextColor={colors.inkFaint} value={host} onChangeText={setHost} />
-            {leagueName ? <Text style={styles.autoName}>{leagueName}</Text> : null}
-          </>
-        )}
-
-        {/* Step 3: Sport */}
-        {showSport && (
-          <>
-            <Text style={styles.stepLabel}>Sport</Text>
-            <FormSelect label="" options={SPORT_OPTIONS} value={sport} onSelect={(o) => setSport(String(o.value))} placeholder="Select a sport..." />
-          </>
-        )}
-
-        {/* Step 4: Start Date */}
-        {showStartDate && (
-          <>
-            <Text style={styles.stepLabel}>Season Start Date</Text>
-            <TextInput style={styles.input} placeholder="YYYY-MM-DD" placeholderTextColor={colors.inkFaint} value={startDate} onChangeText={setStartDate} />
-          </>
-        )}
-
-        {/* Step 5: End Date */}
-        {showEndDate && (
-          <>
-            <Text style={styles.stepLabel}>Season End Date</Text>
-            <TextInput style={styles.input} placeholder="YYYY-MM-DD" placeholderTextColor={colors.inkFaint} value={endDate} onChangeText={setEndDate} />
-          </>
-        )}
-
-        {/* Step 6: Games Per Season */}
-        {showGamesPerSeason && (
-          <>
-            <Text style={styles.stepLabel}>Games Per Season</Text>
-            <TextInput style={styles.input} placeholder="e.g. 10" placeholderTextColor={colors.inkFaint} value={gamesPerSeason} onChangeText={setGamesPerSeason} keyboardType="number-pad" />
-          </>
-        )}
-
-        {/* Step 7: Game Days */}
-        {showGameDays && (
-          <>
-            <Text style={styles.stepLabel}>Game Days</Text>
-            <View style={styles.daysRow}>
-              {DAYS.map((day, idx) => {
-                const active = gameDays.includes(idx);
-                return (
-                  <TouchableOpacity key={day} style={[styles.dayChip, active && styles.dayChipActive]} onPress={() => toggleDay(idx)}>
-                    <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>{day}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </>
-        )}
-
-        {/* Step 8: Time Range */}
-        {showTimeRange && (
-          <>
-            <Text style={styles.stepLabel}>Time Range</Text>
-            <View style={styles.row}>
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Start (e.g. 18:00)" placeholderTextColor={colors.inkFaint} value={timeStart} onChangeText={setTimeStart} />
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="End (e.g. 21:00)" placeholderTextColor={colors.inkFaint} value={timeEnd} onChangeText={setTimeEnd} />
-            </View>
-          </>
-        )}
-
-        {/* Step 9: Visibility */}
-        {showVisibility && (
-          <>
-            <Text style={styles.stepLabel}>Visibility</Text>
-            <View style={styles.row}>
-              <TouchableOpacity style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]} onPress={() => setVisibility('private')}>
-                <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.ink} />
-                <Text style={[styles.toggleText, visibility === 'private' && styles.toggleTextActive]}>Private</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]} onPress={() => setVisibility('public')}>
-                <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.ink} />
-                <Text style={[styles.toggleText, visibility === 'public' && styles.toggleTextActive]}>Public</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {/* Step 10: Gender */}
-        {showGender && (
-          <>
-            <Text style={styles.stepLabel}>Gender</Text>
-            <FormSelect label="" options={GENDER_OPTIONS} value={gender} onSelect={(o) => setGender(String(o.value))} placeholder="Open to All" />
-          </>
-        )}
-
-        {/* Step 11: Age Limit */}
-        {showAge && (
-          <>
-            <Text style={styles.stepLabel}>Age Limit</Text>
-            <View style={styles.row}>
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
-            </View>
-          </>
-        )}
-
-        {/* Step 12: Skill Level */}
-        {showSkill && (
-          <>
-            <Text style={styles.stepLabel}>Skill Level</Text>
-            <FormSelect label="" options={SKILL_OPTIONS} value={skillLevel} onSelect={(o) => setSkillLevel(String(o.value))} placeholder="All Levels" />
-          </>
-        )}
-
-        {/* Step 13: Roster Search */}
-        {showRosterSearch && (
-          <>
-            <Text style={styles.stepLabel}>Invite Rosters</Text>
-            <TextInput style={styles.input} placeholder="Search rosters..." placeholderTextColor={colors.inkFaint} value={rosterQuery} onChangeText={setRosterQuery} />
-            {rosterResults.length > 0 && (
-              <View style={styles.dropdown}>
-                {rosterResults.slice(0, 8).map((r) => (
-                  <TouchableOpacity key={r.id} style={styles.dropdownRow} onPress={() => addRoster(r)}>
-                    <Ionicons name="people" size={18} color={colors.cobalt} />
-                    <Text style={styles.dropdownText}>{r.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-            {invitedRosters.length > 0 && (
-              <View style={styles.chipRow}>
-                {invitedRosters.map((r) => (
-                  <View key={r.id} style={styles.inviteChip}>
-                    <Ionicons name="people" size={14} color={colors.cobalt} />
-                    <Text style={styles.inviteChipText}>{r.name}</Text>
-                    <TouchableOpacity onPress={() => removeRoster(r.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-          </>
-        )}
-
-        {/* Submit */}
-        {showSubmit && (
-          <View style={{ marginTop: 24 }}>
-            <FormButton title={isLoading ? 'Creating...' : 'Create League'} onPress={handleSubmit} loading={isLoading} disabled={isLoading} />
-          </View>
-        )}
-
-        <View style={{ height: 80 }} />
-      </ScrollView>
-    </KeyboardAvoidingView>
-    <UpsellModal visible={showUpsell} onClose={() => setShowUpsell(false)} requiredPlan={requiredPlan} />
+      <CreationWizard
+        steps={steps}
+        onComplete={handleSubmit}
+        onBack={() => (navigation as any).goBack()}
+        isSubmitting={isLoading}
+        submitLabel="Launch League"
+        showSuccess={showSuccess}
+        successScreen={
+          <WizardSuccessScreen
+            emoji={getSportEmoji(sport)}
+            title={`${leagueName} is live!`}
+            summaryRows={[
+              { label: 'Format', value: formatLabel },
+              { label: 'Dates', value: startDate && endDate ? `${startDate} - ${endDate}` : '--' },
+              { label: 'Game Days', value: gameDayLabels || '--' },
+              { label: 'Visibility', value: visibilityLabel },
+              { label: 'Skill Level', value: skillLabel },
+            ]}
+            actions={[
+              {
+                label: 'Go to league',
+                icon: 'arrow-forward',
+                variant: 'primary',
+                onPress: () => (navigation as any).navigate('LeagueDetails', { leagueId: createdLeagueId }),
+              },
+              {
+                label: 'Back to leagues',
+                icon: 'list',
+                variant: 'secondary',
+                onPress: () => (navigation as any).goBack(),
+              },
+            ]}
+          />
+        }
+      />
+      <UpsellModal visible={showUpsell} onClose={() => setShowUpsell(false)} requiredPlan={requiredPlan} onUpgrade={() => setShowUpsell(false)} />
     </>
   );
 };
 
+// ── Summary row helper ──
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.summaryRow}>
+      <Text style={styles.summaryLabel}>{label}</Text>
+      <Text style={styles.summaryValue}>{value}</Text>
+    </View>
+  );
+}
+
+// ── Styles ──
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  content: { padding: 16, paddingTop: 8 },
-  stepLabel: {
+  fieldLabel: {
     fontFamily: fonts.label,
-    fontSize: 12,
-    color: colors.inkFaint,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 20,
     marginBottom: 8,
   },
-  autoName: {
-    fontFamily: fonts.semibold,
-    fontSize: 14,
-    color: colors.cobalt,
-    marginTop: 6,
-  },
   input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.ink,
+    fontSize: 16,
+    color: colors.onSurface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.outlineVariant,
   },
   row: { flexDirection: 'row', gap: 10 },
+  previewCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  previewLabel: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  previewValue: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.primary,
+  },
+
+  // ── Day chips ──
   daysRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   dayChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
-  dayChipActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  dayChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  dayChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  dayChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.onSurface },
   dayChipTextActive: { color: '#FFFFFF', fontFamily: fonts.label },
+
+  // ── Visibility toggle ──
   toggleBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
     gap: 6,
   },
-  toggleBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
+  toggleBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  toggleText: { fontFamily: fonts.ui, fontSize: 15, color: colors.onSurface },
   toggleTextActive: { color: '#FFFFFF' },
+
+  // ── Roster search ──
   dropdown: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.outlineVariant,
     maxHeight: 240,
   },
   dropdownRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.outlineVariant,
   },
-  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.onSurface, flex: 1 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
   inviteChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.outlineVariant,
   },
-  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.onSurface },
+
+  // ── Review summary ──
+  summaryCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  summaryHeader: {
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  summaryEmoji: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
+  summaryTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.onSurface,
+    textAlign: 'center',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: colors.outlineVariant,
+    marginVertical: 14,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  summaryLabel: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+  },
+  summaryValue: {
+    fontFamily: fonts.label,
+    fontSize: 14,
+    color: colors.onSurface,
+  },
 });

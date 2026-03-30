@@ -86,7 +86,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
     }
 
     Alert.alert(
-      'Join Roster',
+      'Join Team',
       `Do you want to join ${validatedTeam.name}?`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -140,7 +140,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
   };
 
   if (isJoining) {
-    return <LoadingSpinner message="Joining roster..." />;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -149,7 +149,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps): JSX.Element {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader
-        title="Join Roster"
+        title="Join Team"
         showBack
         onBackPress={handleCancel}
       />
