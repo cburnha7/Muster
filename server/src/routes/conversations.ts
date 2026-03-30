@@ -64,13 +64,11 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
       return res.status(400).json({ error: 'Cannot DM yourself' });
     }
 
-    // Verify shared context (shared team, event, or league)
-    const [sharedTeam, sharedEvent, sharedLeague] = await Promise.all([
+    // Verify shared context (shared team or event)
+    const [sharedTeam, sharedEvent] = await Promise.all([
       prisma.teamMember.findFirst({
         where: {
-          team: {
-            members: { some: { userId: myId } },
-          },
+          team: { members: { some: { userId: myId, status: 'active' } } },
           userId: otherId,
           status: 'active',
         },
@@ -81,15 +79,9 @@ conversationsRouter.get('/dm/:userId', async (req, res) => {
           userId: otherId,
         },
       }),
-      prisma.leagueMembership.findFirst({
-        where: {
-          league: { memberships: { some: { userId: myId } } },
-          userId: otherId,
-        },
-      }),
     ]);
 
-    if (!sharedTeam && !sharedEvent && !sharedLeague) {
+    if (!sharedTeam && !sharedEvent) {
       return res.status(403).json({ error: 'No shared context with this user' });
     }
 

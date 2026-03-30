@@ -221,14 +221,6 @@ export function ConversationListScreen() {
         ))}
       </ScrollView>
 
-      {/* Compose FAB */}
-      <FloatingActionButton
-        icon="create-outline"
-        onPress={() => navigation.navigate('NewConversation')}
-        backgroundColor={colors.primary}
-        iconColor="#FFFFFF"
-      />
-
       {/* Conversation list */}
       <FlatList
         style={styles.list}
@@ -238,6 +230,14 @@ export function ConversationListScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={renderEmptyState}
+      />
+
+      {/* Compose FAB — must be after FlatList so it renders on top */}
+      <FloatingActionButton
+        icon="create-outline"
+        onPress={() => navigation.navigate('NewConversation')}
+        backgroundColor={colors.primary}
+        iconColor="#FFFFFF"
       />
     </View>
   );

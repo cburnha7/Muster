@@ -7,6 +7,7 @@ import {
   SectionList,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
@@ -40,15 +41,26 @@ export function NewConversationScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [teamsRes] = await Promise.all([
-        teamService.getTeams(),
-      ]);
-      setTeams(teamsRes.data ?? []);
-      // Recent players would come from a dedicated endpoint;
-      // for now we leave the list empty until the API is wired.
-      setRecentPlayers([]);
-    } catch {
-      // Silently handle -- sections will just be empty
+      const teamsRes = await teamService.getTeams();
+      const allTeams = teamsRes.data ?? [];
+      setTeams(allTeams);
+
+      // Extract unique teammates from all teams the user is on
+      const playerMap = new Map<string, RecentPlayer>();
+      for (const team of allTeams) {
+        for (const member of team.members ?? []) {
+          const uid = member.userId ?? member.user?.id;
+          if (uid && uid !== currentUserId && !playerMap.has(uid)) {
+            const name = member.user
+              ? `${member.user.firstName} ${member.user.lastName}`
+              : 'Unknown';
+            playerMap.set(uid, { id: uid, name });
+          }
+        }
+      }
+      setRecentPlayers(Array.from(playerMap.values()));
+    } catch (e) {
+      console.warn('NewConversation: failed to load data:', e);
     } finally {
       setLoading(false);
     }
@@ -77,8 +89,10 @@ export function NewConversationScreen() {
           title: userName,
           type: 'DIRECT_MESSAGE',
         });
-      } catch {
-        // TODO: surface error toast
+      } catch (e: any) {
+        Alert.alert('Error', e?.message?.includes('shared context')
+          ? 'You need to share a team or game with this person to message them.'
+          : 'Could not start conversation. Please try again.');
       } finally {
         setNavigating(false);
       }
@@ -98,7 +112,7 @@ export function NewConversationScreen() {
           type: 'TEAM_CHAT',
         });
       } catch {
-        // TODO: surface error toast
+        Alert.alert('Error', 'Could not open team chat. Please try again.');
       } finally {
         setNavigating(false);
       }
@@ -113,7 +127,7 @@ export function NewConversationScreen() {
     sections.push({ title: 'YOUR TEAMS', data: filteredTeams.map((t) => ({ ...t, _kind: 'team' as const })) });
   }
   if (filteredPlayers.length > 0) {
-    sections.push({ title: 'RECENT PLAYERS', data: filteredPlayers.map((p) => ({ ...p, _kind: 'player' as const })) });
+    sections.push({ title: 'TEAMMATES', data: filteredPlayers.map((p) => ({ ...p, _kind: 'player' as const })) });
   }
 
   // ── Render helpers ───────────────────────────────
