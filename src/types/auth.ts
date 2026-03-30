@@ -20,6 +20,13 @@ export interface User {
   trialExpiry?: string | null;
   ssoProviders?: string[]; // Array of linked SSO providers ('apple', 'google')
   ssoProviderIds?: Record<string, string>; // Map of provider name to provider user ID
+  onboardingComplete?: boolean;
+  intents?: string[];
+  sportPreferences?: string[];
+  locationCity?: string;
+  locationState?: string;
+  locationLat?: number;
+  locationLng?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -157,4 +164,21 @@ export interface PasswordResetFormData {
  */
 export interface ForgotPasswordFormData {
   email: string;
+}
+
+/**
+ * User intent types for onboarding
+ */
+export type UserIntent = 'PLAYER' | 'CAPTAIN' | 'GUARDIAN' | 'COMMISSIONER' | 'FACILITY_OWNER';
+
+/**
+ * Onboarding data submitted during the onboarding flow
+ */
+export interface OnboardingData {
+  intents: UserIntent[];
+  sportPreferences: string[];
+  locationCity?: string;
+  locationState?: string;
+  locationLat?: number;
+  locationLng?: number;
 }

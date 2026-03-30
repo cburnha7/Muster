@@ -19,6 +19,7 @@ import { Calendar, DateData } from 'react-native-calendars';
 
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { FormButton } from '../../components/forms/FormButton';
+import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
@@ -144,13 +145,13 @@ export function CreateEventScreen() {
     const marks: Record<string, any> = {};
     datesForCourt.forEach((d) => {
       if (d === selectedDate) {
-        marks[d!] = { selected: true, selectedColor: colors.cobalt };
+        marks[d!] = { selected: true, selectedColor: colors.primary };
       } else {
-        marks[d!] = { marked: true, dotColor: colors.cobalt };
+        marks[d!] = { marked: true, dotColor: colors.primary };
       }
     });
     if (selectedDate && !datesForCourt.has(selectedDate)) {
-      marks[selectedDate] = { selected: true, selectedColor: colors.cobalt };
+      marks[selectedDate] = { selected: true, selectedColor: colors.primary };
     }
     return marks;
   }, [datesForCourt, selectedDate]);
@@ -289,13 +290,16 @@ export function CreateEventScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* Step 1: Sport */}
-        <Text style={styles.stepLabel}>Sport</Text>
-        <FormSelect label="" options={SPORT_OPTIONS} value={sport} onSelect={(o) => { setSport(o.value as SportType); setFacilityId(''); setCourtId(''); setSelectedDate(''); setSelectedSlots([]); setEventType(''); setVisibility(''); }} placeholder="Select a sport..." />
+        <Text style={styles.sectionHeadline}>What are you playing?</Text>
+        <SportIconGrid
+          selected={sport}
+          onSelect={(key) => { setSport(key as SportType); setFacilityId(''); setCourtId(''); setSelectedDate(''); setSelectedSlots([]); setEventType(''); setVisibility(''); }}
+        />
 
         {/* Step 2: Ground */}
         {showGrounds && (
           <>
-            <Text style={styles.stepLabel}>Ground</Text>
+            <Text style={styles.sectionHeadline}>Where's the game?</Text>
             <FormSelect label="" options={facilityOptions} value={facilityId} onSelect={(o) => setFacilityId(String(o.value))} placeholder="Select a ground..." />
           </>
         )}
@@ -304,12 +308,12 @@ export function CreateEventScreen() {
         {showCourt && (
           <>
             {loadingSlots ? (
-              <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 12 }} />
+              <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
             ) : courts.length === 0 ? (
               <Text style={styles.hint}>No courts with available slots at this ground.</Text>
             ) : (
               <>
-                <Text style={styles.stepLabel}>Court</Text>
+                <Text style={styles.sectionHeadline}>Which court?</Text>
                 <FormSelect label="" options={courtOptions} value={courtId} onSelect={(o) => { setCourtId(String(o.value)); setSelectedDate(''); setSelectedSlots([]); }} placeholder="Select a court..." />
               </>
             )}
@@ -319,7 +323,7 @@ export function CreateEventScreen() {
         {/* Step 2c: Date */}
         {showCalendar && (
           <>
-            <Text style={styles.stepLabel}>Date</Text>
+            <Text style={styles.sectionHeadline}>Pick a date</Text>
             <Calendar
               markedDates={calendarMarked}
               onDayPress={(day: DateData) => {
@@ -337,7 +341,7 @@ export function CreateEventScreen() {
         {/* Step 2d: Time */}
         {showTimeSlots && (
           <>
-            <Text style={styles.stepLabel}>Time</Text>
+            <Text style={styles.sectionHeadline}>What time?</Text>
             <View style={styles.timeDropdown}>
               {slotsForDate.map((slot, idx) => {
                 const isSelected = selectedSlots.some((s) => s.id === slot.id);
@@ -379,7 +383,7 @@ export function CreateEventScreen() {
                     <Ionicons
                       name={isSelected ? 'checkbox' : 'square-outline'}
                       size={20}
-                      color={isSelected ? colors.cobalt : canSelect ? colors.inkFaint : colors.white}
+                      color={isSelected ? colors.primary : canSelect ? colors.outline : colors.surfaceContainerLowest}
                     />
                     <Text style={[styles.timeRowText, isSelected && styles.timeRowTextSelected]}>
                       {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
@@ -399,7 +403,7 @@ export function CreateEventScreen() {
         {/* Step 3: Event Type */}
         {showEventType && (
           <>
-            <Text style={styles.stepLabel}>Event Type</Text>
+            <Text style={styles.sectionHeadline}>What kind of event?</Text>
             <FormSelect label="" options={EVENT_TYPE_OPTIONS} value={eventType} onSelect={(o) => { setEventType(o.value as EventType); setVisibility(''); setInvitedItems([]); }} placeholder="Select event type..." />
           </>
         )}
@@ -407,14 +411,14 @@ export function CreateEventScreen() {
         {/* Step 4: Visibility */}
         {showVisibility && (
           <>
-            <Text style={styles.stepLabel}>Visibility</Text>
+            <Text style={styles.sectionHeadline}>Who can join?</Text>
             <View style={styles.row}>
               <TouchableOpacity style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]} onPress={() => setVisibility('private')}>
-                <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.ink} />
+                <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.onSurface} />
                 <Text style={[styles.toggleText, visibility === 'private' && styles.toggleTextActive]}>Private</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]} onPress={() => setVisibility('public')}>
-                <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.ink} />
+                <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.onSurface} />
                 <Text style={[styles.toggleText, visibility === 'public' && styles.toggleTextActive]}>Public</Text>
               </TouchableOpacity>
             </View>
@@ -424,23 +428,22 @@ export function CreateEventScreen() {
         {/* Step 5: Max Participants */}
         {showMaxParticipants && (
           <>
+            <Text style={styles.sectionHeadline}>How many players?</Text>
             <Text style={styles.stepLabel}>
               {eventType === EventType.GAME ? 'Max Rosters' : 'Max Players'}
             </Text>
-            <TextInput style={styles.input} placeholder="e.g. 10" placeholderTextColor={colors.inkFaint} value={maxParticipants} onChangeText={setMaxParticipants} keyboardType="number-pad" />
+            <TextInput style={styles.input} placeholder="e.g. 10" placeholderTextColor={colors.outline} value={maxParticipants} onChangeText={setMaxParticipants} keyboardType="number-pad" />
           </>
         )}
 
         {/* Step 6a: Invitations (private) */}
         {showInvitations && (
           <>
-            <Text style={styles.stepLabel}>
-              {eventType === EventType.GAME ? 'Invite Rosters' : 'Invite Rosters & Players'}
-            </Text>
+            <Text style={styles.sectionHeadline}>Invite your crew</Text>
             <TextInput
               style={styles.input}
               placeholder={eventType === EventType.GAME ? 'Search rosters...' : 'Search rosters or players...'}
-              placeholderTextColor={colors.inkFaint}
+              placeholderTextColor={colors.outline}
               value={inviteQuery}
               onChangeText={setInviteQuery}
             />
@@ -449,11 +452,11 @@ export function CreateEventScreen() {
                 {inviteResults.slice(0, 8).map((item) => (
                   <TouchableOpacity key={item.id} style={styles.dropdownRow} onPress={() => addInvite(item)}>
                     {item.type === 'roster' ? (
-                      <Ionicons name="people" size={18} color={colors.cobalt} />
+                      <Ionicons name="people" size={18} color={colors.primary} />
                     ) : item.image ? (
                       <Image source={{ uri: item.image }} style={styles.avatar} />
                     ) : (
-                      <Ionicons name="person" size={18} color={colors.inkFaint} />
+                      <Ionicons name="person" size={18} color={colors.outline} />
                     )}
                     <Text style={styles.dropdownText}>{item.name}</Text>
                   </TouchableOpacity>
@@ -464,9 +467,9 @@ export function CreateEventScreen() {
               <View style={styles.chipRow}>
                 {invitedItems.map((item) => (
                   <View key={item.id} style={styles.inviteChip}>
-                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.cobalt} /> : <Ionicons name="person" size={14} color={colors.ink} />}
+                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.primary} /> : <Ionicons name="person" size={14} color={colors.onSurface} />}
                     <Text style={styles.inviteChipText}>{item.name}</Text>
-                    <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
+                    <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.outline} /></TouchableOpacity>
                   </View>
                 ))}
               </View>
@@ -477,14 +480,15 @@ export function CreateEventScreen() {
         {/* Step 6b: Public filters */}
         {showPublicFilters && (
           <>
+            <Text style={styles.sectionHeadline}>Set player requirements</Text>
             <Text style={styles.stepLabel}>Min Player Rating (0–100)</Text>
-            <TextInput style={styles.input} placeholder="Leave blank for open" placeholderTextColor={colors.inkFaint} value={minPlayerRating} onChangeText={setMinPlayerRating} keyboardType="number-pad" />
+            <TextInput style={styles.input} placeholder="Leave blank for open" placeholderTextColor={colors.outline} value={minPlayerRating} onChangeText={setMinPlayerRating} keyboardType="number-pad" />
             <Text style={styles.stepLabel}>Gender</Text>
             <FormSelect label="" options={GENDER_OPTIONS} value={genderRestriction} onSelect={(o) => setGenderRestriction(String(o.value))} placeholder="Open to All" />
             <Text style={styles.stepLabel}>Age Limit</Text>
             <View style={styles.row}>
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.outline} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.outline} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
             </View>
           </>
         )}
@@ -492,8 +496,8 @@ export function CreateEventScreen() {
         {/* Step 7: Price */}
         {showPrice && (
           <>
-            <Text style={styles.stepLabel}>Price</Text>
-            <TextInput style={styles.input} placeholder="0 for free" placeholderTextColor={colors.inkFaint} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+            <Text style={styles.sectionHeadline}>Set a price</Text>
+            <TextInput style={styles.input} placeholder="0 for free" placeholderTextColor={colors.outline} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
           </>
         )}
 
@@ -511,12 +515,20 @@ export function CreateEventScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: colors.surfaceContainerLowest },
+  sectionHeadline: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.onSurface,
+    marginTop: 28,
+    marginBottom: 12,
+    letterSpacing: -0.3,
+  },
   content: { padding: 16, paddingTop: 8 },
   stepLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkFaint,
+    color: colors.outline,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 20,
@@ -525,20 +537,20 @@ const styles = StyleSheet.create({
   hint: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.outline,
     marginVertical: 12,
     textAlign: 'center',
   },
   input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.onSurface,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
   },
   calendar: {
     borderRadius: 12,
@@ -546,10 +558,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   timeDropdown: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
     overflow: 'hidden',
   },
   timeRow: {
@@ -559,10 +571,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.white,
+    borderBottomColor: colors.outlineVariant,
   },
   timeRowSelected: {
-    backgroundColor: colors.cobalt + '0D',
+    backgroundColor: colors.primary + '0D',
   },
   timeRowDisabled: {
     opacity: 0.35,
@@ -570,16 +582,16 @@ const styles = StyleSheet.create({
   timeRowText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
+    color: colors.onSurface,
   },
   timeRowTextSelected: {
     fontFamily: fonts.label,
-    color: colors.cobalt,
+    color: colors.primary,
   },
   timeHint: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.cobalt,
+    color: colors.primary,
     marginTop: 6,
     textAlign: 'center',
   },
@@ -590,21 +602,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1.5,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
     gap: 6,
   },
-  toggleBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
+  toggleBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.onSurface },
   toggleTextActive: { color: '#FFFFFF' },
   dropdown: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
     maxHeight: 240,
   },
   dropdownRow: {
@@ -614,21 +626,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.white,
+    borderBottomColor: colors.outlineVariant,
   },
-  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
+  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.onSurface, flex: 1 },
   avatar: { width: 24, height: 24, borderRadius: 12 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   inviteChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
   },
-  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.onSurface },
 });

@@ -14,17 +14,18 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
-import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { PlayerCard } from '../../components/ui/PlayerCard';
 
 import { CancelEventModal } from '../../components/events/CancelEventModal';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
-import { RosterParticipantList } from '../../components/events/RosterParticipantList';
+
+import { HeroSection, QuickStatsRow, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import { getSportColor } from '../../constants/sportColors';
 
 import { eventService } from '../../services/api/EventService';
+import { conversationService } from '../../services/api/ConversationService';
 import { BookingValidationService } from '../../services/booking';
 import { useAuth } from '../../context/AuthContext';
 import { setSelectedEvent, updateEventParticipants, removeEvent } from '../../store/slices/eventsSlice';
@@ -32,10 +33,9 @@ import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
 import { colors, fonts } from '../../theme';
-import { loggingService } from '../../services/LoggingService';import {
+import { loggingService } from '../../services/LoggingService';
+import {
   Event,
-  SportType,
-  SkillLevel,
   EventStatus,
   EventType,
   Participant,
@@ -44,15 +44,21 @@ import { loggingService } from '../../services/LoggingService';import {
 } from '../../types';
 import type { Match } from '../../types/league';
 
-interface EventDetailsScreenProps {
-  route: {
-    params: {
-      eventId: string;
-    };
-  };
+function formatDateHero(dateInput: string | Date): string {
+  const d = new Date(dateInput as any);
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+    + ' · '
+    + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function EventDetailsScreen(): JSX.Element {
+function formatEventType(eventType: string): string {
+  return eventType
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+export function EventDetailsScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -60,7 +66,7 @@ export function EventDetailsScreen(): JSX.Element {
 
   // Redux state
   const selectedEvent = useSelector(selectSelectedEvent);
-  
+
   // Auth context
   const { user: currentUser } = useAuth();
 
@@ -103,7 +109,7 @@ export function EventDetailsScreen(): JSX.Element {
 
       // Fetch event from API
       const eventResponse = await eventService.getEvent(eventId);
-      
+
       // Fetch participants (skip cache if requested)
       const participantsData = await eventService.getEventParticipants(eventId, skipCache);
 
@@ -115,7 +121,6 @@ export function EventDetailsScreen(): JSX.Element {
       }
 
       setEvent(eventResponse);
-      navigation.setOptions({ headerTitle: eventResponse.title });
       setParticipants(participantsData.participants);
       setRosters(participantsData.rosters ?? []);
       setParticipantsLoaded(true);
@@ -171,7 +176,7 @@ export function EventDetailsScreen(): JSX.Element {
   const isUserBooked = participants.some(
     participant => participant.userId === currentUser?.id
   );
-  
+
   console.log('≡ƒöì EventDetails - isUserBooked check:', {
     isUserBooked,
     participantsCount: participants.length,
@@ -182,7 +187,7 @@ export function EventDetailsScreen(): JSX.Element {
 
   // Check if user is the organizer
   const isOrganizer = event?.organizerId === currentUser?.id;
-  
+
   // Debug logging
   console.log('≡ƒöì EventDetails - isOrganizer check:', {
     isOrganizer,
@@ -192,7 +197,7 @@ export function EventDetailsScreen(): JSX.Element {
   });
 
   // Check if event is bookable
-  const canBook = event && 
+  const canBook = event &&
     event.status === EventStatus.ACTIVE &&
     event.currentParticipants < event.maxParticipants &&
     !isUserBooked;
@@ -203,7 +208,7 @@ export function EventDetailsScreen(): JSX.Element {
     console.log('≡ƒÄ» handleBookEvent called');
     console.log('≡ƒôï Event:', event?.id, event?.title);
     console.log('≡ƒæñ Current user:', currentUser?.id, currentUser?.email);
-    
+
     if (!event || !currentUser) {
       console.log('Γ¥î Missing event or currentUser', { hasEvent: !!event, hasCurrentUser: !!currentUser });
       Alert.alert('Authentication Required', 'Please log in to book events');
@@ -214,7 +219,7 @@ export function EventDetailsScreen(): JSX.Element {
     // Validate booking before attempting
     const validationResult = BookingValidationService.validateBooking(event, currentUser);
     console.log('Γ£à Validation result:', validationResult);
-    
+
     if (!validationResult.canBook) {
       console.log('Γ¥î Cannot book:', validationResult.reason);
       Alert.alert('Cannot Join', validationResult.reason || 'Booking not allowed');
@@ -236,39 +241,39 @@ export function EventDetailsScreen(): JSX.Element {
       return;
     }
 
-    console.log('≡ƒÜÇ Starting booking process...', { 
-      eventId: event.id, 
+    console.log('≡ƒÜÇ Starting booking process...', {
+      eventId: event.id,
       eventTitle: event.title,
       userId: currentUser.id,
-      userEmail: currentUser.email 
+      userEmail: currentUser.email
     });
 
     try {
       setIsBooking(true);
-      
+
       console.log('≡ƒô₧ Calling eventService.bookEvent API...');
       console.log('≡ƒôï Request params:', { eventId: event.id, userId: currentUser.id });
-      
+
       const booking = await eventService.bookEvent(event.id, currentUser.id);
-      
+
       console.log('Γ£à Booking API call successful!');
       console.log('≡ƒôª Booking response:', JSON.stringify(booking, null, 2));
-      
+
       // Add booking to Redux store
       console.log('≡ƒÆ╛ Adding booking to Redux store...');
       dispatch(addBooking(booking));
       console.log('Γ£à Booking added to Redux');
-      
+
       // Update local state
       const updatedParticipants = event.currentParticipants + 1;
       const updatedEvent = { ...event, currentParticipants: updatedParticipants };
-      console.log('≡ƒôè Updating event participants count:', { 
-        old: event.currentParticipants, 
-        new: updatedParticipants 
+      console.log('≡ƒôè Updating event participants count:', {
+        old: event.currentParticipants,
+        new: updatedParticipants
       });
       setEvent(updatedEvent);
       dispatch(updateEventParticipants({ eventId: event.id, count: updatedParticipants }));
-      
+
       // Reload participants (skip cache to get fresh data)
       console.log('≡ƒöä Reloading participants list...');
       const newParticipantsData = await eventService.getEventParticipants(event.id, true);
@@ -284,7 +289,7 @@ export function EventDetailsScreen(): JSX.Element {
         'Joined Up!',
         `You've successfully joined "${event.title}". Check your bookings to see details.`,
         [
-          { 
+          {
             text: 'OK',
             onPress: () => {
               console.log('Γ£à User dismissed success alert, navigating to Home');
@@ -300,7 +305,7 @@ export function EventDetailsScreen(): JSX.Element {
       console.error('Γ¥î Error type:', typeof error);
       console.error('Γ¥î Error message:', error instanceof Error ? error.message : 'Unknown error');
       console.error('Γ¥î Full error object:', JSON.stringify(error, null, 2));
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Failed to book event';
       Alert.alert('Booking Failed', errorMessage);
     } finally {
@@ -346,7 +351,7 @@ export function EventDetailsScreen(): JSX.Element {
     loggingService.logButton('Leave', 'EventDetailsScreen', { eventId: event.id });
 
     const userBooking = participants.find(p => p.userId === currentUser.id);
-    
+
     if (!userBooking) {
       Alert.alert('Error', 'Could not find your booking for this event');
       return;
@@ -378,7 +383,7 @@ export function EventDetailsScreen(): JSX.Element {
 
       // Force a complete reload with cache bypass
       await loadEvent(false, true);
-      
+
       console.log('Γ£à Event reloaded after step out');
     } catch (error) {
       console.error('Γ¥î Step out error:', error);
@@ -401,16 +406,16 @@ export function EventDetailsScreen(): JSX.Element {
       console.log('≡ƒùæ∩╕Å Cancelling event:', event.id, 'Reason:', reason);
       await eventService.deleteEvent(event.id, reason);
       console.log('Γ£à Event cancelled successfully');
-      
+
       // Remove event from Redux store
       dispatch(removeEvent(event.id));
-      
+
       // Close the modal
       setShowCancelModal(false);
-      
+
       // Navigate to Home (will trigger refresh via useFocusEffect)
       navigation.navigate('HomeScreen' as never);
-      
+
       // Show success message after navigation
       setTimeout(() => {
         Alert.alert('Success', 'Event cancelled successfully. Participants will be notified.');
@@ -626,7 +631,7 @@ export function EventDetailsScreen(): JSX.Element {
           return (
             <View key={roster.id} style={{ marginBottom: 16 }}>
               <View style={styles.rosterSaluteHeader}>
-                <Ionicons name="shield-outline" size={14} color={colors.cobalt} />
+                <Ionicons name="shield-outline" size={14} color={colors.primary} />
                 <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
                 {roster.isHome && (
                   <View style={styles.rosterSaluteHomeBadge}>
@@ -653,86 +658,6 @@ export function EventDetailsScreen(): JSX.Element {
         )}
       </View>
     );
-  };
-
-  // Format date and time
-  const formatDateTime = (date: Date) => {
-    const eventDate = new Date(date);
-    return {
-      date: eventDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: 'UTC',
-      }),
-      time: eventDate.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'UTC',
-      }),
-    };
-  };
-
-  // Get sport icon
-  const getSportIcon = (sportType: SportType) => {
-    switch (sportType) {
-      case SportType.BASKETBALL:
-        return 'basketball-outline';
-      case SportType.SOCCER:
-        return 'football-outline';
-      case SportType.TENNIS:
-      case SportType.PICKLEBALL:
-        return 'tennisball-outline';
-      case SportType.VOLLEYBALL:
-        return 'american-football-outline';
-      case SportType.SOFTBALL:
-      case SportType.BASEBALL:
-        return 'baseball-outline';
-      case SportType.FLAG_FOOTBALL:
-        return 'flag-outline';
-      case SportType.KICKBALL:
-        return 'football-outline';
-      default:
-        return 'fitness-outline';
-    }
-  };
-
-  // Get skill level color (kept for backward compat)
-  const getSkillLevelColor = (skillLevel: SkillLevel) => {
-    switch (skillLevel) {
-      case SkillLevel.BEGINNER:
-        return '#34C759';
-      case SkillLevel.INTERMEDIATE:
-        return '#FF9500';
-      case SkillLevel.ADVANCED:
-        return '#FF3B30';
-      default:
-        return '#007AFF';
-    }
-  };
-
-  const getRatingBadgeColor = (rating: number) => {
-    if (rating >= 80) return colors.heart;
-    if (rating >= 50) return colors.gold;
-    return colors.cobalt;
-  };
-
-  // Get status color
-  const getStatusColor = (status: EventStatus) => {
-    switch (status) {
-      case EventStatus.ACTIVE:
-        return '#34C759';
-      case EventStatus.CANCELLED:
-        return '#FF3B30';
-      case EventStatus.COMPLETED:
-        return '#666';
-      case EventStatus.FULL:
-        return '#FF9500';
-      default:
-        return '#666';
-    }
   };
 
   if (isLoading && !event) {
@@ -765,15 +690,74 @@ export function EventDetailsScreen(): JSX.Element {
     );
   }
 
-  const startDateTime = formatDateTime(event.startTime);
-  const endDateTime = formatDateTime(event.endTime);
   const availableSpots = event.maxParticipants - event.currentParticipants;
 
+  // Derive duration string
+  const durationString = (() => {
+    const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
+    const totalMinutes = Math.round(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours === 0) return `${minutes}m`;
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+  })();
+
+  // Derive location string
+  const locationString = event.facility
+    ? [event.facility.name, event.facility.street && event.facility.city
+        ? `${event.facility.street}, ${event.facility.city}`
+        : event.facility.city || ''].filter(Boolean).join(' · ')
+    : '';
+
+  // Derive CTA label, variant, and action
+  type CTAVariant = 'primary' | 'confirmed' | 'secondary' | 'disabled';
+  let ctaLabel: string;
+  let ctaVariant: CTAVariant;
+  let ctaAction: () => void;
+
+  if (!participantsLoaded) {
+    ctaLabel = 'Loading...';
+    ctaVariant = 'disabled';
+    ctaAction = () => {};
+  } else if (event.status === EventStatus.CANCELLED) {
+    ctaLabel = 'Event cancelled';
+    ctaVariant = 'disabled';
+    ctaAction = () => {};
+  } else if (isPastEvent) {
+    ctaLabel = 'Event Ended';
+    ctaVariant = 'disabled';
+    ctaAction = () => {};
+  } else if (isLive) {
+    ctaLabel = 'In Progress';
+    ctaVariant = 'disabled';
+    ctaAction = () => {};
+  } else if (isOrganizer) {
+    ctaLabel = 'Edit game';
+    ctaVariant = 'primary';
+    ctaAction = handleEditEvent;
+  } else if (isUserBooked) {
+    ctaLabel = "You're in ✓";
+    ctaVariant = 'confirmed';
+    ctaAction = () => {};
+  } else if (!canBook && availableSpots <= 0) {
+    ctaLabel = 'Join waitlist';
+    ctaVariant = 'secondary';
+    ctaAction = () => {};
+  } else if (canBook) {
+    ctaLabel = `I'm in — Join game${event.price > 0 ? ` · $${event.price}` : ''}`;
+    ctaVariant = 'primary';
+    ctaAction = handleBookEvent;
+  } else {
+    ctaLabel = 'Cannot Join';
+    ctaVariant = 'disabled';
+    ctaAction = () => {};
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -783,65 +767,58 @@ export function EventDetailsScreen(): JSX.Element {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Participants Section - Show salute grid at top for past GAME events only */}
-        {isPastEvent && participants.length > 0 && event.eventType === EventType.GAME && (
-          <View style={styles.section}>
-            <View style={styles.participantsHeader}>
-              <Text style={styles.sectionTitle}>
-                Participants ({participants.length})
-              </Text>
-              {salutedParticipants.size > 0 && !salutesSubmitted && (
-                <Text style={styles.saluteCount}>
-                  ≡ƒÖî {salutedParticipants.size}/3 saluted
-                </Text>
-              )}
-              {salutesSubmitted && (
-                <View style={styles.submittedBadge}>
-                  <Ionicons name="checkmark-circle" size={16} color={colors.cobalt} />
-                  <Text style={styles.submittedText}>Submitted</Text>
-                </View>
-              )}
-            </View>
-            {!salutesSubmitted ? (
-              <>
-                <Text style={styles.saluteInstructions}>
-                  Tap a participant to salute them (max 3 per event)
-                </Text>
-                {renderSaluteGrid()}
-                {salutedParticipants.size > 0 && (
-                  <View style={styles.submitSalutesContainer}>
-                    <TouchableOpacity
-                      style={styles.submitSalutesButton}
-                      onPress={handleSubmitSalutes}
-                      disabled={isSubmittingSalutes}
-                    >
-                      {isSubmittingSalutes ? (
-                        <Text style={styles.submitSalutesButtonText}>Submitting...</Text>
-                      ) : (
-                        <>
-                          <Ionicons name="send" size={20} color="#FFFFFF" />
-                          <Text style={styles.submitSalutesButtonText}>
-                            Submit {salutedParticipants.size} Salute{salutedParticipants.size > 1 ? 's' : ''}
-                          </Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                    <Text style={styles.submitSalutesHint}>
-                      This will update player ratings
-                    </Text>
-                  </View>
-                )}
-              </>
-            ) : (
-              <View style={styles.salutesSubmittedContainer}>
-                <Ionicons name="checkmark-circle" size={48} color={colors.cobalt} />
-                <Text style={styles.salutesSubmittedTitle}>Salutes Submitted!</Text>
-                <Text style={styles.salutesSubmittedDescription}>
-                  You saluted {salutedParticipants.size} player{salutedParticipants.size > 1 ? 's' : ''} and their ratings have been updated.
-                </Text>
-              </View>
-            )}
-          </View>
+        {/* HeroSection */}
+        <HeroSection
+          title={event.title}
+          sportColor={getSportColor(event.sportType)}
+          badges={[
+            { label: formatEventType(event.eventType) },
+            ...(event.status === EventStatus.CANCELLED
+              ? [{ label: 'Cancelled', bgColor: colors.errorContainer, textColor: colors.error }]
+              : []),
+            ...(isLive
+              ? [{ label: 'Live', bgColor: colors.secondaryContainer, textColor: colors.secondary }]
+              : []),
+          ]}
+          headline={formatDateHero(event.startTime)}
+          {...(locationString ? { subline: locationString } : {})}
+          {...(locationString ? { onSublinePress: () => { /* open maps */ } } : {})}
+        />
+
+        {/* QuickStatsRow — Duration / Players / Price */}
+        <QuickStatsRow stats={[
+          { label: 'Duration', value: durationString },
+          {
+            label: 'Players',
+            value: `${event.currentParticipants}/${event.maxParticipants}`,
+            fillRatio: event.currentParticipants / event.maxParticipants,
+          },
+          { label: 'Price', value: event.price > 0 ? `$${event.price}` : 'Free' },
+        ]} />
+
+        {/* Game Thread Chat button */}
+        {isUserBooked && (
+          <TouchableOpacity
+            style={styles.chatBtn}
+            onPress={async () => {
+              try {
+                const convs = await conversationService.getConversations('GAME_THREAD');
+                const eventConv = convs.find((c) => c.entityId === eventId);
+                if (eventConv) {
+                  (navigation as any).navigate('Messages', {
+                    screen: 'Chat',
+                    params: { conversationId: eventConv.id, title: event.title ?? 'Game Thread', type: 'GAME_THREAD' },
+                  });
+                }
+              } catch (e) {
+                console.error('Navigate to chat error:', e);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="chatbubbles-outline" size={18} color={colors.primary} />
+            <Text style={styles.chatBtnText}>Game Thread</Text>
+          </TouchableOpacity>
         )}
 
         {/* League Match Section */}
@@ -849,71 +826,72 @@ export function EventDetailsScreen(): JSX.Element {
           try {
             const match = event.matches[0] as Match;
             if (!match) return null;
-            
+
             const leagueName = match.league?.name || 'League Match';
-            
+
             return (
-              <TouchableOpacity
-                style={styles.leagueSection}
-                onPress={() => handleNavigateToLeague(match.leagueId)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.leagueBadge}>
-                  <Ionicons name="trophy" size={16} color={colors.gold} />
-                  <Text style={styles.leagueBadgeText}>LEAGUE MATCH</Text>
-                </View>
-                
-                <View style={styles.leagueContent}>
-                  <View style={styles.leagueHeader}>
-                    <Ionicons name="shield-outline" size={20} color={colors.cobalt} />
-                    <Text style={styles.leagueName}>{leagueName}</Text>
-                    <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+              <DetailCard title="League Match" delay={50}>
+                <TouchableOpacity
+                  onPress={() => handleNavigateToLeague(match.leagueId)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.leagueBadge}>
+                    <Ionicons name="trophy" size={16} color={colors.gold} />
+                    <Text style={styles.leagueBadgeText}>LEAGUE MATCH</Text>
                   </View>
-                  
-                  <View style={styles.matchDetails}>
-                    <View style={styles.teamInfo}>
-                      <Text style={styles.teamName}>
-                        {match.homeTeam?.name || 'Home Roster'}
-                      </Text>
-                      {match.homeScore !== undefined && match.homeScore !== null && (
-                        <Text style={styles.teamScore}>{match.homeScore}</Text>
-                      )}
+
+                  <View style={styles.leagueContent}>
+                    <View style={styles.leagueHeader}>
+                      <Ionicons name="shield-outline" size={20} color={colors.primary} />
+                      <Text style={styles.leagueName}>{leagueName}</Text>
+                      <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
                     </View>
-                    
-                    <Text style={styles.vsText}>vs</Text>
-                    
-                    <View style={styles.teamInfo}>
-                      <Text style={styles.teamName}>
-                        {match.awayTeam?.name || 'Away Roster'}
-                      </Text>
-                      {match.awayScore !== undefined && match.awayScore !== null && (
-                        <Text style={styles.teamScore}>{match.awayScore}</Text>
-                      )}
+
+                    <View style={styles.matchDetails}>
+                      <View style={styles.teamInfo}>
+                        <Text style={styles.teamName}>
+                          {match.homeTeam?.name || 'Home Roster'}
+                        </Text>
+                        {match.homeScore !== undefined && match.homeScore !== null && (
+                          <Text style={styles.teamScore}>{match.homeScore}</Text>
+                        )}
+                      </View>
+
+                      <Text style={styles.vsText}>vs</Text>
+
+                      <View style={styles.teamInfo}>
+                        <Text style={styles.teamName}>
+                          {match.awayTeam?.name || 'Away Roster'}
+                        </Text>
+                        {match.awayScore !== undefined && match.awayScore !== null && (
+                          <Text style={styles.teamScore}>{match.awayScore}</Text>
+                        )}
+                      </View>
                     </View>
+
+                    {match.scheduledAt && (
+                      <View style={styles.matchMeta}>
+                        <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
+                        <Text style={styles.matchMetaText}>
+                          {new Date(match.scheduledAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                        {match.status && (
+                          <>
+                            <Text style={styles.matchMetaDot}>·</Text>
+                            <Text style={[styles.matchMetaText, { textTransform: 'capitalize' }]}>
+                              {match.status.replace('_', ' ')}
+                            </Text>
+                          </>
+                        )}
+                      </View>
+                    )}
                   </View>
-                  
-                  {match.scheduledAt && (
-                    <View style={styles.matchMeta}>
-                      <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
-                      <Text style={styles.matchMetaText}>
-                        {new Date(match.scheduledAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </Text>
-                      {match.status && (
-                        <>
-                          <Text style={styles.matchMetaDot}>ΓÇó</Text>
-                          <Text style={[styles.matchMetaText, { textTransform: 'capitalize' }]}>
-                            {match.status.replace('_', ' ')}
-                          </Text>
-                        </>
-                      )}
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </DetailCard>
             );
           } catch (error) {
             console.error('Error rendering league match section:', error);
@@ -921,267 +899,188 @@ export function EventDetailsScreen(): JSX.Element {
           }
         })()}
 
-        {/* Description */}
-        {event.description ? (
-          <View style={styles.section}>
-            <Text style={styles.description}>{event.description}</Text>
-          </View>
-        ) : null}
-
-        {/* Event Details */}
-        <View style={styles.section}>
-          <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Start</Text>
-              <Text style={styles.detailValue}>
-                {startDateTime.date} at {startDateTime.time}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="time-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>End</Text>
-              <Text style={styles.detailValue}>
-                {endDateTime.date} at {endDateTime.time}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="hourglass-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Duration</Text>
-              <Text style={styles.detailValue}>
-                {(() => {
-                  const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
-                  const totalMinutes = Math.round(ms / 60000);
-                  const hours = Math.floor(totalMinutes / 60);
-                  const minutes = totalMinutes % 60;
-                  if (hours === 0) return `${minutes}min`;
-                  if (minutes === 0) return `${hours}h`;
-                  return `${hours}h ${minutes}min`;
-                })()}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Location</Text>
-              <Text style={styles.detailValue}>
-                {event.facility?.name || 'Location TBD'}
-              </Text>
-              {event.facility && (
-                <Text style={styles.detailSubtext}>
-                  {event.facility.street}, {event.facility.city}
-                </Text>
-              )}
-              {event.rental && (
-                <Text style={styles.detailSubtext}>
-                  {event.rental.timeSlot.court.name}
-                </Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="people-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Participants</Text>
-              <Text style={styles.detailValue}>
-                {event.currentParticipants} / {event.maxParticipants}
-              </Text>
-              <Text style={styles.detailSubtext}>
-                {availableSpots > 0 ? `${availableSpots} spots available` : 'Event is full'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="card-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Price</Text>
-              <Text style={styles.detailValue}>
-                {event.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Ionicons name="trophy-outline" size={20} color="#666" />
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>Event Type</Text>
-              <Text style={styles.detailValue}>
-                {event.eventType.split('_').map((w, i) => i === 0 ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Equipment */}
-        {event.equipment.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Equipment Needed</Text>
-            <View style={styles.equipmentList}>
-              {event.equipment.map((item, index) => (
-                <View key={index} style={styles.equipmentItem}>
-                  <Ionicons name="checkmark-circle-outline" size={16} color="#34C759" />
-                  <Text style={styles.equipmentText}>{item}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Rules */}
-        {event.rules && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Rules & Notes</Text>
-            <Text style={styles.rulesText}>{event.rules}</Text>
-          </View>
-        )}
-
-        {/* Organizer */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Organizer</Text>
-          <View style={styles.organizerInfo}>
-            <Ionicons name="person-circle-outline" size={24} color="#666" />
-            <Text style={styles.organizerName}>
-              {event.organizer ? 
-                `${event.organizer.firstName} ${event.organizer.lastName}` : 
-                'Unknown Organizer'
-              }
-            </Text>
-          </View>
-        </View>
-
-        {/* Condensed participant count (non-debrief view) */}
-        {!isPastEvent && participants.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.detailRow}>
-              <Ionicons name="people-outline" size={20} color="#666" />
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Players</Text>
-                <Text style={styles.detailValue}>
-                  {participants.length} / {event.maxParticipants} joined
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Compact member list for past non-game events */}
-        {isPastEvent && event.eventType !== EventType.GAME && participants.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Players ({participants.length})</Text>
-            {participants.map((p) => (
-              <TouchableOpacity key={p.userId} style={styles.compactMemberRow} onPress={() => p.user && setSelectedPlayer({ id: p.userId, firstName: p.user.firstName, lastName: p.user.lastName, profileImage: p.user.profileImage, dateOfBirth: (p.user as any).dateOfBirth, gender: (p.user as any).gender })} activeOpacity={0.7}>
-                {p.user?.profileImage ? (
-                  <Image source={{ uri: p.user.profileImage }} style={styles.compactMemberAvatar} />
-                ) : (
-                  <View style={styles.compactMemberAvatarFallback}>
-                    <Text style={styles.compactMemberInitial}>{p.user?.firstName?.[0] || '?'}</Text>
+        {/* Players section */}
+        <DetailCard title={`Players (${event.currentParticipants}/${event.maxParticipants})`} delay={100}>
+          {/* Past GAME events: salute grid */}
+          {isPastEvent && participants.length > 0 && event.eventType === EventType.GAME ? (
+            <>
+              <View style={styles.participantsHeader}>
+                {salutedParticipants.size > 0 && !salutesSubmitted && (
+                  <Text style={styles.saluteCount}>
+                    ≡ƒÖî {salutedParticipants.size}/3 saluted
+                  </Text>
+                )}
+                {salutesSubmitted && (
+                  <View style={styles.submittedBadge}>
+                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                    <Text style={styles.submittedText}>Submitted</Text>
                   </View>
                 )}
-                <Text style={styles.compactMemberName}>
-                  {p.user ? `${p.user.firstName} ${p.user.lastName}` : 'Unknown'}
-                </Text>
+              </View>
+              {!salutesSubmitted ? (
+                <>
+                  <Text style={styles.saluteInstructions}>
+                    Tap a participant to salute them (max 3 per event)
+                  </Text>
+                  {renderSaluteGrid()}
+                  {salutedParticipants.size > 0 && (
+                    <View style={styles.submitSalutesContainer}>
+                      <TouchableOpacity
+                        style={styles.submitSalutesButton}
+                        onPress={handleSubmitSalutes}
+                        disabled={isSubmittingSalutes}
+                      >
+                        {isSubmittingSalutes ? (
+                          <Text style={styles.submitSalutesButtonText}>Submitting...</Text>
+                        ) : (
+                          <>
+                            <Ionicons name="send" size={20} color="#FFFFFF" />
+                            <Text style={styles.submitSalutesButtonText}>
+                              Submit {salutedParticipants.size} Salute{salutedParticipants.size > 1 ? 's' : ''}
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                      <Text style={styles.submitSalutesHint}>
+                        This will update player ratings
+                      </Text>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <View style={styles.salutesSubmittedContainer}>
+                  <Ionicons name="checkmark-circle" size={48} color={colors.primary} />
+                  <Text style={styles.salutesSubmittedTitle}>Salutes Submitted!</Text>
+                  <Text style={styles.salutesSubmittedDescription}>
+                    You saluted {salutedParticipants.size} player{salutedParticipants.size > 1 ? 's' : ''} and their ratings have been updated.
+                  </Text>
+                </View>
+              )}
+            </>
+          ) : (
+            /* Upcoming events and past non-game events: list as PersonRows */
+            <>
+              {participants.map((p, index) => {
+                const pressHandler =
+                  isPastEvent && p.userId !== currentUser?.id
+                    ? () => handleParticipantClick(p)
+                    : p.user
+                    ? () => setSelectedPlayer({
+                        id: p.userId,
+                        firstName: p.user!.firstName,
+                        lastName: p.user!.lastName,
+                        profileImage: p.user!.profileImage,
+                        dateOfBirth: (p.user as any).dateOfBirth,
+                        gender: (p.user as any).gender,
+                      })
+                    : null;
+                const personRowProps = {
+                  name: p.user ? `${p.user.firstName} ${p.user.lastName}` : 'Unknown Player',
+                  ...(p.userId === event.organizerId ? { role: 'Organizer' as const } : {}),
+                  ...(pressHandler ? { onPress: pressHandler } : {}),
+                };
+                return (
+                  <React.Fragment key={p.userId}>
+                    <PersonRow {...personRowProps} />
+                    {index < participants.length - 1 && (
+                      <View style={styles.personRowDivider} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {participants.length === 0 && (
+                <Text style={styles.emptyParticipantsText}>No players yet — be the first!</Text>
+              )}
+            </>
+          )}
+        </DetailCard>
+
+        {/* Details card */}
+        <DetailCard title="Details" delay={150}>
+          {/* Equipment checklist */}
+          {event.equipment && event.equipment.length > 0 && (
+            <View style={styles.detailSection}>
+              <Text style={styles.detailSectionLabel}>Equipment Needed</Text>
+              <View style={styles.equipmentList}>
+                {event.equipment.map((item, index) => (
+                  <View key={index} style={styles.equipmentItem}>
+                    <Ionicons name="checkmark-circle-outline" size={16} color="#34C759" />
+                    <Text style={styles.equipmentText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Rules & Notes */}
+          {event.rules ? (
+            <View style={styles.detailSection}>
+              <Text style={styles.detailSectionLabel}>Rules & Notes</Text>
+              <Text style={styles.rulesText}>{event.rules}</Text>
+            </View>
+          ) : null}
+
+          {/* Organizer as PersonRow */}
+          {event.organizer ? (
+            <View style={styles.detailSection}>
+              <Text style={styles.detailSectionLabel}>Organizer</Text>
+              <PersonRow
+                name={`${event.organizer.firstName} ${event.organizer.lastName}`}
+                role="Organizer"
+              />
+            </View>
+          ) : null}
+
+          {/* Waiver banner (if required and not yet signed) */}
+          {waiverStatus?.required && !waiverStatus?.signed && (
+            <TouchableOpacity
+              style={styles.waiverBanner}
+              onPress={() => { setWaiverAgreed(false); setShowWaiverModal(true); }}
+            >
+              <Ionicons name="shield-checkmark-outline" size={20} color={colors.gold} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.waiverBannerTitle}>Waiver Required</Text>
+                <Text style={styles.waiverBannerSub}>Read & Sign Waiver →</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Organizer actions */}
+          {isUpcoming && isOrganizer && (
+            <View style={styles.organizerActions}>
+              <TouchableOpacity style={styles.organizerActionBtn} onPress={handleEditEvent}>
+                <Ionicons name="create-outline" size={16} color={colors.primary} />
+                <Text style={styles.organizerActionBtnText}>Edit Event</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
+              <TouchableOpacity
+                style={[styles.organizerActionBtn, styles.organizerActionBtnDanger]}
+                onPress={() => setShowCancelModal(true)}
+              >
+                <Ionicons name="trash-outline" size={16} color={colors.error} />
+                <Text style={[styles.organizerActionBtnText, { color: colors.error }]}>Delete Event</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </DetailCard>
+
+        {/* Description (if exists) */}
+        {event.description ? (
+          <DetailCard delay={200}>
+            <Text style={styles.description}>{event.description}</Text>
+          </DetailCard>
+        ) : null}
       </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actions}>
-        {!participantsLoaded ? (
-          <FormButton
-            title="Loading..."
-            disabled={true}
-            loading={true}
-            onPress={() => {}}
-          />
-        ) : event.status === EventStatus.CANCELLED ? (
-          <FormButton
-            title="Cancelled"
-            disabled={true}
-            onPress={() => {}}
-          />
-        ) : isPastEvent ? (
-          <FormButton
-            title="Event Ended"
-            disabled={true}
-            onPress={() => {}}
-          />
-        ) : isLive ? (
-          <FormButton
-            title="In Progress"
-            disabled={true}
-            onPress={() => {}}
-          />
-        ) : isUserBooked ? (
-          <FormButton
-            title="Step Out"
-            variant="muted"
-            onPress={handleCancelBooking}
-            loading={isBooking}
-            disabled={isBooking}
-          />
-        ) : canBook ? (
-          <>
-            {waiverStatus?.required && !waiverStatus?.signed && (
-              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.goldTint, padding: 12, borderRadius: 10, marginBottom: 8, gap: 8 }} onPress={() => { setWaiverAgreed(false); setShowWaiverModal(true); }}>
-                <Ionicons name="shield-checkmark-outline" size={20} color={colors.gold} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: fonts.label, fontSize: 13, color: colors.ink }}>Waiver Required</Text>
-                  <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft }}>Read & Sign Waiver →</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-            <FormButton
-              title={`Join Up${event.price > 0 ? ` - ${event.price}` : ''}`}
-              onPress={handleBookEvent}
-              loading={isBooking}
-              disabled={isBooking || (waiverStatus?.required === true && !waiverStatus?.signed)}
-            />
-          </>
-        ) : (
-          <FormButton
-            title={
-              isUserBooked ? 'Already Joined' :
-              event.status !== EventStatus.ACTIVE ? 'Event Not Available' :
-              availableSpots <= 0 ? 'Event Full' :
-              'Cannot Join Up'
-            }
-            disabled={true}
-            onPress={() => {}}
-          />
-        )}
-
-        {/* Edit Event — full-width, organizer only, upcoming only */}
-        {isUpcoming && isOrganizer && (
-          <FormButton
-            title="Edit Event"
-            variant="outline"
-            onPress={handleEditEvent}
-            style={{ marginTop: 10 }}
-          />
-        )}
-
-        {/* Delete Event — full-width, organizer only, upcoming only */}
-        {isUpcoming && isOrganizer && (
-          <FormButton
-            title="Delete Event"
-            variant="danger"
-            onPress={() => setShowCancelModal(true)}
-            style={{ marginTop: 10 }}
-          />
-        )}
-      </View>
+      {/* FixedBottomCTA — hidden for past events */}
+      {!isPastEvent && (
+        <FixedBottomCTA
+          label={ctaLabel}
+          onPress={ctaAction}
+          variant={ctaVariant}
+          loading={isBooking}
+          {...(isUserBooked && !isOrganizer ? { secondaryLabel: 'Back out', onSecondaryPress: handleCancelBooking } : {})}
+        />
+      )}
 
       {/* Cancel Event Modal */}
       <CancelEventModal
@@ -1215,11 +1114,11 @@ export function EventDetailsScreen(): JSX.Element {
               <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, lineHeight: 22 }}>{waiverStatus?.waiverText || 'Loading waiver...'}</Text>
             </ScrollView>
             <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }} onPress={() => setWaiverAgreed(!waiverAgreed)}>
-              <Ionicons name={waiverAgreed ? 'checkbox' : 'square-outline'} size={22} color={waiverAgreed ? colors.cobalt : colors.inkFaint} />
+              <Ionicons name={waiverAgreed ? 'checkbox' : 'square-outline'} size={22} color={waiverAgreed ? colors.primary : colors.inkFaint} />
               <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, flex: 1 }}>I have read and agree to this waiver</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={{ backgroundColor: waiverAgreed ? colors.cobalt : colors.inkFaint, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 8 }}
+              style={{ backgroundColor: waiverAgreed ? colors.primary : colors.inkFaint, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 8 }}
               disabled={!waiverAgreed || signingWaiver}
               onPress={async () => {
                 if (!currentUser?.id || !event?.facilityId) return;
@@ -1335,66 +1234,9 @@ export function EventDetailsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  header: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 12,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 12,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-    marginLeft: 12,
-    flex: 1,
-  },
-  badges: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  leagueSection: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 12,
-    marginTop: 12,
-    marginHorizontal: 16,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.gold,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
-  },
+  // League match card styles
   leagueBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1447,7 +1289,7 @@ const styles = StyleSheet.create({
   teamScore: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.cobalt,
+    color: colors.primary,
     marginLeft: 8,
   },
   vsText: {
@@ -1469,52 +1311,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.inkFaint,
   },
-  section: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 12,
-    shadowColor: colors.ink,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
-    marginTop: 12,
-    marginHorizontal: 16,
-    padding: 16,
-  },
-  sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 16,
-    color: colors.ink,
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 24,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  // Details card sub-sections
+  detailSection: {
     marginBottom: 16,
   },
-  detailContent: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 2,
-  },
-  detailValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  detailSubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+  detailSectionLabel: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
   },
   equipmentList: {
     gap: 8,
@@ -1525,49 +1332,79 @@ const styles = StyleSheet.create({
   },
   equipmentText: {
     fontSize: 16,
-    color: '#333',
+    color: colors.ink,
     marginLeft: 8,
   },
   rulesText: {
-    fontSize: 16,
-    color: '#666',
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.inkSoft,
+    lineHeight: 22,
+  },
+  description: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.inkSoft,
     lineHeight: 24,
   },
-  organizerInfo: {
+  // Participants
+  personRowDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.outlineVariant,
+    marginLeft: 52,
+  },
+  emptyParticipantsText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+  // Waiver banner
+  waiverBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  organizerName: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  participantsList: {
+    backgroundColor: colors.goldTint,
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 8,
     gap: 8,
   },
-  participantItem: {
+  waiverBannerTitle: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  waiverBannerSub: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkSoft,
+  },
+  // Organizer action buttons inside details card
+  organizerActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  organizerActionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: colors.primary + '12',
   },
-  participantName: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 8,
+  organizerActionBtnDanger: {
+    backgroundColor: colors.error + '12',
   },
-  moreParticipants: {
+  organizerActionBtnText: {
+    fontFamily: fonts.ui,
     fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    marginTop: 4,
+    color: colors.primary,
   },
-  actions: {
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  // Participants Grid Styles
+  // Participants Grid Styles (salute grid — kept exactly as-is)
   participantsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1606,7 +1443,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterSaluteHomeBadge: {
-    backgroundColor: colors.cobalt + '20',
+    backgroundColor: colors.primary + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1614,7 +1451,7 @@ const styles = StyleSheet.create({
   rosterSaluteHomeBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.cobalt,
+    color: colors.primary,
   },
   participantCard: {
     width: '30%',
@@ -1644,7 +1481,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1690,7 +1527,7 @@ const styles = StyleSheet.create({
   submittedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobaltLight + '20',
+    backgroundColor: colors.primaryFixed + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -1699,7 +1536,7 @@ const styles = StyleSheet.create({
   submittedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
+    color: colors.primary,
   },
   submitSalutesContainer: {
     marginTop: 20,
@@ -1734,7 +1571,7 @@ const styles = StyleSheet.create({
   salutesSubmittedTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.cobalt,
+    color: colors.primary,
     marginTop: 16,
     marginBottom: 8,
   },
@@ -1770,7 +1607,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -1843,33 +1680,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  compactMemberRow: {
+  chatBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    gap: 10,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.primary + '12',
+    gap: 8,
   },
-  compactMemberAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  compactMemberAvatarFallback: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.cobalt + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compactMemberInitial: {
+  chatBtnText: {
+    fontFamily: fonts.label,
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.cobalt,
-  },
-  compactMemberName: {
-    flex: 1,
-    fontSize: 15,
-    color: '#333',
+    color: colors.primary,
   },
 });

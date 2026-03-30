@@ -10,6 +10,7 @@ import {
   PaginatedResponse,
   PaginationParams,
 } from '../../types';
+import { OnboardingData } from '../../types/auth';
 
 export class UserService extends BaseApiService {
   constructor() {
@@ -343,6 +344,20 @@ export class UserService extends BaseApiService {
    */
   async declineRosterInvitation(rosterId: string): Promise<void> {
     return this.post(`/teams/${rosterId}/leave`, {});
+  }
+
+  /**
+   * Complete onboarding flow
+   */
+  async completeOnboarding(data: OnboardingData): Promise<{ user: User }> {
+    return this.put<{ user: User }>(API_ENDPOINTS.USERS.ONBOARDING, data);
+  }
+
+  /**
+   * Update user intents
+   */
+  async updateIntents(intents: string[]): Promise<{ user: User }> {
+    return this.put<{ user: User }>(API_ENDPOINTS.USERS.INTENTS, { intents });
   }
 }
 

@@ -16,7 +16,9 @@ import {
   LoginCredentials,
   AuthResponse,
   TokenResponse,
+  OnboardingData,
 } from '../../types/auth';
+import { UserService } from '../../services/api/UserService';
 
 // Auth state interface
 export interface AuthState {
@@ -244,6 +246,25 @@ export const loadCachedUser = createAsyncThunk(
       return null;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to load cached user');
+    }
+  }
+);
+
+/**
+ * Complete onboarding flow
+ */
+export const completeOnboarding = createAsyncThunk(
+  'auth/completeOnboarding',
+  async (data: OnboardingData, { rejectWithValue }) => {
+    try {
+      const userService = new UserService();
+      const response = await userService.completeOnboarding(data);
+      const updatedUser = response.user;
+      // Persist updated user to TokenStorage so it survives page reloads
+      await TokenStorage.storeUser(updatedUser);
+      return updatedUser;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to complete onboarding');
     }
   }
 );
@@ -479,6 +500,22 @@ const authSlice = createSlice({
       })
       .addCase(loadCachedUser.rejected, (state) => {
         state.isLoading = false;
+      });
+
+    // Complete onboarding
+    builder
+      .addCase(completeOnboarding.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(completeOnboarding.fulfilled, (state, action: PayloadAction<User>) => {
+        state.user = action.payload;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(completeOnboarding.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

@@ -1,19 +1,15 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from './types';
-
-// Import onboarding screens (to be created in task 4.2)
-import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
-import { FeatureOverviewScreen } from '../screens/onboarding/FeatureOverviewScreen';
-import { GetStartedScreen } from '../screens/onboarding/GetStartedScreen';
+import { IntentSelectionScreen } from '../screens/onboarding/IntentSelectionScreen';
+import { SportSelectionScreen } from '../screens/onboarding/SportSelectionScreen';
+import { LocationSetupScreen } from '../screens/onboarding/LocationSetupScreen';
+import { PersonaSetupScreen } from '../screens/onboarding/PersonaSetupScreen';
+import { ProfileFinishScreen } from '../screens/onboarding/ProfileFinishScreen';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
-interface OnboardingNavigatorProps {
-  onComplete: () => void;
-}
-
-export function OnboardingNavigator({ onComplete }: OnboardingNavigatorProps): JSX.Element {
+export default function OnboardingNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
@@ -21,22 +17,11 @@ export function OnboardingNavigator({ onComplete }: OnboardingNavigatorProps): J
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen 
-        name="Welcome" 
-        component={WelcomeScreen}
-      />
-      <Stack.Screen 
-        name="FeatureOverview" 
-        component={FeatureOverviewScreen}
-      />
-      <Stack.Screen name="GetStarted">
-        {(props) => (
-          <GetStartedScreen
-            {...props}
-            onComplete={onComplete}
-          />
-        )}
-      </Stack.Screen>
+      <Stack.Screen name="IntentSelection" component={IntentSelectionScreen} />
+      <Stack.Screen name="SportSelection" component={SportSelectionScreen} />
+      <Stack.Screen name="LocationSetup" component={LocationSetupScreen} />
+      <Stack.Screen name="PersonaSetup" component={PersonaSetupScreen} />
+      <Stack.Screen name="ProfileFinish" component={ProfileFinishScreen} />
     </Stack.Navigator>
   );
 }

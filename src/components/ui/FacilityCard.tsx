@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Facility, SportType } from '../../types';
+import { colors, fonts } from '../../theme';
 
 interface FacilityCardProps {
   facility: Facility;
@@ -18,24 +19,16 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 }) => {
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
-      case SportType.BASKETBALL:
-        return 'basketball-outline';
-      case SportType.SOCCER:
-        return 'football-outline';
+      case SportType.BASKETBALL: return 'basketball-outline';
+      case SportType.SOCCER: return 'football-outline';
       case SportType.TENNIS:
-      case SportType.PICKLEBALL:
-        return 'tennisball-outline';
-      case SportType.VOLLEYBALL:
-        return 'american-football-outline';
+      case SportType.PICKLEBALL: return 'tennisball-outline';
+      case SportType.VOLLEYBALL: return 'american-football-outline';
       case SportType.SOFTBALL:
-      case SportType.BASEBALL:
-        return 'baseball-outline';
-      case SportType.FLAG_FOOTBALL:
-        return 'flag-outline';
-      case SportType.KICKBALL:
-        return 'football-outline';
-      default:
-        return 'fitness-outline';
+      case SportType.BASEBALL: return 'baseball-outline';
+      case SportType.FLAG_FOOTBALL: return 'flag-outline';
+      case SportType.KICKBALL: return 'football-outline';
+      default: return 'fitness-outline';
     }
   };
 
@@ -45,106 +38,73 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
     const hasHalfStar = rating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <Ionicons key={i} name="star" size={14} color="#FFD700" />
-      );
+      stars.push(<Ionicons key={i} name="star" size={14} color={colors.gold} />);
     }
-
     if (hasHalfStar) {
-      stars.push(
-        <Ionicons key="half" name="star-half" size={14} color="#FFD700" />
-      );
+      stars.push(<Ionicons key="half" name="star-half" size={14} color={colors.gold} />);
     }
-
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <Ionicons key={`empty-${i}`} name="star-outline" size={14} color="#FFD700" />
-      );
+      stars.push(<Ionicons key={`empty-${i}`} name="star-outline" size={14} color={colors.gold} />);
     }
-
     return stars;
   };
 
-  const formatAddress = () => {
-    return `${facility.street}, ${facility.city}, ${facility.state}`;
-  };
+  const formatAddress = () => `${facility.street}, ${facility.city}, ${facility.state}`;
 
   return (
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={() => onPress?.(facility)}
-      activeOpacity={0.7}
+      activeOpacity={0.85}
     >
       {facility.imageUrl && (
-        <Image
-          source={{ uri: facility.imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: facility.imageUrl }} style={styles.image} resizeMode="cover" />
       )}
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.name} numberOfLines={1}>
-            {facility.name}
-          </Text>
+          <Text style={styles.name} numberOfLines={1}>{facility.name}</Text>
           <View style={styles.rating}>
-            <View style={styles.stars}>
-              {renderStars(facility.rating)}
-            </View>
+            <View style={styles.stars}>{renderStars(facility.rating)}</View>
             <Text style={styles.ratingText}>
               {facility.rating.toFixed(1)} ({facility.reviewCount || 0})
             </Text>
           </View>
         </View>
 
-        <Text style={styles.description} numberOfLines={2}>
-          {facility.description}
-        </Text>
+        <Text style={styles.description} numberOfLines={2}>{facility.description}</Text>
 
         <View style={styles.details}>
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color="#666" />
-            <Text style={styles.detailText} numberOfLines={1}>
-              {formatAddress()}
-            </Text>
+            <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
+            <Text style={styles.detailText} numberOfLines={1}>{formatAddress()}</Text>
           </View>
         </View>
 
         <View style={styles.footer}>
           <View style={styles.sportsContainer}>
-            {facility.sportTypes.slice(0, 3).map((sport, index) => (
+            {facility.sportTypes.slice(0, 3).map((sport) => (
               <View key={sport} style={styles.sportBadge}>
-                <Ionicons
-                  name={getSportIcon(sport) as any}
-                  size={16}
-                  color="#007AFF"
-                />
+                <Ionicons name={getSportIcon(sport) as any} size={14} color={colors.primary} />
                 <Text style={styles.sportText}>
                   {sport.charAt(0).toUpperCase() + sport.slice(1)}
                 </Text>
               </View>
             ))}
             {facility.sportTypes.length > 3 && (
-              <Text style={styles.moreText}>
-                +{facility.sportTypes.length - 3} more
-              </Text>
+              <Text style={styles.moreText}>+{facility.sportTypes.length - 3} more</Text>
             )}
           </View>
 
-          <View style={styles.pricing}>
-            {facility.pricePerHour && (
-              <Text style={styles.price}>
-                ${facility.pricePerHour}/hr
-              </Text>
-            )}
-          </View>
+          {facility.pricePerHour && (
+            <Text style={styles.price}>${facility.pricePerHour}/hr</Text>
+          )}
         </View>
 
         {facility.amenities && facility.amenities.length > 0 && (
           <View style={styles.amenities}>
-            <Text style={styles.amenitiesTitle}>Amenities:</Text>
+            <Text style={styles.amenitiesTitle}>Amenities</Text>
             <Text style={styles.amenitiesText} numberOfLines={1}>
               {facility.amenities.slice(0, 3).join(', ')}
               {facility.amenities.length > 3 && '...'}
@@ -158,18 +118,10 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginVertical: 8,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    marginVertical: 6,
     marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
     overflow: 'hidden',
   },
   image: {
@@ -186,9 +138,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   name: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
     flex: 1,
     marginRight: 8,
   },
@@ -200,12 +152,14 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   ratingText: {
+    fontFamily: fonts.body,
     fontSize: 12,
-    color: '#666',
+    color: colors.onSurfaceVariant,
   },
   description: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -218,8 +172,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   detailText: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     marginLeft: 8,
     flex: 1,
   },
@@ -233,48 +188,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    flexWrap: 'wrap',
+    gap: 6,
   },
   sportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F8FF',
+    backgroundColor: colors.primary + '14',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
+    borderRadius: 9999,
+    gap: 4,
   },
   sportText: {
+    fontFamily: fonts.label,
     fontSize: 10,
-    color: '#007AFF',
-    fontWeight: '500',
-    marginLeft: 4,
+    color: colors.primary,
   },
   moreText: {
+    fontFamily: fonts.body,
     fontSize: 12,
-    color: '#666',
+    color: colors.onSurfaceVariant,
     fontStyle: 'italic',
   },
-  pricing: {
-    alignItems: 'flex-end',
-  },
   price: {
+    fontFamily: fonts.heading,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#007AFF',
+    color: colors.primary,
   },
   amenities: {
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: colors.outlineVariant,
     paddingTop: 8,
   },
   amenitiesTitle: {
+    fontFamily: fonts.label,
     fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
+    color: colors.onSurface,
     marginBottom: 4,
   },
   amenitiesText: {
+    fontFamily: fonts.body,
     fontSize: 12,
-    color: '#666',
+    color: colors.onSurfaceVariant,
   },
 });

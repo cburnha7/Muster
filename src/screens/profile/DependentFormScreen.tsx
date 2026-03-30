@@ -229,7 +229,7 @@ export function DependentFormScreen() {
           onBackPress={() => (navigation as any).goBack()}
         />
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={colors.cobalt} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
@@ -378,7 +378,7 @@ export function DependentFormScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   flex: {
     flex: 1,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   loadingContent: {
     flex: 1,
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: 8,
     fontFamily: fonts.body,
   },
@@ -422,8 +422,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   chipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipIcon: {
     marginRight: 4,
@@ -431,14 +431,14 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 14,
     fontFamily: fonts.label,
-    color: colors.ink,
+    color: colors.onSurface,
   },
   chipTextSelected: {
     color: '#FFFFFF',
   },
   errorText: {
     fontSize: 14,
-    color: colors.heart,
+    color: colors.error,
     marginTop: 4,
   },
   submitContainer: {

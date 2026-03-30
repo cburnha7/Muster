@@ -715,6 +715,14 @@ router.post('/', requireNonDependent, async (req, res) => {
       // Non-fatal — event was still created
     }
 
+    // Messaging hook: create game thread
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.createGameThread(result.id, result.organizerId, result.title);
+    } catch (msgErr) {
+      console.error('Failed to create game thread:', msgErr);
+    }
+
     res.status(201).json(result);
   } catch (error) {
     console.error('Create event error:', error);
@@ -1101,6 +1109,23 @@ router.post('/:id/book', async (req, res) => {
     console.log('📦 Booking ID:', booking.id);
     console.log('📊 Updated participants:', event.currentParticipants + 1);
 
+    // Messaging hook: add to game thread
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      const conv = await MessagingService.getConversationForEvent(id);
+      if (conv) {
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+        const totalParticipants = await prisma.gameParticipation.count({ where: { eventId: id } });
+        await MessagingService.addParticipant(conv.id, userId, 'MEMBER');
+        if (user) {
+          const eventRecord = await prisma.event.findUnique({ where: { id }, select: { maxParticipants: true } });
+          await MessagingService.postSystemMessage(conv.id, `${user.firstName} ${user.lastName} is in! (${totalParticipants}/${eventRecord?.maxParticipants ?? '?'})`);
+        }
+      }
+    } catch (msgErr) {
+      console.error('Failed to update game thread on RSVP:', msgErr);
+    }
+
     res.status(201).json(booking);
   } catch (error) {
     console.error('❌ Book event error:', error);
@@ -1116,6 +1141,12 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
     console.log('🚶 DELETE /events/:id/book/:bookingId');
     console.log('📋 Event ID:', id);
     console.log('📋 Booking ID:', bookingId);
+
+    // Fetch the booking to get userId before cancelling
+    const bookingToCancel = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { userId: true },
+    });
 
     // Update the booking status to cancelled and update event participant count
     await prisma.$transaction([
@@ -1136,6 +1167,26 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
     ]);
 
     console.log('✅ Booking cancelled successfully');
+
+    // Messaging hook: remove from game thread
+    if (bookingToCancel) {
+      try {
+        const { MessagingService } = await import('../services/MessagingService');
+        const conv = await MessagingService.getConversationForEvent(id);
+        if (conv) {
+          const user = await prisma.user.findUnique({ where: { id: bookingToCancel.userId }, select: { firstName: true, lastName: true } });
+          await MessagingService.removeParticipant(conv.id, bookingToCancel.userId);
+          const remaining = await prisma.gameParticipation.count({ where: { eventId: id } });
+          if (user) {
+            const eventRecord = await prisma.event.findUnique({ where: { id }, select: { maxParticipants: true } });
+            await MessagingService.postSystemMessage(conv.id, `${user.firstName} ${user.lastName} stepped out (${remaining}/${eventRecord?.maxParticipants ?? '?'})`);
+          }
+        }
+      } catch (msgErr) {
+        console.error('Failed to update game thread on RSVP out:', msgErr);
+      }
+    }
+
     res.status(204).send();
   } catch (error) {
     console.error('❌ Cancel booking error:', error);

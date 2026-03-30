@@ -46,7 +46,7 @@ export function InboxSection({
   const items: InboxItem[] = [];
 
   rosterInvitations.forEach((inv) => {
-    items.push({ id: `r-${inv.id}`, task: 'Join Roster', name: inv.rosterName, onPress: () => onRosterInvitationPress(inv) });
+    items.push({ id: `r-${inv.id}`, task: 'Join Team', name: inv.rosterName, onPress: () => onRosterInvitationPress(inv) });
   });
   leagueInvitations.forEach((inv) => {
     items.push({ id: `l-${inv.id}`, task: 'Join League', name: inv.leagueName, onPress: () => onLeagueInvitationPress(inv) });

@@ -103,6 +103,13 @@ export interface User {
   preferredSports: SportType[];
   notificationPreferences: NotificationPreferences;
   stripeAccountId?: string;
+  onboardingComplete?: boolean;
+  intents?: string[];
+  sportPreferences?: string[];
+  locationCity?: string;
+  locationState?: string;
+  locationLat?: number;
+  locationLng?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -450,6 +457,7 @@ export interface PaginatedResponse<T> {
 
 export interface EventFilters {
   sportType?: SportType;
+  sportTypes?: string; // Comma-separated sport keys for multi-sport filtering
   skillLevel?: SkillLevel;
   minPlayerRating?: number; // Filter events by max rating requirement
   startDate?: Date;
@@ -831,9 +839,4 @@ export interface TeamTransaction {
 
 export * from './eventsCalendar';
 
-
-// ============================================================================
-// EVENTS CALENDAR TYPES
-// ============================================================================
-
-export * from './eventsCalendar';
+export * from './messaging';

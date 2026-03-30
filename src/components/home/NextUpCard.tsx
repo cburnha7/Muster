@@ -52,7 +52,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
   return (
     <TouchableOpacity onPress={() => onPress(booking)} activeOpacity={0.9}>
       <LinearGradient
-        colors={live ? ['#006D32', '#004D23'] : ['#0052FF', '#003EC7']}
+        colors={live ? [colors.secondary, '#004D23'] : [colors.primary, colors.primaryContainer]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
@@ -97,7 +97,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
             </Text>
           </View>
           <View style={styles.arrowCircle}>
-            <Ionicons name="arrow-forward" size={16} color={live ? '#006D32' : '#0052FF'} />
+            <Ionicons name="arrow-forward" size={16} color={live ? colors.secondary : colors.primary} />
           </View>
         </View>
       </LinearGradient>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#55FD8C',
+    backgroundColor: colors.secondaryContainer,
   },
   badgeText: {
     fontFamily: fonts.label,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
   },
   spotsText: {
-    color: '#55FD8C',
+    color: colors.secondaryContainer,
   },
   arrowCircle: {
     width: 32,

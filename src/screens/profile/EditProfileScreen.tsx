@@ -365,10 +365,10 @@ export function EditProfileScreen(): JSX.Element {
             placeholder="Start typing your address..."
           />
           {addressSuggestions.length > 0 && (
-            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: colors.border, marginTop: -8, marginBottom: 8 }}>
+            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: colors.outlineVariant, marginTop: -8, marginBottom: 8 }}>
               {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
-                <TouchableOpacity key={idx} style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: idx < 4 ? 1 : 0, borderBottomColor: colors.border }} onPress={() => { setAddress(suggestion); setAddressSuggestions([]); }}>
-                  <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink }}>{suggestion}</Text>
+                <TouchableOpacity key={idx} style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: idx < 4 ? 1 : 0, borderBottomColor: colors.outlineVariant }} onPress={() => { setAddress(suggestion); setAddressSuggestions([]); }}>
+                  <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.onSurface }}>{suggestion}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -414,7 +414,7 @@ export function EditProfileScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   content: {
     padding: 16,
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
   imageButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#3B82F6',
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   imageButtonText: {
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   removeButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: colors.error,
   },
   removeButtonText: {
     color: '#FFFFFF',
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   sportsLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.onSurfaceVariant,
     marginBottom: 12,
   },
   sportsList: {
@@ -517,21 +517,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.outlineVariant,
   },
   sportTagSelected: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#3B82F6',
+    backgroundColor: colors.primaryFixed,
+    borderColor: colors.primary,
   },
   sportTagText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.outline,
     fontWeight: '500',
   },
   sportTagTextSelected: {
-    color: '#3B82F6',
+    color: colors.primary,
   },
   saveButton: {
     marginTop: 24,

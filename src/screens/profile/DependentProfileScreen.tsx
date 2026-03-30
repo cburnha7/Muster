@@ -104,7 +104,7 @@ export function DependentProfileScreen() {
           onBackPress={() => (navigation as any).goBack()}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.cobalt} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
@@ -136,7 +136,7 @@ export function DependentProfileScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {/* Profile Header */}
@@ -146,7 +146,7 @@ export function DependentProfileScreen() {
               <Image source={{ uri: profile.profileImage }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Ionicons name="person" size={36} color={colors.inkFaint} />
+                <Ionicons name="person" size={36} color={colors.outline} />
               </View>
             )}
             <View style={styles.profileInfo}>
@@ -168,7 +168,7 @@ export function DependentProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel="Edit dependent profile"
             >
-              <Ionicons name="create-outline" size={18} color={colors.cobalt} />
+              <Ionicons name="create-outline" size={18} color={colors.primary} />
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
 
@@ -184,7 +184,7 @@ export function DependentProfileScreen() {
               <Ionicons
                 name="arrow-forward-circle-outline"
                 size={18}
-                color={canTransfer ? colors.ink : colors.inkFaint}
+                color={canTransfer ? colors.onSurface : colors.outline}
               />
               <Text style={[styles.transferButtonText, !canTransfer && styles.transferButtonTextDisabled]}>
                 Transfer
@@ -205,7 +205,7 @@ export function DependentProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Salutes Received</Text>
           <View style={styles.statCard}>
-            <Ionicons name="hand-left-outline" size={24} color={colors.gold} />
+            <Ionicons name="hand-left-outline" size={24} color={colors.tertiary} />
             <Text style={styles.statValue}>{profile.salutesReceived}</Text>
             <Text style={styles.statLabel}>
               {profile.salutesReceived === 1 ? 'Salute' : 'Salutes'}
@@ -218,13 +218,13 @@ export function DependentProfileScreen() {
           <Text style={styles.sectionTitle}>Event History</Text>
           {profile.eventHistory.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="calendar-outline" size={24} color={colors.inkFaint} />
+              <Ionicons name="calendar-outline" size={24} color={colors.outline} />
               <Text style={styles.emptyCardText}>No events yet</Text>
             </View>
           ) : (
             profile.eventHistory.map((event: any, index: number) => (
               <View key={event.id ?? index} style={styles.listItem}>
-                <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
+                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {event.title ?? event.name ?? `Event ${index + 1}`}
                 </Text>
@@ -243,13 +243,13 @@ export function DependentProfileScreen() {
           <Text style={styles.sectionTitle}>Roster Memberships</Text>
           {profile.rosterMemberships.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="people-outline" size={24} color={colors.inkFaint} />
+              <Ionicons name="people-outline" size={24} color={colors.outline} />
               <Text style={styles.emptyCardText}>Not a member of any Rosters</Text>
             </View>
           ) : (
             profile.rosterMemberships.map((roster: any, index: number) => (
               <View key={roster.id ?? index} style={styles.listItem}>
-                <Ionicons name="people-outline" size={18} color={colors.cobalt} />
+                <Ionicons name="people-outline" size={18} color={colors.primary} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {roster.name ?? `Roster ${index + 1}`}
                 </Text>
@@ -263,13 +263,13 @@ export function DependentProfileScreen() {
           <Text style={styles.sectionTitle}>League Memberships</Text>
           {profile.leagueMemberships.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="trophy-outline" size={24} color={colors.inkFaint} />
+              <Ionicons name="trophy-outline" size={24} color={colors.outline} />
               <Text style={styles.emptyCardText}>Not a member of any Leagues</Text>
             </View>
           ) : (
             profile.leagueMemberships.map((league: any, index: number) => (
               <View key={league.id ?? index} style={styles.listItem}>
-                <Ionicons name="trophy-outline" size={18} color={colors.cobalt} />
+                <Ionicons name="trophy-outline" size={18} color={colors.primary} />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {league.name ?? `League ${index + 1}`}
                 </Text>
@@ -287,7 +287,7 @@ export function DependentProfileScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
   },
   scrollView: {
     flex: 1,
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.outline,
   },
   profileHeader: {
     backgroundColor: '#FFFFFF',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceContainerLowest,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -338,12 +338,12 @@ const styles = StyleSheet.create({
   profileName: {
     fontFamily: fonts.heading,
     ...typeScale.h3,
-    color: colors.ink,
+    color: colors.onSurface,
   },
   profileDob: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
+    color: colors.outline,
     marginTop: 2,
   },
   headerActions: {
@@ -359,12 +359,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt,
+    borderColor: colors.primary,
   },
   editButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.cobalt,
+    color: colors.primary,
     marginLeft: 4,
   },
   transferButton: {
@@ -374,25 +374,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.ink,
+    borderColor: colors.onSurface,
   },
   transferButtonDisabled: {
-    borderColor: colors.inkFaint + '40',
+    borderColor: colors.outline + '40',
     opacity: 0.6,
   },
   transferButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.ink,
+    color: colors.onSurface,
     marginLeft: 4,
   },
   transferButtonTextDisabled: {
-    color: colors.inkFaint,
+    color: colors.outline,
   },
   transferHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
+    color: colors.outline,
     marginTop: 8,
     fontStyle: 'italic',
   },
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
+    color: colors.onSurface,
     marginBottom: Spacing.sm,
   },
   statCard: {
@@ -422,12 +422,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: fonts.display,
     fontSize: 24,
-    color: colors.gold,
+    color: colors.tertiary,
   },
   statLabel: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.outline,
   },
   emptyCard: {
     backgroundColor: '#FFFFFF',
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   emptyCardText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: colors.outline,
     marginTop: Spacing.sm,
   },
   listItem: {
@@ -463,12 +463,12 @@ const styles = StyleSheet.create({
   listItemText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
+    color: colors.onSurface,
     flex: 1,
   },
   listItemDate: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
+    color: colors.outline,
   },
 });

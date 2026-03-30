@@ -174,6 +174,19 @@ export interface UserResponse {
   trialTier: string | null;
   trialExpiry: Date | null;
   ssoProviders: string[];
+  onboardingComplete: boolean;
+  intents: string[];
+  sportPreferences: string[];
+  locationCity: string | null;
+  locationState: string | null;
+  locationLat: number | null;
+  locationLng: number | null;
+  isDependent: boolean;
+  guardianId: string | null;
+  profileImage: string | null;
+  dateOfBirth: Date | null;
+  gender: string | null;
+  phoneNumber: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -197,6 +210,19 @@ export function toUserResponse(user: User): UserResponse {
     trialTier: user.trialTier || null,
     trialExpiry: user.trialExpiry || null,
     ssoProviders: user.ssoProviders || [],
+    onboardingComplete: user.onboardingComplete ?? false,
+    intents: user.intents || [],
+    sportPreferences: user.sportPreferences || [],
+    locationCity: user.locationCity || null,
+    locationState: user.locationState || null,
+    locationLat: user.locationLat || null,
+    locationLng: user.locationLng || null,
+    isDependent: user.isDependent || false,
+    guardianId: user.guardianId || null,
+    profileImage: user.profileImage || null,
+    dateOfBirth: user.dateOfBirth || null,
+    gender: user.gender || null,
+    phoneNumber: user.phoneNumber || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

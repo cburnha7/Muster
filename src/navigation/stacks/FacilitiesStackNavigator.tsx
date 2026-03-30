@@ -20,17 +20,17 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.white },
+  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
+  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
 };
 
 export function FacilitiesStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="FacilitiesList" component={FacilitiesListScreen} />
-      <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ ...detailHeader, headerTitle: 'Ground' }} />
-      <Stack.Screen name="CreateFacility" component={CreateFacilityScreen} options={{ ...detailHeader, headerTitle: 'New Ground' }} />
+      <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
+      <Stack.Screen name="CreateFacility" component={CreateFacilityScreen} options={{ headerShown: false }} />
       <Stack.Screen name="EditFacility" component={EditFacilityScreen} options={{ ...detailHeader, headerTitle: 'Edit Ground' }} />
       <Stack.Screen name="ManageGround" component={ManageGroundScreen} options={{ ...detailHeader, headerTitle: 'Manage' }} />
       <Stack.Screen name="AddCourt" component={AddCourtScreen} options={{ ...detailHeader, headerTitle: 'Add Court' }} />

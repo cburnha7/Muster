@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   TouchableOpacity,
   TextInput,
   Image,
@@ -15,33 +13,36 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
-import { FormButton } from '../../components/forms/FormButton';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
+import { CreationWizard, WizardStep } from '../../components/wizard/CreationWizard';
+import { SportIconGrid } from '../../components/wizard/SportIconGrid';
+import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { teamService } from '../../services/api/TeamService';
 import { addTeam, joinTeam, selectUserTeams } from '../../store/slices/teamsSlice';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
-import { SportType, SkillLevel, User } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { SportType, SkillLevel } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
-import { colors, fonts, Spacing } from '../../theme';
-
-const SPORT_OPTIONS: SelectOption[] = [
-  { label: 'Basketball', value: SportType.BASKETBALL },
-  { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Tennis', value: SportType.TENNIS },
-  { label: 'Soccer', value: SportType.SOCCER },
-  { label: 'Softball', value: SportType.SOFTBALL },
-  { label: 'Baseball', value: SportType.BASEBALL },
-  { label: 'Volleyball', value: SportType.VOLLEYBALL },
-  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
-  { label: 'Kickball', value: SportType.KICKBALL },
-  { label: 'Other', value: SportType.OTHER },
-];
+import { getSportEmoji } from '../../constants/sports';
+import { colors, fonts } from '../../theme';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { label: 'Open to All', value: '' },
   { label: 'Male Only', value: 'male' },
   { label: 'Female Only', value: 'female' },
 ];
+
+const DEFAULT_MAX_PLAYERS: Record<string, number> = {
+  basketball: 10,
+  soccer: 22,
+  tennis: 4,
+  pickleball: 4,
+  volleyball: 12,
+  softball: 18,
+  baseball: 18,
+  flag_football: 14,
+  kickball: 16,
+};
 
 interface InviteItem {
   id: string;
@@ -53,16 +54,19 @@ interface InviteItem {
 export function CreateTeamScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const { user: authUser } = useAuth();
   const userTeams = useSelector(selectUserTeams);
   const { allowed: rosterAllowed, requiredPlan } = useFeatureGate('create_roster');
 
   const [showUpsell, setShowUpsell] = useState(false);
   const [upsellPlan, setUpsellPlan] = useState<SubscriptionPlan>('roster');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
 
-  // ── Step state ──
+  // ── Form state (all fields preserved) ──
   const [name, setName] = useState('');
-  const [sport, setSport] = useState<SportType | ''>('');
+  const [sport, setSport] = useState<string>('');
   const [visibility, setVisibility] = useState<'private' | 'public' | ''>('');
   const [maxPlayers, setMaxPlayers] = useState('');
   const [gender, setGender] = useState('');
@@ -75,14 +79,20 @@ export function CreateTeamScreen() {
   const [inviteResults, setInviteResults] = useState<InviteItem[]>([]);
   const [invitedItems, setInvitedItems] = useState<InviteItem[]>([]);
 
-  // ── Step visibility ──
-  const showSport = name.trim().length >= 2;
-  const showVisibility = !!sport;
-  const showMaxPlayers = visibility !== '';
-  const showGender = !!maxPlayers && parseInt(maxPlayers) > 0;
-  const showInvites = gender !== undefined && showGender;
-  const showPrice = showInvites;
-  const showSubmit = showPrice;
+  // Smart default: pre-select user's primary sport
+  useEffect(() => {
+    if (!sport && authUser?.sportPreferences?.length) {
+      setSport(authUser.sportPreferences[0] ?? '');
+    }
+  }, [authUser?.sportPreferences]);
+
+  // Smart default: set max players when sport changes
+  useEffect(() => {
+    if (sport && !maxPlayers) {
+      const defaultMax = DEFAULT_MAX_PLAYERS[sport] || 10;
+      setMaxPlayers(String(defaultMax));
+    }
+  }, [sport]);
 
   // ── Invite search ──
   useEffect(() => {
@@ -115,8 +125,8 @@ export function CreateTeamScreen() {
 
   const removeInvite = (id: string) => setInvitedItems((prev) => prev.filter((i) => i.id !== id));
 
-  // ── Submit ──
-  const handleSubmit = async () => {
+  // ── Submit (identical payload) ──
+  const handleSubmit = useCallback(async () => {
     if (!name.trim() || !sport) return;
 
     if (userTeams.length >= 1 && !rosterAllowed) {
@@ -142,77 +152,104 @@ export function CreateTeamScreen() {
 
       dispatch(addTeam(newTeam));
       dispatch(joinTeam(newTeam));
-      (navigation as any).replace('TeamsList');
+      setCreatedTeamId(newTeam.id);
+      setShowSuccess(true);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create roster.');
+      Alert.alert('Error', error.message || 'Failed to create team.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [name, sport, visibility, maxPlayers, gender, invitedItems, userTeams, rosterAllowed, requiredPlan, dispatch]);
 
-  return (
-    <>
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+  const handleSportSelect = useCallback((key: string) => {
+    setSport(key);
+    // Reset max players to the new sport's default
+    const defaultMax = DEFAULT_MAX_PLAYERS[key] || 10;
+    setMaxPlayers(String(defaultMax));
+  }, []);
 
-        {/* Step 1: Name */}
-        <Text style={styles.stepLabel}>Roster Name</Text>
-        <TextInput style={styles.input} placeholder="e.g. Sunday Ballers" placeholderTextColor={colors.inkFaint} value={name} onChangeText={setName} />
-
-        {/* Step 2: Sport */}
-        {showSport && (
-          <>
-            <Text style={styles.stepLabel}>Sport</Text>
-            <FormSelect label="" options={SPORT_OPTIONS} value={sport} onSelect={(o) => setSport(o.value as SportType)} placeholder="Select a sport..." />
-          </>
-        )}
-
-        {/* Step 3: Visibility */}
-        {showVisibility && (
-          <>
-            <Text style={styles.stepLabel}>Visibility</Text>
+  // ── Wizard steps ──
+  const steps: WizardStep[] = useMemo(
+    () => [
+      {
+        key: 'name',
+        headline: 'Name your team',
+        subtitle: 'Pick a name and sport — you can change these later',
+        validate: () => name.trim().length >= 2 && !!sport,
+        content: (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.fieldLabel}>Team name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Sunday Ballers"
+              placeholderTextColor={colors.outline}
+              value={name}
+              onChangeText={setName}
+              autoFocus
+            />
+            <Text style={[styles.fieldLabel, { marginTop: 24 }]}>Sport</Text>
+            <SportIconGrid selected={sport} onSelect={handleSportSelect} />
+          </ScrollView>
+        ),
+      },
+      {
+        key: 'setup',
+        headline: 'Set it up',
+        subtitle: 'Configure visibility, roster size, and eligibility',
+        validate: () => visibility !== '' && !!maxPlayers && parseInt(maxPlayers) > 0,
+        content: (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.fieldLabel}>Visibility</Text>
             <View style={styles.row}>
-              <TouchableOpacity style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]} onPress={() => setVisibility('private')}>
-                <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.ink} />
+              <TouchableOpacity
+                style={[styles.toggleBtn, visibility === 'private' && styles.toggleBtnActive]}
+                onPress={() => setVisibility('private')}
+              >
+                <Ionicons name="lock-closed-outline" size={16} color={visibility === 'private' ? '#FFF' : colors.onSurface} />
                 <Text style={[styles.toggleText, visibility === 'private' && styles.toggleTextActive]}>Private</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]} onPress={() => setVisibility('public')}>
-                <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.ink} />
+              <TouchableOpacity
+                style={[styles.toggleBtn, visibility === 'public' && styles.toggleBtnActive]}
+                onPress={() => setVisibility('public')}
+              >
+                <Ionicons name="globe-outline" size={16} color={visibility === 'public' ? '#FFF' : colors.onSurface} />
                 <Text style={[styles.toggleText, visibility === 'public' && styles.toggleTextActive]}>Public</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
 
-        {/* Step 4: Max Players */}
-        {showMaxPlayers && (
-          <>
-            <Text style={styles.stepLabel}>Max Players</Text>
-            <TextInput style={styles.input} placeholder="e.g. 15" placeholderTextColor={colors.inkFaint} value={maxPlayers} onChangeText={setMaxPlayers} keyboardType="number-pad" />
-          </>
-        )}
+            <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Max players</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. 15"
+              placeholderTextColor={colors.outline}
+              value={maxPlayers}
+              onChangeText={setMaxPlayers}
+              keyboardType="number-pad"
+            />
 
-        {/* Step 5: Gender */}
-        {showGender && (
-          <>
-            <Text style={styles.stepLabel}>Gender</Text>
+            <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Gender</Text>
             <FormSelect label="" options={GENDER_OPTIONS} value={gender} onSelect={(o) => setGender(String(o.value))} placeholder="Open to All" />
-            <Text style={styles.stepLabel}>Age Limit</Text>
-            <View style={styles.row}>
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
-              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
-            </View>
-          </>
-        )}
 
-        {/* Step 6: Invite Players */}
-        {showInvites && (
-          <>
-            <Text style={styles.stepLabel}>Invite Players</Text>
+            <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Age limit</Text>
+            <View style={styles.row}>
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Min age" placeholderTextColor={colors.outline} value={minAge} onChangeText={setMinAge} keyboardType="number-pad" />
+              <TextInput style={[styles.input, { flex: 1 }]} placeholder="Max age" placeholderTextColor={colors.outline} value={maxAge} onChangeText={setMaxAge} keyboardType="number-pad" />
+            </View>
+          </ScrollView>
+        ),
+      },
+      {
+        key: 'invite',
+        headline: 'Invite players',
+        subtitle: 'Search for players or rosters to invite (optional)',
+        validate: () => true, // All optional
+        content: (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.fieldLabel}>Search</Text>
             <TextInput
               style={styles.input}
               placeholder="Search rosters or players..."
-              placeholderTextColor={colors.inkFaint}
+              placeholderTextColor={colors.outline}
               value={inviteQuery}
               onChangeText={setInviteQuery}
             />
@@ -221,11 +258,11 @@ export function CreateTeamScreen() {
                 {inviteResults.slice(0, 8).map((item) => (
                   <TouchableOpacity key={item.id} style={styles.dropdownRow} onPress={() => addInvite(item)}>
                     {item.type === 'roster' ? (
-                      <Ionicons name="people" size={18} color={colors.cobalt} />
+                      <Ionicons name="people" size={18} color={colors.primary} />
                     ) : item.image ? (
                       <Image source={{ uri: item.image }} style={styles.avatar} />
                     ) : (
-                      <Ionicons name="person" size={18} color={colors.inkFaint} />
+                      <Ionicons name="person" size={18} color={colors.outline} />
                     )}
                     <Text style={styles.dropdownText}>{item.name}</Text>
                   </TouchableOpacity>
@@ -236,61 +273,134 @@ export function CreateTeamScreen() {
               <View style={styles.chipRow}>
                 {invitedItems.map((item) => (
                   <View key={item.id} style={styles.inviteChip}>
-                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.cobalt} /> : <Ionicons name="person" size={14} color={colors.ink} />}
+                    {item.type === 'roster' ? <Ionicons name="people" size={14} color={colors.primary} /> : <Ionicons name="person" size={14} color={colors.onSurface} />}
                     <Text style={styles.inviteChipText}>{item.name}</Text>
-                    <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.inkFaint} /></TouchableOpacity>
+                    <TouchableOpacity onPress={() => removeInvite(item.id)}><Ionicons name="close-circle" size={16} color={colors.outline} /></TouchableOpacity>
                   </View>
                 ))}
               </View>
             )}
-          </>
-        )}
 
-        {/* Step 7: Price */}
-        {showPrice && (
-          <>
-            <Text style={styles.stepLabel}>Join Fee</Text>
-            <TextInput style={styles.input} placeholder="0 for free" placeholderTextColor={colors.inkFaint} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
-          </>
-        )}
+            <Text style={[styles.fieldLabel, { marginTop: 24 }]}>Join fee</Text>
+            <TextInput style={styles.input} placeholder="0 for free" placeholderTextColor={colors.outline} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+          </ScrollView>
+        ),
+      },
+      {
+        key: 'review',
+        headline: 'Review and create',
+        subtitle: 'Make sure everything looks good',
+        validate: () => name.trim().length >= 2 && !!sport,
+        content: (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.reviewCard}>
+              <View style={styles.reviewRow}>
+                <Text style={styles.reviewEmoji}>{getSportEmoji(sport)}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.reviewName}>{name.trim() || 'Untitled Team'}</Text>
+                  <Text style={styles.reviewMeta}>
+                    {sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace('_', ' ') : ''} · {visibility === 'public' ? 'Public' : 'Private'} · {maxPlayers || '10'} players max
+                  </Text>
+                </View>
+              </View>
 
-        {/* Submit */}
-        {showSubmit && (
-          <View style={{ marginTop: 24 }}>
-            <FormButton title={isLoading ? 'Creating...' : 'Create Roster'} onPress={handleSubmit} loading={isLoading} disabled={isLoading} />
-          </View>
-        )}
+              {gender && (
+                <View style={styles.reviewDetailRow}>
+                  <Text style={styles.reviewDetailLabel}>Gender</Text>
+                  <Text style={styles.reviewDetailValue}>{gender === 'male' ? 'Male Only' : gender === 'female' ? 'Female Only' : 'Open to All'}</Text>
+                </View>
+              )}
 
-        <View style={{ height: 80 }} />
-      </ScrollView>
-    </KeyboardAvoidingView>
-    <UpsellModal visible={showUpsell} onClose={() => setShowUpsell(false)} requiredPlan={upsellPlan} feature="create_roster" />
+              {(minAge || maxAge) && (
+                <View style={styles.reviewDetailRow}>
+                  <Text style={styles.reviewDetailLabel}>Age range</Text>
+                  <Text style={styles.reviewDetailValue}>{minAge || 'Any'} – {maxAge || 'Any'}</Text>
+                </View>
+              )}
+
+              {invitedItems.length > 0 && (
+                <View style={styles.reviewDetailRow}>
+                  <Text style={styles.reviewDetailLabel}>Invites</Text>
+                  <Text style={styles.reviewDetailValue}>{invitedItems.length} invited</Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        ),
+      },
+    ],
+    [name, sport, visibility, maxPlayers, gender, minAge, maxAge, inviteQuery, inviteResults, invitedItems, price, handleSportSelect]
+  );
+
+  const sportEmoji = getSportEmoji(sport);
+
+  return (
+    <>
+      <CreationWizard
+        steps={steps}
+        onComplete={handleSubmit}
+        onBack={() => navigation.goBack()}
+        isSubmitting={isLoading}
+        submitLabel="Create Team"
+        showSuccess={showSuccess}
+        successScreen={
+          <WizardSuccessScreen
+            emoji={sportEmoji}
+            title={`${name.trim()} is live!`}
+            subtitle="Your team has been created"
+            summaryRows={[
+              { label: 'Sport', value: sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace('_', ' ') : '' },
+              { label: 'Visibility', value: visibility === 'public' ? 'Public' : 'Private' },
+              { label: 'Max players', value: maxPlayers || '10' },
+              ...(invitedItems.length > 0 ? [{ label: 'Invites sent', value: String(invitedItems.length) }] : []),
+            ]}
+            actions={[
+              {
+                label: 'Go to team',
+                icon: 'arrow-forward',
+                onPress: () => {
+                  if (createdTeamId) {
+                    (navigation as any).replace('TeamDetails', { teamId: createdTeamId });
+                  } else {
+                    (navigation as any).replace('TeamsList');
+                  }
+                },
+                variant: 'primary',
+              },
+              {
+                label: 'Back to teams',
+                icon: 'list-outline',
+                onPress: () => (navigation as any).replace('TeamsList'),
+                variant: 'secondary',
+              },
+            ]}
+          />
+        }
+      />
+      <UpsellModal visible={showUpsell} onClose={() => setShowUpsell(false)} requiredPlan={upsellPlan} onUpgrade={() => setShowUpsell(false)} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  content: { padding: 16, paddingTop: 8 },
-  stepLabel: {
+  fieldLabel: {
     fontFamily: fonts.label,
-    fontSize: 12,
-    color: colors.inkFaint,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginTop: 20,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.ink,
+    fontSize: 16,
+    color: colors.onSurface,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
   },
   row: { flexDirection: 'row', gap: 10 },
   toggleBtn: {
@@ -298,22 +408,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: colors.white,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 2,
+    borderColor: colors.outlineVariant,
     gap: 6,
   },
-  toggleBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  toggleText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
+  toggleBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  toggleText: { fontFamily: fonts.ui, fontSize: 15, color: colors.onSurface },
   toggleTextActive: { color: '#FFFFFF' },
+
+  // ── Invite dropdown ──
   dropdown: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 12,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
     maxHeight: 240,
   },
   dropdownRow: {
@@ -323,21 +435,71 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.white,
+    borderBottomColor: colors.surfaceContainerLow,
   },
-  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
+  dropdownText: { fontFamily: fonts.body, fontSize: 15, color: colors.onSurface, flex: 1 },
   avatar: { width: 24, height: 24, borderRadius: 12 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   inviteChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceContainerLowest,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.outlineVariant,
   },
-  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.onSurface },
+
+  // ── Review card ──
+  reviewCard: {
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: colors.onSurface,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 12,
+  },
+  reviewEmoji: {
+    fontSize: 40,
+  },
+  reviewName: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.onSurface,
+  },
+  reviewMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  reviewDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.outlineVariant,
+  },
+  reviewDetailLabel: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+  },
+  reviewDetailValue: {
+    fontFamily: fonts.label,
+    fontSize: 14,
+    color: colors.onSurface,
+  },
 });
