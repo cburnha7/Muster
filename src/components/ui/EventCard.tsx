@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PressableCard } from './PressableCard';
 import { Event, SportType, SkillLevel } from '../../types';
 import { EventEligibilityService } from '../../services/events/EventEligibilityService';
 import { colors, fonts } from '../../theme';
@@ -68,10 +69,9 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
   const wasAutoOpened = event.eligibility?.wasAutoOpenedToPublic;
 
   return (
-    <TouchableOpacity
+    <PressableCard
       style={[styles.container, colorIndicator ? styles.containerWithIndicator : undefined, style]}
       onPress={() => onPress?.(event)}
-      activeOpacity={0.85}
     >
       {colorIndicator && (
         <View style={[styles.colorIndicatorStripe, { backgroundColor: colorIndicator }]} />
@@ -180,7 +180,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           <Text style={styles.autoOpenedText}>Now open to public - was invite-only</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 

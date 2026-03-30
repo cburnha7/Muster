@@ -12,11 +12,13 @@ const Stack = createNativeStackNavigator<TeamsStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: false,
+  headerBackVisible: true,
+  headerBackTitleVisible: false,
+  headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.surfaceContainerLowest },
+  headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
+  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
 };
 
 export function TeamsStackNavigator(): JSX.Element {
@@ -25,7 +27,7 @@ export function TeamsStackNavigator(): JSX.Element {
       <Stack.Screen name="TeamsList" component={TeamsListScreen} />
       <Stack.Screen name="TeamDetails" component={TeamDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
       <Stack.Screen name="CreateTeam" component={CreateTeamScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="JoinTeam" component={JoinTeamScreen} options={{ ...detailHeader, headerTitle: 'Join Team' }} />
+      <Stack.Screen name="JoinTeam" component={JoinTeamScreen} options={{ headerShown: false }} />
       <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
     </Stack.Navigator>
   );

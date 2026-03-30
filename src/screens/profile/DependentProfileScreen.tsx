@@ -13,7 +13,7 @@ import {
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
+
 import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
 import { useAuth } from '../../context/AuthContext';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
@@ -70,6 +70,13 @@ export function DependentProfileScreen() {
     }
   }, [authUser?.id, dependentId]);
 
+  // Update nav header with dependent's name
+  useEffect(() => {
+    if (profile) {
+      navigation.setOptions({ headerTitle: `${profile.firstName} ${profile.lastName}` });
+    }
+  }, [navigation, profile]);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
@@ -98,11 +105,6 @@ export function DependentProfileScreen() {
   if (loading) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader
-          title="Dependent Profile"
-          showBack
-          onBackPress={() => (navigation as any).goBack()}
-        />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -113,11 +115,6 @@ export function DependentProfileScreen() {
   if (!profile) {
     return (
       <View style={styles.screen}>
-        <ScreenHeader
-          title="Dependent Profile"
-          showBack
-          onBackPress={() => (navigation as any).goBack()}
-        />
         <View style={styles.loadingContainer}>
           <Text style={styles.emptyText}>Could not load profile.</Text>
         </View>
@@ -127,11 +124,6 @@ export function DependentProfileScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader
-        title={`${profile.firstName} ${profile.lastName}`}
-        showBack
-        onBackPress={() => (navigation as any).goBack()}
-      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

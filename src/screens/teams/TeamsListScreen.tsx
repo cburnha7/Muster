@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
 import { teamService } from '../../services/api/TeamService';
@@ -129,7 +130,11 @@ export function TeamsListScreen() {
   }
 
   if (loading && !refreshing && !myRosters.length && !publicRosters.length) {
-    return <View style={styles.container}><LoadingSpinner /></View>;
+    return (
+      <View style={styles.container}>
+        {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
+      </View>
+    );
   }
 
   const renderHeader = () => (

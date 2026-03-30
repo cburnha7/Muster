@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../../theme';
 
-const EMOJIS = ['🔥', '👍', '👏', '😂'] as const;
+const EMOJIS = ['👍', '🔥', '😂', '❤️', '💪', '🎯', '👏', '😤'] as const;
 
 interface ReactionPickerProps {
   onSelect: (emoji: string) => void;
@@ -39,9 +39,9 @@ const styles = StyleSheet.create({
   picker: {
     flexDirection: 'row',
     backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 32,
-    padding: 8,
-    gap: 8,
+    borderRadius: 28,
+    padding: 6,
+    gap: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -49,13 +49,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   emojiBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emoji: {
-    fontSize: 26,
+    fontSize: 22,
   },
 });

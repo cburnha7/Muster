@@ -13,9 +13,10 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenHeader } from '../../components/navigation/ScreenHeader';
+
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
+import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { useAuth } from '../../context/AuthContext';
 import { colors, fonts, Spacing } from '../../theme';
 import { SportType } from '../../types';
@@ -94,6 +95,11 @@ export function DependentFormScreen() {
   const params = (route.params as { dependentId?: string }) || {};
   const dependentId = params.dependentId;
   const isEditMode = !!dependentId;
+
+  // Set nav header title dynamically
+  React.useEffect(() => {
+    navigation.setOptions({ headerTitle: isEditMode ? 'Edit Dependent' : 'Add Dependent' });
+  }, [navigation, isEditMode]);
 
   // Form state
   const [firstName, setFirstName] = useState('');
@@ -223,11 +229,6 @@ export function DependentFormScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ScreenHeader
-          title={isEditMode ? 'Edit Dependent' : 'Add Dependent'}
-          showBack
-          onBackPress={() => (navigation as any).goBack()}
-        />
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -237,11 +238,6 @@ export function DependentFormScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader
-        title={isEditMode ? 'Edit Dependent' : 'Add Dependent'}
-        showBack
-        onBackPress={() => (navigation as any).goBack()}
-      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -275,16 +271,13 @@ export function DependentFormScreen() {
           />
 
           {/* Date of birth */}
-          <FormInput
+          <DatePickerInput
             label="Date of Birth"
-            placeholder="YYYY-MM-DD"
             value={dateOfBirth}
-            onChangeText={setDateOfBirth}
+            onChange={setDateOfBirth}
             error={errors.dateOfBirth}
             required
-            leftIcon="calendar-outline"
-            keyboardType="numbers-and-punctuation"
-            maxLength={10}
+            maximumDate={new Date()}
           />
 
           {/* Gender */}

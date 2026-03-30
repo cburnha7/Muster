@@ -15,6 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { SkeletonConversationRow } from '../../components/ui/SkeletonBox';
 import { ConversationRow } from '../../components/messages/ConversationRow';
 import { conversationService } from '../../services/api/ConversationService';
 import { setConversations, setLoadingConversations, setError, setUnreadCount } from '../../store/slices/messagingSlice';
@@ -31,6 +32,43 @@ const FILTERS: Array<{ key: FilterType; label: string }> = [
   { key: 'LEAGUE_CHANNEL', label: 'Leagues' },
   { key: 'DIRECT_MESSAGE', label: 'DMs' },
 ];
+
+const EMPTY_STATES: Record<FilterType, { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; actionLabel?: string; targetTab?: string; targetScreen?: string }> = {
+  ALL: {
+    icon: 'chatbubble-outline',
+    title: 'No conversations yet',
+    subtitle: 'Your conversations will show up here as you join teams and games.',
+  },
+  TEAM_CHAT: {
+    icon: 'people-outline',
+    title: 'No team chats',
+    subtitle: 'Join a team to start chatting with teammates.',
+    actionLabel: 'Browse Teams',
+    targetTab: 'Teams',
+    targetScreen: 'TeamsList',
+  },
+  GAME_THREAD: {
+    icon: 'calendar-outline',
+    title: 'No game threads',
+    subtitle: 'RSVP to a game to get the game thread.',
+    actionLabel: 'Find Games',
+    targetTab: 'Home',
+    targetScreen: 'HomeScreen',
+  },
+  LEAGUE_CHANNEL: {
+    icon: 'trophy-outline',
+    title: 'No league chats',
+    subtitle: 'Register for a league to access league chat.',
+    actionLabel: 'Browse Leagues',
+    targetTab: 'Leagues',
+    targetScreen: 'LeaguesBrowser',
+  },
+  DIRECT_MESSAGE: {
+    icon: 'person-outline',
+    title: 'No direct messages',
+    subtitle: "Tap a player's profile to start a conversation.",
+  },
+};
 
 type Nav = NativeStackNavigationProp<MessagesStackParamList>;
 
@@ -58,8 +96,6 @@ export function ConversationListScreen() {
 
   useEffect(() => {
     loadConversations();
-    // Polling: refresh conversation list every 30 seconds
-    // TODO: replace with Socket.IO subscription when WebSocket layer is added
     const interval = setInterval(loadConversations, 30000);
     return () => clearInterval(interval);
   }, [loadConversations]);
@@ -68,6 +104,16 @@ export function ConversationListScreen() {
     setRefreshing(true);
     await loadConversations();
     setRefreshing(false);
+  };
+
+  const handleMute = async (conversation: Conversation) => {
+    try {
+      const newMuted = !conversation.myParticipant?.isMuted;
+      await conversationService.setMuted(conversation.id, newMuted);
+      await loadConversations();
+    } catch (err: any) {
+      console.error('Mute error:', err);
+    }
   };
 
   const handlePress = (conversation: Conversation) => {
@@ -83,6 +129,7 @@ export function ConversationListScreen() {
     });
   };
 
+  // Filter by search query
   const filtered = conversations.filter((c) => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -93,10 +140,43 @@ export function ConversationListScreen() {
     return true;
   });
 
+  // Sort: unreads (non-muted) first, then by most recent message
+  const sorted = [...filtered].sort((a, b) => {
+    const aUnread = a.unreadCount > 0 && !a.myParticipant?.isMuted ? 1 : 0;
+    const bUnread = b.unreadCount > 0 && !b.myParticipant?.isMuted ? 1 : 0;
+    if (aUnread !== bUnread) return bUnread - aUnread;
+    const aTime = a.messages[0]?.createdAt ?? a.updatedAt;
+    const bTime = b.messages[0]?.createdAt ?? b.updatedAt;
+    return new Date(bTime).getTime() - new Date(aTime).getTime();
+  });
+
+  const handleEmptyAction = () => {
+    const emptyState = EMPTY_STATES[activeFilter];
+    if (emptyState.targetTab && emptyState.targetScreen) {
+      (navigation as any).getParent()?.navigate(emptyState.targetTab, { screen: emptyState.targetScreen });
+    }
+  };
+
+  const renderEmptyState = () => {
+    const emptyState = EMPTY_STATES[activeFilter];
+    return (
+      <View style={styles.emptyState}>
+        <Ionicons name={emptyState.icon} size={56} color={colors.outlineVariant} />
+        <Text style={styles.emptyTitle}>{emptyState.title}</Text>
+        <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
+        {emptyState.actionLabel && (
+          <TouchableOpacity style={styles.emptyAction} onPress={handleEmptyAction} activeOpacity={0.7}>
+            <Text style={styles.emptyActionText}>{emptyState.actionLabel}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   if (isLoading && conversations.length === 0) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={styles.container}>
+        {Array.from({ length: 8 }).map((_, i) => <SkeletonConversationRow key={i} />)}
       </View>
     );
   }
@@ -143,20 +223,12 @@ export function ConversationListScreen() {
       {/* Conversation list */}
       <FlatList
         style={styles.list}
-        data={filtered}
+        data={sorted}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ConversationRow conversation={item} onPress={handlePress} />}
+        renderItem={({ item }) => <ConversationRow conversation={item} onPress={handlePress} onMute={handleMute} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="chatbubbles-outline" size={56} color={colors.outlineVariant} />
-            <Text style={styles.emptyTitle}>No conversations yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Your conversations will show up here as you join teams and games.
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={renderEmptyState}
       />
     </View>
   );
@@ -209,4 +281,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { fontFamily: fonts.headingSemi, fontSize: 18, color: colors.onSurface, textAlign: 'center' },
   emptySubtitle: { fontFamily: fonts.body, fontSize: 15, color: colors.onSurfaceVariant, textAlign: 'center', lineHeight: 22 },
+  emptyAction: {
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    backgroundColor: colors.primary,
+  },
+  emptyActionText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
 });

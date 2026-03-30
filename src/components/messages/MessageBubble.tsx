@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../theme';
 import type { Message } from '../../types/messaging';
 
@@ -7,10 +7,18 @@ interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   showSender: boolean;
+  showAvatar: boolean;
+  showTimestamp: boolean;
+  showReadReceipt?: 'sending' | 'sent' | 'read' | null | undefined;
+  currentUserId?: string | undefined;
   onLongPress: (message: Message) => void;
+  onToggleReaction?: (messageId: string, emoji: string, hasMe: boolean) => void;
 }
 
-function groupReactions(reactions: Message['reactions']): Array<{ emoji: string; count: number; hasMe: boolean; userIds: string[] }> {
+function groupReactions(
+  reactions: Message['reactions'],
+  currentUserId?: string,
+): Array<{ emoji: string; count: number; hasMe: boolean; userIds: string[] }> {
   const map = new Map<string, { count: number; userIds: string[] }>();
   for (const r of reactions) {
     const existing = map.get(r.emoji);
@@ -21,26 +29,44 @@ function groupReactions(reactions: Message['reactions']): Array<{ emoji: string;
       map.set(r.emoji, { count: 1, userIds: [r.userId] });
     }
   }
-  return Array.from(map.entries()).map(([emoji, data]) => ({ emoji, ...data, hasMe: false }));
+  return Array.from(map.entries()).map(([emoji, data]) => ({
+    emoji,
+    ...data,
+    hasMe: currentUserId ? data.userIds.includes(currentUserId) : false,
+  }));
 }
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
-export function MessageBubble({ message, isOwn, showSender, onLongPress }: MessageBubbleProps) {
-  const grouped = groupReactions(message.reactions);
+export function MessageBubble({
+  message,
+  isOwn,
+  showSender,
+  showAvatar,
+  showTimestamp,
+  showReadReceipt,
+  currentUserId,
+  onLongPress,
+  onToggleReaction,
+}: MessageBubbleProps) {
+  const grouped = groupReactions(message.reactions, currentUserId);
 
   return (
     <TouchableWithoutFeedback onLongPress={() => onLongPress(message)}>
       <View style={[styles.row, isOwn && styles.rowOwn]}>
-        {/* Avatar placeholder for other users */}
+        {/* Avatar or spacer for other users */}
         {!isOwn && (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarInitial}>
-              {message.sender?.firstName?.charAt(0) ?? '?'}
-            </Text>
-          </View>
+          showAvatar ? (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>
+                {message.sender?.firstName?.charAt(0) ?? '?'}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.avatarSpacer} />
+          )
         )}
 
         <View style={[styles.column, isOwn && styles.columnOwn]}>
@@ -62,21 +88,37 @@ export function MessageBubble({ message, isOwn, showSender, onLongPress }: Messa
 
           <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther, message.sendError && styles.bubbleError]}>
             <Text style={[styles.content, isOwn && styles.contentOwn]}>{message.content}</Text>
-            <View style={styles.metaRow}>
-              {message.isSending && <Text style={[styles.status, isOwn && styles.statusOwn]}>Sending…</Text>}
-              {message.sendError && <Text style={styles.statusError}>Failed</Text>}
-              <Text style={[styles.time, isOwn && styles.timeOwn]}>{formatTime(message.createdAt)}</Text>
-            </View>
+            {(showTimestamp || message.isSending || message.sendError) && (
+              <View style={styles.metaRow}>
+                {message.isSending && <Text style={[styles.status, isOwn && styles.statusOwn]}>Sending...</Text>}
+                {message.sendError && <Text style={styles.statusError}>Failed</Text>}
+                {showTimestamp && !message.isSending && !message.sendError && (
+                  <Text style={[styles.time, isOwn && styles.timeOwn]}>{formatTime(message.createdAt)}</Text>
+                )}
+              </View>
+            )}
           </View>
+
+          {/* Read receipt */}
+          {showReadReceipt && (
+            <Text style={[styles.readReceipt, isOwn && styles.readReceiptOwn]}>
+              {showReadReceipt === 'sending' ? 'Sending...' : showReadReceipt === 'read' ? 'Read' : 'Sent'}
+            </Text>
+          )}
 
           {/* Reactions */}
           {grouped.length > 0 && (
             <View style={[styles.reactions, isOwn && styles.reactionsOwn]}>
               {grouped.map((g) => (
-                <View key={g.emoji} style={styles.reactionPill}>
+                <TouchableOpacity
+                  key={g.emoji}
+                  style={[styles.reactionPill, g.hasMe && styles.reactionPillMine]}
+                  onPress={() => onToggleReaction?.(message.id, g.emoji, g.hasMe)}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.reactionEmoji}>{g.emoji}</Text>
-                  <Text style={styles.reactionCount}>{g.count}</Text>
-                </View>
+                  <Text style={[styles.reactionCount, g.hasMe && styles.reactionCountMine]}>{g.count}</Text>
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -102,6 +144,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '20',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  avatarSpacer: {
+    width: 28,
     flexShrink: 0,
   },
   avatarInitial: {
@@ -158,6 +204,14 @@ const styles = StyleSheet.create({
   status: { fontFamily: fonts.body, fontSize: 11, color: colors.onSurfaceVariant },
   statusOwn: { color: 'rgba(255,255,255,0.7)' },
   statusError: { fontFamily: fonts.body, fontSize: 11, color: colors.error },
+  readReceipt: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+    paddingHorizontal: 4,
+  },
+  readReceiptOwn: { textAlign: 'right' },
   reactions: { flexDirection: 'row', gap: 4, flexWrap: 'wrap', paddingLeft: 4 },
   reactionsOwn: { justifyContent: 'flex-end', paddingLeft: 0, paddingRight: 4 },
   reactionPill: {
@@ -169,6 +223,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 3,
   },
+  reactionPillMine: {
+    backgroundColor: colors.primary + '15',
+    borderWidth: 1,
+    borderColor: colors.primary + '40',
+  },
   reactionEmoji: { fontSize: 14 },
   reactionCount: { fontFamily: fonts.label, fontSize: 12, color: colors.onSurface },
+  reactionCountMine: { color: colors.primary },
 });

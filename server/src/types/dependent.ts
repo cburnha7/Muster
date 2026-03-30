@@ -17,6 +17,7 @@ export interface CreateDependentInput {
   dateOfBirth: string; // ISO 8601 date
   sportPreferences: string[];
   profileImage?: string;
+  gender?: string;
 }
 
 /**
@@ -30,6 +31,7 @@ export interface UpdateDependentInput {
   dateOfBirth?: string;
   sportPreferences?: string[];
   profileImage?: string;
+  gender?: string;
 }
 
 /**

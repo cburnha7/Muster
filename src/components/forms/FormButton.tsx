@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   StyleSheet,
   ActivityIndicator,
   View,
+  Animated,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors, fonts } from '../../theme';
 
 interface FormButtonProps {
@@ -23,6 +26,11 @@ interface FormButtonProps {
   textStyle?: any;
 }
 
+function triggerHaptic() {
+  if (Platform.OS === 'web') return;
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+}
+
 export const FormButton: React.FC<FormButtonProps> = ({
   title,
   onPress,
@@ -36,10 +44,29 @@ export const FormButton: React.FC<FormButtonProps> = ({
   textStyle,
 }) => {
   const isDisabled = disabled || loading;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    triggerHaptic();
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 0,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 4,
+    }).start();
+  }, [scaleAnim]);
 
   const getIconColor = () => {
     if (isDisabled) return colors.outline;
-
     switch (variant) {
       case 'primary':
       case 'danger':
@@ -114,43 +141,51 @@ export const FormButton: React.FC<FormButtonProps> = ({
   // Primary variant gets the glow gradient
   if (variant === 'primary' && !isDisabled) {
     return (
-      <TouchableOpacity
+      <Pressable
         onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={isDisabled}
-        activeOpacity={0.85}
         style={style}
       >
-        <LinearGradient
-          colors={['#0052FF', '#003EC7']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.button, sizeStyle, styles.primary]}
-        >
-          {content}
-        </LinearGradient>
-      </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+          <LinearGradient
+            colors={[colors.primary, colors.primaryContainer]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.button, sizeStyle, styles.primary]}
+          >
+            {content}
+          </LinearGradient>
+        </Animated.View>
+      </Pressable>
     );
   }
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.button,
-        sizeStyle,
-        variant === 'primary' && styles.primaryFlat,
-        variant === 'secondary' && styles.secondary,
-        variant === 'outline' && styles.outline,
-        variant === 'muted' && styles.muted,
-        variant === 'danger' && styles.danger,
-        isDisabled && styles.disabled,
-        style,
-      ]}
+    <Pressable
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={isDisabled}
-      activeOpacity={0.85}
     >
-      {content}
-    </TouchableOpacity>
+      <Animated.View
+        style={[
+          styles.button,
+          sizeStyle,
+          variant === 'primary' && styles.primaryFlat,
+          variant === 'secondary' && styles.secondary,
+          variant === 'outline' && styles.outline,
+          variant === 'muted' && styles.muted,
+          variant === 'danger' && styles.danger,
+          isDisabled && styles.disabled,
+          style,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        {content}
+      </Animated.View>
+    </Pressable>
   );
 };
 
@@ -194,9 +229,7 @@ const styles = StyleSheet.create({
   largeText: { fontSize: 18 },
 
   // Color variants
-  primary: {
-    // gradient handles background
-  },
+  primary: {},
   primaryFlat: {
     backgroundColor: colors.surfaceContainerHigh,
   },

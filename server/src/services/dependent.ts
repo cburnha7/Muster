@@ -43,6 +43,8 @@ export async function createDependent(
       lastName: data.lastName,
       dateOfBirth,
       profileImage: data.profileImage ?? null,
+      sportPreferences: data.sportPreferences ?? [],
+      ...(data.gender ? { gender: data.gender } : {}),
       isDependent: true,
       guardianId,
       email: null,
@@ -249,6 +251,8 @@ export async function updateDependent(
   if (data.lastName !== undefined) updateData.lastName = data.lastName;
   if (data.dateOfBirth !== undefined) updateData.dateOfBirth = new Date(data.dateOfBirth);
   if (data.profileImage !== undefined) updateData.profileImage = data.profileImage;
+  if (data.sportPreferences !== undefined) updateData.sportPreferences = data.sportPreferences;
+  if (data.gender !== undefined) updateData.gender = data.gender;
 
   const updated = await prisma.user.update({
     where: { id: dependentId },
