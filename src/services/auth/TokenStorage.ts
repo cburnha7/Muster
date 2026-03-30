@@ -25,25 +25,18 @@ const KEYS = {
 
 /**
  * Sentinel key — lives in sessionStorage.
- * Present = same browser session (page refresh is fine).
- * Missing = new session (browser was closed) → wipe localStorage auth data.
+ * Previously this cleared localStorage auth on new browser sessions,
+ * but that caused login loops on web. On web, tokens persist across
+ * sessions via localStorage. The server-side refresh token expiry
+ * handles session invalidation instead.
  */
 const SESSION_SENTINEL = 'muster_session_active';
 
 const isWeb = Platform.OS === 'web';
 
-/**
- * On web, check the sentinel on first load.
- * If it's missing the user closed the browser, so clear persisted auth.
- */
+// On web, just set the sentinel — don't clear tokens.
+// Token expiry is handled server-side via refresh token validation.
 if (isWeb) {
-  if (!sessionStorage.getItem(SESSION_SENTINEL)) {
-    localStorage.removeItem(KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(KEYS.REFRESH_TOKEN);
-    localStorage.removeItem(KEYS.USER_DATA);
-    console.log('🔒 New browser session detected — cleared stored auth');
-  }
-  // Set the sentinel so refreshes within this session are fine
   sessionStorage.setItem(SESSION_SENTINEL, '1');
 }
 
