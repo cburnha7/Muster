@@ -131,7 +131,7 @@ export function HomeScreen() {
 
   const loadOrganizedEvents = useCallback(async () => {
     try {
-      const result = await userService.getUserEvents({ page: 1, limit: 100 });
+      const result = await userService.getUserEvents(undefined, { page: 1, limit: 100 });
       const bookedEventIds = new Set((bookingsData?.data || []).map((b) => b.eventId));
       setOrganizedEvents((result.data || []).filter((e: Event) => !bookedEventIds.has(e.id)));
     } catch {
@@ -162,15 +162,37 @@ export function HomeScreen() {
     });
   }, [bookingsData, activeFilter]);
 
-  // Future bookings only (for cards view)
+  // Future bookings + organized events (for cards view)
   const futureBookings = useMemo(() => {
     const now = new Date();
-    return allBookings.filter((b) => {
+    const fromBookings = allBookings.filter((b) => {
       if (!b.event?.startTime) return false;
       if (b.status === 'cancelled') return false;
       return new Date(b.event.endTime || b.event.startTime) >= now;
     });
-  }, [allBookings]);
+    // Add organized events not already in bookings
+    const bookedEventIds = new Set(fromBookings.map((b) => b.eventId));
+    const fromOrganized = organizedEvents
+      .filter((e) => e.startTime && new Date(e.endTime || e.startTime) >= now && !bookedEventIds.has(e.id))
+      .map((e) => ({
+        id: `org-${e.id}`,
+        eventId: e.id,
+        userId: currentUser?.id || '',
+        status: 'confirmed',
+        bookingType: 'event',
+        totalPrice: 0,
+        paymentStatus: 'paid',
+        debriefSubmitted: false,
+        createdAt: e.createdAt || new Date().toISOString(),
+        updatedAt: e.updatedAt || new Date().toISOString(),
+        event: e,
+      } as Booking));
+    return [...fromBookings, ...fromOrganized].sort((a, b) => {
+      const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
+      const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+      return aTime - bTime;
+    });
+  }, [allBookings, organizedEvents, currentUser]);
 
   // Next up = first future booking
   const nextUpBooking = futureBookings[0] || null;
