@@ -87,14 +87,31 @@ app.set('trust proxy', 1);
 
 // CORS configuration
 const corsOptions: cors.CorsOptions = {
-  origin: [
-    'https://muster-ecru.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:8081',
-    'http://localhost:19006',
-    'http://localhost:19000',
-    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [])
-  ],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://muster-ecru.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:8081',
+      'http://localhost:19006',
+      'http://localhost:19000',
+      ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [])
+    ];
+
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+
+    // Allow any Vercel preview deployment for this project
+    if (/^https:\/\/muster[a-z0-9-]*\.vercel\.app$/.test(origin)
+        || /^https:\/\/muster-[a-z0-9-]+-edwinburnham-1336s-projects\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id', 'X-Active-User-Id', 'X-Request-ID'],
