@@ -18,7 +18,9 @@ import {
   TokenResponse,
 } from '../../types/auth';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? 'http://localhost:3000/api' : 'https://muster-production.up.railway.app/api');
+import { API_BASE_URL } from './config';
+
+const API_URL = API_BASE_URL;
 
 // Network timeout in milliseconds (30 seconds)
 const NETWORK_TIMEOUT = 30000;
