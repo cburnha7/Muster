@@ -860,7 +860,6 @@ router.get('/onboarding', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // All existing users are considered onboarded
     return res.json({
       completed: true,
       userId: user.id,
@@ -868,6 +867,35 @@ router.get('/onboarding', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error checking onboarding status:', error);
     return res.status(500).json({ error: 'Failed to check onboarding status' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /onboarding — Mark user onboarding as complete
+// ---------------------------------------------------------------------------
+router.put('/onboarding', authMiddleware, async (req, res) => {
+  try {
+    const userId = resolveUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({
+      completed: true,
+      userId: user.id,
+    });
+  } catch (error) {
+    console.error('Error completing onboarding:', error);
+    return res.status(500).json({ error: 'Failed to complete onboarding' });
   }
 });
 
