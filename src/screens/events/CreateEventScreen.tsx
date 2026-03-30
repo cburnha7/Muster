@@ -181,7 +181,7 @@ export function CreateEventScreen() {
           const rostersRes = await teamService.getTeams(undefined, { page: 1, limit: 10 });
           let players: any[] = [];
           try {
-            const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?q=${encodeURIComponent(inviteQuery)}&limit=10`);
+            const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
             const json = await resp.json();
             players = Array.isArray(json) ? json : json.data || [];
           } catch {}
