@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface ConnectAccount {
   entityType: string;
@@ -57,7 +58,7 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
   const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/connect/accounts`;
+      const url = `${API_BASE_URL}/connect/accounts`;
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -90,7 +91,7 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
   const handleOnboard = async (entityType: string, entityId: string) => {
     try {
       setOnboardingEntityId(entityId);
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/connect/onboard`;
+      const url = `${API_BASE_URL}/connect/onboard`;
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };

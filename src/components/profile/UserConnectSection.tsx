@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface ConnectStatus {
   onboarded: boolean;
@@ -34,7 +35,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
 
   const loadStatus = useCallback(async () => {
     try {
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/stripe/connect/status`;
+      const url = `${API_BASE_URL}/stripe/connect/status`;
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
       headers['x-user-id'] = userId;
@@ -56,7 +57,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
   const handleOnboard = async () => {
     try {
       setOnboarding(true);
-      const url = `${process.env.EXPO_PUBLIC_API_URL}/stripe/connect/onboard`;
+      const url = `${API_BASE_URL}/stripe/connect/onboard`;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       headers['x-user-id'] = userId;

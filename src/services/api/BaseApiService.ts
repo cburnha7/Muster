@@ -493,7 +493,7 @@ export class BaseApiService {
 
 // Create and export default configuration
 export const defaultApiConfig: ApiServiceConfig = {
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: (() => { try { return require('./config').API_BASE_URL; } catch { return 'http://localhost:3000/api'; } })(),
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second

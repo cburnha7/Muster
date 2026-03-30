@@ -25,6 +25,7 @@ import { SportType, SkillLevel } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
 import { getSportEmoji } from '../../constants/sports';
 import { colors, fonts } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { label: 'Open to All', value: '' },
@@ -101,7 +102,7 @@ export function CreateTeamScreen() {
       try {
         let players: any[] = [];
         try {
-          const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
+          const resp = await fetch(`${API_BASE_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
           const json = await resp.json();
           players = Array.isArray(json) ? json : json.data || [];
         } catch (err) { console.warn('Player search failed:', (err as Error).message); }

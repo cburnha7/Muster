@@ -37,8 +37,9 @@ export const fetchSubscription = createAsyncThunk(
   'subscription/fetch',
   async (userId: string, { rejectWithValue }) => {
     try {
+      const { API_BASE_URL } = await import('../../services/api/config');
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/subscriptions/${userId}`
+        `${API_BASE_URL}/subscriptions/${userId}`
       );
       if (!response.ok) {
         // No subscription = free plan

@@ -38,6 +38,7 @@ import {
   EventStatus,
   Facility,
 } from '../../types';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface EditEventScreenProps {
   route: {
@@ -225,7 +226,7 @@ export function EditEventScreen(): JSX.Element {
           // Fetch user details for pending invites
           for (const uid of pendingIds) {
             try {
-              const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/${uid}`);
+              const resp = await fetch(`${API_BASE_URL}/users/${uid}`);
               if (resp.ok) {
                 const u = await resp.json();
                 pending.push({ userId: u.id, firstName: u.firstName, lastName: u.lastName, profileImage: u.profileImage, status: 'invited' });
@@ -254,7 +255,7 @@ export function EditEventScreen(): JSX.Element {
         } else {
           let searchPlayers: any[] = [];
           try {
-            const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
+            const resp = await fetch(`${API_BASE_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
             const json = await resp.json();
             searchPlayers = Array.isArray(json) ? json : json.data || [];
           } catch (err) { console.warn('Player search failed:', (err as Error).message); }

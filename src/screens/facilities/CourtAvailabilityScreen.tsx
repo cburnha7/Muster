@@ -33,6 +33,7 @@ import { useAuth } from '../../context/AuthContext';
 import { RecurringBookingToggle, RecurringConfig } from '../../components/bookings/RecurringBookingToggle';
 import { RecurringConflictsModal } from '../../components/bookings/RecurringConflictsModal';
 import { InsuranceDocumentSelector } from '../../components/bookings/InsuranceDocumentSelector';
+import { API_BASE_URL } from '../../services/api/config';
 
 type CourtAvailabilityScreenNavigationProp = NativeStackNavigationProp<
   FacilitiesStackParamList,
@@ -147,7 +148,7 @@ export function CourtAvailabilityScreen() {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts`
+        `${API_BASE_URL}/facilities/${facilityId}/courts`
       );
       if (!response.ok) throw new Error('Failed to load courts');
       const data = await response.json();
@@ -169,7 +170,7 @@ export function CourtAvailabilityScreen() {
   const loadFacilityData = async () => {
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}`
+        `${API_BASE_URL}/facilities/${facilityId}`
       );
       if (!response.ok) throw new Error('Failed to load facility');
       const data = await response.json();
@@ -183,7 +184,7 @@ export function CourtAvailabilityScreen() {
     try {
       setLoadingSlots(true);
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}`
+        `${API_BASE_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}`
       );
       if (!response.ok) throw new Error('Failed to load availability');
       const data: AvailabilityData = await response.json();
@@ -337,7 +338,7 @@ export function CourtAvailabilityScreen() {
         body.insuranceDocumentId = selectedInsuranceDocumentId;
       }
 
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/rentals/bulk`, {
+      const response = await fetch(`${API_BASE_URL}/rentals/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -396,7 +397,7 @@ export function CourtAvailabilityScreen() {
       const slotData = availabilityData?.slots.find((s) => s.id === slot.slotId);
       if (!slotData) throw new Error('Slot data not found');
 
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/rentals/recurring`, {
+      const response = await fetch(`${API_BASE_URL}/rentals/recurring`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

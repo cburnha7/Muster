@@ -95,9 +95,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch(fetchSubscription(reduxUser.id) as any);
 
       // Hydrate dependents into context slice for the ContextIndicator pill
-      fetch(`${process.env.EXPO_PUBLIC_API_URL}/dependents`, {
-        headers: { 'X-User-Id': reduxUser.id },
-      })
+      import('../services/api/config')
+        .then(({ API_BASE_URL }) =>
+          fetch(`${API_BASE_URL}/dependents`, {
+            headers: { 'X-User-Id': reduxUser.id },
+          })
+        )
         .then((res) => (res.ok ? res.json() : []))
         .then((data) => dispatch(setDependents(data)))
         .catch((err) => console.warn('Failed to load dependents:', err));

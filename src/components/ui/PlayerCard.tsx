@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface SportRating {
   sportType: string;
@@ -50,7 +51,7 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
   useEffect(() => {
     if (!visible || !player) { setRatings([]); return; }
     setLoading(true);
-    fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/sport-ratings/${player.id}`)
+    fetch(`${API_BASE_URL}/users/sport-ratings/${player.id}`)
       .then(r => r.json())
       .then((data: SportRating[]) => setRatings((data || []).filter(r => r.overallEventCount > 0 || r.bracketEventCount > 0)))
       .catch(() => setRatings([]))

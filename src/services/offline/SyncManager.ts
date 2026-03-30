@@ -123,7 +123,8 @@ class SyncManager {
     const { method, endpoint, payload } = action;
     
     // This is a simplified version - in production, you'd use your actual API service
-    const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+    const { API_BASE_URL } = await import('../api/config');
+    const baseUrl = API_BASE_URL;
     const url = `${baseUrl}${endpoint}`;
 
     const options: RequestInit = {

@@ -28,6 +28,7 @@ import { colors, fonts } from '../../theme';
 import { calendarTheme } from '../../utils/calendarUtils';
 import { SportType, SkillLevel, EventType, Facility } from '../../types';
 import { getSportEmoji } from '../../constants/sports';
+import { API_BASE_URL } from '../../services/api/config';
 
 const EVENT_TYPE_OPTIONS: SelectOption[] = [
   { label: 'Game', value: EventType.GAME },
@@ -181,7 +182,7 @@ export function CreateEventScreen() {
           const rostersRes = await teamService.getTeams(undefined, { page: 1, limit: 10 });
           let players: any[] = [];
           try {
-            const resp = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
+            const resp = await fetch(`${API_BASE_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
             const json = await resp.json();
             players = Array.isArray(json) ? json : json.data || [];
           } catch (err) { console.warn('Invite search failed:', (err as Error).message); }
