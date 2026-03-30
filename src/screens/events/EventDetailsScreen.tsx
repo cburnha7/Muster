@@ -478,7 +478,7 @@ export function EventDetailsScreen() {
       [{ text: 'OK' }]
     );
 
-    // TODO: Call API to save salute
+    // TODO: wire to API when endpoint exists
     // await eventService.saluteParticipant(event.id, selectedParticipant.userId);
   };
 
@@ -498,7 +498,7 @@ export function EventDetailsScreen() {
     // Show success message
     Alert.alert('Salute Removed', 'You can salute someone else now.');
 
-    // TODO: Call API to remove salute
+    // TODO: wire to API when endpoint exists
     // await eventService.unsaluteParticipant(event.id, selectedParticipant.userId);
   };
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { rateCalculator } from '../services/RateCalculator';
 import { availabilityService } from '../services/AvailabilityService';
 import { verificationService } from '../services/VerificationService';

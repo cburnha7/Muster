@@ -53,6 +53,14 @@ class ConversationServiceClass extends BaseApiService {
     return res.count;
   }
 
+  async getOrCreateTeamChat(teamId: string): Promise<Conversation> {
+    return this.post<Conversation>(API_ENDPOINTS.CONVERSATIONS.GET_OR_CREATE_TEAM(teamId), {});
+  }
+
+  async getOrCreateGameThread(eventId: string): Promise<Conversation> {
+    return this.post<Conversation>(API_ENDPOINTS.CONVERSATIONS.GET_OR_CREATE_EVENT(eventId), {});
+  }
+
   async getDM(userId: string): Promise<Conversation> {
     return this.get<Conversation>(API_ENDPOINTS.CONVERSATIONS.DM(userId));
   }

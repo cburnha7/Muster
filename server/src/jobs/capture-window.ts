@@ -13,7 +13,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { stripe, calculatePlatformFee } from '../services/stripe-connect';
 import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
 import { NotificationService } from '../services/NotificationService';

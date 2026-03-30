@@ -10,7 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 
 /** In-memory cache so we don't hit the DB on every request. */
 const dependentCache = new Map<string, { isDependent: boolean; ts: number }>();

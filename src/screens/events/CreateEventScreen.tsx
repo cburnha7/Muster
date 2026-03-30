@@ -192,7 +192,7 @@ export function CreateEventScreen() {
             .map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }));
           setInviteResults([...rosterItems, ...playerItems]);
         }
-      } catch { setInviteResults([]); }
+      } catch (e) { console.warn('Search failed:', e); setInviteResults([]); }
     }, 300);
     return () => clearTimeout(timer);
   }, [inviteQuery, eventType]);
