@@ -129,8 +129,11 @@ export function ConversationListScreen() {
     });
   };
 
-  // Filter by search query
+  // Filter by search query and exclude empty conversations
   const filtered = conversations.filter((c) => {
+    // Hide conversations with no messages
+    if (!c.messages || c.messages.length === 0) return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const name = (c.name ?? '').toLowerCase();

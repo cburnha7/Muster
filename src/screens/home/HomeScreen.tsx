@@ -117,6 +117,7 @@ export function HomeScreen() {
 
   // User teams state
   const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
 
   const loadUserTeams = useCallback(async () => {
     try {
@@ -127,6 +128,16 @@ export function HomeScreen() {
       setUserTeams([]);
     }
   }, []);
+
+  const loadOrganizedEvents = useCallback(async () => {
+    try {
+      const result = await userService.getUserEvents({ page: 1, limit: 100 });
+      const bookedEventIds = new Set((bookingsData?.data || []).map((b) => b.eventId));
+      setOrganizedEvents((result.data || []).filter((e: Event) => !bookedEventIds.has(e.id)));
+    } catch {
+      setOrganizedEvents([]);
+    }
+  }, [bookingsData]);
 
   // DependentToggle state
   const [activeFilter, setActiveFilter] = useState<PersonFilter>({
@@ -174,13 +185,28 @@ export function HomeScreen() {
       .slice(0, 10);
   }, [futureBookings]);
 
-  // Calendar marked dates
+  // Calendar marked dates — include both bookings and organized events
   const calendarMarkedDates = useMemo(() => {
     const marks: Record<string, any> = {};
     for (const b of allBookings) {
       if (!b.event?.startTime) continue;
       const dateStr = formatDateForCalendar(new Date(b.event.startTime));
       if (dateStr === selectedDate) continue;
+      marks[dateStr] = {
+        customStyles: {
+          container: {
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+            borderRadius: 16,
+          },
+          text: { color: colors.onSurface },
+        },
+      };
+    }
+    for (const e of organizedEvents) {
+      if (!e.startTime) continue;
+      const dateStr = formatDateForCalendar(new Date(e.startTime));
+      if (dateStr === selectedDate || marks[dateStr]) continue;
       marks[dateStr] = {
         customStyles: {
           container: {
@@ -203,15 +229,33 @@ export function HomeScreen() {
       },
     };
     return marks;
-  }, [allBookings, selectedDate]);
+  }, [allBookings, organizedEvents, selectedDate]);
 
-  // Bookings for selected calendar date
+  // Bookings + organized events for selected calendar date
   const calendarDateBookings = useMemo(() => {
-    return allBookings.filter((b) => {
+    const fromBookings = allBookings.filter((b) => {
       if (!b.event?.startTime) return false;
       return formatDateForCalendar(new Date(b.event.startTime)) === selectedDate;
     });
-  }, [allBookings, selectedDate]);
+    // Create pseudo-bookings for organized events on this date
+    const bookedEventIds = new Set(fromBookings.map((b) => b.eventId));
+    const fromOrganized = organizedEvents
+      .filter((e) => e.startTime && formatDateForCalendar(new Date(e.startTime)) === selectedDate && !bookedEventIds.has(e.id))
+      .map((e) => ({
+        id: `org-${e.id}`,
+        eventId: e.id,
+        userId: currentUser?.id || '',
+        status: 'confirmed',
+        bookingType: 'event',
+        totalPrice: 0,
+        paymentStatus: 'paid',
+        debriefSubmitted: false,
+        createdAt: e.createdAt || new Date().toISOString(),
+        updatedAt: e.updatedAt || new Date().toISOString(),
+        event: e,
+      } as Booking));
+    return [...fromBookings, ...fromOrganized];
+  }, [allBookings, organizedEvents, selectedDate, currentUser]);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
@@ -266,9 +310,9 @@ export function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
-    await Promise.all([refetchBookings(), refetchDiscover(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues(), loadUserTeams()]);
+    await Promise.all([refetchBookings(), refetchDiscover(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues(), loadUserTeams(), loadOrganizedEvents()]);
     setIsRefreshing(false);
-  }, [refetchBookings, refetchDiscover, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues, loadUserTeams]);
+  }, [refetchBookings, refetchDiscover, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues, loadUserTeams, loadOrganizedEvents]);
 
   useFocusEffect(
     useCallback(() => {
@@ -279,6 +323,7 @@ export function HomeScreen() {
         loadInvitations();
         loadReadyToScheduleLeagues();
         loadUserTeams();
+        loadOrganizedEvents();
       }
     }, [authLoading])
   );
@@ -297,6 +342,7 @@ export function HomeScreen() {
       loadInvitations();
       loadReadyToScheduleLeagues();
       loadUserTeams();
+      loadOrganizedEvents();
     }
   }, [activeUserId]);
 

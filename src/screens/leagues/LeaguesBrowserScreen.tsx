@@ -13,7 +13,6 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { LeagueCard } from '../../components/ui/LeagueCard';
-import { CollapsibleSection } from '../../components/ui/CollapsibleSection';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
@@ -55,6 +54,7 @@ export function LeaguesBrowserScreen() {
   const [error, setError] = useState<string | null>(null);
   const [sportFilter, setSportFilter] = useState('');
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [pastExpanded, setPastExpanded] = useState(false);
 
   // Search modal toggle
   useEffect(() => {
@@ -188,13 +188,13 @@ export function LeaguesBrowserScreen() {
         ListFooterComponent={
           pastLeagues.length > 0 ? (
             <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
-              <CollapsibleSection title="Past Seasons" count={pastLeagues.length} defaultExpanded={false}>
-                <View style={styles.pastList}>
-                  {pastLeagues.map((league) => (
-                    <LeagueCard key={league.id} league={league} onPress={() => handleLeaguePress(league)} isOwner={league.organizerId === currentUser?.id} />
-                  ))}
-                </View>
-              </CollapsibleSection>
+              <TouchableOpacity style={styles.pastHeader} onPress={() => setPastExpanded((v) => !v)} activeOpacity={0.7}>
+                <Text style={styles.sectionTitle}>Past Seasons</Text>
+                <Ionicons name={pastExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.onSurfaceVariant} />
+              </TouchableOpacity>
+              {pastExpanded && pastLeagues.map((league) => (
+                <LeagueCard key={league.id} league={league} onPress={() => handleLeaguePress(league)} isOwner={league.organizerId === currentUser?.id} />
+              ))}
             </View>
           ) : null
         }
@@ -263,7 +263,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 100,
   },
-  pastList: {
+  pastHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 16,
     paddingBottom: 8,
   },
   empty: {
