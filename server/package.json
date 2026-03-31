@@ -15,6 +15,7 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx src/prisma/seed.ts",
     "seed:facilities": "tsx src/scripts/seed-facilities-with-courts.ts",
+    "seed:test-events": "tsx src/scripts/seed-test-events.ts",
     "test": "jest --forceExit --detectOpenHandles"
   },
   "keywords": [

@@ -12,6 +12,7 @@ import {
   CancellationPolicy,
   CancellationPolicyResponse,
 } from '../../types';
+import { CourtForEvent, DateForCourt, SlotForDate } from '../../screens/events/create-flow/types';
 
 export class FacilityService extends BaseApiService {
   constructor() {
@@ -310,6 +311,45 @@ export class FacilityService extends BaseApiService {
     const params = { userId };
     return this.get(`${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/available-slots`, { params });
   }
+  /**
+   * Get courts available for event creation at a facility
+   * Filtered by ownership (all courts with slots) or reservations (only rented courts)
+   */
+  async getCourtsForEvent(
+    facilityId: string,
+    userId: string,
+    sportType?: string,
+  ): Promise<{ data: CourtForEvent[]; isOwner: boolean }> {
+    const params: Record<string, string> = { userId };
+    if (sportType) params.sportType = sportType;
+    return this.get(API_ENDPOINTS.FACILITIES.COURTS_FOR_EVENT(facilityId), { params });
+  }
+
+  /**
+   * Get available dates for a court (filtered by ownership or reservations)
+   */
+  async getDatesForCourt(
+    facilityId: string,
+    courtId: string,
+    userId: string,
+  ): Promise<{ data: DateForCourt[]; isOwner: boolean }> {
+    const params = { userId };
+    return this.get(API_ENDPOINTS.FACILITIES.COURT_DATES(facilityId, courtId), { params });
+  }
+
+  /**
+   * Get available time slots for a court on a specific date
+   */
+  async getSlotsForDate(
+    facilityId: string,
+    courtId: string,
+    userId: string,
+    date: string,
+  ): Promise<{ data: SlotForDate[]; isOwner: boolean }> {
+    const params = { userId, date };
+    return this.get(API_ENDPOINTS.FACILITIES.COURT_SLOTS(facilityId, courtId), { params });
+  }
+
   /**
    * Get cancellation policy for a facility
    */

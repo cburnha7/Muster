@@ -59,6 +59,9 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/facilities/${id}`,
     EVENTS: (id: string) => `/facilities/${id}/events`,
     CANCELLATION_POLICY: (id: string) => `/facilities/${id}/cancellation-policy`,
+    COURTS_FOR_EVENT: (facilityId: string) => `/facilities/${facilityId}/courts-for-event`,
+    COURT_DATES: (facilityId: string, courtId: string) => `/facilities/${facilityId}/courts/${courtId}/dates`,
+    COURT_SLOTS: (facilityId: string, courtId: string) => `/facilities/${facilityId}/courts/${courtId}/slots`,
   },
 
   // Users
