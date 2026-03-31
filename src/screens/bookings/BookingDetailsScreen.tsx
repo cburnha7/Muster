@@ -418,7 +418,7 @@ export function BookingDetailsScreen(): JSX.Element {
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Location</Text>
                 <Text style={styles.detailValue}>
-                  {event.facility?.name || 'Location TBD'}
+                  {event.facility?.name || event.locationName || 'Location TBD'}
                 </Text>
                 {event.facility && (
                   <Text style={styles.detailSubtext}>

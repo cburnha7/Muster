@@ -142,7 +142,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         <View style={styles.detailRow}>
           <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
           <Text style={styles.detailText} numberOfLines={1}>
-            {event.facility?.name || 'Location TBD'}
+            {event.facility?.name || event.locationName || 'Location TBD'}
           </Text>
         </View>
 

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import { requireNonDependent } from '../middleware/require-non-dependent';
@@ -62,6 +63,62 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Get teams error:', error);
     res.status(500).json({ error: 'Failed to fetch teams' });
+  }
+});
+
+// Validate invite code (no auth required — new users need to validate before signing up)
+router.get('/validate-invite', async (req, res) => {
+  try {
+    const { inviteCode } = req.query;
+
+    if (!inviteCode || typeof inviteCode !== 'string') {
+      return res.status(400).json({ valid: false, error: 'Invite code is required' });
+    }
+
+    const inviteLink = await prisma.inviteLink.findFirst({
+      where: {
+        token: inviteCode.toUpperCase(),
+        isActive: true,
+        expiresAt: { gt: new Date() },
+      },
+      include: {
+        team: {
+          include: {
+            members: {
+              where: { status: 'active' },
+              select: { id: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!inviteLink) {
+      return res.json({ valid: false });
+    }
+
+    // Check max uses
+    if (inviteLink.maxUses !== null && inviteLink.useCount >= inviteLink.maxUses) {
+      return res.json({ valid: false });
+    }
+
+    const { team } = inviteLink;
+    res.json({
+      valid: true,
+      team: {
+        id: team.id,
+        name: team.name,
+        sportType: team.sportType,
+        skillLevel: team.skillLevel,
+        memberCount: team.members.length,
+        maxMembers: team.maxMembers,
+        imageUrl: team.imageUrl,
+      },
+      expiresAt: inviteLink.expiresAt,
+    });
+  } catch (error) {
+    console.error('Validate invite code error:', error);
+    res.status(500).json({ valid: false, error: 'Failed to validate invite code' });
   }
 });
 
@@ -482,11 +539,33 @@ router.post('/:id/join', async (req, res) => {
       return res.status(400).json({ error: 'You are already a member of this roster' });
     }
 
-    // Private roster: require existing membership record (added by captain)
+    // Validate invite code if provided
+    let validInviteLink = false;
+    if (inviteCode) {
+      const link = await prisma.inviteLink.findFirst({
+        where: {
+          token: inviteCode.toUpperCase(),
+          teamId: id,
+          isActive: true,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      if (link && (link.maxUses === null || link.useCount < link.maxUses)) {
+        validInviteLink = true;
+        // Increment use count
+        await prisma.inviteLink.update({
+          where: { id: link.id },
+          data: { useCount: { increment: 1 } },
+        });
+      }
+    }
+
+    // Private roster: require existing membership record OR valid invite code
     if (team.isPrivate) {
       const wasInvited = team.members.some(m => m.userId === userId);
 
-      if (!wasInvited) {
+      if (!wasInvited && !validInviteLink) {
         return res.status(403).json({ error: 'This is a private roster. You need an invite to join.' });
       }
     }
@@ -637,6 +716,81 @@ router.post('/:id/add-member', async (req, res) => {
   } catch (error) {
     console.error('Add member error:', error);
     res.status(500).json({ error: 'Failed to add player to roster' });
+  }
+});
+
+// Generate invite link for a team (captain/co-captain only)
+router.post('/:id/invite-link', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.headers['x-user-id'] as string | undefined;
+    const { maxUses } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Verify team exists and user is captain/co-captain
+    const team = await prisma.team.findUnique({
+      where: { id },
+      include: {
+        members: {
+          where: { userId, status: 'active' },
+          select: { role: true },
+        },
+      },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: 'Roster not found' });
+    }
+
+    const member = team.members[0];
+    if (!member || (member.role !== 'captain' && member.role !== 'co_captain')) {
+      return res.status(403).json({ error: 'Only captains and co-captains can generate invite links' });
+    }
+
+    // Check for existing active, non-expired link with >1 day remaining
+    const oneDayFromNow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const existingLink = await prisma.inviteLink.findFirst({
+      where: {
+        teamId: id,
+        isActive: true,
+        expiresAt: { gt: oneDayFromNow },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existingLink) {
+      return res.json({
+        link: `https://muster.app/join/${existingLink.token}`,
+        code: existingLink.token,
+        expiresAt: existingLink.expiresAt,
+      });
+    }
+
+    // Generate a new 8-char uppercase hex token
+    const token = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    const inviteLink = await prisma.inviteLink.create({
+      data: {
+        token,
+        teamId: id,
+        createdBy: userId,
+        expiresAt,
+        maxUses: maxUses ?? null,
+      },
+    });
+
+    res.status(201).json({
+      link: `https://muster.app/join/${inviteLink.token}`,
+      code: inviteLink.token,
+      expiresAt: inviteLink.expiresAt,
+    });
+  } catch (error) {
+    console.error('Generate invite link error:', error);
+    res.status(500).json({ error: 'Failed to generate invite link' });
   }
 });
 

@@ -33,6 +33,7 @@ export type AuthStackParamList = {
   Registration: undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
+  InviteRegistration: { inviteCode: string; teamId: string; teamName: string; teamSport: string };
 };
 
 // Main Tab Navigator Types

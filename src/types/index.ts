@@ -241,7 +241,7 @@ export interface Event {
   title: string;
   description: string;
   sportType: SportType;
-  facilityId: string;
+  facilityId?: string;
   facility?: Facility;
   organizerId: string;
   organizer?: User;
@@ -280,6 +280,11 @@ export interface Event {
       };
     };
   };
+  // Free-text location (alternative to facilityId)
+  locationName?: string;
+  locationAddress?: string;
+  locationLat?: number;
+  locationLng?: number;
   // Group fee coverage
   isGroupFeeCovered?: boolean; // Event cost covered by roster balance
   coveringTeamId?: string; // Which roster is covering the cost

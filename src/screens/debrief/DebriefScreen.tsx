@@ -190,8 +190,8 @@ export function DebriefScreen(): JSX.Element {
           <View style={styles.ratingSection}>
             <Text style={styles.sectionTitle}>
               {isReadonly
-                ? `${details.event.facility.name}`
-                : `Rate ${details.event.facility.name}`}
+                ? `${details.event.facility?.name || 'the venue'}`
+                : `Rate ${details.event.facility?.name || 'the venue'}`}
             </Text>
             {!isReadonly && <Text style={styles.ratingHint}>Optional</Text>}
             <View style={styles.starsRow}>

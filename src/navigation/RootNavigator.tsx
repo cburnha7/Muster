@@ -1,6 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from './types';
 import { useAuth } from '../context/AuthContext';
 import { useNetworkState } from '../services/network';
@@ -36,15 +39,71 @@ const profileScreenOptions = {
   headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
 };
 
+const PENDING_INVITE_KEY = '@muster_pending_invite';
+
+/** Extract invite code from a muster.app/join/<code> URL */
+function extractInviteCode(url: string): string | null {
+  try {
+    const parsed = Linking.parse(url);
+    // Handle muster://join/CODE or https://muster.app/join/CODE
+    if (parsed.path?.startsWith('join/')) {
+      return parsed.path.replace('join/', '');
+    }
+    // Handle path param from linking config
+    if (parsed.queryParams?.inviteCode) {
+      return parsed.queryParams.inviteCode as string;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function RootNavigator() {
   const { user, isLoading: authLoading } = useAuth();
   useNetworkState();
+  const pendingInviteHandled = useRef(false);
 
   // Log user state changes
   useEffect(() => {
     console.log('RootNavigator: User state changed:', user ? `Logged in as ${user.firstName} ${user.lastName}` : 'Not logged in');
     console.log('RootNavigator: Auth loading:', authLoading);
   }, [user, authLoading]);
+
+  // ── Capture invite code from deep link when not authenticated ──
+  useEffect(() => {
+    const handleURL = ({ url }: { url: string }) => {
+      const code = extractInviteCode(url);
+      if (code && !user) {
+        // Stash the invite code for after authentication
+        AsyncStorage.setItem(PENDING_INVITE_KEY, code).catch(() => {});
+        console.log('RootNavigator: Stashed pending invite code:', code);
+      }
+    };
+
+    // Check initial URL (cold start from link)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleURL({ url });
+    });
+
+    // Listen for URLs while app is open
+    const subscription = Linking.addEventListener('url', handleURL);
+    return () => subscription.remove();
+  }, [user]);
+
+  // ── After login + onboarding, redirect to JoinTeam if there's a pending invite ──
+  useEffect(() => {
+    if (user && user.onboardingComplete && !pendingInviteHandled.current) {
+      pendingInviteHandled.current = true;
+      AsyncStorage.getItem(PENDING_INVITE_KEY).then((code) => {
+        if (code) {
+          AsyncStorage.removeItem(PENDING_INVITE_KEY).catch(() => {});
+          console.log('RootNavigator: Redirecting to JoinTeam with pending invite:', code);
+          // The TabNavigatorWithInviteRedirect component below handles the redirect
+        }
+      });
+    }
+  }, [user]);
 
   // Show loading screen while checking auth
   if (authLoading) {
@@ -76,7 +135,9 @@ export function RootNavigator() {
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
           <>
-            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen name="Main">
+              {(props) => <TabNavigatorWithInviteRedirect {...props} />}
+            </Stack.Screen>
             <Stack.Group screenOptions={profileScreenOptions}>
               <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerTitle: 'Profile' }} />
               <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerTitle: 'Edit Profile' }} />
@@ -92,6 +153,32 @@ export function RootNavigator() {
       </Stack.Navigator>
     </View>
   );
+}
+
+/** Wrapper that checks for pending invite codes on mount and redirects */
+function TabNavigatorWithInviteRedirect(props: any) {
+  const navigation = useNavigation();
+  const checkedRef = useRef(false);
+
+  useEffect(() => {
+    if (checkedRef.current) return;
+    checkedRef.current = true;
+
+    AsyncStorage.getItem(PENDING_INVITE_KEY).then((code) => {
+      if (code) {
+        AsyncStorage.removeItem(PENDING_INVITE_KEY).catch(() => {});
+        // Navigate to JoinTeam within the Teams stack
+        setTimeout(() => {
+          (navigation as any).navigate('Teams', {
+            screen: 'JoinTeam',
+            params: { inviteCode: code },
+          });
+        }, 300);
+      }
+    });
+  }, []);
+
+  return <TabNavigator {...props} />;
 }
 
 const styles = StyleSheet.create({

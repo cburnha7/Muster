@@ -575,7 +575,7 @@ export function HomeScreen() {
                 <View style={styles.discoverInfo}>
                   <Text style={styles.discoverTitle} numberOfLines={1}>{event.title}</Text>
                   <Text style={styles.discoverMeta} numberOfLines={1}>
-                    {formatEventTime(event.startTime)} {'\u00B7'} {event.facility?.name || 'TBD'} {'\u00B7'} {event.currentParticipants}/{event.maxParticipants || '\u221E'}
+                    {formatEventTime(event.startTime)} {'\u00B7'} {event.facility?.name || event.locationName || 'Location TBD'} {'\u00B7'} {event.currentParticipants}/{event.maxParticipants || '\u221E'}
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.joinBtn} onPress={() => handleJoinEvent(event.id)}>

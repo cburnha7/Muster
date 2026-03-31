@@ -9,6 +9,7 @@ import {
   Platform,
   RefreshControl,
   TextInput,
+  Share,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -407,6 +408,28 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     }
   };
 
+  // ── Share invite link ──
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const handleShareInviteLink = async () => {
+    setIsGeneratingLink(true);
+    try {
+      const result = await teamService.generateInviteLink(teamId);
+      const shareMessage = `Join ${team?.name ?? 'our team'} on Muster! Tap the link to sign up and join the team: ${result.link}`;
+
+      await Share.share(
+        Platform.OS === 'ios'
+          ? { message: shareMessage, url: result.link }
+          : { message: shareMessage }
+      );
+    } catch (err: any) {
+      if (err?.message !== 'User did not share') {
+        Alert.alert('Error', err?.message || 'Failed to generate invite link.');
+      }
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
   // ── Open player card ──
   const openPlayerCard = (member: TeamMember) => {
     const user = member.user;
@@ -515,6 +538,21 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               >
                 <Ionicons name="chatbubbles-outline" size={18} color={colors.cobalt} />
                 <Text style={styles.chatBtnText}>Team Chat{chatUnreadCount > 0 ? ` · ${chatUnreadCount} new` : ''}</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* ── Share Invite Link (managers only) ── */}
+            {!readOnly && isManagerRole && isMember && (
+              <TouchableOpacity
+                style={styles.inviteLinkBtn}
+                onPress={handleShareInviteLink}
+                activeOpacity={0.8}
+                disabled={isGeneratingLink}
+              >
+                <Ionicons name="link-outline" size={18} color={colors.gold} />
+                <Text style={styles.inviteLinkBtnText}>
+                  {isGeneratingLink ? 'Generating link...' : 'Share Invite Link'}
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -1089,5 +1127,22 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 14,
     color: colors.cobalt,
+  },
+  inviteLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.gold + '18',
+    gap: 8,
+  },
+  inviteLinkBtnText: {
+    fontFamily: fonts.label,
+    fontSize: 14,
+    color: colors.gold,
   },
 });

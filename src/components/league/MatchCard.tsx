@@ -143,11 +143,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, style }) =
         )}
 
         {/* Location */}
-        {match.event?.facility && (
+        {(match.event?.facility?.name || match.event?.locationName) && (
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color="#666" />
             <Text style={styles.locationText} numberOfLines={1}>
-              {match.event.facility.name}
+              {match.event?.facility?.name || match.event?.locationName || 'TBD'}
             </Text>
           </View>
         )}
