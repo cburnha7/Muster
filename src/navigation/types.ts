@@ -17,7 +17,7 @@ export type RootStackParamList = {
 };
 
 // Onboarding Stack Types
-export type OnboardingIntent = 'PLAYER' | 'CAPTAIN' | 'GUARDIAN' | 'COMMISSIONER' | 'FACILITY_OWNER';
+export type OnboardingIntent = 'PLAYER' | 'CAPTAIN' | 'COACH' | 'GUARDIAN' | 'COMMISSIONER' | 'FACILITY_OWNER';
 
 export type OnboardingStackParamList = {
   IntentSelection: undefined;
@@ -84,6 +84,7 @@ export type HomeStackParamList = {
   };
   Debrief: { eventId: string; readonly?: boolean };
   PendingReservationDetails: { rentalId: string };
+  AttendanceMarking: { eventId: string };
 };
 
 export type EventsStackParamList = {
@@ -161,6 +162,10 @@ export type TeamsStackParamList = {
   CreatePublicEvent: { rosterId: string };
   PayPlayerDues: { rosterId: string; seasonId: string };
   EventDetails: { eventId: string };
+  AvailabilityGrid: { teamId: string };
+  SeasonAvailability: { teamId: string; forUserId?: string };
+  AttendanceMarking: { eventId: string };
+  AttendanceReport: { teamId: string };
 };
 
 export type LeaguesStackParamList = {
@@ -174,7 +179,9 @@ export type LeaguesStackParamList = {
   DocumentViewer: { leagueId: string; documentId: string; documentName?: string };
   PayLeagueDues: { rosterId: string; leagueId: string; seasonId: string };
   LeagueScheduling: { leagueId: string };
+  ScheduleWizard: { leagueId: string };
   LeagueDeletionConfirm: { leagueId: string };
+  LeagueTeamManagement: { leagueId: string };
 };
 
 export type BookingsStackParamList = {
