@@ -68,12 +68,10 @@ export type LeagueWizardAction =
 // ── Helpers ──
 
 export function getSeasonFromDate(date: Date): string {
-  const month = date.getMonth();
-  const year = date.getFullYear();
-  if (month >= 2 && month <= 4) return `Spring ${year}`;
-  if (month >= 5 && month <= 7) return `Summer ${year}`;
-  if (month >= 8 && month <= 10) return `Fall ${year}`;
-  return `Winter ${year}`;
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${m}/${d}/${y}`;
 }
 
 export function createInitialLeagueState(): LeagueWizardState {
