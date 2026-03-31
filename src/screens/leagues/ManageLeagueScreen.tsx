@@ -325,6 +325,28 @@ export const ManageLeagueScreen: React.FC = () => {
           />
         </View>
 
+        {/* Commissioner Team Management */}
+        <TouchableOpacity
+          style={styles.section}
+          onPress={() => (navigation as any).navigate('LeagueTeamManagement', { leagueId })}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.sectionHeader, { borderBottomWidth: 0 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Ionicons name="people" size={22} color={colors.cobalt} />
+              <View>
+                <Text style={[styles.sectionTitle, { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }]}>
+                  Manage Teams
+                </Text>
+                <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.inkFaint, marginTop: 2 }}>
+                  Create teams and assign coaches
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+          </View>
+        </TouchableOpacity>
+
         {/* Manage Teams */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
