@@ -1,10 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Animated,
-  Dimensions,
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
@@ -12,9 +10,6 @@ import { WizardProgressDots } from '../../../components/wizard/WizardProgressDot
 import { useCreateEvent } from './CreateEventContext';
 import { canContinue } from './validation';
 import { colors, fonts } from '../../../theme';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const ANIMATION_DURATION = 200;
 
 interface EventFlowContainerProps {
   children: React.ReactNode;
@@ -24,15 +19,6 @@ interface EventFlowContainerProps {
 export function EventFlowContainer({ children, onSubmit }: EventFlowContainerProps) {
   const { state, dispatch } = useCreateEvent();
   const { currentStep } = state;
-  const translateX = useRef(new Animated.Value(-currentStep * SCREEN_WIDTH)).current;
-
-  useEffect(() => {
-    Animated.timing(translateX, {
-      toValue: -currentStep * SCREEN_WIDTH,
-      duration: ANIMATION_DURATION,
-      useNativeDriver: true,
-    }).start();
-  }, [currentStep, translateX]);
 
   const childArray = React.Children.toArray(children);
   const enabled = canContinue(state, currentStep);
@@ -54,13 +40,7 @@ export function EventFlowContainer({ children, onSubmit }: EventFlowContainerPro
       </View>
 
       <View style={styles.stageContainer}>
-        <Animated.View style={[styles.slider, { transform: [{ translateX }] }]}>
-          {childArray.map((child, i) => (
-            <View key={i} style={styles.slide}>
-              {child}
-            </View>
-          ))}
-        </Animated.View>
+        {childArray[currentStep]}
       </View>
 
       {showButton && (
@@ -90,15 +70,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   stageContainer: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  slider: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  slide: {
-    width: SCREEN_WIDTH,
     flex: 1,
   },
   buttonContainer: {
