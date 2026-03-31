@@ -1,21 +1,47 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   ScrollView,
   View,
   Text,
-  TextInput,
+  TouchableOpacity,
   Switch,
+  Platform,
   StyleSheet,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { CancellationPolicyPicker } from '../../../components/facilities/CancellationPolicyPicker';
 import { useCreateFacility } from './CreateFacilityContext';
 import { colors, fonts, Spacing } from '../../../theme';
 
 export function Step5Policies() {
   const { state, dispatch } = useCreateFacility();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const setField = (field: string, value: any) =>
     dispatch({ type: 'SET_FIELD', field, value });
+
+  const handlePickPdf = () => {
+    if (Platform.OS === 'web') {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileSelected = (e: any) => {
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      alert('Please select a PDF file');
+      return;
+    }
+    const uri = URL.createObjectURL(file);
+    setField('waiverFileName', file.name);
+    setField('waiverFileUri', uri);
+  };
+
+  const handleRemoveFile = () => {
+    setField('waiverFileName', '');
+    setField('waiverFileUri', '');
+  };
 
   return (
     <ScrollView
@@ -79,14 +105,14 @@ export function Step5Policies() {
           <View style={styles.toggleInfo}>
             <Text style={styles.toggleLabel}>Waiver Requirement</Text>
             <Text style={styles.toggleDescription}>
-              Require players to accept a waiver before booking
+              Require players to sign a waiver before booking. Uploading a new version invalidates all previous signatures.
             </Text>
           </View>
           <Switch
             value={state.waiverRequired}
             onValueChange={(v) => {
               setField('waiverRequired', v);
-              if (!v) setField('waiverText', '');
+              if (!v) { handleRemoveFile(); }
             }}
             trackColor={{ false: colors.surface, true: colors.cobalt }}
             thumbColor={colors.white}
@@ -95,16 +121,39 @@ export function Step5Policies() {
       </View>
 
       {state.waiverRequired && (
-        <TextInput
-          style={styles.waiverInput}
-          value={state.waiverText}
-          onChangeText={(v) => setField('waiverText', v)}
-          placeholder="Enter waiver text..."
-          placeholderTextColor={colors.inkSoft}
-          multiline
-          numberOfLines={6}
-          textAlignVertical="top"
-        />
+        <View style={styles.uploadSection}>
+          {state.waiverFileName ? (
+            <View style={styles.fileCard}>
+              <View style={styles.fileInfo}>
+                <Ionicons name="document-text-outline" size={24} color={colors.cobalt} />
+                <View style={styles.fileDetails}>
+                  <Text style={styles.fileName} numberOfLines={1}>{state.waiverFileName}</Text>
+                  <Text style={styles.fileHint}>PDF waiver</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={handleRemoveFile} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close-circle" size={22} color={colors.heart} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.uploadBox} onPress={handlePickPdf} activeOpacity={0.7}>
+              <Ionicons name="cloud-upload-outline" size={32} color={colors.cobalt} />
+              <Text style={styles.uploadText}>Upload Waiver PDF</Text>
+              <Text style={styles.uploadHint}>Tap to select a PDF file</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Hidden file input for web */}
+          {Platform.OS === 'web' && (
+            <input
+              ref={fileInputRef as any}
+              type="file"
+              accept="application/pdf"
+              style={{ display: 'none' }}
+              onChange={handleFileSelected}
+            />
+          )}
+        </View>
       )}
 
       <View style={{ height: 40 }} />
@@ -115,47 +164,30 @@ export function Step5Policies() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
-  heading: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.ink,
-    marginBottom: 24,
-  },
+  heading: { fontFamily: fonts.heading, fontSize: 24, color: colors.ink, marginBottom: 24 },
   toggleSection: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 14,
+    backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 14,
   },
   toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   toggleInfo: { flex: 1, marginRight: 12 },
-  toggleLabel: {
-    fontFamily: fonts.label,
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.ink,
-    marginBottom: 2,
+  toggleLabel: { fontFamily: fonts.label, fontSize: 15, lineHeight: 22, color: colors.ink, marginBottom: 2 },
+  toggleDescription: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
+  uploadSection: { marginTop: 4 },
+  uploadBox: {
+    borderWidth: 2, borderColor: colors.cobalt, borderStyle: 'dashed', borderRadius: 14,
+    paddingVertical: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface,
   },
-  toggleDescription: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.inkSoft,
+  uploadText: { fontFamily: fonts.ui, fontSize: 16, color: colors.cobalt, marginTop: 8 },
+  uploadHint: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginTop: 4 },
+  fileCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: colors.surface, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: colors.border,
   },
-  waiverInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.white,
-    minHeight: 120,
-    marginTop: 4,
-  },
+  fileInfo: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
+  fileDetails: { flex: 1 },
+  fileName: { fontFamily: fonts.label, fontSize: 15, color: colors.ink },
+  fileHint: { fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft, marginTop: 2 },
 });

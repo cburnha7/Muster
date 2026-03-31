@@ -414,22 +414,19 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           </DetailCard>
         )}
 
-        {/* Edit / Delete for owner */}
-        {isOwner && (
-          <View style={styles.ownerActions}>
-            <TouchableOpacity style={styles.ownerEditBtn} onPress={handleEdit} activeOpacity={0.7}>
-              <Text style={styles.ownerEditBtnText}>Edit Ground</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.ownerDeleteBtn} onPress={handleDeleteGround} activeOpacity={0.7}>
-              <Text style={styles.ownerDeleteBtnText}>Delete Ground</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Spacer for fixed bottom button */}
+        <View style={{ height: 20 }} />
 
       </ScrollView>
 
-      {/* Fixed bottom CTA — non-owners only */}
-      {!isOwner && (
+      {/* Fixed bottom — Edit for owner, Book for non-owner */}
+      {isOwner ? (
+        <FixedBottomCTA
+          label="Edit Ground"
+          onPress={handleEdit}
+          variant="primary"
+        />
+      ) : (
         <FixedBottomCTA
           label="Book a court"
           onPress={() =>

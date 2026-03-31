@@ -31,7 +31,7 @@ export function FacilitiesStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="FacilitiesList" component={FacilitiesListScreen} />
-      <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
+      <Stack.Screen name="FacilityDetails" component={FacilityDetailsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CreateFacility" component={CreateFacilityScreen} options={{ headerShown: false }} />
       <Stack.Screen name="EditFacility" component={EditFacilityScreen} options={{ ...detailHeader, headerTitle: 'Edit Ground' }} />
       <Stack.Screen name="ManageGround" component={ManageGroundScreen} options={{ headerShown: false }} />

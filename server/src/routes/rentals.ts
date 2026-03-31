@@ -616,10 +616,15 @@ router.get('/rentals/my-rentals', async (req, res) => {
         },
       },
       orderBy: {
-        timeSlot: {
-          date: 'asc',
-        },
+        createdAt: 'desc',
       },
+    });
+
+    // Sort by timeSlot date in JS (avoids nested orderBy issues)
+    rentals.sort((a: any, b: any) => {
+      const dateA = a.timeSlot?.date ? new Date(a.timeSlot.date).getTime() : 0;
+      const dateB = b.timeSlot?.date ? new Date(b.timeSlot.date).getTime() : 0;
+      return dateA - dateB;
     });
 
     res.json(rentals);

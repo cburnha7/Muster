@@ -75,7 +75,7 @@ function CreateFacilityInner() {
       requiresInsurance: state.requiresInsurance,
       requiresBookingConfirmation: state.requiresBookingConfirmation,
       waiverRequired: state.waiverRequired,
-      waiverText: state.waiverRequired ? state.waiverText : '',
+      waiverText: state.waiverRequired ? state.waiverFileName : '',
     };
 
     const newFacility = await facilityService.createFacility(facilityData as any);
@@ -193,7 +193,7 @@ function CreateFacilityInner() {
             icon: 'arrow-forward',
             onPress: () => {
               if (state.createdFacilityId) {
-                (navigation as any).navigate('FacilityDetail', {
+                (navigation as any).navigate('FacilityDetails', {
                   facilityId: state.createdFacilityId,
                 });
               } else {

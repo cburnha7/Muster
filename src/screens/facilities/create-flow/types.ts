@@ -44,7 +44,8 @@ export interface FacilityWizardState {
   requiresBookingConfirmation: boolean;
   requiresInsurance: boolean;
   waiverRequired: boolean;
-  waiverText: string;
+  waiverFileName: string;
+  waiverFileUri: string;
   // Submission
   isSubmitting: boolean;
   showSuccess: boolean;
@@ -87,7 +88,8 @@ export function createInitialFacilityState(): FacilityWizardState {
     requiresBookingConfirmation: false,
     requiresInsurance: false,
     waiverRequired: false,
-    waiverText: '',
+    waiverFileName: '',
+    waiverFileUri: '',
     isSubmitting: false,
     showSuccess: false,
     createdFacilityId: null,

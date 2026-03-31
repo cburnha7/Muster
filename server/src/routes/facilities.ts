@@ -237,30 +237,30 @@ router.get('/authorized/for-events', async (req, res) => {
     today.setUTCHours(0, 0, 0, 0);
 
     // Get facilities where user has confirmed rentals
-    const rentalsWithFacilities = await prisma.facilityRental.findMany({
-      where: {
-        userId: userId as string,
-        status: 'confirmed',
-        usedForEventId: null, // Only unused rentals
-        timeSlot: {
-          date: { gte: today }, // Only future rentals
-          court: {
-            facility: { isActive: true }, // Only active facilities
+    let rentalsWithFacilities: any[] = [];
+    try {
+      rentalsWithFacilities = await prisma.facilityRental.findMany({
+        where: {
+          userId: userId as string,
+          status: 'confirmed',
+          usedForEventId: null,
+          timeSlot: {
+            date: { gte: today },
           },
         },
-      },
-      include: {
-        timeSlot: {
-          include: {
-            court: {
-              include: {
-                facility: {
-                  include: {
-                    owner: {
-                      select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
+        include: {
+          timeSlot: {
+            include: {
+              court: {
+                include: {
+                  facility: {
+                    include: {
+                      owner: {
+                        select: {
+                          id: true,
+                          firstName: true,
+                          lastName: true,
+                        },
                       },
                     },
                   },
@@ -269,8 +269,15 @@ router.get('/authorized/for-events', async (req, res) => {
             },
           },
         },
-      },
-    });
+      });
+    } catch (rentalErr: any) {
+      console.error('Rental query failed, continuing with owned facilities only:', rentalErr?.message);
+    }
+
+    // Filter out rentals with inactive facilities (in JS to avoid nested where issues)
+    rentalsWithFacilities = rentalsWithFacilities.filter(
+      (r: any) => r.timeSlot?.court?.facility?.isActive !== false
+    );
 
     // Extract unique facilities from rentals
     const rentalFacilityIds = new Set<string>();
