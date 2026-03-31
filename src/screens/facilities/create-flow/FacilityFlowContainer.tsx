@@ -6,6 +6,8 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { WizardProgressDots } from '../../../components/wizard/WizardProgressDots';
 import { useCreateFacility } from './CreateFacilityContext';
 import { FacilityWizardState } from './types';
@@ -40,24 +42,33 @@ function canContinue(state: FacilityWizardState, step: number): boolean {
 
 export function FacilityFlowContainer({ children, onSubmit }: FacilityFlowContainerProps) {
   const { state, dispatch } = useCreateFacility();
+  const navigation = useNavigation();
   const { currentStep } = state;
 
   const childArray = React.Children.toArray(children);
   const enabled = canContinue(state, currentStep);
   const isLastStep = currentStep === 4;
 
+  const handleBack = () => {
+    if (currentStep === 0) navigation.goBack();
+    else dispatch({ type: 'PREV_STEP' });
+  };
+
   const handlePress = () => {
-    if (isLastStep) {
-      onSubmit();
-    } else {
-      dispatch({ type: 'NEXT_STEP' });
-    }
+    if (isLastStep) onSubmit();
+    else dispatch({ type: 'NEXT_STEP' });
   };
 
   return (
     <SafeAreaView style={styles.root}>
-      <View style={styles.dotsContainer}>
-        <WizardProgressDots current={currentStep} total={5} />
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="arrow-back" size={24} color={colors.ink} />
+        </TouchableOpacity>
+        <View style={styles.dotsWrapper}>
+          <WizardProgressDots current={currentStep} total={5} />
+        </View>
+        <View style={styles.backBtn} />
       </View>
 
       <View style={styles.stageContainer}>{childArray[currentStep]}</View>
@@ -84,7 +95,9 @@ export function FacilityFlowContainer({ children, onSubmit }: FacilityFlowContai
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.white },
-  dotsContainer: { paddingVertical: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
+  backBtn: { width: 40, alignItems: 'center' as const },
+  dotsWrapper: { flex: 1 },
   stageContainer: { flex: 1 },
   buttonContainer: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 8 },
   button: {

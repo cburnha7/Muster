@@ -6,6 +6,8 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { WizardProgressDots } from '../../../components/wizard/WizardProgressDots';
 import { useCreateEvent } from './CreateEventContext';
 import { canContinue } from './validation';
@@ -18,6 +20,7 @@ interface EventFlowContainerProps {
 
 export function EventFlowContainer({ children, onSubmit }: EventFlowContainerProps) {
   const { state, dispatch } = useCreateEvent();
+  const navigation = useNavigation();
   const { currentStep } = state;
 
   const childArray = React.Children.toArray(children);
@@ -25,18 +28,26 @@ export function EventFlowContainer({ children, onSubmit }: EventFlowContainerPro
   const isLastStep = currentStep === 4;
   const showButton = currentStep > 0;
 
+  const handleBack = () => {
+    if (currentStep === 0) navigation.goBack();
+    else dispatch({ type: 'PREV_STEP' });
+  };
+
   const handlePress = () => {
-    if (isLastStep) {
-      onSubmit();
-    } else {
-      dispatch({ type: 'NEXT_STEP' });
-    }
+    if (isLastStep) onSubmit();
+    else dispatch({ type: 'NEXT_STEP' });
   };
 
   return (
     <SafeAreaView style={styles.root}>
-      <View style={styles.dotsContainer}>
-        <WizardProgressDots current={currentStep} total={5} />
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="arrow-back" size={24} color={colors.ink} />
+        </TouchableOpacity>
+        <View style={styles.dotsWrapper}>
+          <WizardProgressDots current={currentStep} total={5} />
+        </View>
+        <View style={styles.backBtn} />
       </View>
 
       <View style={styles.stageContainer}>
@@ -66,8 +77,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-  dotsContainer: {
-    paddingVertical: 12,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  backBtn: {
+    width: 40,
+    alignItems: 'center',
+  },
+  dotsWrapper: {
+    flex: 1,
   },
   stageContainer: {
     flex: 1,
