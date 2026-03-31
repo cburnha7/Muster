@@ -1,79 +1,37 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
+import React, { useCallback } from 'react';
+import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { Ionicons } from '@expo/vector-icons';
-import { Calendar, DateData } from 'react-native-calendars';
 
+<<<<<<< Updated upstream
 import * as Location from 'expo-location';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { CreationWizard, WizardStep } from '../../components/wizard/CreationWizard';
 import { SportIconGrid } from '../../components/wizard/SportIconGrid';
+=======
+import { CreateEventProvider, useCreateEvent } from './create-flow/CreateEventContext';
+import { EventFlowContainer } from './create-flow/EventFlowContainer';
+import { Step1Sport } from './create-flow/Step1Sport';
+import { Step2Details } from './create-flow/Step2Details';
+import { Step3Ground } from './create-flow/Step3Ground';
+import { Step4When } from './create-flow/Step4When';
+import { Step5Invite } from './create-flow/Step5Invite';
+>>>>>>> Stashed changes
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import CrossPlatformDateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { eventService } from '../../services/api/EventService';
-import { facilityService } from '../../services/api/FacilityService';
-import { teamService } from '../../services/api/TeamService';
 import { addEvent } from '../../store/slices/eventsSlice';
 import { useAuth } from '../../context/AuthContext';
-import { colors, fonts } from '../../theme';
-import { calendarTheme } from '../../utils/calendarUtils';
-import { SportType, SkillLevel, EventType, Facility } from '../../types';
 import { getSportEmoji } from '../../constants/sports';
-import { API_BASE_URL } from '../../services/api/config';
+import { EventType, SkillLevel } from '../../types';
 
-const EVENT_TYPE_OPTIONS: SelectOption[] = [
-  { label: 'Game', value: EventType.GAME },
-  { label: 'Practice', value: EventType.PRACTICE },
-  { label: 'Pickup', value: EventType.PICKUP },
-];
-
-const GENDER_OPTIONS: SelectOption[] = [
-  { label: 'Open to All', value: '' },
-  { label: 'Male Only', value: 'male' },
-  { label: 'Female Only', value: 'female' },
-];
-
-const SKILL_OPTIONS: SelectOption[] = [
-  { label: 'All Levels', value: SkillLevel.ALL_LEVELS },
-  { label: 'Beginner', value: SkillLevel.BEGINNER },
-  { label: 'Intermediate', value: SkillLevel.INTERMEDIATE },
-  { label: 'Advanced', value: SkillLevel.ADVANCED },
-];
-
-interface SlotData {
-  id: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  price: number;
-  court: { id: string; name: string; sportType: string; capacity: number };
-  isFromRental: boolean;
-  rentalId: string | null;
-}
-
-interface InviteItem {
-  id: string;
-  name: string;
-  type: 'roster' | 'player';
-  image?: string;
-}
-
-export function CreateEventScreen() {
-  const navigation = useNavigation();
-  const dispatch = useDispatch();
+function CreateEventInner() {
+  const { state, dispatch } = useCreateEvent();
+  const navigation = useNavigation<any>();
+  const reduxDispatch = useDispatch();
   const { user } = useAuth();
 
+<<<<<<< Updated upstream
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
@@ -356,21 +314,82 @@ export function CreateEventScreen() {
         const maxIdx = Math.max(...selectedIndices);
         if (idx === minIdx || idx === maxIdx) return prev.filter((s) => s.id !== slot.id);
         return prev;
+=======
+  const handleSubmit = useCallback(async () => {
+    if (!user || !state.sport || !state.facilityId || state.selectedSlots.length === 0) return;
+
+    dispatch({ type: 'SUBMIT_START' });
+
+    try {
+      const firstSlot = state.selectedSlots[0]!;
+      const lastSlot = state.selectedSlots[state.selectedSlots.length - 1]!;
+      const slotDate = new Date(firstSlot.date);
+      const [sh, sm] = firstSlot.startTime.split(':');
+      const startTime = new Date(
+        Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(sh || '0'), parseInt(sm || '0')),
+      );
+      const [eh, em] = lastSlot.endTime.split(':');
+      const endTime = new Date(
+        Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(eh || '0'), parseInt(em || '0')),
+      );
+
+      const sportLabel = state.sport.charAt(0).toUpperCase() + state.sport.slice(1).replace(/_/g, ' ');
+      const typeLabel = state.eventType
+        ? state.eventType.charAt(0).toUpperCase() + state.eventType.slice(1)
+        : 'Event';
+
+      const rosterIds = state.invitedItems.filter((i) => i.type === 'roster').map((i) => i.id);
+      const playerIds = state.invitedItems.filter((i) => i.type === 'player').map((i) => i.id);
+
+      const eventData: any = {
+        title: `${sportLabel} ${typeLabel}`,
+        description: '',
+        sportType: state.sport,
+        eventType: state.eventType || EventType.PICKUP,
+        facilityId: state.facilityId,
+        timeSlotId: firstSlot.id,
+        startTime,
+        endTime,
+        maxParticipants: parseInt(state.maxParticipants) || 10,
+        price: parseFloat(state.price) || 0,
+        skillLevel: state.skillLevel || SkillLevel.ALL_LEVELS,
+        equipment: [],
+        isPrivate: state.visibility === 'private',
+        organizerId: user.id,
+      };
+
+      // Eligibility fields
+      if (state.minAge || state.maxAge) {
+        eventData.eligibility = {
+          isInviteOnly: state.visibility === 'private',
+          minAge: state.minAge ? parseInt(state.minAge) : undefined,
+          maxAge: state.maxAge ? parseInt(state.maxAge) : undefined,
+        };
       }
-      const next = [...prev, slot].sort((a, b) => a.startTime.localeCompare(b.startTime));
-      return next;
-    });
-  }, [slotsForDate]);
+      if (state.genderRestriction) eventData.genderRestriction = state.genderRestriction;
+      if (state.minPlayerRating) eventData.minPlayerRating = parseInt(state.minPlayerRating);
 
-  const canSelectSlot = useCallback((idx: number) => {
-    if (selectedSlots.length === 0) return true;
-    if (selectedSlots.some((s) => s.id === slotsForDate[idx]?.id)) return true;
-    const selectedIndices = selectedSlots.map((s) => slotsForDate.findIndex((sf) => sf.id === s.id));
-    const minIdx = Math.min(...selectedIndices);
-    const maxIdx = Math.max(...selectedIndices);
-    return idx === minIdx - 1 || idx === maxIdx + 1;
-  }, [selectedSlots, slotsForDate]);
+      // Invite data
+      if (rosterIds.length > 0) {
+        if (!eventData.eligibility) eventData.eligibility = {};
+        eventData.eligibility.restrictedToTeams = rosterIds;
+      }
+      if (playerIds.length > 0) eventData.invitedUserIds = playerIds;
 
+      // Recurring fields
+      if (state.recurring && state.recurringFrequency) {
+        eventData.recurring = true;
+        eventData.recurringFrequency = state.recurringFrequency;
+        eventData.recurringEndDate = state.recurringEndDate;
+>>>>>>> Stashed changes
+      }
+
+      // Slot references
+      eventData.timeSlotIds = state.selectedSlots.map((s) => s.id);
+      eventData.rentalIds = state.selectedSlots.map((s) => s.rentalId).filter(Boolean);
+      if (firstSlot.rentalId) eventData.rentalId = firstSlot.rentalId;
+
+<<<<<<< Updated upstream
   // ── Wizard steps ──
   const steps: WizardStep[] = useMemo(() => [
     // Screen 1: Sport
@@ -681,53 +700,76 @@ export function CreateEventScreen() {
 
   const sportEmoji = getSportEmoji(sport);
   const sportLabel = sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : '';
+=======
+      const newEvent = await eventService.createEvent(eventData);
+      reduxDispatch(addEvent(newEvent));
+      dispatch({ type: 'SUBMIT_SUCCESS', eventId: newEvent.id });
+    } catch (error: any) {
+      dispatch({ type: 'SUBMIT_FAIL' });
+      Alert.alert('Error', error?.message || 'Failed to create event');
+    }
+  }, [user, state, dispatch, reduxDispatch]);
+
+  if (state.showSuccess) {
+    const sportLabel = state.sport
+      ? state.sport.charAt(0).toUpperCase() + state.sport.slice(1).replace(/_/g, ' ')
+      : '';
+    const sportEmoji = getSportEmoji(state.sport || '');
+    const typeLabel = state.eventType
+      ? state.eventType.charAt(0).toUpperCase() + state.eventType.slice(1)
+      : 'Event';
+
+    return (
+      <WizardSuccessScreen
+        emoji={sportEmoji}
+        title="Game on!"
+        subtitle={`Your ${sportLabel} ${typeLabel} is live`}
+        summaryRows={[
+          { label: 'Sport', value: sportLabel },
+          { label: 'Type', value: typeLabel },
+          { label: 'Visibility', value: state.visibility === 'public' ? 'Public' : 'Private' },
+          { label: 'Max', value: state.maxParticipants || '10' },
+          ...(state.invitedItems.length > 0
+            ? [{ label: 'Invites sent', value: String(state.invitedItems.length) }]
+            : []),
+        ]}
+        actions={[
+          {
+            label: 'View event',
+            icon: 'arrow-forward',
+            onPress: () => {
+              if (state.createdEventId) {
+                navigation.replace('EventDetails', { eventId: state.createdEventId });
+              } else {
+                navigation.goBack();
+              }
+            },
+            variant: 'primary',
+          },
+          {
+            label: 'Back to home',
+            icon: 'home-outline',
+            onPress: () => navigation.replace('HomeScreen'),
+            variant: 'secondary',
+          },
+        ]}
+      />
+    );
+  }
+>>>>>>> Stashed changes
 
   return (
-    <CreationWizard
-      steps={steps}
-      onComplete={handleSubmit}
-      onBack={() => navigation.goBack()}
-      isSubmitting={isLoading}
-      submitLabel="Create Event"
-      showSuccess={showSuccess}
-      successScreen={
-        <WizardSuccessScreen
-          emoji={sportEmoji}
-          title="Game on!"
-          subtitle={`Your ${sportLabel} ${eventType || 'event'} is live`}
-          summaryRows={[
-            { label: 'Sport', value: sportLabel },
-            { label: 'Type', value: eventType ? eventType.charAt(0).toUpperCase() + eventType.slice(1) : '' },
-            { label: 'Visibility', value: visibility === 'public' ? 'Public' : 'Private' },
-            { label: 'Max', value: maxParticipants || '10' },
-            ...(invitedItems.length > 0 ? [{ label: 'Invites sent', value: String(invitedItems.length) }] : []),
-          ]}
-          actions={[
-            {
-              label: 'View event',
-              icon: 'arrow-forward',
-              onPress: () => {
-                if (createdEventId) {
-                  (navigation as any).replace('EventDetails', { eventId: createdEventId });
-                } else {
-                  navigation.goBack();
-                }
-              },
-              variant: 'primary',
-            },
-            {
-              label: 'Back to home',
-              icon: 'home-outline',
-              onPress: () => (navigation as any).replace('HomeScreen'),
-              variant: 'secondary',
-            },
-          ]}
-        />
-      }
-    />
+    <EventFlowContainer onSubmit={handleSubmit}>
+      <Step1Sport />
+      <Step2Details />
+      <Step3Ground />
+      <Step4When />
+      <Step5Invite />
+    </EventFlowContainer>
   );
 }
 
+<<<<<<< Updated upstream
 const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: fonts.label,
@@ -881,3 +923,12 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
+=======
+export function CreateEventScreen() {
+  return (
+    <CreateEventProvider>
+      <CreateEventInner />
+    </CreateEventProvider>
+  );
+}
+>>>>>>> Stashed changes
