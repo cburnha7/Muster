@@ -244,6 +244,9 @@ router.get('/authorized/for-events', async (req, res) => {
         usedForEventId: null, // Only unused rentals
         timeSlot: {
           date: { gte: today }, // Only future rentals
+          court: {
+            facility: { isActive: true }, // Only active facilities
+          },
         },
       },
       include: {
@@ -310,8 +313,9 @@ router.get('/authorized/for-events', async (req, res) => {
       data: facilitiesWithBoth,
       total: facilitiesWithBoth.length,
     });
-  } catch (error) {
-    console.error('Get authorized facilities error:', error);
+  } catch (error: any) {
+    console.error('Get authorized facilities error:', error?.message || error);
+    console.error('Stack:', error?.stack);
     res.status(500).json({ error: 'Failed to fetch authorized facilities' });
   }
 });
