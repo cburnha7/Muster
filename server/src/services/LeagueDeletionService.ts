@@ -272,7 +272,36 @@ export class LeagueDeletionService {
         });
       }
 
-      // 15. Delete the league — Prisma cascade handles child records
+      // 15. Delete conversations linked to this league
+      const conversations = await tx.conversation.findMany({
+        where: { entityId: leagueId, type: 'LEAGUE' },
+        select: { id: true },
+      });
+      const convIds = conversations.map((c) => c.id);
+      if (convIds.length > 0) {
+        await tx.messageReaction.deleteMany({
+          where: { message: { conversationId: { in: convIds } } },
+        });
+        await tx.message.deleteMany({ where: { conversationId: { in: convIds } } });
+        await tx.conversationParticipant.deleteMany({ where: { conversationId: { in: convIds } } });
+        await tx.conversation.deleteMany({ where: { id: { in: convIds } } });
+      }
+
+      // 16. Remove league from event eligibility restrictions
+      const eventsWithRestriction = await tx.event.findMany({
+        where: { eligibilityRestrictedToLeagues: { has: leagueId } },
+        select: { id: true, eligibilityRestrictedToLeagues: true },
+      });
+      for (const evt of eventsWithRestriction) {
+        await tx.event.update({
+          where: { id: evt.id },
+          data: {
+            eligibilityRestrictedToLeagues: evt.eligibilityRestrictedToLeagues.filter((lid) => lid !== leagueId),
+          },
+        });
+      }
+
+      // 17. Delete the league — Prisma cascade handles child records
       await tx.league.delete({
         where: { id: leagueId },
       });

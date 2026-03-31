@@ -444,28 +444,59 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if team exists
-    const team = await prisma.team.findUnique({
-      where: { id },
-    });
-
+    const team = await prisma.team.findUnique({ where: { id } });
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    // Delete related records first, then the team
-    // Note: LeagueMembership and TeamTransaction have onDelete: Cascade
-    // so they are automatically removed when the team is deleted.
     await prisma.$transaction(async (tx) => {
-      // Delete team members (no cascade)
-      await tx.teamMember.deleteMany({ where: { teamId: id } });
+      // Delete conversations linked to this roster
+      const conversations = await tx.conversation.findMany({
+        where: { entityId: id, type: 'TEAM' },
+        select: { id: true },
+      });
+      const convIds = conversations.map((c) => c.id);
+      if (convIds.length > 0) {
+        await tx.messageReaction.deleteMany({
+          where: { message: { conversationId: { in: convIds } } },
+        });
+        await tx.message.deleteMany({ where: { conversationId: { in: convIds } } });
+        await tx.conversationParticipant.deleteMany({ where: { conversationId: { in: convIds } } });
+        await tx.conversation.deleteMany({ where: { id: { in: convIds } } });
+      }
 
-      // Delete matches referencing this team (no cascade)
-      await tx.match.deleteMany({ 
-        where: { OR: [{ homeTeamId: id }, { awayTeamId: id }] } 
+      // Delete booking participants referencing this roster
+      await tx.bookingParticipant.deleteMany({ where: { rosterId: id } });
+
+      // Nullify events where this roster was covering the fee
+      await tx.event.updateMany({
+        where: { coveringTeamId: id },
+        data: { coveringTeamId: null, isGroupFeeCovered: false },
       });
 
-      // Delete the team (cascades: leagueMemberships, transactions)
+      // Remove invited user references from events (eligibilityRestrictedToTeams)
+      const eventsWithRestriction = await tx.event.findMany({
+        where: { eligibilityRestrictedToTeams: { has: id } },
+        select: { id: true, eligibilityRestrictedToTeams: true },
+      });
+      for (const evt of eventsWithRestriction) {
+        await tx.event.update({
+          where: { id: evt.id },
+          data: {
+            eligibilityRestrictedToTeams: evt.eligibilityRestrictedToTeams.filter((tid) => tid !== id),
+          },
+        });
+      }
+
+      // Delete team members
+      await tx.teamMember.deleteMany({ where: { teamId: id } });
+
+      // Delete matches referencing this team
+      await tx.match.deleteMany({
+        where: { OR: [{ homeTeamId: id }, { awayTeamId: id }] },
+      });
+
+      // Delete the team (cascades: leagueMemberships, transactions, inviteLinks, playerDuesPayments)
       await tx.team.delete({ where: { id } });
     });
 
