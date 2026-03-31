@@ -391,6 +391,39 @@ export class LeagueService extends BaseApiService {
       params: { seasonId },
     });
   }
+
+  // ─── Commissioner Team Management ───
+
+  /**
+   * Commissioner creates a team for their league
+   */
+  async createTeamForLeague(
+    leagueId: string,
+    data: { name: string; maxMembers?: number; coachEmail?: string; coachUserId?: string }
+  ): Promise<any> {
+    return this.post(`/leagues/${leagueId}/teams`, data);
+  }
+
+  /**
+   * Commissioner assigns a coach to a team in their league
+   */
+  async assignCoach(
+    leagueId: string,
+    teamId: string,
+    data: { coachUserId?: string; email?: string }
+  ): Promise<any> {
+    return this.post(`/leagues/${leagueId}/teams/${teamId}/assign-coach`, data);
+  }
+
+  /**
+   * Commissioner bulk-creates teams for their league
+   */
+  async bulkCreateTeams(
+    leagueId: string,
+    teams: { name: string; maxMembers?: number }[]
+  ): Promise<{ created: number; failed: number; results: any[] }> {
+    return this.post(`/leagues/${leagueId}/teams/bulk`, { teams });
+  }
 }
 
 // Export singleton instance

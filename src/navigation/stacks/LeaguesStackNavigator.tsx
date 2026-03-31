@@ -10,7 +10,9 @@ import { RecordMatchResultScreen } from '../../screens/leagues/RecordMatchResult
 import { AssignFacilityScreen } from '../../screens/leagues/AssignFacilityScreen';
 import { DocumentViewerScreen } from '../../screens/leagues/DocumentViewerScreen';
 import SchedulingScreen from '../../screens/leagues/SchedulingScreen';
+import { ScheduleWizardScreen } from '../../screens/leagues/ScheduleWizardScreen';
 import { LeagueDeletionConfirmScreen } from '../../screens/leagues/LeagueDeletionConfirmScreen';
+import { LeagueTeamManagementScreen } from '../../screens/leagues/LeagueTeamManagementScreen';
 import { colors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<LeaguesStackParamList>();
@@ -38,7 +40,9 @@ export function LeaguesStackNavigator() {
       <Stack.Screen name="AssignFacility" component={AssignFacilityScreen} options={{ headerShown: false }} />
       <Stack.Screen name="DocumentViewer" component={DocumentViewerScreen} options={{ ...detailHeader, headerTitle: 'Document' }} />
       <Stack.Screen name="LeagueScheduling" component={SchedulingScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ScheduleWizard" component={ScheduleWizardScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LeagueDeletionConfirm" component={LeagueDeletionConfirmScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="LeagueTeamManagement" component={LeagueTeamManagementScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

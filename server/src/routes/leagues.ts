@@ -712,6 +712,348 @@ router.delete('/:id', requireNonDependent, async (req: Request, res: Response) =
   }
 });
 
+// ─── Commissioner Team Management ───
+
+// POST /api/leagues/:id/teams - Commissioner creates a team for their league
+router.post('/:id/teams', optionalAuthMiddleware, requireNonDependent, async (req: Request, res: Response) => {
+  try {
+    const { id: leagueId } = req.params;
+    const userId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Verify league exists and user is the commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, organizerId: true, sportType: true, suggestedRosterSize: true, name: true },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can create teams' });
+    }
+
+    const {
+      name,
+      sportType,
+      maxMembers,
+      skillLevel,
+      genderRestriction,
+      coachEmail,
+      coachUserId,
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Team name is required' });
+    }
+
+    // Create the team
+    const team = await prisma.team.create({
+      data: {
+        name: name.trim(),
+        description: '',
+        sportType: sportType || league.sportType || '',
+        sportTypes: sportType ? [sportType] : (league.sportType ? [league.sportType] : []),
+        skillLevel: skillLevel || '',
+        maxMembers: maxMembers || league.suggestedRosterSize || 15,
+        isPrivate: true,
+        genderRestriction: genderRestriction || null,
+      },
+    });
+
+    // Create LeagueMembership linking team to league
+    await prisma.leagueMembership.create({
+      data: {
+        leagueId,
+        memberId: team.id,
+        teamId: team.id,
+        memberType: 'roster',
+        status: 'active',
+        matchesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        points: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+      },
+    });
+
+    // Create team chat
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      await MessagingService.createTeamChat(team.id, userId, team.name);
+    } catch (msgErr) {
+      console.error('Failed to create team chat:', msgErr);
+    }
+
+    // Assign coach if provided
+    let coachAssignment: { assigned: boolean; method: string; userId?: string } = { assigned: false, method: 'none' };
+
+    const targetCoachId = coachUserId || null;
+    const targetCoachEmail = coachEmail?.trim() || null;
+
+    if (targetCoachId) {
+      // Direct user ID assignment
+      const coachUser = await prisma.user.findUnique({ where: { id: targetCoachId }, select: { id: true } });
+      if (coachUser) {
+        await prisma.teamMember.create({
+          data: {
+            teamId: team.id,
+            userId: targetCoachId,
+            role: 'coach',
+            status: 'active',
+            joinedAt: new Date(),
+          },
+        });
+        coachAssignment = { assigned: true, method: 'direct', userId: targetCoachId };
+      }
+    } else if (targetCoachEmail) {
+      // Look up by email
+      const coachUser = await prisma.user.findUnique({
+        where: { email: targetCoachEmail.toLowerCase() },
+        select: { id: true, firstName: true, lastName: true },
+      });
+
+      if (coachUser) {
+        await prisma.teamMember.create({
+          data: {
+            teamId: team.id,
+            userId: coachUser.id,
+            role: 'coach',
+            status: 'active',
+            joinedAt: new Date(),
+          },
+        });
+        coachAssignment = { assigned: true, method: 'email_found', userId: coachUser.id };
+      } else {
+        // User not found — they'll need to sign up first
+        coachAssignment = { assigned: false, method: 'user_not_found' };
+      }
+    }
+
+    // Fetch complete team
+    const completeTeam = await prisma.team.findUnique({
+      where: { id: team.id },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, email: true, firstName: true, lastName: true, profileImage: true },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      team: completeTeam,
+      coachAssignment,
+      leagueMembership: { leagueId, teamId: team.id, status: 'active' },
+    });
+  } catch (error: any) {
+    console.error('Commissioner create team error:', error);
+    res.status(500).json({ error: 'Failed to create team', details: error?.message });
+  }
+});
+
+// POST /api/leagues/:id/teams/:teamId/assign-coach
+router.post('/:id/teams/:teamId/assign-coach', optionalAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id: leagueId, teamId } = req.params;
+    const userId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Verify league + commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, organizerId: true, name: true },
+    });
+    if (!league) return res.status(404).json({ error: 'League not found' });
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can assign coaches' });
+    }
+
+    // Verify team is in this league
+    const membership = await prisma.leagueMembership.findFirst({
+      where: { leagueId, teamId, memberType: 'roster' },
+    });
+    if (!membership) {
+      return res.status(404).json({ error: 'Team is not in this league' });
+    }
+
+    const team = await prisma.team.findUnique({ where: { id: teamId }, select: { id: true, name: true } });
+    if (!team) return res.status(404).json({ error: 'Team not found' });
+
+    const { coachUserId: targetUserId, email } = req.body;
+
+    if (!targetUserId && !email) {
+      return res.status(400).json({ error: 'Provide either coachUserId or email' });
+    }
+
+    let coachId: string | null = targetUserId || null;
+
+    // Look up by email if no userId
+    if (!coachId && email) {
+      const foundUser = await prisma.user.findUnique({
+        where: { email: email.trim().toLowerCase() },
+        select: { id: true },
+      });
+      if (foundUser) {
+        coachId = foundUser.id;
+      } else {
+        return res.status(404).json({
+          error: 'No user found with that email. They need to create a Muster account first.',
+        });
+      }
+    }
+
+    if (!coachId) {
+      return res.status(400).json({ error: 'Could not resolve coach user' });
+    }
+
+    // Check if they're already on the team
+    const existing = await prisma.teamMember.findFirst({
+      where: { teamId, userId: coachId },
+    });
+
+    if (existing) {
+      // Update their role to coach
+      await prisma.teamMember.update({
+        where: { id: existing.id },
+        data: { role: 'coach', status: 'active' },
+      });
+    } else {
+      await prisma.teamMember.create({
+        data: {
+          teamId,
+          userId: coachId,
+          role: 'coach',
+          status: 'active',
+          joinedAt: new Date(),
+        },
+      });
+    }
+
+    // Fetch updated team
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        members: {
+          where: { status: 'active' },
+          include: {
+            user: {
+              select: { id: true, email: true, firstName: true, lastName: true, profileImage: true },
+            },
+          },
+        },
+      },
+    });
+
+    res.json({ success: true, team: updatedTeam });
+  } catch (error: any) {
+    console.error('Assign coach error:', error);
+    res.status(500).json({ error: 'Failed to assign coach', details: error?.message });
+  }
+});
+
+// POST /api/leagues/:id/teams/bulk - Commissioner bulk-creates teams
+router.post('/:id/teams/bulk', optionalAuthMiddleware, requireNonDependent, async (req: Request, res: Response) => {
+  try {
+    const { id: leagueId } = req.params;
+    const userId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, organizerId: true, sportType: true, suggestedRosterSize: true, name: true },
+    });
+    if (!league) return res.status(404).json({ error: 'League not found' });
+    if (league.organizerId !== userId) {
+      return res.status(403).json({ error: 'Only the league commissioner can create teams' });
+    }
+
+    const { teams } = req.body;
+    if (!Array.isArray(teams) || teams.length === 0) {
+      return res.status(400).json({ error: 'Provide an array of teams' });
+    }
+    if (teams.length > 20) {
+      return res.status(400).json({ error: 'Maximum 20 teams per bulk create' });
+    }
+
+    const results: any[] = [];
+
+    for (const teamInput of teams) {
+      if (!teamInput.name?.trim()) {
+        results.push({ name: teamInput.name, error: 'Name is required' });
+        continue;
+      }
+
+      try {
+        const team = await prisma.team.create({
+          data: {
+            name: teamInput.name.trim(),
+            description: '',
+            sportType: league.sportType || '',
+            sportTypes: league.sportType ? [league.sportType] : [],
+            skillLevel: '',
+            maxMembers: teamInput.maxMembers || league.suggestedRosterSize || 15,
+            isPrivate: true,
+          },
+        });
+
+        await prisma.leagueMembership.create({
+          data: {
+            leagueId,
+            memberId: team.id,
+            teamId: team.id,
+            memberType: 'roster',
+            status: 'active',
+            matchesPlayed: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            points: 0,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            goalDifference: 0,
+          },
+        });
+
+        // Create team chat
+        try {
+          const { MessagingService } = await import('../services/MessagingService');
+          await MessagingService.createTeamChat(team.id, userId, team.name);
+        } catch (e) { /* non-critical */ }
+
+        results.push({ name: team.name, teamId: team.id, status: 'created' });
+      } catch (e: any) {
+        results.push({ name: teamInput.name, error: e?.message || 'Failed' });
+      }
+    }
+
+    res.status(201).json({
+      created: results.filter(r => r.status === 'created').length,
+      failed: results.filter(r => r.error).length,
+      results,
+    });
+  } catch (error: any) {
+    console.error('Bulk create teams error:', error);
+    res.status(500).json({ error: 'Failed to create teams', details: error?.message });
+  }
+});
+
 export default router;
 
 // GET /api/leagues/:id/standings - Get league standings (roster-based)
@@ -1348,7 +1690,7 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
             sportType: true,
             balance: true,
             members: {
-              where: { role: 'captain', status: 'active' },
+              where: { role: { in: ['captain', 'co_captain', 'coach', 'assistant_coach'] }, status: 'active' },
               select: { userId: true }
             }
           }
@@ -1546,8 +1888,8 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
       }
     });
 
-    if (!teamMember || (teamMember.role !== 'captain' && teamMember.role !== 'admin')) {
-      return res.status(403).json({ error: 'Only roster captains or admins can withdraw from leagues' });
+    if (!teamMember || !['captain', 'co_captain', 'coach', 'assistant_coach', 'admin'].includes(teamMember.role)) {
+      return res.status(403).json({ error: 'Only team managers can withdraw from leagues' });
     }
 
     // Find membership
