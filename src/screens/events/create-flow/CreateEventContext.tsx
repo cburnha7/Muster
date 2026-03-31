@@ -11,28 +11,19 @@ function computeContiguousSelection(
   allSlots: SlotData[],
 ): SlotData[] {
   const isSelected = current.some((s) => s.id === toggled.id);
-
   if (isSelected) {
-    // Deselect: only allow removing from either end of the contiguous block
     if (current.length <= 1) return [];
     if (toggled.id === current[0]!.id) return current.slice(1);
     if (toggled.id === current[current.length - 1]!.id) return current.slice(0, -1);
-    // Not an endpoint — ignore
     return current;
   }
-
-  // Select: must be adjacent to the current block
   if (current.length === 0) return [toggled];
-
   const sorted = [...allSlots].sort((a, b) => a.startTime.localeCompare(b.startTime));
   const toggledIdx = sorted.findIndex((s) => s.id === toggled.id);
   const firstIdx = sorted.findIndex((s) => s.id === current[0]!.id);
   const lastIdx = sorted.findIndex((s) => s.id === current[current.length - 1]!.id);
-
   if (toggledIdx === firstIdx - 1) return [toggled, ...current];
   if (toggledIdx === lastIdx + 1) return [...current, toggled];
-
-  // Not adjacent — ignore
   return current;
 }
 
@@ -48,6 +39,16 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 
     case 'SET_FIELD':
       return { ...state, [action.field]: action.value };
+
+    case 'SET_LOCATION_MODE':
+      return {
+        ...state,
+        locationMode: action.mode,
+        // Reset the other mode's data
+        ...(action.mode === 'muster'
+          ? { locationName: '', locationAddress: '', locationLat: null, locationLng: null }
+          : { facilityId: '', facilityName: '', courtId: '', courtName: '', selectedSlots: [], isOwner: false }),
+      };
 
     case 'SET_FACILITY':
       return {
@@ -73,12 +74,26 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
     case 'TOGGLE_SLOT':
       return {
         ...state,
-        selectedSlots: computeContiguousSelection(
-          state.selectedSlots,
-          action.slot,
-          action.slotsForDate,
-        ),
+        selectedSlots: computeContiguousSelection(state.selectedSlots, action.slot, action.slotsForDate),
       };
+
+    case 'TOGGLE_RECURRING_DAY': {
+      const days = state.recurringDays.includes(action.day)
+        ? state.recurringDays.filter((d) => d !== action.day)
+        : [...state.recurringDays, action.day];
+      return { ...state, recurringDays: days };
+    }
+
+    case 'SET_OCCURRENCE_LOCATIONS':
+      return { ...state, occurrenceLocations: action.locations };
+
+    case 'UPDATE_OCCURRENCE': {
+      const locs = [...state.occurrenceLocations];
+      if (locs[action.index]) {
+        locs[action.index] = { ...locs[action.index]!, ...action.location };
+      }
+      return { ...state, occurrenceLocations: locs };
+    }
 
     case 'SET_VISIBILITY':
       return { ...state, visibility: action.visibility };
@@ -130,8 +145,6 @@ export function CreateEventProvider({ children }: { children: React.ReactNode })
 
 export function useCreateEvent(): CreateEventContextValue {
   const ctx = useContext(CreateEventContext);
-  if (!ctx) {
-    throw new Error('useCreateEvent must be used within a CreateEventProvider');
-  }
+  if (!ctx) throw new Error('useCreateEvent must be used within a CreateEventProvider');
   return ctx;
 }

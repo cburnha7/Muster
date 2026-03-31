@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   View,
@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateEvent } from './CreateEventContext';
+import { AvailabilityIndicator } from '../../../components/ui/AvailabilityIndicator';
+import { useAvailabilityCheck } from '../../../hooks/useAvailabilityCheck';
 import { colors, fonts } from '../../../theme';
 import { EventType } from '../../../types';
 import { InviteItem } from './types';
@@ -24,6 +26,27 @@ export function Step5Invite() {
   const [searching, setSearching] = useState(false);
 
   const isGame = state.eventType === EventType.GAME;
+
+  // Build date windows for availability check
+  const dateWindows = useMemo(() => {
+    const fmt = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const fmtDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (state.recurring && state.occurrenceLocations.length > 0 && state.startTime && state.endTime) {
+      return state.occurrenceLocations.map((occ) => ({
+        date: occ.date,
+        startTime: fmt(state.startTime!),
+        endTime: fmt(state.endTime!),
+      }));
+    }
+    if (state.startDate && state.startTime && state.endTime) {
+      return [{ date: fmtDate(state.startDate), startTime: fmt(state.startTime), endTime: fmt(state.endTime) }];
+    }
+    return [];
+  }, [state.startDate, state.startTime, state.endTime, state.recurring, state.occurrenceLocations]);
+
+  const playerIds = useMemo(() => state.invitedItems.filter((i) => i.type === 'player').map((i) => i.id), [state.invitedItems]);
+  const rosterInviteIds = useMemo(() => state.invitedItems.filter((i) => i.type === 'roster').map((i) => i.id), [state.invitedItems]);
+  const { availability } = useAvailabilityCheck(playerIds, rosterInviteIds, dateWindows);
 
   const handleVisibility = (vis: 'private' | 'public') => {
     dispatch({ type: 'SET_VISIBILITY', visibility: vis });
@@ -183,16 +206,21 @@ export function Step5Invite() {
           {state.invitedItems.length > 0 && (
             <View style={styles.chipsContainer}>
               {state.invitedItems.map((item) => (
-                <View key={item.id} style={styles.chip}>
-                  {item.type === 'roster' ? (
-                    <Ionicons name="people-outline" size={14} color={colors.cobalt} />
-                  ) : (
-                    <Ionicons name="person-outline" size={14} color={colors.cobalt} />
+                <View key={item.id} style={styles.inviteeCard}>
+                  <View style={styles.inviteeRow}>
+                    {item.type === 'roster' ? (
+                      <Ionicons name="people-outline" size={14} color={colors.cobalt} />
+                    ) : (
+                      <Ionicons name="person-outline" size={14} color={colors.cobalt} />
+                    )}
+                    <Text style={styles.chipText}>{item.name}</Text>
+                    <TouchableOpacity onPress={() => handleRemoveInvite(item.id)}>
+                      <Ionicons name="close-circle" size={16} color={colors.inkSoft} />
+                    </TouchableOpacity>
+                  </View>
+                  {availability[item.id] && (
+                    <AvailabilityIndicator statuses={availability[item.id]!} />
                   )}
-                  <Text style={styles.chipText}>{item.name}</Text>
-                  <TouchableOpacity onPress={() => handleRemoveInvite(item.id)}>
-                    <Ionicons name="close-circle" size={16} color={colors.inkSoft} />
-                  </TouchableOpacity>
                 </View>
               ))}
             </View>
@@ -317,10 +345,21 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
   },
   chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 16,
+  },
+  inviteeCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  inviteeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   chip: {
     flexDirection: 'row',
