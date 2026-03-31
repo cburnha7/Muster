@@ -15,10 +15,12 @@ import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar, DateData } from 'react-native-calendars';
 
+import * as Location from 'expo-location';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { CreationWizard, WizardStep } from '../../components/wizard/CreationWizard';
 import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
+import CrossPlatformDateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
@@ -78,7 +80,9 @@ export function CreateEventScreen() {
   // ── Screen 1: Sport ──
   const [sport, setSport] = useState<SportType | ''>('');
 
-  // ── Screen 2: Grounds ──
+  // ── Screen 2: Location ──
+  const [locationMode, setLocationMode] = useState<'facility' | 'freetext' | ''>('');
+  // Facility path
   const [facilityId, setFacilityId] = useState('');
   const [courtId, setCourtId] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -86,6 +90,21 @@ export function CreateEventScreen() {
   const [facilities, setFacilities] = useState<(Facility & { isOwned: boolean })[]>([]);
   const [allSlots, setAllSlots] = useState<SlotData[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  // Free-text path
+  const [locationName, setLocationName] = useState('');
+  const [locationAddress, setLocationAddress] = useState('');
+  const [locationLat, setLocationLat] = useState<number | null>(null);
+  const [locationLng, setLocationLng] = useState<number | null>(null);
+  const [freeTextDate, setFreeTextDate] = useState<Date>(new Date());
+  const [freeTextStartTime, setFreeTextStartTime] = useState<Date>(() => {
+    const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1);
+    return d;
+  });
+  const [freeTextEndTime, setFreeTextEndTime] = useState<Date>(() => {
+    const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 2);
+    return d;
+  });
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   // ── Screen 3: Event Type & Details ──
   const [eventType, setEventType] = useState<EventType | ''>('');
@@ -203,28 +222,78 @@ export function CreateEventScreen() {
   };
   const removeInvite = (id: string) => setInvitedItems((prev) => prev.filter((i) => i.id !== id));
 
+  // ── Use current location for free-text path ──
+  const handleUseCurrentLocation = useCallback(async () => {
+    setGettingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required to use this feature.');
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setLocationLat(loc.coords.latitude);
+      setLocationLng(loc.coords.longitude);
+      // Try reverse geocoding for address
+      try {
+        const [geo] = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        if (geo) {
+          const parts = [geo.streetNumber, geo.street, geo.city, geo.region, geo.postalCode].filter(Boolean);
+          if (parts.length > 0) setLocationAddress(parts.join(', '));
+        }
+      } catch {
+        // Reverse geocoding is optional — coordinates are captured
+      }
+    } catch (err: any) {
+      Alert.alert('Error', 'Could not get your current location.');
+    } finally {
+      setGettingLocation(false);
+    }
+  }, []);
+
   // ── Submit ──
   const handleSubmit = useCallback(async () => {
-    if (!user || !sport || !facilityId || selectedSlots.length === 0) return;
+    if (!user || !sport) return;
+
+    // Validate based on location mode
+    if (locationMode === 'facility' && (selectedSlots.length === 0 || !facilityId)) return;
+    if (locationMode === 'freetext' && !locationName.trim()) return;
+
     try {
       setIsLoading(true);
-      const firstSlot = selectedSlots[0]!;
-      const lastSlot = selectedSlots[selectedSlots.length - 1]!;
-      const slotDate = new Date(firstSlot.date);
-      const [h, mStr] = firstSlot.startTime.split(':');
-      const start = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(h || '0'), parseInt(mStr || '0')));
-      const [eh, em] = lastSlot.endTime.split(':');
-      const end = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(eh || '0'), parseInt(em || '0')));
+      const sportLbl = sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ');
 
-      const sportLabel = sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ');
+      let startTime: Date;
+      let endTime: Date;
+
+      if (locationMode === 'facility' && selectedSlots.length > 0) {
+        // Derive time from facility time slots
+        const firstSlot = selectedSlots[0]!;
+        const lastSlot = selectedSlots[selectedSlots.length - 1]!;
+        const slotDate = new Date(firstSlot.date);
+        const [h, mStr] = firstSlot.startTime.split(':');
+        startTime = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(h || '0'), parseInt(mStr || '0')));
+        const [eh, em] = lastSlot.endTime.split(':');
+        endTime = new Date(Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(), parseInt(eh || '0'), parseInt(em || '0')));
+      } else {
+        // Free-text or no location: use standalone date/time pickers
+        const d = freeTextDate;
+        const st = freeTextStartTime;
+        const et = freeTextEndTime;
+        startTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), st.getHours(), st.getMinutes());
+        endTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), et.getHours(), et.getMinutes());
+      }
+
       const eventData: any = {
-        title: `${sportLabel} ${eventType || 'Event'}`,
+        title: `${sportLbl} ${eventType || 'Event'}`,
         description: '',
         sportType: sport,
         eventType: eventType || EventType.PICKUP,
-        facilityId,
-        startTime: start,
-        endTime: end,
+        startTime,
+        endTime,
         maxParticipants: parseInt(maxParticipants) || 10,
         price: parseFloat(price) || 0,
         skillLevel: skillLevel || SkillLevel.ALL_LEVELS,
@@ -233,16 +302,26 @@ export function CreateEventScreen() {
         equipment: [],
         isPrivate: visibility === 'private',
         organizerId: user.id,
-        timeSlotId: firstSlot.id,
-        rentalId: firstSlot.rentalId || undefined,
-        timeSlotIds: selectedSlots.map((s) => s.id),
-        rentalIds: selectedSlots.map((s) => s.rentalId).filter(Boolean),
         eligibility: {
           isInviteOnly: visibility === 'private',
           minAge: minAge ? parseInt(minAge) : undefined,
           maxAge: maxAge ? parseInt(maxAge) : undefined,
         },
       };
+
+      if (locationMode === 'facility') {
+        const firstSlot = selectedSlots[0]!;
+        eventData.facilityId = facilityId;
+        eventData.timeSlotId = firstSlot.id;
+        eventData.rentalId = firstSlot.rentalId || undefined;
+        eventData.timeSlotIds = selectedSlots.map((s) => s.id);
+        eventData.rentalIds = selectedSlots.map((s) => s.rentalId).filter(Boolean);
+      } else if (locationMode === 'freetext') {
+        eventData.locationName = locationName.trim();
+        eventData.locationAddress = locationAddress.trim() || undefined;
+        eventData.locationLat = locationLat;
+        eventData.locationLng = locationLng;
+      }
 
       const rosterIds = invitedItems.filter((i) => i.type === 'roster').map((i) => i.id);
       const playerIds = invitedItems.filter((i) => i.type === 'player').map((i) => i.id);
@@ -258,7 +337,7 @@ export function CreateEventScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, sport, facilityId, selectedSlots, eventType, maxParticipants, price, skillLevel, minPlayerRating, genderRestriction, minAge, maxAge, visibility, invitedItems, dispatch]);
+  }, [user, sport, locationMode, facilityId, selectedSlots, locationName, locationAddress, locationLat, locationLng, freeTextDate, freeTextStartTime, freeTextEndTime, eventType, maxParticipants, price, skillLevel, minPlayerRating, genderRestriction, minAge, maxAge, visibility, invitedItems, dispatch]);
 
   const handleSportSelect = useCallback((key: string) => {
     setSport(key as SportType);
@@ -304,73 +383,174 @@ export function CreateEventScreen() {
         </ScrollView>
       ),
     },
-    // Screen 2: Grounds
+    // Screen 2: Location
     {
-      key: 'grounds',
+      key: 'location',
       headline: "Where's the game?",
-      validate: () => selectedSlots.length > 0,
+      validate: () => {
+        if (locationMode === 'facility') return selectedSlots.length > 0;
+        if (locationMode === 'freetext') return !!locationName.trim();
+        return false;
+      },
       content: (
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={styles.fieldLabel}>Ground</Text>
-          <FormSelect label="" options={facilityOptions} value={facilityId} onSelect={(o) => setFacilityId(String(o.value))} placeholder="Select a ground..." />
+          {/* ── Location mode selection ── */}
+          <View style={styles.locationChoiceRow}>
+            <TouchableOpacity
+              style={[styles.locationChoiceCard, locationMode === 'facility' && styles.locationChoiceCardActive]}
+              onPress={() => { setLocationMode('facility'); setLocationName(''); setLocationAddress(''); setLocationLat(null); setLocationLng(null); }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="business-outline" size={22} color={locationMode === 'facility' ? colors.cobalt : colors.inkFaint} />
+              <Text style={[styles.locationChoiceTitle, locationMode === 'facility' && styles.locationChoiceTitleActive]}>At a Muster facility</Text>
+              <Text style={styles.locationChoiceHint}>Book a court with time slots</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.locationChoiceCard, locationMode === 'freetext' && styles.locationChoiceCardActive]}
+              onPress={() => { setLocationMode('freetext'); setFacilityId(''); setCourtId(''); setSelectedDate(''); setSelectedSlots([]); }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="location-outline" size={22} color={locationMode === 'freetext' ? colors.cobalt : colors.inkFaint} />
+              <Text style={[styles.locationChoiceTitle, locationMode === 'freetext' && styles.locationChoiceTitleActive]}>Somewhere else</Text>
+              <Text style={styles.locationChoiceHint}>Park, school field, gym, etc.</Text>
+            </TouchableOpacity>
+          </View>
 
-          {facilityId && loadingSlots && <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 12 }} />}
-
-          {facilityId && !loadingSlots && courts.length === 0 && (
-            <Text style={styles.hint}>No courts with available slots at this ground.</Text>
-          )}
-
-          {facilityId && !loadingSlots && courts.length > 0 && (
+          {/* ── Facility path ── */}
+          {locationMode === 'facility' && (
             <>
-              <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Court</Text>
-              <FormSelect label="" options={courtOptions} value={courtId} onSelect={(o) => { setCourtId(String(o.value)); setSelectedDate(''); setSelectedSlots([]); }} placeholder="Select a court..." />
+              <Text style={styles.fieldLabel}>Ground</Text>
+              <FormSelect label="" options={facilityOptions} value={facilityId} onSelect={(o) => setFacilityId(String(o.value))} placeholder="Select a ground..." />
+
+              {facilityId && loadingSlots && <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 12 }} />}
+
+              {facilityId && !loadingSlots && courts.length === 0 && (
+                <Text style={styles.hint}>No courts with available slots at this ground.</Text>
+              )}
+
+              {facilityId && !loadingSlots && courts.length > 0 && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Court</Text>
+                  <FormSelect label="" options={courtOptions} value={courtId} onSelect={(o) => { setCourtId(String(o.value)); setSelectedDate(''); setSelectedSlots([]); }} placeholder="Select a court..." />
+                </>
+              )}
+
+              {courtId && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Date</Text>
+                  <Calendar
+                    markedDates={calendarMarked}
+                    onDayPress={(day: DateData) => {
+                      if (datesForCourt.has(day.dateString)) {
+                        setSelectedDate(day.dateString);
+                        setSelectedSlots([]);
+                      }
+                    }}
+                    theme={calendarTheme}
+                    style={styles.calendar}
+                  />
+                </>
+              )}
+
+              {selectedDate && slotsForDate.length > 0 && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Time</Text>
+                  <View style={styles.timeDropdown}>
+                    {slotsForDate.map((slot, idx) => {
+                      const isSelected = selectedSlots.some((s) => s.id === slot.id);
+                      const canSelect = canSelectSlot(idx);
+                      return (
+                        <TouchableOpacity
+                          key={slot.id}
+                          style={[styles.timeRow, isSelected && styles.timeRowSelected, !canSelect && styles.timeRowDisabled]}
+                          disabled={!canSelect}
+                          onPress={() => toggleSlot(slot, idx)}
+                        >
+                          <Ionicons name={isSelected ? 'checkbox' : 'square-outline'} size={20} color={isSelected ? colors.cobalt : canSelect ? colors.inkFaint : colors.surface} />
+                          <Text style={[styles.timeRowText, isSelected && styles.timeRowTextSelected]}>
+                            {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {selectedSlots.length > 0 && (
+                    <Text style={styles.timeHint}>
+                      {formatTime(selectedSlots[0]!.startTime)} – {formatTime(selectedSlots[selectedSlots.length - 1]!.endTime)}
+                    </Text>
+                  )}
+                </>
+              )}
             </>
           )}
 
-          {courtId && (
+          {/* ── Free-text path ── */}
+          {locationMode === 'freetext' && (
             <>
-              <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Date</Text>
-              <Calendar
-                markedDates={calendarMarked}
-                onDayPress={(day: DateData) => {
-                  if (datesForCourt.has(day.dateString)) {
-                    setSelectedDate(day.dateString);
-                    setSelectedSlots([]);
-                  }
-                }}
-                theme={calendarTheme}
-                style={styles.calendar}
+              <Text style={styles.fieldLabel}>Location name *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Central Park, Main Street Gym, Town Field"
+                placeholderTextColor={colors.inkFaint}
+                value={locationName}
+                onChangeText={setLocationName}
               />
-            </>
-          )}
 
-          {selectedDate && slotsForDate.length > 0 && (
-            <>
-              <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Time</Text>
-              <View style={styles.timeDropdown}>
-                {slotsForDate.map((slot, idx) => {
-                  const isSelected = selectedSlots.some((s) => s.id === slot.id);
-                  const canSelect = canSelectSlot(idx);
-                  return (
-                    <TouchableOpacity
-                      key={slot.id}
-                      style={[styles.timeRow, isSelected && styles.timeRowSelected, !canSelect && styles.timeRowDisabled]}
-                      disabled={!canSelect}
-                      onPress={() => toggleSlot(slot, idx)}
-                    >
-                      <Ionicons name={isSelected ? 'checkbox' : 'square-outline'} size={20} color={isSelected ? colors.cobalt : canSelect ? colors.inkFaint : colors.surface} />
-                      <Text style={[styles.timeRowText, isSelected && styles.timeRowTextSelected]}>
-                        {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              {selectedSlots.length > 0 && (
-                <Text style={styles.timeHint}>
-                  {formatTime(selectedSlots[0]!.startTime)} – {formatTime(selectedSlots[selectedSlots.length - 1]!.endTime)}
+              <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Address (optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Start typing an address..."
+                placeholderTextColor={colors.inkFaint}
+                value={locationAddress}
+                onChangeText={setLocationAddress}
+              />
+
+              <TouchableOpacity
+                style={styles.currentLocationBtn}
+                onPress={handleUseCurrentLocation}
+                disabled={gettingLocation}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="navigate-outline" size={16} color={colors.cobalt} />
+                <Text style={styles.currentLocationText}>
+                  {gettingLocation ? 'Getting location...' : 'Use my current location'}
+                </Text>
+              </TouchableOpacity>
+
+              {locationLat != null && locationLng != null && (
+                <Text style={styles.coordsHint}>
+                  Coordinates captured ({locationLat.toFixed(4)}, {locationLng.toFixed(4)})
                 </Text>
               )}
+
+              <Text style={[styles.fieldLabel, { marginTop: 24 }]}>Date</Text>
+              <CrossPlatformDateTimePicker
+                value={freeTextDate}
+                mode="date"
+                minimumDate={new Date()}
+                onChange={(_, date) => { if (date) setFreeTextDate(date); }}
+              />
+
+              <View style={[styles.row, { marginTop: 16 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fieldLabel}>Start time</Text>
+                  <CrossPlatformDateTimePicker
+                    value={freeTextStartTime}
+                    mode="time"
+                    minuteInterval={15}
+                    onChange={(_, date) => { if (date) setFreeTextStartTime(date); }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fieldLabel}>End time</Text>
+                  <CrossPlatformDateTimePicker
+                    value={freeTextEndTime}
+                    mode="time"
+                    minuteInterval={15}
+                    onChange={(_, date) => { if (date) setFreeTextEndTime(date); }}
+                  />
+                </View>
+              </View>
             </>
           )}
         </ScrollView>
@@ -496,7 +676,7 @@ export function CreateEventScreen() {
         </ScrollView>
       ),
     },
-  ], [sport, facilityId, courtId, selectedDate, selectedSlots, facilities, courts, courtOptions, facilityOptions, allSlots, loadingSlots, datesForCourt, calendarMarked, slotsForDate, eventType, minAge, maxAge, genderRestriction, skillLevel, visibility, maxParticipants, price, inviteQuery, inviteResults, invitedItems, minPlayerRating, handleSportSelect, canSelectSlot, toggleSlot]);
+  ], [sport, locationMode, facilityId, courtId, selectedDate, selectedSlots, facilities, courts, courtOptions, facilityOptions, allSlots, loadingSlots, datesForCourt, calendarMarked, slotsForDate, locationName, locationAddress, locationLat, locationLng, freeTextDate, freeTextStartTime, freeTextEndTime, gettingLocation, handleUseCurrentLocation, eventType, minAge, maxAge, genderRestriction, skillLevel, visibility, maxParticipants, price, inviteQuery, inviteResults, invitedItems, minPlayerRating, handleSportSelect, canSelectSlot, toggleSlot]);
 
   const sportEmoji = getSportEmoji(sport);
   const sportLabel = sport ? sport.charAt(0).toUpperCase() + sport.slice(1).replace(/_/g, ' ') : '';
@@ -646,4 +826,57 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   inviteChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+
+  // ── Location choice styles ──
+  locationChoiceRow: { gap: 10, marginBottom: 20 },
+  locationChoiceCard: {
+    flexDirection: 'column',
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    gap: 4,
+  },
+  locationChoiceCardActive: {
+    borderColor: colors.cobalt,
+    backgroundColor: colors.cobalt + '08',
+  },
+  locationChoiceTitle: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
+    marginTop: 4,
+  },
+  locationChoiceTitleActive: { color: colors.cobalt },
+  locationChoiceHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+  },
+  currentLocationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: colors.cobalt + '10',
+    alignSelf: 'flex-start',
+  },
+  currentLocationText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.cobalt,
+    fontWeight: '500',
+  },
+  coordsHint: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
 });

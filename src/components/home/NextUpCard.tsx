@@ -73,10 +73,10 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
 
         {/* Details row */}
         <View style={styles.detailsRow}>
-          {event.facility?.name && (
+          {(event.facility?.name || event.locationName) && (
             <View style={styles.detail}>
               <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.detailText} numberOfLines={1}>{event.facility.name}</Text>
+              <Text style={styles.detailText} numberOfLines={1}>{event.facility?.name || event.locationName}</Text>
             </View>
           )}
           <View style={styles.detail}>

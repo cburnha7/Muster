@@ -9,6 +9,8 @@ import {
   RefreshControl,
   Modal,
   Image,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,6 +24,7 @@ import { CancelEventModal } from '../../components/events/CancelEventModal';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 
 import { HeroSection, QuickStatsRow, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
 import { getSportColor } from '../../constants/sportColors';
 
 import { eventService } from '../../services/api/EventService';
@@ -703,12 +706,20 @@ export function EventDetailsScreen() {
     return `${hours}h ${minutes}m`;
   })();
 
-  // Derive location string
+  // Derive location string and coordinates
   const locationString = event.facility
     ? [event.facility.name, event.facility.street && event.facility.city
         ? `${event.facility.street}, ${event.facility.city}`
         : event.facility.city || ''].filter(Boolean).join(' · ')
-    : '';
+    : event.locationName
+      ? [event.locationName, event.locationAddress].filter(Boolean).join(' · ')
+      : '';
+
+  const locationLat = event.facility?.latitude ?? event.locationLat ?? null;
+  const locationLng = event.facility?.longitude ?? event.locationLng ?? null;
+  const locationAddress = event.facility
+    ? [event.facility.street, event.facility.city, event.facility.state, event.facility.zipCode].filter(Boolean).join(', ')
+    : event.locationAddress ?? null;
 
   // Derive CTA label, variant, and action
   type CTAVariant = 'primary' | 'confirmed' | 'secondary' | 'disabled';
@@ -782,7 +793,19 @@ export function EventDetailsScreen() {
           ]}
           headline={formatDateHero(event.startTime)}
           {...(locationString ? { subline: locationString } : {})}
-          {...(locationString ? { onSublinePress: () => { /* open maps */ } } : {})}
+          {...(locationString && (locationLat || locationAddress) ? {
+            onSublinePress: () => {
+              const dest = locationLat && locationLng
+                ? `${locationLat},${locationLng}`
+                : encodeURIComponent(locationAddress || '');
+              const url = Platform.OS === 'ios'
+                ? `maps:?daddr=${dest}`
+                : `google.navigation:q=${dest}`;
+              Linking.openURL(url).catch(() => {
+                Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${dest}`);
+              });
+            },
+          } : {})}
         />
 
         {/* QuickStatsRow — Duration / Players / Price */}
@@ -795,6 +818,36 @@ export function EventDetailsScreen() {
           },
           { label: 'Price', value: event.price > 0 ? `$${event.price}` : 'Free' },
         ]} />
+
+        {/* Location Card with Get Directions */}
+        {locationString ? (
+          <DetailCard title="Location" delay={25}>
+            {event.facility ? (
+              <TouchableOpacity
+                onPress={() => (navigation as any).navigate('FacilityDetails', { facilityId: event.facility!.id })}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.locationNameLink}>{event.facility.name}</Text>
+              </TouchableOpacity>
+            ) : event.locationName ? (
+              <Text style={styles.locationNameText}>{event.locationName}</Text>
+            ) : null}
+            {locationAddress ? (
+              <Text style={styles.locationAddressText}>{locationAddress}</Text>
+            ) : null}
+            <View style={{ marginTop: 10 }}>
+              <GetDirectionsButton
+                latitude={locationLat}
+                longitude={locationLng}
+                address={locationAddress}
+              />
+            </View>
+          </DetailCard>
+        ) : (
+          <DetailCard title="Location" delay={25}>
+            <Text style={styles.locationTBD}>Location TBD</Text>
+          </DetailCard>
+        )}
 
         {/* Game Thread Chat button */}
         {isUserBooked && (
@@ -1230,6 +1283,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  // Location card styles
+  locationNameLink: {
+    fontFamily: fonts.heading,
+    fontSize: 16,
+    color: colors.cobalt,
+    textDecorationLine: 'underline',
+    marginBottom: 2,
+  },
+  locationNameText: {
+    fontFamily: fonts.heading,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 2,
+  },
+  locationAddressText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkSoft,
+    lineHeight: 20,
+  },
+  locationTBD: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    fontStyle: 'italic',
   },
   // League match card styles
   leagueBadge: {

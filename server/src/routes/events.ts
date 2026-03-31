@@ -74,10 +74,23 @@ router.get('/', async (req, res) => {
         })
         .map((f) => f.id);
 
-      where.facilityId = { in: facilityIdsInRadius };
+      // Also find free-text events within radius using their own coordinates
+      const latDeltaEvent = radiusMiles / 69;
+      const lngDeltaEvent = radiusMiles / (69 * Math.cos((lat * Math.PI) / 180));
+
+      where.OR = [
+        // Events at facilities within radius
+        { facilityId: { in: facilityIdsInRadius } },
+        // Events with free-text coordinates within radius
+        {
+          facilityId: null,
+          locationLat: { not: null, gte: lat - latDeltaEvent, lte: lat + latDeltaEvent },
+          locationLng: { not: null, gte: lng - lngDeltaEvent, lte: lng + lngDeltaEvent },
+        },
+      ];
     }
 
-    // Text-based location search (city/state match on facility)
+    // Text-based location search (city/state match on facility OR free-text location)
     if (locationQuery && !facilityIdsInRadius) {
       const locStr = (locationQuery as string).trim();
       if (locStr) {
@@ -91,7 +104,11 @@ router.get('/', async (req, res) => {
           },
           select: { id: true },
         });
-        where.facilityId = { in: matchingFacilities.map((f) => f.id) };
+        where.OR = [
+          { facilityId: { in: matchingFacilities.map((f) => f.id) } },
+          { locationName: { contains: locStr, mode: 'insensitive' } },
+          { locationAddress: { contains: locStr, mode: 'insensitive' } },
+        ];
       }
     }
 
@@ -375,46 +392,75 @@ router.post('/', requireNonDependent, async (req, res) => {
     const organizerId = eventData.organizerId;
     console.log('Organizer ID:', organizerId);
 
-    // Validate facility authorization
-    const facility = await prisma.facility.findUnique({
-      where: { id: eventData.facilityId },
-      select: { id: true, ownerId: true },
-    });
+    // Determine location mode: facility-based OR free-text OR none
+    const hasFacility = !!eventData.facilityId;
+    const hasFreeTextLocation = !!eventData.locationName;
+    let isOwner = false;
 
-    if (!facility) {
-      return res.status(404).json({ error: 'Facility not found' });
-    }
-
-    const isOwner = facility.ownerId === organizerId;
-    console.log('Is owner:', isOwner);
-    console.log('Facility owner ID:', facility.ownerId);
-
-    // If not owner, check if user has a rental at this facility
-    if (!isOwner) {
-      const hasRental = await prisma.facilityRental.findFirst({
-        where: {
-          userId: organizerId,
-          status: 'confirmed',
-          timeSlot: {
-            court: {
-              facilityId: eventData.facilityId,
-            },
-          },
-        },
+    if (hasFacility) {
+      // ── Facility-based event: validate facility authorization ──
+      const facility = await prisma.facility.findUnique({
+        where: { id: eventData.facilityId },
+        select: { id: true, ownerId: true },
       });
 
-      console.log('Has rental:', !!hasRental);
-      
-      if (!hasRental) {
-        console.log('Authorization failed: No rental found');
-        return res.status(403).json({ 
-          error: 'Unauthorized: You must own this facility or have a rental to create events here' 
-        });
+      if (!facility) {
+        return res.status(404).json({ error: 'Facility not found' });
       }
+
+      isOwner = facility.ownerId === organizerId;
+      console.log('Is owner:', isOwner);
+      console.log('Facility owner ID:', facility.ownerId);
+
+      // If not owner, check if user has a rental at this facility
+      if (!isOwner) {
+        const hasRental = await prisma.facilityRental.findFirst({
+          where: {
+            userId: organizerId,
+            status: 'confirmed',
+            timeSlot: {
+              court: {
+                facilityId: eventData.facilityId,
+              },
+            },
+          },
+        });
+
+        console.log('Has rental:', !!hasRental);
+
+        if (!hasRental) {
+          console.log('Authorization failed: No rental found');
+          return res.status(403).json({
+            error: 'Unauthorized: You must own this facility or have a rental to create events here'
+          });
+        }
+      }
+
+      // Clear free-text location fields when using a facility
+      eventData.locationName = null;
+      eventData.locationAddress = null;
+      eventData.locationLat = null;
+      eventData.locationLng = null;
+    } else if (hasFreeTextLocation) {
+      // ── Free-text location event: clear facility references ──
+      eventData.facilityId = null;
+      eventData.rentalId = null;
+      eventData.timeSlotId = null;
+      eventData.timeSlotIds = null;
+      eventData.rentalIds = null;
+      console.log('Free-text location event:', eventData.locationName);
+    } else {
+      // ── No location (TBD): clear all location fields ──
+      eventData.facilityId = null;
+      eventData.rentalId = null;
+      eventData.timeSlotId = null;
+      eventData.timeSlotIds = null;
+      eventData.rentalIds = null;
+      console.log('Event with no location (TBD)');
     }
 
     // Handle timeSlotId (direct slot selection for owners) - only if not using rental
-    if (eventData.timeSlotId && !eventData.rentalId) {
+    if (hasFacility && eventData.timeSlotId && !eventData.rentalId) {
       // Check if multiple slots are selected
       const slotIds = eventData.timeSlotIds || [eventData.timeSlotId];
       
@@ -563,10 +609,10 @@ router.post('/', requireNonDependent, async (req, res) => {
       
       // Store all rental IDs for later processing
       eventData.rentalIds = rentals.map(r => r.id);
-    } else if (!isOwner) {
-      // If not using a rental and not owner, reject
-      return res.status(403).json({ 
-        error: 'You must use a rental to create events at facilities you do not own' 
+    } else if (hasFacility && !isOwner) {
+      // If using a facility but not using a rental and not owner, reject
+      return res.status(403).json({
+        error: 'You must use a rental to create events at facilities you do not own'
       });
     }
 

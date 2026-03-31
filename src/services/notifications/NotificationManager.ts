@@ -49,7 +49,7 @@ class NotificationManagerClass {
 
     return await NotificationService.scheduleNotification(
       'Event Starting Soon! ⏰',
-      `"${event.title}" starts in 1 hour at ${event.facility?.name || 'the venue'}. Get ready!`,
+      `"${event.title}" starts in 1 hour at ${event.facility?.name || event.locationName || 'the venue'}. Get ready!`,
       data,
       trigger
     );
@@ -110,7 +110,7 @@ class NotificationManagerClass {
 
     await NotificationService.scheduleNotification(
       'New Event Available! 🏀',
-      `Check out "${event.title}" - ${event.sportType} at ${event.facility?.name || 'a nearby venue'}`,
+      `Check out "${event.title}" - ${event.sportType} at ${event.facility?.name || event.locationName || 'a nearby venue'}`,
       data
     );
   }
