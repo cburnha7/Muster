@@ -61,10 +61,10 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
               <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
               <Text style={styles.eventTime}>{formatTime(startDate)}</Text>
 
-              {event.facility?.name && (
+              {(event.facility?.name || event.locationName) && (
                 <View style={styles.locationRow}>
                   <Ionicons name="location-outline" size={12} color={colors.outline} />
-                  <Text style={styles.locationText} numberOfLines={1}>{event.facility.name}</Text>
+                  <Text style={styles.locationText} numberOfLines={1}>{event.facility?.name || event.locationName}</Text>
                 </View>
               )}
 

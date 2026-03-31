@@ -28,6 +28,7 @@ import { colors, fonts, Spacing } from '../../theme';
 import { Event, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
 import { getSportColor } from '../../constants/sportColors';
 import { getSportLabel } from '../../constants/sports';
 
@@ -303,6 +304,13 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               <Text style={styles.parkingText}>{facility.parkingInfo}</Text>
             </View>
           ) : null}
+          <View style={{ marginTop: 12 }}>
+            <GetDirectionsButton
+              latitude={facility.latitude}
+              longitude={facility.longitude}
+              address={fullAddressString}
+            />
+          </View>
         </DetailCard>
 
         {/* Facility map image */}

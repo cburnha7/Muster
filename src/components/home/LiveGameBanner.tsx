@@ -44,7 +44,7 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
           {emoji} {event.title}
         </Text>
         <Text style={styles.meta} numberOfLines={1}>
-          {event.facility?.name ?? 'Game'} · Started {mins}m ago
+          {event.facility?.name || event.locationName || 'Game'} · Started {mins}m ago
         </Text>
       </View>
       <Text style={styles.arrow}>→</Text>

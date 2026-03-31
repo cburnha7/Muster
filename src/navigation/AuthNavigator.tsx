@@ -7,6 +7,7 @@ import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegistrationScreen } from '../screens/auth/RegistrationScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '../screens/auth/ResetPasswordScreen';
+import { InviteRegistrationScreen } from '../screens/auth/InviteRegistrationScreen';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -23,32 +24,39 @@ export function AuthNavigator({ onAuthSuccess }: AuthNavigatorProps): JSX.Elemen
       }}
       initialRouteName="Login"
     >
-      <Stack.Screen 
-        name="Login" 
+      <Stack.Screen
+        name="Login"
         component={LoginScreen}
         options={{
           title: 'Sign In',
         }}
       />
-      <Stack.Screen 
-        name="Registration" 
+      <Stack.Screen
+        name="Registration"
         component={RegistrationScreen}
         options={{
           title: 'Create Account',
         }}
       />
-      <Stack.Screen 
-        name="ForgotPassword" 
+      <Stack.Screen
+        name="ForgotPassword"
         component={ForgotPasswordScreen}
         options={{
           title: 'Forgot Password',
         }}
       />
-      <Stack.Screen 
-        name="ResetPassword" 
+      <Stack.Screen
+        name="ResetPassword"
         component={ResetPasswordScreen}
         options={{
           title: 'Reset Password',
+        }}
+      />
+      <Stack.Screen
+        name="InviteRegistration"
+        component={InviteRegistrationScreen}
+        options={{
+          title: 'Join Team',
         }}
       />
     </Stack.Navigator>

@@ -153,6 +153,13 @@ model Event {
   isGroupFeeCovered              Boolean  @default(false) // Event cost covered by roster balance
   coveringTeamId                 String? // Which roster is covering the cost
 
+  // Free-text location (alternative to facilityId)
+  // An event has EITHER a facilityId OR free-text location fields, never both.
+  locationName    String?  // "New Gloucester Elementary School Field"
+  locationAddress String?  // "61 Intervale Rd, New Gloucester, ME 04260"
+  locationLat     Float?   // For map display and distance calculations
+  locationLng     Float?   // For map display and distance calculations
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -304,6 +311,7 @@ model Team {
   transactions      TeamTransaction[]
   rosterStrikes     RosterStrike[]
   duesPayments      PlayerDuesPayment[] @relation("RosterDuesPayments")
+  inviteLinks       InviteLink[]
 
   @@index([leagueId])
   @@map("teams")
@@ -805,9 +813,10 @@ model FacilityRental {
   usedForEventId String?
 
   // Notifications
-  confirmationSent Boolean @default(false)
-  reminderSent24h  Boolean @default(false)
-  reminderSent1h   Boolean @default(false)
+  confirmationSent    Boolean @default(false)
+  reminderSent24h     Boolean @default(false)
+  reminderSent1h      Boolean @default(false)
+  postGameMessageSent Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1380,6 +1389,26 @@ model WaiverSignature {
   @@index([userId])
   @@index([facilityId])
   @@map("waiver_signatures")
+}
+
+// ─── Invite Links ────────────────────────────────────────────────────────────
+
+model InviteLink {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  teamId    String
+  createdBy String
+  expiresAt DateTime
+  maxUses   Int?     // null = unlimited
+  useCount  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([teamId])
+  @@map("invite_links")
 }
 
 // ─── Messaging ───────────────────────────────────────────────────────────────

@@ -79,7 +79,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
           <View style={styles.detailRow}>
             <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
             <Text style={styles.detailText} numberOfLines={1}>
-              {event.facility?.name || 'Location TBD'}
+              {event.facility?.name || event.locationName || 'Location TBD'}
             </Text>
           </View>
         </View>

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Linking from 'expo-linking';
 
 // Lazy-load heavy providers to catch import-time crashes
 let ReduxProvider: React.ComponentType<{ children: React.ReactNode }>;
 let AuthProvider: React.ComponentType<{ children: React.ReactNode }>;
 let NotificationProvider: React.ComponentType<{ children: React.ReactNode }>;
-let NavigationContainer: React.ComponentType<{ children: React.ReactNode }>;
+let NavigationContainer: React.ComponentType<{ children: React.ReactNode; linking?: any }>;
 let RootNavigator: React.ComponentType;
 let ErrorBoundary: React.ComponentType<{ children: React.ReactNode }>;
 let useFontsHook: () => { fontsLoaded: boolean; error: Error | null };
@@ -83,9 +84,26 @@ function AppContent() {
     console.warn('Font loading error:', error.message);
   }
 
+  const linking = {
+    prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
+    config: {
+      screens: {
+        Main: {
+          screens: {
+            Teams: {
+              screens: {
+                JoinTeam: 'join/:inviteCode',
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: cream }}>
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <RootNavigator />
       </NavigationContainer>
       <StatusBar style="dark" />

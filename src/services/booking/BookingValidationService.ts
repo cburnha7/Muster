@@ -246,6 +246,8 @@ export class BookingValidationService {
 
     if (event.facility?.name) {
       message += ` at ${event.facility.name}`;
+    } else if (event.locationName) {
+      message += ` at ${event.locationName}`;
     }
 
     if (event.price > 0) {
