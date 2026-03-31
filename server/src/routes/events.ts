@@ -1518,4 +1518,93 @@ router.post('/send-reminders', async (req, res) => {
   }
 });
 
+// ── Availability check for invitees ──
+// POST /events/check-availability
+// Body: { userIds: string[], rosterIds: string[], dates: { date: string, startTime: string, endTime: string }[] }
+// Returns: { [inviteeId]: boolean[] } — one boolean per date, true = available
+router.post('/check-availability', async (req, res) => {
+  try {
+    const { userIds = [], rosterIds = [], dates = [] } = req.body;
+    if (!Array.isArray(dates) || dates.length === 0) {
+      return res.json({});
+    }
+
+    // Expand roster IDs to their member user IDs
+    const rosterMembers: Record<string, string[]> = {};
+    if (rosterIds.length > 0) {
+      const members = await prisma.teamMember.findMany({
+        where: { teamId: { in: rosterIds }, status: { not: 'removed' } },
+        select: { teamId: true, userId: true },
+      });
+      for (const m of members) {
+        if (!rosterMembers[m.teamId]) rosterMembers[m.teamId] = [];
+        rosterMembers[m.teamId]!.push(m.userId);
+      }
+    }
+
+    // Collect all unique user IDs to check
+    const allUserIds = new Set<string>(userIds);
+    for (const memberIds of Object.values(rosterMembers)) {
+      for (const uid of memberIds) allUserIds.add(uid);
+    }
+
+    // For each date window, find users who have a confirmed booking/participation
+    const result: Record<string, boolean[]> = {};
+
+    // Initialize result arrays
+    for (const uid of userIds) result[uid] = [];
+    for (const rid of rosterIds) result[rid] = [];
+
+    for (let i = 0; i < dates.length; i++) {
+      const { date, startTime, endTime } = dates[i];
+      const dayStart = new Date(`${date}T${startTime}:00`);
+      const dayEnd = new Date(`${date}T${endTime}:00`);
+
+      // Find events that overlap this time window for any of our users
+      const conflicting = await prisma.event.findMany({
+        where: {
+          status: { in: ['active', 'confirmed'] },
+          startTime: { lt: dayEnd },
+          endTime: { gt: dayStart },
+          OR: [
+            { bookings: { some: { userId: { in: [...allUserIds] }, status: 'confirmed' } } },
+            { gameParticipations: { some: { userId: { in: [...allUserIds] } } } },
+            { organizerId: { in: [...allUserIds] } },
+          ],
+        },
+        select: {
+          bookings: { where: { status: 'confirmed', userId: { in: [...allUserIds] } }, select: { userId: true } },
+          gameParticipations: { where: { userId: { in: [...allUserIds] } }, select: { userId: true } },
+          organizerId: true,
+        },
+      });
+
+      // Collect busy user IDs for this date
+      const busyUsers = new Set<string>();
+      for (const evt of conflicting) {
+        if (allUserIds.has(evt.organizerId)) busyUsers.add(evt.organizerId);
+        for (const b of evt.bookings) busyUsers.add(b.userId);
+        for (const gp of evt.gameParticipations) busyUsers.add(gp.userId);
+      }
+
+      // Player availability
+      for (const uid of userIds) {
+        result[uid]!.push(!busyUsers.has(uid));
+      }
+
+      // Roster availability (worst-case: if ANY member is busy, mark unavailable)
+      for (const rid of rosterIds) {
+        const members = rosterMembers[rid] || [];
+        const available = members.length === 0 || members.every((uid) => !busyUsers.has(uid));
+        result[rid]!.push(available);
+      }
+    }
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('Availability check error:', error);
+    res.status(500).json({ error: 'Failed to check availability' });
+  }
+});
+
 export default router;
