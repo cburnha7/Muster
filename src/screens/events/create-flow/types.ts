@@ -1,6 +1,6 @@
 import { SportType, EventType } from '../../../types';
 
-// ── Slot & invite shapes (match existing CreateEventScreen.tsx) ──
+// ── Slot & invite shapes ──
 
 export interface SlotData {
   id: string;
@@ -31,24 +31,48 @@ export interface CourtForEvent {
 }
 
 export interface DateForCourt {
-  date: string; // YYYY-MM-DD
+  date: string;
   slotCount: number;
 }
 
 export interface SlotForDate {
   id: string;
-  startTime: string; // HH:MM
-  endTime: string;   // HH:MM
+  startTime: string;
+  endTime: string;
   price: number;
   isFromRental: boolean;
   rentalId: string | null;
 }
 
+// ── Per-occurrence location for recurring events ──
+
+export interface OccurrenceLocation {
+  date: string;           // YYYY-MM-DD
+  facilityId?: string;
+  facilityName?: string;
+  courtId?: string;
+  courtName?: string;
+  booked: boolean;
+}
+
+// ── Day of week ──
+
+export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+
+export const ALL_DAYS: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+// Map JS Date.getDay() (0=Sun) to our DayOfWeek
+export const DAY_INDEX_MAP: Record<number, DayOfWeek> = {
+  0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat',
+};
+
 // ── Wizard state ──
 
 export interface WizardState {
   currentStep: number; // 0–4
+  // Step 1: Sport
   sport: SportType | null;
+  // Step 2: Details
   eventType: EventType | null;
   minAge: string;
   maxAge: string;
@@ -56,6 +80,17 @@ export interface WizardState {
   skillLevel: string;
   maxParticipants: string;
   price: string;
+  // Step 3: When
+  startDate: Date | null;
+  startTime: Date | null;
+  endTime: Date | null;
+  recurring: boolean;
+  recurringFrequency: 'weekly' | 'biweekly' | 'monthly' | null;
+  recurringDays: DayOfWeek[];
+  numberOfEvents: string;
+  recurringEndDate: string; // auto-calculated, read-only display
+  // Step 4: Where
+  locationMode: 'muster' | 'open' | null;
   facilityId: string;
   facilityName: string;
   isOwner: boolean;
@@ -63,12 +98,16 @@ export interface WizardState {
   courtName: string;
   selectedDate: string;
   selectedSlots: SlotData[];
-  recurring: boolean;
-  recurringFrequency: 'weekly' | 'biweekly' | 'monthly' | null;
-  recurringEndDate: string;
+  occurrenceLocations: OccurrenceLocation[];
+  locationName: string;    // open ground free-text name
+  locationAddress: string; // open ground address
+  locationLat: number | null;
+  locationLng: number | null;
+  // Step 5: Invite
   visibility: 'private' | 'public' | null;
   invitedItems: InviteItem[];
   minPlayerRating: string;
+  // Submission
   isSubmitting: boolean;
   showSuccess: boolean;
   createdEventId: string | null;
@@ -80,11 +119,15 @@ export type WizardAction =
   | { type: 'SET_SPORT'; sport: SportType }
   | { type: 'SET_EVENT_TYPE'; eventType: EventType }
   | { type: 'SET_FIELD'; field: string; value: any }
+  | { type: 'SET_LOCATION_MODE'; mode: 'muster' | 'open' }
   | { type: 'SET_FACILITY'; facilityId: string; facilityName: string; isOwner: boolean }
   | { type: 'SET_COURT'; courtId: string; courtName: string }
   | { type: 'RESET_COURT' }
   | { type: 'SET_DATE'; date: string }
   | { type: 'TOGGLE_SLOT'; slot: SlotData; slotsForDate: SlotData[] }
+  | { type: 'TOGGLE_RECURRING_DAY'; day: DayOfWeek }
+  | { type: 'SET_OCCURRENCE_LOCATIONS'; locations: OccurrenceLocation[] }
+  | { type: 'UPDATE_OCCURRENCE'; index: number; location: Partial<OccurrenceLocation> }
   | { type: 'SET_VISIBILITY'; visibility: 'private' | 'public' }
   | { type: 'ADD_INVITE'; item: InviteItem }
   | { type: 'REMOVE_INVITE'; id: string }
@@ -108,6 +151,15 @@ export function createInitialState(): WizardState {
     skillLevel: '',
     maxParticipants: '',
     price: '',
+    startDate: null,
+    startTime: null,
+    endTime: null,
+    recurring: false,
+    recurringFrequency: null,
+    recurringDays: [],
+    numberOfEvents: '',
+    recurringEndDate: '',
+    locationMode: null,
     facilityId: '',
     facilityName: '',
     isOwner: false,
@@ -115,9 +167,11 @@ export function createInitialState(): WizardState {
     courtName: '',
     selectedDate: '',
     selectedSlots: [],
-    recurring: false,
-    recurringFrequency: null,
-    recurringEndDate: '',
+    occurrenceLocations: [],
+    locationName: '',
+    locationAddress: '',
+    locationLat: null,
+    locationLng: null,
     visibility: null,
     invitedItems: [],
     minPlayerRating: '',

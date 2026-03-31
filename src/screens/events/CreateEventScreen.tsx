@@ -6,8 +6,8 @@ import { CreateEventProvider, useCreateEvent } from './create-flow/CreateEventCo
 import { EventFlowContainer } from './create-flow/EventFlowContainer';
 import { Step1Sport } from './create-flow/Step1Sport';
 import { Step2Details } from './create-flow/Step2Details';
-import { Step3Ground } from './create-flow/Step3Ground';
-import { Step4When } from './create-flow/Step4When';
+import { Step3When } from './create-flow/Step3When';
+import { Step4Where } from './create-flow/Step4Where';
 import { Step5Invite } from './create-flow/Step5Invite';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { eventService } from '../../services/api/EventService';
@@ -23,36 +23,29 @@ function CreateEventInner() {
   const { user } = useAuth();
 
   const handleSubmit = useCallback(async () => {
-    if (!user || !state.sport || !state.facilityId || state.selectedSlots.length === 0) return;
+    if (!user || !state.sport) return;
     dispatch({ type: 'SUBMIT_START' });
     try {
-      const firstSlot = state.selectedSlots[0]!;
-      const lastSlot = state.selectedSlots[state.selectedSlots.length - 1]!;
-      const slotDate = new Date(firstSlot.date);
-      const [sh, sm] = firstSlot.startTime.split(':');
-      const startTime = new Date(
-        Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(),
-          parseInt(sh || '0'), parseInt(sm || '0')),
-      );
-      const [eh, em] = lastSlot.endTime.split(':');
-      const endTime = new Date(
-        Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate(),
-          parseInt(eh || '0'), parseInt(em || '0')),
-      );
       const sportLabel = state.sport.charAt(0).toUpperCase() + state.sport.slice(1).replace(/_/g, ' ');
       const typeLabel = state.eventType
         ? state.eventType.charAt(0).toUpperCase() + state.eventType.slice(1)
         : 'Event';
+
+      // Build start/end times from date + time pickers
+      const d = state.startDate ?? new Date();
+      const st = state.startTime ?? new Date();
+      const et = state.endTime ?? new Date();
+      const startTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), st.getHours(), st.getMinutes());
+      const endTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), et.getHours(), et.getMinutes());
+
       const rosterIds = state.invitedItems.filter((i) => i.type === 'roster').map((i) => i.id);
       const playerIds = state.invitedItems.filter((i) => i.type === 'player').map((i) => i.id);
 
-      const eventData = {
+      const eventData: any = {
         title: `${sportLabel} ${typeLabel}`,
         description: '',
         sportType: state.sport,
         eventType: state.eventType || EventType.PICKUP,
-        facilityId: state.facilityId,
-        timeSlotId: firstSlot.id,
         startTime,
         endTime,
         maxParticipants: parseInt(state.maxParticipants) || 10,
@@ -62,6 +55,25 @@ function CreateEventInner() {
         isPrivate: state.visibility === 'private',
         organizerId: user.id,
       };
+
+      // Location data
+      if (state.locationMode === 'muster' && state.facilityId) {
+        eventData.facilityId = state.facilityId;
+        if (state.selectedSlots.length > 0) {
+          const firstSlot = state.selectedSlots[0];
+          eventData.timeSlotId = firstSlot.id;
+          eventData.timeSlotIds = state.selectedSlots.map((s) => s.id);
+          eventData.rentalIds = state.selectedSlots.map((s) => s.rentalId).filter(Boolean);
+          if (firstSlot.rentalId) eventData.rentalId = firstSlot.rentalId;
+        }
+      } else if (state.locationMode === 'open') {
+        eventData.locationName = state.locationName.trim();
+        eventData.locationAddress = state.locationAddress.trim() || undefined;
+        eventData.locationLat = state.locationLat;
+        eventData.locationLng = state.locationLng;
+      }
+
+      // Eligibility
       if (state.minAge || state.maxAge || state.visibility === 'private') {
         eventData.eligibility = {
           isInviteOnly: state.visibility === 'private',
@@ -71,24 +83,30 @@ function CreateEventInner() {
       }
       if (state.genderRestriction) eventData.genderRestriction = state.genderRestriction;
       if (state.minPlayerRating) eventData.minPlayerRating = parseInt(state.minPlayerRating);
+
+      // Invites
       if (rosterIds.length > 0) {
         if (!eventData.eligibility) eventData.eligibility = {};
         eventData.eligibility.restrictedToTeams = rosterIds;
       }
       if (playerIds.length > 0) eventData.invitedUserIds = playerIds;
+
+      // Recurring
       if (state.recurring && state.recurringFrequency) {
         eventData.recurring = true;
         eventData.recurringFrequency = state.recurringFrequency;
         eventData.recurringEndDate = state.recurringEndDate;
+        eventData.recurringDays = state.recurringDays;
+        eventData.numberOfEvents = parseInt(state.numberOfEvents) || 1;
+        if (state.occurrenceLocations.length > 0) {
+          eventData.occurrenceLocations = state.occurrenceLocations;
+        }
       }
-      eventData.timeSlotIds = state.selectedSlots.map((s) => s.id);
-      eventData.rentalIds = state.selectedSlots.map((s) => s.rentalId).filter(Boolean);
-      if (firstSlot.rentalId) eventData.rentalId = firstSlot.rentalId;
 
       const newEvent = await eventService.createEvent(eventData);
       reduxDispatch(addEvent(newEvent));
       dispatch({ type: 'SUBMIT_SUCCESS', eventId: newEvent.id });
-    } catch (error) {
+    } catch (error: any) {
       dispatch({ type: 'SUBMIT_FAIL' });
       Alert.alert('Error', error?.message || 'Failed to create event');
     }
@@ -127,8 +145,8 @@ function CreateEventInner() {
     <EventFlowContainer onSubmit={handleSubmit}>
       <Step1Sport />
       <Step2Details />
-      <Step3Ground />
-      <Step4When />
+      <Step3When />
+      <Step4Where />
       <Step5Invite />
     </EventFlowContainer>
   );
