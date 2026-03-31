@@ -83,6 +83,8 @@ export const API_ENDPOINTS = {
     ADD_MEMBER: (id: string) => `/teams/${id}/add-member`,
     REMOVE_MEMBER: (teamId: string, userId: string) => `/teams/${teamId}/members/${userId}`,
     EVENTS: (id: string) => `/teams/${id}/events`,
+    INVITE_LINK: (id: string) => `/teams/${id}/invite-link`,
+    VALIDATE_INVITE: '/teams/validate-invite',
   },
 
   // Bookings

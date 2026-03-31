@@ -182,27 +182,34 @@ export class TeamService extends BaseApiService {
   }
 
   /**
-   * Generate new invite code for a team
+   * Generate invite link for a team (captain/co-captain only)
+   * Returns existing valid link if one exists, or creates a new one.
    */
-  async generateInviteCode(teamId: string): Promise<{ inviteCode: string; expiresAt: Date }> {
-    return this.post<{ inviteCode: string; expiresAt: Date }>(
-      `${API_ENDPOINTS.TEAMS.BY_ID(teamId)}/invite-code`
+  async generateInviteLink(teamId: string): Promise<{ link: string; code: string; expiresAt: string }> {
+    return this.post<{ link: string; code: string; expiresAt: string }>(
+      API_ENDPOINTS.TEAMS.INVITE_LINK(teamId)
     );
   }
 
   /**
-   * Validate invite code
+   * @deprecated Use generateInviteLink instead
+   */
+  async generateInviteCode(teamId: string): Promise<{ inviteCode: string; expiresAt: Date }> {
+    const result = await this.generateInviteLink(teamId);
+    return { inviteCode: result.code, expiresAt: new Date(result.expiresAt) };
+  }
+
+  /**
+   * Validate invite code — returns team info if valid, or { valid: false }
+   * No auth required (new users validate before signing up).
    */
   async validateInviteCode(inviteCode: string): Promise<{
     valid: boolean;
-    team?: Team;
-    expiresAt?: Date;
+    team?: { id: string; name: string; sportType: string; skillLevel: string; memberCount: number; maxMembers: number; imageUrl?: string };
+    expiresAt?: string;
   }> {
     const params = { inviteCode };
-    return this.get<{ valid: boolean; team?: Team; expiresAt?: Date }>(
-      `${API_ENDPOINTS.TEAMS.BASE}/validate-invite`,
-      { params }
-    );
+    return this.get(API_ENDPOINTS.TEAMS.VALIDATE_INVITE, { params });
   }
 
   /**

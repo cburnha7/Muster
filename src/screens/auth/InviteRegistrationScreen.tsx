@@ -1,0 +1,599 @@
+/**
+ * InviteRegistrationScreen
+ *
+ * Streamlined 2-step registration for users who arrive via team invite link.
+ * Step 1: Create account (name, email, password — all on one screen)
+ * Step 2: "Add your child" or "This is for me" toggle
+ *
+ * On completion:
+ * - Registers user
+ * - Optionally creates a dependent
+ * - Marks onboarding complete (skipping the full 5-step flow)
+ * - Auto-joins the team with the invite code
+ * - Navigates to team details
+ */
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Switch,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { FormInput } from '../../components/forms/FormInput';
+import { FormButton } from '../../components/forms/FormButton';
+import { SSOButton } from '../../components/auth/SSOButton';
+import { colors } from '../../theme';
+import ValidationService from '../../services/auth/ValidationService';
+import SSOService from '../../services/auth/SSOService';
+import { registerUser, registerWithSSO, completeOnboarding } from '../../store/slices/authSlice';
+import { setDependents } from '../../store/slices/contextSlice';
+import { API_BASE_URL } from '../../services/api/config';
+import { UserIntent } from '../../types/auth';
+
+const PENDING_INVITE_KEY = '@muster_pending_invite';
+
+interface InviteRegistrationScreenProps {
+  route: {
+    params: {
+      inviteCode: string;
+      teamId: string;
+      teamName: string;
+      teamSport: string;
+    };
+  };
+}
+
+export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProps) {
+  const { inviteCode, teamName, teamSport } = route.params;
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+
+  // Step tracking
+  const [step, setStep] = useState(0); // 0 = account, 1 = child/self
+
+  // Step 1: Account fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Step 2: Child fields
+  const [isForChild, setIsForChild] = useState(true); // Default to child (youth team likely)
+  const [childFirstName, setChildFirstName] = useState('');
+  const [childDob, setChildDob] = useState('');
+
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState<'apple' | 'google' | null>(null);
+
+  // Registered user data (set after step 1 completes)
+  const [registeredUser, setRegisteredUser] = useState<any>(null);
+
+  const updateError = (field: string, msg: string) => {
+    setErrors(prev => ({ ...prev, [field]: msg }));
+  };
+
+  const clearError = (field: string) => {
+    setErrors(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // ── Step 1 validation ──
+  const validateStep1 = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (ValidationService.validateEmail(email) !== null) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // ── Step 1 submit: Register account ──
+  const handleRegister = async () => {
+    if (!validateStep1()) return;
+
+    setIsLoading(true);
+    try {
+      // Generate a username from email (before the @)
+      const username = (email.split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_]/g, '') + Math.floor(Math.random() * 100);
+
+      const result = await (dispatch as any)(registerUser({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        username,
+        password,
+        confirmPassword: password,
+        agreedToTerms: true,
+      })).unwrap();
+
+      setRegisteredUser(result);
+      setStep(1);
+    } catch (err: any) {
+      const msg = typeof err === 'string' ? err : err?.message || 'Registration failed';
+      if (msg.toLowerCase().includes('email')) {
+        updateError('email', msg);
+      } else {
+        Alert.alert('Registration Error', msg);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── SSO Registration ──
+  const handleSSO = async (provider: 'apple' | 'google') => {
+    setSsoLoading(provider);
+    try {
+      const ssoResult = provider === 'apple'
+        ? await SSOService.signInWithApple()
+        : await SSOService.signInWithGoogle();
+
+      if (!ssoResult) {
+        setSsoLoading(null);
+        return;
+      }
+
+      const result = await (dispatch as any)(registerWithSSO({
+        provider,
+        providerToken: ssoResult.providerToken,
+        providerUserId: ssoResult.providerId,
+        email: ssoResult.email || email,
+        firstName: ssoResult.firstName || firstName,
+        lastName: ssoResult.lastName || lastName,
+        username: ((ssoResult.email || email).split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_]/g, '') + Math.floor(Math.random() * 100),
+      })).unwrap();
+
+      setRegisteredUser(result);
+      if (ssoResult.firstName) setFirstName(ssoResult.firstName);
+      if (ssoResult.lastName) setLastName(ssoResult.lastName);
+      setStep(1);
+    } catch (err: any) {
+      Alert.alert('SSO Error', err?.message || 'SSO registration failed');
+    } finally {
+      setSsoLoading(null);
+    }
+  };
+
+  // ── Step 2 submit: Create dependent (if child) + complete onboarding + join team ──
+  const handleFinish = async () => {
+    if (isForChild) {
+      if (!childFirstName.trim()) {
+        updateError('childFirstName', "Child's first name is required");
+        return;
+      }
+      if (!childDob.trim()) {
+        updateError('childDob', 'Date of birth is required');
+        return;
+      }
+      // Basic date validation
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(childDob)) {
+        updateError('childDob', 'Format: YYYY-MM-DD');
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    try {
+      const userId = registeredUser?.id || registeredUser?.user?.id;
+      const token = registeredUser?.token || registeredUser?.accessToken;
+
+      // 1. Complete onboarding with pre-filled data
+      const intents: UserIntent[] = isForChild ? ['GUARDIAN'] : ['PLAYER'];
+      await (dispatch as any)(completeOnboarding({
+        intents,
+        sportPreferences: [teamSport],
+      })).unwrap();
+
+      // 2. Create dependent if needed
+      if (isForChild && userId && token) {
+        try {
+          const depRes = await fetch(`${API_BASE_URL}/dependents`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+              'X-User-Id': userId,
+            },
+            body: JSON.stringify({
+              firstName: childFirstName.trim(),
+              lastName: lastName.trim(), // Use parent's last name as default
+              dateOfBirth: childDob,
+              sportPreferences: [teamSport],
+            }),
+          });
+
+          if (depRes.ok) {
+            const dependent = await depRes.json();
+            // Update context with the new dependent
+            dispatch(setDependents([{
+              id: dependent.id,
+              firstName: dependent.firstName,
+              lastName: dependent.lastName,
+              profileImage: null,
+              dateOfBirth: dependent.dateOfBirth,
+            }]));
+          }
+        } catch (depErr) {
+          console.error('Failed to create dependent:', depErr);
+          // Continue anyway — parent can add child later
+        }
+      }
+
+      // 3. Join the team with the invite code
+      // Store invite code for the redirect after navigation settles
+      await AsyncStorage.setItem(PENDING_INVITE_KEY, inviteCode);
+
+      // The RootNavigator will pick up the pending invite code and redirect to JoinTeam
+      // after the Main navigator mounts.
+
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Render Step 1: Account Creation ──
+  const renderAccountStep = () => (
+    <>
+      <View style={styles.teamBanner}>
+        <Ionicons name="people" size={20} color={colors.gold} />
+        <Text style={styles.teamBannerText}>
+          You've been invited to join <Text style={styles.teamBannerName}>{teamName}</Text>
+        </Text>
+      </View>
+
+      <Text style={styles.stepTitle}>Create your account</Text>
+      <Text style={styles.stepSubtitle}>
+        Sign up to join the team. It only takes a minute.
+      </Text>
+
+      <View style={styles.nameRow}>
+        <View style={styles.nameField}>
+          <FormInput
+            label="First Name"
+            value={firstName}
+            onChangeText={(t) => { setFirstName(t); clearError('firstName'); }}
+            error={errors.firstName}
+            autoCapitalize="words"
+          />
+        </View>
+        <View style={styles.nameField}>
+          <FormInput
+            label="Last Name"
+            value={lastName}
+            onChangeText={(t) => { setLastName(t); clearError('lastName'); }}
+            error={errors.lastName}
+            autoCapitalize="words"
+          />
+        </View>
+      </View>
+
+      <FormInput
+        label="Email"
+        value={email}
+        onChangeText={(t) => { setEmail(t); clearError('email'); }}
+        error={errors.email}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      <FormInput
+        label="Password"
+        value={password}
+        onChangeText={(t) => { setPassword(t); clearError('password'); }}
+        error={errors.password}
+        secureTextEntry
+      />
+
+      <FormButton
+        title={isLoading ? 'Creating account...' : 'Continue'}
+        onPress={handleRegister}
+        disabled={isLoading}
+      />
+
+      <View style={styles.ssoSection}>
+        <Text style={styles.ssoText}>Or sign up with</Text>
+        <View style={styles.ssoRow}>
+          {Platform.OS === 'ios' && (
+            <SSOButton
+              provider="apple"
+              onPress={() => handleSSO('apple')}
+              loading={ssoLoading === 'apple'}
+              disabled={!!ssoLoading}
+            />
+          )}
+          <SSOButton
+            provider="google"
+            onPress={() => handleSSO('google')}
+            loading={ssoLoading === 'google'}
+            disabled={!!ssoLoading}
+          />
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={styles.loginLink}
+        onPress={() => (navigation as any).navigate('Login')}
+      >
+        <Text style={styles.loginLinkText}>
+          Already have an account? <Text style={styles.loginLinkBold}>Sign in</Text>
+        </Text>
+      </TouchableOpacity>
+    </>
+  );
+
+  // ── Render Step 2: Child or Self ──
+  const renderChildStep = () => (
+    <>
+      <Text style={styles.stepTitle}>Who's joining?</Text>
+      <Text style={styles.stepSubtitle}>
+        Is this for your child or are you joining as a player?
+      </Text>
+
+      <View style={styles.toggleRow}>
+        <Text style={[styles.toggleLabel, !isForChild && styles.toggleLabelActive]}>This is for me</Text>
+        <Switch
+          value={isForChild}
+          onValueChange={setIsForChild}
+          trackColor={{ false: colors.cobalt + '40', true: colors.gold + '40' }}
+          thumbColor={isForChild ? colors.gold : colors.cobalt}
+        />
+        <Text style={[styles.toggleLabel, isForChild && styles.toggleLabelActive]}>For my child</Text>
+      </View>
+
+      {isForChild && (
+        <View style={styles.childFields}>
+          <FormInput
+            label="Child's First Name"
+            value={childFirstName}
+            onChangeText={(t) => { setChildFirstName(t); clearError('childFirstName'); }}
+            error={errors.childFirstName}
+            autoCapitalize="words"
+          />
+          <FormInput
+            label="Date of Birth"
+            value={childDob}
+            onChangeText={(t) => { setChildDob(t); clearError('childDob'); }}
+            error={errors.childDob}
+            placeholder="YYYY-MM-DD"
+            keyboardType="numbers-and-punctuation"
+          />
+        </View>
+      )}
+
+      {!isForChild && (
+        <View style={styles.selfNote}>
+          <Ionicons name="information-circle-outline" size={18} color={colors.cobalt} />
+          <Text style={styles.selfNoteText}>
+            You'll be added as a player on {teamName}.
+          </Text>
+        </View>
+      )}
+
+      <FormButton
+        title={isLoading ? 'Setting up...' : `Join ${teamName}`}
+        onPress={handleFinish}
+        disabled={isLoading}
+      />
+
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => setStep(0)}
+        disabled={isLoading}
+      >
+        <Ionicons name="arrow-back" size={18} color={colors.onSurfaceVariant} />
+        <Text style={styles.backBtnText}>Back</Text>
+      </TouchableOpacity>
+    </>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Progress indicator */}
+        <View style={styles.progressRow}>
+          <View style={[styles.progressDot, step === 0 && styles.progressDotActive]} />
+          <View style={[styles.progressDot, step === 1 && styles.progressDotActive]} />
+        </View>
+
+        {step === 0 ? renderAccountStep() : renderChildStep()}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background || '#F9FAFB',
+  },
+  scrollContent: {
+    padding: 24,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 60,
+    gap: 16,
+  },
+
+  // Progress
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  progressDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D1D5DB',
+  },
+  progressDotActive: {
+    width: 24,
+    backgroundColor: colors.cobalt || '#2D5F3F',
+  },
+
+  // Team banner
+  teamBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: (colors.gold || '#B8976A') + '18',
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+    marginBottom: 8,
+  },
+  teamBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
+  },
+  teamBannerName: {
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+
+  // Step content
+  stepTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  stepSubtitle: {
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+
+  // Name row
+  nameRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  nameField: {
+    flex: 1,
+  },
+
+  // SSO
+  ssoSection: {
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 8,
+  },
+  ssoText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  ssoRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+
+  // Login link
+  loginLink: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  loginLinkText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  loginLinkBold: {
+    fontWeight: '700',
+    color: colors.cobalt || '#2D5F3F',
+  },
+
+  // Toggle
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginVertical: 8,
+  },
+  toggleLabel: {
+    fontSize: 15,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  toggleLabelActive: {
+    color: '#1F2937',
+    fontWeight: '700',
+  },
+
+  // Child fields
+  childFields: {
+    gap: 12,
+  },
+
+  // Self note
+  selfNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 14,
+    backgroundColor: (colors.cobalt || '#2D5F3F') + '10',
+    borderRadius: 10,
+  },
+  selfNoteText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
+  },
+
+  // Back button
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  backBtnText: {
+    fontSize: 15,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+});
