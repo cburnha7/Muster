@@ -82,8 +82,31 @@ export function Step2Config() {
   const handleEndDate = (_: any, date?: Date) => {
     if (date) dispatch({ type: 'SET_FIELD', field: 'endDate', value: date });
   };
-  const handleTimeStart = (text: string) => dispatch({ type: 'SET_FIELD', field: 'timeStart', value: text });
-  const handleTimeEnd = (text: string) => dispatch({ type: 'SET_FIELD', field: 'timeEnd', value: text });
+  const handleTimeStart = (_: any, date?: Date) => {
+    if (date) {
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      dispatch({ type: 'SET_FIELD', field: 'timeStart', value: `${hh}:${mm}` });
+    }
+  };
+  const handleTimeEnd = (_: any, date?: Date) => {
+    if (date) {
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      dispatch({ type: 'SET_FIELD', field: 'timeEnd', value: `${hh}:${mm}` });
+    }
+  };
+
+  const parseTimeToDate = (timeStr: string): Date => {
+    const d = new Date();
+    if (timeStr) {
+      const [hh, mm] = timeStr.split(':').map(Number);
+      d.setHours(hh ?? 18, mm ?? 0, 0, 0);
+    } else {
+      d.setHours(18, 0, 0, 0);
+    }
+    return d;
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -240,21 +263,21 @@ export function Step2Config() {
           <Text style={styles.label}>Time Window</Text>
           <View style={styles.row}>
             <View style={styles.half}>
-              <TextInput
-                style={styles.input}
-                placeholder="Start (e.g. 18:00)"
-                placeholderTextColor={colors.inkSoft}
-                value={state.timeStart}
-                onChangeText={handleTimeStart}
+              <Text style={styles.sublabel}>Start</Text>
+              <CrossPlatformDateTimePicker
+                value={parseTimeToDate(state.timeStart)}
+                mode="time"
+                minuteInterval={15}
+                onChange={handleTimeStart}
               />
             </View>
             <View style={styles.half}>
-              <TextInput
-                style={styles.input}
-                placeholder="End (e.g. 21:00)"
-                placeholderTextColor={colors.inkSoft}
-                value={state.timeEnd}
-                onChangeText={handleTimeEnd}
+              <Text style={styles.sublabel}>End</Text>
+              <CrossPlatformDateTimePicker
+                value={parseTimeToDate(state.timeEnd)}
+                mode="time"
+                minuteInterval={15}
+                onChange={handleTimeEnd}
               />
             </View>
           </View>
@@ -269,6 +292,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: { fontFamily: fonts.heading, fontSize: 24, color: colors.ink, marginBottom: 24 },
   label: { fontFamily: fonts.body, fontSize: 16, color: colors.ink, marginBottom: 8, marginTop: 16 },
+  sublabel: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginBottom: 4 },
   input: {
     backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
     paddingHorizontal: 16, paddingVertical: 12, fontFamily: fonts.body, fontSize: 16,
