@@ -430,6 +430,320 @@ router.get('/:id/available-slots', async (req, res) => {
   }
 });
 
+// ============================================================================
+// EVENT CREATION FILTERING ENDPOINTS
+// ============================================================================
+
+// Get courts available for event creation at a facility
+// Returns courts filtered by ownership (all active with available slots) or rentals (only user's rented courts)
+router.get('/:facilityId/courts-for-event', async (req, res) => {
+  try {
+    const { facilityId } = req.params;
+    const { userId, sportType } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Check if facility exists and determine ownership
+    const facility = await prisma.facility.findUnique({
+      where: { id: facilityId },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    const isOwner = facility.ownerId === (userId as string);
+
+    // Normalize today's date to midnight UTC for comparison
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    if (isOwner) {
+      // Owner: return all active courts with at least one available future time slot
+      const courtWhere: any = {
+        facilityId,
+        isActive: true,
+      };
+      if (sportType) {
+        courtWhere.sportType = sportType as string;
+      }
+
+      const courts = await prisma.facilityCourt.findMany({
+        where: courtWhere,
+        include: {
+          timeSlots: {
+            where: {
+              status: 'available',
+              date: { gte: today },
+            },
+            select: { id: true },
+          },
+        },
+      });
+
+      // Filter to only courts that have at least one available slot
+      const courtsWithSlots = courts
+        .filter(court => court.timeSlots.length > 0)
+        .map(court => ({
+          id: court.id,
+          name: court.name,
+          sportType: court.sportType,
+          capacity: court.capacity,
+          availableSlotCount: court.timeSlots.length,
+        }));
+
+      res.json({ data: courtsWithSlots, isOwner: true });
+    } else {
+      // Non-owner: return only courts where user has a confirmed future rental
+      const rentalWhere: any = {
+        userId: userId as string,
+        status: 'confirmed',
+        usedForEventId: null,
+        timeSlot: {
+          court: {
+            facilityId,
+            isActive: true,
+          },
+          date: { gte: today },
+        },
+      };
+      if (sportType) {
+        rentalWhere.timeSlot.court.sportType = sportType as string;
+      }
+
+      const rentals = await prisma.facilityRental.findMany({
+        where: rentalWhere,
+        include: {
+          timeSlot: {
+            include: {
+              court: {
+                select: {
+                  id: true,
+                  name: true,
+                  sportType: true,
+                  capacity: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Group by court and count slots
+      const courtMap = new Map<string, { id: string; name: string; sportType: string; capacity: number; availableSlotCount: number }>();
+      for (const rental of rentals) {
+        const court = rental.timeSlot.court;
+        const existing = courtMap.get(court.id);
+        if (existing) {
+          existing.availableSlotCount += 1;
+        } else {
+          courtMap.set(court.id, {
+            id: court.id,
+            name: court.name,
+            sportType: court.sportType,
+            capacity: court.capacity,
+            availableSlotCount: 1,
+          });
+        }
+      }
+
+      res.json({ data: Array.from(courtMap.values()), isOwner: false });
+    }
+  } catch (error) {
+    console.error('Get courts for event error:', error);
+    res.status(500).json({ error: 'Failed to fetch courts for event' });
+  }
+});
+
+// Get available dates for a court for event creation
+// Returns dates filtered by ownership (all future dates with available slots) or rentals (only user's rental dates)
+router.get('/:facilityId/courts/:courtId/dates', async (req, res) => {
+  try {
+    const { facilityId, courtId } = req.params;
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Check if facility exists and determine ownership
+    const facility = await prisma.facility.findUnique({
+      where: { id: facilityId },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    const isOwner = facility.ownerId === (userId as string);
+
+    // Normalize today's date to midnight UTC for comparison
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    if (isOwner) {
+      // Owner: return all future dates with available slots on this court
+      const slots = await prisma.facilityTimeSlot.findMany({
+        where: {
+          courtId,
+          status: 'available',
+          date: { gte: today },
+          court: { facilityId },
+        },
+        select: { date: true },
+      });
+
+      // Group by date and count
+      const dateMap = new Map<string, number>();
+      for (const slot of slots) {
+        const dateStr = slot.date.toISOString().split('T')[0];
+        dateMap.set(dateStr, (dateMap.get(dateStr) || 0) + 1);
+      }
+
+      const dates = Array.from(dateMap.entries())
+        .map(([date, slotCount]) => ({ date, slotCount }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      res.json({ data: dates, isOwner: true });
+    } else {
+      // Non-owner: return only dates where user has a confirmed rental on this court
+      const rentals = await prisma.facilityRental.findMany({
+        where: {
+          userId: userId as string,
+          status: 'confirmed',
+          usedForEventId: null,
+          timeSlot: {
+            courtId,
+            date: { gte: today },
+            court: { facilityId },
+          },
+        },
+        include: {
+          timeSlot: {
+            select: { date: true },
+          },
+        },
+      });
+
+      // Group by date and count
+      const dateMap = new Map<string, number>();
+      for (const rental of rentals) {
+        const dateStr = rental.timeSlot.date.toISOString().split('T')[0];
+        dateMap.set(dateStr, (dateMap.get(dateStr) || 0) + 1);
+      }
+
+      const dates = Array.from(dateMap.entries())
+        .map(([date, slotCount]) => ({ date, slotCount }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      res.json({ data: dates, isOwner: false });
+    }
+  } catch (error) {
+    console.error('Get dates for court error:', error);
+    res.status(500).json({ error: 'Failed to fetch dates for court' });
+  }
+});
+
+// Get available time slots for a court on a specific date for event creation
+// Returns slots filtered by ownership (all available slots) or rentals (only user's rental slots)
+router.get('/:facilityId/courts/:courtId/slots', async (req, res) => {
+  try {
+    const { facilityId, courtId } = req.params;
+    const { userId, date } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+    if (!date) {
+      return res.status(400).json({ error: 'date is required (YYYY-MM-DD)' });
+    }
+
+    // Check if facility exists and determine ownership
+    const facility = await prisma.facility.findUnique({
+      where: { id: facilityId },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    const isOwner = facility.ownerId === (userId as string);
+
+    // Parse the date string to a Date object (midnight UTC)
+    const slotDate = new Date(date as string);
+    slotDate.setUTCHours(0, 0, 0, 0);
+
+    // End of day for range query
+    const slotDateEnd = new Date(slotDate);
+    slotDateEnd.setUTCHours(23, 59, 59, 999);
+
+    if (isOwner) {
+      // Owner: return all available time slots on this court for this date
+      const slots = await prisma.facilityTimeSlot.findMany({
+        where: {
+          courtId,
+          status: 'available',
+          date: { gte: slotDate, lte: slotDateEnd },
+          court: { facilityId },
+        },
+        orderBy: { startTime: 'asc' },
+      });
+
+      res.json({
+        data: slots.map(slot => ({
+          id: slot.id,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          price: slot.price,
+          isFromRental: false,
+          rentalId: null,
+        })),
+        isOwner: true,
+      });
+    } else {
+      // Non-owner: return only time slots where user has a confirmed rental
+      const rentals = await prisma.facilityRental.findMany({
+        where: {
+          userId: userId as string,
+          status: 'confirmed',
+          usedForEventId: null,
+          timeSlot: {
+            courtId,
+            date: { gte: slotDate, lte: slotDateEnd },
+            court: { facilityId },
+          },
+        },
+        include: {
+          timeSlot: true,
+        },
+        orderBy: {
+          timeSlot: { startTime: 'asc' },
+        },
+      });
+
+      res.json({
+        data: rentals.map(rental => ({
+          id: rental.timeSlot.id,
+          startTime: rental.timeSlot.startTime,
+          endTime: rental.timeSlot.endTime,
+          price: rental.timeSlot.price,
+          isFromRental: true,
+          rentalId: rental.id,
+        })),
+        isOwner: false,
+      });
+    }
+  } catch (error) {
+    console.error('Get slots for court error:', error);
+    res.status(500).json({ error: 'Failed to fetch slots for court' });
+  }
+});
+
 // Check for duplicate facilities at address
 router.post('/check-duplicates', async (req, res) => {
   try {
