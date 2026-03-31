@@ -117,7 +117,7 @@ export function Step3Preview() {
   const sportLabel = state.sport ? getSportLabel(state.sport) : '';
   const seasonLabel = state.startDate ? getSeasonFromDate(state.startDate) : '';
   const leagueName = state.hostName.trim() && sportLabel
-    ? `${state.hostName.trim()} ${sportLabel} ${seasonLabel}`.trim()
+    ? `${state.hostName.trim()} - ${sportLabel} - ${seasonLabel}`.trim()
     : 'League Preview';
 
   const rounds = useMemo(

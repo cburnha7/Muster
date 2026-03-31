@@ -51,7 +51,7 @@ export function Step2Config() {
   const sportLabel = state.sport ? getSportLabel(state.sport) : '';
   const seasonLabel = state.startDate ? getSeasonFromDate(state.startDate) : '';
   const leagueName = state.hostName.trim() && sportLabel
-    ? `${state.hostName.trim()} ${sportLabel} ${seasonLabel}`.trim()
+    ? `${state.hostName.trim()} - ${sportLabel} - ${seasonLabel}`.trim()
     : '';
 
   const isBlock = state.frequency === 'block';
