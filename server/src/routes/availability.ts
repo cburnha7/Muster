@@ -47,11 +47,11 @@ router.post('/:userId/batch', async (req, res) => {
 
     res.status(201).json({ count: created.count, batchId });
   } catch (error: any) {
+    console.error('Create availability batch error:', error?.code, error?.message);
     if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
-      return res.status(503).json({ error: 'Availability table not yet created. Please run database migration.' });
+      return res.status(503).json({ error: 'Availability table not yet created. Run: npx prisma migrate deploy' });
     }
-    console.error('Create availability batch error:', error?.message);
-    res.status(500).json({ error: 'Failed to create availability blocks' });
+    res.status(500).json({ error: 'Failed to create availability blocks', details: error?.message });
   }
 });
 
