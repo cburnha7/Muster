@@ -191,7 +191,7 @@ export function AvatarBottomSheet() {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.editDepBtn}
                   >
-                    <Ionicons name="create-outline" size={16} color={colors.onSurfaceVariant} />
+                    <Ionicons name="create-outline" size={20} color={colors.onSurfaceVariant} />
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   editDepBtn: {
-    padding: 6,
+    padding: 10,
     marginLeft: 4,
   },
   addChildAvatar: {
