@@ -746,6 +746,12 @@ router.post('/:id/result', async (req: Request, res: Response) => {
       }
     });
 
+    // Lock league from deletion once a match is completed
+    if (existingMatch.leagueId) {
+      const { lockLeagueIfMatchPlayed } = await import('../middleware/league-lock');
+      await lockLeagueIfMatchPlayed(prisma, existingMatch.leagueId, 'completed');
+    }
+
     // Update home team membership stats
     const homeMembership = await prisma.leagueMembership.findFirst({
       where: {
