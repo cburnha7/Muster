@@ -1,29 +1,25 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 /**
- * Registers a Prisma middleware that automatically sets
- * `League.lockedFromDeletion = true` when any Match transitions
- * to `in_progress` or `completed`.
+ * Locks a league from deletion when a match transitions to in_progress or completed.
+ * Call this after updating a match status.
  */
-export function registerLeagueLockMiddleware(prisma: PrismaClient): void {
-  prisma.$use(async (params: Prisma.MiddlewareParams, next) => {
-    const result = await next(params);
+export async function lockLeagueIfMatchPlayed(prisma: PrismaClient, leagueId: string | null, matchStatus: string): Promise<void> {
+  if (!leagueId) return;
+  if (matchStatus !== 'in_progress' && matchStatus !== 'completed') return;
+  try {
+    await prisma.league.update({
+      where: { id: leagueId },
+      data: { lockedFromDeletion: true },
+    });
+  } catch (err) {
+    console.error('Failed to lock league from deletion:', err);
+  }
+}
 
-    if (params.model === 'Match' && params.action === 'update') {
-      const newStatus = params.args?.data?.status;
-      if (newStatus === 'in_progress' || newStatus === 'completed') {
-        try {
-          await prisma.league.update({
-            where: { id: result.leagueId },
-            data: { lockedFromDeletion: true },
-          });
-        } catch (err) {
-          // Log but don't break the match update
-          console.error('Failed to lock league from deletion:', err);
-        }
-      }
-    }
-
-    return result;
-  });
+/**
+ * @deprecated No longer uses prisma.$use middleware. Kept as no-op for backward compatibility.
+ */
+export function registerLeagueLockMiddleware(_prisma: PrismaClient): void {
+  // No-op — league locking is now handled inline in match update routes
 }
