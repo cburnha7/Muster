@@ -17,6 +17,7 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
+import * as XLSX from 'xlsx';
 import { colors, fonts } from '../../theme';
 
 // ── Types ──
@@ -41,34 +42,88 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-// Simple CSV/text parser — extracts lines that look like date, time, duration
-function parseFileContent(text: string): ImportedEvent[] {
+// ── Normalize a date string to YYYY-MM-DD ──
+function normalizeDate(raw: string): string | null {
+  // MM/DD/YYYY or MM-DD-YYYY
+  const mdy = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (mdy) {
+    const yr = mdy[3]!.length === 2 ? `20${mdy[3]}` : mdy[3];
+    return `${yr}-${mdy[1]!.padStart(2, '0')}-${mdy[2]!.padStart(2, '0')}`;
+  }
+  // YYYY-MM-DD already
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  // Try Date constructor
+  const d = new Date(raw);
+  if (!isNaN(d.getTime())) return d.toISOString().split('T')[0]!;
+  return null;
+}
+
+// ── Compute duration from start/end times ──
+function computeDuration(startTime: string, endTimeOrDuration: string): string {
+  // If it already looks like a duration, return it
+  if (/\d+\s*(min|hr|hour|m|h)/i.test(endTimeOrDuration)) return endTimeOrDuration;
+  // Try to parse as end time and compute difference
+  const startMatch = startTime.match(/(\d{1,2}):(\d{2})/);
+  const endMatch = endTimeOrDuration.match(/(\d{1,2}):(\d{2})/);
+  if (startMatch && endMatch) {
+    const startMin = parseInt(startMatch[1]!) * 60 + parseInt(startMatch[2]!);
+    const endMin = parseInt(endMatch[1]!) * 60 + parseInt(endMatch[2]!);
+    const diff = endMin - startMin;
+    if (diff > 0) return `${diff} min`;
+  }
+  return '60 min';
+}
+
+// ── Parse spreadsheet rows (from xlsx) ──
+function parseSheetRows(rows: any[][]): ImportedEvent[] {
+  if (rows.length < 2) return [];
+  const header = rows[0]!.map((h) => String(h || '').toLowerCase().trim());
+
+  // Find column indices
+  const dateIdx = header.findIndex((h) => /date|day|when/i.test(h));
+  const timeIdx = header.findIndex((h) => /start.*time|time|begin/i.test(h));
+  const endIdx = header.findIndex((h) => /end.*time|finish|until/i.test(h));
+  const durIdx = header.findIndex((h) => /duration|length|dur/i.test(h));
+
+  const events: ImportedEvent[] = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i]!;
+    const rawDate = dateIdx >= 0 ? String(row[dateIdx] || '') : '';
+    const rawTime = timeIdx >= 0 ? String(row[timeIdx] || '') : '';
+    const rawEnd = endIdx >= 0 ? String(row[endIdx] || '') : '';
+    const rawDur = durIdx >= 0 ? String(row[durIdx] || '') : '';
+
+    const date = normalizeDate(rawDate);
+    if (!date) continue;
+
+    const startTime = rawTime.match(/\d{1,2}:\d{2}/) ? rawTime.match(/\d{1,2}:\d{2}/)![0] : '12:00';
+    const duration = rawDur || rawEnd ? computeDuration(startTime, rawDur || rawEnd) : '60 min';
+
+    events.push({ id: generateId(), date, startTime, duration });
+  }
+  return events;
+}
+
+// ── Parse plain text (CSV or PDF text) ──
+function parseTextContent(text: string): ImportedEvent[] {
   const events: ImportedEvent[] = [];
   const lines = text.split('\n').filter((l) => l.trim());
-  // Skip header row if it looks like one
   const start = lines[0]?.match(/date|time|event|name/i) ? 1 : 0;
   for (let i = start; i < lines.length; i++) {
-    const parts = lines[i]!.split(/[,\t]+/).map((p) => p.trim());
-    if (parts.length >= 2) {
-      // Try to find a date-like value
-      const datePart = parts.find((p) => /\d{1,4}[-/]\d{1,2}[-/]\d{1,4}/.test(p));
-      const timePart = parts.find((p) => /\d{1,2}:\d{2}/.test(p));
-      const durationPart = parts.find((p) => /\d+\s*(min|hr|hour|m|h)/i.test(p)) || '60 min';
-      if (datePart) {
-        // Normalize date to YYYY-MM-DD
-        let normalized = datePart;
-        const mdyMatch = datePart.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
-        if (mdyMatch) {
-          const yr = mdyMatch[3]!.length === 2 ? `20${mdyMatch[3]}` : mdyMatch[3];
-          normalized = `${yr}-${mdyMatch[1]!.padStart(2, '0')}-${mdyMatch[2]!.padStart(2, '0')}`;
-        }
-        events.push({
-          id: generateId(),
-          date: normalized,
-          startTime: timePart || '12:00',
-          duration: durationPart,
-        });
-      }
+    const parts = lines[i]!.split(/[,\t|]+/).map((p) => p.trim());
+    if (parts.length < 1) continue;
+    // Find date-like, time-like, duration-like values
+    const datePart = parts.find((p) => /\d{1,4}[-/]\d{1,2}[-/]\d{1,4}/.test(p));
+    const timePart = parts.find((p) => /\d{1,2}:\d{2}/.test(p));
+    const durPart = parts.find((p) => /\d+\s*(min|hr|hour|m|h)/i.test(p));
+    const endTimePart = !durPart ? parts.filter((p) => /\d{1,2}:\d{2}/.test(p))[1] : undefined;
+
+    if (datePart) {
+      const date = normalizeDate(datePart);
+      if (!date) continue;
+      const startTime = timePart?.match(/\d{1,2}:\d{2}/)?.[0] || '12:00';
+      const duration = durPart || (endTimePart ? computeDuration(startTime, endTimePart) : '60 min');
+      events.push({ id: generateId(), date, startTime, duration });
     }
   }
   return events;
@@ -87,6 +142,7 @@ export function AvailabilityCalendarScreen() {
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [batchName, setBatchName] = useState('');
   const [parsedEvents, setParsedEvents] = useState<ImportedEvent[]>([]);
+  const [parseError, setParseError] = useState('');
   const [importedFileName, setImportedFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -127,6 +183,7 @@ export function AvailabilityCalendarScreen() {
   const openImportModal = useCallback(() => {
     setBatchName('');
     setParsedEvents([]);
+    setParseError('');
     setImportedFileName('');
     setImportModalVisible(true);
   }, []);
@@ -141,19 +198,74 @@ export function AvailabilityCalendarScreen() {
     const file = e?.target?.files?.[0];
     if (!file) return;
     setImportedFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target?.result as string;
-      if (text) {
-        const parsed = parseFileContent(text);
-        setParsedEvents(parsed);
-        if (parsed.length === 0) {
-          Alert.alert('No Events Found', 'Could not parse any events from this file. Try a CSV with date and time columns.');
+    setParsedEvents([]);
+    setParseError('');
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+    if (ext === 'xlsx' || ext === 'xls') {
+      // Excel: read as ArrayBuffer, parse with xlsx
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const sheetName = workbook.SheetNames[0];
+          if (!sheetName) { setParseError('No sheets found in this file.'); return; }
+          const sheet = workbook.Sheets[sheetName]!;
+          const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
+          const parsed = parseSheetRows(rows);
+          if (parsed.length === 0) {
+            setParseError('No events found in this file. Please check the format and try again.');
+          } else {
+            setParsedEvents(parsed);
+          }
+        } catch {
+          setParseError('Could not read this Excel file. Please check the format.');
         }
-      }
-    };
-    reader.readAsText(file);
-    // Reset input so same file can be re-selected
+      };
+      reader.readAsArrayBuffer(file);
+    } else if (ext === 'csv' || ext === 'txt') {
+      // CSV/Text: read as text, try xlsx first (handles CSV), fallback to text parser
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result as string;
+        if (!text) { setParseError('File is empty.'); return; }
+        // Try xlsx CSV parser first
+        try {
+          const workbook = XLSX.read(text, { type: 'string', raw: false });
+          const sheetName = workbook.SheetNames[0];
+          if (sheetName) {
+            const rows: any[][] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]!, { header: 1, raw: false });
+            const parsed = parseSheetRows(rows);
+            if (parsed.length > 0) { setParsedEvents(parsed); return; }
+          }
+        } catch { /* fallback to text parser */ }
+        // Fallback: plain text line parser
+        const parsed = parseTextContent(text);
+        if (parsed.length === 0) {
+          setParseError('No events found in this file. Please check the format and try again.');
+        } else {
+          setParsedEvents(parsed);
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      // PDF or other: read as text (basic extraction)
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result as string;
+        if (!text) { setParseError('Could not read this file.'); return; }
+        const parsed = parseTextContent(text);
+        if (parsed.length === 0) {
+          setParseError('No events found in this file. Please check the format and try again.');
+        } else {
+          setParsedEvents(parsed);
+        }
+      };
+      reader.readAsText(file);
+    }
+
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -304,8 +416,13 @@ export function AvailabilityCalendarScreen() {
               />
             )}
 
-            {/* Parsed events list */}
-            {parsedEvents.length > 0 && (
+            {/* Parsed events list or error */}
+            {parseError ? (
+              <View style={styles.parseErrorBox}>
+                <Ionicons name="alert-circle-outline" size={20} color={colors.heart} />
+                <Text style={styles.parseErrorText}>{parseError}</Text>
+              </View>
+            ) : parsedEvents.length > 0 ? (
               <View style={styles.parsedSection}>
                 <Text style={styles.parsedCount}>{parsedEvents.length} event{parsedEvents.length !== 1 ? 's' : ''} found</Text>
                 <ScrollView style={styles.parsedList} nestedScrollEnabled>
@@ -318,7 +435,7 @@ export function AvailabilityCalendarScreen() {
                   ))}
                 </ScrollView>
               </View>
-            )}
+            ) : null}
 
             {/* Actions */}
             <View style={styles.modalActions}>
@@ -392,6 +509,11 @@ const styles = StyleSheet.create({
   dropZoneText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt, marginTop: 8 },
   dropZoneHint: { fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft, marginTop: 4 },
   parsedSection: { marginTop: 16 },
+  parseErrorBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16,
+    padding: 14, backgroundColor: '#FEF2F2', borderRadius: 10, borderWidth: 1, borderColor: colors.heart,
+  },
+  parseErrorText: { fontFamily: fonts.body, fontSize: 14, color: colors.heart, flex: 1 },
   parsedCount: { fontFamily: fonts.label, fontSize: 13, color: colors.ink, marginBottom: 8 },
   parsedList: { maxHeight: 200 },
   parsedRow: {
