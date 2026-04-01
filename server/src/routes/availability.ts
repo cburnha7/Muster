@@ -1,14 +1,79 @@
 import { Router } from 'express';
+import { prisma } from '../lib/prisma';
+
 const router = Router();
 
-// GET /api/availability/:userId — get availability blocks
+// GET /api/availability/:userId — get all availability blocks for a user
 router.get('/:userId', async (req, res) => {
-  res.json({ blocks: [] });
+  try {
+    const { userId } = req.params;
+    const blocks = await prisma.availabilityBlock.findMany({
+      where: { userId },
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+    });
+    res.json({ blocks });
+  } catch (error: any) {
+    console.error('Get availability blocks error:', error?.message);
+    res.status(500).json({ error: 'Failed to fetch availability blocks' });
+  }
 });
 
-// POST /api/availability/:userId — add availability block
-router.post('/:userId', async (req, res) => {
-  res.status(201).json({ id: 'stub', ...req.body });
+// POST /api/availability/:userId/batch — import a batch of blocks
+router.post('/:userId/batch', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { batchName, events } = req.body;
+
+    if (!Array.isArray(events) || events.length === 0) {
+      return res.status(400).json({ error: 'events array is required' });
+    }
+
+    const batchId = `batch-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const created = await prisma.availabilityBlock.createMany({
+      data: events.map((evt: any) => ({
+        userId,
+        date: evt.date,
+        startTime: evt.startTime,
+        duration: evt.duration || '60 min',
+        title: batchName || 'Imported',
+        batchId,
+      })),
+    });
+
+    res.status(201).json({ count: created.count, batchId });
+  } catch (error: any) {
+    console.error('Create availability batch error:', error?.message);
+    res.status(500).json({ error: 'Failed to create availability blocks' });
+  }
+});
+
+// DELETE /api/availability/:userId/:blockId — delete a single block
+router.delete('/:userId/:blockId', async (req, res) => {
+  try {
+    const { userId, blockId } = req.params;
+    await prisma.availabilityBlock.deleteMany({
+      where: { id: blockId, userId },
+    });
+    res.status(204).send();
+  } catch (error: any) {
+    console.error('Delete availability block error:', error?.message);
+    res.status(500).json({ error: 'Failed to delete availability block' });
+  }
+});
+
+// DELETE /api/availability/:userId/batch/:batchId — delete an entire batch
+router.delete('/:userId/batch/:batchId', async (req, res) => {
+  try {
+    const { userId, batchId } = req.params;
+    const result = await prisma.availabilityBlock.deleteMany({
+      where: { userId, batchId },
+    });
+    res.json({ deleted: result.count });
+  } catch (error: any) {
+    console.error('Delete availability batch error:', error?.message);
+    res.status(500).json({ error: 'Failed to delete batch' });
+  }
 });
 
 export default router;
