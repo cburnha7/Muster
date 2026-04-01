@@ -1,60 +1,101 @@
-import { useEffect, useState } from 'react';
-import { NotificationService } from '../services/notifications';
+import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../store/slices/authSlice';
+import { userService, RosterInvitation, LeagueInvitation, EventInvitation, ReadyToScheduleLeague } from '../services/api/UserService';
+import { debriefService } from '../services/api/DebriefService';
 
-export interface UseNotificationsResult {
-  expoPushToken: string | null;
-  isInitialized: boolean;
-  error: Error | null;
-  scheduleNotification: typeof NotificationService.scheduleNotification;
-  cancelNotification: typeof NotificationService.cancelNotification;
-  cancelAllNotifications: typeof NotificationService.cancelAllNotifications;
-  setBadgeCount: typeof NotificationService.setBadgeCount;
-  getBadgeCount: typeof NotificationService.getBadgeCount;
+export interface NotificationItem {
+  id: string;
+  type: 'roster_invitation' | 'league_invitation' | 'event_invitation' | 'schedule_league' | 'debrief' | 'cancel_request' | 'game_challenge';
+  title: string;
+  subtitle: string;
+  data: any;
 }
 
-/**
- * Hook for managing push notifications in React components
- */
-export const useNotifications = (): UseNotificationsResult => {
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export function useNotifications() {
+  const user = useSelector(selectUser);
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
+  const refresh = useCallback(async () => {
+    if (!user?.id) { setItems([]); return; }
+    setLoading(true);
+    try {
+      const [invitations, readyLeagues, debriefBookings] = await Promise.all([
+        userService.getInvitations().catch(() => ({ rosterInvitations: [], leagueInvitations: [], eventInvitations: [], total: 0 })),
+        userService.getLeaguesReadyToSchedule().catch(() => []),
+        userService.getUserBookings('confirmed', { page: 1, limit: 50 })
+          .then((res: any) => (res?.data || []).filter((b: any) => b.debriefSubmitted === false && b.event && new Date(b.event.endTime) < new Date()))
+          .catch(() => []),
+      ]);
+
+      const notifs: NotificationItem[] = [];
+
+      invitations.rosterInvitations.forEach((inv) => {
+        notifs.push({
+          id: `roster-${inv.id}`,
+          type: 'roster_invitation',
+          title: 'Roster Invitation',
+          subtitle: inv.rosterName,
+          data: inv,
+        });
+      });
+
+      invitations.leagueInvitations.forEach((inv) => {
+        notifs.push({
+          id: `league-${inv.id}`,
+          type: 'league_invitation',
+          title: 'League Invitation',
+          subtitle: inv.leagueName,
+          data: inv,
+        });
+      });
+
+      invitations.eventInvitations.forEach((inv) => {
+        notifs.push({
+          id: `event-${inv.id}`,
+          type: 'event_invitation',
+          title: 'Game Invitation',
+          subtitle: inv.eventTitle,
+          data: inv,
+        });
+      });
+
+      readyLeagues.forEach((league) => {
+        notifs.push({
+          id: `schedule-${league.id}`,
+          type: 'schedule_league',
+          title: 'Schedule League Games',
+          subtitle: league.name,
+          data: league,
+        });
+      });
+
+      debriefBookings.forEach((booking: any) => {
+        notifs.push({
+          id: `debrief-${booking.id}`,
+          type: 'debrief',
+          title: 'Debrief Pending',
+          subtitle: booking.event?.title || 'Event',
+          data: booking,
+        });
+      });
+
+      setItems(notifs);
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  // Auto-refresh every 60 seconds
   useEffect(() => {
-    let isMounted = true;
+    const interval = setInterval(refresh, 60000);
+    return () => clearInterval(interval);
+  }, [refresh]);
 
-    const initializeNotifications = async () => {
-      try {
-        const token = await NotificationService.initialize();
-        
-        if (isMounted) {
-          setExpoPushToken(token);
-          setIsInitialized(true);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Failed to initialize notifications'));
-          setIsInitialized(true);
-        }
-      }
-    };
-
-    initializeNotifications();
-
-    return () => {
-      isMounted = false;
-      NotificationService.cleanup();
-    };
-  }, []);
-
-  return {
-    expoPushToken,
-    isInitialized,
-    error,
-    scheduleNotification: NotificationService.scheduleNotification.bind(NotificationService),
-    cancelNotification: NotificationService.cancelNotification.bind(NotificationService),
-    cancelAllNotifications: NotificationService.cancelAllNotifications.bind(NotificationService),
-    setBadgeCount: NotificationService.setBadgeCount.bind(NotificationService),
-    getBadgeCount: NotificationService.getBadgeCount.bind(NotificationService),
-  };
-};
+  return { items, count: items.length, loading, refresh };
+}

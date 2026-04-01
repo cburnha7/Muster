@@ -9,6 +9,7 @@ import { RootState } from '../store/store';
 import { colors, fonts } from '../theme';
 import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
 import { HeaderUserSelector } from '../components/navigation/HeaderUserSelector';
+import { NotificationBell } from '../components/navigation/NotificationBell';
 import { AvatarBottomSheet } from '../components/navigation/AvatarBottomSheet';
 import { AvatarSheetProvider } from '../context/AvatarSheetContext';
 import { searchEventBus } from '../utils/searchEventBus';
@@ -70,6 +71,7 @@ function CustomHeader({ routeName }: { routeName: string }) {
   const sectionTitle = SECTION_TITLES[routeName];
   return (
     <View style={styles.headerRow}>
+      <NotificationBell />
       {sectionTitle ? (
         <Text style={styles.headerSectionTitle}>{sectionTitle}</Text>
       ) : (
