@@ -92,6 +92,7 @@ model User {
 
   insuranceDocuments     InsuranceDocument[]
   waiverSignatures       WaiverSignature[]
+  availabilityBlocks     AvailabilityBlock[]
 
   // Self-referential relation for guardian/dependent accounts
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
@@ -1498,4 +1499,23 @@ model MessageReaction {
   createdAt DateTime @default(now())
 
   @@unique([messageId, userId, emoji])
+}
+
+// ── Availability Calendar ────────────────────────────────────────────────────
+
+model AvailabilityBlock {
+  id        String   @id @default(uuid())
+  userId    String
+  date      String   // YYYY-MM-DD
+  startTime String   // HH:MM
+  duration  String   // e.g. "60 min"
+  title     String   // batch name or event name
+  batchId   String?  // groups blocks from the same import
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, date])
+  @@map("availability_blocks")
 }

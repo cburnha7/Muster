@@ -557,11 +557,17 @@ router.get('/leagues-ready-to-schedule', optionalAuthMiddleware, async (req, res
         readyNotificationSent: true,
         scheduleGenerated: false,
         isActive: true,
+        OR: [
+          { endDate: null },
+          { endDate: { gte: new Date() } },
+        ],
       },
       select: {
         id: true,
         name: true,
         sportType: true,
+        endDate: true,
+        isActive: true,
       },
       orderBy: { createdAt: 'desc' },
     });

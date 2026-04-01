@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   Alert,
   RefreshControl,
 } from 'react-native';
@@ -14,10 +13,10 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { Ionicons } from '@expo/vector-icons';
 
 
-import { SportRatingsSection } from '../../components/profile/SportRatingsSection';
+import { ProfileCard } from '../../components/profile/ProfileCard';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../services/api/config';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { colors, fonts, Spacing } from '../../theme';
 import { DependentProfile } from '../../types/dependent';
 
 /**
@@ -136,75 +135,68 @@ export function DependentProfileScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarRow}>
-            {profile.profileImage ? (
-              <Image source={{ uri: profile.profileImage }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Ionicons name="person" size={36} color={colors.outline} />
-              </View>
-            )}
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileDob}>
-                Born {new Date(profile.dateOfBirth).toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-
-          {/* Action buttons */}
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={handleEdit}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="Edit dependent profile"
-            >
-              <Ionicons name="create-outline" size={18} color={colors.primary} />
-              <Text style={styles.editButtonText}>Edit</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.availabilityButton}
-              onPress={handleAvailability}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="Update availability"
-            >
-              <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-              <Text style={styles.availabilityButtonText}>Availability</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.transferButton, !canTransfer && styles.transferButtonDisabled]}
-              onPress={handleTransfer}
-              disabled={!canTransfer}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="Transfer account to independent"
-              accessibilityState={{ disabled: !canTransfer }}
-            >
-              <Ionicons
-                name="arrow-forward-circle-outline"
-                size={18}
-                color={canTransfer ? colors.onSurface : colors.outline}
-              />
-              <Text style={[styles.transferButtonText, !canTransfer && styles.transferButtonTextDisabled]}>
-                Transfer
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {!canTransfer && (
-            <Text style={styles.transferHint}>
-              Transfer available when dependent turns 18
-            </Text>
-          )}
+        {/* Profile Card */}
+        <View style={{ marginHorizontal: 16, marginTop: 16 }}>
+          <ProfileCard
+            userId={dependentId}
+            profileImage={profile.profileImage}
+            firstName={profile.firstName}
+            lastName={profile.lastName}
+            dateOfBirth={profile.dateOfBirth}
+            gender={(profile as any).gender}
+            email={(profile as any).email}
+            phone={(profile as any).phoneNumber}
+          />
         </View>
 
-        {/* Sport Ratings — reuses the same component as the guardian's profile */}
-        <SportRatingsSection userId={dependentId} />
+        {/* Action buttons */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEdit}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Edit dependent profile"
+          >
+            <Ionicons name="create-outline" size={18} color={colors.primary} />
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.availabilityButton}
+            onPress={handleAvailability}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Update availability"
+          >
+            <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
+            <Text style={styles.availabilityButtonText}>Availability</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.transferButton, !canTransfer && styles.transferButtonDisabled]}
+            onPress={handleTransfer}
+            disabled={!canTransfer}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Transfer account to independent"
+            accessibilityState={{ disabled: !canTransfer }}
+          >
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={18}
+              color={canTransfer ? colors.onSurface : colors.outline}
+            />
+            <Text style={[styles.transferButtonText, !canTransfer && styles.transferButtonTextDisabled]}>
+              Transfer
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {!canTransfer && (
+          <Text style={styles.transferHint}>
+            Transfer available when dependent turns 18
+          </Text>
+        )}
 
         {/* Event History */}
         <View style={styles.section}>
@@ -298,46 +290,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.outline,
   },
-  profileHeader: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  avatarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  avatarPlaceholder: {
-    backgroundColor: colors.surfaceContainerLowest,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  profileDob: {
-    fontFamily: fonts.body,
-    ...typeScale.bodySm,
-    color: colors.outline,
-    marginTop: 2,
-  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 12,
+    marginHorizontal: 16,
     gap: 8,
   },
   editButton: {
@@ -397,6 +354,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.outline,
     marginTop: 8,
+    marginHorizontal: 16,
     fontStyle: 'italic',
   },
   section: {

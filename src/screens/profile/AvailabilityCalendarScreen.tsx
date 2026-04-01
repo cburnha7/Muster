@@ -17,6 +17,8 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
+import { API_BASE_URL } from '../../services/api/config';
+import { authService } from '../../services/auth/AuthService';
 import * as XLSX from 'xlsx';
 import { colors, fonts } from '../../theme';
 
@@ -146,10 +148,35 @@ export function AvailabilityCalendarScreen() {
   const [importedFileName, setImportedFileName] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Load Muster events for this user
+  const targetId = userId || currentUser?.id || '';
+
+  // Load saved availability blocks + Muster events
   useEffect(() => {
-    const targetId = userId || currentUser?.id;
     if (!targetId) return;
+    const token = authService.getToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    // Load saved blocks from server
+    fetch(`${API_BASE_URL}/availability/${targetId}`, { headers })
+      .then((r) => r.json())
+      .then((data) => {
+        const saved: CalendarEvent[] = (data.blocks || []).map((b: any) => ({
+          id: b.id,
+          date: b.date,
+          title: b.title,
+          startTime: b.startTime,
+          duration: b.duration,
+          source: 'imported' as const,
+        }));
+        setEvents((prev) => {
+          const muster = prev.filter((e) => e.source === 'muster');
+          return [...saved, ...muster];
+        });
+      })
+      .catch(() => {});
+
+    // Load Muster events
     userService.getUserBookings('upcoming', { page: 1, limit: 100 })
       .then((res: any) => {
         const bookings = res?.data || [];
@@ -174,7 +201,7 @@ export function AvailabilityCalendarScreen() {
         });
       })
       .catch(() => {});
-  }, [userId, currentUser?.id]);
+  }, [targetId]);
 
   const handleDayPress = useCallback((day: DateData) => {
     setSelectedDate(day.dateString);
@@ -269,7 +296,7 @@ export function AvailabilityCalendarScreen() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
-  const handleConfirmImport = useCallback(() => {
+  const handleConfirmImport = useCallback(async () => {
     if (!batchName.trim()) {
       Alert.alert('Name Required', 'Please enter a name for this batch.');
       return;
@@ -278,21 +305,60 @@ export function AvailabilityCalendarScreen() {
       Alert.alert('No Events', 'Drop a file first to parse events.');
       return;
     }
-    const newEvents: CalendarEvent[] = parsedEvents.map((pe) => ({
-      id: pe.id,
-      date: pe.date,
-      title: batchName.trim(),
-      startTime: pe.startTime,
-      duration: pe.duration,
-      source: 'imported' as const,
-    }));
-    setEvents((prev) => [...prev, ...newEvents]);
-    setImportModalVisible(false);
-  }, [batchName, parsedEvents]);
 
-  const handleDeleteEvent = useCallback((id: string) => {
+    // Save to server
+    try {
+      const token = authService.getToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE_URL}/availability/${targetId}/batch`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          batchName: batchName.trim(),
+          events: parsedEvents.map((pe) => ({
+            date: pe.date,
+            startTime: pe.startTime,
+            duration: pe.duration,
+          })),
+        }),
+      });
+
+      if (!res.ok) throw new Error('Save failed');
+
+      // Reload from server to get real IDs
+      const loadRes = await fetch(`${API_BASE_URL}/availability/${targetId}`, { headers });
+      const data = await loadRes.json();
+      const saved: CalendarEvent[] = (data.blocks || []).map((b: any) => ({
+        id: b.id,
+        date: b.date,
+        title: b.title,
+        startTime: b.startTime,
+        duration: b.duration,
+        source: 'imported' as const,
+      }));
+      setEvents((prev) => {
+        const muster = prev.filter((e) => e.source === 'muster');
+        return [...saved, ...muster];
+      });
+    } catch {
+      Alert.alert('Error', 'Failed to save events. Please try again.');
+      return;
+    }
+
+    setImportModalVisible(false);
+  }, [batchName, parsedEvents, targetId]);
+
+  const handleDeleteEvent = useCallback(async (id: string) => {
     setEvents((prev) => prev.filter((e) => e.id !== id));
-  }, []);
+    try {
+      const token = authService.getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      await fetch(`${API_BASE_URL}/availability/${targetId}/${id}`, { method: 'DELETE', headers });
+    } catch { /* silent — already removed from UI */ }
+  }, [targetId]);
 
   // Calendar marked dates
   const markedDates = events.reduce<Record<string, any>>((acc, evt) => {

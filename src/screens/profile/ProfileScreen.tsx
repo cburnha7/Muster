@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Alert,
   Platform,
   RefreshControl,
@@ -16,10 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
+import { ProfileCard } from '../../components/profile/ProfileCard';
 import { colors, fonts } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/api/UserService';
-import { teamService } from '../../services/api/TeamService';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
 import type { Team, Event } from '../../types';
@@ -114,65 +113,31 @@ export function ProfileScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       showsVerticalScrollIndicator={false}
     >
-      {/* ── Identity Card ──────────────────────────── */}
-      <View style={styles.identityCard}>
-        <View style={styles.identityTop}>
-          {authUser.profileImage ? (
-            <Image source={{ uri: authUser.profileImage }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarInitial}>
-                {authUser.firstName?.[0]?.toUpperCase() || '?'}
-              </Text>
-            </View>
-          )}
-          <View style={styles.identityInfo}>
-            <Text style={styles.profileName}>{authUser.firstName} {authUser.lastName}</Text>
-            {(authUser as any)?.address && (
-              <View style={styles.locationRow}>
-                <Ionicons name="location-outline" size={13} color={colors.onSurfaceVariant} />
-                <Text style={styles.locationText} numberOfLines={1}>{(authUser as any).address}</Text>
-              </View>
-            )}
-          </View>
-        </View>
+      {/* ── Profile Card ──────────────────────────── */}
+      <ProfileCard
+        userId={authUser.id}
+        profileImage={authUser.profileImage}
+        firstName={authUser.firstName}
+        lastName={authUser.lastName}
+        dateOfBirth={(authUser as any).dateOfBirth ?? ''}
+        gender={(authUser as any).gender}
+        email={authUser.email}
+        phone={(authUser as any).phoneNumber}
+        address={
+          (authUser as any)?.locationCity
+            ? `${(authUser as any).locationCity}, ${(authUser as any).locationState}`
+            : undefined
+        }
+      />
 
-        {/* Sport badges */}
-        {sportPrefs.length > 0 && (
-          <View style={styles.sportBadges}>
-            {sportPrefs.map((key) => (
-              <View key={key} style={styles.sportBadge}>
-                <Text style={styles.sportBadgeEmoji}>{getSportEmoji(key)}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={styles.editLink}
-          onPress={() => (navigation as any).navigate('EditProfile')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="create-outline" size={15} color={colors.primary} />
-          <Text style={styles.editLinkText}>Edit profile</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── Stats Row ──────────────────────────────── */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{loadingStats ? '-' : stats?.games ?? 0}</Text>
-          <Text style={styles.statLabel}>Games</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{loadingStats ? '-' : stats?.salutes ?? 0}</Text>
-          <Text style={styles.statLabel}>Salutes</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{loadingStats ? '-' : stats?.teams ?? 0}</Text>
-          <Text style={styles.statLabel}>Teams</Text>
-        </View>
-      </View>
+      <TouchableOpacity
+        style={styles.editLink}
+        onPress={() => (navigation as any).navigate('EditProfile')}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="create-outline" size={15} color={colors.primary} />
+        <Text style={styles.editLinkText}>Edit profile</Text>
+      </TouchableOpacity>
 
       {/* ── Recent Games ───────────────────────────── */}
       <Text style={styles.sectionTitle}>Recent Games</Text>
@@ -269,70 +234,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-  // ── Identity Card ──────────────────────────────
-  identityCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-  },
-  identityTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-  },
-  avatarPlaceholder: {
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: {
-    fontFamily: fonts.ui,
-    fontSize: 28,
-    color: '#FFFFFF',
-  },
-  identityInfo: {
-    flex: 1,
-    marginLeft: 16,
-    gap: 4,
-  },
-  profileName: {
-    fontFamily: fonts.heading,
-    fontSize: 22,
-    color: colors.onSurface,
-    letterSpacing: -0.3,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  locationText: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.onSurfaceVariant,
-    flex: 1,
-  },
-  sportBadges: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 14,
-  },
-  sportBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sportBadgeEmoji: {
-    fontSize: 16,
-  },
+  // ── Edit Link ───────────────────────────────────
   editLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -344,34 +246,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 13,
     color: colors.primary,
-  },
-
-  // ── Stats Row ──────────────────────────────────
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    gap: 4,
-  },
-  statValue: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
-    color: colors.onSurface,
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    fontFamily: fonts.label,
-    fontSize: 11,
-    color: colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
 
   // ── Section ────────────────────────────────────
