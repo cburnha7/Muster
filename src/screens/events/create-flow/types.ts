@@ -18,6 +18,8 @@ export interface InviteItem {
   name: string;
   type: 'roster' | 'player';
   image?: string;
+  pending?: boolean;
+  email?: string;
 }
 
 // ── API response shapes ──

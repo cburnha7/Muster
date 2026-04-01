@@ -5,6 +5,8 @@ export interface RosterInviteItem {
   name: string;
   type: 'roster' | 'player';
   image?: string;
+  pending?: boolean;
+  email?: string;
 }
 
 export interface RosterWizardState {
