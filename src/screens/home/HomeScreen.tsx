@@ -618,17 +618,6 @@ export function HomeScreen() {
             </>
           )}
 
-          {/* ── Inbox ──────────────────────────── */}
-          {inboxCount > 0 && (
-            <TouchableOpacity style={styles.inboxBtn} onPress={() => setInboxModalVisible(true)} activeOpacity={0.85}>
-              <View style={styles.inboxDot} />
-              <Text style={styles.inboxBtnText}>
-                {inboxCount} item{inboxCount !== 1 ? 's' : ''} need{inboxCount === 1 ? 's' : ''} your attention
-              </Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.outline} />
-            </TouchableOpacity>
-          )}
-
           {/* ── Calendar toggle ─────────────────── */}
           <TouchableOpacity
             style={styles.calendarToggle}
@@ -687,38 +676,6 @@ export function HomeScreen() {
       >
         <Ionicons name="add" size={26} color="#FFFFFF" />
       </TouchableOpacity>
-
-      {/* Inbox modal */}
-      <Modal visible={inboxModalVisible} transparent animationType="fade" onRequestClose={() => setInboxModalVisible(false)}>
-        <Pressable style={styles.inboxBackdrop} onPress={() => setInboxModalVisible(false)}>
-          <View style={[styles.inboxModal, isWide && { maxWidth: 480, alignSelf: 'center' as const, width: '100%' }]}>
-            <View style={styles.inboxHeader}>
-              <Text style={styles.inboxTitle}>Inbox</Text>
-              <TouchableOpacity onPress={() => setInboxModalVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={22} color={colors.onSurface} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.inboxScroll} showsVerticalScrollIndicator={false}>
-              <InboxSection
-                rosterInvitations={rosterInvitations}
-                leagueInvitations={leagueInvitations}
-                eventInvitations={eventInvitations}
-                readyToScheduleLeagues={readyToScheduleLeagues}
-                debriefEvents={debriefEvents}
-                cancelRequests={cancelRequests}
-                onRosterInvitationPress={(inv) => { setInboxModalVisible(false); handleRosterInvitationPress(inv); }}
-                onLeagueInvitationPress={(inv) => { setInboxModalVisible(false); handleLeagueInvitationPress(inv); }}
-                onEventInvitationPress={(inv) => { setInboxModalVisible(false); handleEventInvitationPress(inv); }}
-                onScheduleLeaguePress={(league) => { setInboxModalVisible(false); handleReadyToSchedulePress(league); }}
-                onDebriefPress={(booking) => { setInboxModalVisible(false); handleDebriefPress(booking); }}
-                onApproveCancelRequest={handleApproveCancelRequest}
-                onDenyCancelRequest={handleDenyCancelRequest}
-                isCancelLoading={isApproving || isDenying}
-              />
-            </ScrollView>
-          </View>
-        </Pressable>
-      </Modal>
 
       <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
 

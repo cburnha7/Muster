@@ -25,7 +25,12 @@ export function useNotifications() {
         userService.getInvitations().catch(() => ({ rosterInvitations: [], leagueInvitations: [], eventInvitations: [], total: 0 })),
         userService.getLeaguesReadyToSchedule().catch(() => []),
         userService.getUserBookings('confirmed', { page: 1, limit: 50 })
-          .then((res: any) => (res?.data || []).filter((b: any) => b.debriefSubmitted === false && b.event && new Date(b.event.endTime) < new Date()))
+          .then((res: any) => (res?.data || []).filter((b: any) =>
+            b.debriefSubmitted === false &&
+            b.event &&
+            b.event.status === 'active' &&
+            new Date(b.event.endTime) < new Date()
+          ))
           .catch(() => []),
       ]);
 
@@ -51,7 +56,7 @@ export function useNotifications() {
         });
       });
 
-      invitations.eventInvitations.forEach((inv) => {
+      invitations.eventInvitations.filter((inv) => inv.eventStatus === 'active' || !inv.eventStatus).forEach((inv) => {
         notifs.push({
           id: `event-${inv.id}`,
           type: 'event_invitation',
@@ -61,7 +66,7 @@ export function useNotifications() {
         });
       });
 
-      readyLeagues.forEach((league) => {
+      readyLeagues.filter((l) => l.isActive !== false).forEach((league) => {
         notifs.push({
           id: `schedule-${league.id}`,
           type: 'schedule_league',

@@ -232,7 +232,7 @@ export function AvailabilityCalendarScreen() {
         {/* Add block button */}
         <TouchableOpacity style={styles.addBlockBtn} onPress={openAddModal} activeOpacity={0.7}>
           <Ionicons name="add-circle-outline" size={20} color={colors.white} />
-          <Text style={styles.addBlockBtnText}>Add Availability Block</Text>
+          <Text style={styles.addBlockBtnText}>Block Off Time</Text>
         </TouchableOpacity>
 
         {/* Blocks for selected day */}

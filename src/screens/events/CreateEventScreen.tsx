@@ -60,7 +60,7 @@ function CreateEventInner() {
       if (state.locationMode === 'muster' && state.facilityId) {
         eventData.facilityId = state.facilityId;
         if (state.selectedSlots.length > 0) {
-          const firstSlot = state.selectedSlots[0];
+          const firstSlot = state.selectedSlots[0]!;
           eventData.timeSlotId = firstSlot.id;
           eventData.timeSlotIds = state.selectedSlots.map((s) => s.id);
           eventData.rentalIds = state.selectedSlots.map((s) => s.rentalId).filter(Boolean);
