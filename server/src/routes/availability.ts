@@ -13,6 +13,10 @@ router.get('/:userId', async (req, res) => {
     });
     res.json({ blocks });
   } catch (error: any) {
+    // Table may not exist yet if migration hasn't run
+    if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+      return res.json({ blocks: [] });
+    }
     console.error('Get availability blocks error:', error?.message);
     res.status(500).json({ error: 'Failed to fetch availability blocks' });
   }
@@ -43,6 +47,9 @@ router.post('/:userId/batch', async (req, res) => {
 
     res.status(201).json({ count: created.count, batchId });
   } catch (error: any) {
+    if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+      return res.status(503).json({ error: 'Availability table not yet created. Please run database migration.' });
+    }
     console.error('Create availability batch error:', error?.message);
     res.status(500).json({ error: 'Failed to create availability blocks' });
   }
