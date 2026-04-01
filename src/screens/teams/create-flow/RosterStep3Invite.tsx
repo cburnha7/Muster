@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateRoster } from './CreateRosterContext';
 import { RosterInviteItem } from './types';
+import { InviteToMusterModal } from '../../../components/invite/InviteToMusterModal';
 import { colors, fonts } from '../../../theme';
 import { API_BASE_URL } from '../../../services/api/config';
 
@@ -14,6 +15,7 @@ export function RosterStep3Invite() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<RosterInviteItem[]>([]);
   const [searching, setSearching] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const privateSelected = state.visibility === 'private';
   const publicSelected = state.visibility === 'public';
@@ -46,6 +48,21 @@ export function RosterStep3Invite() {
     setQuery(text);
     doSearch(text);
   };
+
+  const handleInviteToMuster = useCallback((name: string, email: string) => {
+    dispatch({
+      type: 'ADD_INVITE',
+      item: {
+        id: `pending-${Date.now()}`,
+        name: name,
+        type: 'player' as const,
+        pending: true,
+        email: email,
+      },
+    });
+    setShowInviteModal(false);
+    // TODO: Send invite email via server
+  }, [dispatch]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -107,6 +124,12 @@ export function RosterStep3Invite() {
               })}
             </View>
           )}
+
+          <TouchableOpacity style={styles.inviteToMusterBtn} onPress={() => setShowInviteModal(true)} activeOpacity={0.7}>
+            <Ionicons name="person-add-outline" size={18} color={colors.cobalt} />
+            <Text style={styles.inviteToMusterText}>Invite to Muster</Text>
+          </TouchableOpacity>
+
           {state.invitedItems.length > 0 && (
             <View style={styles.chipList}>
               {state.invitedItems.map((item) => (
@@ -115,6 +138,11 @@ export function RosterStep3Invite() {
                     ? <Ionicons name="people-outline" size={14} color={colors.cobalt} />
                     : <Ionicons name="person-outline" size={14} color={colors.cobalt} />}
                   <Text style={styles.chipText}>{item.name}</Text>
+                  {(item as any).pending && (
+                    <View style={styles.pendingBadge}>
+                      <Text style={styles.pendingBadgeText}>Pending</Text>
+                    </View>
+                  )}
                   <TouchableOpacity onPress={() => dispatch({ type: 'REMOVE_INVITE', id: item.id })}>
                     <Ionicons name="close-circle" size={16} color={colors.inkSoft} />
                   </TouchableOpacity>
@@ -122,6 +150,12 @@ export function RosterStep3Invite() {
               ))}
             </View>
           )}
+
+          <InviteToMusterModal
+            visible={showInviteModal}
+            onClose={() => setShowInviteModal(false)}
+            onInvite={handleInviteToMuster}
+          />
         </>
       )}
 
@@ -180,6 +214,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   chipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  inviteToMusterBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 12, marginTop: 8, marginBottom: 16,
+    borderWidth: 1, borderColor: colors.cobalt, borderRadius: 10,
+  },
+  inviteToMusterText: { fontFamily: fonts.ui, fontSize: 14, color: colors.cobalt },
+  pendingBadge: {
+    backgroundColor: colors.gold, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  pendingBadgeText: { fontFamily: fonts.label, fontSize: 10, color: colors.white },
   input: {
     backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
     paddingHorizontal: 16, paddingVertical: 12, fontFamily: fonts.body, fontSize: 16, color: colors.ink, marginBottom: 16,
