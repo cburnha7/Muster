@@ -556,6 +556,7 @@ router.get('/leagues-ready-to-schedule', optionalAuthMiddleware, async (req, res
         organizerId: userId,
         readyNotificationSent: true,
         scheduleGenerated: false,
+        isActive: true,
       },
       select: {
         id: true,
