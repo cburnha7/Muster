@@ -43,6 +43,13 @@ export function ProfileScreen() {
   const [myTeams, setMyTeams] = useState<Team[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
+  // Set header title to user's name
+  useEffect(() => {
+    if (authUser) {
+      navigation.setOptions({ headerTitle: `${authUser.firstName} ${authUser.lastName}` });
+    }
+  }, [navigation, authUser]);
+
   const loadProfileData = useCallback(async () => {
     try {
       const [statsData, teamsData, eventsData] = await Promise.all([
@@ -130,14 +137,25 @@ export function ProfileScreen() {
         }
       />
 
-      <TouchableOpacity
-        style={styles.editLink}
-        onPress={() => (navigation as any).navigate('EditProfile')}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="create-outline" size={15} color={colors.primary} />
-        <Text style={styles.editLinkText}>Edit profile</Text>
-      </TouchableOpacity>
+      {/* Action buttons */}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => (navigation as any).navigate('EditProfile')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="create-outline" size={18} color={colors.primary} />
+          <Text style={styles.actionBtnText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.actionBtnCobalt]}
+          onPress={() => (navigation as any).navigate('AvailabilityCalendar', { userId: authUser.id })}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
+          <Text style={[styles.actionBtnText, styles.actionBtnTextCobalt]}>Availability</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* ── Recent Games ───────────────────────────── */}
       <Text style={styles.sectionTitle}>Recent Games</Text>
@@ -234,18 +252,32 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-  // ── Edit Link ───────────────────────────────────
-  editLink: {
+  // ── Action Buttons ───────────────────────────────
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
     gap: 4,
-    marginTop: 14,
-    alignSelf: 'flex-start',
   },
-  editLinkText: {
+  actionBtnCobalt: {
+    borderColor: colors.cobalt,
+  },
+  actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
     color: colors.primary,
+  },
+  actionBtnTextCobalt: {
+    color: colors.cobalt,
   },
 
   // ── Section ────────────────────────────────────
