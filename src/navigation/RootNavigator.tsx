@@ -26,6 +26,7 @@ import { DependentFormScreen } from '../screens/profile/DependentFormScreen';
 import { DependentProfileScreen } from '../screens/profile/DependentProfileScreen';
 import { TransferAccountScreen } from '../screens/profile/TransferAccountScreen';
 import { RedeemCodeScreen } from '../screens/profile/RedeemCodeScreen';
+import { AvailabilityCalendarScreen } from '../screens/profile/AvailabilityCalendarScreen';
 import { colors, fonts } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -147,6 +148,7 @@ export function RootNavigator() {
               <Stack.Screen name="DependentProfile" component={DependentProfileScreen} options={{ headerTitle: 'Dependent' }} />
               <Stack.Screen name="TransferAccount" component={TransferAccountScreen} options={{ headerTitle: 'Transfer' }} />
               <Stack.Screen name="RedeemCode" component={RedeemCodeScreen} options={{ headerTitle: 'Redeem Code' }} />
+              <Stack.Screen name="AvailabilityCalendar" component={AvailabilityCalendarScreen} options={{ headerShown: false }} />
             </Stack.Group>
           </>
         )}

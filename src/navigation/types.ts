@@ -14,6 +14,7 @@ export type RootStackParamList = {
   DependentProfile: { dependentId: string };
   TransferAccount: { dependentId: string };
   RedeemCode: undefined;
+  AvailabilityCalendar: { userId: string };
 };
 
 // Onboarding Stack Types

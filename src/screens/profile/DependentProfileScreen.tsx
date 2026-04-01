@@ -103,6 +103,10 @@ export function DependentProfileScreen() {
     (navigation as any).navigate('TransferAccount', { dependentId });
   };
 
+  const handleAvailability = () => {
+    (navigation as any).navigate('AvailabilityCalendar', { userId: dependentId });
+  };
+
   if (loading) {
     return (
       <View style={styles.screen}>
@@ -143,9 +147,6 @@ export function DependentProfileScreen() {
               </View>
             )}
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>
-                {profile.firstName} {profile.lastName}
-              </Text>
               <Text style={styles.profileDob}>
                 Born {new Date(profile.dateOfBirth).toLocaleDateString()}
               </Text>
@@ -163,6 +164,17 @@ export function DependentProfileScreen() {
             >
               <Ionicons name="create-outline" size={18} color={colors.primary} />
               <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.availabilityButton}
+              onPress={handleAvailability}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Update availability"
+            >
+              <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
+              <Text style={styles.availabilityButtonText}>Availability</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -193,18 +205,6 @@ export function DependentProfileScreen() {
 
         {/* Sport Ratings — reuses the same component as the guardian's profile */}
         <SportRatingsSection userId={dependentId} />
-
-        {/* Salutes */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Salutes Received</Text>
-          <View style={styles.statCard}>
-            <Ionicons name="hand-left-outline" size={24} color={colors.tertiary} />
-            <Text style={styles.statValue}>{profile.salutesReceived}</Text>
-            <Text style={styles.statLabel}>
-              {profile.salutesReceived === 1 ? 'Salute' : 'Salutes'}
-            </Text>
-          </View>
-        </View>
 
         {/* Event History */}
         <View style={styles.section}>
@@ -328,11 +328,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 16,
   },
-  profileName: {
-    fontFamily: fonts.heading,
-    ...typeScale.h3,
-    color: colors.onSurface,
-  },
   profileDob: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
@@ -358,6 +353,21 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 13,
     color: colors.primary,
+    marginLeft: 4,
+  },
+  availabilityButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.cobalt,
+  },
+  availabilityButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.cobalt,
     marginLeft: 4,
   },
   transferButton: {
@@ -398,29 +408,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: colors.onSurface,
     marginBottom: Spacing.sm,
-  },
-  statCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  statValue: {
-    fontFamily: fonts.display,
-    fontSize: 24,
-    color: colors.tertiary,
-  },
-  statLabel: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.outline,
   },
   emptyCard: {
     backgroundColor: '#FFFFFF',
