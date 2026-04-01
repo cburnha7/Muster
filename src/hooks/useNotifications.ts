@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
 import { userService, RosterInvitation, LeagueInvitation, EventInvitation, ReadyToScheduleLeague } from '../services/api/UserService';
-import { debriefService } from '../services/api/DebriefService';
 
 export interface NotificationItem {
   id: string;
@@ -24,7 +23,7 @@ export function useNotifications() {
       const [invitations, readyLeagues, debriefBookings] = await Promise.all([
         userService.getInvitations().catch(() => ({ rosterInvitations: [], leagueInvitations: [], eventInvitations: [], total: 0 })),
         userService.getLeaguesReadyToSchedule().catch(() => []),
-        userService.getUserBookings('confirmed', { page: 1, limit: 50 })
+        userService.getUserBookings('past', { page: 1, limit: 50 })
           .then((res: any) => (res?.data || []).filter((b: any) =>
             b.debriefSubmitted === false &&
             b.event &&

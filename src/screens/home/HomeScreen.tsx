@@ -685,13 +685,6 @@ export function HomeScreen() {
         onEventPress={handleSearchEventPress}
       />
 
-      {/* Milestone celebration overlay */}
-      {pendingMilestone && (
-        <MilestoneOverlay
-          milestone={pendingMilestone}
-          onDismiss={dismissMilestone}
-        />
-      )}
     </View>
   );
 }
