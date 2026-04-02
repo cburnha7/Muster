@@ -19,8 +19,13 @@ import { selectUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
 import { API_BASE_URL } from '../../services/api/config';
 import { authService } from '../../services/auth/AuthService';
-import * as XLSX from 'xlsx';
 import { colors, fonts } from '../../theme';
+
+// Lazy import xlsx only on web — it uses Node.js APIs that crash on native
+let XLSX: any = null;
+if (Platform.OS === 'web') {
+  try { XLSX = require('xlsx'); } catch { /* not available on native */ }
+}
 
 // ── Types ──
 
@@ -230,7 +235,7 @@ export function AvailabilityCalendarScreen() {
 
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
 
-    if (ext === 'xlsx' || ext === 'xls') {
+    if ((ext === 'xlsx' || ext === 'xls') && XLSX) {
       // Excel: read as ArrayBuffer, parse with xlsx
       const reader = new FileReader();
       reader.onload = (evt) => {
@@ -258,16 +263,18 @@ export function AvailabilityCalendarScreen() {
       reader.onload = (evt) => {
         const text = evt.target?.result as string;
         if (!text) { setParseError('File is empty.'); return; }
-        // Try xlsx CSV parser first
-        try {
-          const workbook = XLSX.read(text, { type: 'string', raw: false });
-          const sheetName = workbook.SheetNames[0];
-          if (sheetName) {
-            const rows: any[][] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]!, { header: 1, raw: false });
-            const parsed = parseSheetRows(rows);
-            if (parsed.length > 0) { setParsedEvents(parsed); return; }
-          }
-        } catch { /* fallback to text parser */ }
+        // Try xlsx CSV parser first (if available)
+        if (XLSX) {
+          try {
+            const workbook = XLSX.read(text, { type: 'string', raw: false });
+            const sheetName = workbook.SheetNames[0];
+            if (sheetName) {
+              const rows: any[][] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]!, { header: 1, raw: false });
+              const parsed = parseSheetRows(rows);
+              if (parsed.length > 0) { setParsedEvents(parsed); return; }
+            }
+          } catch { /* fallback to text parser */ }
+        }
         // Fallback: plain text line parser
         const parsed = parseTextContent(text);
         if (parsed.length === 0) {
