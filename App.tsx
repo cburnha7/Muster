@@ -13,61 +13,42 @@ import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 
-// Prevent splash auto-hide on native
-if (Platform.OS !== 'web') {
-  SplashScreen.preventAutoHideAsync().catch(() => {});
-}
-
-// Absolute failsafe: hide splash after 5s no matter what
-if (Platform.OS !== 'web') {
-  setTimeout(() => {
-    SplashScreen.hideAsync().catch(() => {});
-  }, 5000);
-}
+if (Platform.OS !== 'web') { SplashScreen.preventAutoHideAsync().catch(() => {}); }
+if (Platform.OS !== 'web') { setTimeout(() => { SplashScreen.hideAsync().catch(() => {}); }, 5000); }
 
 const linking = {
   prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
-  config: {
-    screens: {
-      Main: {
-        screens: {
-          Teams: {
-            screens: {
-              JoinTeam: 'join/:inviteCode',
-            },
-          },
-        },
-      },
-    },
-  },
+  config: { screens: { Main: { screens: { Teams: { screens: { JoinTeam: 'join/:inviteCode' } } } } } },
 };
 
 export default function App() {
   const [appReady, setAppReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Load fonts with timeout
-        const fontPromise = loadFonts();
-        const timeoutPromise = new Promise(resolve =>
-          setTimeout(resolve, 3000)
-        );
-        await Promise.race([fontPromise, timeoutPromise]);
-      } catch (e) {
-        console.warn('App prepare error:', e);
+        await Promise.race([loadFonts(), new Promise(r => setTimeout(r, 3000))]);
+      } catch (e: any) {
+        console.warn('Startup error:', e);
+        setError(String(e?.message || e));
       } finally {
         setAppReady(true);
-        if (Platform.OS !== 'web') {
-          SplashScreen.hideAsync().catch(() => {});
-        }
+        if (Platform.OS !== 'web') { SplashScreen.hideAsync().catch(() => {}); }
       }
     }
     prepare();
   }, []);
 
-  if (!appReady) {
-    return null;
+  if (!appReady) return null;
+
+  if (error) {
+    return (
+      <View style={styles.err}>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#C0392B', marginBottom: 12 }}>Startup Error</Text>
+        <Text style={{ fontSize: 13, color: '#333', textAlign: 'center' }}>{error}</Text>
+      </View>
+    );
   }
 
   return (
@@ -103,15 +84,10 @@ async function loadFonts() {
       Inter_600SemiBold: inter.Inter_600SemiBold,
       Inter_700Bold: inter.Inter_700Bold,
     });
-    console.log('Fonts loaded');
-  } catch (e) {
-    console.warn('Font load failed, using system fonts:', e);
-  }
+  } catch (e) { console.warn('Font load failed:', e); }
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
+  root: { flex: 1, backgroundColor: '#FFFFFF' },
+  err: { flex: 1, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', padding: 32 },
 });
