@@ -1,11 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ReduxProvider } from './src/store/Provider';
+import { AuthProvider } from './src/context/AuthContext';
+import { NotificationProvider } from './src/services/notifications';
+import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Muster is loading...</Text>
-    </View>
+    <ErrorBoundary>
+      <ReduxProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <GestureHandlerRootView style={styles.container}>
+              <Text style={styles.text}>Providers loaded OK</Text>
+            </GestureHandlerRootView>
+          </NotificationProvider>
+        </AuthProvider>
+      </ReduxProvider>
+    </ErrorBoundary>
   );
 }
 
