@@ -1,11 +1,26 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { Alert, Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { authService } from '../services/auth/AuthService';
 import TokenStorage from '../services/auth/TokenStorage';
 import { User } from '../types';
-import { selectUser, selectAccessToken, selectIsAuthenticated, loadCachedUser, clearAuth } from '../store/slices/authSlice';
-import { fetchSubscription, clearSubscription } from '../store/slices/subscriptionSlice';
+import {
+  selectUser,
+  selectAccessToken,
+  selectIsAuthenticated,
+  loadCachedUser,
+  clearAuth,
+} from '../store/slices/authSlice';
+import {
+  fetchSubscription,
+  clearSubscription,
+} from '../store/slices/subscriptionSlice';
 import { setDependents, resetContext } from '../store/slices/contextSlice';
 import { loggingService } from '../services/LoggingService';
 
@@ -26,12 +41,12 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const dispatch = useDispatch();
-  
+
   // Get auth state from Redux
   const reduxUser = useSelector(selectUser);
   const reduxToken = useSelector(selectAccessToken);
   const reduxIsAuthenticated = useSelector(selectIsAuthenticated);
-  
+
   const [isLoading, setIsLoading] = useState(true);
 
   // Load cached user on mount
@@ -39,12 +54,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loadStoredSession();
   }, []);
 
-  // Listen for session expired events from BaseApiService
+  // Listen for session expired events from BaseApiService (web only)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (Platform.OS !== 'web') return;
 
     const handleSessionExpired = () => {
-      console.log('AuthContext: Session expired event received, clearing auth state');
+      console.log(
+        'AuthContext: Session expired event received, clearing auth state'
+      );
       dispatch(clearAuth());
       Alert.alert(
         'Session Expired',
@@ -62,22 +79,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loadStoredSession = async () => {
     try {
       setIsLoading(true);
-      
+
       // Initialize auth service with a timeout to prevent hanging on bad network
       const initPromise = authService.initialize();
-      const timeoutPromise = new Promise<boolean>((_, reject) => 
+      const timeoutPromise = new Promise<boolean>((_, reject) =>
         setTimeout(() => reject(new Error('Auth init timeout')), 5000)
       );
-      
+
       try {
         await Promise.race([initPromise, timeoutPromise]);
       } catch (err) {
-        console.warn('Auth initialization timed out or failed, continuing without session');
+        console.warn(
+          'Auth initialization timed out or failed, continuing without session'
+        );
       }
-      
+
       // Load cached user from TokenStorage into Redux
       await dispatch(loadCachedUser() as any);
-      
     } catch (error) {
       console.error('Load session error:', error);
     } finally {
@@ -101,18 +119,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
             headers: { 'X-User-Id': reduxUser.id },
           })
         )
-        .then((res) => (res.ok ? res.json() : []))
-        .then((data) => dispatch(setDependents(data)))
-        .catch((err) => console.warn('Failed to load dependents:', err));
+        .then(res => (res.ok ? res.json() : []))
+        .then(data => dispatch(setDependents(data)))
+        .catch(err => console.warn('Failed to load dependents:', err));
     }
 
     if (reduxUser && process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
-      authService.switchMockUser(
-        reduxUser.id,
-        reduxUser.email,
-        reduxUser.firstName || 'User',
-        reduxUser.lastName || ''
-      ).catch(err => console.error('Failed to sync authService with Redux user:', err));
+      authService
+        .switchMockUser(
+          reduxUser.id,
+          reduxUser.email,
+          reduxUser.firstName || 'User',
+          reduxUser.lastName || ''
+        )
+        .catch(err =>
+          console.error('Failed to sync authService with Redux user:', err)
+        );
     }
   }, [reduxUser]);
 

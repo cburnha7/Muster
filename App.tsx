@@ -1,52 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Linking from 'expo-linking';
+import * as SplashScreen from 'expo-splash-screen';
+import * as Font from 'expo-font';
+
 import { ReduxProvider } from './src/store/Provider';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { AuthProvider } from './src/context/AuthContext';
+import { NotificationProvider } from './src/services/notifications';
+import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 
-function AuthTest() {
-  const { user, isLoading } = useAuth();
-  return (
-    <View>
-      <Text style={styles.status}>Auth loading: {String(isLoading)}</Text>
-      <Text style={styles.status}>User: {user ? user.firstName : 'null'}</Text>
-    </View>
-  );
-}
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-function Step2() {
-  const [status, setStatus] = useState('Rendering AuthProvider...');
+const linking = {
+  prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          Teams: {
+            screens: {
+              JoinTeam: 'join/:inviteCode',
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
+export default function App() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
+        const inter = require('@expo-google-fonts/inter');
+        await Promise.race([
+          Font.loadAsync({
+            PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
+            PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
+            PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
+            PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
+            PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
+            Inter_400Regular: inter.Inter_400Regular,
+            Inter_500Medium: inter.Inter_500Medium,
+            Inter_600SemiBold: inter.Inter_600SemiBold,
+            Inter_700Bold: inter.Inter_700Bold,
+          }),
+          new Promise(r => setTimeout(r, 3000)),
+        ]);
+      } catch (e) {
+        console.warn('Font load error:', e);
+      } finally {
+        setReady(true);
+        SplashScreen.hideAsync().catch(() => {});
+      }
+    }
+    prepare();
+  }, []);
+
+  if (!ready) return null;
 
   return (
     <ErrorBoundary>
       <ReduxProvider>
         <AuthProvider>
-          <GestureHandlerRootView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scroll}>
-              <Text style={styles.title}>iOS Debug Step 2</Text>
-              <Text style={styles.status}>{status}</Text>
-              <AuthTest />
-            </ScrollView>
-          </GestureHandlerRootView>
+          <NotificationProvider>
+            <GestureHandlerRootView style={styles.root}>
+              <NavigationContainer linking={linking}>
+                <RootNavigator />
+              </NavigationContainer>
+              <StatusBar style="dark" />
+            </GestureHandlerRootView>
+          </NotificationProvider>
         </AuthProvider>
       </ReduxProvider>
     </ErrorBoundary>
   );
 }
 
-export default function App() {
-  return <Step2 />;
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
-  scroll: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 20 },
-  status: { fontSize: 16, color: '#333', textAlign: 'center', marginBottom: 8 },
+  root: { flex: 1, backgroundColor: '#FFFFFF' },
 });
