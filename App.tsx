@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Platform, View, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -13,43 +13,58 @@ import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 
-if (Platform.OS !== 'web') { SplashScreen.preventAutoHideAsync().catch(() => {}); }
-if (Platform.OS !== 'web') { setTimeout(() => { SplashScreen.hideAsync().catch(() => {}); }, 5000); }
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const linking = {
   prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
-  config: { screens: { Main: { screens: { Teams: { screens: { JoinTeam: 'join/:inviteCode' } } } } } },
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          Teams: {
+            screens: {
+              JoinTeam: 'join/:inviteCode',
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 export default function App() {
-  const [appReady, setAppReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        await Promise.race([loadFonts(), new Promise(r => setTimeout(r, 3000))]);
-      } catch (e: any) {
-        console.warn('Startup error:', e);
-        setError(String(e?.message || e));
+        const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
+        const inter = require('@expo-google-fonts/inter');
+        await Promise.race([
+          Font.loadAsync({
+            PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
+            PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
+            PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
+            PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
+            PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
+            Inter_400Regular: inter.Inter_400Regular,
+            Inter_500Medium: inter.Inter_500Medium,
+            Inter_600SemiBold: inter.Inter_600SemiBold,
+            Inter_700Bold: inter.Inter_700Bold,
+          }),
+          new Promise(r => setTimeout(r, 3000)),
+        ]);
+      } catch (e) {
+        console.warn('Font load error:', e);
       } finally {
-        setAppReady(true);
-        if (Platform.OS !== 'web') { SplashScreen.hideAsync().catch(() => {}); }
+        setReady(true);
+        SplashScreen.hideAsync().catch(() => {});
       }
     }
     prepare();
   }, []);
 
-  if (!appReady) return null;
-
-  if (error) {
-    return (
-      <View style={styles.err}>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#C0392B', marginBottom: 12 }}>Startup Error</Text>
-        <Text style={{ fontSize: 13, color: '#333', textAlign: 'center' }}>{error}</Text>
-      </View>
-    );
-  }
+  if (!ready) return null;
 
   return (
     <ErrorBoundary>
@@ -57,7 +72,7 @@ export default function App() {
         <AuthProvider>
           <NotificationProvider>
             <GestureHandlerRootView style={styles.root}>
-              <NavigationContainer linking={linking}>
+              <NavigationContainer linking={linking as any}>
                 <RootNavigator />
               </NavigationContainer>
               <StatusBar style="dark" />
@@ -69,25 +84,6 @@ export default function App() {
   );
 }
 
-async function loadFonts() {
-  try {
-    const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
-    const inter = require('@expo-google-fonts/inter');
-    await Font.loadAsync({
-      PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
-      PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
-      PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
-      PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
-      PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
-      Inter_400Regular: inter.Inter_400Regular,
-      Inter_500Medium: inter.Inter_500Medium,
-      Inter_600SemiBold: inter.Inter_600SemiBold,
-      Inter_700Bold: inter.Inter_700Bold,
-    });
-  } catch (e) { console.warn('Font load failed:', e); }
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
-  err: { flex: 1, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', padding: 32 },
 });

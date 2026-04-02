@@ -3,8 +3,9 @@ import axios, {
   AxiosRequestConfig,
   AxiosResponse,
   AxiosError,
-  InternalAxiosRequestConfig
+  InternalAxiosRequestConfig,
 } from 'axios';
+import { Platform } from 'react-native';
 import TokenStorage from '../auth/TokenStorage';
 import { acquireRefresh, performTokenRefresh } from '../auth/tokenRefreshLock';
 import { cacheService, CacheService } from './CacheService';
@@ -85,7 +86,10 @@ export class BaseApiService {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
           if (__DEV__) {
-            console.log('🔐 API Request - Token attached:', token.substring(0, 20) + '...');
+            console.log(
+              '🔐 API Request - Token attached:',
+              token.substring(0, 20) + '...'
+            );
           }
         } else {
           if (__DEV__) {
@@ -97,12 +101,20 @@ export class BaseApiService {
         // Read user from TokenStorage instead of authService
         const currentUser = await TokenStorage.getUser();
         if (__DEV__) {
-          console.log('👤 Current user from TokenStorage:', currentUser?.email, currentUser?.id);
+          console.log(
+            '👤 Current user from TokenStorage:',
+            currentUser?.email,
+            currentUser?.id
+          );
         }
         if (currentUser && currentUser.id) {
           config.headers['X-User-Id'] = currentUser.id;
           if (__DEV__) {
-            console.log('🔐 API Request - User ID attached:', currentUser.id, currentUser.email);
+            console.log(
+              '🔐 API Request - User ID attached:',
+              currentUser.id,
+              currentUser.email
+            );
           }
         } else {
           if (__DEV__) {
@@ -152,7 +164,10 @@ export class BaseApiService {
         }
 
         // Handle token refresh for 401 errors using the shared refresh lock
-        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
+        if (
+          error.response?.status === 401 &&
+          !error.config?.url?.includes('/auth/')
+        ) {
           try {
             const currentRefreshToken = await TokenStorage.getRefreshToken();
             if (!currentRefreshToken) {
@@ -160,7 +175,9 @@ export class BaseApiService {
             }
 
             // Use the shared lock so RTK Query and Axios never race
-            const tokens = await acquireRefresh(() => performTokenRefresh(currentRefreshToken));
+            const tokens = await acquireRefresh(() =>
+              performTokenRefresh(currentRefreshToken)
+            );
 
             // Retry the original request with new token
             if (error.config) {
@@ -174,11 +191,17 @@ export class BaseApiService {
             }
           } catch (refreshError: any) {
             // Any refresh failure (missing token or actual failure) — clear session
-            console.error('🔒 Token refresh failed, clearing session:', refreshError.message || refreshError);
+            console.error(
+              '🔒 Token refresh failed, clearing session:',
+              refreshError.message || refreshError
+            );
             await TokenStorage.clearAll();
 
             // Dispatch a global event so the app can redirect to login
-            if (typeof window !== 'undefined') {
+            if (
+              Platform.OS === 'web' &&
+              typeof window?.dispatchEvent === 'function'
+            ) {
               window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
             }
 
@@ -204,7 +227,7 @@ export class BaseApiService {
           error.config?.url || 'unknown',
           error.config?.method?.toUpperCase() || 'UNKNOWN',
           error.response?.status,
-          apiError.message,
+          apiError.message
         );
 
         return Promise.reject(apiError);
@@ -217,13 +240,17 @@ export class BaseApiService {
    */
   private shouldRetry(error: AxiosError): boolean {
     // Don't retry client errors (4xx) except for specific cases
-    if (error.response?.status && error.response.status >= 400 && error.response.status < 500) {
+    if (
+      error.response?.status &&
+      error.response.status >= 400 &&
+      error.response.status < 500
+    ) {
       // Retry on 408 (Request Timeout) and 429 (Too Many Requests)
       return error.response.status === 408 || error.response.status === 429;
     }
 
     // Retry on network errors and server errors (5xx)
-    return !error.response || (error.response.status >= 500);
+    return !error.response || error.response.status >= 500;
   }
 
   /**
@@ -242,10 +269,14 @@ export class BaseApiService {
     const config = error.config as any;
     config.__retryCount = (config.__retryCount || 0) + 1;
 
-    const delay = this.retryConfig.delay * Math.pow(this.retryConfig.backoffFactor, config.__retryCount - 1);
-    
+    const delay =
+      this.retryConfig.delay *
+      Math.pow(this.retryConfig.backoffFactor, config.__retryCount - 1);
+
     if (this.config.enableLogging) {
-      console.log(`Retrying request (attempt ${config.__retryCount}/${this.retryConfig.attempts}) after ${delay}ms`);
+      console.log(
+        `Retrying request (attempt ${config.__retryCount}/${this.retryConfig.attempts}) after ${delay}ms`
+      );
     }
 
     await this.sleep(delay);
@@ -288,34 +319,43 @@ export class BaseApiService {
    * Log outgoing request
    */
   private logRequest(config: InternalAxiosRequestConfig): void {
-    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-      headers: config.headers,
-      data: config.data,
-      params: config.params,
-    });
+    console.log(
+      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      {
+        headers: config.headers,
+        data: config.data,
+        params: config.params,
+      }
+    );
   }
 
   /**
    * Log successful response
    */
   private logResponse(response: AxiosResponse): void {
-    console.log(`✅ API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-      status: response.status,
-      statusText: response.statusText,
-      data: response.data,
-    });
+    console.log(
+      `✅ API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`,
+      {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+      }
+    );
   }
 
   /**
    * Log error response
    */
   private logError(error: AxiosError): void {
-    console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      message: error.message,
-      data: error.response?.data,
-    });
+    console.error(
+      `❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+      {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: error.message,
+        data: error.response?.data,
+      }
+    );
   }
 
   /**
@@ -335,9 +375,13 @@ export class BaseApiService {
   /**
    * Make a GET request with caching support
    */
-  protected async get<T>(url: string, config?: AxiosRequestConfig & { cacheOptions?: CacheOptions }): Promise<T> {
+  protected async get<T>(
+    url: string,
+    config?: AxiosRequestConfig & { cacheOptions?: CacheOptions }
+  ): Promise<T> {
     const cacheOptions = config?.cacheOptions;
-    const cacheKey = cacheOptions?.key || this.generateCacheKey('GET', url, config?.params);
+    const cacheKey =
+      cacheOptions?.key || this.generateCacheKey('GET', url, config?.params);
 
     // Check cache first if caching is enabled and not skipped
     if (this.config.enableCaching && !cacheOptions?.skipCache) {
@@ -351,7 +395,7 @@ export class BaseApiService {
     }
 
     const response = await this.client.get<T>(url, config);
-    
+
     // Cache the response if caching is enabled
     if (this.config.enableCaching && !cacheOptions?.skipCache) {
       await this.cache.set(cacheKey, response.data, cacheOptions?.ttl);
@@ -363,56 +407,71 @@ export class BaseApiService {
   /**
    * Make a POST request
    */
-  protected async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  protected async post<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
-    
+
     // Invalidate related cache entries for POST requests
     if (this.config.enableCaching) {
       await this.invalidateRelatedCache(url);
     }
-    
+
     return response.data;
   }
 
   /**
    * Make a PUT request
    */
-  protected async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  protected async put<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.put<T>(url, data, config);
-    
+
     // Invalidate related cache entries for PUT requests
     if (this.config.enableCaching) {
       await this.invalidateRelatedCache(url);
     }
-    
+
     return response.data;
   }
 
   /**
    * Make a PATCH request
    */
-  protected async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  protected async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.patch<T>(url, data, config);
-    
+
     // Invalidate related cache entries for PATCH requests
     if (this.config.enableCaching) {
       await this.invalidateRelatedCache(url);
     }
-    
+
     return response.data;
   }
 
   /**
    * Make a DELETE request
    */
-  protected async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  protected async delete<T>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.delete<T>(url, config);
-    
+
     // Invalidate related cache entries for DELETE requests
     if (this.config.enableCaching) {
       await this.invalidateRelatedCache(url);
     }
-    
+
     return response.data;
   }
 
@@ -420,17 +479,19 @@ export class BaseApiService {
    * Upload file with progress tracking
    */
   protected async uploadFile<T>(
-    url: string, 
-    file: FormData, 
+    url: string,
+    file: FormData,
     onProgress?: (progress: number) => void
   ): Promise<T> {
     const response = await this.client.post<T>(url, file, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      onUploadProgress: (progressEvent) => {
+      onUploadProgress: progressEvent => {
         if (onProgress && progressEvent.total) {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
           onProgress(progress);
         }
       },
@@ -480,7 +541,7 @@ export class BaseApiService {
    */
   public updateConfig(newConfig: Partial<ApiServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Update axios instance defaults
     if (newConfig.baseURL) {
       this.client.defaults.baseURL = newConfig.baseURL;
@@ -493,7 +554,13 @@ export class BaseApiService {
 
 // Create and export default configuration
 export const defaultApiConfig: ApiServiceConfig = {
-  baseURL: (() => { try { return require('./config').API_BASE_URL; } catch { return 'http://localhost:3000/api'; } })(),
+  baseURL: (() => {
+    try {
+      return require('./config').API_BASE_URL;
+    } catch {
+      return 'http://localhost:3000/api';
+    }
+  })(),
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second

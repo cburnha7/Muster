@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 
 export interface NetworkState {
   isConnected: boolean;
@@ -17,8 +18,8 @@ class NetworkService {
   }
 
   private setupNetworkMonitoring() {
-    // Use browser's online/offline events for better detection
-    if (typeof window !== 'undefined') {
+    // Use browser's online/offline events for better detection (web only)
+    if (Platform.OS === 'web') {
       window.addEventListener('online', () => {
         this.updateNetworkState({
           isConnected: true,
@@ -36,7 +37,7 @@ class NetworkService {
 
     // Initial check
     this.checkNetworkStatus();
-    
+
     // Periodic checks (less frequent since we have event listeners)
     setInterval(() => {
       this.checkNetworkStatus();
@@ -47,8 +48,9 @@ class NetworkService {
     try {
       // Check if we're online using the browser's navigator.onLine
       // This is more reliable and doesn't cause CORS issues
-      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-      
+      const isOnline =
+        typeof navigator !== 'undefined' ? navigator.onLine : true;
+
       if (!isOnline) {
         const newState: NetworkState = {
           isConnected: false,
@@ -64,7 +66,7 @@ class NetworkService {
         isConnected: true,
         isInternetReachable: true,
       };
-      
+
       this.updateNetworkState(newState);
     } catch (error) {
       // Fallback: assume we're online
@@ -72,13 +74,13 @@ class NetworkService {
         isConnected: true,
         isInternetReachable: true,
       };
-      
+
       this.updateNetworkState(newState);
     }
   }
 
   private updateNetworkState(newState: NetworkState) {
-    const stateChanged = 
+    const stateChanged =
       this.currentState.isConnected !== newState.isConnected ||
       this.currentState.isInternetReachable !== newState.isInternetReachable;
 
@@ -94,10 +96,10 @@ class NetworkService {
 
   public subscribe(listener: (state: NetworkState) => void): () => void {
     this.listeners.push(listener);
-    
+
     // Immediately call with current state
     listener(this.currentState);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.listeners.indexOf(listener);

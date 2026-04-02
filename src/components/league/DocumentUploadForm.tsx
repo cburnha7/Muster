@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
@@ -28,19 +35,26 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
   ];
 
   const handleFileSelect = () => {
-    // Create file input element
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/pdf';
-    
-    input.onchange = (e: any) => {
-      const file = e.target?.files?.[0];
-      if (file) {
-        validateFile(file);
-      }
-    };
-    
-    input.click();
+    if (Platform.OS === 'web') {
+      // Create file input element (web only)
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf';
+
+      input.onchange = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (file) {
+          validateFile(file);
+        }
+      };
+
+      input.click();
+    } else {
+      Alert.alert(
+        'Not Available',
+        'File upload is currently only supported on web.'
+      );
+    }
   };
 
   const validateFile = (file: File) => {
@@ -82,7 +96,10 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validate()) {
-      Alert.alert('Validation Error', 'Please fix the errors before submitting');
+      Alert.alert(
+        'Validation Error',
+        'Please fix the errors before submitting'
+      );
       return;
     }
 
@@ -92,7 +109,10 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
       await onSubmit(selectedFile, documentType);
       setSelectedFile(null);
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to upload document');
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to upload document'
+      );
     }
   };
 
@@ -115,7 +135,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           placeholder="Select document type"
           value={documentType}
           options={documentTypeOptions}
-          onSelect={(option) => setDocumentType(option.value as DocumentType)}
+          onSelect={option => setDocumentType(option.value as DocumentType)}
           error={errors.documentType}
         />
 
@@ -124,15 +144,17 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           onPress={handleFileSelect}
           disabled={loading}
         >
-          <Ionicons 
-            name={selectedFile ? 'document' : 'cloud-upload-outline'} 
-            size={48} 
-            color={selectedFile ? colors.cobalt : '#999'} 
+          <Ionicons
+            name={selectedFile ? 'document' : 'cloud-upload-outline'}
+            size={48}
+            color={selectedFile ? colors.cobalt : '#999'}
           />
           {selectedFile ? (
             <View style={styles.fileInfo}>
               <Text style={styles.fileName}>{selectedFile.name}</Text>
-              <Text style={styles.fileSize}>{formatFileSize(selectedFile.size)}</Text>
+              <Text style={styles.fileSize}>
+                {formatFileSize(selectedFile.size)}
+              </Text>
             </View>
           ) : (
             <Text style={styles.fileSelectorText}>
@@ -141,9 +163,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           )}
         </TouchableOpacity>
 
-        {errors.file && (
-          <Text style={styles.errorText}>{errors.file}</Text>
-        )}
+        {errors.file && <Text style={styles.errorText}>{errors.file}</Text>}
 
         <View style={styles.requirements}>
           <Text style={styles.requirementsTitle}>Requirements:</Text>
