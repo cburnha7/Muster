@@ -13,8 +13,9 @@ import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 
-if (Platform.OS !== 'web') { SplashScreen.preventAutoHideAsync().catch(() => {}); }
-if (Platform.OS !== 'web') { setTimeout(() => { SplashScreen.hideAsync().catch(() => {}); }, 5000); }
+// Prevent auto-hide ONCE at module level
+console.log('[App] Module loaded, calling preventAutoHideAsync');
+SplashScreen.preventAutoHideAsync().catch((e) => console.warn('[App] preventAutoHideAsync error:', e));
 
 const linking = {
   prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
@@ -22,33 +23,42 @@ const linking = {
 };
 
 export default function App() {
-  const [appReady, setAppReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [fontError, setFontError] = useState<Error | null>(null);
+  const [splashHidden, setSplashHidden] = useState(false);
 
+  // Load fonts
   useEffect(() => {
-    async function prepare() {
-      try {
-        await Promise.race([loadFonts(), new Promise(r => setTimeout(r, 3000))]);
-      } catch (e: any) {
-        console.warn('Startup error:', e);
-        setError(String(e?.message || e));
-      } finally {
-        setAppReady(true);
-        if (Platform.OS !== 'web') { SplashScreen.hideAsync().catch(() => {}); }
-      }
-    }
-    prepare();
+    console.log('[App] Starting font load');
+    loadFonts()
+      .then(() => { console.log('[App] Fonts loaded OK'); setFontsLoaded(true); })
+      .catch((e) => { console.warn('[App] Font error:', e); setFontError(e); setFontsLoaded(true); });
   }, []);
 
-  if (!appReady) return null;
+  // Hide splash — with 3s timeout failsafe
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      console.log('[App] Timeout reached, force hiding splash');
+      await SplashScreen.hideAsync().catch(() => {});
+      setSplashHidden(true);
+    }, 3000);
 
-  if (error) {
-    return (
-      <View style={styles.err}>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: '#C0392B', marginBottom: 12 }}>Startup Error</Text>
-        <Text style={{ fontSize: 13, color: '#333', textAlign: 'center' }}>{error}</Text>
-      </View>
-    );
+    if (fontsLoaded || fontError) {
+      console.log('[App] Fonts resolved, hiding splash. loaded:', fontsLoaded, 'error:', !!fontError);
+      clearTimeout(timeout);
+      SplashScreen.hideAsync()
+        .then(() => { console.log('[App] hideAsync succeeded'); setSplashHidden(true); })
+        .catch((e) => { console.warn('[App] hideAsync error:', e); setSplashHidden(true); });
+    }
+
+    return () => clearTimeout(timeout);
+  }, [fontsLoaded, fontError]);
+
+  console.log('[App] Render. fontsLoaded:', fontsLoaded, 'splashHidden:', splashHidden);
+
+  // Show nothing until splash is hidden (native splash covers the screen)
+  if (!splashHidden) {
+    return null;
   }
 
   return (
@@ -70,24 +80,21 @@ export default function App() {
 }
 
 async function loadFonts() {
-  try {
-    const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
-    const inter = require('@expo-google-fonts/inter');
-    await Font.loadAsync({
-      PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
-      PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
-      PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
-      PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
-      PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
-      Inter_400Regular: inter.Inter_400Regular,
-      Inter_500Medium: inter.Inter_500Medium,
-      Inter_600SemiBold: inter.Inter_600SemiBold,
-      Inter_700Bold: inter.Inter_700Bold,
-    });
-  } catch (e) { console.warn('Font load failed:', e); }
+  const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
+  const inter = require('@expo-google-fonts/inter');
+  await Font.loadAsync({
+    PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
+    Inter_400Regular: inter.Inter_400Regular,
+    Inter_500Medium: inter.Inter_500Medium,
+    Inter_600SemiBold: inter.Inter_600SemiBold,
+    Inter_700Bold: inter.Inter_700Bold,
+  });
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
-  err: { flex: 1, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', padding: 32 },
 });

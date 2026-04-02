@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#0052FF"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.muster.app",
@@ -54,14 +52,13 @@
       "backgroundColor": "#FFFFFF"
     },
     "plugins": [
+      "expo-splash-screen",
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
           "color": "#0052FF",
-          "sounds": [
-            "./assets/sounds/notification.wav"
-          ]
+          "sounds": ["./assets/sounds/notification.wav"]
         }
       ],
       [
