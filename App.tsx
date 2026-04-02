@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,7 +12,6 @@ import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 import { useFonts } from './src/hooks/useFonts';
-import { colors } from './src/theme';
 
 // Keep splash screen visible while fonts load (native only)
 if (Platform.OS !== 'web') {
@@ -39,9 +38,10 @@ const linking = {
 function AppContent() {
   const { fontsLoaded, error } = useFonts();
 
-  const onLayoutRootView = useCallback(async () => {
+  // Hide splash screen as soon as fonts resolve (loaded or failed or timed out)
+  useEffect(() => {
     if (fontsLoaded && Platform.OS !== 'web') {
-      await SplashScreen.hideAsync().catch(() => {});
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded]);
 
@@ -49,12 +49,13 @@ function AppContent() {
     console.warn('Font loading error:', error.message);
   }
 
+  // Return null while loading — native splash stays visible, web is brief blank
   if (!fontsLoaded) {
-    return null; // Native splash screen stays visible; web shows nothing briefly
+    return null;
   }
 
   return (
-    <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
+    <GestureHandlerRootView style={styles.root}>
       <NavigationContainer linking={linking}>
         <RootNavigator />
       </NavigationContainer>

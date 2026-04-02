@@ -1,10 +1,13 @@
 /**
  * Custom hook for loading Muster brand fonts.
  * Includes a 3-second timeout fallback so the app never hangs on startup.
+ * Calls SplashScreen.hideAsync() as a safety net in all exit paths.
  */
 
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 
 // Build the font asset map at load time.
 let fontAssets: Record<string, any> = {};
@@ -23,10 +26,19 @@ try {
     Inter_700Bold: inter.Inter_700Bold,
   };
 } catch (e) {
-  console.warn('Font packages failed to load — will use system fonts:', (e as Error).message);
+  console.warn(
+    'Font packages failed to load — will use system fonts:',
+    (e as Error).message
+  );
 }
 
 const FONT_TIMEOUT_MS = 3000;
+
+function hideSplash() {
+  if (Platform.OS !== 'web') {
+    SplashScreen.hideAsync().catch(() => {});
+  }
+}
 
 export function useFonts() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -39,13 +51,16 @@ export function useFonts() {
       if (!resolved) {
         resolved = true;
         setFontsLoaded(true);
+        hideSplash();
       }
     };
 
-    // Timeout fallback — proceed after 3s even if fonts haven't loaded
+    // Timeout fallback — proceed after 3s no matter what
     const timer = setTimeout(() => {
       if (!resolved) {
-        console.warn('Font loading timed out after 3s — proceeding with system fonts');
+        console.warn(
+          'Font loading timed out after 3s — proceeding with system fonts'
+        );
         resolve();
       }
     }, FONT_TIMEOUT_MS);
@@ -59,10 +74,10 @@ export function useFonts() {
         }
         await Font.loadAsync(fontAssets);
         console.log('Fonts loaded successfully');
-        resolve();
       } catch (err) {
         console.error('Error loading fonts:', err);
         setError(err as Error);
+      } finally {
         resolve();
       }
     }
