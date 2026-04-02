@@ -21,12 +21,6 @@ import { API_BASE_URL } from '../../services/api/config';
 import { authService } from '../../services/auth/AuthService';
 import { colors, fonts } from '../../theme';
 
-// Lazy import xlsx only on web — it uses Node.js APIs that crash on native
-let XLSX: any = null;
-if (Platform.OS === 'web') {
-  try { XLSX = require('xlsx'); } catch { /* not available on native */ }
-}
-
 // ── Types ──
 
 interface ImportedEvent {
@@ -79,36 +73,6 @@ function computeDuration(startTime: string, endTimeOrDuration: string): string {
     if (diff > 0) return `${diff} min`;
   }
   return '60 min';
-}
-
-// ── Parse spreadsheet rows (from xlsx) ──
-function parseSheetRows(rows: any[][]): ImportedEvent[] {
-  if (rows.length < 2) return [];
-  const header = rows[0]!.map((h) => String(h || '').toLowerCase().trim());
-
-  // Find column indices
-  const dateIdx = header.findIndex((h) => /date|day|when/i.test(h));
-  const timeIdx = header.findIndex((h) => /start.*time|time|begin/i.test(h));
-  const endIdx = header.findIndex((h) => /end.*time|finish|until/i.test(h));
-  const durIdx = header.findIndex((h) => /duration|length|dur/i.test(h));
-
-  const events: ImportedEvent[] = [];
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i]!;
-    const rawDate = dateIdx >= 0 ? String(row[dateIdx] || '') : '';
-    const rawTime = timeIdx >= 0 ? String(row[timeIdx] || '') : '';
-    const rawEnd = endIdx >= 0 ? String(row[endIdx] || '') : '';
-    const rawDur = durIdx >= 0 ? String(row[durIdx] || '') : '';
-
-    const date = normalizeDate(rawDate);
-    if (!date) continue;
-
-    const startTime = rawTime.match(/\d{1,2}:\d{2}/) ? rawTime.match(/\d{1,2}:\d{2}/)![0] : '12:00';
-    const duration = rawDur || rawEnd ? computeDuration(startTime, rawDur || rawEnd) : '60 min';
-
-    events.push({ id: generateId(), date, startTime, duration });
-  }
-  return events;
 }
 
 // ── Parse plain text (CSV or PDF text) ──
@@ -235,70 +199,25 @@ export function AvailabilityCalendarScreen() {
 
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
 
-    if ((ext === 'xlsx' || ext === 'xls') && XLSX) {
-      // Excel: read as ArrayBuffer, parse with xlsx
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        try {
-          const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const sheetName = workbook.SheetNames[0];
-          if (!sheetName) { setParseError('No sheets found in this file.'); return; }
-          const sheet = workbook.Sheets[sheetName]!;
-          const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
-          const parsed = parseSheetRows(rows);
-          if (parsed.length === 0) {
-            setParseError('No events found in this file. Please check the format and try again.');
-          } else {
-            setParsedEvents(parsed);
-          }
-        } catch {
-          setParseError('Could not read this Excel file. Please check the format.');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    } else if (ext === 'csv' || ext === 'txt') {
-      // CSV/Text: read as text, try xlsx first (handles CSV), fallback to text parser
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const text = evt.target?.result as string;
-        if (!text) { setParseError('File is empty.'); return; }
-        // Try xlsx CSV parser first (if available)
-        if (XLSX) {
-          try {
-            const workbook = XLSX.read(text, { type: 'string', raw: false });
-            const sheetName = workbook.SheetNames[0];
-            if (sheetName) {
-              const rows: any[][] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]!, { header: 1, raw: false });
-              const parsed = parseSheetRows(rows);
-              if (parsed.length > 0) { setParsedEvents(parsed); return; }
-            }
-          } catch { /* fallback to text parser */ }
-        }
-        // Fallback: plain text line parser
-        const parsed = parseTextContent(text);
-        if (parsed.length === 0) {
-          setParseError('No events found in this file. Please check the format and try again.');
-        } else {
-          setParsedEvents(parsed);
-        }
-      };
-      reader.readAsText(file);
-    } else {
-      // PDF or other: read as text (basic extraction)
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const text = evt.target?.result as string;
-        if (!text) { setParseError('Could not read this file.'); return; }
-        const parsed = parseTextContent(text);
-        if (parsed.length === 0) {
-          setParseError('No events found in this file. Please check the format and try again.');
-        } else {
-          setParsedEvents(parsed);
-        }
-      };
-      reader.readAsText(file);
+    // Read all files as text and parse with the text parser
+    // Excel binary files (.xlsx) won't parse as text — show error
+    if (ext === 'xlsx' || ext === 'xls') {
+      setParseError('Excel files (.xlsx) are not supported on this device. Please export as CSV and try again.');
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target?.result as string;
+      if (!text) { setParseError('Could not read this file.'); return; }
+      const parsed = parseTextContent(text);
+      if (parsed.length === 0) {
+        setParseError('No events found in this file. Please check the format and try again.');
+      } else {
+        setParsedEvents(parsed);
+      }
+    };
+    reader.readAsText(file);
 
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
