@@ -1,21 +1,14 @@
 /**
- * Custom hook for loading Muster brand fonts
- * Plus Jakarta Sans — Headlines & display
- * Inter — Body & UI text
- *
- * Font assets are loaded here (not in typography.ts) to isolate the
- * @expo-google-fonts ESM/CJS interop issue from the rest of the theme.
+ * Custom hook for loading Muster brand fonts.
+ * Includes a 3-second timeout fallback so the app never hangs on startup.
  */
 
 import { useEffect, useState } from 'react';
 import * as Font from 'expo-font';
 
-// Build the font asset map at load time. If the packages fail to import
-// (ESM/CJS mismatch on web), we gracefully fall back to system fonts.
+// Build the font asset map at load time.
 let fontAssets: Record<string, any> = {};
 try {
-  // Use require() so Metro doesn't hoist these into static imports
-  // that would crash the entire module graph on web.
   const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
   const inter = require('@expo-google-fonts/inter');
   fontAssets = {
@@ -33,29 +26,50 @@ try {
   console.warn('Font packages failed to load — will use system fonts:', (e as Error).message);
 }
 
+const FONT_TIMEOUT_MS = 3000;
+
 export function useFonts() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    let resolved = false;
+
+    const resolve = () => {
+      if (!resolved) {
+        resolved = true;
+        setFontsLoaded(true);
+      }
+    };
+
+    // Timeout fallback — proceed after 3s even if fonts haven't loaded
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        console.warn('Font loading timed out after 3s — proceeding with system fonts');
+        resolve();
+      }
+    }, FONT_TIMEOUT_MS);
+
     async function loadFonts() {
       try {
         if (Object.keys(fontAssets).length === 0) {
           console.warn('No font assets available — using system fonts');
-          setFontsLoaded(true);
+          resolve();
           return;
         }
         await Font.loadAsync(fontAssets);
-        setFontsLoaded(true);
+        console.log('Fonts loaded successfully');
+        resolve();
       } catch (err) {
         console.error('Error loading fonts:', err);
         setError(err as Error);
-        // Still set fonts as loaded to prevent blocking the app
-        setFontsLoaded(true);
+        resolve();
       }
     }
 
     loadFonts();
+
+    return () => clearTimeout(timer);
   }, []);
 
   return { fontsLoaded, error };
