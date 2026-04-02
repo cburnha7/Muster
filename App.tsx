@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Platform, View, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -13,7 +13,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 import { useFonts } from './src/hooks/useFonts';
 
-// Keep splash screen visible while fonts load (native only)
+// Prevent splash from auto-hiding on native
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync().catch(() => {});
 }
@@ -36,24 +36,6 @@ const linking = {
 };
 
 function AppContent() {
-  const { fontsLoaded, error } = useFonts();
-
-  // Hide splash screen as soon as fonts resolve (loaded or failed or timed out)
-  useEffect(() => {
-    if (fontsLoaded && Platform.OS !== 'web') {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [fontsLoaded]);
-
-  if (error) {
-    console.warn('Font loading error:', error.message);
-  }
-
-  // Return null while loading — native splash stays visible, web is brief blank
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
     <GestureHandlerRootView style={styles.root}>
       <NavigationContainer linking={linking}>
@@ -65,6 +47,34 @@ function AppContent() {
 }
 
 export default function App() {
+  const { fontsLoaded } = useFonts();
+  const [ready, setReady] = useState(false);
+
+  // Hide splash once fonts are done — runs at the TOP level, outside all providers
+  useEffect(() => {
+    if (fontsLoaded) {
+      setReady(true);
+      if (Platform.OS !== 'web') {
+        SplashScreen.hideAsync().catch(() => {});
+      }
+    }
+  }, [fontsLoaded]);
+
+  // Absolute failsafe — hide splash after 5 seconds no matter what
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (Platform.OS !== 'web') {
+        SplashScreen.hideAsync().catch(() => {});
+      }
+      setReady(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!ready) {
+    return null; // Native splash stays visible
+  }
+
   return (
     <ErrorBoundary>
       <ReduxProvider>
