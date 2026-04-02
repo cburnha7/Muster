@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import MapView, {
+  Marker,
+  PROVIDER_GOOGLE,
+  PROVIDER_DEFAULT,
+} from 'react-native-maps';
 import { Facility } from '../../types';
-import { LocationService, Coordinates } from '../../services/location/LocationService';
+import {
+  LocationService,
+  Coordinates,
+} from '../../services/location/LocationService';
 import { GroundMapPreview } from './GroundMapPreview';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { colors } from '../../theme';
@@ -12,7 +19,10 @@ interface GroundsMapViewProps {
   onGroundPress: (ground: Facility) => void;
 }
 
-export function GroundsMapView({ grounds, onGroundPress }: GroundsMapViewProps) {
+export function GroundsMapView({
+  grounds,
+  onGroundPress,
+}: GroundsMapViewProps) {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [selectedGround, setSelectedGround] = useState<Facility | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +59,9 @@ export function GroundsMapView({ grounds, onGroundPress }: GroundsMapViewProps) 
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
+        provider={
+          Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT
+        }
         initialRegion={{
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
@@ -59,11 +71,7 @@ export function GroundsMapView({ grounds, onGroundPress }: GroundsMapViewProps) 
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {groundsWithLocation.map((ground) => {
-          // TODO: Determine if ground has available slots
-          // For now, use grass color for all grounds
-          const hasAvailableSlots = true;
-          
+        {groundsWithLocation.map((ground, index) => {
           return (
             <Marker
               key={ground.id}
@@ -71,9 +79,17 @@ export function GroundsMapView({ grounds, onGroundPress }: GroundsMapViewProps) 
                 latitude: ground.latitude!,
                 longitude: ground.longitude!,
               }}
-              pinColor={hasAvailableSlots ? colors.cobalt : colors.inkFaint}
               onPress={() => setSelectedGround(ground)}
-            />
+            >
+              <View
+                style={[
+                  markerStyles.pin,
+                  selectedGround?.id === ground.id && markerStyles.pinSelected,
+                ]}
+              >
+                <Text style={markerStyles.pinText}>{index + 1}</Text>
+              </View>
+            </Marker>
           );
         })}
       </MapView>
@@ -104,5 +120,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.surface,
+  },
+});
+
+const markerStyles = StyleSheet.create({
+  pin: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.cobalt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  pinSelected: {
+    backgroundColor: colors.pine,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  pinText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
