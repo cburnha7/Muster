@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Linking from 'expo-linking';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { ReduxProvider } from './src/store/Provider';
 import { AuthProvider } from './src/context/AuthContext';
@@ -12,6 +13,11 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 import { useFonts } from './src/hooks/useFonts';
 import { colors } from './src/theme';
+
+// Keep splash screen visible while fonts load (native only)
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync().catch(() => {});
+}
 
 const linking = {
   prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
@@ -33,20 +39,22 @@ const linking = {
 function AppContent() {
   const { fontsLoaded, error } = useFonts();
 
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded && Platform.OS !== 'web') {
+      await SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded]);
+
   if (error) {
     console.warn('Font loading error:', error.message);
   }
 
   if (!fontsLoaded) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.cobalt} />
-      </View>
-    );
+    return null; // Native splash screen stays visible; web shows nothing briefly
   }
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
       <NavigationContainer linking={linking}>
         <RootNavigator />
       </NavigationContainer>
@@ -73,11 +81,5 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  loading: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
