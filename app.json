@@ -16,7 +16,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.muster.app",
-      "buildNumber": "1.0.0",
       "icon": "./assets/muster-icon-1024.png",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to your camera to upload profile photos.",
