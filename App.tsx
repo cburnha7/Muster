@@ -2,42 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ReduxProvider } from './src/store/Provider';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 
-export default function App() {
-  const [status, setStatus] = useState('Loading...');
-  const [error, setError] = useState('');
+function AuthTest() {
+  const { user, isLoading } = useAuth();
+  return (
+    <View>
+      <Text style={styles.status}>Auth loading: {String(isLoading)}</Text>
+      <Text style={styles.status}>User: {user ? user.firstName : 'null'}</Text>
+    </View>
+  );
+}
 
-  useEffect(() => {
-    async function test() {
-      try {
-        setStatus('Testing AuthProvider import...');
-        const { AuthProvider } = require('./src/context/AuthContext');
-        setStatus('AuthProvider imported OK. Testing AuthService...');
-
-        const { authService } = require('./src/services/auth/AuthService');
-        setStatus('AuthService imported. Testing initialize...');
-
-        await authService.initialize();
-        setStatus('AuthService initialized OK!');
-      } catch (e: any) {
-        setError(e?.message || String(e));
-        setStatus('FAILED');
-      }
-    }
-    test();
-  }, []);
+function Step2() {
+  const [status, setStatus] = useState('Rendering AuthProvider...');
 
   return (
-    <ReduxProvider>
-      <GestureHandlerRootView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.title}>iOS Debug</Text>
-          <Text style={styles.status}>{status}</Text>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-        </ScrollView>
-      </GestureHandlerRootView>
-    </ReduxProvider>
+    <ErrorBoundary>
+      <ReduxProvider>
+        <AuthProvider>
+          <GestureHandlerRootView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scroll}>
+              <Text style={styles.title}>iOS Debug Step 2</Text>
+              <Text style={styles.status}>{status}</Text>
+              <AuthTest />
+            </ScrollView>
+          </GestureHandlerRootView>
+        </AuthProvider>
+      </ReduxProvider>
+    </ErrorBoundary>
   );
+}
+
+export default function App() {
+  return <Step2 />;
 }
 
 const styles = StyleSheet.create({
@@ -49,11 +48,5 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   title: { fontSize: 24, fontWeight: '700', marginBottom: 20 },
-  status: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  error: { fontSize: 14, color: '#C0392B', textAlign: 'center', marginTop: 12 },
+  status: { fontSize: 16, color: '#333', textAlign: 'center', marginBottom: 8 },
 });
