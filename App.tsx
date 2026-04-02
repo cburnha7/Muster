@@ -1,27 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Linking from 'expo-linking';
+
 import { ReduxProvider } from './src/store/Provider';
+import { AuthProvider } from './src/context/AuthContext';
+import { NotificationProvider } from './src/services/notifications';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { ErrorBoundary } from './src/components/error/ErrorBoundary';
+
+const linking = {
+  prefixes: [Linking.createURL('/'), 'https://muster.app', 'muster://'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          Teams: {
+            screens: {
+              JoinTeam: 'join/:inviteCode',
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 export default function App() {
   return (
-    <ReduxProvider>
-      <GestureHandlerRootView style={styles.container}>
-        <Text style={styles.text}>Redux OK</Text>
-      </GestureHandlerRootView>
-    </ReduxProvider>
+    <ErrorBoundary>
+      <ReduxProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <GestureHandlerRootView style={styles.root}>
+              <NavigationContainer linking={linking}>
+                <RootNavigator />
+              </NavigationContainer>
+              <StatusBar style="dark" />
+            </GestureHandlerRootView>
+          </NotificationProvider>
+        </AuthProvider>
+      </ReduxProvider>
+    </ErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 24,
-    color: '#000000',
-  },
+  root: { flex: 1, backgroundColor: '#FFFFFF' },
 });

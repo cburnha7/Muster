@@ -1,10 +1,20 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  fallback?: (error: Error, errorInfo: ErrorInfo, resetError: () => void) => ReactNode;
+  fallback?: (
+    error: Error,
+    errorInfo: ErrorInfo,
+    resetError: () => void
+  ) => ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
@@ -18,7 +28,10 @@ interface ErrorBoundaryState {
  * Error Boundary component to catch and handle React component errors
  * Prevents the entire app from crashing when a component error occurs
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -79,13 +92,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <Ionicons name="alert-circle" size={64} color="#EF4444" />
             <Text style={styles.title}>Oops! Something went wrong</Text>
             <Text style={styles.message}>
-              We're sorry for the inconvenience. The app encountered an unexpected error.
+              We're sorry for the inconvenience. The app encountered an
+              unexpected error.
             </Text>
 
-            {__DEV__ && this.state.error && (
+            {this.state.error && (
               <ScrollView style={styles.errorDetails}>
-                <Text style={styles.errorTitle}>Error Details (Dev Only):</Text>
-                <Text style={styles.errorText}>{this.state.error.toString()}</Text>
+                <Text style={styles.errorTitle}>Error:</Text>
+                <Text style={styles.errorText}>
+                  {this.state.error.toString()}
+                </Text>
                 {this.state.errorInfo && (
                   <>
                     <Text style={styles.errorTitle}>Component Stack:</Text>
@@ -102,7 +118,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </TouchableOpacity>
 
             <Text style={styles.helpText}>
-              If the problem persists, please restart the app or contact support.
+              If the problem persists, please restart the app or contact
+              support.
             </Text>
           </View>
         </View>
