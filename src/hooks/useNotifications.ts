@@ -1,41 +1,67 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../store/slices/authSlice';
-import { userService, RosterInvitation, LeagueInvitation, EventInvitation, ReadyToScheduleLeague } from '../services/api/UserService';
+import { useAuth } from '../context/AuthContext';
+import {
+  userService,
+  RosterInvitation,
+  LeagueInvitation,
+  EventInvitation,
+  ReadyToScheduleLeague,
+} from '../services/api/UserService';
 
 export interface NotificationItem {
   id: string;
-  type: 'roster_invitation' | 'league_invitation' | 'event_invitation' | 'schedule_league' | 'debrief' | 'cancel_request' | 'game_challenge';
+  type:
+    | 'roster_invitation'
+    | 'league_invitation'
+    | 'event_invitation'
+    | 'schedule_league'
+    | 'debrief'
+    | 'cancel_request'
+    | 'game_challenge';
   title: string;
   subtitle: string;
   data: any;
 }
 
 export function useNotifications() {
-  const user = useSelector(selectUser);
+  const { user } = useAuth();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!user?.id) { setItems([]); return; }
+    if (!user?.id) {
+      setItems([]);
+      return;
+    }
     setLoading(true);
     try {
       const [invitations, readyLeagues, debriefBookings] = await Promise.all([
-        userService.getInvitations().catch(() => ({ rosterInvitations: [], leagueInvitations: [], eventInvitations: [], total: 0 })),
+        userService
+          .getInvitations()
+          .catch(() => ({
+            rosterInvitations: [],
+            leagueInvitations: [],
+            eventInvitations: [],
+            total: 0,
+          })),
         userService.getLeaguesReadyToSchedule().catch(() => []),
-        userService.getUserBookings('past', { page: 1, limit: 50 })
-          .then((res: any) => (res?.data || []).filter((b: any) =>
-            b.debriefSubmitted === false &&
-            b.event &&
-            b.event.status === 'active' &&
-            new Date(b.event.endTime) < new Date()
-          ))
+        userService
+          .getUserBookings('past', { page: 1, limit: 50 })
+          .then((res: any) =>
+            (res?.data || []).filter(
+              (b: any) =>
+                b.debriefSubmitted === false &&
+                b.event &&
+                b.event.status === 'active' &&
+                new Date(b.event.endTime) < new Date()
+            )
+          )
           .catch(() => []),
       ]);
 
       const notifs: NotificationItem[] = [];
 
-      invitations.rosterInvitations.forEach((inv) => {
+      invitations.rosterInvitations.forEach(inv => {
         notifs.push({
           id: `roster-${inv.id}`,
           type: 'roster_invitation',
@@ -45,7 +71,7 @@ export function useNotifications() {
         });
       });
 
-      invitations.leagueInvitations.forEach((inv) => {
+      invitations.leagueInvitations.forEach(inv => {
         notifs.push({
           id: `league-${inv.id}`,
           type: 'league_invitation',
@@ -55,25 +81,29 @@ export function useNotifications() {
         });
       });
 
-      invitations.eventInvitations.filter((inv) => inv.eventStatus === 'active' || !inv.eventStatus).forEach((inv) => {
-        notifs.push({
-          id: `event-${inv.id}`,
-          type: 'event_invitation',
-          title: 'Game Invitation',
-          subtitle: inv.eventTitle,
-          data: inv,
+      invitations.eventInvitations
+        .filter(inv => inv.eventStatus === 'active' || !inv.eventStatus)
+        .forEach(inv => {
+          notifs.push({
+            id: `event-${inv.id}`,
+            type: 'event_invitation',
+            title: 'Game Invitation',
+            subtitle: inv.eventTitle,
+            data: inv,
+          });
         });
-      });
 
-      readyLeagues.filter((l) => l.isActive !== false).forEach((league) => {
-        notifs.push({
-          id: `schedule-${league.id}`,
-          type: 'schedule_league',
-          title: 'Schedule League Games',
-          subtitle: league.name,
-          data: league,
+      readyLeagues
+        .filter(l => l.isActive !== false)
+        .forEach(league => {
+          notifs.push({
+            id: `schedule-${league.id}`,
+            type: 'schedule_league',
+            title: 'Schedule League Games',
+            subtitle: league.name,
+            data: league,
+          });
         });
-      });
 
       debriefBookings.forEach((booking: any) => {
         notifs.push({
@@ -93,7 +123,9 @@ export function useNotifications() {
     }
   }, [user?.id]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {

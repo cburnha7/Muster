@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -40,7 +42,10 @@ function canContinue(state: FacilityWizardState, step: number): boolean {
   }
 }
 
-export function FacilityFlowContainer({ children, onSubmit }: FacilityFlowContainerProps) {
+export function FacilityFlowContainer({
+  children,
+  onSubmit,
+}: FacilityFlowContainerProps) {
   const { state, dispatch } = useCreateFacility();
   const navigation = useNavigation();
   const { currentStep } = state;
@@ -62,7 +67,11 @@ export function FacilityFlowContainer({ children, onSubmit }: FacilityFlowContai
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </TouchableOpacity>
         <View style={styles.dotsWrapper}>
@@ -71,31 +80,41 @@ export function FacilityFlowContainer({ children, onSubmit }: FacilityFlowContai
         <View style={styles.backBtn} />
       </View>
 
-      <View style={styles.stageContainer}>{childArray[currentStep]}</View>
+      <KeyboardAvoidingView
+        style={styles.stageContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.stageContainer}>{childArray[currentStep]}</View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, !enabled && styles.buttonDisabled]}
-          onPress={handlePress}
-          disabled={!enabled || state.isSubmitting}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>
-            {state.isSubmitting
-              ? 'Creating...'
-              : isLastStep
-                ? 'Create Ground'
-                : 'Continue'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, !enabled && styles.buttonDisabled]}
+            onPress={handlePress}
+            disabled={!enabled || state.isSubmitting}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>
+              {state.isSubmitting
+                ? 'Creating...'
+                : isLastStep
+                  ? 'Create Ground'
+                  : 'Continue'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.white },
-  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   backBtn: { width: 40, alignItems: 'center' as const },
   dotsWrapper: { flex: 1 },
   stageContainer: { flex: 1 },

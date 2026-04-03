@@ -12,7 +12,11 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -23,7 +27,13 @@ import { PlayerCard } from '../../components/ui/PlayerCard';
 import { CancelEventModal } from '../../components/events/CancelEventModal';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 
-import { HeroSection, QuickStatsRow, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import {
+  HeroSection,
+  QuickStatsRow,
+  PersonRow,
+  DetailCard,
+  FixedBottomCTA,
+} from '../../components/detail';
 import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
 import { getSportColor } from '../../constants/sportColors';
 
@@ -31,7 +41,11 @@ import { eventService } from '../../services/api/EventService';
 import { conversationService } from '../../services/api/ConversationService';
 import { BookingValidationService } from '../../services/booking';
 import { useAuth } from '../../context/AuthContext';
-import { setSelectedEvent, updateEventParticipants, removeEvent } from '../../store/slices/eventsSlice';
+import {
+  setSelectedEvent,
+  updateEventParticipants,
+  removeEvent,
+} from '../../store/slices/eventsSlice';
 import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
@@ -50,9 +64,15 @@ import { API_BASE_URL } from '../../services/api/config';
 
 function formatDateHero(dateInput: string | Date): string {
   const d = new Date(dateInput as any);
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-    + ' · '
-    + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return (
+    d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+    }) +
+    ' · ' +
+    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  );
 }
 
 function formatEventType(eventType: string): string {
@@ -86,79 +106,98 @@ export function EventDetailsScreen() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [rosters, setRosters] = useState<RosterInfo[]>([]);
   const [participantsLoaded, setParticipantsLoaded] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
-  const [salutedParticipants, setSalutedParticipants] = useState<Set<string>>(new Set());
+  const [selectedParticipant, setSelectedParticipant] =
+    useState<Participant | null>(null);
+  const [salutedParticipants, setSalutedParticipants] = useState<Set<string>>(
+    new Set()
+  );
   const [showSaluteModal, setShowSaluteModal] = useState(false);
   const [isSubmittingSalutes, setIsSubmittingSalutes] = useState(false);
   const [salutesSubmitted, setSalutesSubmitted] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showStepOutModal, setShowStepOutModal] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
-  const [waiverStatus, setWaiverStatus] = useState<{ required: boolean; signed: boolean; waiverVersion: string | null; waiverText?: string | null } | null>(null);
+  const [waiverStatus, setWaiverStatus] = useState<{
+    required: boolean;
+    signed: boolean;
+    waiverVersion: string | null;
+    waiverText?: string | null;
+  } | null>(null);
   const [showWaiverModal, setShowWaiverModal] = useState(false);
   const [waiverAgreed, setWaiverAgreed] = useState(false);
   const [signingWaiver, setSigningWaiver] = useState(false);
 
   // Load event details
-  const loadEvent = useCallback(async (isRefresh = false, skipCache = false) => {
-    if (!eventId) return;
+  const loadEvent = useCallback(
+    async (isRefresh = false, skipCache = false) => {
+      if (!eventId) return;
 
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
-      setError(null);
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+        setError(null);
 
-      // Fetch event from API
-      const eventResponse = await eventService.getEvent(eventId);
+        // Fetch event from API
+        const eventResponse = await eventService.getEvent(eventId);
 
-      // Fetch participants (skip cache if requested)
-      const participantsData = await eventService.getEventParticipants(eventId, skipCache);
+        // Fetch participants (skip cache if requested)
+        const participantsData = await eventService.getEventParticipants(
+          eventId,
+          skipCache
+        );
 
-      // Check if event is in the past and if salutes have been submitted
-      const isPastEvent = new Date(eventResponse.endTime) < new Date();
-      if (isPastEvent) {
-        const saluteStatus = await eventService.checkSaluteStatus(eventId);
-        setSalutesSubmitted(saluteStatus.hasSubmitted);
-      }
+        // Check if event is in the past and if salutes have been submitted
+        const isPastEvent = new Date(eventResponse.endTime) < new Date();
+        if (isPastEvent) {
+          const saluteStatus = await eventService.checkSaluteStatus(eventId);
+          setSalutesSubmitted(saluteStatus.hasSubmitted);
+        }
 
-      setEvent(eventResponse);
-      setParticipants(participantsData.participants);
-      setRosters(participantsData.rosters ?? []);
-      setParticipantsLoaded(true);
+        setEvent(eventResponse);
+        setParticipants(participantsData.participants);
+        setRosters(participantsData.rosters ?? []);
+        setParticipantsLoaded(true);
 
-      // Fetch waiver status if event has a facility
-      if (eventResponse.facilityId && currentUser?.id) {
-        try {
-          const wRes = await fetch(`${API_BASE_URL}/waivers/facility/${eventResponse.facilityId}/status?userId=${currentUser.id}`);
-          if (wRes.ok) {
-            const wData = await wRes.json();
-            if (wData.required && !wData.signed) {
-              // Also fetch waiver text
-              const tRes = await fetch(`${API_BASE_URL}/waivers/facility/${eventResponse.facilityId}`);
-              if (tRes.ok) {
-                const tData = await tRes.json();
-                setWaiverStatus({ ...wData, waiverText: tData.waiverText });
+        // Fetch waiver status if event has a facility
+        if (eventResponse.facilityId && currentUser?.id) {
+          try {
+            const wRes = await fetch(
+              `${API_BASE_URL}/waivers/facility/${eventResponse.facilityId}/status?userId=${currentUser.id}`
+            );
+            if (wRes.ok) {
+              const wData = await wRes.json();
+              if (wData.required && !wData.signed) {
+                // Also fetch waiver text
+                const tRes = await fetch(
+                  `${API_BASE_URL}/waivers/facility/${eventResponse.facilityId}`
+                );
+                if (tRes.ok) {
+                  const tData = await tRes.json();
+                  setWaiverStatus({ ...wData, waiverText: tData.waiverText });
+                } else {
+                  setWaiverStatus(wData);
+                }
               } else {
                 setWaiverStatus(wData);
               }
-            } else {
-              setWaiverStatus(wData);
             }
-          }
-        } catch {}
+          } catch {}
+        }
+        dispatch(setSelectedEvent(eventResponse));
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load event';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+        setRefreshing(false);
       }
-      dispatch(setSelectedEvent(eventResponse));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load event';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  }, [eventId, dispatch]);
+    },
+    [eventId, dispatch]
+  );
 
   // Load event on screen focus (always skip cache for participants)
   useFocusEffect(
@@ -171,10 +210,14 @@ export function EventDetailsScreen() {
   const isPastEvent = event && new Date(event.endTime) < new Date();
 
   // Check if event is currently live (started but not ended)
-  const isLive = event && new Date(event.startTime) <= new Date() && new Date(event.endTime) > new Date();
+  const isLive =
+    event &&
+    new Date(event.startTime) <= new Date() &&
+    new Date(event.endTime) > new Date();
 
   // Only upcoming events allow edit/delete/join/leave actions
-  const isUpcoming = event && !isPastEvent && !isLive && event.status !== EventStatus.CANCELLED;
+  const isUpcoming =
+    event && !isPastEvent && !isLive && event.status !== EventStatus.CANCELLED;
 
   // Check if user is already booked
   const isUserBooked = participants.some(
@@ -201,38 +244,53 @@ export function EventDetailsScreen() {
   });
 
   // Check if event is bookable
-  const canBook = event &&
+  const canBook =
+    event &&
     event.status === EventStatus.ACTIVE &&
     event.currentParticipants < event.maxParticipants &&
     !isUserBooked;
 
   // Handle booking
   const handleBookEvent = async () => {
-    loggingService.logButton('Join', 'EventDetailsScreen', { eventId: event?.id });
+    loggingService.logButton('Join', 'EventDetailsScreen', {
+      eventId: event?.id,
+    });
     console.log('≡ƒÄ» handleBookEvent called');
     console.log('≡ƒôï Event:', event?.id, event?.title);
     console.log('≡ƒæñ Current user:', currentUser?.id, currentUser?.email);
 
     if (!event || !currentUser) {
-      console.log('Γ¥î Missing event or currentUser', { hasEvent: !!event, hasCurrentUser: !!currentUser });
+      console.log('Γ¥î Missing event or currentUser', {
+        hasEvent: !!event,
+        hasCurrentUser: !!currentUser,
+      });
       Alert.alert('Authentication Required', 'Please log in to book events');
       return;
     }
 
     console.log('≡ƒöì Validating booking...');
     // Validate booking before attempting
-    const validationResult = BookingValidationService.validateBooking(event, currentUser);
+    const validationResult = BookingValidationService.validateBooking(
+      event,
+      currentUser
+    );
     console.log('Γ£à Validation result:', validationResult);
 
     if (!validationResult.canBook) {
       console.log('Γ¥î Cannot book:', validationResult.reason);
-      Alert.alert('Cannot Join', validationResult.reason || 'Booking not allowed');
+      Alert.alert(
+        'Cannot Join',
+        validationResult.reason || 'Booking not allowed'
+      );
       return;
     }
 
     // Log warnings but proceed anyway (no alert dialog)
     if (validationResult.warnings && validationResult.warnings.length > 0) {
-      console.log('ΓÜá∩╕Å Warnings (proceeding anyway):', validationResult.warnings);
+      console.log(
+        'ΓÜá∩╕Å Warnings (proceeding anyway):',
+        validationResult.warnings
+      );
     }
 
     console.log('Γ£à Proceeding with booking...');
@@ -249,14 +307,17 @@ export function EventDetailsScreen() {
       eventId: event.id,
       eventTitle: event.title,
       userId: currentUser.id,
-      userEmail: currentUser.email
+      userEmail: currentUser.email,
     });
 
     try {
       setIsBooking(true);
 
       console.log('≡ƒô₧ Calling eventService.bookEvent API...');
-      console.log('≡ƒôï Request params:', { eventId: event.id, userId: currentUser.id });
+      console.log('≡ƒôï Request params:', {
+        eventId: event.id,
+        userId: currentUser.id,
+      });
 
       const booking = await eventService.bookEvent(event.id, currentUser.id);
 
@@ -270,21 +331,41 @@ export function EventDetailsScreen() {
 
       // Update local state
       const updatedParticipants = event.currentParticipants + 1;
-      const updatedEvent = { ...event, currentParticipants: updatedParticipants };
+      const updatedEvent = {
+        ...event,
+        currentParticipants: updatedParticipants,
+      };
       console.log('≡ƒôè Updating event participants count:', {
         old: event.currentParticipants,
-        new: updatedParticipants
+        new: updatedParticipants,
       });
       setEvent(updatedEvent);
-      dispatch(updateEventParticipants({ eventId: event.id, count: updatedParticipants }));
+      dispatch(
+        updateEventParticipants({
+          eventId: event.id,
+          count: updatedParticipants,
+        })
+      );
 
       // Reload participants (skip cache to get fresh data)
       console.log('≡ƒöä Reloading participants list...');
-      const newParticipantsData = await eventService.getEventParticipants(event.id, true);
+      const newParticipantsData = await eventService.getEventParticipants(
+        event.id,
+        true
+      );
       console.log('Γ£à Participants reloaded successfully!');
-      console.log('≡ƒôè Participants count:', newParticipantsData.participants.length);
-      console.log('≡ƒæÑ Participant user IDs:', newParticipantsData.participants.map(p => p.userId));
-      console.log('≡ƒöì Current user in participants?', newParticipantsData.participants.some(p => p.userId === currentUser.id));
+      console.log(
+        '≡ƒôè Participants count:',
+        newParticipantsData.participants.length
+      );
+      console.log(
+        '≡ƒæÑ Participant user IDs:',
+        newParticipantsData.participants.map(p => p.userId)
+      );
+      console.log(
+        '≡ƒöì Current user in participants?',
+        newParticipantsData.participants.some(p => p.userId === currentUser.id)
+      );
       setParticipants(newParticipantsData.participants);
       setRosters(newParticipantsData.rosters ?? []);
 
@@ -296,21 +377,27 @@ export function EventDetailsScreen() {
           {
             text: 'OK',
             onPress: () => {
-              console.log('Γ£à User dismissed success alert, navigating to Home');
+              console.log(
+                'Γ£à User dismissed success alert, navigating to Home'
+              );
               // Navigate to Home tab after user dismisses alert
               (navigation as any).navigate('Home', { screen: 'HomeScreen' });
-            }
-          }
+            },
+          },
         ]
       );
     } catch (error) {
       console.error('Γ¥î Booking error occurred!');
       console.error('Γ¥î Error details:', error);
       console.error('Γ¥î Error type:', typeof error);
-      console.error('Γ¥î Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error(
+        'Γ¥î Error message:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
       console.error('Γ¥î Full error object:', JSON.stringify(error, null, 2));
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to book event';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to book event';
       Alert.alert('Booking Failed', errorMessage);
     } finally {
       console.log('≡ƒÅü Booking process finished, setting isBooking to false');
@@ -320,39 +407,44 @@ export function EventDetailsScreen() {
 
   // Handle cancel booking
   const handleCancelBooking = async () => {
-      if (!event || !currentUser) {
-        return;
-      }
-
-      const userBooking = participants.find(p => p.userId === currentUser.id);
-
-      if (!userBooking) {
-        Alert.alert('Error', 'Could not find your booking for this event');
-        return;
-      }
-
-      // Validate cancellation
-      const validationResult = BookingValidationService.validateCancellation(
-        event,
-        currentUser,
-        userBooking.status as unknown as BookingStatus
-      );
-
-      if (!validationResult.canBook) {
-        Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
-        return;
-      }
-
-      // Show the modal
-      setShowStepOutModal(true);
+    if (!event || !currentUser) {
+      return;
     }
+
+    const userBooking = participants.find(p => p.userId === currentUser.id);
+
+    if (!userBooking) {
+      Alert.alert('Error', 'Could not find your booking for this event');
+      return;
+    }
+
+    // Validate cancellation
+    const validationResult = BookingValidationService.validateCancellation(
+      event,
+      currentUser,
+      userBooking.status as unknown as BookingStatus
+    );
+
+    if (!validationResult.canBook) {
+      Alert.alert(
+        'Cannot Leave',
+        validationResult.reason || 'Cannot leave this event'
+      );
+      return;
+    }
+
+    // Show the modal
+    setShowStepOutModal(true);
+  };
 
   // Handle step out confirmation from modal
   const handleStepOutConfirm = async () => {
     if (!event || !currentUser) {
       return;
     }
-    loggingService.logButton('Leave', 'EventDetailsScreen', { eventId: event.id });
+    loggingService.logButton('Leave', 'EventDetailsScreen', {
+      eventId: event.id,
+    });
 
     const userBooking = participants.find(p => p.userId === currentUser.id);
 
@@ -422,11 +514,15 @@ export function EventDetailsScreen() {
 
       // Show success message after navigation
       setTimeout(() => {
-        Alert.alert('Success', 'Event cancelled successfully. Participants will be notified.');
+        Alert.alert(
+          'Success',
+          'Event cancelled successfully. Participants will be notified.'
+        );
       }, 300);
     } catch (err) {
       console.error('Γ¥î Cancel error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to cancel event';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to cancel event';
       throw new Error(errorMessage);
     }
   };
@@ -453,8 +549,14 @@ export function EventDetailsScreen() {
     }
 
     // Check if already saluted 3 participants
-    if (salutedParticipants.size >= 3 && !salutedParticipants.has(participant.userId)) {
-      Alert.alert('Salute Limit Reached', 'You can only salute up to 3 participants per event.');
+    if (
+      salutedParticipants.size >= 3 &&
+      !salutedParticipants.has(participant.userId)
+    ) {
+      Alert.alert(
+        'Salute Limit Reached',
+        'You can only salute up to 3 participants per event.'
+      );
       return;
     }
 
@@ -509,7 +611,9 @@ export function EventDetailsScreen() {
   // Handle submit salutes
   const handleSubmitSalutes = async () => {
     if (!event || salutedParticipants.size === 0) return;
-    loggingService.logButton('Submit Salutes', 'EventDetailsScreen', { eventId: event.id });
+    loggingService.logButton('Submit Salutes', 'EventDetailsScreen', {
+      eventId: event.id,
+    });
 
     Alert.alert(
       'Submit Salutes',
@@ -526,7 +630,10 @@ export function EventDetailsScreen() {
               const salutedUserIds = Array.from(salutedParticipants);
 
               // Call API to submit salutes and recalculate ratings
-              const result = await eventService.submitSalutes(event.id, salutedUserIds);
+              const result = await eventService.submitSalutes(
+                event.id,
+                salutedUserIds
+              );
 
               // Mark as submitted
               setSalutesSubmitted(true);
@@ -537,7 +644,10 @@ export function EventDetailsScreen() {
                 [{ text: 'OK' }]
               );
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : 'Failed to submit salutes';
+              const errorMessage =
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to submit salutes';
               Alert.alert('Submission Failed', errorMessage);
             } finally {
               setIsSubmittingSalutes(false);
@@ -630,12 +740,16 @@ export function EventDetailsScreen() {
 
     return (
       <View>
-        {sortedRosters.map((roster) => {
+        {sortedRosters.map(roster => {
           const rosterParticipants = byRoster.get(roster.id) ?? [];
           return (
             <View key={roster.id} style={{ marginBottom: 16 }}>
               <View style={styles.rosterSaluteHeader}>
-                <Ionicons name="shield-outline" size={14} color={colors.primary} />
+                <Ionicons
+                  name="shield-outline"
+                  size={14}
+                  color={colors.primary}
+                />
                 <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
                 {roster.isHome && (
                   <View style={styles.rosterSaluteHomeBadge}>
@@ -652,7 +766,11 @@ export function EventDetailsScreen() {
         {unassigned.length > 0 && (
           <View style={{ marginBottom: 16 }}>
             <View style={styles.rosterSaluteHeader}>
-              <Ionicons name="people-outline" size={14} color={colors.inkFaint} />
+              <Ionicons
+                name="people-outline"
+                size={14}
+                color={colors.inkFaint}
+              />
               <Text style={styles.rosterSaluteLabel}>Other Players</Text>
             </View>
             <View style={styles.participantsGrid}>
@@ -675,10 +793,7 @@ export function EventDetailsScreen() {
   if (error && !event) {
     return (
       <View style={styles.container}>
-        <ErrorDisplay
-          message={error}
-          onRetry={() => loadEvent()}
-        />
+        <ErrorDisplay message={error} onRetry={() => loadEvent()} />
       </View>
     );
   }
@@ -686,10 +801,7 @@ export function EventDetailsScreen() {
   if (!event) {
     return (
       <View style={styles.container}>
-        <ErrorDisplay
-          message="Event not found"
-          onRetry={() => loadEvent()}
-        />
+        <ErrorDisplay message="Event not found" onRetry={() => loadEvent()} />
       </View>
     );
   }
@@ -698,7 +810,8 @@ export function EventDetailsScreen() {
 
   // Derive duration string
   const durationString = (() => {
-    const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
+    const ms =
+      new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
     const totalMinutes = Math.round(ms / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
@@ -709,9 +822,14 @@ export function EventDetailsScreen() {
 
   // Derive location string and coordinates
   const locationString = event.facility
-    ? [event.facility.name, event.facility.street && event.facility.city
-        ? `${event.facility.street}, ${event.facility.city}`
-        : event.facility.city || ''].filter(Boolean).join(' · ')
+    ? [
+        event.facility.name,
+        event.facility.street && event.facility.city
+          ? `${event.facility.street}, ${event.facility.city}`
+          : event.facility.city || '',
+      ]
+        .filter(Boolean)
+        .join(' · ')
     : event.locationName
       ? [event.locationName, event.locationAddress].filter(Boolean).join(' · ')
       : '';
@@ -719,8 +837,15 @@ export function EventDetailsScreen() {
   const locationLat = event.facility?.latitude ?? event.locationLat ?? null;
   const locationLng = event.facility?.longitude ?? event.locationLng ?? null;
   const locationAddress = event.facility
-    ? [event.facility.street, event.facility.city, event.facility.state, event.facility.zipCode].filter(Boolean).join(', ')
-    : event.locationAddress ?? null;
+    ? [
+        event.facility.street,
+        event.facility.city,
+        event.facility.state,
+        event.facility.zipCode,
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : (event.locationAddress ?? null);
 
   // Derive CTA label, variant, and action
   type CTAVariant = 'primary' | 'confirmed' | 'secondary' | 'disabled';
@@ -744,10 +869,14 @@ export function EventDetailsScreen() {
     ctaLabel = 'In Progress';
     ctaVariant = 'disabled';
     ctaAction = () => {};
-  } else if (isOrganizer) {
-    ctaLabel = "You're hosting";
+  } else if (isOrganizer && isUserBooked) {
+    ctaLabel = "You're in ✓";
     ctaVariant = 'confirmed';
     ctaAction = () => {};
+  } else if (isOrganizer && !isUserBooked) {
+    ctaLabel = "Join Up — You're hosting";
+    ctaVariant = 'primary';
+    ctaAction = handleBookEvent;
   } else if (isUserBooked) {
     ctaLabel = "You're in ✓";
     ctaVariant = 'confirmed';
@@ -786,49 +915,78 @@ export function EventDetailsScreen() {
           badges={[
             { label: formatEventType(event.eventType) },
             ...(event.status === EventStatus.CANCELLED
-              ? [{ label: 'Cancelled', bgColor: colors.errorContainer, textColor: colors.error }]
+              ? [
+                  {
+                    label: 'Cancelled',
+                    bgColor: colors.errorContainer,
+                    textColor: colors.error,
+                  },
+                ]
               : []),
             ...(isLive
-              ? [{ label: 'Live', bgColor: colors.secondaryContainer, textColor: colors.secondary }]
+              ? [
+                  {
+                    label: 'Live',
+                    bgColor: colors.secondaryContainer,
+                    textColor: colors.secondary,
+                  },
+                ]
               : []),
           ]}
           headline={formatDateHero(event.startTime)}
           {...(locationString ? { subline: locationString } : {})}
-          {...(locationString && (locationLat || locationAddress) ? {
-            onSublinePress: () => {
-              const dest = locationLat && locationLng
-                ? `${locationLat},${locationLng}`
-                : encodeURIComponent(locationAddress || '');
-              const url = Platform.OS === 'ios'
-                ? `maps:?daddr=${dest}`
-                : `google.navigation:q=${dest}`;
-              Linking.openURL(url).catch(() => {
-                Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${dest}`);
-              });
-            },
-          } : {})}
+          {...(locationString && (locationLat || locationAddress)
+            ? {
+                onSublinePress: () => {
+                  const dest =
+                    locationLat && locationLng
+                      ? `${locationLat},${locationLng}`
+                      : encodeURIComponent(locationAddress || '');
+                  const url =
+                    Platform.OS === 'ios'
+                      ? `maps:?daddr=${dest}`
+                      : `google.navigation:q=${dest}`;
+                  Linking.openURL(url).catch(() => {
+                    Linking.openURL(
+                      `https://www.google.com/maps/dir/?api=1&destination=${dest}`
+                    );
+                  });
+                },
+              }
+            : {})}
         />
 
         {/* QuickStatsRow — Duration / Players / Price */}
-        <QuickStatsRow stats={[
-          { label: 'Duration', value: durationString },
-          {
-            label: 'Players',
-            value: `${event.currentParticipants}/${event.maxParticipants}`,
-            fillRatio: event.currentParticipants / event.maxParticipants,
-          },
-          { label: 'Price', value: event.price > 0 ? `$${event.price}` : 'Free' },
-        ]} />
+        <QuickStatsRow
+          stats={[
+            { label: 'Duration', value: durationString },
+            {
+              label: 'Players',
+              value: `${event.currentParticipants}/${event.maxParticipants}`,
+              fillRatio: event.currentParticipants / event.maxParticipants,
+            },
+            {
+              label: 'Price',
+              value: event.price > 0 ? `$${event.price}` : 'Free',
+            },
+          ]}
+        />
 
         {/* Location Card with Get Directions */}
         {locationString ? (
           <DetailCard title="Location" delay={25}>
             {event.facility ? (
               <TouchableOpacity
-                onPress={() => (navigation as any).navigate('FacilityDetails', { facilityId: event.facility!.id })}
+                onPress={() =>
+                  (navigation as any).navigate('FacilityDetails', {
+                    facilityId: event.facility!.id,
+                  })
+                }
                 activeOpacity={0.7}
               >
-                <Text style={styles.locationNameLink}>{event.facility.name}</Text>
+                <Text style={styles.locationNameLink}>
+                  {event.facility.name}
+                </Text>
               </TouchableOpacity>
             ) : event.locationName ? (
               <Text style={styles.locationNameText}>{event.locationName}</Text>
@@ -856,105 +1014,150 @@ export function EventDetailsScreen() {
             style={styles.chatBtn}
             onPress={async () => {
               try {
-                const conv = await conversationService.getOrCreateGameThread(eventId);
+                const conv =
+                  await conversationService.getOrCreateGameThread(eventId);
                 (navigation as any).navigate('Messages', {
                   screen: 'Chat',
-                  params: { conversationId: conv.id, title: event.title ?? 'Game Thread', type: 'GAME_THREAD' },
+                  params: {
+                    conversationId: conv.id,
+                    title: event.title ?? 'Game Thread',
+                    type: 'GAME_THREAD',
+                  },
                 });
               } catch (e) {
                 console.error('Navigate to chat error:', e);
-                Alert.alert('Error', 'Could not open game thread. Please try again.');
+                Alert.alert(
+                  'Error',
+                  'Could not open game thread. Please try again.'
+                );
               }
             }}
             activeOpacity={0.8}
           >
-            <Ionicons name="chatbubbles-outline" size={18} color={colors.primary} />
+            <Ionicons
+              name="chatbubbles-outline"
+              size={18}
+              color={colors.primary}
+            />
             <Text style={styles.chatBtnText}>Game Thread</Text>
           </TouchableOpacity>
         )}
 
         {/* League Match Section */}
-        {event.matches && event.matches.length > 0 && (() => {
-          try {
-            const match = event.matches[0] as Match;
-            if (!match) return null;
+        {event.matches &&
+          event.matches.length > 0 &&
+          (() => {
+            try {
+              const match = event.matches[0] as Match;
+              if (!match) return null;
 
-            const leagueName = match.league?.name || 'League Match';
+              const leagueName = match.league?.name || 'League Match';
 
-            return (
-              <DetailCard title="League Match" delay={50}>
-                <TouchableOpacity
-                  onPress={() => handleNavigateToLeague(match.leagueId)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.leagueBadge}>
-                    <Ionicons name="trophy" size={16} color={colors.gold} />
-                    <Text style={styles.leagueBadgeText}>LEAGUE MATCH</Text>
-                  </View>
-
-                  <View style={styles.leagueContent}>
-                    <View style={styles.leagueHeader}>
-                      <Ionicons name="shield-outline" size={20} color={colors.primary} />
-                      <Text style={styles.leagueName}>{leagueName}</Text>
-                      <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+              return (
+                <DetailCard title="League Match" delay={50}>
+                  <TouchableOpacity
+                    onPress={() => handleNavigateToLeague(match.leagueId)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.leagueBadge}>
+                      <Ionicons name="trophy" size={16} color={colors.gold} />
+                      <Text style={styles.leagueBadgeText}>LEAGUE MATCH</Text>
                     </View>
 
-                    <View style={styles.matchDetails}>
-                      <View style={styles.teamInfo}>
-                        <Text style={styles.teamName}>
-                          {match.homeTeam?.name || 'Home Roster'}
-                        </Text>
-                        {match.homeScore !== undefined && match.homeScore !== null && (
-                          <Text style={styles.teamScore}>{match.homeScore}</Text>
-                        )}
+                    <View style={styles.leagueContent}>
+                      <View style={styles.leagueHeader}>
+                        <Ionicons
+                          name="shield-outline"
+                          size={20}
+                          color={colors.primary}
+                        />
+                        <Text style={styles.leagueName}>{leagueName}</Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color={colors.inkFaint}
+                        />
                       </View>
 
-                      <Text style={styles.vsText}>vs</Text>
+                      <View style={styles.matchDetails}>
+                        <View style={styles.teamInfo}>
+                          <Text style={styles.teamName}>
+                            {match.homeTeam?.name || 'Home Roster'}
+                          </Text>
+                          {match.homeScore !== undefined &&
+                            match.homeScore !== null && (
+                              <Text style={styles.teamScore}>
+                                {match.homeScore}
+                              </Text>
+                            )}
+                        </View>
 
-                      <View style={styles.teamInfo}>
-                        <Text style={styles.teamName}>
-                          {match.awayTeam?.name || 'Away Roster'}
-                        </Text>
-                        {match.awayScore !== undefined && match.awayScore !== null && (
-                          <Text style={styles.teamScore}>{match.awayScore}</Text>
-                        )}
+                        <Text style={styles.vsText}>vs</Text>
+
+                        <View style={styles.teamInfo}>
+                          <Text style={styles.teamName}>
+                            {match.awayTeam?.name || 'Away Roster'}
+                          </Text>
+                          {match.awayScore !== undefined &&
+                            match.awayScore !== null && (
+                              <Text style={styles.teamScore}>
+                                {match.awayScore}
+                              </Text>
+                            )}
+                        </View>
                       </View>
+
+                      {match.scheduledAt && (
+                        <View style={styles.matchMeta}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={14}
+                            color={colors.inkFaint}
+                          />
+                          <Text style={styles.matchMetaText}>
+                            {new Date(match.scheduledAt).toLocaleDateString(
+                              'en-US',
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              }
+                            )}
+                          </Text>
+                          {match.status && (
+                            <>
+                              <Text style={styles.matchMetaDot}>·</Text>
+                              <Text
+                                style={[
+                                  styles.matchMetaText,
+                                  { textTransform: 'capitalize' },
+                                ]}
+                              >
+                                {match.status.replace('_', ' ')}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      )}
                     </View>
-
-                    {match.scheduledAt && (
-                      <View style={styles.matchMeta}>
-                        <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
-                        <Text style={styles.matchMetaText}>
-                          {new Date(match.scheduledAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </Text>
-                        {match.status && (
-                          <>
-                            <Text style={styles.matchMetaDot}>·</Text>
-                            <Text style={[styles.matchMetaText, { textTransform: 'capitalize' }]}>
-                              {match.status.replace('_', ' ')}
-                            </Text>
-                          </>
-                        )}
-                      </View>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </DetailCard>
-            );
-          } catch (error) {
-            console.error('Error rendering league match section:', error);
-            return null;
-          }
-        })()}
+                  </TouchableOpacity>
+                </DetailCard>
+              );
+            } catch (error) {
+              console.error('Error rendering league match section:', error);
+              return null;
+            }
+          })()}
 
         {/* Players section */}
-        <DetailCard title={`Players (${event.currentParticipants}/${event.maxParticipants})`} delay={100}>
+        <DetailCard
+          title={`Players (${event.currentParticipants}/${event.maxParticipants})`}
+          delay={100}
+        >
           {/* Past GAME events: salute grid */}
-          {isPastEvent && participants.length > 0 && event.eventType === EventType.GAME ? (
+          {isPastEvent &&
+          participants.length > 0 &&
+          event.eventType === EventType.GAME ? (
             <>
               <View style={styles.participantsHeader}>
                 {salutedParticipants.size > 0 && !salutesSubmitted && (
@@ -964,7 +1167,11 @@ export function EventDetailsScreen() {
                 )}
                 {salutesSubmitted && (
                   <View style={styles.submittedBadge}>
-                    <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color={colors.primary}
+                    />
                     <Text style={styles.submittedText}>Submitted</Text>
                   </View>
                 )}
@@ -983,12 +1190,15 @@ export function EventDetailsScreen() {
                         disabled={isSubmittingSalutes}
                       >
                         {isSubmittingSalutes ? (
-                          <Text style={styles.submitSalutesButtonText}>Submitting...</Text>
+                          <Text style={styles.submitSalutesButtonText}>
+                            Submitting...
+                          </Text>
                         ) : (
                           <>
                             <Ionicons name="send" size={20} color="#FFFFFF" />
                             <Text style={styles.submitSalutesButtonText}>
-                              Submit {salutedParticipants.size} Salute{salutedParticipants.size > 1 ? 's' : ''}
+                              Submit {salutedParticipants.size} Salute
+                              {salutedParticipants.size > 1 ? 's' : ''}
                             </Text>
                           </>
                         )}
@@ -1001,10 +1211,18 @@ export function EventDetailsScreen() {
                 </>
               ) : (
                 <View style={styles.salutesSubmittedContainer}>
-                  <Ionicons name="checkmark-circle" size={48} color={colors.primary} />
-                  <Text style={styles.salutesSubmittedTitle}>Salutes Submitted!</Text>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={48}
+                    color={colors.primary}
+                  />
+                  <Text style={styles.salutesSubmittedTitle}>
+                    Salutes Submitted!
+                  </Text>
                   <Text style={styles.salutesSubmittedDescription}>
-                    You saluted {salutedParticipants.size} player{salutedParticipants.size > 1 ? 's' : ''} and their ratings have been updated.
+                    You saluted {salutedParticipants.size} player
+                    {salutedParticipants.size > 1 ? 's' : ''} and their ratings
+                    have been updated.
                   </Text>
                 </View>
               )}
@@ -1017,18 +1235,23 @@ export function EventDetailsScreen() {
                   isPastEvent && p.userId !== currentUser?.id
                     ? () => handleParticipantClick(p)
                     : p.user
-                    ? () => setSelectedPlayer({
-                        id: p.userId,
-                        firstName: p.user!.firstName,
-                        lastName: p.user!.lastName,
-                        profileImage: p.user!.profileImage,
-                        dateOfBirth: (p.user as any).dateOfBirth,
-                        gender: (p.user as any).gender,
-                      })
-                    : null;
+                      ? () =>
+                          setSelectedPlayer({
+                            id: p.userId,
+                            firstName: p.user!.firstName,
+                            lastName: p.user!.lastName,
+                            profileImage: p.user!.profileImage,
+                            dateOfBirth: (p.user as any).dateOfBirth,
+                            gender: (p.user as any).gender,
+                          })
+                      : null;
                 const personRowProps = {
-                  name: p.user ? `${p.user.firstName} ${p.user.lastName}` : 'Unknown Player',
-                  ...(p.userId === event.organizerId ? { role: 'Organizer' as const } : {}),
+                  name: p.user
+                    ? `${p.user.firstName} ${p.user.lastName}`
+                    : 'Unknown Player',
+                  ...(p.userId === event.organizerId
+                    ? { role: 'Organizer' as const }
+                    : {}),
                   ...(pressHandler ? { onPress: pressHandler } : {}),
                 };
                 return (
@@ -1041,7 +1264,9 @@ export function EventDetailsScreen() {
                 );
               })}
               {participants.length === 0 && (
-                <Text style={styles.emptyParticipantsText}>No players yet — be the first!</Text>
+                <Text style={styles.emptyParticipantsText}>
+                  No players yet — be the first!
+                </Text>
               )}
             </>
           )}
@@ -1056,7 +1281,11 @@ export function EventDetailsScreen() {
               <View style={styles.equipmentList}>
                 {event.equipment.map((item, index) => (
                   <View key={index} style={styles.equipmentItem}>
-                    <Ionicons name="checkmark-circle-outline" size={16} color="#34C759" />
+                    <Ionicons
+                      name="checkmark-circle-outline"
+                      size={16}
+                      color="#34C759"
+                    />
                     <Text style={styles.equipmentText}>{item}</Text>
                   </View>
                 ))}
@@ -1087,9 +1316,16 @@ export function EventDetailsScreen() {
           {waiverStatus?.required && !waiverStatus?.signed && (
             <TouchableOpacity
               style={styles.waiverBanner}
-              onPress={() => { setWaiverAgreed(false); setShowWaiverModal(true); }}
+              onPress={() => {
+                setWaiverAgreed(false);
+                setShowWaiverModal(true);
+              }}
             >
-              <Ionicons name="shield-checkmark-outline" size={20} color={colors.gold} />
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={20}
+                color={colors.gold}
+              />
               <View style={{ flex: 1 }}>
                 <Text style={styles.waiverBannerTitle}>Waiver Required</Text>
                 <Text style={styles.waiverBannerSub}>Read & Sign Waiver →</Text>
@@ -1110,10 +1346,42 @@ export function EventDetailsScreen() {
         {/* Edit / Delete for organizer */}
         {isUpcoming && isOrganizer && (
           <View style={styles.ownerActions}>
-            <TouchableOpacity style={styles.ownerEditBtn} onPress={handleEditEvent} activeOpacity={0.7}>
+            {isUserBooked ? (
+              <TouchableOpacity
+                style={styles.ownerStepOutBtn}
+                onPress={handleCancelBooking}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="exit-outline" size={18} color={colors.heart} />
+                <Text style={styles.ownerStepOutBtnText}>Step Out</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.ownerJoinBtn}
+                onPress={handleBookEvent}
+                disabled={isBooking || availableSpots <= 0}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="add-circle-outline"
+                  size={18}
+                  color={colors.cobalt}
+                />
+                <Text style={styles.ownerJoinBtnText}>Join Up</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.ownerEditBtn}
+              onPress={handleEditEvent}
+              activeOpacity={0.7}
+            >
               <Text style={styles.ownerEditBtnText}>Edit Event</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.ownerDeleteBtn} onPress={() => setShowCancelModal(true)} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.ownerDeleteBtn}
+              onPress={() => setShowCancelModal(true)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.ownerDeleteBtnText}>Delete Event</Text>
             </TouchableOpacity>
           </View>
@@ -1127,7 +1395,12 @@ export function EventDetailsScreen() {
           onPress={ctaAction}
           variant={ctaVariant}
           loading={isBooking}
-          {...(isUserBooked && !isOrganizer ? { secondaryLabel: 'Back out', onSecondaryPress: handleCancelBooking } : {})}
+          {...(isUserBooked && !isOrganizer
+            ? {
+                secondaryLabel: 'Back out',
+                onSecondaryPress: handleCancelBooking,
+              }
+            : {})}
         />
       )}
 
@@ -1155,19 +1428,85 @@ export function EventDetailsScreen() {
       />
 
       {/* Waiver Modal */}
-      <Modal visible={showWaiverModal} transparent animationType="slide" onRequestClose={() => setShowWaiverModal(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: '#FFFFFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%', padding: 20 }}>
-            <Text style={{ fontFamily: fonts.heading, fontSize: 20, color: colors.ink, marginBottom: 12 }}>{event?.facility?.name || 'Facility'} Waiver</Text>
+      <Modal
+        visible={showWaiverModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowWaiverModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              maxHeight: '85%',
+              padding: 20,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fonts.heading,
+                fontSize: 20,
+                color: colors.ink,
+                marginBottom: 12,
+              }}
+            >
+              {event?.facility?.name || 'Facility'} Waiver
+            </Text>
             <ScrollView style={{ maxHeight: 300, marginBottom: 16 }}>
-              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, lineHeight: 22 }}>{waiverStatus?.waiverText || 'Loading waiver...'}</Text>
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 14,
+                  color: colors.ink,
+                  lineHeight: 22,
+                }}
+              >
+                {waiverStatus?.waiverText || 'Loading waiver...'}
+              </Text>
             </ScrollView>
-            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }} onPress={() => setWaiverAgreed(!waiverAgreed)}>
-              <Ionicons name={waiverAgreed ? 'checkbox' : 'square-outline'} size={22} color={waiverAgreed ? colors.primary : colors.inkFaint} />
-              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.ink, flex: 1 }}>I have read and agree to this waiver</Text>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 16,
+              }}
+              onPress={() => setWaiverAgreed(!waiverAgreed)}
+            >
+              <Ionicons
+                name={waiverAgreed ? 'checkbox' : 'square-outline'}
+                size={22}
+                color={waiverAgreed ? colors.primary : colors.inkFaint}
+              />
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 14,
+                  color: colors.ink,
+                  flex: 1,
+                }}
+              >
+                I have read and agree to this waiver
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={{ backgroundColor: waiverAgreed ? colors.primary : colors.inkFaint, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 8 }}
+              style={{
+                backgroundColor: waiverAgreed
+                  ? colors.primary
+                  : colors.inkFaint,
+                borderRadius: 12,
+                paddingVertical: 14,
+                alignItems: 'center',
+                marginBottom: 8,
+              }}
               disabled={!waiverAgreed || signingWaiver}
               onPress={async () => {
                 if (!currentUser?.id || !event?.facilityId) return;
@@ -1176,22 +1515,50 @@ export function EventDetailsScreen() {
                   const resp = await fetch(`${API_BASE_URL}/waivers/sign`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id, facilityId: event.facilityId }),
+                    body: JSON.stringify({
+                      userId: currentUser.id,
+                      facilityId: event.facilityId,
+                    }),
                   });
                   if (resp.ok) {
-                    setWaiverStatus((prev) => prev ? { ...prev, signed: true } : prev);
+                    setWaiverStatus(prev =>
+                      prev ? { ...prev, signed: true } : prev
+                    );
                     setShowWaiverModal(false);
                   } else {
-                    Alert.alert('Error', 'Something went wrong. Please try again.');
+                    Alert.alert(
+                      'Error',
+                      'Something went wrong. Please try again.'
+                    );
                   }
-                } catch { Alert.alert('Error', 'Something went wrong. Please try again.'); }
+                } catch {
+                  Alert.alert(
+                    'Error',
+                    'Something went wrong. Please try again.'
+                  );
+                }
                 setSigningWaiver(false);
               }}
             >
-              <Text style={{ fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' }}>{signingWaiver ? 'Signing...' : 'Sign & Continue'}</Text>
+              <Text
+                style={{ fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' }}
+              >
+                {signingWaiver ? 'Signing...' : 'Sign & Continue'}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 8 }} onPress={() => setShowWaiverModal(false)}>
-              <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint }}>Cancel</Text>
+            <TouchableOpacity
+              style={{ alignItems: 'center', paddingVertical: 8 }}
+              onPress={() => setShowWaiverModal(false)}
+            >
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 14,
+                  color: colors.inkFaint,
+                }}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1209,7 +1576,10 @@ export function EventDetailsScreen() {
           activeOpacity={1}
           onPress={() => setShowSaluteModal(false)}
         >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+          <View
+            style={styles.modalContent}
+            onStartShouldSetResponder={() => true}
+          >
             {selectedParticipant && (
               <>
                 {/* Participant Avatar */}
@@ -1241,25 +1611,31 @@ export function EventDetailsScreen() {
                       <Text style={styles.modalSalutedText}>≡ƒÖî Saluted</Text>
                     </View>
                     <Text style={styles.modalDescription}>
-                      You've already saluted this player. You can remove your salute if you'd like.
+                      You've already saluted this player. You can remove your
+                      salute if you'd like.
                     </Text>
                     <TouchableOpacity
                       style={styles.modalButtonSecondary}
                       onPress={handleUnsalute}
                     >
-                      <Text style={styles.modalButtonSecondaryText}>Remove Salute</Text>
+                      <Text style={styles.modalButtonSecondaryText}>
+                        Remove Salute
+                      </Text>
                     </TouchableOpacity>
                   </>
                 ) : (
                   <>
                     <Text style={styles.modalDescription}>
-                      Give this player a salute to recognize their great sportsmanship and skills!
+                      Give this player a salute to recognize their great
+                      sportsmanship and skills!
                     </Text>
                     <TouchableOpacity
                       style={styles.modalButtonPrimary}
                       onPress={handleSalute}
                     >
-                      <Text style={styles.modalButtonPrimaryText}>≡ƒÖî Salute Player</Text>
+                      <Text style={styles.modalButtonPrimaryText}>
+                        ≡ƒÖî Salute Player
+                      </Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -1472,6 +1848,36 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 16,
     color: '#FFFFFF',
+  },
+  ownerJoinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.cobalt,
+    borderRadius: 12,
+    paddingVertical: 14,
+  },
+  ownerJoinBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.cobalt,
+  },
+  ownerStepOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.heart,
+    borderRadius: 12,
+    paddingVertical: 14,
+  },
+  ownerStepOutBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.heart,
   },
   ownerDeleteBtn: {
     borderWidth: 2,

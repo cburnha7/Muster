@@ -30,8 +30,12 @@ export class UserService extends BaseApiService {
   async updateProfile(updates: UpdateProfileData): Promise<User> {
     const data = {
       ...updates,
-      // Convert Date to ISO string if present
-      dateOfBirth: updates.dateOfBirth?.toISOString(),
+      // Ensure dateOfBirth is sent as a string — handle both Date objects and strings
+      dateOfBirth: updates.dateOfBirth
+        ? typeof updates.dateOfBirth === 'string'
+          ? updates.dateOfBirth
+          : (updates.dateOfBirth as Date).toISOString()
+        : undefined,
     };
 
     return this.put<User>(API_ENDPOINTS.USERS.PROFILE, data);
@@ -66,6 +70,26 @@ export class UserService extends BaseApiService {
       formData,
       onProgress
     );
+  }
+
+  /**
+   * Upload profile image as base64 data URI (matches server JSON body expectation)
+   */
+  async uploadProfileImageData(
+    imageData: string
+  ): Promise<{ imageUrl: string }> {
+    return this.post<{ imageUrl: string }>(API_ENDPOINTS.USERS.PROFILE_IMAGE, {
+      imageData,
+    });
+  }
+
+  /**
+   * Set profile image from a URL
+   */
+  async uploadProfileImageUrl(imageUrl: string): Promise<{ imageUrl: string }> {
+    return this.post<{ imageUrl: string }>(API_ENDPOINTS.USERS.PROFILE_IMAGE, {
+      imageUrl,
+    });
   }
 
   /**

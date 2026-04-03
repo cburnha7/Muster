@@ -22,6 +22,7 @@ import { TimePickerInput } from '../../components/forms/TimePickerInput';
 import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 
 import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
@@ -197,7 +198,8 @@ export function EditEventScreen(): JSX.Element {
         status: eventResponse.status,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load event';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to load event';
       setLoadError(errorMessage);
     } finally {
       setIsLoadingEvent(false);
@@ -210,17 +212,19 @@ export function EditEventScreen(): JSX.Element {
     (async () => {
       try {
         const data = await eventService.getEventParticipants(eventId, true);
-        const confirmed: InvitedPlayer[] = (data.participants || []).map((p: any) => ({
-          userId: p.userId,
-          firstName: p.user?.firstName || 'Unknown',
-          lastName: p.user?.lastName || '',
-          profileImage: p.user?.profileImage,
-          status: 'confirmed' as const,
-        }));
+        const confirmed: InvitedPlayer[] = (data.participants || []).map(
+          (p: any) => ({
+            userId: p.userId,
+            firstName: p.user?.firstName || 'Unknown',
+            lastName: p.user?.lastName || '',
+            profileImage: p.user?.profileImage,
+            status: 'confirmed' as const,
+          })
+        );
         // Fetch invited users who haven't joined yet
         const invitedIds: string[] = event.invitedUserIds || [];
-        const confirmedIds = new Set(confirmed.map((p) => p.userId));
-        const pendingIds = invitedIds.filter((id) => !confirmedIds.has(id));
+        const confirmedIds = new Set(confirmed.map(p => p.userId));
+        const pendingIds = invitedIds.filter(id => !confirmedIds.has(id));
         let pending: InvitedPlayer[] = [];
         if (pendingIds.length > 0) {
           // Fetch user details for pending invites
@@ -229,53 +233,102 @@ export function EditEventScreen(): JSX.Element {
               const resp = await fetch(`${API_BASE_URL}/users/${uid}`);
               if (resp.ok) {
                 const u = await resp.json();
-                pending.push({ userId: u.id, firstName: u.firstName, lastName: u.lastName, profileImage: u.profileImage, status: 'invited' });
+                pending.push({
+                  userId: u.id,
+                  firstName: u.firstName,
+                  lastName: u.lastName,
+                  profileImage: u.profileImage,
+                  status: 'invited',
+                });
               }
-            } catch (err) { console.warn('Failed to fetch user:', uid, (err as Error).message); }
+            } catch (err) {
+              console.warn(
+                'Failed to fetch user:',
+                uid,
+                (err as Error).message
+              );
+            }
           }
         }
         setPlayers([...confirmed, ...pending]);
-      } catch (err) { console.warn('Failed to load players:', (err as Error).message); }
+      } catch (err) {
+        console.warn('Failed to load players:', (err as Error).message);
+      }
     })();
   }, [event, eventId]);
 
   // Invite search
   useEffect(() => {
-    if (!inviteQuery.trim()) { setInviteResults([]); return; }
+    if (!inviteQuery.trim()) {
+      setInviteResults([]);
+      return;
+    }
     const timer = setTimeout(async () => {
       try {
         const isGame = formData.eventType === EventType.GAME;
         if (isGame) {
-          const res = await teamService.getTeams(undefined, { page: 1, limit: 15 });
+          const res = await teamService.getTeams(undefined, {
+            page: 1,
+            limit: 15,
+          });
           setInviteResults(
             (res.data || [])
-              .filter((t: any) => t.name.toLowerCase().includes(inviteQuery.toLowerCase()))
-              .map((t: any) => ({ id: t.id, name: t.name, type: 'roster' as const }))
+              .filter((t: any) =>
+                t.name.toLowerCase().includes(inviteQuery.toLowerCase())
+              )
+              .map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                type: 'roster' as const,
+              }))
           );
         } else {
           let searchPlayers: any[] = [];
           try {
-            const resp = await fetch(`${API_BASE_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`);
+            const resp = await fetch(
+              `${API_BASE_URL}/users/search?query=${encodeURIComponent(inviteQuery)}&limit=10`
+            );
             const json = await resp.json();
             searchPlayers = Array.isArray(json) ? json : json.data || [];
-          } catch (err) { console.warn('Player search failed:', (err as Error).message); }
+          } catch (err) {
+            console.warn('Player search failed:', (err as Error).message);
+          }
           setInviteResults(
-            searchPlayers.map((u: any) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`, type: 'player' as const, image: u.profileImage }))
+            searchPlayers.map((u: any) => ({
+              id: u.id,
+              name: `${u.firstName} ${u.lastName}`,
+              type: 'player' as const,
+              image: u.profileImage,
+            }))
           );
         }
-      } catch { setInviteResults([]); }
+      } catch {
+        setInviteResults([]);
+      }
     }, 300);
     return () => clearTimeout(timer);
   }, [inviteQuery, formData.eventType]);
 
   const addInvite = (item: InviteItem) => {
-    if (players.some((p) => p.userId === item.id)) return;
-    setPlayers((prev) => [...prev, { userId: item.id, firstName: item.name.split(' ')[0] || item.name, lastName: item.name.split(' ').slice(1).join(' '), profileImage: item.image, status: 'invited' }]);
-    setInviteQuery(''); setInviteResults([]);
+    if (players.some(p => p.userId === item.id)) return;
+    setPlayers(prev => [
+      ...prev,
+      {
+        userId: item.id,
+        firstName: item.name.split(' ')[0] || item.name,
+        lastName: item.name.split(' ').slice(1).join(' '),
+        profileImage: item.image,
+        status: 'invited',
+      },
+    ]);
+    setInviteQuery('');
+    setInviteResults([]);
   };
 
   const removeInvite = (userId: string) => {
-    setPlayers((prev) => prev.filter((p) => p.userId !== userId || p.status === 'confirmed'));
+    setPlayers(prev =>
+      prev.filter(p => p.userId !== userId || p.status === 'confirmed')
+    );
   };
 
   // Get facility options
@@ -287,7 +340,7 @@ export function EditEventScreen(): JSX.Element {
   // Handle input change
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -339,7 +392,7 @@ export function EditEventScreen(): JSX.Element {
       if (isNaN(maxParticipants) || maxParticipants < 1) {
         newErrors.maxParticipants = 'Must be a valid number greater than 0';
       }
-      
+
       // Check if reducing capacity below current participants
       if (event && maxParticipants < event.currentParticipants) {
         newErrors.maxParticipants = `Cannot reduce below current participants (${event.currentParticipants})`;
@@ -365,8 +418,15 @@ export function EditEventScreen(): JSX.Element {
     }
 
     // Date/time validation
-    if (formData.startDate && formData.startTime && formData.endDate && formData.endTime) {
-      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+    if (
+      formData.startDate &&
+      formData.startTime &&
+      formData.endDate &&
+      formData.endTime
+    ) {
+      const startDateTime = new Date(
+        `${formData.startDate}T${formData.startTime}`
+      );
       const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
       if (endDateTime <= startDateTime) {
@@ -376,7 +436,8 @@ export function EditEventScreen(): JSX.Element {
 
     // Log each validation failure
     Object.entries(newErrors).forEach(([field, msg]) => {
-      if (msg) loggingService.logValidation('EditEventScreen', field, 'invalid', msg);
+      if (msg)
+        loggingService.logValidation('EditEventScreen', field, 'invalid', msg);
     });
 
     setErrors(newErrors);
@@ -393,7 +454,9 @@ export function EditEventScreen(): JSX.Element {
     try {
       setIsLoading(true);
 
-      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+      const startDateTime = new Date(
+        `${formData.startDate}T${formData.startTime}`
+      );
       const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
       const updateData: UpdateEventData = {
@@ -406,11 +469,16 @@ export function EditEventScreen(): JSX.Element {
         maxParticipants: parseInt(formData.maxParticipants),
         price: parseFloat(formData.price),
         skillLevel: formData.skillLevel as SkillLevel,
-        equipment: formData.equipment.split(',').map(item => item.trim()).filter(Boolean),
+        equipment: formData.equipment
+          .split(',')
+          .map(item => item.trim())
+          .filter(Boolean),
         rules: formData.rules.trim() || undefined,
         eventType: formData.eventType as EventType,
         status: formData.status as EventStatus,
-        invitedUserIds: players.filter((p) => p.status === 'invited').map((p) => p.userId),
+        invitedUserIds: players
+          .filter(p => p.status === 'invited')
+          .map(p => p.userId),
       } as any;
 
       const updatedEvent = await eventService.updateEvent(event.id, updateData);
@@ -419,7 +487,8 @@ export function EditEventScreen(): JSX.Element {
       // Navigate back to the event details screen
       navigation.goBack();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update event';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to update event';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -451,19 +520,16 @@ export function EditEventScreen(): JSX.Element {
     try {
       setIsLoading(true);
       await eventService.deleteEvent(event.id);
-      
-      Alert.alert(
-        'Success',
-        'Event deleted successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+
+      Alert.alert('Success', 'Event deleted successfully!', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete event';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to delete event';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -496,10 +562,7 @@ export function EditEventScreen(): JSX.Element {
           showBack={true}
           onBackPress={handleCancel}
         />
-        <ErrorDisplay
-          message={loadError}
-          onRetry={loadEventAndFacilities}
-        />
+        <ErrorDisplay message={loadError} onRetry={loadEventAndFacilities} />
       </View>
     );
   }
@@ -526,7 +589,7 @@ export function EditEventScreen(): JSX.Element {
             label="Event Title"
             placeholder="Enter event title"
             value={formData.title}
-            onChangeText={(value) => handleInputChange('title', value)}
+            onChangeText={value => handleInputChange('title', value)}
             error={errors.title}
             required
           />
@@ -536,7 +599,7 @@ export function EditEventScreen(): JSX.Element {
             placeholder="Select sport"
             value={formData.sportType}
             options={sportTypeOptions}
-            onSelect={(option) => handleSelectChange('sportType', option)}
+            onSelect={option => handleSelectChange('sportType', option)}
             error={errors.sportType}
             required
           />
@@ -546,7 +609,7 @@ export function EditEventScreen(): JSX.Element {
             placeholder="Select grounds"
             value={formData.facilityId}
             options={facilityOptions}
-            onSelect={(option) => handleSelectChange('facilityId', option)}
+            onSelect={option => handleSelectChange('facilityId', option)}
             error={errors.facilityId}
             required
             footerOption={{
@@ -571,7 +634,7 @@ export function EditEventScreen(): JSX.Element {
             <DatePickerInput
               label="Start Date"
               value={formData.startDate}
-              onChange={(value) => handleInputChange('startDate', value)}
+              onChange={value => handleInputChange('startDate', value)}
               error={errors.startDate}
               containerStyle={styles.dateInput}
               required
@@ -580,7 +643,7 @@ export function EditEventScreen(): JSX.Element {
             <TimePickerInput
               label="Start Time"
               value={formData.startTime}
-              onChange={(value) => handleInputChange('startTime', value)}
+              onChange={value => handleInputChange('startTime', value)}
               error={errors.startTime}
               containerStyle={styles.timeInput}
               required
@@ -591,7 +654,7 @@ export function EditEventScreen(): JSX.Element {
             <DatePickerInput
               label="End Date"
               value={formData.endDate}
-              onChange={(value) => handleInputChange('endDate', value)}
+              onChange={value => handleInputChange('endDate', value)}
               error={errors.endDate}
               containerStyle={styles.dateInput}
               required
@@ -600,7 +663,7 @@ export function EditEventScreen(): JSX.Element {
             <TimePickerInput
               label="End Time"
               value={formData.endTime}
-              onChange={(value) => handleInputChange('endTime', value)}
+              onChange={value => handleInputChange('endTime', value)}
               error={errors.endTime}
               containerStyle={styles.timeInput}
               required
@@ -612,7 +675,9 @@ export function EditEventScreen(): JSX.Element {
               label="Max Participants"
               placeholder="e.g., 10"
               value={formData.maxParticipants}
-              onChangeText={(value) => handleInputChange('maxParticipants', value)}
+              onChangeText={value =>
+                handleInputChange('maxParticipants', value)
+              }
               error={errors.maxParticipants}
               keyboardType="numeric"
               containerStyle={styles.numberInput}
@@ -623,7 +688,7 @@ export function EditEventScreen(): JSX.Element {
               label="Price (USD)"
               placeholder="0.00"
               value={formData.price}
-              onChangeText={(value) => handleInputChange('price', value)}
+              onChangeText={value => handleInputChange('price', value)}
               error={errors.price}
               keyboardType="decimal-pad"
               containerStyle={styles.numberInput}
@@ -635,7 +700,7 @@ export function EditEventScreen(): JSX.Element {
             placeholder="Select skill level"
             value={formData.skillLevel}
             options={skillLevelOptions}
-            onSelect={(option) => handleSelectChange('skillLevel', option)}
+            onSelect={option => handleSelectChange('skillLevel', option)}
             error={errors.skillLevel}
             required
           />
@@ -645,7 +710,7 @@ export function EditEventScreen(): JSX.Element {
             placeholder="Select event type"
             value={formData.eventType}
             options={eventTypeOptions}
-            onSelect={(option) => handleSelectChange('eventType', option)}
+            onSelect={option => handleSelectChange('eventType', option)}
             error={errors.eventType}
             required
           />
@@ -655,7 +720,7 @@ export function EditEventScreen(): JSX.Element {
             placeholder="Select status"
             value={formData.status}
             options={statusOptions}
-            onSelect={(option) => handleSelectChange('status', option)}
+            onSelect={option => handleSelectChange('status', option)}
             error={errors.status}
             required
           />
@@ -664,22 +729,26 @@ export function EditEventScreen(): JSX.Element {
             label="Equipment Needed"
             placeholder="e.g., Basketball, Water bottle (comma separated)"
             value={formData.equipment}
-            onChangeText={(value) => handleInputChange('equipment', value)}
+            onChangeText={value => handleInputChange('equipment', value)}
           />
 
           <FormInput
             label="Rules & Notes"
             placeholder="Any special rules or notes for participants"
             value={formData.rules}
-            onChangeText={(value) => handleInputChange('rules', value)}
+            onChangeText={value => handleInputChange('rules', value)}
             multiline
             numberOfLines={3}
           />
 
           {event && (
             <View style={styles.eventInfo}>
-              <Text style={styles.infoLabel}>Current Participants: {event.currentParticipants}</Text>
-              <Text style={styles.infoLabel}>Created: {new Date(event.createdAt).toLocaleDateString()}</Text>
+              <Text style={styles.infoLabel}>
+                Current Participants: {event.currentParticipants}
+              </Text>
+              <Text style={styles.infoLabel}>
+                Created: {new Date(event.createdAt).toLocaleDateString()}
+              </Text>
             </View>
           )}
 
@@ -687,23 +756,35 @@ export function EditEventScreen(): JSX.Element {
           {players.length > 0 && (
             <View style={styles.playersSection}>
               <Text style={styles.playersSectionTitle}>Players</Text>
-              {players.map((p) => (
+              {players.map(p => (
                 <View key={p.userId} style={styles.playerRow}>
                   {p.profileImage ? (
-                    <Image source={{ uri: p.profileImage }} style={styles.playerAvatar} />
+                    <Image
+                      source={{ uri: p.profileImage }}
+                      style={styles.playerAvatar}
+                    />
                   ) : (
                     <View style={styles.playerAvatarFallback}>
                       <Ionicons name="person" size={16} color="#FFFFFF" />
                     </View>
                   )}
-                  <Text style={styles.playerName}>{p.firstName} {p.lastName}</Text>
+                  <Text style={styles.playerName}>
+                    {p.firstName} {p.lastName}
+                  </Text>
                   {p.status === 'invited' && (
                     <>
                       <View style={styles.invitedBadge}>
                         <Text style={styles.invitedBadgeText}>Invited</Text>
                       </View>
-                      <TouchableOpacity onPress={() => removeInvite(p.userId)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                        <Ionicons name="close-circle" size={20} color={colors.inkFaint} />
+                      <TouchableOpacity
+                        onPress={() => removeInvite(p.userId)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={20}
+                          color={colors.inkFaint}
+                        />
                       </TouchableOpacity>
                     </>
                   )}
@@ -717,21 +798,36 @@ export function EditEventScreen(): JSX.Element {
             <Text style={styles.playersSectionTitle}>Invite Players</Text>
             <TextInput
               style={styles.inviteInput}
-              placeholder={formData.eventType === EventType.GAME ? 'Search rosters...' : 'Search players...'}
+              placeholder={
+                formData.eventType === EventType.GAME
+                  ? 'Search rosters...'
+                  : 'Search players...'
+              }
               placeholderTextColor={colors.inkFaint}
               value={inviteQuery}
               onChangeText={setInviteQuery}
             />
             {inviteResults.length > 0 && (
               <View style={styles.inviteDropdown}>
-                {inviteResults.slice(0, 8).map((item) => (
-                  <TouchableOpacity key={item.id} style={styles.inviteDropdownRow} onPress={() => addInvite(item)}>
+                {inviteResults.slice(0, 8).map(item => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.inviteDropdownRow}
+                    onPress={() => addInvite(item)}
+                  >
                     {item.type === 'roster' ? (
                       <Ionicons name="people" size={18} color={colors.cobalt} />
                     ) : item.image ? (
-                      <Image source={{ uri: item.image }} style={styles.inviteDropdownAvatar} />
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.inviteDropdownAvatar}
+                      />
                     ) : (
-                      <Ionicons name="person" size={18} color={colors.inkFaint} />
+                      <Ionicons
+                        name="person"
+                        size={18}
+                        color={colors.inkFaint}
+                      />
                     )}
                     <Text style={styles.inviteDropdownText}>{item.name}</Text>
                   </TouchableOpacity>
