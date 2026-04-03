@@ -49,7 +49,7 @@ export interface SlotForDate {
 // ── Per-occurrence location for recurring events ──
 
 export interface OccurrenceLocation {
-  date: string;           // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   facilityId?: string;
   facilityName?: string;
   courtId?: string;
@@ -61,11 +61,25 @@ export interface OccurrenceLocation {
 
 export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 
-export const ALL_DAYS: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+export const ALL_DAYS: DayOfWeek[] = [
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+  'Sat',
+  'Sun',
+];
 
 // Map JS Date.getDay() (0=Sun) to our DayOfWeek
 export const DAY_INDEX_MAP: Record<number, DayOfWeek> = {
-  0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat',
+  0: 'Sun',
+  1: 'Mon',
+  2: 'Tue',
+  3: 'Wed',
+  4: 'Thu',
+  5: 'Fri',
+  6: 'Sat',
 };
 
 // ── Wizard state ──
@@ -101,8 +115,11 @@ export interface WizardState {
   selectedDate: string;
   selectedSlots: SlotData[];
   occurrenceLocations: OccurrenceLocation[];
-  locationName: string;    // open ground free-text name
-  locationAddress: string; // open ground address
+  locationName: string; // open ground free-text name
+  locationAddress: string; // open ground street address
+  locationCity: string;
+  locationState: string;
+  locationZip: string;
   locationLat: number | null;
   locationLng: number | null;
   // Step 5: Invite
@@ -122,14 +139,23 @@ export type WizardAction =
   | { type: 'SET_EVENT_TYPE'; eventType: EventType }
   | { type: 'SET_FIELD'; field: string; value: any }
   | { type: 'SET_LOCATION_MODE'; mode: 'muster' | 'open' }
-  | { type: 'SET_FACILITY'; facilityId: string; facilityName: string; isOwner: boolean }
+  | {
+      type: 'SET_FACILITY';
+      facilityId: string;
+      facilityName: string;
+      isOwner: boolean;
+    }
   | { type: 'SET_COURT'; courtId: string; courtName: string }
   | { type: 'RESET_COURT' }
   | { type: 'SET_DATE'; date: string }
   | { type: 'TOGGLE_SLOT'; slot: SlotData; slotsForDate: SlotData[] }
   | { type: 'TOGGLE_RECURRING_DAY'; day: DayOfWeek }
   | { type: 'SET_OCCURRENCE_LOCATIONS'; locations: OccurrenceLocation[] }
-  | { type: 'UPDATE_OCCURRENCE'; index: number; location: Partial<OccurrenceLocation> }
+  | {
+      type: 'UPDATE_OCCURRENCE';
+      index: number;
+      location: Partial<OccurrenceLocation>;
+    }
   | { type: 'SET_VISIBILITY'; visibility: 'private' | 'public' }
   | { type: 'ADD_INVITE'; item: InviteItem }
   | { type: 'REMOVE_INVITE'; id: string }
@@ -154,8 +180,18 @@ export function createInitialState(): WizardState {
     maxParticipants: '',
     price: '',
     startDate: new Date(),
-    startTime: (() => { const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 1); return d; })(),
-    endTime: (() => { const d = new Date(); d.setMinutes(0, 0, 0); d.setHours(d.getHours() + 2); return d; })(),
+    startTime: (() => {
+      const d = new Date();
+      d.setMinutes(0, 0, 0);
+      d.setHours(d.getHours() + 1);
+      return d;
+    })(),
+    endTime: (() => {
+      const d = new Date();
+      d.setMinutes(0, 0, 0);
+      d.setHours(d.getHours() + 2);
+      return d;
+    })(),
     recurring: false,
     recurringFrequency: null,
     recurringDays: [],
@@ -172,6 +208,9 @@ export function createInitialState(): WizardState {
     occurrenceLocations: [],
     locationName: '',
     locationAddress: '',
+    locationCity: '',
+    locationState: '',
+    locationZip: '',
     locationLat: null,
     locationLng: null,
     visibility: null,
