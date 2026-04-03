@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -162,36 +163,42 @@ export function EditProfileScreen(): JSX.Element {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0]) {
-        await uploadImage(result.assets[0].uri);
+        await uploadImage(result.assets[0]);
       }
     } catch (err: any) {
       Alert.alert('Error', 'Failed to pick image: ' + err.message);
     }
   };
 
-  const uploadImage = async (uri: string) => {
+  const uploadImage = async (asset: ImagePicker.ImagePickerAsset) => {
     try {
       setUploadingImage(true);
 
-      const formData = new FormData();
-      if (Platform.OS === 'web') {
-        const response = await fetch(uri);
+      let imageData: string;
+
+      if (asset.base64) {
+        // Use base64 from image picker (works on all platforms)
+        imageData = `data:image/jpeg;base64,${asset.base64}`;
+      } else if (Platform.OS === 'web') {
+        // Fallback for web: convert blob to base64
+        const response = await fetch(asset.uri);
         const blob = await response.blob();
-        const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-        formData.append('image', file);
+        imageData = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
       } else {
-        // React Native: use uri-based object (File constructor doesn't exist)
-        formData.append('image', {
-          uri,
-          name: 'profile.jpg',
-          type: 'image/jpeg',
-        } as any);
+        // Fallback: send URI (won't persist for other users but won't crash)
+        imageData = asset.uri;
       }
 
-      const result = await userService.uploadProfileImageFormData(formData);
+      const result = await userService.uploadProfileImageData(imageData);
       setProfileImage(result.imageUrl);
       Alert.alert('Success', 'Profile image updated successfully');
     } catch (err: any) {
@@ -272,264 +279,273 @@ export function EditProfileScreen(): JSX.Element {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {/* Profile Image Section */}
-        <View style={styles.imageSection}>
-          <View style={styles.imageContainer}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <View style={styles.profileImagePlaceholder}>
-                <Text style={styles.profileImagePlaceholderText}>
-                  {firstName?.[0]?.toUpperCase() || 'U'}
-                  {lastName?.[0]?.toUpperCase() || ''}
-                </Text>
-              </View>
-            )}
-            {uploadingImage && (
-              <View style={styles.uploadingOverlay}>
-                <LoadingSpinner />
-              </View>
-            )}
-          </View>
-          <View style={styles.imageButtons}>
-            <TouchableOpacity
-              style={styles.imageButton}
-              onPress={handlePickImage}
-              disabled={uploadingImage}
-            >
-              <Text style={styles.imageButtonText}>Change Photo</Text>
-            </TouchableOpacity>
-            {profileImage && (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.content}>
+          {/* Profile Image Section */}
+          <View style={styles.imageSection}>
+            <View style={styles.imageContainer}>
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View style={styles.profileImagePlaceholder}>
+                  <Text style={styles.profileImagePlaceholderText}>
+                    {firstName?.[0]?.toUpperCase() || 'U'}
+                    {lastName?.[0]?.toUpperCase() || ''}
+                  </Text>
+                </View>
+              )}
+              {uploadingImage && (
+                <View style={styles.uploadingOverlay}>
+                  <LoadingSpinner />
+                </View>
+              )}
+            </View>
+            <View style={styles.imageButtons}>
               <TouchableOpacity
-                style={[styles.imageButton, styles.removeButton]}
-                onPress={handleRemoveImage}
+                style={styles.imageButton}
+                onPress={handlePickImage}
                 disabled={uploadingImage}
               >
-                <Text style={[styles.imageButtonText, styles.removeButtonText]}>
-                  Remove
-                </Text>
+                <Text style={styles.imageButtonText}>Change Photo</Text>
               </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Form Fields */}
-        <View style={styles.formSection}>
-          <FormInput
-            label="First Name"
-            value={firstName}
-            onChangeText={setFirstName}
-            placeholder="Enter your first name"
-            error={errors.firstName}
-            returnKeyType="next"
-            onSubmitEditing={() => lastNameRef.current?.focus()}
-          />
-
-          <FormInput
-            ref={lastNameRef}
-            label="Last Name"
-            value={lastName}
-            onChangeText={setLastName}
-            placeholder="Enter your last name"
-            error={errors.lastName}
-            returnKeyType="next"
-            onSubmitEditing={() => emailRef.current?.focus()}
-          />
-
-          <FormInput
-            ref={emailRef}
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={errors.email}
-            returnKeyType="next"
-            onSubmitEditing={() => phoneRef.current?.focus()}
-          />
-
-          <FormInput
-            ref={phoneRef}
-            label="Phone Number (Optional)"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-            error={errors.phoneNumber}
-            returnKeyType="done"
-          />
-
-          {/* Gender */}
-          <FormSelect
-            label="Gender"
-            options={GENDER_OPTIONS}
-            value={gender}
-            onSelect={o => setGender(String(o.value))}
-            placeholder="Prefer not to say"
-          />
-
-          {/* Birthday — Month / Day / Year dropdowns */}
-          <Text
-            style={{
-              fontFamily: fonts.body,
-              fontSize: 16,
-              fontWeight: '500',
-              color: '#333',
-              marginBottom: 8,
-              marginTop: 8,
-            }}
-          >
-            Birthday
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1 }}>
-              <FormSelect
-                label=""
-                options={Array.from({ length: 12 }, (_, i) => ({
-                  label: new Date(2000, i).toLocaleString('en', {
-                    month: 'long',
-                  }),
-                  value: String(i + 1),
-                }))}
-                value={birthMonth}
-                onSelect={o => setBirthMonth(String(o.value))}
-                placeholder="Month"
-              />
-            </View>
-            <View style={{ flex: 0.6 }}>
-              <FormSelect
-                label=""
-                options={Array.from({ length: 31 }, (_, i) => ({
-                  label: String(i + 1),
-                  value: String(i + 1),
-                }))}
-                value={birthDay}
-                onSelect={o => setBirthDay(String(o.value))}
-                placeholder="Day"
-              />
-            </View>
-            <View style={{ flex: 0.8 }}>
-              <FormSelect
-                label=""
-                options={Array.from({ length: 80 }, (_, i) => {
-                  const y = new Date().getFullYear() - i;
-                  return { label: String(y), value: String(y) };
-                })}
-                value={birthYear}
-                onSelect={o => setBirthYear(String(o.value))}
-                placeholder="Year"
-              />
-            </View>
-          </View>
-
-          {/* Home Address — autocomplete */}
-          <FormInput
-            label="Home Address"
-            value={address}
-            onChangeText={text => {
-              setAddress(text);
-              // Google Places autocomplete
-              if (text.length >= 3) {
-                const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-                if (apiKey) {
-                  fetch(
-                    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
-                  )
-                    .then(r => r.json())
-                    .then(data =>
-                      setAddressSuggestions(
-                        (data.predictions || []).map((p: any) => p.description)
-                      )
-                    )
-                    .catch(() => setAddressSuggestions([]));
-                }
-              } else {
-                setAddressSuggestions([]);
-              }
-            }}
-            placeholder="Start typing your address..."
-          />
-          {addressSuggestions.length > 0 && (
-            <View
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: colors.outlineVariant,
-                marginTop: -8,
-                marginBottom: 8,
-              }}
-            >
-              {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
+              {profileImage && (
                 <TouchableOpacity
-                  key={idx}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                    borderBottomWidth: idx < 4 ? 1 : 0,
-                    borderBottomColor: colors.outlineVariant,
-                  }}
-                  onPress={() => {
-                    setAddress(suggestion);
-                    setAddressSuggestions([]);
-                  }}
+                  style={[styles.imageButton, styles.removeButton]}
+                  onPress={handleRemoveImage}
+                  disabled={uploadingImage}
                 >
                   <Text
+                    style={[styles.imageButtonText, styles.removeButtonText]}
+                  >
+                    Remove
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Form Fields */}
+          <View style={styles.formSection}>
+            <FormInput
+              label="First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder="Enter your first name"
+              error={errors.firstName}
+              returnKeyType="next"
+              onSubmitEditing={() => lastNameRef.current?.focus()}
+            />
+
+            <FormInput
+              ref={lastNameRef}
+              label="Last Name"
+              value={lastName}
+              onChangeText={setLastName}
+              placeholder="Enter your last name"
+              error={errors.lastName}
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
+            />
+
+            <FormInput
+              ref={emailRef}
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Enter your email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={errors.email}
+              returnKeyType="next"
+              onSubmitEditing={() => phoneRef.current?.focus()}
+            />
+
+            <FormInput
+              ref={phoneRef}
+              label="Phone Number (Optional)"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+              error={errors.phoneNumber}
+              returnKeyType="done"
+            />
+
+            {/* Gender */}
+            <FormSelect
+              label="Gender"
+              options={GENDER_OPTIONS}
+              value={gender}
+              onSelect={o => setGender(String(o.value))}
+              placeholder="Prefer not to say"
+            />
+
+            {/* Birthday — Month / Day / Year dropdowns */}
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 16,
+                fontWeight: '500',
+                color: '#333',
+                marginBottom: 8,
+                marginTop: 8,
+              }}
+            >
+              Birthday
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <FormSelect
+                  label=""
+                  options={Array.from({ length: 12 }, (_, i) => ({
+                    label: new Date(2000, i).toLocaleString('en', {
+                      month: 'long',
+                    }),
+                    value: String(i + 1),
+                  }))}
+                  value={birthMonth}
+                  onSelect={o => setBirthMonth(String(o.value))}
+                  placeholder="Month"
+                />
+              </View>
+              <View style={{ flex: 0.6 }}>
+                <FormSelect
+                  label=""
+                  options={Array.from({ length: 31 }, (_, i) => ({
+                    label: String(i + 1),
+                    value: String(i + 1),
+                  }))}
+                  value={birthDay}
+                  onSelect={o => setBirthDay(String(o.value))}
+                  placeholder="Day"
+                />
+              </View>
+              <View style={{ flex: 0.8 }}>
+                <FormSelect
+                  label=""
+                  options={Array.from({ length: 80 }, (_, i) => {
+                    const y = new Date().getFullYear() - i;
+                    return { label: String(y), value: String(y) };
+                  })}
+                  value={birthYear}
+                  onSelect={o => setBirthYear(String(o.value))}
+                  placeholder="Year"
+                />
+              </View>
+            </View>
+
+            {/* Home Address — autocomplete */}
+            <FormInput
+              label="Home Address"
+              value={address}
+              onChangeText={text => {
+                setAddress(text);
+                // Google Places autocomplete
+                if (text.length >= 3) {
+                  const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                  if (apiKey) {
+                    fetch(
+                      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
+                    )
+                      .then(r => r.json())
+                      .then(data =>
+                        setAddressSuggestions(
+                          (data.predictions || []).map(
+                            (p: any) => p.description
+                          )
+                        )
+                      )
+                      .catch(() => setAddressSuggestions([]));
+                  }
+                } else {
+                  setAddressSuggestions([]);
+                }
+              }}
+              placeholder="Start typing your address..."
+            />
+            {addressSuggestions.length > 0 && (
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: colors.outlineVariant,
+                  marginTop: -8,
+                  marginBottom: 8,
+                }}
+              >
+                {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
+                  <TouchableOpacity
+                    key={idx}
                     style={{
-                      fontFamily: fonts.body,
-                      fontSize: 14,
-                      color: colors.onSurface,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderBottomWidth: idx < 4 ? 1 : 0,
+                      borderBottomColor: colors.outlineVariant,
+                    }}
+                    onPress={() => {
+                      setAddress(suggestion);
+                      setAddressSuggestions([]);
                     }}
                   >
-                    {suggestion}
+                    <Text
+                      style={{
+                        fontFamily: fonts.body,
+                        fontSize: 14,
+                        color: colors.onSurface,
+                      }}
+                    >
+                      {suggestion}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Preferred Sports */}
+            <Text style={styles.sportsLabel}>Preferred Sports</Text>
+            <View style={styles.sportsList}>
+              {SPORT_OPTIONS.map(sport => (
+                <TouchableOpacity
+                  key={String(sport.value)}
+                  style={[
+                    styles.sportTag,
+                    selectedSports.includes(String(sport.value)) &&
+                      styles.sportTagSelected,
+                  ]}
+                  onPress={() => toggleSport(String(sport.value))}
+                >
+                  <Text
+                    style={[
+                      styles.sportTagText,
+                      selectedSports.includes(String(sport.value)) &&
+                        styles.sportTagTextSelected,
+                    ]}
+                  >
+                    {sport.label}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          )}
 
-          {/* Preferred Sports */}
-          <Text style={styles.sportsLabel}>Preferred Sports</Text>
-          <View style={styles.sportsList}>
-            {SPORT_OPTIONS.map(sport => (
-              <TouchableOpacity
-                key={String(sport.value)}
-                style={[
-                  styles.sportTag,
-                  selectedSports.includes(String(sport.value)) &&
-                    styles.sportTagSelected,
-                ]}
-                onPress={() => toggleSport(String(sport.value))}
-              >
-                <Text
-                  style={[
-                    styles.sportTagText,
-                    selectedSports.includes(String(sport.value)) &&
-                      styles.sportTagTextSelected,
-                  ]}
-                >
-                  {sport.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {/* Save Button */}
+            <FormButton
+              title={saving ? 'Saving...' : 'Save Changes'}
+              onPress={handleSave}
+              disabled={saving}
+              style={styles.saveButton}
+            />
           </View>
-
-          {/* Save Button */}
-          <FormButton
-            title={saving ? 'Saving...' : 'Save Changes'}
-            onPress={handleSave}
-            disabled={saving}
-            style={styles.saveButton}
-          />
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

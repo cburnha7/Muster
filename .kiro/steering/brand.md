@@ -60,3 +60,26 @@ All UI must import tokens from `src/theme/` — never hardcode colors or fonts.
 - Salute window closes 24 hours after game end
 - Players cannot salute themselves
 - Import constants from `brand.salute` — never hardcode these values
+
+## Secondary Colors
+
+### Sport type badges
+Use `sportColors[sport]` from `colors.ts` for sport type badges — each sport has its own soft bg/text pair. Never use cobalt or pine for sport badges.
+- Soccer: green `#1A7F5A`
+- Basketball: burnt orange `#C45C1A`
+- Hockey: steel blue `#1A5FA0`
+- Tennis: warm brown `#7A5C1A`
+- Volleyball: plum `#8B1A6B`
+- Rugby: deep maroon `#5C1A1A`
+- Other: slate `#3A4A6A`
+
+### Avatar colors
+Use `getAvatarColor(userId)` from `colors.ts` to assign consistent avatar background colors. Never hardcode avatar colors — always derive from userId.
+
+### Status badges
+Use the `statusX` / `statusXText` token pairs from `colors.ts`:
+- Open / available: `statusOpen` / `statusOpenText`
+- Full: `statusFull` / `statusFullText`
+- Few spots left: `statusFew` / `statusFewText`
+- Closed / completed: `statusClosed` / `statusClosedText`
+- League / Roster: `statusLeague` / `statusLeagueText`

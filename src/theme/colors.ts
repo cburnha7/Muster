@@ -1,105 +1,128 @@
-// ── Tonal Architecture ──────────────────────────────
-// Built for athletic energy: high-chroma primaries, crisp neutrals.
-// Depth is achieved through luminosity shifts, not borders.
-
 export const colors = {
-  // ── Primary (Electric Blue) ──────────────────────
-  primary:            '#0052FF',
-  primaryContainer:   '#003EC7',
-  onPrimary:          '#FFFFFF',
-  primaryFixed:       '#DDE1FF',
-  primaryFixedDim:    '#B8C4FF',
-  onPrimaryFixed:     '#001A5C',
-  onPrimaryFixedVariant: '#1A2A5C',
+  // ── Cobalt blue — PRIMARY ─────────────────────
+  cobalt: '#2040E0', // primary brand — buttons, CTAs, active states
+  cobaltLight: '#3D56F0', // hover
+  cobaltDark: '#1530B0', // pressed
+  cobaltTint: '#EEF1FD', // blue tint — badges, backgrounds
 
-  // ── Secondary (Active Green) ─────────────────────
-  secondary:          '#006D32',
-  secondaryContainer: '#55FD8C',
-  onSecondary:        '#FFFFFF',
+  // ── Pine green — SUCCESS / OPEN ───────────────
+  pine: '#2D5F3F', // success, open, available
+  pineLight: '#3D8C5E', // hover
+  pineTint: '#EBF5EF', // green tint
 
-  // ── Tertiary (Cool Grey) ─────────────────────────
-  tertiary:           '#434E62',
-  tertiaryContainer:  '#5A6578',
+  // ── Gold — SALUTE ONLY ────────────────────────
+  gold: '#D4A017', // salute accent
+  goldLight: '#F0BE40', // salute glow
+  goldTint: '#FEF3CD', // gold tint
 
-  // ── Surface Hierarchy (Tonal Layering) ───────────
-  background:         '#F7F9FB',
-  surface:            '#F7F9FB',
-  surfaceContainerLow:    '#F2F4F6',
-  surfaceContainerLowest: '#FFFFFF',
-  surfaceContainer:       '#ECEEF0',
-  surfaceContainerHigh:   '#E4E6E8',
-  surfaceDim:             '#D8DADC',
+  // ── Heart red — ERRORS / STEP OUT ────────────
+  heart: '#C0392B', // errors, destructive, Step Out
+  vermillion: '#E05A20', // red accent
+  heartTint: '#FDECEA', // red tint
 
-  // ── On-Surface / Text ────────────────────────────
-  onSurface:          '#191C1E',
-  onSurfaceVariant:   '#43474E',
-  inverseSurface:     '#2E3133',
-  inverseOnSurface:   '#F0F1F3',
+  // ── SPORT TYPE BADGES ─────────────────────────
+  sportSoccer: '#1A7F5A', // deep green
+  sportBasket: '#C45C1A', // burnt orange
+  sportHockey: '#1A5FA0', // steel blue
+  sportTennis: '#7A5C1A', // warm brown
+  sportVolley: '#8B1A6B', // plum
+  sportRugby: '#5C1A1A', // deep maroon
+  sportOther: '#3A4A6A', // slate
 
-  // ── Outline ──────────────────────────────────────
-  outline:            '#73777F',
-  outlineVariant:     '#C3C6CF',
+  // ── AVATAR PALETTE (player cards) ────────────
+  avatar1: '#2040E0', // cobalt
+  avatar2: '#2D5F3F', // pine
+  avatar3: '#C0392B', // heart
+  avatar4: '#7B4EA0', // violet
+  avatar5: '#1A7A8A', // teal
+  avatar6: '#C45C1A', // amber
+  avatar7: '#8B1A6B', // plum
+  avatar8: '#1A5FA0', // steel
 
-  // ── Error ────────────────────────────────────────
-  error:              '#BA1A1A',
-  errorContainer:     '#FFDAD6',
-  onError:            '#FFFFFF',
-  onErrorContainer:   '#410002',
+  // ── STATUS TONES ──────────────────────────────
+  statusOpen: '#EBF5EF', // available — pine tint
+  statusOpenText: '#2D5F3F',
+  statusFull: '#FDECEA', // full — heart tint
+  statusFullText: '#C0392B',
+  statusFew: '#FEF3CD', // few spots — gold tint
+  statusFewText: '#9A7200',
+  statusClosed: '#F0F0F0', // closed / completed
+  statusClosedText: '#6B7C76',
+  statusLeague: '#EEF1FD', // league / roster — cobalt tint
+  statusLeagueText: '#2040E0',
 
-  // ── Transparency helpers ─────────────────────────
-  overlay:    'rgba(25, 28, 30, 0.6)',
-  scrim:      'rgba(25, 28, 30, 0.4)',
+  // ── Surfaces ──────────────────────────────────
+  white: '#FFFFFF', // app background
+  surface: '#F8F8F8', // card background
+  border: '#E8E8E8', // dividers
 
-  // ── Legacy aliases (backward compat) ─────────────
-  pine:         '#0052FF',
-  pineLight:    '#3375FF',
-  pineDark:     '#003EC7',
-  heart:        '#BA1A1A',
-  heartLight:   '#FFDAD6',
-  heartDark:    '#93000A',
-  vermillion:   '#BA1A1A',
-  navy:         '#191C1E',
-  navyLight:    '#43474E',
-  navyDark:     '#111315',
-  bronze:       '#C3C6CF',
-  bronzeLight:  '#E4E6E8',
-  bronzeDark:   '#73777F',
-  chalk:        '#F7F9FB',
-  cream:        '#F2F4F6',
-  white:        '#FFFFFF',
-  border:       '#C3C6CF',
-  ink:          '#191C1E',
-  inkMid:       '#2E3133',
-  inkSoft:      '#43474E',
-  inkFaint:     '#73777F',
-  gold:         '#D4A017',
-  goldLight:    '#F0BE40',
-  grass:        '#0052FF',
-  grassLight:   '#3375FF',
-  grassDark:    '#003EC7',
-  track:        '#BA1A1A',
-  trackLight:   '#FFDAD6',
-  sky:          '#191C1E',
-  skyLight:     '#43474E',
-  soft:         '#73777F',
-  court:        '#C3C6CF',
-  courtLight:   '#E4E6E8',
-  textTertiary: '#73777F',
-  chalkWarm:    '#F2F4F6',
-  pineTint:     '#DDE1FF',
-  heartTint:    '#FFDAD6',
-  goldTint:     '#FEF3CD',
-  navyTint:     '#DDE1FF',
-  textPrimary:  '#191C1E',
-  textSecondary:'#43474E',
-  textMuted:    '#73777F',
-  textInverse:  '#FFFFFF',
-  fieldBackground: '#ECEEF0',
-  fieldBorder:  '#C3C6CF',
-  // cobalt alias for primary (backward compat with older screens)
-  cobalt:       '#0052FF',
-  cobaltLight:  '#3375FF',
-  cobaltDark:   '#003EC7',
+  // ── Ink / text ────────────────────────────────
+  ink: '#0F1F3D', // primary text
+  inkSoft: '#4A5568', // secondary text
+  inkFaint: '#9AA5B4', // placeholder / disabled
+
+  // ── Transparency ──────────────────────────────
+  overlay: 'rgba(32, 64, 224, 0.6)',
+  scrim: 'rgba(15, 31, 61, 0.4)',
 } as const;
 
 export type ColorKey = keyof typeof colors;
+
+// ── Backward-compatible aliases ──────────────────
+// Many components still reference the old Material Design 3 tokens.
+// These aliases map them to the new brand palette so nothing breaks.
+(colors as any).primary = colors.cobalt;
+(colors as any).primaryContainer = colors.cobaltLight;
+(colors as any).primaryFixed = colors.cobaltTint;
+(colors as any).onPrimary = colors.white;
+(colors as any).onPrimaryContainer = colors.cobalt;
+(colors as any).secondary = colors.pine;
+(colors as any).secondaryContainer = colors.pineTint;
+(colors as any).onSecondary = colors.white;
+(colors as any).onSecondaryContainer = colors.pine;
+(colors as any).tertiary = colors.gold;
+(colors as any).tertiaryContainer = colors.goldTint;
+(colors as any).error = colors.heart;
+(colors as any).errorContainer = colors.heartTint;
+(colors as any).onError = colors.white;
+(colors as any).onErrorContainer = colors.heart;
+(colors as any).background = colors.white;
+(colors as any).onBackground = colors.ink;
+(colors as any).onSurface = colors.ink;
+(colors as any).onSurfaceVariant = colors.inkSoft;
+(colors as any).surfaceContainerLowest = colors.white;
+(colors as any).surfaceContainerLow = colors.surface;
+(colors as any).surfaceContainerHigh = colors.border;
+(colors as any).outline = colors.inkSoft;
+(colors as any).outlineVariant = colors.border;
+(colors as any).textPrimary = colors.ink;
+(colors as any).textSecondary = colors.inkSoft;
+(colors as any).textTertiary = colors.inkFaint;
+
+// ── Avatar color picker (assign by user ID) ──────
+export const avatarColors = [
+  colors.avatar1,
+  colors.avatar2,
+  colors.avatar3,
+  colors.avatar4,
+  colors.avatar5,
+  colors.avatar6,
+  colors.avatar7,
+  colors.avatar8,
+];
+
+export const getAvatarColor = (userId: string): string => {
+  const index = userId.charCodeAt(0) % avatarColors.length;
+  return avatarColors[index];
+};
+
+// ── Sport badge colors ────────────────────────────
+export const sportColors: Record<string, { bg: string; text: string }> = {
+  soccer: { bg: '#E8F5EF', text: '#1A7F5A' },
+  basketball: { bg: '#FDF0E6', text: '#C45C1A' },
+  hockey: { bg: '#E6EFF8', text: '#1A5FA0' },
+  tennis: { bg: '#F5F0E6', text: '#7A5C1A' },
+  volleyball: { bg: '#F5E6F2', text: '#8B1A6B' },
+  rugby: { bg: '#F5E6E6', text: '#5C1A1A' },
+  other: { bg: '#ECEEF2', text: '#3A4A6A' },
+};

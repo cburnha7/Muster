@@ -5,9 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
-  Alert,
   RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
 import {
   useNavigation,
@@ -17,24 +16,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { ProfileCard } from '../../components/profile/ProfileCard';
+import { PressableCard } from '../../components/ui/PressableCard';
+import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../services/api/config';
-import { colors, fonts, Spacing } from '../../theme';
+import { getSportEmoji } from '../../constants/sports';
+import { getSportColor } from '../../constants/sportColors';
+import { colors, fonts } from '../../theme';
 import { DependentProfile } from '../../types/dependent';
 
-/**
- * DependentProfileScreen
- *
- * Displays a dependent's full profile: stats, sport ratings, event history,
- * Salutes, Roster memberships, and League memberships. Provides edit and
- * transfer actions.
- *
- * Requirements: 3.1, 3.2, 3.3, 4.1, 8.1
- */
-
-/**
- * Returns true if the person with the given DOB is 18 or older.
- */
 function isAge18OrOlder(dateOfBirth: string): boolean {
   const dateOnly = dateOfBirth.split('T')[0];
   const dob = new Date(dateOnly + 'T00:00:00Z');
@@ -50,10 +40,16 @@ function isAge18OrOlder(dateOfBirth: string): boolean {
   return dob <= cutoff;
 }
 
+function formatEventDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export function DependentProfileScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { user: authUser } = useAuth();
+  const { width } = useWindowDimensions();
 
   const params = (route.params as { dependentId: string }) || {};
   const { dependentId } = params;
@@ -73,17 +69,13 @@ export function DependentProfileScreen() {
       const data: DependentProfile = await response.json();
       setProfile(data);
     } catch {
-      Alert.alert(
-        'Error',
-        'Could not load dependent profile. Please try again.'
-      );
+      // handled by empty state
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [authUser?.id, dependentId]);
 
-  // Update nav header with dependent's name
   useEffect(() => {
     if (profile) {
       navigation.setOptions({
@@ -95,7 +87,6 @@ export function DependentProfileScreen() {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
-
   useFocusEffect(
     useCallback(() => {
       fetchProfile();
@@ -108,362 +99,442 @@ export function DependentProfileScreen() {
   }, [fetchProfile]);
 
   const canTransfer = profile ? isAge18OrOlder(profile.dateOfBirth) : false;
+  const contentMaxWidth = width > 600 ? 540 : undefined;
 
-  const handleEdit = () => {
-    (navigation as any).navigate('DependentForm', { dependentId });
-  };
-
-  const handleTransfer = () => {
-    (navigation as any).navigate('TransferAccount', { dependentId });
-  };
-
-  const handleAvailability = () => {
-    (navigation as any).navigate('AvailabilityCalendar', {
-      userId: dependentId,
-    });
-  };
+  const recentGames = profile?.eventHistory ?? [];
+  const rosterMemberships = profile?.rosterMemberships ?? [];
+  const leagueMemberships = profile?.leagueMemberships ?? [];
 
   if (loading) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[
+          styles.content,
+          contentMaxWidth
+            ? {
+                maxWidth: contentMaxWidth,
+                alignSelf: 'center' as const,
+                width: '100%' as unknown as number,
+              }
+            : undefined,
+        ]}
+      >
+        <SkeletonRow />
+        <SkeletonRow />
+        <SkeletonRow />
+      </ScrollView>
     );
   }
 
   if (!profile) {
     return (
-      <View style={styles.screen}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.emptyText}>Could not load profile.</Text>
-        </View>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <Ionicons
+          name="person-outline"
+          size={48}
+          color={colors.outlineVariant}
+        />
+        <Text style={styles.emptyText}>Could not load profile.</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
-        }
-      >
-        {/* Profile Card */}
-        <View style={{ marginHorizontal: 16, marginTop: 16 }}>
-          <ProfileCard
-            userId={dependentId}
-            profileImage={profile.profileImage}
-            firstName={profile.firstName}
-            lastName={profile.lastName}
-            dateOfBirth={profile.dateOfBirth}
-            gender={(profile as any).gender}
-            email={(profile as any).email}
-            phone={(profile as any).phoneNumber}
-          />
-        </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        styles.content,
+        contentMaxWidth
+          ? {
+              maxWidth: contentMaxWidth,
+              alignSelf: 'center' as const,
+              width: '100%' as unknown as number,
+            }
+          : undefined,
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Profile Card ── */}
+      <ProfileCard
+        userId={dependentId}
+        profileImage={profile.profileImage}
+        firstName={profile.firstName}
+        lastName={profile.lastName}
+        dateOfBirth={profile.dateOfBirth}
+        gender={(profile as any).gender}
+      />
 
-        {/* Action buttons */}
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleEdit}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Edit dependent profile"
-          >
-            <Ionicons name="create-outline" size={18} color={colors.primary} />
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.availabilityButton}
-            onPress={handleAvailability}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Update availability"
-          >
-            <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-            <Text style={styles.availabilityButtonText}>Availability</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.transferButton,
-              !canTransfer && styles.transferButtonDisabled,
-            ]}
-            onPress={handleTransfer}
-            disabled={!canTransfer}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Transfer account to independent"
-            accessibilityState={{ disabled: !canTransfer }}
-          >
-            <Ionicons
-              name="arrow-forward-circle-outline"
-              size={18}
-              color={canTransfer ? colors.onSurface : colors.outline}
-            />
-            <Text
-              style={[
-                styles.transferButtonText,
-                !canTransfer && styles.transferButtonTextDisabled,
-              ]}
-            >
-              Transfer
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {!canTransfer && (
-          <Text style={styles.transferHint}>
-            Transfer available when dependent turns 18
+      {/* ── Action Buttons ── */}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() =>
+            (navigation as any).navigate('DependentForm', { dependentId })
+          }
+          activeOpacity={0.7}
+        >
+          <Ionicons name="create-outline" size={18} color={colors.primary} />
+          <Text style={styles.actionBtnText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.actionBtnCobalt]}
+          onPress={() =>
+            (navigation as any).navigate('AvailabilityCalendar', {
+              userId: dependentId,
+            })
+          }
+          activeOpacity={0.7}
+        >
+          <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
+          <Text style={[styles.actionBtnText, styles.actionBtnTextCobalt]}>
+            Availability
           </Text>
-        )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.actionBtn,
+            styles.actionBtnTransfer,
+            !canTransfer && styles.actionBtnDisabled,
+          ]}
+          onPress={() =>
+            (navigation as any).navigate('TransferAccount', { dependentId })
+          }
+          disabled={!canTransfer}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="arrow-forward-circle-outline"
+            size={18}
+            color={canTransfer ? colors.onSurface : colors.outlineVariant}
+          />
+          <Text
+            style={[
+              styles.actionBtnText,
+              styles.actionBtnTextTransfer,
+              !canTransfer && styles.actionBtnTextDisabled,
+            ]}
+          >
+            Transfer
+          </Text>
+        </TouchableOpacity>
+      </View>
+      {!canTransfer && (
+        <Text style={styles.transferHint}>
+          Transfer available when dependent turns 18
+        </Text>
+      )}
 
-        {/* Event History */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Event History</Text>
-          {profile.eventHistory.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Ionicons
-                name="calendar-outline"
-                size={24}
-                color={colors.outline}
-              />
-              <Text style={styles.emptyCardText}>No events yet</Text>
-            </View>
-          ) : (
-            profile.eventHistory.map((booking: any, index: number) => (
-              <View key={booking.id ?? index} style={styles.listItem}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={18}
-                  color={colors.primary}
+      {/* ── Recent Games ── */}
+      <Text style={styles.sectionTitle}>Recent Games</Text>
+      <View style={styles.sectionCard}>
+        {recentGames.length === 0 ? (
+          <View style={styles.emptySection}>
+            <Ionicons
+              name="calendar-outline"
+              size={32}
+              color={colors.outlineVariant}
+            />
+            <Text style={styles.emptyText}>No games played yet</Text>
+          </View>
+        ) : (
+          recentGames.map((booking: any, idx: number) => {
+            const event = booking.event ?? booking;
+            const sport = event.sportType ?? '';
+            const sportColor = getSportColor(sport);
+            return (
+              <PressableCard
+                key={booking.id ?? idx}
+                style={[
+                  styles.gameRow,
+                  idx === recentGames.length - 1 && styles.gameRowLast,
+                ]}
+                onPress={() =>
+                  (navigation as any).navigate('Home', {
+                    screen: 'EventDetails',
+                    params: { eventId: event.id ?? booking.eventId },
+                  })
+                }
+              >
+                <View
+                  style={[styles.sportDot, { backgroundColor: sportColor }]}
                 />
-                <Text style={styles.listItemText} numberOfLines={1}>
-                  {booking.event?.title ?? `Event ${index + 1}`}
-                </Text>
-                {booking.event?.startTime && (
-                  <Text style={styles.listItemDate}>
-                    {new Date(booking.event.startTime).toLocaleDateString()}
+                <View style={styles.gameInfo}>
+                  <Text style={styles.gameName} numberOfLines={1}>
+                    {event.title ?? `Event ${idx + 1}`}
                   </Text>
-                )}
-              </View>
-            ))
-          )}
-        </View>
-
-        {/* Roster Memberships */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Roster Memberships</Text>
-          {profile.rosterMemberships.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Ionicons
-                name="people-outline"
-                size={24}
-                color={colors.outline}
-              />
-              <Text style={styles.emptyCardText}>
-                Not a member of any Rosters
-              </Text>
-            </View>
-          ) : (
-            profile.rosterMemberships.map((member: any, index: number) => (
-              <View key={member.id ?? index} style={styles.listItem}>
+                  {event.startTime && (
+                    <Text style={styles.gameMeta} numberOfLines={1}>
+                      {formatEventDate(event.startTime)}{' '}
+                      {event.facility?.name ? `· ${event.facility.name}` : ''}
+                    </Text>
+                  )}
+                </View>
                 <Ionicons
-                  name="people-outline"
-                  size={18}
-                  color={colors.primary}
+                  name="chevron-forward"
+                  size={14}
+                  color={colors.outlineVariant}
                 />
-                <Text style={styles.listItemText} numberOfLines={1}>
-                  {member.team?.name ?? `Roster ${index + 1}`}
-                </Text>
-              </View>
-            ))
-          )}
-        </View>
+              </PressableCard>
+            );
+          })
+        )}
+      </View>
 
-        {/* League Memberships */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>League Memberships</Text>
-          {profile.leagueMemberships.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Ionicons
-                name="trophy-outline"
-                size={24}
-                color={colors.outline}
-              />
-              <Text style={styles.emptyCardText}>
-                Not a member of any Leagues
-              </Text>
-            </View>
-          ) : (
-            profile.leagueMemberships.map((membership: any, index: number) => (
-              <View key={membership.id ?? index} style={styles.listItem}>
+      {/* ── Teams ── */}
+      <Text style={styles.sectionTitle}>Teams</Text>
+      <View style={styles.sectionCard}>
+        {rosterMemberships.length === 0 ? (
+          <View style={styles.emptySection}>
+            <Ionicons
+              name="people-outline"
+              size={32}
+              color={colors.outlineVariant}
+            />
+            <Text style={styles.emptyText}>Not a member of any Rosters</Text>
+          </View>
+        ) : (
+          rosterMemberships.map((member: any, idx: number) => {
+            const team = member.team ?? {};
+            const sport = (team.sportTypes?.[0] ??
+              team.sportType ??
+              '') as string;
+            return (
+              <PressableCard
+                key={member.id ?? idx}
+                style={[
+                  styles.gameRow,
+                  idx === rosterMemberships.length - 1 && styles.gameRowLast,
+                ]}
+                onPress={() =>
+                  (navigation as any).getParent()?.navigate('Teams', {
+                    screen: 'TeamDetails',
+                    params: { teamId: team.id ?? member.teamId },
+                  })
+                }
+              >
+                <View
+                  style={[
+                    styles.teamIconCircle,
+                    { backgroundColor: getSportColor(sport) + '18' },
+                  ]}
+                >
+                  <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
+                </View>
+                <View style={styles.gameInfo}>
+                  <Text style={styles.gameName} numberOfLines={1}>
+                    {team.name ?? `Roster ${idx + 1}`}
+                  </Text>
+                  <Text style={styles.gameMeta}>
+                    {team.members?.length ?? 0} players
+                  </Text>
+                </View>
                 <Ionicons
-                  name="trophy-outline"
-                  size={18}
-                  color={colors.primary}
+                  name="chevron-forward"
+                  size={14}
+                  color={colors.outlineVariant}
                 />
-                <Text style={styles.listItemText} numberOfLines={1}>
-                  {membership.league?.name ?? `League ${index + 1}`}
-                </Text>
-              </View>
-            ))
-          )}
-        </View>
+              </PressableCard>
+            );
+          })
+        )}
+      </View>
 
-        <View style={{ height: 32 }} />
-      </ScrollView>
-    </View>
+      {/* ── League Memberships ── */}
+      <Text style={styles.sectionTitle}>League Memberships</Text>
+      <View style={styles.sectionCard}>
+        {leagueMemberships.length === 0 ? (
+          <View style={styles.emptySection}>
+            <Ionicons
+              name="trophy-outline"
+              size={32}
+              color={colors.outlineVariant}
+            />
+            <Text style={styles.emptyText}>Not a member of any Leagues</Text>
+          </View>
+        ) : (
+          leagueMemberships.map((membership: any, idx: number) => {
+            const league = membership.league ?? {};
+            const sport = (league.sportType ?? '') as string;
+            return (
+              <PressableCard
+                key={membership.id ?? idx}
+                style={[
+                  styles.gameRow,
+                  idx === leagueMemberships.length - 1 && styles.gameRowLast,
+                ]}
+                onPress={() =>
+                  (navigation as any).getParent()?.navigate('Leagues', {
+                    screen: 'LeagueDetails',
+                    params: { leagueId: league.id ?? membership.leagueId },
+                  })
+                }
+              >
+                <View
+                  style={[
+                    styles.teamIconCircle,
+                    { backgroundColor: getSportColor(sport) + '18' },
+                  ]}
+                >
+                  <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
+                </View>
+                <View style={styles.gameInfo}>
+                  <Text style={styles.gameName} numberOfLines={1}>
+                    {league.name ?? `League ${idx + 1}`}
+                  </Text>
+                  <Text style={styles.gameMeta}>
+                    {sport
+                      ? sport.charAt(0).toUpperCase() + sport.slice(1)
+                      : ''}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={14}
+                  color={colors.outlineVariant}
+                />
+              </PressableCard>
+            );
+          })
+        )}
+      </View>
+
+      <View style={{ height: 32 }} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.background,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
+  content: {
     paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.outline,
-  },
-  headerActions: {
+  actionRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    marginHorizontal: 16,
     gap: 8,
+    marginTop: 14,
   },
-  editButton: {
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.primary,
+    gap: 4,
   },
-  editButtonText: {
+  actionBtnCobalt: {
+    borderColor: colors.cobalt,
+  },
+  actionBtnTransfer: {
+    borderColor: colors.onSurface,
+  },
+  actionBtnDisabled: {
+    borderColor: colors.outlineVariant,
+    opacity: 0.6,
+  },
+  actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
     color: colors.primary,
-    marginLeft: 4,
   },
-  availabilityButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.cobalt,
-  },
-  availabilityButtonText: {
-    fontFamily: fonts.ui,
-    fontSize: 13,
+  actionBtnTextCobalt: {
     color: colors.cobalt,
-    marginLeft: 4,
   },
-  transferButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.onSurface,
-  },
-  transferButtonDisabled: {
-    borderColor: colors.outline + '40',
-    opacity: 0.6,
-  },
-  transferButtonText: {
-    fontFamily: fonts.ui,
-    fontSize: 13,
+  actionBtnTextTransfer: {
     color: colors.onSurface,
-    marginLeft: 4,
   },
-  transferButtonTextDisabled: {
-    color: colors.outline,
+  actionBtnTextDisabled: {
+    color: colors.outlineVariant,
   },
   transferHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.outline,
-    marginTop: 8,
-    marginHorizontal: 16,
+    color: colors.outlineVariant,
+    marginTop: 6,
     fontStyle: 'italic',
   },
-  section: {
-    marginHorizontal: 16,
-    marginTop: 16,
-  },
   sectionTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 24,
+    fontFamily: fonts.headingSemi,
+    fontSize: 16,
     color: colors.onSurface,
-    marginBottom: Spacing.sm,
+    marginTop: 24,
+    marginBottom: 10,
+    letterSpacing: -0.2,
   },
-  emptyCard: {
+  sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
-  emptyCardText: {
-    fontFamily: fonts.body,
-    fontSize: 14,
-    color: colors.outline,
-    marginTop: Spacing.sm,
-  },
-  listItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
+  gameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.outlineVariant + '50',
   },
-  listItemText: {
-    fontFamily: fonts.label,
-    fontSize: 14,
-    color: colors.onSurface,
+  gameRowLast: {
+    borderBottomWidth: 0,
+  },
+  sportDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  teamIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamEmoji: {
+    fontSize: 18,
+  },
+  gameInfo: {
     flex: 1,
+    gap: 2,
   },
-  listItemDate: {
+  gameName: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.onSurface,
+  },
+  gameMeta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.outline,
+    color: colors.onSurfaceVariant,
+  },
+  emptySection: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  emptyText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
   },
 });

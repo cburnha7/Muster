@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -58,29 +60,34 @@ export function EventFlowContainer({
         <View style={styles.backBtn} />
       </View>
 
-      <View style={styles.stageContainer}>{childArray[currentStep]}</View>
+      <KeyboardAvoidingView
+        style={styles.stageContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.stageContainer}>{childArray[currentStep]}</View>
 
-      {showButton && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              (!enabled || state.isSubmitting) && styles.buttonDisabled,
-            ]}
-            onPress={handlePress}
-            disabled={!enabled || state.isSubmitting}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>
-              {state.isSubmitting
-                ? 'Creating...'
-                : isLastStep
-                  ? 'Create Event'
-                  : 'Continue'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        {showButton && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                (!enabled || state.isSubmitting) && styles.buttonDisabled,
+              ]}
+              onPress={handlePress}
+              disabled={!enabled || state.isSubmitting}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>
+                {state.isSubmitting
+                  ? 'Creating...'
+                  : isLastStep
+                    ? 'Create Event'
+                    : 'Continue'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

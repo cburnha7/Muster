@@ -8,7 +8,10 @@ import {
   TextInput,
   ActivityIndicator,
   Keyboard,
-  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
@@ -53,6 +56,7 @@ export function CancelEventModal({
   };
 
   const handleCancel = () => {
+    Keyboard.dismiss();
     setReason('');
     setError('');
     onCancel();
@@ -65,86 +69,86 @@ export function CancelEventModal({
       animationType="fade"
       onRequestClose={handleCancel}
     >
-      <View style={styles.overlay}>
-        <TouchableWithoutFeedback
-          onPress={() => {
-            Keyboard.dismiss();
-          }}
-        >
-          <View style={StyleSheet.absoluteFill} />
-        </TouchableWithoutFeedback>
-        <TouchableOpacity
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {/* Tapping the backdrop dismisses keyboard only — does NOT close modal */}
+        <Pressable
           style={StyleSheet.absoluteFill}
-          activeOpacity={1}
-          onPress={() => {
-            Keyboard.dismiss();
-            handleCancel();
-          }}
+          onPress={() => Keyboard.dismiss()}
         />
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Ionicons name="warning" size={32} color={colors.heart} />
-            <Text style={styles.title}>Cancel Event</Text>
-          </View>
 
-          <Text style={styles.eventTitle}>{eventTitle}</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.header}>
+              <Ionicons name="warning" size={32} color={colors.heart} />
+              <Text style={styles.title}>Step Out of Event</Text>
+            </View>
 
-          <Text style={styles.description}>
-            This will cancel the event and notify all participants. Please
-            provide a reason for the cancellation.
-          </Text>
+            <Text style={styles.eventTitle}>{eventTitle}</Text>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Cancellation Reason *</Text>
-            <TextInput
-              style={[styles.input, error ? styles.inputError : null]}
-              placeholder="e.g., Bad weather, facility unavailable, etc."
-              value={reason}
-              onChangeText={text => {
-                setReason(text);
-                setError('');
-              }}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              maxLength={500}
-              editable={!isSubmitting}
-            />
-            <Text style={styles.charCount}>
-              {reason.length}/500
-              {reason.trim().length < MIN_CHARS ? ` (min ${MIN_CHARS})` : ''}
+            <Text style={styles.description}>
+              This will cancel the event and notify all participants. Please
+              provide a reason for the cancellation.
             </Text>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          </View>
 
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.button, styles.buttonSecondary]}
-              onPress={handleCancel}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.buttonSecondaryText}>Keep Event</Text>
-            </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Cancellation Reason *</Text>
+              <TextInput
+                style={[styles.input, error ? styles.inputError : null]}
+                placeholder="e.g., Bad weather, facility unavailable, etc."
+                value={reason}
+                onChangeText={text => {
+                  setReason(text);
+                  setError('');
+                }}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                maxLength={500}
+                editable={!isSubmitting}
+              />
+              <Text style={styles.charCount}>
+                {reason.length}/500
+                {reason.trim().length < MIN_CHARS ? ` (min ${MIN_CHARS})` : ''}
+              </Text>
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </View>
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.buttonDanger,
-                (isSubmitting || reason.trim().length < MIN_CHARS) &&
-                  styles.buttonDisabled,
-              ]}
-              onPress={handleConfirm}
-              disabled={isSubmitting || reason.trim().length < MIN_CHARS}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonDangerText}>Cancel Event</Text>
-              )}
-            </TouchableOpacity>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={handleCancel}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.buttonSecondaryText}>Keep Event</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.buttonDanger,
+                  (isSubmitting || reason.trim().length < MIN_CHARS) &&
+                    styles.buttonDisabled,
+                ]}
+                onPress={handleConfirm}
+                disabled={isSubmitting || reason.trim().length < MIN_CHARS}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.buttonDangerText}>Cancel Event</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -153,6 +157,9 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -163,7 +170,6 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 500,
-    zIndex: 1,
   },
   header: {
     alignItems: 'center',

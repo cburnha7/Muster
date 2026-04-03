@@ -23,22 +23,66 @@ const detailHeader = {
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
+  headerTitleStyle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
+  },
 };
 
 export function ProfileStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ ...detailHeader, headerTitle: 'Edit Profile' }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ ...detailHeader, headerTitle: 'Settings' }} />
-      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} options={{ ...detailHeader, headerTitle: 'Notifications' }} />
-      <Stack.Screen name="UserStats" component={UserStatsScreen} options={{ ...detailHeader, headerTitle: 'Stats' }} />
-      <Stack.Screen name="BookingHistory" component={BookingHistoryScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DependentForm" component={DependentFormScreen} options={{ ...detailHeader, headerTitle: 'Dependent' }} />
-      <Stack.Screen name="DependentProfile" component={DependentProfileScreen} options={{ ...detailHeader, headerTitle: 'Dependent' }} />
-      <Stack.Screen name="TransferAccount" component={TransferAccountScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RedeemCode" component={RedeemCodeScreen} options={{ ...detailHeader, headerTitle: 'Redeem Code' }} />
+      <Stack.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={{ headerBackTitle: 'Home' }}
+      />
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ ...detailHeader, headerTitle: 'Edit Profile' }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ ...detailHeader, headerTitle: 'Settings' }}
+      />
+      <Stack.Screen
+        name="NotificationPreferences"
+        component={NotificationPreferencesScreen}
+        options={{ ...detailHeader, headerTitle: 'Notifications' }}
+      />
+      <Stack.Screen
+        name="UserStats"
+        component={UserStatsScreen}
+        options={{ ...detailHeader, headerTitle: 'Stats' }}
+      />
+      <Stack.Screen
+        name="BookingHistory"
+        component={BookingHistoryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DependentForm"
+        component={DependentFormScreen}
+        options={{ ...detailHeader, headerTitle: 'Dependent' }}
+      />
+      <Stack.Screen
+        name="DependentProfile"
+        component={DependentProfileScreen}
+        options={{ ...detailHeader, headerTitle: 'Dependent' }}
+      />
+      <Stack.Screen
+        name="TransferAccount"
+        component={TransferAccountScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RedeemCode"
+        component={RedeemCodeScreen}
+        options={{ ...detailHeader, headerTitle: 'Redeem Code' }}
+      />
     </Stack.Navigator>
   );
 }
