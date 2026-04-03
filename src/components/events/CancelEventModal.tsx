@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
@@ -28,14 +30,13 @@ export function CancelEventModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleConfirm = async () => {
-    if (!reason.trim()) {
-      setError('Please provide a reason for cancellation');
-      return;
-    }
+  const MIN_CHARS = 5;
 
-    if (reason.trim().length < 10) {
-      setError('Reason must be at least 10 characters');
+  const handleConfirm = async () => {
+    Keyboard.dismiss();
+
+    if (reason.trim().length < MIN_CHARS) {
+      setError(`Reason must be at least ${MIN_CHARS} characters`);
       return;
     }
 
@@ -65,10 +66,20 @@ export function CancelEventModal({
       onRequestClose={handleCancel}
     >
       <View style={styles.overlay}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+          }}
+        >
+          <View style={StyleSheet.absoluteFill} />
+        </TouchableWithoutFeedback>
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
-          onPress={handleCancel}
+          onPress={() => {
+            Keyboard.dismiss();
+            handleCancel();
+          }}
         />
         <View style={styles.modalContent}>
           <View style={styles.header}>
@@ -79,7 +90,8 @@ export function CancelEventModal({
           <Text style={styles.eventTitle}>{eventTitle}</Text>
 
           <Text style={styles.description}>
-            This will cancel the event and notify all participants. Please provide a reason for the cancellation.
+            This will cancel the event and notify all participants. Please
+            provide a reason for the cancellation.
           </Text>
 
           <View style={styles.inputContainer}>
@@ -88,7 +100,7 @@ export function CancelEventModal({
               style={[styles.input, error ? styles.inputError : null]}
               placeholder="e.g., Bad weather, facility unavailable, etc."
               value={reason}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setReason(text);
                 setError('');
               }}
@@ -98,7 +110,10 @@ export function CancelEventModal({
               maxLength={500}
               editable={!isSubmitting}
             />
-            <Text style={styles.charCount}>{reason.length}/500</Text>
+            <Text style={styles.charCount}>
+              {reason.length}/500
+              {reason.trim().length < MIN_CHARS ? ` (min ${MIN_CHARS})` : ''}
+            </Text>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
 
@@ -112,9 +127,14 @@ export function CancelEventModal({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.buttonDanger]}
+              style={[
+                styles.button,
+                styles.buttonDanger,
+                (isSubmitting || reason.trim().length < MIN_CHARS) &&
+                  styles.buttonDisabled,
+              ]}
               onPress={handleConfirm}
-              disabled={isSubmitting || !reason.trim()}
+              disabled={isSubmitting || reason.trim().length < MIN_CHARS}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -225,6 +245,9 @@ const styles = StyleSheet.create({
   },
   buttonDanger: {
     backgroundColor: colors.heart,
+  },
+  buttonDisabled: {
+    opacity: 0.4,
   },
   buttonDangerText: {
     fontSize: 16,
