@@ -16,16 +16,46 @@ export interface ProfileCardProps {
   address?: string | null;
 }
 
+function parseDOB(dateOfBirth: string): Date | null {
+  // Strip time portion if present, parse as UTC to avoid timezone shift
+  const dateOnly = dateOfBirth.split('T')[0];
+  const d = new Date(dateOnly + 'T00:00:00Z');
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function calculateAge(dateOfBirth: string): number | null {
-  const dob = new Date(dateOfBirth);
-  if (isNaN(dob.getTime())) return null;
-  return Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  const dob = parseDOB(dateOfBirth);
+  if (!dob) return null;
+  const today = new Date();
+  let age = today.getUTCFullYear() - dob.getUTCFullYear();
+  const monthDiff = today.getUTCMonth() - dob.getUTCMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getUTCDate() < dob.getUTCDate())
+  ) {
+    age--;
+  }
+  return age;
 }
 
 function formatDate(dateOfBirth: string): string | null {
-  const d = new Date(dateOfBirth);
-  if (isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const d = parseDOB(dateOfBirth);
+  if (!d) return null;
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
 export function ProfileCard({
@@ -59,7 +89,9 @@ export function ProfileCard({
       </View>
 
       {/* Name */}
-      <Text style={styles.name}>{firstName} {lastName}</Text>
+      <Text style={styles.name}>
+        {firstName} {lastName}
+      </Text>
 
       {/* Info Rows */}
       <View style={styles.infoSection}>

@@ -14,7 +14,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 
-
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { DatePickerInput } from '../../components/forms/DatePickerInput';
@@ -23,7 +22,11 @@ import { setDependents } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
 import { colors, fonts, Spacing } from '../../theme';
 import { SportType } from '../../types';
-import { CreateDependentInput, UpdateDependentInput, DependentProfile } from '../../types/dependent';
+import {
+  CreateDependentInput,
+  UpdateDependentInput,
+  DependentProfile,
+} from '../../types/dependent';
 
 /**
  * DependentFormScreen
@@ -53,6 +56,7 @@ const SPORT_OPTIONS: { label: string; value: string }[] = [
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
   { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
   { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Hockey', value: SportType.HOCKEY },
   { label: 'Other', value: SportType.OTHER },
 ];
 
@@ -102,7 +106,9 @@ export function DependentFormScreen() {
 
   // Set nav header title dynamically
   React.useEffect(() => {
-    navigation.setOptions({ headerTitle: isEditMode ? 'Edit Dependent' : 'Add Dependent' });
+    navigation.setOptions({
+      headerTitle: isEditMode ? 'Edit Dependent' : 'Add Dependent',
+    });
   }, [navigation, isEditMode]);
 
   // Form state
@@ -136,7 +142,10 @@ export function DependentFormScreen() {
         setProfileImage(data.profileImage ?? '');
         setGender(data.gender ?? '');
       } catch {
-        Alert.alert('Error', 'Could not load dependent details. Please try again.');
+        Alert.alert(
+          'Error',
+          'Could not load dependent details. Please try again.'
+        );
         (navigation as any).goBack();
       } finally {
         setIsLoading(false);
@@ -175,13 +184,16 @@ export function DependentFormScreen() {
 
   // Clear field-level errors as the user types / selects
   useEffect(() => {
-    if (errors.firstName && firstName.trim()) setErrors((prev) => ({ ...prev, firstName: undefined }));
+    if (errors.firstName && firstName.trim())
+      setErrors(prev => ({ ...prev, firstName: undefined }));
   }, [firstName]);
   useEffect(() => {
-    if (errors.lastName && lastName.trim()) setErrors((prev) => ({ ...prev, lastName: undefined }));
+    if (errors.lastName && lastName.trim())
+      setErrors(prev => ({ ...prev, lastName: undefined }));
   }, [lastName]);
   useEffect(() => {
-    if (errors.dateOfBirth && dateOfBirth) setErrors((prev) => ({ ...prev, dateOfBirth: undefined }));
+    if (errors.dateOfBirth && dateOfBirth)
+      setErrors(prev => ({ ...prev, dateOfBirth: undefined }));
   }, [dateOfBirth]);
 
   /** Refresh the Redux dependent list so the context switcher picks up changes. */
@@ -238,15 +250,17 @@ export function DependentFormScreen() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         const message =
-          errorData?.error ?? errorData?.message ?? 'Something went wrong. Please try again.';
+          errorData?.error ??
+          errorData?.message ??
+          'Something went wrong. Please try again.';
 
         // Surface known validation errors inline instead of a generic alert
         if (message.toLowerCase().includes('under 18')) {
-          setErrors((prev) => ({ ...prev, dateOfBirth: message }));
+          setErrors(prev => ({ ...prev, dateOfBirth: message }));
         } else if (message.includes('Missing required fields')) {
-          setErrors((prev) => ({ ...prev, general: message }));
+          setErrors(prev => ({ ...prev, general: message }));
         } else {
-          setErrors((prev) => ({ ...prev, general: message }));
+          setErrors(prev => ({ ...prev, general: message }));
         }
         return;
       }
@@ -259,25 +273,36 @@ export function DependentFormScreen() {
         isEditMode
           ? `${firstName}'s profile has been updated.`
           : `${firstName} has been added to your family.`,
-        [{ text: 'OK', onPress: () => {
-          if (isEditMode) {
-            (navigation as any).goBack();
-          } else {
-            (navigation as any).reset({ index: 0, routes: [{ name: 'Main' }] });
-          }
-        }}]
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (isEditMode) {
+                (navigation as any).goBack();
+              } else {
+                (navigation as any).reset({
+                  index: 0,
+                  routes: [{ name: 'Main' }],
+                });
+              }
+            },
+          },
+        ]
       );
     } catch (err: any) {
       console.error('Dependent submit error:', err);
-      setErrors({ general: 'Could not reach the server. Check your connection and try again.' });
+      setErrors({
+        general:
+          'Could not reach the server. Check your connection and try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const toggleSport = (sport: string) => {
-    setSportPreferences((prev) =>
-      prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
+    setSportPreferences(prev =>
+      prev.includes(sport) ? prev.filter(s => s !== sport) : [...prev, sport]
     );
   };
 
@@ -339,19 +364,36 @@ export function DependentFormScreen() {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionLabel}>Gender</Text>
             <View style={styles.chipContainer}>
-              {[{ label: 'Male', value: 'male' }, { label: 'Female', value: 'female' }].map((opt) => {
+              {[
+                { label: 'Male', value: 'male' },
+                { label: 'Female', value: 'female' },
+              ].map(opt => {
                 const selected = gender === opt.value;
                 return (
                   <TouchableOpacity
                     key={opt.value}
                     style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => setGender(gender === opt.value ? '' : opt.value)}
+                    onPress={() =>
+                      setGender(gender === opt.value ? '' : opt.value)
+                    }
                     activeOpacity={0.7}
                   >
                     {selected && (
-                      <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" style={styles.chipIcon} />
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="#FFFFFF"
+                        style={styles.chipIcon}
+                      />
                     )}
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{opt.label}</Text>
+                    <Text
+                      style={[
+                        styles.chipText,
+                        selected && styles.chipTextSelected,
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
@@ -360,11 +402,9 @@ export function DependentFormScreen() {
 
           {/* Sport preferences — chip-style multi-select */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionLabel}>
-              Sport Preferences
-            </Text>
+            <Text style={styles.sectionLabel}>Sport Preferences</Text>
             <View style={styles.chipContainer}>
-              {SPORT_OPTIONS.map((sport) => {
+              {SPORT_OPTIONS.map(sport => {
                 const selected = sportPreferences.includes(sport.value);
                 return (
                   <TouchableOpacity
@@ -384,7 +424,12 @@ export function DependentFormScreen() {
                         style={styles.chipIcon}
                       />
                     )}
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                    <Text
+                      style={[
+                        styles.chipText,
+                        selected && styles.chipTextSelected,
+                      ]}
+                    >
                       {sport.label}
                     </Text>
                   </TouchableOpacity>
@@ -418,7 +463,13 @@ export function DependentFormScreen() {
           {/* Submit */}
           <View style={styles.submitContainer}>
             <FormButton
-              title={isSubmitting ? 'Saving…' : isEditMode ? 'Save Changes' : 'Add Dependent'}
+              title={
+                isSubmitting
+                  ? 'Saving…'
+                  : isEditMode
+                    ? 'Save Changes'
+                    : 'Add Dependent'
+              }
               onPress={handleSubmit}
               loading={isSubmitting}
               disabled={isSubmitting}

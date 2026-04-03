@@ -55,6 +55,20 @@ export class UserService extends BaseApiService {
   }
 
   /**
+   * Upload profile image from pre-built FormData (works on both web and native)
+   */
+  async uploadProfileImageFormData(
+    formData: FormData,
+    onProgress?: (progress: number) => void
+  ): Promise<{ imageUrl: string }> {
+    return this.uploadFile<{ imageUrl: string }>(
+      API_ENDPOINTS.USERS.PROFILE_IMAGE,
+      formData,
+      onProgress
+    );
+  }
+
+  /**
    * Delete profile image
    */
   async deleteProfileImage(): Promise<void> {
@@ -73,7 +87,7 @@ export class UserService extends BaseApiService {
     // DEVELOPMENT: Add userId as query parameter for mock auth
     const { authService } = await import('../auth/AuthService');
     const currentUser = authService.getCurrentUser();
-    
+
     const params = {
       ...pagination,
       status,
@@ -81,11 +95,15 @@ export class UserService extends BaseApiService {
     };
 
     console.log('📚 UserService.getUserBookings - params:', params);
-    console.log('📚 UserService.getUserBookings - currentUser:', currentUser?.email, currentUser?.id);
+    console.log(
+      '📚 UserService.getUserBookings - currentUser:',
+      currentUser?.email,
+      currentUser?.id
+    );
 
-    return this.get<PaginatedResponse<Booking>>(API_ENDPOINTS.USERS.BOOKINGS, { 
+    return this.get<PaginatedResponse<Booking>>(API_ENDPOINTS.USERS.BOOKINGS, {
       params,
-      cacheOptions: { skipCache }
+      cacheOptions: { skipCache },
     });
   }
 
@@ -101,15 +119,21 @@ export class UserService extends BaseApiService {
       status,
     };
 
-    return this.get<PaginatedResponse<Event>>(API_ENDPOINTS.USERS.EVENTS, { params });
+    return this.get<PaginatedResponse<Event>>(API_ENDPOINTS.USERS.EVENTS, {
+      params,
+    });
   }
 
   /**
    * Get user's teams
    */
-  async getUserTeams(pagination?: PaginationParams): Promise<PaginatedResponse<Team>> {
+  async getUserTeams(
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<Team>> {
     const params = pagination || {};
-    return this.get<PaginatedResponse<Team>>(API_ENDPOINTS.USERS.TEAMS, { params });
+    return this.get<PaginatedResponse<Team>>(API_ENDPOINTS.USERS.TEAMS, {
+      params,
+    });
   }
 
   /**
@@ -169,27 +193,37 @@ export class UserService extends BaseApiService {
   /**
    * Get user's favorite facilities
    */
-  async getFavoriteFacilities(pagination?: PaginationParams): Promise<PaginatedResponse<any>> {
+  async getFavoriteFacilities(
+    pagination?: PaginationParams
+  ): Promise<PaginatedResponse<any>> {
     const params = pagination || {};
-    return this.get<PaginatedResponse<any>>(`${API_ENDPOINTS.USERS.PROFILE}/favorites/facilities`, {
-      params,
-    });
+    return this.get<PaginatedResponse<any>>(
+      `${API_ENDPOINTS.USERS.PROFILE}/favorites/facilities`,
+      {
+        params,
+      }
+    );
   }
 
   /**
    * Add facility to favorites
    */
   async addFacilityToFavorites(facilityId: string): Promise<void> {
-    return this.post<void>(`${API_ENDPOINTS.USERS.PROFILE}/favorites/facilities`, {
-      facilityId,
-    });
+    return this.post<void>(
+      `${API_ENDPOINTS.USERS.PROFILE}/favorites/facilities`,
+      {
+        facilityId,
+      }
+    );
   }
 
   /**
    * Remove facility from favorites
    */
   async removeFacilityFromFavorites(facilityId: string): Promise<void> {
-    return this.delete<void>(`${API_ENDPOINTS.USERS.PROFILE}/favorites/facilities/${facilityId}`);
+    return this.delete<void>(
+      `${API_ENDPOINTS.USERS.PROFILE}/favorites/facilities/${facilityId}`
+    );
   }
 
   /**
@@ -219,7 +253,10 @@ export class UserService extends BaseApiService {
     preferredTimeSlots?: string[];
     budgetRange?: { min: number; max: number };
   }): Promise<void> {
-    return this.put<void>(`${API_ENDPOINTS.USERS.PROFILE}/preferences`, preferences);
+    return this.put<void>(
+      `${API_ENDPOINTS.USERS.PROFILE}/preferences`,
+      preferences
+    );
   }
 
   /**
@@ -256,26 +293,33 @@ export class UserService extends BaseApiService {
   /**
    * Get user's achievements and badges
    */
-  async getAchievements(): Promise<{
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    unlockedAt: Date;
-    progress?: number;
-    maxProgress?: number;
-  }[]> {
+  async getAchievements(): Promise<
+    {
+      id: string;
+      name: string;
+      description: string;
+      icon: string;
+      unlockedAt: Date;
+      progress?: number;
+      maxProgress?: number;
+    }[]
+  > {
     return this.get(`${API_ENDPOINTS.USERS.PROFILE}/achievements`);
   }
 
   /**
    * Check if username is available
    */
-  async checkUsernameAvailability(username: string): Promise<{ available: boolean }> {
+  async checkUsernameAvailability(
+    username: string
+  ): Promise<{ available: boolean }> {
     const params = { username };
-    return this.get<{ available: boolean }>(`${API_ENDPOINTS.USERS.PROFILE}/check-username`, {
-      params,
-    });
+    return this.get<{ available: boolean }>(
+      `${API_ENDPOINTS.USERS.PROFILE}/check-username`,
+      {
+        params,
+      }
+    );
   }
 
   /**
@@ -308,9 +352,12 @@ export class UserService extends BaseApiService {
    * Get leagues ready to schedule (Commissioner only)
    */
   async getLeaguesReadyToSchedule(): Promise<ReadyToScheduleLeague[]> {
-    return this.get<ReadyToScheduleLeague[]>(`${API_ENDPOINTS.USERS.BASE}/leagues-ready-to-schedule`, {
-      cacheOptions: { skipCache: true },
-    });
+    return this.get<ReadyToScheduleLeague[]>(
+      `${API_ENDPOINTS.USERS.BASE}/leagues-ready-to-schedule`,
+      {
+        cacheOptions: { skipCache: true },
+      }
+    );
   }
 
   /**
@@ -323,7 +370,7 @@ export class UserService extends BaseApiService {
     total: number;
   }> {
     return this.get(`${API_ENDPOINTS.USERS.BASE}/invitations`, {
-      cacheOptions: { skipCache: true }
+      cacheOptions: { skipCache: true },
     });
   }
 
