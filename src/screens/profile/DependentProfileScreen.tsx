@@ -9,9 +9,12 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-
 
 import { ProfileCard } from '../../components/profile/ProfileCard';
 import { useAuth } from '../../context/AuthContext';
@@ -33,10 +36,17 @@ import { DependentProfile } from '../../types/dependent';
  * Returns true if the person with the given DOB is 18 or older.
  */
 function isAge18OrOlder(dateOfBirth: string): boolean {
-  const dob = new Date(dateOfBirth);
+  const dateOnly = dateOfBirth.split('T')[0];
+  const dob = new Date(dateOnly + 'T00:00:00Z');
   if (isNaN(dob.getTime())) return false;
   const today = new Date();
-  const cutoff = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  const cutoff = new Date(
+    Date.UTC(
+      today.getUTCFullYear() - 18,
+      today.getUTCMonth(),
+      today.getUTCDate()
+    )
+  );
   return dob <= cutoff;
 }
 
@@ -63,7 +73,10 @@ export function DependentProfileScreen() {
       const data: DependentProfile = await response.json();
       setProfile(data);
     } catch {
-      Alert.alert('Error', 'Could not load dependent profile. Please try again.');
+      Alert.alert(
+        'Error',
+        'Could not load dependent profile. Please try again.'
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,7 +86,9 @@ export function DependentProfileScreen() {
   // Update nav header with dependent's name
   useEffect(() => {
     if (profile) {
-      navigation.setOptions({ headerTitle: `${profile.firstName} ${profile.lastName}` });
+      navigation.setOptions({
+        headerTitle: `${profile.firstName} ${profile.lastName}`,
+      });
     }
   }, [navigation, profile]);
 
@@ -103,7 +118,9 @@ export function DependentProfileScreen() {
   };
 
   const handleAvailability = () => {
-    (navigation as any).navigate('AvailabilityCalendar', { userId: dependentId });
+    (navigation as any).navigate('AvailabilityCalendar', {
+      userId: dependentId,
+    });
   };
 
   if (loading) {
@@ -132,7 +149,11 @@ export function DependentProfileScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
         {/* Profile Card */}
@@ -174,7 +195,10 @@ export function DependentProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.transferButton, !canTransfer && styles.transferButtonDisabled]}
+            style={[
+              styles.transferButton,
+              !canTransfer && styles.transferButtonDisabled,
+            ]}
             onPress={handleTransfer}
             disabled={!canTransfer}
             activeOpacity={0.7}
@@ -187,7 +211,12 @@ export function DependentProfileScreen() {
               size={18}
               color={canTransfer ? colors.onSurface : colors.outline}
             />
-            <Text style={[styles.transferButtonText, !canTransfer && styles.transferButtonTextDisabled]}>
+            <Text
+              style={[
+                styles.transferButtonText,
+                !canTransfer && styles.transferButtonTextDisabled,
+              ]}
+            >
               Transfer
             </Text>
           </TouchableOpacity>
@@ -203,13 +232,21 @@ export function DependentProfileScreen() {
           <Text style={styles.sectionTitle}>Event History</Text>
           {profile.eventHistory.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="calendar-outline" size={24} color={colors.outline} />
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={colors.outline}
+              />
               <Text style={styles.emptyCardText}>No events yet</Text>
             </View>
           ) : (
             profile.eventHistory.map((booking: any, index: number) => (
               <View key={booking.id ?? index} style={styles.listItem}>
-                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color={colors.primary}
+                />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {booking.event?.title ?? `Event ${index + 1}`}
                 </Text>
@@ -228,13 +265,23 @@ export function DependentProfileScreen() {
           <Text style={styles.sectionTitle}>Roster Memberships</Text>
           {profile.rosterMemberships.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="people-outline" size={24} color={colors.outline} />
-              <Text style={styles.emptyCardText}>Not a member of any Rosters</Text>
+              <Ionicons
+                name="people-outline"
+                size={24}
+                color={colors.outline}
+              />
+              <Text style={styles.emptyCardText}>
+                Not a member of any Rosters
+              </Text>
             </View>
           ) : (
             profile.rosterMemberships.map((member: any, index: number) => (
               <View key={member.id ?? index} style={styles.listItem}>
-                <Ionicons name="people-outline" size={18} color={colors.primary} />
+                <Ionicons
+                  name="people-outline"
+                  size={18}
+                  color={colors.primary}
+                />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {member.team?.name ?? `Roster ${index + 1}`}
                 </Text>
@@ -248,13 +295,23 @@ export function DependentProfileScreen() {
           <Text style={styles.sectionTitle}>League Memberships</Text>
           {profile.leagueMemberships.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="trophy-outline" size={24} color={colors.outline} />
-              <Text style={styles.emptyCardText}>Not a member of any Leagues</Text>
+              <Ionicons
+                name="trophy-outline"
+                size={24}
+                color={colors.outline}
+              />
+              <Text style={styles.emptyCardText}>
+                Not a member of any Leagues
+              </Text>
             </View>
           ) : (
             profile.leagueMemberships.map((membership: any, index: number) => (
               <View key={membership.id ?? index} style={styles.listItem}>
-                <Ionicons name="trophy-outline" size={18} color={colors.primary} />
+                <Ionicons
+                  name="trophy-outline"
+                  size={18}
+                  color={colors.primary}
+                />
                 <Text style={styles.listItemText} numberOfLines={1}>
                   {membership.league?.name ?? `League ${index + 1}`}
                 </Text>

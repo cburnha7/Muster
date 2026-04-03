@@ -18,7 +18,8 @@ import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { loggingService } from '../../services/LoggingService';import { validateEmail, validatePhoneNumber } from '../../utils/validation';
+import { loggingService } from '../../services/LoggingService';
+import { validateEmail, validatePhoneNumber } from '../../utils/validation';
 import { colors, fonts } from '../../theme';
 import { SportType } from '../../types';
 
@@ -32,6 +33,7 @@ const SPORT_OPTIONS: SelectOption[] = [
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
   { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
   { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Hockey', value: SportType.HOCKEY },
   { label: 'Other', value: SportType.OTHER },
 ];
 
@@ -54,7 +56,9 @@ export function EditProfileScreen(): JSX.Element {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
+  const [profileImage, setProfileImage] = useState<string | undefined>(
+    undefined
+  );
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [gender, setGender] = useState<string>('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -77,7 +81,8 @@ export function EditProfileScreen(): JSX.Element {
 
   const requestImagePermissions = async () => {
     if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
           'Permission Required',
@@ -100,12 +105,17 @@ export function EditProfileScreen(): JSX.Element {
       setProfileImage(profileData.profileImage);
       setSelectedSports(profileData.preferredSports || []);
       setGender((profileData as any).gender || '');
-      setDateOfBirth(profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toISOString().split('T')[0] : '');
+      setDateOfBirth(
+        profileData.dateOfBirth
+          ? String(profileData.dateOfBirth).split('T')[0]
+          : ''
+      );
       if (profileData.dateOfBirth) {
-        const d = new Date(profileData.dateOfBirth);
-        setBirthMonth(String(d.getUTCMonth() + 1));
-        setBirthDay(String(d.getUTCDate()));
-        setBirthYear(String(d.getUTCFullYear()));
+        const dateStr = String(profileData.dateOfBirth).split('T')[0];
+        const [y, m, dd] = dateStr.split('-');
+        setBirthMonth(String(parseInt(m)));
+        setBirthDay(String(parseInt(dd)));
+        setBirthYear(y);
       }
       setAddress((profileData as any).address || '');
     } catch (err: any) {
@@ -166,12 +176,22 @@ export function EditProfileScreen(): JSX.Element {
     try {
       setUploadingImage(true);
 
-      // Create a file object from the URI
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+      const formData = new FormData();
+      if (Platform.OS === 'web') {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+        formData.append('image', file);
+      } else {
+        // React Native: use uri-based object (File constructor doesn't exist)
+        formData.append('image', {
+          uri,
+          name: 'profile.jpg',
+          type: 'image/jpeg',
+        } as any);
+      }
 
-      const result = await userService.uploadProfileImage(file);
+      const result = await userService.uploadProfileImageFormData(formData);
       setProfileImage(result.imageUrl);
       Alert.alert('Success', 'Profile image updated successfully');
     } catch (err: any) {
@@ -182,27 +202,31 @@ export function EditProfileScreen(): JSX.Element {
   };
 
   const handleRemoveImage = async () => {
-    Alert.alert('Remove Profile Image', 'Are you sure you want to remove your profile image?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await userService.deleteProfileImage();
-            setProfileImage(undefined);
-            Alert.alert('Success', 'Profile image removed');
-          } catch (err: any) {
-            Alert.alert('Error', 'Failed to remove image: ' + err.message);
-          }
+    Alert.alert(
+      'Remove Profile Image',
+      'Are you sure you want to remove your profile image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await userService.deleteProfileImage();
+              setProfileImage(undefined);
+              Alert.alert('Success', 'Profile image removed');
+            } catch (err: any) {
+              Alert.alert('Error', 'Failed to remove image: ' + err.message);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const toggleSport = (sport: string) => {
-    setSelectedSports((prev) =>
-      prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
+    setSelectedSports(prev =>
+      prev.includes(sport) ? prev.filter(s => s !== sport) : [...prev, sport]
     );
   };
 
@@ -221,7 +245,10 @@ export function EditProfileScreen(): JSX.Element {
         phoneNumber: phoneNumber || undefined,
         gender: gender || undefined,
         preferredSports: selectedSports,
-        dateOfBirth: (birthYear && birthMonth && birthDay) ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}` : undefined,
+        dateOfBirth:
+          birthYear && birthMonth && birthDay
+            ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
+            : undefined,
         address: address || undefined,
       } as any;
 
@@ -251,7 +278,10 @@ export function EditProfileScreen(): JSX.Element {
         <View style={styles.imageSection}>
           <View style={styles.imageContainer}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.profileImage}
+              />
             ) : (
               <View style={styles.profileImagePlaceholder}>
                 <Text style={styles.profileImagePlaceholderText}>
@@ -280,7 +310,9 @@ export function EditProfileScreen(): JSX.Element {
                 onPress={handleRemoveImage}
                 disabled={uploadingImage}
               >
-                <Text style={[styles.imageButtonText, styles.removeButtonText]}>Remove</Text>
+                <Text style={[styles.imageButtonText, styles.removeButtonText]}>
+                  Remove
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -338,21 +370,61 @@ export function EditProfileScreen(): JSX.Element {
             label="Gender"
             options={GENDER_OPTIONS}
             value={gender}
-            onSelect={(o) => setGender(String(o.value))}
+            onSelect={o => setGender(String(o.value))}
             placeholder="Prefer not to say"
           />
 
           {/* Birthday — Month / Day / Year dropdowns */}
-          <Text style={{ fontFamily: fonts.body, fontSize: 16, fontWeight: '500', color: '#333', marginBottom: 8, marginTop: 8 }}>Birthday</Text>
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 16,
+              fontWeight: '500',
+              color: '#333',
+              marginBottom: 8,
+              marginTop: 8,
+            }}
+          >
+            Birthday
+          </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <View style={{ flex: 1 }}>
-              <FormSelect label="" options={Array.from({ length: 12 }, (_, i) => ({ label: new Date(2000, i).toLocaleString('en', { month: 'long' }), value: String(i + 1) }))} value={birthMonth} onSelect={(o) => setBirthMonth(String(o.value))} placeholder="Month" />
+              <FormSelect
+                label=""
+                options={Array.from({ length: 12 }, (_, i) => ({
+                  label: new Date(2000, i).toLocaleString('en', {
+                    month: 'long',
+                  }),
+                  value: String(i + 1),
+                }))}
+                value={birthMonth}
+                onSelect={o => setBirthMonth(String(o.value))}
+                placeholder="Month"
+              />
             </View>
             <View style={{ flex: 0.6 }}>
-              <FormSelect label="" options={Array.from({ length: 31 }, (_, i) => ({ label: String(i + 1), value: String(i + 1) }))} value={birthDay} onSelect={(o) => setBirthDay(String(o.value))} placeholder="Day" />
+              <FormSelect
+                label=""
+                options={Array.from({ length: 31 }, (_, i) => ({
+                  label: String(i + 1),
+                  value: String(i + 1),
+                }))}
+                value={birthDay}
+                onSelect={o => setBirthDay(String(o.value))}
+                placeholder="Day"
+              />
             </View>
             <View style={{ flex: 0.8 }}>
-              <FormSelect label="" options={Array.from({ length: 80 }, (_, i) => { const y = new Date().getFullYear() - i; return { label: String(y), value: String(y) }; })} value={birthYear} onSelect={(o) => setBirthYear(String(o.value))} placeholder="Year" />
+              <FormSelect
+                label=""
+                options={Array.from({ length: 80 }, (_, i) => {
+                  const y = new Date().getFullYear() - i;
+                  return { label: String(y), value: String(y) };
+                })}
+                value={birthYear}
+                onSelect={o => setBirthYear(String(o.value))}
+                placeholder="Year"
+              />
             </View>
           </View>
 
@@ -360,15 +432,21 @@ export function EditProfileScreen(): JSX.Element {
           <FormInput
             label="Home Address"
             value={address}
-            onChangeText={(text) => {
+            onChangeText={text => {
               setAddress(text);
               // Google Places autocomplete
               if (text.length >= 3) {
                 const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
                 if (apiKey) {
-                  fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`)
+                  fetch(
+                    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
+                  )
                     .then(r => r.json())
-                    .then(data => setAddressSuggestions((data.predictions || []).map((p: any) => p.description)))
+                    .then(data =>
+                      setAddressSuggestions(
+                        (data.predictions || []).map((p: any) => p.description)
+                      )
+                    )
                     .catch(() => setAddressSuggestions([]));
                 }
               } else {
@@ -378,10 +456,39 @@ export function EditProfileScreen(): JSX.Element {
             placeholder="Start typing your address..."
           />
           {addressSuggestions.length > 0 && (
-            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: colors.outlineVariant, marginTop: -8, marginBottom: 8 }}>
+            <View
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: colors.outlineVariant,
+                marginTop: -8,
+                marginBottom: 8,
+              }}
+            >
               {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
-                <TouchableOpacity key={idx} style={{ paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: idx < 4 ? 1 : 0, borderBottomColor: colors.outlineVariant }} onPress={() => { setAddress(suggestion); setAddressSuggestions([]); }}>
-                  <Text style={{ fontFamily: fonts.body, fontSize: 14, color: colors.onSurface }}>{suggestion}</Text>
+                <TouchableOpacity
+                  key={idx}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderBottomWidth: idx < 4 ? 1 : 0,
+                    borderBottomColor: colors.outlineVariant,
+                  }}
+                  onPress={() => {
+                    setAddress(suggestion);
+                    setAddressSuggestions([]);
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: 14,
+                      color: colors.onSurface,
+                    }}
+                  >
+                    {suggestion}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -390,19 +497,21 @@ export function EditProfileScreen(): JSX.Element {
           {/* Preferred Sports */}
           <Text style={styles.sportsLabel}>Preferred Sports</Text>
           <View style={styles.sportsList}>
-            {SPORT_OPTIONS.map((sport) => (
+            {SPORT_OPTIONS.map(sport => (
               <TouchableOpacity
                 key={String(sport.value)}
                 style={[
                   styles.sportTag,
-                  selectedSports.includes(String(sport.value)) && styles.sportTagSelected,
+                  selectedSports.includes(String(sport.value)) &&
+                    styles.sportTagSelected,
                 ]}
                 onPress={() => toggleSport(String(sport.value))}
               >
                 <Text
                   style={[
                     styles.sportTagText,
-                    selectedSports.includes(String(sport.value)) && styles.sportTagTextSelected,
+                    selectedSports.includes(String(sport.value)) &&
+                      styles.sportTagTextSelected,
                   ]}
                 >
                   {sport.label}

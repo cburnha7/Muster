@@ -24,7 +24,10 @@ import { HoursOfOperationSection } from '../../components/facilities/HoursOfOper
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
-import { updateFacility, removeFacility } from '../../store/slices/facilitiesSlice';
+import {
+  updateFacility,
+  removeFacility,
+} from '../../store/slices/facilitiesSlice';
 import { SportType, CreateFacilityData, Facility } from '../../types';
 import { colors, fonts, Spacing, TextStyles } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
@@ -54,7 +57,9 @@ interface EditFacilityScreenProps {
   };
 }
 
-export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Element {
+export function EditFacilityScreen({
+  route,
+}: EditFacilityScreenProps): JSX.Element {
   const { facilityId } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -70,11 +75,12 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   const [originalCourts, setOriginalCourts] = useState<string[]>([]); // Track original court IDs
   const [hoursOfOperation, setHoursOfOperation] = useState<DayHours[]>([]);
   const [requiresInsurance, setRequiresInsurance] = useState(false);
-  const [requiresBookingConfirmation, setRequiresBookingConfirmation] = useState(false);
+  const [requiresBookingConfirmation, setRequiresBookingConfirmation] =
+    useState(false);
   const [waiverRequired, setWaiverRequired] = useState(false);
   const [waiverText, setWaiverText] = useState('');
   const [originalWaiverText, setOriginalWaiverText] = useState('');
-  
+
   const [formData, setFormData] = useState<Partial<CreateFacilityData>>({
     name: '',
     description: '',
@@ -110,6 +116,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [addressQuery, setAddressQuery] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
     loadFacilityData();
@@ -119,7 +127,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   // This ensures we always have fresh data when returning to this screen
   useFocusEffect(
     useCallback(() => {
-      console.log('📍 EditFacilityScreen focused, reloading data with skipCache');
+      console.log(
+        '📍 EditFacilityScreen focused, reloading data with skipCache'
+      );
       loadFacilityData(true); // Skip cache when screen comes into focus
     }, [facilityId])
   );
@@ -128,10 +138,13 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const facility = await facilityService.getFacility(facilityId, skipCache);
-      const facilityCourts = await courtService.getCourts(facilityId, skipCache);
-      
+      const facilityCourts = await courtService.getCourts(
+        facilityId,
+        skipCache
+      );
+
       // Prepopulate form data
       setFormData({
         name: facility.name,
@@ -157,7 +170,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         },
         cancellationPolicyHours: facility.cancellationPolicyHours ?? null,
       });
-      
+
       // Prepopulate courts
       const loadedCourts = facilityCourts.map(court => ({
         id: court.id,
@@ -173,11 +186,24 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
       // Prepopulate insurance requirement
       setRequiresInsurance(facility.requiresInsurance === true);
-      setRequiresBookingConfirmation(facility.requiresBookingConfirmation === true);
+
+      // Prepopulate address search bar with existing address
+      const addr = [
+        facility.street,
+        facility.city,
+        facility.state,
+        facility.zipCode,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      if (addr) setAddressQuery(addr);
+      setRequiresBookingConfirmation(
+        facility.requiresBookingConfirmation === true
+      );
       setWaiverRequired((facility as any).waiverRequired === true);
       setWaiverText((facility as any).waiverText || '');
       setOriginalWaiverText((facility as any).waiverText || '');
-      
+
       // Load hours of operation from availabilitySlots
       if (facility.availabilitySlots && facility.availabilitySlots.length > 0) {
         const hours = facility.availabilitySlots
@@ -190,7 +216,6 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           }));
         setHoursOfOperation(hours);
       }
-      
     } catch (err: any) {
       setError(err.message || 'Failed to load ground');
     } finally {
@@ -199,9 +224,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   };
 
   const updateField = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => {
+      setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
@@ -210,7 +235,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   };
 
   const updateNestedField = (parent: string, field: string, value: any) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [parent]: {
         ...(prev[parent as keyof CreateFacilityData] as any),
@@ -222,7 +247,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
   const toggleSportType = (sport: SportType) => {
     const currentSports = formData.sportTypes || [];
     const newSports = currentSports.includes(sport)
-      ? currentSports.filter((s) => s !== sport)
+      ? currentSports.filter(s => s !== sport)
       : [...currentSports, sport];
     updateField('sportTypes', newSports);
   };
@@ -239,15 +264,17 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
     if (editingCourtId) {
       // Update existing court
-      setCourts(courts.map(c => 
-        c.id === editingCourtId 
-          ? { 
-              ...newCourt, 
-              id: editingCourtId, 
-              isExisting: c.isExisting || false 
-            }
-          : c
-      ));
+      setCourts(
+        courts.map(c =>
+          c.id === editingCourtId
+            ? {
+                ...newCourt,
+                id: editingCourtId,
+                isExisting: c.isExisting || false,
+              }
+            : c
+        )
+      );
       setEditingCourtId(null);
     } else {
       // Add new court
@@ -285,11 +312,17 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
   const handleRemoveCourt = (courtId: string) => {
     console.log('🗑️ handleRemoveCourt called with courtId:', courtId);
-    console.log('Current courts:', courts.map(c => ({ id: c.id, name: c.name })));
-    
+    console.log(
+      'Current courts:',
+      courts.map(c => ({ id: c.id, name: c.name }))
+    );
+
     setCourts(prevCourts => {
-      const filtered = prevCourts.filter((c) => c.id !== courtId);
-      console.log('🗑️ New courts list:', filtered.map(c => ({ id: c.id, name: c.name })));
+      const filtered = prevCourts.filter(c => c.id !== courtId);
+      console.log(
+        '🗑️ New courts list:',
+        filtered.map(c => ({ id: c.id, name: c.name }))
+      );
       return filtered;
     });
   };
@@ -327,7 +360,12 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
     // Log each validation failure
     Object.entries(newErrors).forEach(([field, msg]) => {
-      loggingService.logValidation('EditFacilityScreen', field, 'required', msg);
+      loggingService.logValidation(
+        'EditFacilityScreen',
+        field,
+        'required',
+        msg
+      );
     });
 
     setErrors(newErrors);
@@ -344,7 +382,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
     try {
       setIsSubmitting(true);
-      
+
       // Update facility
       const facilityData = {
         name: formData.name || '',
@@ -360,7 +398,8 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         contactEmail: formData.contactInfo?.email || '',
         contactWebsite: formData.contactInfo?.website || '',
         pricePerHour: formData.pricing?.wholeFacilityRate || 0,
-        hoursOfOperation: hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
+        hoursOfOperation:
+          hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
         requiresInsurance,
         requiresBookingConfirmation,
@@ -368,23 +407,26 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         waiverText: waiverRequired ? waiverText : null,
       };
 
-      const updatedFacility = await facilityService.updateFacility(facilityId, facilityData as any);
-      
+      const updatedFacility = await facilityService.updateFacility(
+        facilityId,
+        facilityData as any
+      );
+
       // Handle courts
       const currentCourtIds = courts.map(c => c.id);
-      
+
       // Delete removed courts
       for (const originalId of originalCourts) {
         if (!currentCourtIds.includes(originalId)) {
           await courtService.deleteCourt(facilityId, originalId);
         }
       }
-      
+
       // Create new courts or update existing ones
       for (let i = 0; i < courts.length; i++) {
         const court = courts[i];
         if (!court) continue;
-        
+
         if (court.isExisting) {
           // Update existing court
           await courtService.updateCourt(facilityId, court.id, {
@@ -409,13 +451,16 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       }
 
       dispatch(updateFacility(updatedFacility));
-      
+
       // Navigate back immediately - the list will reload with fresh data
       setIsSubmitting(false);
-      navigation.navigate('Facilities' as never, { 
-        screen: 'FacilitiesList',
-        params: { refresh: Date.now() } // Force refresh
-      } as never);
+      navigation.navigate(
+        'Facilities' as never,
+        {
+          screen: 'FacilitiesList',
+          params: { refresh: Date.now() }, // Force refresh
+        } as never
+      );
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update ground');
     } finally {
@@ -437,33 +482,40 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       console.log('🗑️ Facility deleted, updating Redux...');
       dispatch(removeFacility(facilityId));
       console.log('🗑️ Navigating back...');
-      
+
       // Navigate with refresh parameter to force list reload
-      navigation.navigate('Facilities' as never, { 
-        screen: 'FacilitiesList',
-        params: { refresh: Date.now() }
-      } as never);
+      navigation.navigate(
+        'Facilities' as never,
+        {
+          screen: 'FacilitiesList',
+          params: { refresh: Date.now() },
+        } as never
+      );
     } catch (err: any) {
       console.error('❌ Delete error:', err);
       setShowDeleteModal(false);
       const details = err.details || {};
       if (details.rentals?.length) {
         const lines = details.rentals.map((r: any) => {
-          const date = r.date ? new Date(r.date).toLocaleDateString() : 'Unknown date';
+          const date = r.date
+            ? new Date(r.date).toLocaleDateString()
+            : 'Unknown date';
           return `• ${r.court} — ${date} (${r.user})`;
         });
         Alert.alert(
           'Future Rentals Found',
-          `Cancel these rentals before deleting this ground:\n\n${lines.join('\n')}`,
+          `Cancel these rentals before deleting this ground:\n\n${lines.join('\n')}`
         );
       } else if (details.events?.length) {
         const lines = details.events.map((e: any) => {
-          const date = e.startTime ? new Date(e.startTime).toLocaleDateString() : 'Unknown date';
+          const date = e.startTime
+            ? new Date(e.startTime).toLocaleDateString()
+            : 'Unknown date';
           return `• ${e.title || 'Untitled'} — ${date}`;
         });
         Alert.alert(
           'Future Events Found',
-          `Cancel these events before deleting this ground:\n\n${lines.join('\n')}`,
+          `Cancel these events before deleting this ground:\n\n${lines.join('\n')}`
         );
       } else {
         Alert.alert('Error', err.message || 'Failed to delete ground');
@@ -493,7 +545,10 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+      >
         {/* Basic Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Basic Information</Text>
@@ -501,7 +556,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           <FormInput
             label="Ground Name *"
             value={formData.name || ''}
-            onChangeText={(value) => updateField('name', value)}
+            onChangeText={value => updateField('name', value)}
             placeholder="Enter ground name"
             error={errors.name || ''}
           />
@@ -509,11 +564,11 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           <FormInput
             label="Description *"
             value={formData.description || ''}
-            onChangeText={(value) => updateField('description', value)}
+            onChangeText={value => updateField('description', value)}
             placeholder="Describe your ground"
             multiline
             numberOfLines={4}
-            error={errors.description || ""}
+            error={errors.description || ''}
           />
         </View>
 
@@ -521,20 +576,120 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Address</Text>
 
+          <Text style={styles.inputLabel}>Search Address</Text>
+          <TextInput
+            style={styles.addressSearchInput}
+            placeholder="Start typing an address..."
+            placeholderTextColor={colors.inkSoft}
+            value={addressQuery}
+            onChangeText={text => {
+              setAddressQuery(text);
+              if (text.length >= 3) {
+                const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                if (apiKey) {
+                  fetch(
+                    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
+                  )
+                    .then(r => r.json())
+                    .then(data => setAddressSuggestions(data.predictions || []))
+                    .catch(() => setAddressSuggestions([]));
+                }
+              } else {
+                setAddressSuggestions([]);
+              }
+            }}
+          />
+          {addressSuggestions.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              {addressSuggestions
+                .slice(0, 5)
+                .map((suggestion: any, idx: number) => (
+                  <TouchableOpacity
+                    key={suggestion.place_id || idx}
+                    style={[
+                      styles.suggestionItem,
+                      idx < 4 && styles.suggestionBorder,
+                    ]}
+                    onPress={() => {
+                      const apiKey =
+                        process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                      if (apiKey && suggestion.place_id) {
+                        fetch(
+                          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=address_components&key=${apiKey}`
+                        )
+                          .then(r => r.json())
+                          .then(data => {
+                            const components =
+                              data.result?.address_components || [];
+                            let street = '';
+                            let city = '';
+                            let st = '';
+                            let zip = '';
+                            for (const c of components) {
+                              if (c.types.includes('street_number'))
+                                street = c.long_name + ' ';
+                              if (c.types.includes('route'))
+                                street += c.long_name;
+                              if (c.types.includes('locality'))
+                                city = c.long_name;
+                              if (
+                                c.types.includes('administrative_area_level_1')
+                              )
+                                st = c.short_name;
+                              if (c.types.includes('postal_code'))
+                                zip = c.long_name;
+                            }
+                            updateNestedField(
+                              'address',
+                              'street',
+                              street.trim()
+                            );
+                            updateNestedField('address', 'city', city);
+                            updateNestedField('address', 'state', st);
+                            updateNestedField('address', 'zipCode', zip);
+                            setAddressQuery(suggestion.description);
+                            setAddressSuggestions([]);
+                          })
+                          .catch(() => {
+                            setAddressQuery(suggestion.description);
+                            setAddressSuggestions([]);
+                          });
+                      } else {
+                        setAddressQuery(suggestion.description);
+                        setAddressSuggestions([]);
+                      }
+                    }}
+                  >
+                    <Ionicons
+                      name="location-outline"
+                      size={16}
+                      color={colors.inkSoft}
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={styles.suggestionText} numberOfLines={1}>
+                      {suggestion.description}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+            </View>
+          )}
+
           <FormInput
             label="Street Address *"
             value={formData.address?.street || ''}
-            onChangeText={(value) => updateNestedField('address', 'street', value)}
+            onChangeText={value =>
+              updateNestedField('address', 'street', value)
+            }
             placeholder="123 Main St"
-            error={errors.street || ""}
+            error={errors.street || ''}
           />
 
           <FormInput
             label="City *"
             value={formData.address?.city || ''}
-            onChangeText={(value) => updateNestedField('address', 'city', value)}
+            onChangeText={value => updateNestedField('address', 'city', value)}
             placeholder="City"
-            error={errors.city || ""}
+            error={errors.city || ''}
           />
 
           <View style={styles.row}>
@@ -542,19 +697,23 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               <FormInput
                 label="State *"
                 value={formData.address?.state || ''}
-                onChangeText={(value) => updateNestedField('address', 'state', value)}
+                onChangeText={value =>
+                  updateNestedField('address', 'state', value)
+                }
                 placeholder="State"
-                error={errors.state || ""}
+                error={errors.state || ''}
               />
             </View>
             <View style={styles.halfWidth}>
               <FormInput
                 label="ZIP Code *"
                 value={formData.address?.zipCode || ''}
-                onChangeText={(value) => updateNestedField('address', 'zipCode', value)}
+                onChangeText={value =>
+                  updateNestedField('address', 'zipCode', value)
+                }
                 placeholder="12345"
                 keyboardType="numeric"
-                error={errors.zipCode || ""}
+                error={errors.zipCode || ''}
               />
             </View>
           </View>
@@ -567,14 +726,18 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           <FormInput
             label="Name"
             value={formData.contactInfo?.name || ''}
-            onChangeText={(value) => updateNestedField('contactInfo', 'name', value)}
+            onChangeText={value =>
+              updateNestedField('contactInfo', 'name', value)
+            }
             placeholder="John Doe"
           />
 
           <FormInput
             label="Phone"
             value={formData.contactInfo?.phone || ''}
-            onChangeText={(value) => updateNestedField('contactInfo', 'phone', value)}
+            onChangeText={value =>
+              updateNestedField('contactInfo', 'phone', value)
+            }
             placeholder="(555) 123-4567"
             keyboardType="phone-pad"
           />
@@ -582,7 +745,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           <FormInput
             label="Email"
             value={formData.contactInfo?.email || ''}
-            onChangeText={(value) => updateNestedField('contactInfo', 'email', value)}
+            onChangeText={value =>
+              updateNestedField('contactInfo', 'email', value)
+            }
             placeholder="contact@ground.com"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -591,7 +756,9 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           <FormInput
             label="Website"
             value={formData.contactInfo?.website || ''}
-            onChangeText={(value) => updateNestedField('contactInfo', 'website', value)}
+            onChangeText={value =>
+              updateNestedField('contactInfo', 'website', value)
+            }
             placeholder="https://ground.com"
             keyboardType="url"
             autoCapitalize="none"
@@ -601,17 +768,27 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         {/* Sport Types */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sport Types *</Text>
-          {errors.sportTypes && <Text style={styles.errorText}>{errors.sportTypes}</Text>}
+          {errors.sportTypes && (
+            <Text style={styles.errorText}>{errors.sportTypes}</Text>
+          )}
           <View style={styles.sportTypeContainer}>
-            {Object.values(SportType).map((sport) => {
+            {Object.values(SportType).map(sport => {
               const isSelected = formData.sportTypes?.includes(sport);
               return (
                 <TouchableOpacity
                   key={sport}
-                  style={[styles.sportChip, isSelected && styles.sportChipSelected]}
+                  style={[
+                    styles.sportChip,
+                    isSelected && styles.sportChipSelected,
+                  ]}
                   onPress={() => toggleSportType(sport)}
                 >
-                  <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                  <Text
+                    style={[
+                      styles.sportChipText,
+                      isSelected && styles.sportChipTextSelected,
+                    ]}
+                  >
                     {sport.charAt(0).toUpperCase() + sport.slice(1)}
                   </Text>
                 </TouchableOpacity>
@@ -634,7 +811,12 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               style={styles.addButton}
               onPress={() => setShowAddCourtModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color={colors.cobalt} style={{ marginRight: Spacing.xs }} />
+              <Ionicons
+                name="add-circle"
+                size={24}
+                color={colors.cobalt}
+                style={{ marginRight: Spacing.xs }}
+              />
               <Text style={styles.addButtonText}>Add Court</Text>
             </TouchableOpacity>
           </View>
@@ -644,7 +826,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               No courts added yet. Add courts to set individual pricing.
             </Text>
           ) : (
-            courts.map((court) => (
+            courts.map(court => (
               <TouchableOpacity
                 key={court.id}
                 style={styles.courtCard}
@@ -654,25 +836,38 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                 <View style={styles.courtInfo}>
                   <Text style={styles.courtName}>{court.name}</Text>
                   <Text style={styles.courtDetails}>
-                    {court.sportType.charAt(0).toUpperCase() + court.sportType.slice(1)} • 
-                    {court.isIndoor ? ' Indoor' : ' Outdoor'} • 
-                    Capacity: {court.capacity}
+                    {court.sportType.charAt(0).toUpperCase() +
+                      court.sportType.slice(1)}{' '}
+                    •{court.isIndoor ? ' Indoor' : ' Outdoor'} • Capacity:{' '}
+                    {court.capacity}
                   </Text>
-                  <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
+                  <Text style={styles.courtPrice}>
+                    ${court.pricePerHour}/hour
+                  </Text>
                 </View>
                 <View style={styles.courtActions} pointerEvents="box-none">
-                  <Ionicons name="create-outline" size={20} color={colors.cobalt} style={{ marginRight: Spacing.sm }} />
+                  <Ionicons
+                    name="create-outline"
+                    size={20}
+                    color={colors.cobalt}
+                    style={{ marginRight: Spacing.sm }}
+                  />
                   <TouchableOpacity
                     style={styles.removeButton}
                     activeOpacity={0.7}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    onPress={(e) => {
+                    onPress={e => {
                       e.stopPropagation();
                       console.log('🗑️ Delete button pressed');
                       handleRemoveCourt(court.id);
                     }}
                   >
-                    <Ionicons name="trash-outline" size={20} color={colors.heart} pointerEvents="none" />
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color={colors.heart}
+                      pointerEvents="none"
+                    />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -684,7 +879,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         <View style={styles.section}>
           <CancellationPolicyPicker
             value={formData.cancellationPolicyHours ?? null}
-            onChange={(val) => updateField('cancellationPolicyHours', val)}
+            onChange={val => updateField('cancellationPolicyHours', val)}
           />
         </View>
 
@@ -692,41 +887,49 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
         <View style={styles.section}>
           <View style={styles.insuranceToggleRow}>
             <View style={styles.insuranceToggleInfo}>
-              <Text style={styles.insuranceToggleLabel}>Requires Booking Confirmation</Text>
+              <Text style={styles.insuranceToggleLabel}>
+                Requires Booking Confirmation
+              </Text>
               <Text style={styles.insuranceToggleDescription}>
-                All reservation requests must be approved before they are confirmed
+                All reservation requests must be approved before they are
+                confirmed
               </Text>
             </View>
             <Switch
               value={requiresBookingConfirmation}
-              onValueChange={(val) => {
+              onValueChange={val => {
                 setRequiresBookingConfirmation(val);
                 if (!val) setRequiresInsurance(false);
               }}
               trackColor={{ false: colors.white, true: colors.cobaltLight }}
-              thumbColor={requiresBookingConfirmation ? colors.cobalt : colors.surface}
+              thumbColor={
+                requiresBookingConfirmation ? colors.cobalt : colors.surface
+              }
             />
           </View>
         </View>
 
         {/* Insurance Requirement — only visible when confirmation is on */}
         {requiresBookingConfirmation && (
-        <View style={styles.section}>
-          <View style={styles.insuranceToggleRow}>
-            <View style={styles.insuranceToggleInfo}>
-              <Text style={styles.insuranceToggleLabel}>Requires Proof of Insurance</Text>
-              <Text style={styles.insuranceToggleDescription}>
-                Renters must attach a valid insurance document when reserving a court
-              </Text>
+          <View style={styles.section}>
+            <View style={styles.insuranceToggleRow}>
+              <View style={styles.insuranceToggleInfo}>
+                <Text style={styles.insuranceToggleLabel}>
+                  Requires Proof of Insurance
+                </Text>
+                <Text style={styles.insuranceToggleDescription}>
+                  Renters must attach a valid insurance document when reserving
+                  a court
+                </Text>
+              </View>
+              <Switch
+                value={requiresInsurance}
+                onValueChange={setRequiresInsurance}
+                trackColor={{ false: colors.white, true: colors.cobaltLight }}
+                thumbColor={requiresInsurance ? colors.cobalt : colors.surface}
+              />
             </View>
-            <Switch
-              value={requiresInsurance}
-              onValueChange={setRequiresInsurance}
-              trackColor={{ false: colors.white, true: colors.cobaltLight }}
-              thumbColor={requiresInsurance ? colors.cobalt : colors.surface}
-            />
           </View>
-        </View>
         )}
 
         {/* Waiver Section */}
@@ -734,7 +937,10 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           <View style={styles.insuranceToggleRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.insuranceLabel}>Require Waiver</Text>
-              <Text style={styles.insuranceDescription}>Players must sign a waiver before attending events at this facility.</Text>
+              <Text style={styles.insuranceDescription}>
+                Players must sign a waiver before attending events at this
+                facility.
+              </Text>
             </View>
             <Switch
               value={waiverRequired}
@@ -746,14 +952,48 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
           {waiverRequired && (
             <View style={{ marginTop: 12 }}>
               <Text style={styles.insuranceLabel}>Waiver Document</Text>
-              <Text style={styles.insuranceDescription}>Players will be required to read and accept this waiver before joining events. Uploading a new version will require all players to re-sign.</Text>
+              <Text style={styles.insuranceDescription}>
+                Players will be required to read and accept this waiver before
+                joining events. Uploading a new version will require all players
+                to re-sign.
+              </Text>
               {originalWaiverText && waiverText !== originalWaiverText && (
-                <View style={{ backgroundColor: colors.goldTint, padding: 10, borderRadius: 8, marginTop: 8, marginBottom: 8 }}>
-                  <Text style={{ fontFamily: fonts.body, fontSize: 13, color: colors.gold }}>Saving a new waiver will invalidate all previously signed waivers. Players will be prompted to re-sign before their next event.</Text>
+                <View
+                  style={{
+                    backgroundColor: colors.goldTint,
+                    padding: 10,
+                    borderRadius: 8,
+                    marginTop: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: 13,
+                      color: colors.gold,
+                    }}
+                  >
+                    Saving a new waiver will invalidate all previously signed
+                    waivers. Players will be prompted to re-sign before their
+                    next event.
+                  </Text>
                 </View>
               )}
               <TextInput
-                style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, minHeight: 120, fontFamily: fonts.body, fontSize: 14, color: colors.ink, textAlignVertical: 'top', marginTop: 8, borderWidth: 1, borderColor: colors.border }}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 10,
+                  padding: 12,
+                  minHeight: 120,
+                  fontFamily: fonts.body,
+                  fontSize: 14,
+                  color: colors.ink,
+                  textAlignVertical: 'top',
+                  marginTop: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
                 multiline
                 numberOfLines={6}
                 placeholder="Enter your full waiver text here…"
@@ -761,7 +1001,17 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
                 value={waiverText}
                 onChangeText={setWaiverText}
               />
-              <Text style={{ fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginTop: 4, textAlign: 'right' }}>{waiverText.length} characters</Text>
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 12,
+                  color: colors.inkFaint,
+                  marginTop: 4,
+                  textAlign: 'right',
+                }}
+              >
+                {waiverText.length} characters
+              </Text>
             </View>
           )}
         </View>
@@ -813,18 +1063,20 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               <Text style={styles.modalTitle}>
                 {editingCourtId ? 'Edit Court/Field' : 'Add Court/Field'}
               </Text>
-              <TouchableOpacity onPress={() => {
-                setShowAddCourtModal(false);
-                setEditingCourtId(null);
-                setNewCourt({
-                  id: '',
-                  name: '',
-                  sportType: '',
-                  capacity: 10,
-                  isIndoor: false,
-                  pricePerHour: 0,
-                });
-              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowAddCourtModal(false);
+                  setEditingCourtId(null);
+                  setNewCourt({
+                    id: '',
+                    name: '',
+                    sportType: '',
+                    capacity: 10,
+                    isIndoor: false,
+                    pricePerHour: 0,
+                  });
+                }}
+              >
                 <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
@@ -833,21 +1085,33 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               <FormInput
                 label="Court Name *"
                 value={newCourt.name}
-                onChangeText={(value) => setNewCourt({ ...newCourt, name: value })}
+                onChangeText={value =>
+                  setNewCourt({ ...newCourt, name: value })
+                }
                 placeholder="e.g., Court 1, Field A"
               />
 
               <Text style={styles.inputLabel}>Sport Type *</Text>
               <View style={styles.sportTypeContainer}>
-                {Object.values(SportType).map((sport) => {
+                {Object.values(SportType).map(sport => {
                   const isSelected = newCourt.sportType === sport;
                   return (
                     <TouchableOpacity
                       key={sport}
-                      style={[styles.sportChip, isSelected && styles.sportChipSelected]}
-                      onPress={() => setNewCourt({ ...newCourt, sportType: sport })}
+                      style={[
+                        styles.sportChip,
+                        isSelected && styles.sportChipSelected,
+                      ]}
+                      onPress={() =>
+                        setNewCourt({ ...newCourt, sportType: sport })
+                      }
                     >
-                      <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                      <Text
+                        style={[
+                          styles.sportChipText,
+                          isSelected && styles.sportChipTextSelected,
+                        ]}
+                      >
                         {sport.charAt(0).toUpperCase() + sport.slice(1)}
                       </Text>
                     </TouchableOpacity>
@@ -858,7 +1122,7 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               <FormInput
                 label="Capacity"
                 value={newCourt.capacity.toString()}
-                onChangeText={(value) =>
+                onChangeText={value =>
                   setNewCourt({ ...newCourt, capacity: parseInt(value) || 0 })
                 }
                 placeholder="10"
@@ -867,10 +1131,23 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
 
               <TouchableOpacity
                 style={styles.checkboxRow}
-                onPress={() => setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })}
+                onPress={() =>
+                  setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })
+                }
               >
-                <View style={[styles.checkbox, newCourt.isIndoor && styles.checkboxChecked]}>
-                  {newCourt.isIndoor && <Ionicons name="checkmark" size={16} color={colors.surface} />}
+                <View
+                  style={[
+                    styles.checkbox,
+                    newCourt.isIndoor && styles.checkboxChecked,
+                  ]}
+                >
+                  {newCourt.isIndoor && (
+                    <Ionicons
+                      name="checkmark"
+                      size={16}
+                      color={colors.surface}
+                    />
+                  )}
                 </View>
                 <Text style={styles.checkboxLabel}>Indoor Court</Text>
               </TouchableOpacity>
@@ -878,8 +1155,11 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
               <FormInput
                 label="Price Per Hour ($)"
                 value={newCourt.pricePerHour.toString()}
-                onChangeText={(value) =>
-                  setNewCourt({ ...newCourt, pricePerHour: parseFloat(value) || 0 })
+                onChangeText={value =>
+                  setNewCourt({
+                    ...newCourt,
+                    pricePerHour: parseFloat(value) || 0,
+                  })
                 }
                 placeholder="0.00"
                 keyboardType="decimal-pad"
@@ -929,10 +1209,11 @@ export function EditFacilityScreen({ route }: EditFacilityScreenProps): JSX.Elem
             <View style={styles.deleteModalIcon}>
               <Ionicons name="warning" size={48} color={colors.heart} />
             </View>
-            
+
             <Text style={styles.deleteModalTitle}>Delete Ground?</Text>
             <Text style={styles.deleteModalMessage}>
-              Are you sure you want to delete this ground? This action cannot be undone and will remove all associated courts and data.
+              Are you sure you want to delete this ground? This action cannot be
+              undone and will remove all associated courts and data.
             </Text>
 
             <View style={styles.deleteModalButtons}>
@@ -1282,5 +1563,41 @@ const styles = StyleSheet.create({
   insuranceToggleDescription: {
     ...TextStyles.body,
     color: colors.inkFaint,
+  },
+  addressSearchInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    marginBottom: 8,
+  },
+  suggestionsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  suggestionBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  suggestionText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.ink,
+    flex: 1,
   },
 });

@@ -18,7 +18,10 @@ interface EventFlowContainerProps {
   onSubmit: () => void;
 }
 
-export function EventFlowContainer({ children, onSubmit }: EventFlowContainerProps) {
+export function EventFlowContainer({
+  children,
+  onSubmit,
+}: EventFlowContainerProps) {
   const { state, dispatch } = useCreateEvent();
   const navigation = useNavigation();
   const { currentStep } = state;
@@ -34,6 +37,7 @@ export function EventFlowContainer({ children, onSubmit }: EventFlowContainerPro
   };
 
   const handlePress = () => {
+    if (state.isSubmitting) return; // prevent double tap
     if (isLastStep) onSubmit();
     else dispatch({ type: 'NEXT_STEP' });
   };
@@ -41,7 +45,11 @@ export function EventFlowContainer({ children, onSubmit }: EventFlowContainerPro
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </TouchableOpacity>
         <View style={styles.dotsWrapper}>
@@ -50,20 +58,25 @@ export function EventFlowContainer({ children, onSubmit }: EventFlowContainerPro
         <View style={styles.backBtn} />
       </View>
 
-      <View style={styles.stageContainer}>
-        {childArray[currentStep]}
-      </View>
+      <View style={styles.stageContainer}>{childArray[currentStep]}</View>
 
       {showButton && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, !enabled && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              (!enabled || state.isSubmitting) && styles.buttonDisabled,
+            ]}
             onPress={handlePress}
-            disabled={!enabled}
+            disabled={!enabled || state.isSubmitting}
             activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>
-              {isLastStep ? 'Create Event' : 'Continue'}
+              {state.isSubmitting
+                ? 'Creating...'
+                : isLastStep
+                  ? 'Create Event'
+                  : 'Continue'}
             </Text>
           </TouchableOpacity>
         </View>

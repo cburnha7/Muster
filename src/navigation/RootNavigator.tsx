@@ -37,7 +37,11 @@ const profileScreenOptions = {
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.heading, fontSize: 22, color: colors.onSurface },
+  headerTitleStyle: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.onSurface,
+  },
 };
 
 const PENDING_INVITE_KEY = '@muster_pending_invite';
@@ -67,7 +71,10 @@ export function RootNavigator() {
 
   // Log user state changes
   useEffect(() => {
-    console.log('RootNavigator: User state changed:', user ? `Logged in as ${user.firstName} ${user.lastName}` : 'Not logged in');
+    console.log(
+      'RootNavigator: User state changed:',
+      user ? `Logged in as ${user.firstName} ${user.lastName}` : 'Not logged in'
+    );
     console.log('RootNavigator: Auth loading:', authLoading);
   }, [user, authLoading]);
 
@@ -83,7 +90,7 @@ export function RootNavigator() {
     };
 
     // Check initial URL (cold start from link)
-    Linking.getInitialURL().then((url) => {
+    Linking.getInitialURL().then(url => {
       if (url) handleURL({ url });
     });
 
@@ -96,10 +103,13 @@ export function RootNavigator() {
   useEffect(() => {
     if (user && user.onboardingComplete && !pendingInviteHandled.current) {
       pendingInviteHandled.current = true;
-      AsyncStorage.getItem(PENDING_INVITE_KEY).then((code) => {
+      AsyncStorage.getItem(PENDING_INVITE_KEY).then(code => {
         if (code) {
           AsyncStorage.removeItem(PENDING_INVITE_KEY).catch(() => {});
-          console.log('RootNavigator: Redirecting to JoinTeam with pending invite:', code);
+          console.log(
+            'RootNavigator: Redirecting to JoinTeam with pending invite:',
+            code
+          );
           // The TabNavigatorWithInviteRedirect component below handles the redirect
         }
       });
@@ -122,7 +132,7 @@ export function RootNavigator() {
       >
         {!user ? (
           <Stack.Screen name="Auth">
-            {(props) => (
+            {props => (
               <AuthNavigator
                 {...props}
                 onAuthSuccess={() => {
@@ -136,19 +146,55 @@ export function RootNavigator() {
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
           <>
-            <Stack.Screen name="Main">
-              {(props) => <TabNavigatorWithInviteRedirect {...props} />}
+            <Stack.Screen name="Main" options={{ headerBackTitle: 'Home' }}>
+              {props => <TabNavigatorWithInviteRedirect {...props} />}
             </Stack.Screen>
             <Stack.Group screenOptions={profileScreenOptions}>
-              <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ headerTitle: 'Profile' }} />
-              <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerTitle: 'Edit Profile' }} />
-              <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerTitle: 'Settings' }} />
-              <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} options={{ headerTitle: 'Notifications' }} />
-              <Stack.Screen name="DependentForm" component={DependentFormScreen} options={{ headerTitle: 'Dependent' }} />
-              <Stack.Screen name="DependentProfile" component={DependentProfileScreen} options={{ headerTitle: 'Dependent' }} />
-              <Stack.Screen name="TransferAccount" component={TransferAccountScreen} options={{ headerTitle: 'Transfer' }} />
-              <Stack.Screen name="RedeemCode" component={RedeemCodeScreen} options={{ headerTitle: 'Redeem Code' }} />
-              <Stack.Screen name="AvailabilityCalendar" component={AvailabilityCalendarScreen} options={{ headerShown: false }} />
+              <Stack.Screen
+                name="ProfileScreen"
+                component={ProfileScreen}
+                options={{ headerTitle: 'Profile' }}
+              />
+              <Stack.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
+                options={{ headerTitle: 'Edit Profile' }}
+              />
+              <Stack.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{ headerTitle: 'Settings' }}
+              />
+              <Stack.Screen
+                name="NotificationPreferences"
+                component={NotificationPreferencesScreen}
+                options={{ headerTitle: 'Notifications' }}
+              />
+              <Stack.Screen
+                name="DependentForm"
+                component={DependentFormScreen}
+                options={{ headerTitle: 'Dependent' }}
+              />
+              <Stack.Screen
+                name="DependentProfile"
+                component={DependentProfileScreen}
+                options={{ headerTitle: 'Dependent' }}
+              />
+              <Stack.Screen
+                name="TransferAccount"
+                component={TransferAccountScreen}
+                options={{ headerTitle: 'Transfer' }}
+              />
+              <Stack.Screen
+                name="RedeemCode"
+                component={RedeemCodeScreen}
+                options={{ headerTitle: 'Redeem Code' }}
+              />
+              <Stack.Screen
+                name="AvailabilityCalendar"
+                component={AvailabilityCalendarScreen}
+                options={{ headerShown: false }}
+              />
             </Stack.Group>
           </>
         )}
@@ -166,7 +212,7 @@ function TabNavigatorWithInviteRedirect(props: any) {
     if (checkedRef.current) return;
     checkedRef.current = true;
 
-    AsyncStorage.getItem(PENDING_INVITE_KEY).then((code) => {
+    AsyncStorage.getItem(PENDING_INVITE_KEY).then(code => {
       if (code) {
         AsyncStorage.removeItem(PENDING_INVITE_KEY).catch(() => {});
         // Navigate to JoinTeam within the Teams stack
