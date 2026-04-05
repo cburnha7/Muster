@@ -11,22 +11,38 @@ const Stack = createNativeStackNavigator<EventsStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerBackTitleVisible: false,
   headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
+  headerTitleStyle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
+  },
 };
 
 export function EventsStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="EventsList" component={EventsListScreen} />
-      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
-      <Stack.Screen name="CreateEvent" component={CreateEventScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="EditEvent" component={EditEventScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetailsScreen}
+        options={{ ...detailHeader, headerTitle: '' }}
+      />
+      <Stack.Screen
+        name="CreateEvent"
+        component={CreateEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EditEvent"
+        component={EditEventScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }

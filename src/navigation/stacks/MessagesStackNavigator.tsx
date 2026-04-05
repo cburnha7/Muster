@@ -10,20 +10,31 @@ const Stack = createNativeStackNavigator<MessagesStackParamList>();
 
 const detailHeader = {
   headerShown: true,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerBackTitleVisible: false,
   headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
+  headerTitleStyle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
+  },
 };
 
 export function MessagesStackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ConversationList" component={ConversationListScreen} />
-      <Stack.Screen name="NewConversation" component={NewConversationScreen} options={{ ...detailHeader, headerTitle: 'New Message' }} />
+      <Stack.Screen
+        name="ConversationList"
+        component={ConversationListScreen}
+      />
+      <Stack.Screen
+        name="NewConversation"
+        component={NewConversationScreen}
+        options={{ ...detailHeader, headerTitle: 'New Message' }}
+      />
       <Stack.Screen name="Chat" component={ChatScreen} options={detailHeader} />
     </Stack.Navigator>
   );

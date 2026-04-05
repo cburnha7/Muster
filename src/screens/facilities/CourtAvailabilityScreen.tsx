@@ -13,7 +13,14 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, typeScale, Spacing, TextStyles, ComponentStyles } from '../../theme';
+import {
+  colors,
+  fonts,
+  typeScale,
+  Spacing,
+  TextStyles,
+  ComponentStyles,
+} from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
   calendarTheme,
@@ -30,16 +37,23 @@ import type { TimeSlot } from '../../components/facilities/TimeSlotGrid';
 import type { CartSlot } from '../../components/facilities/BulkBookingConfirmationModal';
 import type { ConflictSlot } from '../../components/facilities/BookingConflictModal';
 import { useAuth } from '../../context/AuthContext';
-import { RecurringBookingToggle, RecurringConfig } from '../../components/bookings/RecurringBookingToggle';
+import {
+  RecurringBookingToggle,
+  RecurringConfig,
+} from '../../components/bookings/RecurringBookingToggle';
 import { RecurringConflictsModal } from '../../components/bookings/RecurringConflictsModal';
 import { InsuranceDocumentSelector } from '../../components/bookings/InsuranceDocumentSelector';
 import { API_BASE_URL } from '../../services/api/config';
+import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 
 type CourtAvailabilityScreenNavigationProp = NativeStackNavigationProp<
   FacilitiesStackParamList,
   'CourtAvailability'
 >;
-type CourtAvailabilityScreenRouteProp = RouteProp<FacilitiesStackParamList, 'CourtAvailability'>;
+type CourtAvailabilityScreenRouteProp = RouteProp<
+  FacilitiesStackParamList,
+  'CourtAvailability'
+>;
 
 interface Court {
   id: string;
@@ -64,13 +78,25 @@ export function CourtAvailabilityScreen() {
   const route = useRoute<CourtAvailabilityScreenRouteProp>();
   const { user } = useAuth();
 
-  const { facilityId, facilityName, courtId, eventDate, eventStartTime, returnTo, returnParams } = route.params;
+  const {
+    facilityId,
+    facilityName,
+    courtId,
+    eventDate,
+    eventStartTime,
+    returnTo,
+    returnParams,
+  } = route.params;
 
   // Facility data (for requiresInsurance and requiresBookingConfirmation check)
-  const [facilityData, setFacilityData] = useState<{ requiresInsurance?: boolean; requiresBookingConfirmation?: boolean } | null>(null);
+  const [facilityData, setFacilityData] = useState<{
+    requiresInsurance?: boolean;
+    requiresBookingConfirmation?: boolean;
+  } | null>(null);
 
   // Insurance document selection (only used when requiresInsurance = true)
-  const [selectedInsuranceDocumentId, setSelectedInsuranceDocumentId] = useState<string | undefined>(undefined);
+  const [selectedInsuranceDocumentId, setSelectedInsuranceDocumentId] =
+    useState<string | undefined>(undefined);
 
   const requiresInsurance = facilityData?.requiresInsurance === true;
 
@@ -79,13 +105,16 @@ export function CourtAvailabilityScreen() {
   );
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
   const [courts, setCourts] = useState<Court[]>([]);
-  const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
+  const [availabilityData, setAvailabilityData] =
+    useState<AvailabilityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [markedDates, setMarkedDates] = useState<any>({});
 
   // Selection cart Ã¢â‚¬â€ persists across court/date changes
-  const [selectionCart, setSelectionCart] = useState<Map<string, CartSlot>>(new Map());
+  const [selectionCart, setSelectionCart] = useState<Map<string, CartSlot>>(
+    new Map()
+  );
 
   // Whole day toggle
   const [wholeDayOn, setWholeDayOn] = useState(false);
@@ -94,7 +123,8 @@ export function CourtAvailabilityScreen() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showConflict, setShowConflict] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictSlot[]>([]);
-  const [availableSlotsAfterConflict, setAvailableSlotsAfterConflict] = useState<any[]>([]);
+  const [availableSlotsAfterConflict, setAvailableSlotsAfterConflict] =
+    useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Recurring booking state
@@ -134,15 +164,27 @@ export function CourtAvailabilityScreen() {
   const currentViewSelectedIds = useMemo(() => {
     if (!selectedCourt) return [];
     return Array.from(selectionCart.values())
-      .filter((s) => s.courtId === selectedCourt.id && s.date === selectedDate)
-      .map((s) => s.slotId);
+      .filter(s => s.courtId === selectedCourt.id && s.date === selectedDate)
+      .map(s => s.slotId);
   }, [selectionCart, selectedCourt?.id, selectedDate]);
 
   // Cart summary stats
-  const cartSlots = useMemo(() => Array.from(selectionCart.values()), [selectionCart]);
-  const cartTotal = useMemo(() => cartSlots.reduce((sum, s) => sum + s.price, 0), [cartSlots]);
-  const cartCourtCount = useMemo(() => new Set(cartSlots.map((s) => s.courtId)).size, [cartSlots]);
-  const cartDayCount = useMemo(() => new Set(cartSlots.map((s) => s.date)).size, [cartSlots]);
+  const cartSlots = useMemo(
+    () => Array.from(selectionCart.values()),
+    [selectionCart]
+  );
+  const cartTotal = useMemo(
+    () => cartSlots.reduce((sum, s) => sum + s.price, 0),
+    [cartSlots]
+  );
+  const cartCourtCount = useMemo(
+    () => new Set(cartSlots.map(s => s.courtId)).size,
+    [cartSlots]
+  );
+  const cartDayCount = useMemo(
+    () => new Set(cartSlots.map(s => s.date)).size,
+    [cartSlots]
+  );
 
   const loadCourts = async () => {
     try {
@@ -169,9 +211,7 @@ export function CourtAvailabilityScreen() {
 
   const loadFacilityData = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/facilities/${facilityId}`
-      );
+      const response = await fetch(`${API_BASE_URL}/facilities/${facilityId}`);
       if (!response.ok) throw new Error('Failed to load facility');
       const data = await response.json();
       setFacilityData(data);
@@ -183,8 +223,9 @@ export function CourtAvailabilityScreen() {
   const loadAvailability = async (cId: string, date: string) => {
     try {
       setLoadingSlots(true);
+      const tzOffset = new Date().getTimezoneOffset();
       const response = await fetch(
-        `${API_BASE_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}`
+        `${API_BASE_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}&tzOffset=${tzOffset}`
       );
       if (!response.ok) throw new Error('Failed to load availability');
       const data: AvailabilityData = await response.json();
@@ -209,26 +250,29 @@ export function CourtAvailabilityScreen() {
     // Cart persists Ã¢â‚¬â€ no clearing
   };
 
-  const addSlotToCart = useCallback((slot: TimeSlot) => {
-    if (!selectedCourt || !slot.id) return;
-    setSelectionCart((prev) => {
-      const next = new Map(prev);
-      next.set(slot.id!, {
-        slotId: slot.id!,
-        facilityId,
-        courtId: selectedCourt.id,
-        courtName: selectedCourt.name,
-        date: selectedDate,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        price: slot.price || 0,
+  const addSlotToCart = useCallback(
+    (slot: TimeSlot) => {
+      if (!selectedCourt || !slot.id) return;
+      setSelectionCart(prev => {
+        const next = new Map(prev);
+        next.set(slot.id!, {
+          slotId: slot.id!,
+          facilityId,
+          courtId: selectedCourt.id,
+          courtName: selectedCourt.name,
+          date: selectedDate,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          price: slot.price || 0,
+        });
+        return next;
       });
-      return next;
-    });
-  }, [facilityId, selectedCourt, selectedDate]);
+    },
+    [facilityId, selectedCourt, selectedDate]
+  );
 
   const removeSlotFromCart = useCallback((slotId: string) => {
-    setSelectionCart((prev) => {
+    setSelectionCart(prev => {
       const next = new Map(prev);
       next.delete(slotId);
       return next;
@@ -263,7 +307,7 @@ export function CourtAvailabilityScreen() {
 
     if (value) {
       // Add all available slots for current court+date
-      setSelectionCart((prev) => {
+      setSelectionCart(prev => {
         const next = new Map(prev);
         for (const slot of availabilityData.slots) {
           if (slot.status === 'available' && slot.id) {
@@ -283,7 +327,7 @@ export function CourtAvailabilityScreen() {
       });
     } else {
       // Remove all slots for current court+date
-      setSelectionCart((prev) => {
+      setSelectionCart(prev => {
         const next = new Map(prev);
         for (const slot of availabilityData.slots) {
           if (slot.id) next.delete(slot.id);
@@ -327,7 +371,7 @@ export function CourtAvailabilityScreen() {
     setSubmitting(true);
 
     try {
-      const slots = cartSlots.map((s) => ({
+      const slots = cartSlots.map(s => ({
         facilityId: s.facilityId,
         courtId: s.courtId,
         slotId: s.slotId,
@@ -370,8 +414,8 @@ export function CourtAvailabilityScreen() {
 
   const handleBookAvailableAfterConflict = async () => {
     // Remove conflict slots from cart, then resubmit
-    const conflictIds = new Set(conflicts.map((c) => c.slotId));
-    setSelectionCart((prev) => {
+    const conflictIds = new Set(conflicts.map(c => c.slotId));
+    setSelectionCart(prev => {
       const next = new Map(prev);
       for (const id of conflictIds) {
         next.delete(id);
@@ -388,13 +432,19 @@ export function CourtAvailabilityScreen() {
 
   // ─── Recurring booking flow ───────────────────────────────────────
   const handleRecurringBooking = async (skipConflicts = false) => {
-    if (cartSlots.length !== 1 || !user || !selectedCourt || !recurringConfig.endDate) return;
+    if (
+      cartSlots.length !== 1 ||
+      !user ||
+      !selectedCourt ||
+      !recurringConfig.endDate
+    )
+      return;
     setSubmitting(true);
 
     try {
       const slot = cartSlots[0]!;
       // Find the original time slot data to get start/end times
-      const slotData = availabilityData?.slots.find((s) => s.id === slot.slotId);
+      const slotData = availabilityData?.slots.find(s => s.id === slot.slotId);
       if (!slotData) throw new Error('Slot data not found');
 
       const response = await fetch(`${API_BASE_URL}/rentals/recurring`, {
@@ -417,7 +467,11 @@ export function CourtAvailabilityScreen() {
         setShowConfirmation(false);
         setShowRecurringConflicts(false);
         setSelectionCart(new Map());
-        setRecurringConfig({ enabled: false, frequency: 'weekly', endDate: null });
+        setRecurringConfig({
+          enabled: false,
+          frequency: 'weekly',
+          endDate: null,
+        });
 
         const data = await response.json();
         navigateAfterBooking(data.rentals?.[0]);
@@ -439,7 +493,10 @@ export function CourtAvailabilityScreen() {
     }
   };
 
-  const isRecurringReady = recurringConfig.enabled && cartSlots.length === 1 && recurringConfig.endDate !== null;
+  const isRecurringReady =
+    recurringConfig.enabled &&
+    cartSlots.length === 1 &&
+    recurringConfig.endDate !== null;
 
   if (loading) {
     return (
@@ -455,14 +512,20 @@ export function CourtAvailabilityScreen() {
       <View style={styles.emptyContainer}>
         <Ionicons name="basketball-outline" size={64} color={colors.inkFaint} />
         <Text style={styles.emptyTitle}>No Courts Available</Text>
-        <Text style={styles.emptySubtitle}>This facility doesn't have any courts set up yet.</Text>
+        <Text style={styles.emptySubtitle}>
+          This facility doesn't have any courts set up yet.
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ContextualReturnButton />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.facilityName}>{facilityName}</Text>
@@ -472,35 +535,56 @@ export function CourtAvailabilityScreen() {
         {/* Court Selector */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Court</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.courtList}>
-            {courts.map((court) => {
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.courtList}
+          >
+            {courts.map(court => {
               const courtCartCount = Array.from(selectionCart.values()).filter(
-                (s) => s.courtId === court.id
+                s => s.courtId === court.id
               ).length;
               return (
                 <TouchableOpacity
                   key={court.id}
-                  style={[styles.courtCard, selectedCourt?.id === court.id && styles.courtCardSelected]}
+                  style={[
+                    styles.courtCard,
+                    selectedCourt?.id === court.id && styles.courtCardSelected,
+                  ]}
                   onPress={() => handleCourtSelect(court)}
                 >
                   <View style={styles.courtCardHeader}>
                     <Ionicons
                       name={court.isIndoor ? 'home' : 'sunny'}
                       size={20}
-                      color={selectedCourt?.id === court.id ? colors.cobalt : colors.inkFaint}
+                      color={
+                        selectedCourt?.id === court.id
+                          ? colors.cobalt
+                          : colors.inkFaint
+                      }
                     />
-                    <Text style={[styles.courtName, selectedCourt?.id === court.id && styles.courtNameSelected]}>
+                    <Text
+                      style={[
+                        styles.courtName,
+                        selectedCourt?.id === court.id &&
+                          styles.courtNameSelected,
+                      ]}
+                    >
                       {court.name}
                     </Text>
                     {courtCartCount > 0 && (
                       <View style={styles.courtBadge}>
-                        <Text style={styles.courtBadgeText}>{courtCartCount}</Text>
+                        <Text style={styles.courtBadgeText}>
+                          {courtCartCount}
+                        </Text>
                       </View>
                     )}
                   </View>
                   <Text style={styles.courtSportType}>{court.sportType}</Text>
                   {court.pricePerHour != null && (
-                    <Text style={styles.courtPrice}>${court.pricePerHour}/hr</Text>
+                    <Text style={styles.courtPrice}>
+                      ${court.pricePerHour}/hr
+                    </Text>
                   )}
                 </TouchableOpacity>
               );
@@ -522,20 +606,21 @@ export function CourtAvailabilityScreen() {
         </View>
 
         {/* Whole Day Toggle */}
-        {availabilityData && availabilityData.slots.some((s) => s.status === 'available') && (
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleLabel}>
-              <Ionicons name="sunny" size={18} color={colors.gold} />
-              <Text style={styles.toggleText}>Book the Whole Day</Text>
+        {availabilityData &&
+          availabilityData.slots.some(s => s.status === 'available') && (
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLabel}>
+                <Ionicons name="sunny" size={18} color={colors.gold} />
+                <Text style={styles.toggleText}>Book the Whole Day</Text>
+              </View>
+              <Switch
+                value={wholeDayOn}
+                onValueChange={handleWholeDayToggle}
+                trackColor={{ false: '#DDD', true: colors.cobaltLight }}
+                thumbColor={wholeDayOn ? colors.cobalt : '#F4F4F4'}
+              />
             </View>
-            <Switch
-              value={wholeDayOn}
-              onValueChange={handleWholeDayToggle}
-              trackColor={{ false: '#DDD', true: colors.cobaltLight }}
-              thumbColor={wholeDayOn ? colors.cobalt : '#F4F4F4'}
-            />
-          </View>
-        )}
+          )}
 
         {/* Time Slots */}
         <View style={styles.section}>
@@ -543,7 +628,8 @@ export function CourtAvailabilityScreen() {
             <Text style={styles.sectionTitle}>Available Time Slots</Text>
             {availabilityData && (
               <Text style={styles.availabilityCount}>
-                {availabilityData.availableSlots} of {availabilityData.totalSlots} available
+                {availabilityData.availableSlots} of{' '}
+                {availabilityData.totalSlots} available
               </Text>
             )}
           </View>
@@ -563,8 +649,14 @@ export function CourtAvailabilityScreen() {
             />
           ) : (
             <View style={styles.noSlotsContainer}>
-              <Ionicons name="calendar-outline" size={48} color={colors.inkFaint} />
-              <Text style={styles.noSlotsText}>No time slots available for this date</Text>
+              <Ionicons
+                name="calendar-outline"
+                size={48}
+                color={colors.inkFaint}
+              />
+              <Text style={styles.noSlotsText}>
+                No time slots available for this date
+              </Text>
             </View>
           )}
         </View>
@@ -574,19 +666,27 @@ export function CourtAvailabilityScreen() {
           <Text style={styles.legendTitle}>Legend</Text>
           <View style={styles.legendItems}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.cobalt }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: colors.cobalt }]}
+              />
               <Text style={styles.legendText}>Available</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.ink }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: colors.ink }]}
+              />
               <Text style={styles.legendText}>Reserved</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.heart }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: colors.heart }]}
+              />
               <Text style={styles.legendText}>Blocked</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.gold }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: colors.gold }]}
+              />
               <Text style={styles.legendText}>Selected</Text>
             </View>
           </View>
@@ -657,6 +757,11 @@ export function CourtAvailabilityScreen() {
         facilityName={facilityName}
         cartSlots={cartSlots}
         loading={submitting}
+        confirmLabel={
+          returnTo === 'CreateEvent'
+            ? 'Book Reservation & Return to Event'
+            : undefined
+        }
         insuranceContent={
           requiresInsurance && user ? (
             <InsuranceDocumentSelector
@@ -694,73 +799,200 @@ export function CourtAvailabilityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   scrollView: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
-  loadingText: { marginTop: Spacing.md, ...TextStyles.body, color: colors.inkFaint },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white, padding: Spacing.xxl },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    ...TextStyles.body,
+    color: colors.inkFaint,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    padding: Spacing.xxl,
+  },
   emptyTitle: { ...TextStyles.h3, color: colors.ink, marginTop: Spacing.lg },
-  emptySubtitle: { ...TextStyles.body, color: colors.inkFaint, textAlign: 'center', marginTop: Spacing.sm },
-  header: { padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  emptySubtitle: {
+    ...TextStyles.body,
+    color: colors.inkFaint,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+  },
+  header: {
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
   facilityName: { ...TextStyles.h2, color: colors.ink },
-  subtitle: { ...TextStyles.body, color: colors.inkFaint, marginTop: Spacing.xs },
+  subtitle: {
+    ...TextStyles.body,
+    color: colors.inkFaint,
+    marginTop: Spacing.xs,
+  },
   section: { padding: Spacing.lg },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
-  sectionTitle: { fontFamily: fonts.semibold, ...typeScale.h3, color: colors.ink, marginBottom: Spacing.md },
-  availabilityCount: { fontFamily: fonts.label, fontSize: 11, color: colors.cobalt },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    fontFamily: fonts.semibold,
+    ...typeScale.h3,
+    color: colors.ink,
+    marginBottom: Spacing.md,
+  },
+  availabilityCount: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.cobalt,
+  },
   courtList: { flexDirection: 'row' },
   courtCard: {
-    backgroundColor: '#FFF', borderRadius: 12, padding: Spacing.md,
-    marginRight: Spacing.md, borderWidth: 2, borderColor: '#EEE', minWidth: 140,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginRight: Spacing.md,
+    borderWidth: 2,
+    borderColor: '#EEE',
+    minWidth: 140,
   },
-  courtCardSelected: { borderColor: colors.cobalt, backgroundColor: colors.white },
-  courtCardHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xs },
+  courtCardSelected: {
+    borderColor: colors.cobalt,
+    backgroundColor: colors.white,
+  },
+  courtCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
   courtName: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink },
   courtNameSelected: { color: colors.cobalt },
   courtBadge: {
-    backgroundColor: colors.gold, borderRadius: 10,
-    minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+    backgroundColor: colors.gold,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   courtBadgeText: { fontFamily: fonts.label, fontSize: 10, color: '#FFF' },
-  courtSportType: { ...TextStyles.caption, color: colors.inkFaint, marginTop: Spacing.xs },
-  courtPrice: { ...TextStyles.body, color: colors.cobalt, fontWeight: '600', marginTop: Spacing.xs },
+  courtSportType: {
+    ...TextStyles.caption,
+    color: colors.inkFaint,
+    marginTop: Spacing.xs,
+  },
+  courtPrice: {
+    ...TextStyles.body,
+    color: colors.cobalt,
+    fontWeight: '600',
+    marginTop: Spacing.xs,
+  },
   calendar: {
-    borderRadius: 12, backgroundColor: '#FFF',
-    shadowColor: colors.ink, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4,
-    elevation: 2, overflow: 'hidden',
+    borderRadius: 12,
+    backgroundColor: '#FFF',
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
   },
   // Toggle row
   toggleRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginHorizontal: Spacing.lg, marginBottom: Spacing.sm,
-    padding: Spacing.md, backgroundColor: '#FFF', borderRadius: 12,
-    borderWidth: 1, borderColor: '#EEE',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    padding: Spacing.md,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EEE',
   },
   toggleLabel: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  toggleText: { fontFamily: fonts.semibold, ...typeScale.body, color: colors.ink },
+  toggleText: {
+    fontFamily: fonts.semibold,
+    ...typeScale.body,
+    color: colors.ink,
+  },
   // Slots loading / empty
-  loadingSlotsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: Spacing.md },
+  loadingSlotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xl,
+    gap: Spacing.md,
+  },
   loadingSlotsText: { ...TextStyles.body, color: colors.inkFaint },
   noSlotsContainer: { alignItems: 'center', padding: Spacing.xxl },
-  noSlotsText: { ...TextStyles.body, color: colors.inkFaint, marginTop: Spacing.md, textAlign: 'center' },
+  noSlotsText: {
+    ...TextStyles.body,
+    color: colors.inkFaint,
+    marginTop: Spacing.md,
+    textAlign: 'center',
+  },
   // Legend
-  legend: { padding: Spacing.lg, backgroundColor: '#FFF', marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, borderRadius: 12 },
-  legendTitle: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink, marginBottom: Spacing.sm },
+  legend: {
+    padding: Spacing.lg,
+    backgroundColor: '#FFF',
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderRadius: 12,
+  },
+  legendTitle: {
+    ...TextStyles.bodyLarge,
+    fontWeight: '600',
+    color: colors.ink,
+    marginBottom: Spacing.sm,
+  },
   legendItems: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   legendDot: { width: 12, height: 12, borderRadius: 6 },
   legendText: { ...TextStyles.body, color: colors.ink },
   // Footer
   footer: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    padding: Spacing.lg, borderTopWidth: 1, borderTopColor: '#EEE',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: '#EEE',
     backgroundColor: colors.white,
   },
-  footerSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  footerSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
   footerStats: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  footerStatsText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint },
-  footerPrice: { fontFamily: fonts.heading, ...typeScale.h3, color: colors.cobalt },
+  footerStatsText: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+  },
+  footerPrice: {
+    fontFamily: fonts.heading,
+    ...typeScale.h3,
+    color: colors.cobalt,
+  },
   bookButton: {
     ...ComponentStyles.button.primary,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
   },
   bookButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
 });

@@ -62,7 +62,8 @@ function normalizeDate(raw: string): string | null {
 // ── Compute duration from start/end times ──
 function computeDuration(startTime: string, endTimeOrDuration: string): string {
   // If it already looks like a duration, return it
-  if (/\d+\s*(min|hr|hour|m|h)/i.test(endTimeOrDuration)) return endTimeOrDuration;
+  if (/\d+\s*(min|hr|hour|m|h)/i.test(endTimeOrDuration))
+    return endTimeOrDuration;
   // Try to parse as end time and compute difference
   const startMatch = startTime.match(/(\d{1,2}):(\d{2})/);
   const endMatch = endTimeOrDuration.match(/(\d{1,2}):(\d{2})/);
@@ -78,22 +79,26 @@ function computeDuration(startTime: string, endTimeOrDuration: string): string {
 // ── Parse plain text (CSV or PDF text) ──
 function parseTextContent(text: string): ImportedEvent[] {
   const events: ImportedEvent[] = [];
-  const lines = text.split('\n').filter((l) => l.trim());
+  const lines = text.split('\n').filter(l => l.trim());
   const start = lines[0]?.match(/date|time|event|name/i) ? 1 : 0;
   for (let i = start; i < lines.length; i++) {
-    const parts = lines[i]!.split(/[,\t|]+/).map((p) => p.trim());
+    const parts = lines[i]!.split(/[,\t|]+/).map(p => p.trim());
     if (parts.length < 1) continue;
     // Find date-like, time-like, duration-like values
-    const datePart = parts.find((p) => /\d{1,4}[-/]\d{1,2}[-/]\d{1,4}/.test(p));
-    const timePart = parts.find((p) => /\d{1,2}:\d{2}/.test(p));
-    const durPart = parts.find((p) => /\d+\s*(min|hr|hour|m|h)/i.test(p));
-    const endTimePart = !durPart ? parts.filter((p) => /\d{1,2}:\d{2}/.test(p))[1] : undefined;
+    const datePart = parts.find(p => /\d{1,4}[-/]\d{1,2}[-/]\d{1,4}/.test(p));
+    const timePart = parts.find(p => /\d{1,2}:\d{2}/.test(p));
+    const durPart = parts.find(p => /\d+\s*(min|hr|hour|m|h)/i.test(p));
+    const endTimePart = !durPart
+      ? parts.filter(p => /\d{1,2}:\d{2}/.test(p))[1]
+      : undefined;
 
     if (datePart) {
       const date = normalizeDate(datePart);
       if (!date) continue;
       const startTime = timePart?.match(/\d{1,2}:\d{2}/)?.[0] || '12:00';
-      const duration = durPart || (endTimePart ? computeDuration(startTime, endTimePart) : '60 min');
+      const duration =
+        durPart ||
+        (endTimePart ? computeDuration(startTime, endTimePart) : '60 min');
       events.push({ id: generateId(), date, startTime, duration });
     }
   }
@@ -123,13 +128,15 @@ export function AvailabilityCalendarScreen() {
   useEffect(() => {
     if (!targetId) return;
     const token = authService.getToken();
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     // Load saved blocks from server
     fetch(`${API_BASE_URL}/availability/${targetId}`, { headers })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(r => r.json())
+      .then(data => {
         const saved: CalendarEvent[] = (data.blocks || []).map((b: any) => ({
           id: b.id,
           date: b.date,
@@ -138,15 +145,16 @@ export function AvailabilityCalendarScreen() {
           duration: b.duration,
           source: 'imported' as const,
         }));
-        setEvents((prev) => {
-          const muster = prev.filter((e) => e.source === 'muster');
+        setEvents(prev => {
+          const muster = prev.filter(e => e.source === 'muster');
           return [...saved, ...muster];
         });
       })
       .catch(() => {});
 
     // Load Muster events
-    userService.getUserBookings('upcoming', { page: 1, limit: 100 })
+    userService
+      .getUserBookings('upcoming', { page: 1, limit: 100 })
       .then((res: any) => {
         const bookings = res?.data || [];
         const musterEvents: CalendarEvent[] = bookings
@@ -154,7 +162,9 @@ export function AvailabilityCalendarScreen() {
           .map((b: any) => {
             const start = new Date(b.event.startTime);
             const end = new Date(b.event.endTime);
-            const diffMin = Math.round((end.getTime() - start.getTime()) / 60000);
+            const diffMin = Math.round(
+              (end.getTime() - start.getTime()) / 60000
+            );
             return {
               id: `muster-${b.id}`,
               date: start.toISOString().split('T')[0],
@@ -164,8 +174,8 @@ export function AvailabilityCalendarScreen() {
               source: 'muster' as const,
             };
           });
-        setEvents((prev) => {
-          const imported = prev.filter((e) => e.source === 'imported');
+        setEvents(prev => {
+          const imported = prev.filter(e => e.source === 'imported');
           return [...imported, ...musterEvents];
         });
       })
@@ -202,17 +212,24 @@ export function AvailabilityCalendarScreen() {
     // Read all files as text and parse with the text parser
     // Excel binary files (.xlsx) won't parse as text — show error
     if (ext === 'xlsx' || ext === 'xls') {
-      setParseError('Excel files (.xlsx) are not supported on this device. Please export as CSV and try again.');
+      setParseError(
+        'Excel files (.xlsx) are not supported on this device. Please export as CSV and try again.'
+      );
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = evt => {
       const text = evt.target?.result as string;
-      if (!text) { setParseError('Could not read this file.'); return; }
+      if (!text) {
+        setParseError('Could not read this file.');
+        return;
+      }
       const parsed = parseTextContent(text);
       if (parsed.length === 0) {
-        setParseError('No events found in this file. Please check the format and try again.');
+        setParseError(
+          'No events found in this file. Please check the format and try again.'
+        );
       } else {
         setParsedEvents(parsed);
       }
@@ -235,26 +252,33 @@ export function AvailabilityCalendarScreen() {
     // Save to server
     try {
       const token = authService.getToken();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`${API_BASE_URL}/availability/${targetId}/batch`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          batchName: batchName.trim(),
-          events: parsedEvents.map((pe) => ({
-            date: pe.date,
-            startTime: pe.startTime,
-            duration: pe.duration,
-          })),
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/availability/${targetId}/batch`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            batchName: batchName.trim(),
+            events: parsedEvents.map(pe => ({
+              date: pe.date,
+              startTime: pe.startTime,
+              duration: pe.duration,
+            })),
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error('Save failed');
 
       // Reload from server to get real IDs
-      const loadRes = await fetch(`${API_BASE_URL}/availability/${targetId}`, { headers });
+      const loadRes = await fetch(`${API_BASE_URL}/availability/${targetId}`, {
+        headers,
+      });
       const data = await loadRes.json();
       const saved: CalendarEvent[] = (data.blocks || []).map((b: any) => ({
         id: b.id,
@@ -264,8 +288,8 @@ export function AvailabilityCalendarScreen() {
         duration: b.duration,
         source: 'imported' as const,
       }));
-      setEvents((prev) => {
-        const muster = prev.filter((e) => e.source === 'muster');
+      setEvents(prev => {
+        const muster = prev.filter(e => e.source === 'muster');
         return [...saved, ...muster];
       });
     } catch {
@@ -276,42 +300,64 @@ export function AvailabilityCalendarScreen() {
     setImportModalVisible(false);
   }, [batchName, parsedEvents, targetId]);
 
-  const handleDeleteEvent = useCallback(async (id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    try {
-      const token = authService.getToken();
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      await fetch(`${API_BASE_URL}/availability/${targetId}/${id}`, { method: 'DELETE', headers });
-    } catch { /* silent — already removed from UI */ }
-  }, [targetId]);
+  const handleDeleteEvent = useCallback(
+    async (id: string) => {
+      setEvents(prev => prev.filter(e => e.id !== id));
+      try {
+        const token = authService.getToken();
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        await fetch(`${API_BASE_URL}/availability/${targetId}/${id}`, {
+          method: 'DELETE',
+          headers,
+        });
+      } catch {
+        /* silent — already removed from UI */
+      }
+    },
+    [targetId]
+  );
 
   // Calendar marked dates
-  const markedDates = events.reduce<Record<string, any>>((acc, evt) => {
-    const dotColor = evt.source === 'muster' ? colors.cobalt : colors.pine;
-    acc[evt.date] = { ...(acc[evt.date] || {}), marked: true, dotColor };
-    return acc;
-  }, {} as Record<string, any>);
+  const markedDates = events.reduce<Record<string, any>>(
+    (acc, evt) => {
+      const dotColor = evt.source === 'muster' ? colors.cobalt : colors.pine;
+      acc[evt.date] = { ...(acc[evt.date] || {}), marked: true, dotColor };
+      return acc;
+    },
+    {} as Record<string, any>
+  );
   if (selectedDate) {
-    markedDates[selectedDate] = { ...(markedDates[selectedDate] || {}), selected: true, selectedColor: colors.cobalt };
+    markedDates[selectedDate] = {
+      ...(markedDates[selectedDate] || {}),
+      selected: true,
+      selectedColor: colors.cobalt,
+    };
   }
 
-  const eventsForDay = events.filter((e) => e.date === selectedDate);
+  const eventsForDay = events.filter(e => e.date === selectedDate);
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Ionicons name="arrow-back" size={24} color={colors.ink} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Availability</Text>
-        <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+      >
         {/* Single Import Calendar button */}
-        <TouchableOpacity style={styles.importBtn} onPress={openImportModal} activeOpacity={0.7}>
-          <Ionicons name="cloud-upload-outline" size={20} color={colors.white} />
+        <TouchableOpacity
+          style={styles.importBtn}
+          onPress={openImportModal}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="cloud-upload-outline"
+            size={20}
+            color={colors.white}
+          />
           <Text style={styles.importBtnText}>Import Calendar</Text>
         </TouchableOpacity>
 
@@ -336,25 +382,51 @@ export function AvailabilityCalendarScreen() {
         {selectedDate ? (
           <View style={styles.daySection}>
             <Text style={styles.daySectionTitle}>
-              {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+              {new Date(selectedDate + 'T00:00:00').toLocaleDateString(
+                undefined,
+                { weekday: 'long', month: 'long', day: 'numeric' }
+              )}
             </Text>
             {eventsForDay.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Ionicons name="time-outline" size={24} color={colors.inkSoft} />
+                <Ionicons
+                  name="time-outline"
+                  size={24}
+                  color={colors.inkSoft}
+                />
                 <Text style={styles.emptyCardText}>No events this day</Text>
               </View>
             ) : (
-              eventsForDay.map((evt) => (
+              eventsForDay.map(evt => (
                 <View key={evt.id} style={styles.eventCard}>
-                  <View style={[styles.eventDot, { backgroundColor: evt.source === 'muster' ? colors.cobalt : colors.pine }]} />
+                  <View
+                    style={[
+                      styles.eventDot,
+                      {
+                        backgroundColor:
+                          evt.source === 'muster' ? colors.cobalt : colors.pine,
+                      },
+                    ]}
+                  />
                   <View style={styles.eventInfo}>
                     <Text style={styles.eventTitle}>{evt.title}</Text>
-                    <Text style={styles.eventTime}>{evt.startTime} · {evt.duration}</Text>
-                    <Text style={styles.eventSource}>{evt.source === 'muster' ? 'Muster Event' : 'Imported'}</Text>
+                    <Text style={styles.eventTime}>
+                      {evt.startTime} · {evt.duration}
+                    </Text>
+                    <Text style={styles.eventSource}>
+                      {evt.source === 'muster' ? 'Muster Event' : 'Imported'}
+                    </Text>
                   </View>
                   {evt.source === 'imported' && (
-                    <TouchableOpacity onPress={() => handleDeleteEvent(evt.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Ionicons name="trash-outline" size={18} color={colors.heart} />
+                    <TouchableOpacity
+                      onPress={() => handleDeleteEvent(evt.id)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={18}
+                        color={colors.heart}
+                      />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -369,7 +441,12 @@ export function AvailabilityCalendarScreen() {
       </ScrollView>
 
       {/* Import Modal */}
-      <Modal visible={importModalVisible} transparent animationType="slide" onRequestClose={() => setImportModalVisible(false)}>
+      <Modal
+        visible={importModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setImportModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
@@ -390,8 +467,16 @@ export function AvailabilityCalendarScreen() {
             />
 
             {/* Drop zone */}
-            <TouchableOpacity style={styles.dropZone} onPress={handleFilePick} activeOpacity={0.7}>
-              <Ionicons name="cloud-upload-outline" size={36} color={colors.cobalt} />
+            <TouchableOpacity
+              style={styles.dropZone}
+              onPress={handleFilePick}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="cloud-upload-outline"
+                size={36}
+                color={colors.cobalt}
+              />
               <Text style={styles.dropZoneText}>
                 {importedFileName || 'Drop a file or tap to browse'}
               </Text>
@@ -411,14 +496,21 @@ export function AvailabilityCalendarScreen() {
             {/* Parsed events list or error */}
             {parseError ? (
               <View style={styles.parseErrorBox}>
-                <Ionicons name="alert-circle-outline" size={20} color={colors.heart} />
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={20}
+                  color={colors.heart}
+                />
                 <Text style={styles.parseErrorText}>{parseError}</Text>
               </View>
             ) : parsedEvents.length > 0 ? (
               <View style={styles.parsedSection}>
-                <Text style={styles.parsedCount}>{parsedEvents.length} event{parsedEvents.length !== 1 ? 's' : ''} found</Text>
+                <Text style={styles.parsedCount}>
+                  {parsedEvents.length} event
+                  {parsedEvents.length !== 1 ? 's' : ''} found
+                </Text>
                 <ScrollView style={styles.parsedList} nestedScrollEnabled>
-                  {parsedEvents.map((pe) => (
+                  {parsedEvents.map(pe => (
                     <View key={pe.id} style={styles.parsedRow}>
                       <Text style={styles.parsedDate}>{pe.date}</Text>
                       <Text style={styles.parsedTime}>{pe.startTime}</Text>
@@ -431,16 +523,26 @@ export function AvailabilityCalendarScreen() {
 
             {/* Actions */}
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setImportModalVisible(false)} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setImportModalVisible(false)}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalConfirmBtn, parsedEvents.length === 0 && styles.modalConfirmBtnDisabled]}
+                style={[
+                  styles.modalConfirmBtn,
+                  parsedEvents.length === 0 && styles.modalConfirmBtnDisabled,
+                ]}
                 onPress={handleConfirmImport}
                 disabled={parsedEvents.length === 0}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalConfirmText}>Import {parsedEvents.length > 0 ? `(${parsedEvents.length})` : ''}</Text>
+                <Text style={styles.modalConfirmText}>
+                  Import{' '}
+                  {parsedEvents.length > 0 ? `(${parsedEvents.length})` : ''}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -453,72 +555,221 @@ export function AvailabilityCalendarScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   headerTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.ink },
   body: { flex: 1 },
   bodyContent: { paddingBottom: 40 },
   importBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginHorizontal: 16, marginTop: 16, marginBottom: 8, paddingVertical: 14,
-    borderRadius: 12, backgroundColor: colors.cobalt,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.cobalt,
   },
   importBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
   calendar: {
-    marginHorizontal: 16, marginTop: 8, borderRadius: 12, overflow: 'hidden',
-    elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
   },
   daySection: { paddingHorizontal: 16, marginTop: 20 },
-  daySectionTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink, marginBottom: 10 },
-  emptyCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 24, alignItems: 'center' },
-  emptyCardText: { fontFamily: fonts.body, fontSize: 14, color: colors.inkSoft, marginTop: 6, textAlign: 'center' },
+  daySectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.ink,
+    marginBottom: 10,
+  },
+  emptyCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyCardText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkSoft,
+    marginTop: 6,
+    textAlign: 'center',
+  },
   eventCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-    borderRadius: 12, padding: 14, marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
   },
   eventDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
   eventInfo: { flex: 1 },
   eventTitle: { fontFamily: fonts.label, fontSize: 14, color: colors.ink },
-  eventTime: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginTop: 2 },
-  eventSource: { fontFamily: fonts.body, fontSize: 11, color: colors.inkSoft, marginTop: 2 },
+  eventTime: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkSoft,
+    marginTop: 2,
+  },
+  eventSource: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.inkSoft,
+    marginTop: 2,
+  },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', paddingHorizontal: 20 },
-  modalCard: { backgroundColor: colors.white, borderRadius: 16, padding: 20, maxHeight: '85%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   modalTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.ink },
-  fieldLabel: { fontFamily: fonts.label, fontSize: 13, color: colors.ink, marginBottom: 6, marginTop: 12 },
+  fieldLabel: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+    marginBottom: 6,
+    marginTop: 12,
+  },
   textInput: {
-    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 10, fontFamily: fonts.body, fontSize: 15, color: colors.ink,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
   },
   dropZone: {
-    borderWidth: 2, borderColor: colors.cobalt, borderStyle: 'dashed', borderRadius: 14,
-    paddingVertical: 28, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.surface, marginTop: 16,
+    borderWidth: 2,
+    borderColor: colors.cobalt,
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    paddingVertical: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    marginTop: 16,
   },
-  dropZoneText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt, marginTop: 8 },
-  dropZoneHint: { fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft, marginTop: 4 },
+  dropZoneText: {
+    fontFamily: fonts.ui,
+    fontSize: 15,
+    color: colors.cobalt,
+    marginTop: 8,
+  },
+  dropZoneHint: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkSoft,
+    marginTop: 4,
+  },
   parsedSection: { marginTop: 16 },
   parseErrorBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16,
-    padding: 14, backgroundColor: '#FEF2F2', borderRadius: 10, borderWidth: 1, borderColor: colors.heart,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+    padding: 14,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.heart,
   },
-  parseErrorText: { fontFamily: fonts.body, fontSize: 14, color: colors.heart, flex: 1 },
-  parsedCount: { fontFamily: fonts.label, fontSize: 13, color: colors.ink, marginBottom: 8 },
+  parseErrorText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.heart,
+    flex: 1,
+  },
+  parsedCount: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+    marginBottom: 8,
+  },
   parsedList: { maxHeight: 200 },
   parsedRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12,
-    backgroundColor: colors.surface, borderRadius: 8, marginBottom: 4, gap: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    marginBottom: 4,
+    gap: 12,
   },
-  parsedDate: { fontFamily: fonts.label, fontSize: 13, color: colors.ink, width: 90 },
-  parsedTime: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, width: 50 },
-  parsedDuration: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, flex: 1 },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 20 },
-  modalCancelBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
-  modalCancelText: { fontFamily: fonts.ui, fontSize: 14, color: colors.inkSoft },
-  modalConfirmBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: colors.cobalt },
+  parsedDate: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+    width: 90,
+  },
+  parsedTime: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkSoft,
+    width: 50,
+  },
+  parsedDuration: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkSoft,
+    flex: 1,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 20,
+  },
+  modalCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalCancelText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.inkSoft,
+  },
+  modalConfirmBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: colors.cobalt,
+  },
   modalConfirmBtnDisabled: { opacity: 0.4 },
   modalConfirmText: { fontFamily: fonts.ui, fontSize: 14, color: colors.white },
 });

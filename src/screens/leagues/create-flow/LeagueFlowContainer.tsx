@@ -24,25 +24,46 @@ function canContinue(state: LeagueWizardState, step: number): boolean {
   switch (step) {
     case 0:
       return false; // auto-advance on sport tap
-    case 1:
+    case 1: {
+      // Screen 2 — How: all fields required
+      const hasHost = state.hostName.trim().length >= 2;
+      const hasFormat = state.leagueFormat !== null;
+      const hasDays = state.gameDays.length > 0;
+      const hasTime = !!state.timeStart && !!state.timeEnd;
+      const hasFreq = state.frequency !== null;
+      const hasDuration = state.gameDuration > 0;
+      const hasGames = parseInt(state.numberOfGames) > 0;
+      const hasGpp =
+        state.frequency === 'block' || parseInt(state.gamesPerPeriod) > 0;
       return (
-        state.hostName.trim().length >= 2 &&
-        state.leagueFormat !== null &&
-        state.frequency !== null &&
-        state.startDate !== null &&
-        !!state.timeStart &&
-        !!state.timeEnd &&
-        (state.frequency === 'block'
-          ? state.endDate !== null
-          : state.gameDays.length > 0) &&
-        (state.leagueFormat !== 'tournament'
-          ? !!state.gamesPerRound && !!state.numberOfRounds
-          : true)
+        hasHost &&
+        hasFormat &&
+        hasDays &&
+        hasTime &&
+        hasFreq &&
+        hasDuration &&
+        hasGames &&
+        hasGpp
       );
-    case 2:
-      return true; // preview is read-only
+    }
+    case 2: {
+      // Screen 3 — Who: visibility required, private needs exact team count
+      const hasTeams = parseInt(state.numberOfTeams) > 0;
+      const hasVis = state.visibility !== null;
+      if (!hasTeams || !hasVis) return false;
+      if (state.visibility === 'private') {
+        const required = parseInt(state.numberOfTeams) || 0;
+        return state.invitedRosters.length >= required;
+      }
+      return true;
+    }
     case 3:
-      return state.visibility !== null;
+      // Screen 4 — Schedule Preview: start date required, end date for block
+      if (!state.startDate) return false;
+      if (state.frequency === 'block' && !state.endDate) return false;
+      return true;
+    case 4:
+      return true; // final step — submit
     default:
       return false;
   }
@@ -54,7 +75,7 @@ export function LeagueFlowContainer({ children, onSubmit }: Props) {
   const { currentStep } = state;
   const childArray = React.Children.toArray(children);
   const enabled = canContinue(state, currentStep);
-  const isLastStep = currentStep === 3;
+  const isLastStep = currentStep === 4;
   const showButton = currentStep > 0;
 
   const handleBack = () => {
@@ -78,7 +99,7 @@ export function LeagueFlowContainer({ children, onSubmit }: Props) {
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </TouchableOpacity>
         <View style={styles.dotsWrapper}>
-          <WizardProgressDots current={currentStep} total={4} />
+          <WizardProgressDots current={currentStep} total={5} />
         </View>
         <View style={styles.backBtn} />
       </View>
@@ -123,7 +144,7 @@ const styles = StyleSheet.create({
   stageContainer: { flex: 1 },
   buttonContainer: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 8 },
   button: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',

@@ -9,12 +9,20 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const {
-      sportType, sportTypes: sportTypesRaw, minPlayerRating, status, organizerId, userId,
-      latitude: latRaw, longitude: lngRaw, radiusMiles: radiusRaw,
+      sportType,
+      sportTypes: sportTypesRaw,
+      minPlayerRating,
+      status,
+      organizerId,
+      userId,
+      latitude: latRaw,
+      longitude: lngRaw,
+      radiusMiles: radiusRaw,
       locationQuery,
-      page = '1', limit = '10',
+      page = '1',
+      limit = '10',
     } = req.query;
-    
+
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
 
@@ -25,7 +33,10 @@ router.get('/', async (req, res) => {
 
     // Multi-sport filter (comma-separated)
     if (sportTypesRaw) {
-      const sportsList = (sportTypesRaw as string).split(',').map(s => s.trim()).filter(Boolean);
+      const sportsList = (sportTypesRaw as string)
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
       if (sportsList.length === 1) {
         where.sportType = sportsList[0];
       } else if (sportsList.length > 1) {
@@ -35,7 +46,8 @@ router.get('/', async (req, res) => {
       where.sportType = sportType;
     }
 
-    if (minPlayerRating) where.minPlayerRating = { lte: parseInt(minPlayerRating as string) };
+    if (minPlayerRating)
+      where.minPlayerRating = { lte: parseInt(minPlayerRating as string) };
     if (status) where.status = status;
     if (organizerId) where.organizerId = organizerId;
 
@@ -60,7 +72,7 @@ router.get('/', async (req, res) => {
 
       // Precise Haversine filter
       facilityIdsInRadius = nearbyFacilities
-        .filter((f) => {
+        .filter(f => {
           const dLat = ((f.latitude - lat) * Math.PI) / 180;
           const dLng = ((f.longitude - lng) * Math.PI) / 180;
           const a =
@@ -72,11 +84,12 @@ router.get('/', async (req, res) => {
           const distMiles = 3959 * c; // Earth radius in miles
           return distMiles <= radiusMiles;
         })
-        .map((f) => f.id);
+        .map(f => f.id);
 
       // Also find free-text events within radius using their own coordinates
       const latDeltaEvent = radiusMiles / 69;
-      const lngDeltaEvent = radiusMiles / (69 * Math.cos((lat * Math.PI) / 180));
+      const lngDeltaEvent =
+        radiusMiles / (69 * Math.cos((lat * Math.PI) / 180));
 
       where.OR = [
         // Events at facilities within radius
@@ -84,8 +97,16 @@ router.get('/', async (req, res) => {
         // Events with free-text coordinates within radius
         {
           facilityId: null,
-          locationLat: { not: null, gte: lat - latDeltaEvent, lte: lat + latDeltaEvent },
-          locationLng: { not: null, gte: lng - lngDeltaEvent, lte: lng + lngDeltaEvent },
+          locationLat: {
+            not: null,
+            gte: lat - latDeltaEvent,
+            lte: lat + latDeltaEvent,
+          },
+          locationLng: {
+            not: null,
+            gte: lng - lngDeltaEvent,
+            lte: lng + lngDeltaEvent,
+          },
         },
       ];
     }
@@ -105,7 +126,7 @@ router.get('/', async (req, res) => {
           select: { id: true },
         });
         where.OR = [
-          { facilityId: { in: matchingFacilities.map((f) => f.id) } },
+          { facilityId: { in: matchingFacilities.map(f => f.id) } },
           { locationName: { contains: locStr, mode: 'insensitive' } },
           { locationAddress: { contains: locStr, mode: 'insensitive' } },
         ];
@@ -203,18 +224,23 @@ router.get('/:id', async (req, res) => {
     }
 
     // Enforce private event visibility
-    const requestingUserId = (req.query.userId as string | undefined)
-      || (req as any).effectiveUserId
-      || (req as any).user?.userId
-      || (req.headers['x-user-id'] as string | undefined);
+    const requestingUserId =
+      (req.query.userId as string | undefined) ||
+      (req as any).effectiveUserId ||
+      (req as any).user?.userId ||
+      (req.headers['x-user-id'] as string | undefined);
     if (event.isPrivate && requestingUserId) {
       const isOrganizer = event.organizerId === requestingUserId;
       const isInvited = event.invitedUserIds?.includes(requestingUserId);
       if (!isOrganizer && !isInvited) {
-        return res.status(403).json({ error: 'You do not have access to this private event' });
+        return res
+          .status(403)
+          .json({ error: 'You do not have access to this private event' });
       }
     } else if (event.isPrivate && !requestingUserId) {
-      return res.status(403).json({ error: 'You do not have access to this private event' });
+      return res
+        .status(403)
+        .json({ error: 'You do not have access to this private event' });
     }
 
     res.json(event);
@@ -363,7 +389,7 @@ router.post('/', requireNonDependent, async (req, res) => {
   try {
     console.log('=== Create Event Request ===');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
-    
+
     // TODO: Get organizer ID from auth token
     // For now, use the first user as default organizer
     const defaultOrganizer = await prisma.user.findFirst({
@@ -383,8 +409,8 @@ router.post('/', requireNonDependent, async (req, res) => {
     if (eventData.eventType === 'game') {
       const rosterIds = eventData.eligibility?.restrictedToTeams || [];
       if (rosterIds.length > 2) {
-        return res.status(400).json({ 
-          error: 'Game events can have a maximum of two rosters.' 
+        return res.status(400).json({
+          error: 'Game events can have a maximum of two rosters.',
         });
       }
     }
@@ -431,7 +457,8 @@ router.post('/', requireNonDependent, async (req, res) => {
         if (!hasRental) {
           console.log('Authorization failed: No rental found');
           return res.status(403).json({
-            error: 'Unauthorized: You must own this facility or have a rental to create events here'
+            error:
+              'Unauthorized: You must own this facility or have a rental to create events here',
           });
         }
       }
@@ -463,7 +490,7 @@ router.post('/', requireNonDependent, async (req, res) => {
     if (hasFacility && eventData.timeSlotId && !eventData.rentalId) {
       // Check if multiple slots are selected
       const slotIds = eventData.timeSlotIds || [eventData.timeSlotId];
-      
+
       // Fetch all selected slots
       const timeSlots = await prisma.facilityTimeSlot.findMany({
         where: { id: { in: slotIds } },
@@ -489,82 +516,74 @@ router.post('/', requireNonDependent, async (req, res) => {
       const lastSlot = timeSlots[timeSlots.length - 1];
 
       // Verify all slots belong to the selected facility
-      const invalidSlot = timeSlots.find(slot => slot.court.facilityId !== eventData.facilityId);
+      const invalidSlot = timeSlots.find(
+        slot => slot.court.facilityId !== eventData.facilityId
+      );
       if (invalidSlot) {
-        return res.status(400).json({ error: 'Time slot does not belong to selected facility' });
+        return res
+          .status(400)
+          .json({ error: 'Time slot does not belong to selected facility' });
       }
 
       // Only owners can use timeSlotId directly
       if (!isOwner) {
-        return res.status(403).json({ error: 'Only facility owners can directly select time slots' });
+        return res.status(403).json({
+          error: 'Only facility owners can directly select time slots',
+        });
       }
 
       // Verify all slots are available
-      const unavailableSlot = timeSlots.find(slot => slot.status !== 'available');
+      const unavailableSlot = timeSlots.find(
+        slot => slot.status !== 'available'
+      );
       if (unavailableSlot) {
-        return res.status(400).json({ error: 'One or more time slots are not available' });
+        return res
+          .status(400)
+          .json({ error: 'One or more time slots are not available' });
       }
 
-      // Validate event time matches slots (start from first, end at last)
+      // Set event start/end time from the selected time slots
+      // The slot date is stored as UTC midnight; startTime/endTime are "HH:MM" local strings.
+      // Build the event times from the slot date + slot time strings to avoid timezone mismatches.
       const slotDate = new Date(firstSlot.date);
-      const [startHours, startMinutes] = firstSlot.startTime.split(':').map(Number);
-      const [endHours, endMinutes] = lastSlot.endTime.split(':').map(Number);
-      
-      // Use Date.UTC to create timestamps in UTC directly
-      const slotStartUTC = Date.UTC(
-        slotDate.getUTCFullYear(),
-        slotDate.getUTCMonth(),
-        slotDate.getUTCDate(),
-        startHours,
-        startMinutes,
-        0,
-        0
+      const [startHours = 0, startMinutes = 0] = firstSlot.startTime
+        .split(':')
+        .map(Number);
+      const [endHours = 0, endMinutes = 0] = lastSlot.endTime
+        .split(':')
+        .map(Number);
+
+      const slotStart = new Date(slotDate);
+      slotStart.setUTCHours(startHours, startMinutes, 0, 0);
+      const slotEnd = new Date(slotDate);
+      slotEnd.setUTCHours(endHours, endMinutes, 0, 0);
+
+      // Override event times with the authoritative slot times
+      eventData.startTime = slotStart;
+      eventData.endTime = slotEnd;
+
+      console.log('Time slot override:');
+      console.log(
+        '  Slots:',
+        timeSlots.length,
+        '| First:',
+        firstSlot.startTime,
+        '| Last:',
+        lastSlot.endTime
       );
-      
-      const slotEndUTC = Date.UTC(
-        slotDate.getUTCFullYear(),
-        slotDate.getUTCMonth(),
-        slotDate.getUTCDate(),
-        endHours,
-        endMinutes,
-        0,
-        0
+      console.log(
+        '  Event start:',
+        slotStart.toISOString(),
+        '| Event end:',
+        slotEnd.toISOString()
       );
-
-      const eventStart = new Date(eventData.startTime);
-      const eventEnd = new Date(eventData.endTime);
-
-      console.log('Time validation (multiple slots):');
-      console.log('  Number of slots:', timeSlots.length);
-      console.log('  First slot:', firstSlot.startTime);
-      console.log('  Last slot:', lastSlot.endTime);
-      console.log('  Slot start (UTC ISO):', new Date(slotStartUTC).toISOString());
-      console.log('  Event start (UTC ISO):', eventStart.toISOString());
-      console.log('  Slot end (UTC ISO):', new Date(slotEndUTC).toISOString());
-      console.log('  Event end (UTC ISO):', eventEnd.toISOString());
-      console.log('  Match:', eventStart.getTime() === slotStartUTC && eventEnd.getTime() === slotEndUTC);
-
-      // Compare the timestamps
-      if (eventStart.getTime() !== slotStartUTC || eventEnd.getTime() !== slotEndUTC) {
-        return res.status(400).json({ 
-          error: 'Event time must match time slot',
-          expected: {
-            start: new Date(slotStartUTC).toISOString(),
-            end: new Date(slotEndUTC).toISOString(),
-          },
-          received: {
-            start: eventStart.toISOString(),
-            end: eventEnd.toISOString(),
-          }
-        });
-      }
     }
 
     // Handle rentalId (rental-based event creation)
     if (eventData.rentalId) {
       // If multiple slots selected, validate user has rentals for all of them
       const slotIds = eventData.timeSlotIds || [eventData.timeSlotId];
-      
+
       // Get all rentals for these slots
       const rentals = await prisma.facilityRental.findMany({
         where: {
@@ -585,52 +604,94 @@ router.post('/', requireNonDependent, async (req, res) => {
         },
       });
 
-      console.log('Found rentals:', rentals.length, 'for', slotIds.length, 'slots');
+      console.log(
+        'Found rentals:',
+        rentals.length,
+        'for',
+        slotIds.length,
+        'slots'
+      );
 
       // Verify user has rentals for all selected slots
       if (rentals.length !== slotIds.length) {
-        return res.status(403).json({ 
-          error: `You must have confirmed rentals for all ${slotIds.length} selected time slots` 
+        return res.status(403).json({
+          error: `You must have confirmed rentals for all ${slotIds.length} selected time slots`,
         });
       }
 
       // Verify none of the rentals have been used
       const usedRental = rentals.find(r => r.usedForEventId);
       if (usedRental) {
-        return res.status(400).json({ error: 'One or more rentals have already been used for an event' });
+        return res.status(400).json({
+          error: 'One or more rentals have already been used for an event',
+        });
       }
 
       // Use the first rental for facility validation
       const firstRental = rentals[0];
-      
+
       // Set facility and timeSlotId from rental
       eventData.facilityId = firstRental.timeSlot.court.facilityId;
       eventData.timeSlotId = firstRental.timeSlotId;
-      
+
+      // Override event times from the rental's time slot to avoid timezone mismatches
+      const rentalSlotDate = new Date(firstRental.timeSlot.date);
+      const lastRental = rentals[rentals.length - 1];
+      const [rStartH = 0, rStartM = 0] = firstRental.timeSlot.startTime
+        .split(':')
+        .map(Number);
+      const [rEndH = 0, rEndM = 0] = lastRental.timeSlot.endTime
+        .split(':')
+        .map(Number);
+      const rentalStart = new Date(rentalSlotDate);
+      rentalStart.setUTCHours(rStartH, rStartM, 0, 0);
+      const rentalEnd = new Date(rentalSlotDate);
+      rentalEnd.setUTCHours(rEndH, rEndM, 0, 0);
+      eventData.startTime = rentalStart;
+      eventData.endTime = rentalEnd;
+
       // Store all rental IDs for later processing
       eventData.rentalIds = rentals.map(r => r.id);
     } else if (hasFacility && !isOwner) {
       // If using a facility but not using a rental and not owner, reject
       return res.status(403).json({
-        error: 'You must use a rental to create events at facilities you do not own'
+        error:
+          'You must use a rental to create events at facilities you do not own',
       });
     }
 
     // Create event and block slot in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       // Store rental/slot IDs for later, then remove from eventData
       const rentalIds = eventData.rentalIds;
       const timeSlotIds = eventData.timeSlotIds;
-      
+
       // Clean eventData - remove fields that aren't in the Event model
-      const { rentalIds: _, timeSlotIds: __, eligibility, invitedUserIds, homeRosterId: _hr, awayRosterId: _ar, ...cleanEventData } = eventData;
-      
+      const {
+        rentalIds: _,
+        timeSlotIds: __,
+        eligibility,
+        invitedUserIds,
+        homeRosterId: _hr,
+        awayRosterId: _ar,
+        recurring: _recurring,
+        recurringFrequency: _rf,
+        recurringEndDate: _re,
+        recurringDays: _rd,
+        numberOfEvents: _ne,
+        occurrenceLocations: _ol,
+        ...cleanEventData
+      } = eventData;
+
       // Transform eligibility object to flat fields if present
       if (eligibility) {
-        cleanEventData.eligibilityIsInviteOnly = eligibility.isInviteOnly || false;
+        cleanEventData.eligibilityIsInviteOnly =
+          eligibility.isInviteOnly || false;
         cleanEventData.minimumPlayerCount = eligibility.minimumPlayerCount;
-        cleanEventData.eligibilityRestrictedToTeams = eligibility.restrictedToTeams || [];
-        cleanEventData.eligibilityRestrictedToLeagues = eligibility.restrictedToLeagues || [];
+        cleanEventData.eligibilityRestrictedToTeams =
+          eligibility.restrictedToTeams || [];
+        cleanEventData.eligibilityRestrictedToLeagues =
+          eligibility.restrictedToLeagues || [];
         cleanEventData.eligibilityMinAge = eligibility.minAge;
         cleanEventData.eligibilityMaxAge = eligibility.maxAge;
         // Legacy skill-level eligibility fields — no longer written
@@ -651,36 +712,94 @@ router.post('/', requireNonDependent, async (req, res) => {
       if (invitedUserIds && invitedUserIds.length > 0) {
         cleanEventData.invitedUserIds = invitedUserIds;
       }
-      
-      // Create the event
-      const event = await tx.event.create({
-        data: cleanEventData,
-        include: {
-          organizer: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+
+      // Create the event(s)
+      // For recurring events, create one event per occurrence date
+      const isRecurring =
+        eventData.recurring &&
+        eventData.occurrenceLocations &&
+        eventData.occurrenceLocations.length > 0;
+      const eventInclude = {
+        organizer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
           },
-          facility: true,
-          rental: {
-            include: {
-              timeSlot: {
-                include: {
-                  court: true,
-                },
+        },
+        facility: true,
+        rental: {
+          include: {
+            timeSlot: {
+              include: {
+                court: true,
               },
             },
           },
-          timeSlot: {
-            include: {
-              court: true,
-            },
+        },
+        timeSlot: {
+          include: {
+            court: true,
           },
         },
-      });
+      };
+
+      let event;
+      const allCreatedEvents: any[] = [];
+
+      if (isRecurring) {
+        // Create one event per occurrence
+        const baseStart = new Date(cleanEventData.startTime);
+        const baseEnd = new Date(cleanEventData.endTime);
+        const startHours = baseStart.getHours();
+        const startMinutes = baseStart.getMinutes();
+        const endHours = baseEnd.getHours();
+        const endMinutes = baseEnd.getMinutes();
+
+        for (const occ of eventData.occurrenceLocations) {
+          const occDate = new Date(occ.date + 'T12:00:00');
+          const occStart = new Date(
+            occDate.getFullYear(),
+            occDate.getMonth(),
+            occDate.getDate(),
+            startHours,
+            startMinutes
+          );
+          const occEnd = new Date(
+            occDate.getFullYear(),
+            occDate.getMonth(),
+            occDate.getDate(),
+            endHours,
+            endMinutes
+          );
+
+          const occEventData = {
+            ...cleanEventData,
+            startTime: occStart,
+            endTime: occEnd,
+            // Use occurrence-specific facility if booked, otherwise keep base
+            ...(occ.facilityId ? { facilityId: occ.facilityId } : {}),
+          };
+          // Remove slot/rental refs for recurring — each occurrence is independent
+          delete occEventData.timeSlotId;
+          delete occEventData.rentalId;
+
+          const created = await tx.event.create({
+            data: occEventData,
+            include: eventInclude,
+          });
+          allCreatedEvents.push(created);
+        }
+        // Return the first event as the primary result
+        event = allCreatedEvents[0];
+      } else {
+        event = await tx.event.create({
+          data: cleanEventData,
+          include: eventInclude,
+        });
+        allCreatedEvents.push(event);
+      }
 
       // If event was created from rental(s), mark them as used
       if (rentalIds && rentalIds.length > 0) {
@@ -697,7 +816,9 @@ router.post('/', requireNonDependent, async (req, res) => {
       }
 
       // If event is linked to timeSlot(s), block them
-      const slotIdsToBlock = timeSlotIds || (cleanEventData.timeSlotId ? [cleanEventData.timeSlotId] : []);
+      const slotIdsToBlock =
+        timeSlotIds ||
+        (cleanEventData.timeSlotId ? [cleanEventData.timeSlotId] : []);
       if (slotIdsToBlock.length > 0) {
         await tx.facilityTimeSlot.updateMany({
           where: { id: { in: slotIdsToBlock } },
@@ -714,7 +835,8 @@ router.post('/', requireNonDependent, async (req, res) => {
     // ── Post-creation: populate invitedUserIds for inbox ──
     try {
       const eventType = result.eventType;
-      const restrictedToTeams = (eventData.eligibility?.restrictedToTeams || []) as string[];
+      const restrictedToTeams = (eventData.eligibility?.restrictedToTeams ||
+        []) as string[];
       const existingInvited = (result.invitedUserIds || []) as string[];
       let newInvitedIds: string[] = [...existingInvited];
 
@@ -728,12 +850,18 @@ router.post('/', requireNonDependent, async (req, res) => {
           },
           select: { userId: true },
         });
-        managers.forEach((m) => {
-          if (!newInvitedIds.includes(m.userId) && m.userId !== result.organizerId) {
+        managers.forEach(m => {
+          if (
+            !newInvitedIds.includes(m.userId) &&
+            m.userId !== result.organizerId
+          ) {
             newInvitedIds.push(m.userId);
           }
         });
-      } else if ((eventType === 'pickup' || eventType === 'practice') && restrictedToTeams.length > 0) {
+      } else if (
+        (eventType === 'pickup' || eventType === 'practice') &&
+        restrictedToTeams.length > 0
+      ) {
         // Pickup/Practice with roster invites: expand roster members into invitedUserIds
         const members = await prisma.teamMember.findMany({
           where: {
@@ -742,8 +870,11 @@ router.post('/', requireNonDependent, async (req, res) => {
           },
           select: { userId: true },
         });
-        members.forEach((m) => {
-          if (!newInvitedIds.includes(m.userId) && m.userId !== result.organizerId) {
+        members.forEach(m => {
+          if (
+            !newInvitedIds.includes(m.userId) &&
+            m.userId !== result.organizerId
+          ) {
             newInvitedIds.push(m.userId);
           }
         });
@@ -764,14 +895,28 @@ router.post('/', requireNonDependent, async (req, res) => {
     // Messaging hook: create game thread
     try {
       const { MessagingService } = await import('../services/MessagingService');
-      await MessagingService.createGameThread(result.id, result.organizerId, result.title);
+      await MessagingService.createGameThread(
+        result.id,
+        result.organizerId,
+        result.title
+      );
 
       // If the event is linked to teams, auto-post in their team chats
       const linkedTeams = result.eligibilityRestrictedToTeams ?? [];
       if (linkedTeams.length > 0) {
-        const organizer = await prisma.user.findUnique({ where: { id: result.organizerId }, select: { firstName: true, lastName: true } });
-        const dateStr = new Date(result.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        const timeStr = new Date(result.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const organizer = await prisma.user.findUnique({
+          where: { id: result.organizerId },
+          select: { firstName: true, lastName: true },
+        });
+        const dateStr = new Date(result.startTime).toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        });
+        const timeStr = new Date(result.startTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+        });
         for (const tId of linkedTeams) {
           try {
             const teamConv = await MessagingService.getConversationForTeam(tId);
@@ -781,7 +926,9 @@ router.post('/', requireNonDependent, async (req, res) => {
                 `${organizer.firstName} ${organizer.lastName} created ${result.title} for ${dateStr} ${timeStr}`
               );
             }
-          } catch { /* non-critical */ }
+          } catch {
+            /* non-critical */
+          }
         }
       }
     } catch (msgErr) {
@@ -791,7 +938,8 @@ router.post('/', requireNonDependent, async (req, res) => {
     res.status(201).json(result);
   } catch (error) {
     console.error('Create event error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to create event';
+    const message =
+      error instanceof Error ? error.message : 'Failed to create event';
     res.status(500).json({ error: 'Failed to create event', details: message });
   }
 });
@@ -804,7 +952,12 @@ router.put('/:id', async (req, res) => {
     // Verify the event exists and check organizer
     const existing = await prisma.event.findUnique({
       where: { id },
-      select: { organizerId: true, scheduledStatus: true, facilityId: true, eventType: true },
+      select: {
+        organizerId: true,
+        scheduledStatus: true,
+        facilityId: true,
+        eventType: true,
+      },
     });
 
     if (!existing) {
@@ -815,7 +968,9 @@ router.put('/:id', async (req, res) => {
     // The organizerId should be in the request body (sent by the client)
     const requestingUserId = req.body.organizerId;
     if (requestingUserId && existing.organizerId !== requestingUserId) {
-      return res.status(403).json({ error: 'Only the organizer can edit this event' });
+      return res
+        .status(403)
+        .json({ error: 'Only the organizer can edit this event' });
     }
 
     // Don't allow overwriting organizerId
@@ -826,14 +981,17 @@ router.put('/:id', async (req, res) => {
     if (effectiveEventType === 'game') {
       const rosterIds = req.body.eligibility?.restrictedToTeams || [];
       if (rosterIds.length > 2) {
-        return res.status(400).json({ 
-          error: 'Game events can have a maximum of two rosters.' 
+        return res.status(400).json({
+          error: 'Game events can have a maximum of two rosters.',
         });
       }
     }
 
     // If facility is being assigned to an unscheduled shell event, mark it as scheduled
-    const isAssigningFacility = updateData.facilityId && !existing.facilityId && existing.scheduledStatus === 'unscheduled';
+    const isAssigningFacility =
+      updateData.facilityId &&
+      !existing.facilityId &&
+      existing.scheduledStatus === 'unscheduled';
     if (isAssigningFacility) {
       updateData.scheduledStatus = 'scheduled';
     }
@@ -864,7 +1022,8 @@ router.put('/:id', async (req, res) => {
     // ── Post-update: refresh invitedUserIds for inbox ──
     try {
       const eventType = event.eventType;
-      const restrictedToTeams = (event.eligibilityRestrictedToTeams || []) as string[];
+      const restrictedToTeams = (event.eligibilityRestrictedToTeams ||
+        []) as string[];
       const existingInvited = (event.invitedUserIds || []) as string[];
       let newInvitedIds: string[] = [...existingInvited];
 
@@ -877,12 +1036,18 @@ router.put('/:id', async (req, res) => {
           },
           select: { userId: true },
         });
-        managers.forEach((m) => {
-          if (!newInvitedIds.includes(m.userId) && m.userId !== event.organizerId) {
+        managers.forEach(m => {
+          if (
+            !newInvitedIds.includes(m.userId) &&
+            m.userId !== event.organizerId
+          ) {
             newInvitedIds.push(m.userId);
           }
         });
-      } else if ((eventType === 'pickup' || eventType === 'practice') && restrictedToTeams.length > 0) {
+      } else if (
+        (eventType === 'pickup' || eventType === 'practice') &&
+        restrictedToTeams.length > 0
+      ) {
         const members = await prisma.teamMember.findMany({
           where: {
             teamId: { in: restrictedToTeams },
@@ -890,8 +1055,11 @@ router.put('/:id', async (req, res) => {
           },
           select: { userId: true },
         });
-        members.forEach((m) => {
-          if (!newInvitedIds.includes(m.userId) && m.userId !== event.organizerId) {
+        members.forEach(m => {
+          if (
+            !newInvitedIds.includes(m.userId) &&
+            m.userId !== event.organizerId
+          ) {
             newInvitedIds.push(m.userId);
           }
         });
@@ -959,8 +1127,8 @@ router.delete('/:id', async (req, res) => {
     if (hasParticipants) {
       // Event has participants - mark as CANCELLED with reason
       console.log('📌 Marking event as cancelled (has participants)');
-      
-      await prisma.$transaction(async (tx) => {
+
+      await prisma.$transaction(async tx => {
         // Update event status to cancelled with reason
         await tx.event.update({
           where: { id },
@@ -973,7 +1141,7 @@ router.delete('/:id', async (req, res) => {
 
         // Cancel all bookings for this event
         const cancelledBookings = await tx.booking.updateMany({
-          where: { 
+          where: {
             eventId: id,
             status: { not: 'cancelled' },
           },
@@ -1010,14 +1178,17 @@ router.delete('/:id', async (req, res) => {
             where: { id: event.rentalId },
             data: { usedForEventId: null },
           });
-          console.log('✅ Cleared usedForEventId for single rental:', event.rentalId);
+          console.log(
+            '✅ Cleared usedForEventId for single rental:',
+            event.rentalId
+          );
         }
 
         // TODO: Send notifications to all participants about cancellation
       });
 
       console.log('✅ Event cancelled successfully (kept in system)');
-      res.json({ 
+      res.json({
         message: 'Event cancelled successfully',
         deleted: false,
         participantsNotified: event.currentParticipants,
@@ -1025,8 +1196,8 @@ router.delete('/:id', async (req, res) => {
     } else {
       // Event has NO participants - delete it entirely
       console.log('🗑️ Deleting event (no participants)');
-      
-      await prisma.$transaction(async (tx) => {
+
+      await prisma.$transaction(async tx => {
         // Delete the event
         await tx.event.delete({ where: { id } });
         console.log('✅ Event deleted');
@@ -1056,7 +1227,10 @@ router.delete('/:id', async (req, res) => {
             where: { id: event.rentalId },
             data: { usedForEventId: null },
           });
-          console.log('✅ Cleared usedForEventId for single rental:', event.rentalId);
+          console.log(
+            '✅ Cleared usedForEventId for single rental:',
+            event.rentalId
+          );
         }
       });
 
@@ -1101,7 +1275,12 @@ router.post('/:id/book', async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
     console.log('✅ Event found:', event.title);
-    console.log('📊 Current participants:', event.currentParticipants, '/', event.maxParticipants);
+    console.log(
+      '📊 Current participants:',
+      event.currentParticipants,
+      '/',
+      event.maxParticipants
+    );
 
     if (event.currentParticipants >= event.maxParticipants) {
       console.log('❌ Event is full');
@@ -1114,7 +1293,9 @@ router.post('/:id/book', async (req, res) => {
       const isInvited = event.invitedUserIds?.includes(userId);
       if (!isOrganizer && !isInvited) {
         console.log('❌ User not invited to private event');
-        return res.status(403).json({ error: 'You are not invited to this private event' });
+        return res
+          .status(403)
+          .json({ error: 'You are not invited to this private event' });
       }
     }
 
@@ -1179,12 +1360,23 @@ router.post('/:id/book', async (req, res) => {
       const { MessagingService } = await import('../services/MessagingService');
       const conv = await MessagingService.getConversationForEvent(id);
       if (conv) {
-        const user = await prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
-        const totalParticipants = await prisma.gameParticipation.count({ where: { eventId: id } });
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { firstName: true, lastName: true },
+        });
+        const totalParticipants = await prisma.gameParticipation.count({
+          where: { eventId: id },
+        });
         await MessagingService.addParticipant(conv.id, userId, 'MEMBER');
         if (user) {
-          const eventRecord = await prisma.event.findUnique({ where: { id }, select: { maxParticipants: true } });
-          await MessagingService.postSystemMessage(conv.id, `${user.firstName} ${user.lastName} is in! (${totalParticipants}/${eventRecord?.maxParticipants ?? '?'})`);
+          const eventRecord = await prisma.event.findUnique({
+            where: { id },
+            select: { maxParticipants: true },
+          });
+          await MessagingService.postSystemMessage(
+            conv.id,
+            `${user.firstName} ${user.lastName} is in! (${totalParticipants}/${eventRecord?.maxParticipants ?? '?'})`
+          );
         }
       }
     } catch (msgErr) {
@@ -1236,15 +1428,30 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
     // Messaging hook: remove from game thread
     if (bookingToCancel) {
       try {
-        const { MessagingService } = await import('../services/MessagingService');
+        const { MessagingService } =
+          await import('../services/MessagingService');
         const conv = await MessagingService.getConversationForEvent(id);
         if (conv) {
-          const user = await prisma.user.findUnique({ where: { id: bookingToCancel.userId }, select: { firstName: true, lastName: true } });
-          await MessagingService.removeParticipant(conv.id, bookingToCancel.userId);
-          const remaining = await prisma.gameParticipation.count({ where: { eventId: id } });
+          const user = await prisma.user.findUnique({
+            where: { id: bookingToCancel.userId },
+            select: { firstName: true, lastName: true },
+          });
+          await MessagingService.removeParticipant(
+            conv.id,
+            bookingToCancel.userId
+          );
+          const remaining = await prisma.gameParticipation.count({
+            where: { eventId: id },
+          });
           if (user) {
-            const eventRecord = await prisma.event.findUnique({ where: { id }, select: { maxParticipants: true } });
-            await MessagingService.postSystemMessage(conv.id, `${user.firstName} ${user.lastName} stepped out (${remaining}/${eventRecord?.maxParticipants ?? '?'})`);
+            const eventRecord = await prisma.event.findUnique({
+              where: { id },
+              select: { maxParticipants: true },
+            });
+            await MessagingService.postSystemMessage(
+              conv.id,
+              `${user.firstName} ${user.lastName} stepped out (${remaining}/${eventRecord?.maxParticipants ?? '?'})`
+            );
           }
         }
       } catch (msgErr) {
@@ -1286,16 +1493,22 @@ router.post('/:id/salutes', async (req, res) => {
     }
 
     if (new Date(event.endTime) > new Date()) {
-      return res.status(400).json({ error: 'Can only salute participants after event has ended' });
+      return res
+        .status(400)
+        .json({ error: 'Can only salute participants after event has ended' });
     }
 
     // Validate salutedUserIds
     if (!Array.isArray(salutedUserIds) || salutedUserIds.length === 0) {
-      return res.status(400).json({ error: 'salutedUserIds must be a non-empty array' });
+      return res
+        .status(400)
+        .json({ error: 'salutedUserIds must be a non-empty array' });
     }
 
     if (salutedUserIds.length > 3) {
-      return res.status(400).json({ error: 'Can only salute up to 3 participants per event' });
+      return res
+        .status(400)
+        .json({ error: 'Can only salute up to 3 participants per event' });
     }
 
     // Check if user already submitted salutes for this event
@@ -1307,12 +1520,14 @@ router.post('/:id/salutes', async (req, res) => {
     });
 
     if (existingSalutes.length > 0) {
-      return res.status(400).json({ error: 'Salutes already submitted for this event' });
+      return res
+        .status(400)
+        .json({ error: 'Salutes already submitted for this event' });
     }
 
     // Create salutes
     const salutes = await prisma.$transaction(
-      salutedUserIds.map((toUserId) =>
+      salutedUserIds.map(toUserId =>
         prisma.salute.create({
           data: {
             eventId: id,
@@ -1325,7 +1540,7 @@ router.post('/:id/salutes', async (req, res) => {
 
     // Recalculate ratings for saluted users
     const ratingsUpdated = await Promise.all(
-      salutedUserIds.map(async (userId) => {
+      salutedUserIds.map(async userId => {
         // Get total salutes received
         const totalSalutes = await prisma.salute.count({
           where: { toUserId: userId },
@@ -1454,8 +1669,15 @@ router.post('/send-reminders', async (req, res) => {
     for (const event of upcoming24h) {
       const conv = await MessagingService.getConversationForEvent(event.id);
       if (conv) {
-        const dateStr = new Date(event.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-        const timeStr = new Date(event.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const dateStr = new Date(event.startTime).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric',
+        });
+        const timeStr = new Date(event.startTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+        });
         const venue = event.facility?.name ?? event.location ?? 'TBD';
         const count = event._count.gameParticipations;
         const max = event.maxParticipants ?? '?';
@@ -1465,7 +1687,10 @@ router.post('/send-reminders', async (req, res) => {
           'URGENT'
         );
       }
-      await prisma.event.update({ where: { id: event.id }, data: { reminderSent24h: true } });
+      await prisma.event.update({
+        where: { id: event.id },
+        data: { reminderSent24h: true },
+      });
     }
 
     // 1-hour reminders
@@ -1488,7 +1713,10 @@ router.post('/send-reminders', async (req, res) => {
           'URGENT'
         );
       }
-      await prisma.event.update({ where: { id: event.id }, data: { reminderSent1h: true } });
+      await prisma.event.update({
+        where: { id: event.id },
+        data: { reminderSent1h: true },
+      });
     }
 
     // Post-game messages for completed events
@@ -1502,9 +1730,15 @@ router.post('/send-reminders', async (req, res) => {
     for (const event of completed) {
       const conv = await MessagingService.getConversationForEvent(event.id);
       if (conv) {
-        await MessagingService.postSystemMessage(conv.id, 'Good game! How did everyone play?');
+        await MessagingService.postSystemMessage(
+          conv.id,
+          'Good game! How did everyone play?'
+        );
       }
-      await prisma.event.update({ where: { id: event.id }, data: { postGameMessageSent: true } });
+      await prisma.event.update({
+        where: { id: event.id },
+        data: { postGameMessageSent: true },
+      });
     }
 
     res.json({
@@ -1567,14 +1801,26 @@ router.post('/check-availability', async (req, res) => {
           startTime: { lt: dayEnd },
           endTime: { gt: dayStart },
           OR: [
-            { bookings: { some: { userId: { in: [...allUserIds] }, status: 'confirmed' } } },
-            { gameParticipations: { some: { userId: { in: [...allUserIds] } } } },
+            {
+              bookings: {
+                some: { userId: { in: [...allUserIds] }, status: 'confirmed' },
+              },
+            },
+            {
+              gameParticipations: { some: { userId: { in: [...allUserIds] } } },
+            },
             { organizerId: { in: [...allUserIds] } },
           ],
         },
         select: {
-          bookings: { where: { status: 'confirmed', userId: { in: [...allUserIds] } }, select: { userId: true } },
-          gameParticipations: { where: { userId: { in: [...allUserIds] } }, select: { userId: true } },
+          bookings: {
+            where: { status: 'confirmed', userId: { in: [...allUserIds] } },
+            select: { userId: true },
+          },
+          gameParticipations: {
+            where: { userId: { in: [...allUserIds] } },
+            select: { userId: true },
+          },
           organizerId: true,
         },
       });
@@ -1595,7 +1841,8 @@ router.post('/check-availability', async (req, res) => {
       // Roster availability (worst-case: if ANY member is busy, mark unavailable)
       for (const rid of rosterIds) {
         const members = rosterMembers[rid] || [];
-        const available = members.length === 0 || members.every((uid) => !busyUsers.has(uid));
+        const available =
+          members.length === 0 || members.every(uid => !busyUsers.has(uid));
         result[rid]!.push(available);
       }
     }

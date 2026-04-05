@@ -104,29 +104,27 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
       const updatedTeam = await teamService.getTeam(validatedTeam.id);
       dispatch(joinTeam(updatedTeam));
 
-      const joinedName = joinAsUserId && joinAsUserId !== user?.id
-        ? dependents.find(d => d.id === joinAsUserId)?.firstName || 'Your child'
-        : 'You';
+      const joinedName =
+        joinAsUserId && joinAsUserId !== user?.id
+          ? dependents.find(d => d.id === joinAsUserId)?.firstName ||
+            'Your child'
+          : 'You';
 
-      Alert.alert(
-        'Success',
-        `${joinedName} joined ${validatedTeam.name}!`,
-        [
-          {
-            text: 'View Roster',
-            onPress: () => {
-              navigation.goBack();
-              (navigation as any).navigate('TeamDetails', {
-                teamId: validatedTeam.id,
-              });
-            },
+      Alert.alert('Success', `${joinedName} joined ${validatedTeam.name}!`, [
+        {
+          text: 'View Roster',
+          onPress: () => {
+            navigation.goBack();
+            (navigation as any).navigate('TeamDetails', {
+              teamId: validatedTeam.id,
+            });
           },
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+        },
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
     } catch (err: any) {
       console.error('Error joining roster:', err);
       Alert.alert(
@@ -151,21 +149,19 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
     }
 
     // No dependents — join as self
-    Alert.alert(
-      'Join Team',
-      `Do you want to join ${validatedTeam.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Join', onPress: () => performJoin() },
-      ]
-    );
+    Alert.alert('Join Team', `Do you want to join ${validatedTeam.name}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Join', onPress: () => performJoin() },
+    ]);
   };
 
   const handleDependentSelection = (selectedUserId: string) => {
     setShowDependentPicker(false);
-    const selectedName = selectedUserId === user?.id
-      ? 'yourself'
-      : dependents.find(d => d.id === selectedUserId)?.firstName || 'your child';
+    const selectedName =
+      selectedUserId === user?.id
+        ? 'yourself'
+        : dependents.find(d => d.id === selectedUserId)?.firstName ||
+          'your child';
 
     Alert.alert(
       'Join Team',
@@ -190,11 +186,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenHeader
-        title="Join Team"
-        showBack
-        onBackPress={handleCancel}
-      />
+      <ScreenHeader title="Join Team" />
 
       <ScrollView
         style={styles.content}
@@ -204,13 +196,14 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
         <View style={styles.form}>
           <Text style={styles.title}>Enter Invite Code</Text>
           <Text style={styles.subtitle}>
-            Enter the invite code shared by the roster manager to join the roster
+            Enter the invite code shared by the roster manager to join the
+            roster
           </Text>
 
           <FormInput
             label="Invite Code"
             value={inviteCode}
-            onChangeText={(text) => {
+            onChangeText={text => {
               setInviteCode(text.toUpperCase());
               setError(null);
               setValidatedTeam(null);
@@ -243,18 +236,25 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
               <View style={styles.teamInfo}>
                 <Text style={styles.teamNameText}>{validatedTeam.name}</Text>
                 <Text style={styles.infoItem}>
-                  Sport: {validatedTeam.sportType?.charAt(0).toUpperCase() + validatedTeam.sportType?.slice(1).replace(/_/g, ' ')}
+                  Sport:{' '}
+                  {validatedTeam.sportType?.charAt(0).toUpperCase() +
+                    validatedTeam.sportType?.slice(1).replace(/_/g, ' ')}
                 </Text>
                 <Text style={styles.infoItem}>
                   Skill Level: {validatedTeam.skillLevel}
                 </Text>
                 <Text style={styles.infoItem}>
-                  Players: {validatedTeam.memberCount}/{validatedTeam.maxMembers}
+                  Players: {validatedTeam.memberCount}/
+                  {validatedTeam.maxMembers}
                 </Text>
               </View>
 
               <FormButton
-                title={dependents.length > 0 ? "Join This Roster..." : "Join This Roster"}
+                title={
+                  dependents.length > 0
+                    ? 'Join This Roster...'
+                    : 'Join This Roster'
+                }
                 onPress={handleJoinTeam}
                 disabled={isJoining}
               />
@@ -264,8 +264,8 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
           <View style={styles.helpSection}>
             <Text style={styles.helpTitle}>Don't have an invite code?</Text>
             <Text style={styles.helpText}>
-              Ask the roster manager to share their invite code with you, or browse
-              public rosters to join without a code.
+              Ask the roster manager to share their invite code with you, or
+              browse public rosters to join without a code.
             </Text>
             <FormButton
               title="Browse Public Rosters"
@@ -298,12 +298,22 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
               onPress={() => handleDependentSelection(user?.id || '')}
               activeOpacity={0.7}
             >
-              <Ionicons name="person-circle-outline" size={28} color={colors.cobalt} />
+              <Ionicons
+                name="person-circle-outline"
+                size={28}
+                color={colors.cobalt}
+              />
               <View style={styles.pickerOptionText}>
-                <Text style={styles.pickerOptionName}>Me ({user?.firstName})</Text>
+                <Text style={styles.pickerOptionName}>
+                  Me ({user?.firstName})
+                </Text>
                 <Text style={styles.pickerOptionHint}>Join as a player</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.onSurfaceVariant} />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.onSurfaceVariant}
+              />
             </TouchableOpacity>
 
             {/* Dependent options */}
@@ -314,12 +324,24 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
                 onPress={() => handleDependentSelection(dep.id)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="people-circle-outline" size={28} color={colors.gold} />
+                <Ionicons
+                  name="people-circle-outline"
+                  size={28}
+                  color={colors.gold}
+                />
                 <View style={styles.pickerOptionText}>
-                  <Text style={styles.pickerOptionName}>{dep.firstName} {dep.lastName}</Text>
-                  <Text style={styles.pickerOptionHint}>Join as your child</Text>
+                  <Text style={styles.pickerOptionName}>
+                    {dep.firstName} {dep.lastName}
+                  </Text>
+                  <Text style={styles.pickerOptionHint}>
+                    Join as your child
+                  </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.onSurfaceVariant} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={colors.onSurfaceVariant}
+                />
               </TouchableOpacity>
             ))}
 

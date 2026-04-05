@@ -18,7 +18,7 @@ import { formatDateForCalendar } from './calendarUtils';
 
 // Hex values used directly to avoid circular dependency with theme
 const NEUTRAL_DOT_COLOR = '#73777F'; // colors.outline
-const SELECTED_DATE_COLOR = '#0052FF'; // colors.primary
+const SELECTED_DATE_COLOR = '#2D5F3F'; // colors.pine
 
 /**
  * Assign a distinct color to each family member.
@@ -56,14 +56,13 @@ export function resolveEventOwnership(
   for (const userId of familyUserIds) {
     const isOrganizer = event.organizerId === userId;
     const isParticipant =
-      event.participants?.some((p) => p.userId === userId) ?? false;
+      event.participants?.some(p => p.userId === userId) ?? false;
     if (isOrganizer || isParticipant) {
       ownerUserIds.push(userId);
     }
   }
   return { ownerUserIds };
 }
-
 
 /**
  * Build the multi-dot marked dates object for react-native-calendars.
@@ -101,7 +100,7 @@ export function buildMarkedDates(
       dateMap[dateKey].add('__public__');
     } else if (activeFilter.type === 'wholeCrew') {
       if (!dateMap[dateKey]) dateMap[dateKey] = new Set();
-      ownership.ownerUserIds.forEach((id) => dateMap[dateKey].add(id));
+      ownership.ownerUserIds.forEach(id => dateMap[dateKey].add(id));
     } else {
       // Individual filter
       if (ownership.ownerUserIds.includes(activeFilter.userId)) {
@@ -115,7 +114,7 @@ export function buildMarkedDates(
 
   const marked: Record<string, MultiDotMarking> = {};
   for (const [date, userIds] of Object.entries(dateMap)) {
-    const dots = Array.from(userIds).map((uid) => ({
+    const dots = Array.from(userIds).map(uid => ({
       key: uid,
       color:
         uid === '__public__'

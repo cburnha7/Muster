@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ScrollView,
   View,
@@ -6,23 +6,23 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Dimensions,
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { facilityService } from '../../../services/api/FacilityService';
+import { SlotData } from './types';
 import { colors, fonts } from '../../../theme';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export function Step4Where() {
   const { state, dispatch } = useCreateEvent();
   const { user } = useAuth();
   const navigation = useNavigation<any>();
+  const route = useRoute();
+  const routeParams = (route.params || {}) as any;
 
   const isMuster = state.locationMode === 'muster';
   const isOpen = state.locationMode === 'open';
@@ -34,8 +34,12 @@ export function Step4Where() {
   const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [courts, setCourts] = useState<SelectOption[]>([]);
   const [loadingCourts, setLoadingCourts] = useState(false);
-  const [cardIndex, setCardIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const [noSportMatch, setNoSportMatch] = useState(false);
+
+  // Reservation / slot state
+  const [matchingSlots, setMatchingSlots] = useState<SlotData[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [isOwnerView, setIsOwnerView] = useState(false);
 
   const loadFacilities = useCallback(async () => {
     if (!user?.id) return;
@@ -60,25 +64,136 @@ export function Step4Where() {
     if (isMuster) loadFacilities();
   }, [isMuster, loadFacilities]);
 
+  // Load courts when facility selected — check sport match
   useEffect(() => {
     if (!state.facilityId || !user?.id || !isMuster) {
       setCourts([]);
+      setNoSportMatch(false);
       return;
     }
     setLoadingCourts(true);
+    setNoSportMatch(false);
+    // Load ALL courts (no sport filter) to check sport availability
     facilityService
-      .getCourtsForEvent(state.facilityId, user.id, state.sport ?? undefined)
-      .then((res: any) => {
-        setCourts(
-          res.data.map((c: any) => ({
-            label: c.name,
-            value: c.id,
-          }))
-        );
+      .getCourtsForEvent(state.facilityId, user.id)
+      .then((allRes: any) => {
+        const all = allRes.data || [];
+        const sportFiltered = state.sport
+          ? all.filter((c: any) => c.sportType === state.sport)
+          : all;
+        if (sportFiltered.length === 0 && all.length > 0 && state.sport) {
+          setNoSportMatch(true);
+          setCourts([]);
+        } else {
+          setCourts(
+            sportFiltered.map((c: any) => ({ label: c.name, value: c.id }))
+          );
+        }
       })
       .catch(() => setCourts([]))
       .finally(() => setLoadingCourts(false));
   }, [state.facilityId, user?.id, state.sport, isMuster]);
+
+  // Load matching slots/reservations when court is selected
+  useEffect(() => {
+    if (!state.facilityId || !state.courtId || !user?.id || !isMuster) {
+      setMatchingSlots([]);
+      return;
+    }
+    // Build the event date string from state.startDate
+    const eventDate = state.startDate;
+    if (!eventDate) {
+      setMatchingSlots([]);
+      return;
+    }
+    const dateStr = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
+
+    setLoadingSlots(true);
+    facilityService
+      .getSlotsForDate(state.facilityId, state.courtId, user.id, dateStr)
+      .then(res => {
+        setIsOwnerView(res.isOwner);
+        // Filter slots that fall within the event time window
+        const startTime = state.startTime;
+        const endTime = state.endTime;
+        let slots = res.data || [];
+        if (startTime && endTime) {
+          const eventStart = `${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+          const eventEnd = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+          slots = slots.filter(
+            s => s.startTime >= eventStart && s.endTime <= eventEnd
+          );
+        }
+        const courtInfo = courts.find(c => c.value === state.courtId);
+        setMatchingSlots(
+          slots.map(s => ({
+            id: s.id,
+            date: dateStr,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            price: s.price,
+            court: {
+              id: state.courtId,
+              name: courtInfo?.label || state.courtName,
+              sportType: state.sport || '',
+              capacity: 0,
+            },
+            isFromRental: s.isFromRental,
+            rentalId: s.rentalId,
+          }))
+        );
+      })
+      .catch(() => setMatchingSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }, [
+    state.facilityId,
+    state.courtId,
+    user?.id,
+    state.startDate,
+    state.startTime,
+    state.endTime,
+    isMuster,
+    state.sport,
+    state.courtName,
+    courts,
+  ]);
+
+  // Auto-set facility/court when returning from reservation booking
+  useEffect(() => {
+    if (routeParams.fromReservation && routeParams.facilityId) {
+      // Set location mode to muster
+      if (state.locationMode !== 'muster') {
+        dispatch({ type: 'SET_LOCATION_MODE', mode: 'muster' });
+      }
+      // Set facility
+      const fac = facilities.find(f => f.id === routeParams.facilityId);
+      if (fac) {
+        dispatch({
+          type: 'SET_FACILITY',
+          facilityId: fac.id,
+          facilityName: fac.name,
+          isOwner: fac.isOwned,
+        });
+      } else if (routeParams.facilityId && routeParams.facilityName) {
+        dispatch({
+          type: 'SET_FACILITY',
+          facilityId: routeParams.facilityId,
+          facilityName: routeParams.facilityName,
+          isOwner: false,
+        });
+      }
+      // Set court after a tick so the court list loads first
+      if (routeParams.courtId && routeParams.courtName) {
+        setTimeout(() => {
+          dispatch({
+            type: 'SET_COURT',
+            courtId: routeParams.courtId,
+            courtName: routeParams.courtName,
+          });
+        }, 300);
+      }
+    }
+  }, [routeParams.fromReservation, routeParams.facilityId, facilities]);
 
   const facilityOptions: SelectOption[] = facilities.map(f => ({
     label: f.name,
@@ -95,6 +210,8 @@ export function Step4Where() {
       isOwner: fac.isOwned,
     });
     setCourts([]);
+    setMatchingSlots([]);
+    setNoSportMatch(false);
   };
 
   const handleCourtSelect = (value: string | number | boolean) => {
@@ -105,6 +222,11 @@ export function Step4Where() {
       courtId: String(court.value),
       courtName: court.label,
     });
+    setMatchingSlots([]);
+  };
+
+  const handleSlotSelect = (slot: SlotData) => {
+    dispatch({ type: 'TOGGLE_SLOT', slot, slotsForDate: matchingSlots });
   };
 
   const handleNeedCourt = (dateStr?: string) => {
@@ -118,16 +240,19 @@ export function Step4Where() {
         filterDate: dateStr || fmtDate,
         filterStartTime: state.startTime ? fmtTime(state.startTime) : undefined,
         filterEndTime: state.endTime ? fmtTime(state.endTime) : undefined,
+        returnTo: 'CreateEvent',
       },
     });
   };
 
   const fmtTime = (d: Date): string =>
     `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  const fmtDisplayTime = (d: Date | null): string => {
-    if (!d) return '';
-    const h12 = d.getHours() % 12 || 12;
-    return `${h12}:${String(d.getMinutes()).padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
+
+  const fmt12 = (time: string): string => {
+    const [h, m] = time.split(':').map(Number);
+    const h12 = (h || 0) % 12 || 12;
+    const ampm = (h || 0) >= 12 ? 'PM' : 'AM';
+    return `${h12}:${String(m || 0).padStart(2, '0')} ${ampm}`;
   };
 
   return (
@@ -176,118 +301,150 @@ export function Step4Where() {
           {loadingFacilities ? (
             <ActivityIndicator
               size="small"
-              color={colors.cobalt}
+              color={colors.pine}
               style={styles.loader}
             />
           ) : (
             <FormSelect
               label="Ground"
               placeholder="Select a ground"
-              value={state.facilityId || undefined}
+              value={state.facilityId || ''}
               options={facilityOptions}
               onValueChange={handleFacilitySelect}
             />
           )}
 
+          {/* Sport mismatch warning */}
+          {noSportMatch && (
+            <View style={styles.warningCard}>
+              <Ionicons name="warning-outline" size={18} color={colors.heart} />
+              <Text style={styles.warningText}>
+                No courts at this location are available for{' '}
+                {state.sport || 'the selected sport'}.
+              </Text>
+            </View>
+          )}
+
+          {/* Court selector — only if sport matches */}
           {state.facilityId !== '' &&
+            !noSportMatch &&
             (loadingCourts ? (
               <ActivityIndicator
                 size="small"
-                color={colors.cobalt}
+                color={colors.pine}
                 style={styles.loader}
               />
             ) : (
               <FormSelect
                 label="Court"
                 placeholder="Select a court"
-                value={state.courtId || undefined}
+                value={state.courtId || ''}
                 options={courts}
                 onValueChange={handleCourtSelect}
                 disabled={courts.length === 0}
               />
             ))}
 
-          {isRecurring ? (
+          {/* Matching reservations / available slots */}
+          {state.courtId !== '' && !noSportMatch && (
             <>
-              <Text style={styles.sectionLabel}>Event Occurrences</Text>
-              <ScrollView
-                ref={scrollRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={e =>
-                  setCardIndex(
-                    Math.round(
-                      e.nativeEvent.contentOffset.x / (SCREEN_WIDTH - 40)
-                    )
-                  )
-                }
-                style={styles.cardScroller}
-              >
-                {state.occurrenceLocations.map((occ, i) => (
-                  <View
-                    key={occ.date}
-                    style={[styles.occCard, { width: SCREEN_WIDTH - 40 }]}
-                  >
-                    <Text style={styles.occNumber}>
-                      Event {i + 1} of {state.occurrenceLocations.length}
-                    </Text>
-                    <Text style={styles.occDate}>{occ.date}</Text>
-                    <Text style={styles.occTime}>
-                      {fmtDisplayTime(state.startTime)} –{' '}
-                      {fmtDisplayTime(state.endTime)}
-                    </Text>
-                    {occ.booked && occ.facilityName ? (
-                      <View style={styles.occBooked}>
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={16}
-                          color={colors.pine}
-                        />
-                        <Text style={styles.occBookedText}>
-                          {occ.facilityName}
-                          {occ.courtName ? ` — ${occ.courtName}` : ''}
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.occUnbooked}>
-                        No location selected
-                      </Text>
-                    )}
-                    <TouchableOpacity
-                      style={styles.needCourtBtn}
-                      onPress={() => handleNeedCourt(occ.date)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons
-                        name="search-outline"
-                        size={16}
-                        color={colors.cobalt}
-                      />
-                      <Text style={styles.needCourtBtnText}>Need a court?</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-              <View style={styles.dotsRow}>
-                {state.occurrenceLocations.map((_, i) => (
-                  <View
-                    key={i}
-                    style={[styles.dot, i === cardIndex && styles.dotActive]}
+              {loadingSlots ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.pine}
+                  style={styles.loader}
+                />
+              ) : matchingSlots.length > 0 ? (
+                <>
+                  <Text style={styles.sectionLabel}>
+                    {isOwnerView ? 'Available Time Slots' : 'Your Reservations'}
+                  </Text>
+                  {matchingSlots.map(slot => {
+                    const selected = state.selectedSlots.some(
+                      s => s.id === slot.id
+                    );
+                    return (
+                      <TouchableOpacity
+                        key={slot.id}
+                        style={[
+                          styles.slotCard,
+                          selected && styles.slotCardSelected,
+                        ]}
+                        onPress={() => handleSlotSelect(slot)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.slotInfo}>
+                          <Text
+                            style={[
+                              styles.slotDate,
+                              selected && styles.slotTextSelected,
+                            ]}
+                          >
+                            {slot.date}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.slotTime,
+                              selected && styles.slotTextSelected,
+                            ]}
+                          >
+                            {fmt12(slot.startTime)} – {fmt12(slot.endTime)}
+                          </Text>
+                        </View>
+                        {selected && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={22}
+                            color={colors.pine}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </>
+              ) : (
+                <View style={styles.noSlotsCard}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={24}
+                    color={colors.inkSoft}
                   />
-                ))}
-              </View>
+                  <Text style={styles.noSlotsText}>
+                    {isOwnerView
+                      ? 'No available time slots for this court within the event time window.'
+                      : 'No reservations found for this court within the event time window.'}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.needCourtBtn}
+                    onPress={() => handleNeedCourt()}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="search-outline"
+                      size={16}
+                      color={colors.pine}
+                    />
+                    <Text style={styles.needCourtBtnText}>Need a court?</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </>
-          ) : (
-            <TouchableOpacity
-              style={styles.needCourtBtn}
-              onPress={() => handleNeedCourt()}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="search-outline" size={16} color={colors.cobalt} />
-              <Text style={styles.needCourtBtnText}>Need a court?</Text>
-            </TouchableOpacity>
           )}
+
+          {/* Need a court button for when court is not yet selected */}
+          {state.courtId === '' &&
+            state.facilityId !== '' &&
+            !noSportMatch &&
+            !isRecurring && (
+              <TouchableOpacity
+                style={styles.needCourtBtn}
+                onPress={() => handleNeedCourt()}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="search-outline" size={16} color={colors.pine} />
+                <Text style={styles.needCourtBtnText}>Need a court?</Text>
+              </TouchableOpacity>
+            )}
         </>
       )}
 
@@ -303,7 +460,6 @@ export function Step4Where() {
               dispatch({ type: 'SET_FIELD', field: 'locationName', value: v })
             }
           />
-
           <Text style={styles.fieldLabel}>Street Address</Text>
           <TextInput
             style={styles.input}
@@ -318,7 +474,6 @@ export function Step4Where() {
               })
             }
           />
-
           <View style={styles.addressRow}>
             <View style={{ flex: 2 }}>
               <Text style={styles.fieldLabel}>City</Text>
@@ -398,7 +553,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  modeBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
+  modeBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
   modeBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
   modeBtnTextActive: { color: colors.white },
   loader: { marginVertical: 16 },
@@ -411,48 +566,61 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  cardScroller: { marginHorizontal: -20 },
-  occCard: {
+  warningCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.heartTint,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.heart,
+  },
+  warningText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.heart,
+    flex: 1,
+  },
+  slotCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginHorizontal: 20,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  slotCardSelected: {
+    borderColor: colors.pine,
+    backgroundColor: colors.pineTint,
+  },
+  slotInfo: { gap: 2 },
+  slotDate: { fontFamily: fonts.label, fontSize: 13, color: colors.inkSoft },
+  slotTime: {
+    fontFamily: fonts.headingSemi || fonts.heading,
+    fontSize: 16,
+    color: colors.ink,
+  },
+  slotTextSelected: { color: colors.pine },
+  noSlotsCard: {
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 24,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  occNumber: {
-    fontFamily: fonts.label,
-    fontSize: 12,
-    color: colors.inkSoft,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  occDate: {
-    fontFamily: fonts.heading,
-    fontSize: 20,
-    color: colors.ink,
-    marginTop: 4,
-  },
-  occTime: {
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.inkSoft,
-    marginTop: 2,
-    marginBottom: 12,
-  },
-  occBooked: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
-  },
-  occBookedText: { fontFamily: fonts.body, fontSize: 14, color: colors.pine },
-  occUnbooked: {
+  noSlotsText: {
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.inkSoft,
-    fontStyle: 'italic',
-    marginBottom: 12,
+    textAlign: 'center',
   },
   needCourtBtn: {
     flexDirection: 'row',
@@ -460,25 +628,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: colors.cobalt,
+    borderColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 12,
     marginTop: 16,
   },
-  needCourtBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 15,
-    color: colors.cobalt,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 12,
-    marginBottom: 16,
-  },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border },
-  dotActive: { backgroundColor: colors.cobalt, width: 20 },
+  needCourtBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
   fieldLabel: {
     fontFamily: fonts.body,
     fontSize: 16,

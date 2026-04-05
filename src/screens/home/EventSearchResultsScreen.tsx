@@ -18,7 +18,10 @@ import { selectUser } from '../../store/slices/authSlice';
 import { Event } from '../../types';
 import { HomeStackParamList } from '../../navigation/types';
 
-type NavProp = NativeStackNavigationProp<HomeStackParamList, 'EventSearchResults'>;
+type NavProp = NativeStackNavigationProp<
+  HomeStackParamList,
+  'EventSearchResults'
+>;
 type RoutePropType = RouteProp<HomeStackParamList, 'EventSearchResults'>;
 
 export function EventSearchResultsScreen() {
@@ -53,8 +56,11 @@ export function EventSearchResultsScreen() {
     const raw = data?.data ?? [];
     const now = new Date();
     return raw
-      .filter((e) => new Date(e.startTime) >= now)
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .filter(e => new Date(e.startTime) >= now)
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      );
   }, [data]);
 
   const handleEventPress = (event: Event) => {
@@ -63,7 +69,10 @@ export function EventSearchResultsScreen() {
 
   const filterSummary = useMemo(() => {
     const parts: string[] = [];
-    if (sportTypes.length > 0) parts.push(sportTypes.length === 1 ? sportTypes[0]! : `${sportTypes.length} sports`);
+    if (sportTypes.length > 0)
+      parts.push(
+        sportTypes.length === 1 ? sportTypes[0]! : `${sportTypes.length} sports`
+      );
     if (locationQuery) parts.push(locationQuery);
     else if (latitude != null) parts.push('Near you');
     parts.push(`${radiusMiles} mi`);
@@ -74,12 +83,11 @@ export function EventSearchResultsScreen() {
     <View style={styles.screen}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityLabel="Go back" accessibilityRole="button">
-          <Ionicons name="arrow-back" size={24} color={colors.ink} />
-        </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle}>Search Results</Text>
-          <Text style={styles.filterSummary} numberOfLines={1}>{filterSummary}</Text>
+          <Text style={styles.filterSummary} numberOfLines={1}>
+            {filterSummary}
+          </Text>
         </View>
       </View>
 
@@ -91,15 +99,21 @@ export function EventSearchResultsScreen() {
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={56} color={colors.inkFaint} />
           <Text style={styles.emptyTitle}>No games found</Text>
-          <Text style={styles.emptySubtitle}>Try broadening your search or increasing the distance</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} accessibilityRole="button">
+          <Text style={styles.emptySubtitle}>
+            Try broadening your search or increasing the distance
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+          >
             <Text style={styles.backButtonText}>Adjust Search</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={events}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <EventCard event={item} onPress={handleEventPress} />
           )}

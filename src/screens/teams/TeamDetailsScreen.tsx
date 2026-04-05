@@ -10,6 +10,8 @@ import {
   RefreshControl,
   TextInput,
   Share,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -31,12 +33,29 @@ import {
   leaveTeam as leaveTeamAction,
 } from '../../store/slices/teamsSlice';
 import { selectUser } from '../../store/slices/authSlice';
-import { Team, TeamMember, TeamRole, MemberStatus, SportType, SkillLevel, Event, User } from '../../types';
+import {
+  Team,
+  TeamMember,
+  TeamRole,
+  MemberStatus,
+  SportType,
+  SkillLevel,
+  Event,
+  User,
+} from '../../types';
 import { colors, fonts } from '../../theme';
-import { DuesStatusBadge, DuesStatus } from '../../components/dues/DuesStatusBadge';
+import {
+  DuesStatusBadge,
+  DuesStatus,
+} from '../../components/dues/DuesStatusBadge';
 import { PlayerCard } from '../../components/ui/PlayerCard';
 import { loggingService } from '../../services/LoggingService';
-import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import {
+  HeroSection,
+  PersonRow,
+  DetailCard,
+  FixedBottomCTA,
+} from '../../components/detail';
 import { getSportColor } from '../../constants/sportColors';
 
 interface TeamDetailsScreenProps {
@@ -64,7 +83,6 @@ const skillLevelOptions = [
   { label: 'Advanced', value: SkillLevel.ADVANCED },
 ];
 
-
 export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const { teamId, readOnly } = route.params;
   const navigation = useNavigation();
@@ -82,9 +100,13 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   // Form state
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [formSportType, setFormSportType] = useState<SportType>(SportType.BASKETBALL);
+  const [formSportType, setFormSportType] = useState<SportType>(
+    SportType.BASKETBALL
+  );
   const [formSportTypes, setFormSportTypes] = useState<SportType[]>([]);
-  const [formSkillLevel, setFormSkillLevel] = useState<SkillLevel>(SkillLevel.ALL_LEVELS);
+  const [formSkillLevel, setFormSkillLevel] = useState<SkillLevel>(
+    SkillLevel.ALL_LEVELS
+  );
   const [formMaxMembers, setFormMaxMembers] = useState('10');
   const [formIsPublic, setFormIsPublic] = useState(true);
   const [_formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -94,35 +116,54 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const [events, setEvents] = useState<Event[]>([]);
 
   // Dues status (visible to roster manager)
-  const [playerDuesMap, setPlayerDuesMap] = useState<Map<string, DuesStatus>>(new Map());
+  const [playerDuesMap, setPlayerDuesMap] = useState<Map<string, DuesStatus>>(
+    new Map()
+  );
   const [duesAmount, setDuesAmount] = useState<number | null>(null);
   const [_activeSeason, setActiveSeason] = useState<any>(null);
 
   // Modals
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conflictEvents, setConflictEvents] = useState<
+    { id: string; title: string; startTime: string }[]
+  >([]);
+  const [showConflictModal, setShowConflictModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; firstName: string; lastName: string; profileImage?: string; dateOfBirth?: string; gender?: string } | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImage?: string;
+    dateOfBirth?: string;
+    gender?: string;
+  } | null>(null);
 
   // Derived state
   const isMember = team?.members?.some(
-    (m) => m.userId === currentUser?.id && m.status === MemberStatus.ACTIVE
+    m => m.userId === currentUser?.id && m.status === MemberStatus.ACTIVE
   );
-  const currentMember = team?.members?.find((m) => m.userId === currentUser?.id);
+  const currentMember = team?.members?.find(m => m.userId === currentUser?.id);
   const isCaptain = currentMember?.role === TeamRole.CAPTAIN;
-  const isManagerRole = isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN;
+  const isManagerRole =
+    isCaptain || currentMember?.role === TeamRole.CO_CAPTAIN;
   const [editMode, setEditMode] = useState(false);
   const isPendingInvite = team?.members?.some(
-    (m) => m.userId === currentUser?.id && m.status === MemberStatus.PENDING
+    m => m.userId === currentUser?.id && m.status === MemberStatus.PENDING
   );
 
-  const activeMembers = team?.members?.filter((m) => m.status === MemberStatus.ACTIVE) || [];
-  const pendingMembers = team?.members?.filter((m) => m.status === MemberStatus.PENDING) || [];
-  const allMemberIds = team?.members?.map((m) => m.userId) || [];
+  const activeMembers =
+    team?.members?.filter(m => m.status === MemberStatus.ACTIVE) || [];
+  const pendingMembers =
+    team?.members?.filter(m => m.status === MemberStatus.PENDING) || [];
+  const allMemberIds = team?.members?.map(m => m.userId) || [];
 
   // Upcoming events (future only, sorted ascending)
   const upcomingEvents = events
-    .filter((e) => new Date(e.startTime) >= new Date())
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    .filter(e => new Date(e.startTime) >= new Date())
+    .sort(
+      (a, b) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
 
   // Set header "Edit" button for managers
   useEffect(() => {
@@ -134,7 +175,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             style={{ marginRight: 16 }}
             activeOpacity={0.7}
           >
-            <Text style={{ fontFamily: fonts.ui, fontSize: 16, color: colors.cobalt }}>Edit</Text>
+            <Text
+              style={{
+                fontFamily: fonts.ui,
+                fontSize: 16,
+                color: colors.cobalt,
+              }}
+            >
+              Edit
+            </Text>
           </TouchableOpacity>
         ) : null,
     });
@@ -149,7 +198,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       setFormSportTypes(
         team.sportTypes && team.sportTypes.length > 0
           ? team.sportTypes
-          : (team.sportType ? [team.sportType] : [SportType.BASKETBALL])
+          : team.sportType
+            ? [team.sportType]
+            : [SportType.BASKETBALL]
       );
       setFormSkillLevel(team.skillLevel || SkillLevel.ALL_LEVELS);
       setFormMaxMembers(String(team.maxMembers || 10));
@@ -196,10 +247,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       // Look for a league with an active season that has dues
       for (const league of leagueData) {
         const seasons = league.seasons || [];
-        const active = seasons.find((s: any) => s.isActive && s.duesAmount && s.duesAmount > 0);
+        const active = seasons.find(
+          (s: any) => s.isActive && s.duesAmount && s.duesAmount > 0
+        );
         if (active) {
           setActiveSeason(active);
-          const result = await playerDuesService.getRosterStatus(teamId, active.id);
+          const result = await playerDuesService.getRosterStatus(
+            teamId,
+            active.id
+          );
           setDuesAmount(result.duesAmount);
           const map = new Map<string, DuesStatus>();
           for (const p of result.players) {
@@ -227,23 +283,44 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       let isMounted = true;
       const load = async () => {
         setIsLoading(true);
-        await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents(), loadPlayerDuesStatus()]);
+        await Promise.all([
+          loadTeamDetails(),
+          loadTeamLeagues(),
+          loadTeamEvents(),
+          loadPlayerDuesStatus(),
+        ]);
         if (isMounted) setIsLoading(false);
         // Fetch unread count for team chat (best-effort, don't block)
         try {
           const convs = await conversationService.getConversations('TEAM_CHAT');
-          const teamConv = convs.find((c) => c.entityId === teamId);
-          if (teamConv && isMounted) setChatUnreadCount(teamConv.unreadCount ?? 0);
-        } catch { /* non-critical */ }
+          const teamConv = convs.find(c => c.entityId === teamId);
+          if (teamConv && isMounted)
+            setChatUnreadCount(teamConv.unreadCount ?? 0);
+        } catch {
+          /* non-critical */
+        }
       };
       load();
-      return () => { isMounted = false; };
-    }, [loadTeamDetails, loadTeamLeagues, loadTeamEvents, loadPlayerDuesStatus, teamId])
+      return () => {
+        isMounted = false;
+      };
+    }, [
+      loadTeamDetails,
+      loadTeamLeagues,
+      loadTeamEvents,
+      loadPlayerDuesStatus,
+      teamId,
+    ])
   );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([loadTeamDetails(), loadTeamLeagues(), loadTeamEvents(), loadPlayerDuesStatus()]);
+    await Promise.all([
+      loadTeamDetails(),
+      loadTeamLeagues(),
+      loadTeamEvents(),
+      loadPlayerDuesStatus(),
+    ]);
     setIsRefreshing(false);
   };
 
@@ -252,28 +329,55 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     const errs: Record<string, string> = {};
     if (!formName.trim()) {
       errs.name = 'Roster name is required';
-      loggingService.logValidation('TeamDetailsScreen', 'name', 'required', 'Roster name is required');
-    }
-    else if (formName.length < 3) {
+      loggingService.logValidation(
+        'TeamDetailsScreen',
+        'name',
+        'required',
+        'Roster name is required'
+      );
+    } else if (formName.length < 3) {
       errs.name = 'Roster name must be at least 3 characters';
-      loggingService.logValidation('TeamDetailsScreen', 'name', 'minLength', 'Roster name must be at least 3 characters');
-    }
-    else if (formName.length > 50) {
+      loggingService.logValidation(
+        'TeamDetailsScreen',
+        'name',
+        'minLength',
+        'Roster name must be at least 3 characters'
+      );
+    } else if (formName.length > 50) {
       errs.name = 'Roster name must be less than 50 characters';
-      loggingService.logValidation('TeamDetailsScreen', 'name', 'maxLength', 'Roster name must be less than 50 characters');
+      loggingService.logValidation(
+        'TeamDetailsScreen',
+        'name',
+        'maxLength',
+        'Roster name must be less than 50 characters'
+      );
     }
     if (formDescription && formDescription.length > 500) {
       errs.description = 'Description must be less than 500 characters';
-      loggingService.logValidation('TeamDetailsScreen', 'description', 'maxLength', 'Description must be less than 500 characters');
+      loggingService.logValidation(
+        'TeamDetailsScreen',
+        'description',
+        'maxLength',
+        'Description must be less than 500 characters'
+      );
     }
     const maxNum = parseInt(formMaxMembers, 10);
     if (isNaN(maxNum) || maxNum < 2) {
       errs.maxMembers = 'Roster must allow at least 2 players';
-      loggingService.logValidation('TeamDetailsScreen', 'maxMembers', 'min', 'Roster must allow at least 2 players');
-    }
-    else if (maxNum > 100) {
+      loggingService.logValidation(
+        'TeamDetailsScreen',
+        'maxMembers',
+        'min',
+        'Roster must allow at least 2 players'
+      );
+    } else if (maxNum > 100) {
       errs.maxMembers = 'Maximum players cannot exceed 100';
-      loggingService.logValidation('TeamDetailsScreen', 'maxMembers', 'max', 'Maximum players cannot exceed 100');
+      loggingService.logValidation(
+        'TeamDetailsScreen',
+        'maxMembers',
+        'max',
+        'Maximum players cannot exceed 100'
+      );
     }
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -292,7 +396,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
       const updates: any = { name: formName.trim() };
       if (sportOk) {
-        updates.sportType = (formSportTypes.length > 0 ? formSportTypes[0] : formSportType) ?? SportType.BASKETBALL;
+        updates.sportType =
+          (formSportTypes.length > 0 ? formSportTypes[0] : formSportType) ??
+          SportType.BASKETBALL;
         updates.sportTypes = formSportTypes;
         updates.isPublic = formIsPublic;
       }
@@ -334,7 +440,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const handleConfirmInvite = handleJoinTeam;
 
   const handleDeclineInvitation = async () => {
-    loggingService.logButton('Decline Invitation', 'TeamDetailsScreen', { teamId });
+    loggingService.logButton('Decline Invitation', 'TeamDetailsScreen', {
+      teamId,
+    });
 
     const doDecline = async () => {
       try {
@@ -354,7 +462,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to decline this roster invitation?')) {
+      if (
+        window.confirm(
+          'Are you sure you want to decline this roster invitation?'
+        )
+      ) {
         await doDecline();
       }
     } else {
@@ -387,7 +499,21 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       dispatch(removeTeam(teamId));
       (navigation as any).replace('TeamsList');
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Failed to delete roster.');
+      setShowDeleteModal(false);
+      // Handle upcoming event conflict
+      const data = err?.response?.data || err?.data;
+      if (
+        data?.error === 'UPCOMING_EVENTS_CONFLICT' &&
+        data?.events?.length > 0
+      ) {
+        setConflictEvents(data.events);
+        setShowConflictModal(true);
+      } else {
+        Alert.alert(
+          'Error',
+          data?.message || err.message || 'Failed to delete roster.'
+        );
+      }
     }
   };
 
@@ -438,18 +564,31 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       id: member.userId,
       firstName: user.firstName,
       lastName: user.lastName,
-      ...(user.profileImage !== undefined ? { profileImage: user.profileImage } : {}),
-      ...(typeof (user as any).dateOfBirth === 'string' ? { dateOfBirth: (user as any).dateOfBirth } : {}),
-      ...(typeof (user as any).gender === 'string' ? { gender: (user as any).gender } : {}),
+      ...(user.profileImage !== undefined
+        ? { profileImage: user.profileImage }
+        : {}),
+      ...(typeof (user as any).dateOfBirth === 'string'
+        ? { dateOfBirth: (user as any).dateOfBirth }
+        : {}),
+      ...(typeof (user as any).gender === 'string'
+        ? { gender: (user as any).gender }
+        : {}),
     });
   };
 
   // ── Derived display values ──
   const sportLabel = (() => {
-    const sports = team?.sportTypes && team.sportTypes.length > 0
-      ? team.sportTypes
-      : (team?.sportType ? [team.sportType] : []);
-    return sports.map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')).join(', ') || 'Sport';
+    const sports =
+      team?.sportTypes && team.sportTypes.length > 0
+        ? team.sportTypes
+        : team?.sportType
+          ? [team.sportType]
+          : [];
+    return (
+      sports
+        .map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' '))
+        .join(', ') || 'Sport'
+    );
   })();
 
   const skillLabel = (team?.skillLevel || 'all_levels')
@@ -457,14 +596,19 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     .replace(/\b\w/g, (c: string) => c.toUpperCase());
 
   const managerName = (() => {
-    const captainMember = team?.members?.find((m) => m.role === TeamRole.CAPTAIN);
-    if (captainMember?.user) return `${captainMember.user.firstName} ${captainMember.user.lastName}`;
-    if (team?.captain) return `${team.captain.firstName} ${team.captain.lastName}`;
+    const captainMember = team?.members?.find(m => m.role === TeamRole.CAPTAIN);
+    if (captainMember?.user)
+      return `${captainMember.user.firstName} ${captainMember.user.lastName}`;
+    if (team?.captain)
+      return `${team.captain.firstName} ${team.captain.lastName}`;
     return 'Unknown';
   })();
 
   const formatDate = (dateStr: string | Date) =>
-    new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    new Date(dateStr).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
 
   // ── Loading / Error states ──
   if (isLoading) {
@@ -474,7 +618,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   if (error || !team) {
     return (
       <View style={styles.container}>
-        <ErrorDisplay message={error || 'Roster not found'} onRetry={loadTeamDetails} />
+        <ErrorDisplay
+          message={error || 'Roster not found'}
+          onRetry={loadTeamDetails}
+        />
       </View>
     );
   }
@@ -485,7 +632,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.cobalt} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.cobalt}
+          />
         }
       >
         {/* ── Invitation Banner ── */}
@@ -495,9 +646,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               <Ionicons name="mail-outline" size={24} color={colors.gold} />
             </View>
             <View style={styles.invitationBannerContent}>
-              <Text style={styles.invitationBannerTitle}>You've been invited!</Text>
+              <Text style={styles.invitationBannerTitle}>
+                You've been invited!
+              </Text>
               <Text style={styles.invitationBannerText}>
-                You've been invited to join this roster. Review the details below and decide if you'd like to join.
+                You've been invited to join this roster. Review the details
+                below and decide if you'd like to join.
               </Text>
             </View>
           </View>
@@ -524,20 +678,35 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 style={styles.chatBtn}
                 onPress={async () => {
                   try {
-                    const conv = await conversationService.getOrCreateTeamChat(teamId);
+                    const conv =
+                      await conversationService.getOrCreateTeamChat(teamId);
                     (navigation as any).navigate('Messages', {
                       screen: 'Chat',
-                      params: { conversationId: conv.id, title: team.name ?? 'Team Chat', type: 'TEAM_CHAT' },
+                      params: {
+                        conversationId: conv.id,
+                        title: team.name ?? 'Team Chat',
+                        type: 'TEAM_CHAT',
+                      },
                     });
                   } catch (e) {
                     console.error('Navigate to chat error:', e);
-                    Alert.alert('Error', 'Could not open team chat. Please try again.');
+                    Alert.alert(
+                      'Error',
+                      'Could not open team chat. Please try again.'
+                    );
                   }
                 }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="chatbubbles-outline" size={18} color={colors.cobalt} />
-                <Text style={styles.chatBtnText}>Team Chat{chatUnreadCount > 0 ? ` · ${chatUnreadCount} new` : ''}</Text>
+                <Ionicons
+                  name="chatbubbles-outline"
+                  size={18}
+                  color={colors.cobalt}
+                />
+                <Text style={styles.chatBtnText}>
+                  Team Chat
+                  {chatUnreadCount > 0 ? ` · ${chatUnreadCount} new` : ''}
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -551,7 +720,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               >
                 <Ionicons name="link-outline" size={18} color={colors.gold} />
                 <Text style={styles.inviteLinkBtnText}>
-                  {isGeneratingLink ? 'Generating link...' : 'Share Invite Link'}
+                  {isGeneratingLink
+                    ? 'Generating link...'
+                    : 'Share Invite Link'}
                 </Text>
               </TouchableOpacity>
             )}
@@ -560,43 +731,90 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             <DetailCard
               title="Your teammates"
               delay={50}
-              {...(!readOnly && isManagerRole ? { action: { label: 'Invite', onPress: () => setEditMode(true) } } : {})}
+              {...(!readOnly && isManagerRole
+                ? {
+                    action: {
+                      label: 'Invite',
+                      onPress: () => setEditMode(true),
+                    },
+                  }
+                : {})}
             >
               {activeMembers.length <= 1 && (
                 <Text style={styles.emptyMsg}>
                   Your team needs more players — share the code to grow
                 </Text>
               )}
-              {activeMembers.map((m) => {
+              {activeMembers.map(m => {
                 const isMe = m.userId === currentUser?.id;
-                const showDues = !readOnly && isManagerRole && duesAmount != null && playerDuesMap.size > 0;
+                const showDues =
+                  !readOnly &&
+                  isManagerRole &&
+                  duesAmount != null &&
+                  playerDuesMap.size > 0;
                 return (
                   <PersonRow
                     key={m.userId}
-                    name={m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown'}
-                    {...(m.role === TeamRole.CAPTAIN ? { role: 'Captain' } : m.role === TeamRole.CO_CAPTAIN ? { role: 'Co-Captain' } : {})}
+                    name={
+                      m.user
+                        ? `${m.user.firstName} ${m.user.lastName}`
+                        : 'Unknown'
+                    }
+                    {...(m.role === TeamRole.CAPTAIN
+                      ? { role: 'Captain' }
+                      : m.role === TeamRole.CO_CAPTAIN
+                        ? { role: 'Co-Captain' }
+                        : {})}
                     {...(showDues
-                      ? { rightElement: <DuesStatusBadge status={playerDuesMap.get(m.userId) ?? 'unpaid'} /> }
+                      ? {
+                          rightElement: (
+                            <DuesStatusBadge
+                              status={playerDuesMap.get(m.userId) ?? 'unpaid'}
+                            />
+                          ),
+                        }
                       : !isMe
-                      ? { rightElement: (
-                          <TouchableOpacity
-                            onPress={async () => {
-                              try {
-                                const conv = await conversationService.getDM(m.userId);
-                                (navigation as any).navigate('Messages', {
-                                  screen: 'Chat',
-                                  params: { conversationId: conv.id, title: m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Chat', type: 'DIRECT_MESSAGE' },
-                                });
-                              } catch (e: any) {
-                                Alert.alert('Cannot message', e?.data?.error || 'Could not start conversation');
-                              }
-                            }}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                          >
-                            <Ionicons name="chatbubble-outline" size={18} color={colors.primary} />
-                          </TouchableOpacity>
-                        )}
-                      : {})}
+                        ? {
+                            rightElement: (
+                              <TouchableOpacity
+                                onPress={async () => {
+                                  try {
+                                    const conv =
+                                      await conversationService.getDM(m.userId);
+                                    (navigation as any).navigate('Messages', {
+                                      screen: 'Chat',
+                                      params: {
+                                        conversationId: conv.id,
+                                        title: m.user
+                                          ? `${m.user.firstName} ${m.user.lastName}`
+                                          : 'Chat',
+                                        type: 'DIRECT_MESSAGE',
+                                      },
+                                    });
+                                  } catch (e: any) {
+                                    Alert.alert(
+                                      'Cannot message',
+                                      e?.data?.error ||
+                                        'Could not start conversation'
+                                    );
+                                  }
+                                }}
+                                hitSlop={{
+                                  top: 10,
+                                  bottom: 10,
+                                  left: 10,
+                                  right: 10,
+                                }}
+                              >
+                                <Ionicons
+                                  name="chatbubble-outline"
+                                  size={18}
+                                  color={colors.primary}
+                                />
+                              </TouchableOpacity>
+                            ),
+                          }
+                        : {})}
                     onPress={() => openPlayerCard(m)}
                   />
                 );
@@ -604,10 +822,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               {pendingMembers.length > 0 && (
                 <>
                   <Text style={styles.pendingHeader}>Pending</Text>
-                  {pendingMembers.map((m) => (
+                  {pendingMembers.map(m => (
                     <PersonRow
                       key={m.userId}
-                      name={m.user ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown'}
+                      name={
+                        m.user
+                          ? `${m.user.firstName} ${m.user.lastName}`
+                          : 'Unknown'
+                      }
                       role="Invited"
                     />
                   ))}
@@ -642,7 +864,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                       }
                       activeOpacity={0.7}
                     >
-                      <View style={[styles.leagueRow, isPending && styles.leagueRowPending]}>
+                      <View
+                        style={[
+                          styles.leagueRow,
+                          isPending && styles.leagueRowPending,
+                        ]}
+                      >
                         <Ionicons
                           name="trophy-outline"
                           size={20}
@@ -650,14 +877,22 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                         />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.leagueName}>{league.name}</Text>
-                          <Text style={styles.leagueSport}>{league.sportType}</Text>
+                          <Text style={styles.leagueSport}>
+                            {league.sportType}
+                          </Text>
                         </View>
                         {isPending && (
                           <View style={styles.pendingLeagueBadge}>
-                            <Text style={styles.pendingLeagueBadgeText}>Pending</Text>
+                            <Text style={styles.pendingLeagueBadgeText}>
+                              Pending
+                            </Text>
                           </View>
                         )}
-                        <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color={colors.onSurfaceVariant}
+                        />
                       </View>
                     </TouchableOpacity>
                   );
@@ -670,16 +905,26 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               {upcomingEvents.length === 0 ? (
                 <Text style={styles.emptyMsg}>No games scheduled yet</Text>
               ) : (
-                upcomingEvents.slice(0, 3).map((event) => (
+                upcomingEvents.slice(0, 3).map(event => (
                   <TouchableOpacity
                     key={event.id}
-                    onPress={() => (navigation as any).navigate('EventDetails', { eventId: event.id })}
+                    onPress={() =>
+                      (navigation as any).navigate('EventDetails', {
+                        eventId: event.id,
+                      })
+                    }
                     style={styles.eventRow}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.eventDate}>{formatDate(event.startTime)}</Text>
+                    <Text style={styles.eventDate}>
+                      {formatDate(event.startTime)}
+                    </Text>
                     <Text style={styles.eventTitle}>{event.title}</Text>
-                    <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={colors.onSurfaceVariant}
+                    />
                   </TouchableOpacity>
                 ))
               )}
@@ -688,10 +933,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Edit / Delete for captain ── */}
             {!readOnly && isCaptain && (
               <View style={styles.ownerActions}>
-                <TouchableOpacity style={styles.ownerEditBtn} onPress={() => setEditMode(true)} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.ownerEditBtn}
+                  onPress={() => setEditMode(true)}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.ownerEditBtnText}>Edit Roster</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.ownerDeleteBtn} onPress={() => setShowDeleteModal(true)} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.ownerDeleteBtn}
+                  onPress={() => setShowDeleteModal(true)}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.ownerDeleteBtnText}>Delete Roster</Text>
                 </TouchableOpacity>
               </View>
@@ -705,7 +958,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               const sportOk = nameOk && !!formSportType;
               const visOk = sportOk;
               const visSelected = formIsPublic !== undefined;
-              const maxOk = visOk && visSelected && !!formMaxMembers && parseInt(formMaxMembers) > 0;
+              const maxOk =
+                visOk &&
+                visSelected &&
+                !!formMaxMembers &&
+                parseInt(formMaxMembers) > 0;
 
               return (
                 <>
@@ -725,7 +982,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                         label=""
                         options={sportTypeOptions}
                         value={formSportType}
-                        onSelect={(o) => {
+                        onSelect={o => {
                           setFormSportType(o.value as SportType);
                           setFormSportTypes([o.value as SportType]);
                         }}
@@ -739,7 +996,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                       <Text style={styles.editStepLabel}>Visibility</Text>
                       <View style={styles.editRow}>
                         <TouchableOpacity
-                          style={[styles.editToggle, !formIsPublic && styles.editToggleActive]}
+                          style={[
+                            styles.editToggle,
+                            !formIsPublic && styles.editToggleActive,
+                          ]}
                           onPress={() => setFormIsPublic(false)}
                         >
                           <Ionicons
@@ -757,7 +1017,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={[styles.editToggle, formIsPublic && styles.editToggleActive]}
+                          style={[
+                            styles.editToggle,
+                            formIsPublic && styles.editToggleActive,
+                          ]}
                           onPress={() => setFormIsPublic(true)}
                         >
                           <Ionicons
@@ -784,9 +1047,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                       <TextInput
                         style={styles.editInput}
                         value={formMaxMembers}
-                        onChangeText={(v) => {
+                        onChangeText={v => {
                           const n = parseInt(v, 10);
-                          if (!isNaN(n) || v === '') setFormMaxMembers(v === '' ? '' : String(n));
+                          if (!isNaN(n) || v === '')
+                            setFormMaxMembers(v === '' ? '' : String(n));
                         }}
                         placeholder="e.g. 15"
                         placeholderTextColor={colors.inkFaint}
@@ -802,7 +1066,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                         label=""
                         options={skillLevelOptions}
                         value={formSkillLevel}
-                        onSelect={(o) => setFormSkillLevel(o.value as SkillLevel)}
+                        onSelect={o => setFormSkillLevel(o.value as SkillLevel)}
                         placeholder="All Levels"
                       />
                     </>
@@ -812,15 +1076,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             })()}
 
             {/* ── Invite Players (visible when all fields filled) ── */}
-            {formName.trim().length >= 2 && !!formSportType && !!formMaxMembers && parseInt(formMaxMembers) > 0 && (
-              <View style={styles.addMembersSection}>
-                <Text style={styles.editStepLabel}>Invite Players</Text>
-                <AddMemberSearch
-                  onAddMember={handleAddMemberDirectly}
-                  existingMemberIds={allMemberIds}
-                />
-              </View>
-            )}
+            {formName.trim().length >= 2 &&
+              !!formSportType &&
+              !!formMaxMembers &&
+              parseInt(formMaxMembers) > 0 && (
+                <View style={styles.addMembersSection}>
+                  <Text style={styles.editStepLabel}>Invite Players</Text>
+                  <AddMemberSearch
+                    onAddMember={handleAddMemberDirectly}
+                    existingMemberIds={allMemberIds}
+                  />
+                </View>
+              )}
           </View>
         )}
       </ScrollView>
@@ -870,6 +1137,72 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
         onConfirm={handleDeleteTeam}
       />
 
+      {/* Upcoming event conflict modal */}
+      <Modal
+        visible={showConflictModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConflictModal(false)}
+      >
+        <Pressable
+          style={styles.conflictBackdrop}
+          onPress={() => setShowConflictModal(false)}
+        >
+          <View style={styles.conflictModal}>
+            <Ionicons
+              name="warning-outline"
+              size={32}
+              color={colors.heart}
+              style={{ alignSelf: 'center', marginBottom: 12 }}
+            />
+            <Text style={styles.conflictTitle}>Can't Delete Yet</Text>
+            <Text style={styles.conflictMessage}>
+              This roster is registered in upcoming events. Remove it from each
+              event before deleting.
+            </Text>
+            {conflictEvents.map(evt => (
+              <TouchableOpacity
+                key={evt.id}
+                style={styles.conflictEventRow}
+                onPress={() => {
+                  setShowConflictModal(false);
+                  (navigation as any).navigate('Home', {
+                    screen: 'EventDetails',
+                    params: { eventId: evt.id, returnTo: 'Roster' },
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.conflictEventInfo}>
+                  <Text style={styles.conflictEventTitle} numberOfLines={1}>
+                    {evt.title}
+                  </Text>
+                  <Text style={styles.conflictEventDate}>
+                    {new Date(evt.startTime).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.pine}
+                />
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.conflictDismissBtn}
+              onPress={() => setShowConflictModal(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.conflictDismissText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
       <ConfirmModal
         visible={showLeaveModal}
         title="Leave"
@@ -889,7 +1222,6 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -1144,5 +1476,62 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 14,
     color: colors.gold,
+  },
+  conflictBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 31, 61, 0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  conflictModal: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 24,
+    maxHeight: '70%',
+  },
+  conflictTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.ink,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  conflictMessage: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkSoft,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  conflictEventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+  },
+  conflictEventInfo: { flex: 1, gap: 2 },
+  conflictEventTitle: {
+    fontFamily: fonts.headingSemi || fonts.heading,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  conflictEventDate: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkSoft,
+  },
+  conflictDismissBtn: {
+    alignItems: 'center',
+    paddingVertical: 14,
+    marginTop: 12,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+  },
+  conflictDismissText: {
+    fontFamily: fonts.ui,
+    fontSize: 15,
+    color: colors.ink,
   },
 });

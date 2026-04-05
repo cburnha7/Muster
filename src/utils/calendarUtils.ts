@@ -8,16 +8,16 @@ export const calendarTheme = {
   backgroundColor: 'transparent',
   calendarBackground: 'transparent',
   textSectionTitleColor: colors.onSurfaceVariant,
-  selectedDayBackgroundColor: colors.primary,
+  selectedDayBackgroundColor: colors.pine,
   selectedDayTextColor: '#FFFFFF',
-  todayTextColor: colors.primary,
+  todayTextColor: colors.pine,
   dayTextColor: colors.onSurface,
   textDisabledColor: colors.outlineVariant,
-  dotColor: colors.primary,
+  dotColor: colors.pine,
   selectedDotColor: '#FFFFFF',
-  arrowColor: colors.primary,
+  arrowColor: colors.ink,
   monthTextColor: colors.onSurface,
-  indicatorColor: colors.primary,
+  indicatorColor: colors.pine,
   textDayFontFamily: fonts.body,
   textMonthFontFamily: fonts.heading,
   textDayHeaderFontFamily: fonts.headingSemi,
@@ -33,10 +33,10 @@ export const calendarTheme = {
  * Marking colors for calendar dates
  */
 export const calendarMarkingColors = {
-  available: colors.primary,
+  available: colors.pine,
   blocked: colors.error,
   rented: colors.onSurface,
-  selected: colors.primary,
+  selected: colors.pine,
 };
 
 /**
@@ -158,7 +158,15 @@ export function getDayOfWeek(date: Date): number {
  * Get day name from day of week number
  */
 export function getDayName(dayOfWeek: number): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const days = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
   return days[dayOfWeek];
 }
 

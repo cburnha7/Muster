@@ -20,6 +20,7 @@ import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { CancellationPolicyDisplay } from '../../components/facilities/CancellationPolicyDisplay';
 import { facilityService } from '../../services/api/FacilityService';
 import { OwnerReservationsSection } from '../../components/facilities/OwnerReservationsSection';
+import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 import {
   setSelectedFacility,
   selectSelectedFacility,
@@ -27,7 +28,12 @@ import {
 import { colors, fonts, Spacing } from '../../theme';
 import { Event, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
-import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import {
+  HeroSection,
+  PersonRow,
+  DetailCard,
+  FixedBottomCTA,
+} from '../../components/detail';
 import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
 import { getSportColor } from '../../constants/sportColors';
 import { getSportLabel } from '../../constants/sports';
@@ -53,11 +59,13 @@ interface FacilityDetailsScreenProps {
 }
 
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
-  const { facilityId } = route.params;
+  const { facilityId, ...restParams } = route.params as any;
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  const selectedFacility = useSelector(selectSelectedFacility) as FacilityWithVerification | null;
+  const selectedFacility = useSelector(
+    selectSelectedFacility
+  ) as FacilityWithVerification | null;
   const currentUser = useSelector(selectUser);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -90,8 +98,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         limit: 20,
       });
       const now = Date.now();
-      const upcoming = (response.data || []).filter(
-        (e) => e.endTime ? new Date(e.endTime).getTime() > now : new Date(e.startTime).getTime() > now
+      const upcoming = (response.data || []).filter(e =>
+        e.endTime
+          ? new Date(e.endTime).getTime() > now
+          : new Date(e.startTime).getTime() > now
       );
       setEvents(upcoming);
     } catch (err: any) {
@@ -106,14 +116,22 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const handleDeleteGround = () => {
     if (!selectedFacility) return;
     if (Platform.OS === 'web') {
-      if (window.confirm(`Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`)) {
+      if (
+        window.confirm(
+          `Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`
+        )
+      ) {
         doDeleteGround();
       }
     } else {
-      Alert.alert('Delete Ground', `Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: doDeleteGround },
-      ]);
+      Alert.alert(
+        'Delete Ground',
+        `Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: doDeleteGround },
+        ]
+      );
     }
   };
 
@@ -122,7 +140,8 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
       await facilityService.deleteFacility(facilityId);
       navigation.goBack();
     } catch (err: any) {
-      const msg = err instanceof Error ? err.message : 'Failed to delete ground';
+      const msg =
+        err instanceof Error ? err.message : 'Failed to delete ground';
       Alert.alert('Error', msg);
     }
   };
@@ -136,9 +155,8 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     const address = encodeURIComponent(
       `${selectedFacility.street}, ${selectedFacility.city}, ${selectedFacility.state} ${selectedFacility.zipCode}`
     );
-    const url = Platform.OS === 'ios'
-      ? `maps://?q=${address}`
-      : `geo:0,0?q=${address}`;
+    const url =
+      Platform.OS === 'ios' ? `maps://?q=${address}` : `geo:0,0?q=${address}`;
     Linking.openURL(url).catch(() => {
       Linking.openURL(`https://maps.google.com/?q=${address}`);
     });
@@ -154,12 +172,21 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     }
 
     if (hasHalfStar) {
-      stars.push(<Ionicons key="half" name="star-half" size={20} color="#FFD700" />);
+      stars.push(
+        <Ionicons key="half" name="star-half" size={20} color="#FFD700" />
+      );
     }
 
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Ionicons key={`empty-${i}`} name="star-outline" size={20} color="#FFD700" />);
+      stars.push(
+        <Ionicons
+          key={`empty-${i}`}
+          name="star-outline"
+          size={20}
+          color="#FFD700"
+        />
+      );
     }
 
     return stars;
@@ -176,7 +203,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   if (error || !selectedFacility) {
     return (
       <View style={styles.container}>
-        <ErrorDisplay message={error || 'Ground not found'} onRetry={loadFacilityDetails} />
+        <ErrorDisplay
+          message={error || 'Ground not found'}
+          onRetry={loadFacilityDetails}
+        />
       </View>
     );
   }
@@ -189,7 +219,9 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     facility.city,
     facility.state,
     facility.zipCode,
-  ].filter(Boolean).join(', ');
+  ]
+    .filter(Boolean)
+    .join(', ');
 
   const showCancellationPolicy =
     facility.noticeWindowHours != null &&
@@ -198,8 +230,8 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   return (
     <View style={styles.container}>
+      <ContextualReturnButton />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-
         {/* Hero image */}
         {facility.imageUrl && (
           <Image
@@ -213,17 +245,21 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         <HeroSection
           title={facility.name}
           sportColor={getSportColor(facility.sportTypes?.[0])}
-          badges={[
-            ...facility.sportTypes.map((s) => ({ label: getSportLabel(s) })),
-            facility.isVerified
-              ? {
-                  label: '✓ Verified',
-                  bgColor: colors.secondaryContainer,
-                  textColor: colors.secondary,
-                }
-              : null,
-          ].filter(Boolean) as any}
-          {...(facility.pricePerHour ? { headline: `From $${facility.pricePerHour}/hr` } : {})}
+          badges={
+            [
+              ...facility.sportTypes.map(s => ({ label: getSportLabel(s) })),
+              facility.isVerified
+                ? {
+                    label: '✓ Verified',
+                    bgColor: colors.secondaryContainer,
+                    textColor: colors.secondary,
+                  }
+                : null,
+            ].filter(Boolean) as any
+          }
+          {...(facility.pricePerHour
+            ? { headline: `From $${facility.pricePerHour}/hr` }
+            : {})}
           subline={[facility.city, facility.state].filter(Boolean).join(', ')}
           onSublinePress={openMapsDirections}
         >
@@ -244,7 +280,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               <View style={styles.amenitiesGrid}>
                 {facility.amenities.map((a, i) => (
                   <View key={i} style={styles.amenityRow}>
-                    <Ionicons name="checkmark-circle" size={16} color={colors.secondary} />
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color={colors.secondary}
+                    />
                     <Text style={styles.amenityText}>
                       {typeof a === 'string' ? a : (a as any).name}
                     </Text>
@@ -261,7 +301,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           <View style={styles.mapContainer}>
             {Platform.OS === 'web' ? (
               <View style={[styles.map, styles.mapPlaceholder]}>
-                <Ionicons name="location" size={48} color={colors.onSurfaceVariant} />
+                <Ionicons
+                  name="location"
+                  size={48}
+                  color={colors.onSurfaceVariant}
+                />
                 <Text style={styles.mapPlaceholderText}>
                   Map view not available on web
                 </Text>
@@ -296,7 +340,9 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             )}
           </View>
           {facility.accessInstructions ? (
-            <Text style={[styles.bodyText, { marginTop: 12 }]}>{facility.accessInstructions}</Text>
+            <Text style={[styles.bodyText, { marginTop: 12 }]}>
+              {facility.accessInstructions}
+            </Text>
           ) : null}
           {facility.parkingInfo ? (
             <View style={styles.parkingBox}>
@@ -327,14 +373,20 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                 resizeMode="cover"
                 fallback={
                   <View style={styles.mapFallback}>
-                    <Ionicons name="map-outline" size={48} color={colors.onSurfaceVariant} />
+                    <Ionicons
+                      name="map-outline"
+                      size={48}
+                      color={colors.onSurfaceVariant}
+                    />
                     <Text style={styles.mapFallbackText}>Map unavailable</Text>
                   </View>
                 }
               />
               <View style={styles.facilityMapOverlay}>
                 <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
-                <Text style={styles.facilityMapOverlayText}>Tap to view full size</Text>
+                <Text style={styles.facilityMapOverlayText}>
+                  Tap to view full size
+                </Text>
               </View>
             </TouchableOpacity>
           </DetailCard>
@@ -354,7 +406,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               activeOpacity={0.7}
             >
               <View style={styles.contactRow}>
-                <Ionicons name="call-outline" size={16} color={colors.primary} />
+                <Ionicons
+                  name="call-outline"
+                  size={16}
+                  color={colors.primary}
+                />
                 <Text style={styles.contactText}>{facility.contactPhone}</Text>
               </View>
             </TouchableOpacity>
@@ -365,7 +421,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               activeOpacity={0.7}
             >
               <View style={styles.contactRow}>
-                <Ionicons name="mail-outline" size={16} color={colors.primary} />
+                <Ionicons
+                  name="mail-outline"
+                  size={16}
+                  color={colors.primary}
+                />
                 <Text style={styles.contactText}>{facility.contactEmail}</Text>
               </View>
             </TouchableOpacity>
@@ -376,8 +436,14 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               activeOpacity={0.7}
             >
               <View style={styles.contactRow}>
-                <Ionicons name="globe-outline" size={16} color={colors.primary} />
-                <Text style={styles.contactText}>{facility.contactWebsite}</Text>
+                <Ionicons
+                  name="globe-outline"
+                  size={16}
+                  color={colors.primary}
+                />
+                <Text style={styles.contactText}>
+                  {facility.contactWebsite}
+                </Text>
               </View>
             </TouchableOpacity>
           ) : null}
@@ -397,7 +463,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         {/* Upcoming events */}
         {events.length > 0 && (
           <DetailCard title="Upcoming events" delay={300}>
-            {events.map((event) => (
+            {events.map(event => (
               <EventCard
                 key={event.id}
                 event={event}
@@ -416,7 +482,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
         {/* Spacer for fixed bottom button */}
         <View style={{ height: 20 }} />
-
       </ScrollView>
 
       {/* Fixed bottom — Edit for owner, Book for non-owner */}
@@ -433,6 +498,12 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             (navigation as any).navigate('CourtAvailability', {
               facilityId: facility.id,
               facilityName: facility.name,
+              ...(restParams.returnTo
+                ? {
+                    returnTo: restParams.returnTo,
+                    returnParams: restParams.returnParams,
+                  }
+                : {}),
             })
           }
           variant="primary"
@@ -470,8 +541,14 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                   resizeMode="contain"
                   fallback={
                     <View style={styles.mapFallback}>
-                      <Ionicons name="map-outline" size={64} color={colors.onSurfaceVariant} />
-                      <Text style={styles.mapFallbackText}>Map unavailable</Text>
+                      <Ionicons
+                        name="map-outline"
+                        size={64}
+                        color={colors.onSurfaceVariant}
+                      />
+                      <Text style={styles.mapFallbackText}>
+                        Map unavailable
+                      </Text>
                     </View>
                   }
                 />
