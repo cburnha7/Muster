@@ -32,7 +32,9 @@ class DebriefServiceClass extends BaseApiService {
   }
 
   async getDebriefEvents(): Promise<{ data: Booking[] }> {
-    return this.get<{ data: Booking[] }>(API_ENDPOINTS.DEBRIEF.BASE);
+    return this.get<{ data: Booking[] }>(API_ENDPOINTS.DEBRIEF.BASE, {
+      cacheOptions: { skipCache: true },
+    });
   }
 
   async getDebriefDetails(eventId: string): Promise<DebriefDetails> {
@@ -44,10 +46,13 @@ class DebriefServiceClass extends BaseApiService {
     salutedUserIds: string[],
     facilityRating?: number
   ): Promise<{ success: boolean }> {
-    return this.post<{ success: boolean }>(API_ENDPOINTS.DEBRIEF.SUBMIT(eventId), {
-      salutedUserIds,
-      facilityRating: facilityRating || null,
-    });
+    return this.post<{ success: boolean }>(
+      API_ENDPOINTS.DEBRIEF.SUBMIT(eventId),
+      {
+        salutedUserIds,
+        facilityRating: facilityRating || null,
+      }
+    );
   }
 }
 

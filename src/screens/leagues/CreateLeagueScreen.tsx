@@ -2,12 +2,16 @@ import React, { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { CreateLeagueProvider, useCreateLeague } from './create-flow/CreateLeagueContext';
+import {
+  CreateLeagueProvider,
+  useCreateLeague,
+} from './create-flow/CreateLeagueContext';
 import { LeagueFlowContainer } from './create-flow/LeagueFlowContainer';
 import { Step1Sport } from './create-flow/Step1Sport';
 import { Step2Config } from './create-flow/Step2Config';
-import { Step3Preview } from './create-flow/Step3Preview';
-import { Step4Who } from './create-flow/Step4Who';
+import { Step3Who } from './create-flow/Step3Who';
+import { Step4Preview } from './create-flow/Step4Preview';
+import { Step4Who as Step5Invite } from './create-flow/Step4Who';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { leagueService } from '../../services/api/LeagueService';
@@ -24,25 +28,36 @@ function CreateLeagueInner() {
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
   const user = useSelector(selectUser);
-  const { allowed: leagueAllowed, requiredPlan } = useFeatureGate('create_league');
+  const { allowed: leagueAllowed, requiredPlan } =
+    useFeatureGate('create_league');
   const [showUpsell, setShowUpsell] = useState(false);
   const [upsellPlan, setUpsellPlan] = useState<SubscriptionPlan>('league');
 
   // Build league name
   const sportLabel = state.sport ? getSportLabel(state.sport) : '';
   const seasonLabel = state.startDate ? getSeasonFromDate(state.startDate) : '';
-  const leagueName = state.hostName.trim() && sportLabel
-    ? `${state.hostName.trim()} - ${sportLabel} - ${seasonLabel}`.trim()
+  const ageGroup = state.maxBirthYear
+    ? ` U${new Date().getFullYear() - parseInt(state.maxBirthYear)}`
     : '';
+  const leagueName =
+    state.hostName.trim() && sportLabel
+      ? `${state.hostName.trim()} ${sportLabel} ${seasonLabel}${ageGroup}`.trim()
+      : '';
 
   const formatLabel =
-    state.leagueFormat === 'season' ? 'Season'
-    : state.leagueFormat === 'season_with_playoffs' ? 'Season with Playoffs'
-    : state.leagueFormat === 'tournament' ? 'Tournament'
-    : '';
+    state.leagueFormat === 'season'
+      ? 'Season'
+      : state.leagueFormat === 'season_with_playoffs'
+        ? 'Season with Playoffs'
+        : state.leagueFormat === 'tournament'
+          ? 'Tournament'
+          : '';
 
   const handleSubmit = useCallback(async () => {
-    if (!user?.id) { Alert.alert('Error', 'Please log in'); return; }
+    if (!user?.id) {
+      Alert.alert('Error', 'Please log in');
+      return;
+    }
     if (!leagueAllowed) {
       setUpsellPlan(requiredPlan);
       setShowUpsell(true);
@@ -59,16 +74,20 @@ function CreateLeagueInner() {
         leagueFormat: state.leagueFormat,
         startDate: state.startDate,
         endDate: state.endDate || undefined,
-        seasonGameCount: state.gamesPerRound && state.numberOfRounds
-          ? parseInt(state.gamesPerRound) * parseInt(state.numberOfRounds)
-          : undefined,
+        seasonGameCount:
+          state.gamesPerRound && state.numberOfRounds
+            ? parseInt(state.gamesPerRound) * parseInt(state.numberOfRounds)
+            : undefined,
         preferredGameDays: state.gameDays,
         preferredTimeWindowStart: state.timeStart || undefined,
         preferredTimeWindowEnd: state.timeEnd || undefined,
-        gameFrequency: state.frequency === 'block' ? 'all_at_once' : state.frequency,
+        gameFrequency:
+          state.frequency === 'block' ? 'all_at_once' : state.frequency,
         trackStandings: state.leagueFormat !== 'tournament',
         visibility: state.visibility || 'public',
-        playoffTeamCount: state.playoffTeamCount ? parseInt(state.playoffTeamCount) : undefined,
+        playoffTeamCount: state.playoffTeamCount
+          ? parseInt(state.playoffTeamCount)
+          : undefined,
         eliminationFormat: state.playoffFormat || undefined,
       };
 
@@ -80,7 +99,11 @@ function CreateLeagueInner() {
         try {
           await leagueService.inviteRoster(newLeague.id, roster.id, user.id);
         } catch (err) {
-          console.warn('Failed to invite roster:', roster.id, (err as Error).message);
+          console.warn(
+            'Failed to invite roster:',
+            roster.id,
+            (err as Error).message
+          );
         }
       }
 
@@ -89,7 +112,15 @@ function CreateLeagueInner() {
       dispatch({ type: 'SUBMIT_FAIL' });
       Alert.alert('Error', error?.message || 'Failed to create league');
     }
-  }, [user, state, leagueName, leagueAllowed, requiredPlan, dispatch, reduxDispatch]);
+  }, [
+    user,
+    state,
+    leagueName,
+    leagueAllowed,
+    requiredPlan,
+    dispatch,
+    reduxDispatch,
+  ]);
 
   if (state.showSuccess) {
     return (
@@ -99,9 +130,17 @@ function CreateLeagueInner() {
         subtitle="Your league has been created"
         summaryRows={[
           { label: 'Format', value: formatLabel },
-          { label: 'Visibility', value: state.visibility === 'public' ? 'Public' : 'Private' },
+          {
+            label: 'Visibility',
+            value: state.visibility === 'public' ? 'Public' : 'Private',
+          },
           ...(state.invitedRosters.length > 0
-            ? [{ label: 'Rosters invited', value: String(state.invitedRosters.length) }]
+            ? [
+                {
+                  label: 'Rosters invited',
+                  value: String(state.invitedRosters.length),
+                },
+              ]
             : []),
         ]}
         actions={[
@@ -110,7 +149,9 @@ function CreateLeagueInner() {
             icon: 'arrow-forward',
             onPress: () => {
               if (state.createdLeagueId) {
-                navigation.replace('LeagueDetails', { leagueId: state.createdLeagueId });
+                navigation.replace('LeagueDetails', {
+                  leagueId: state.createdLeagueId,
+                });
               } else {
                 navigation.goBack();
               }
@@ -133,8 +174,9 @@ function CreateLeagueInner() {
       <LeagueFlowContainer onSubmit={handleSubmit}>
         <Step1Sport />
         <Step2Config />
-        <Step3Preview />
-        <Step4Who />
+        <Step3Who />
+        <Step4Preview />
+        <Step5Invite />
       </LeagueFlowContainer>
       <UpsellModal
         visible={showUpsell}

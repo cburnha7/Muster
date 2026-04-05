@@ -19,30 +19,78 @@ const Stack = createNativeStackNavigator<LeaguesStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerBackTitleVisible: false,
   headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
+  headerTitleStyle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
+  },
 };
 
 export function LeaguesStackNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="LeaguesBrowser" component={LeaguesBrowserScreen} />
-      <Stack.Screen name="LeagueDetails" component={LeagueDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
-      <Stack.Screen name="CreateLeague" component={CreateLeagueScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="ManageLeague" component={ManageLeagueScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="CreateMatch" component={CreateMatchScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="RecordMatchResult" component={RecordMatchResultScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="AssignFacility" component={AssignFacilityScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DocumentViewer" component={DocumentViewerScreen} options={{ ...detailHeader, headerTitle: 'Document' }} />
-      <Stack.Screen name="LeagueScheduling" component={SchedulingScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="ScheduleWizard" component={ScheduleWizardScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="LeagueDeletionConfirm" component={LeagueDeletionConfirmScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="LeagueTeamManagement" component={LeagueTeamManagementScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="LeagueDetails"
+        component={LeagueDetailsScreen}
+        options={{ ...detailHeader, headerTitle: '' }}
+      />
+      <Stack.Screen
+        name="CreateLeague"
+        component={CreateLeagueScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ManageLeague"
+        component={ManageLeagueScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreateMatch"
+        component={CreateMatchScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RecordMatchResult"
+        component={RecordMatchResultScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AssignFacility"
+        component={AssignFacilityScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DocumentViewer"
+        component={DocumentViewerScreen}
+        options={{ ...detailHeader, headerTitle: 'Document' }}
+      />
+      <Stack.Screen
+        name="LeagueScheduling"
+        component={SchedulingScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ScheduleWizard"
+        component={ScheduleWizardScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LeagueDeletionConfirm"
+        component={LeagueDeletionConfirmScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LeagueTeamManagement"
+        component={LeagueTeamManagementScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }

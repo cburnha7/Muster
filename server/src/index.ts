@@ -49,8 +49,14 @@ dotenv.config();
 function validateStripeEnv(): void {
   const requiredVars = [
     { name: 'STRIPE_SECRET_KEY', hint: 'Required for all Stripe API calls' },
-    { name: 'STRIPE_WEBHOOK_SECRET', hint: 'Required for webhook signature verification' },
-    { name: 'PLATFORM_FEE_RATE', hint: 'Required for application fee calculation (e.g. 0.05 for 5%)' },
+    {
+      name: 'STRIPE_WEBHOOK_SECRET',
+      hint: 'Required for webhook signature verification',
+    },
+    {
+      name: 'PLATFORM_FEE_RATE',
+      hint: 'Required for application fee calculation (e.g. 0.05 for 5%)',
+    },
   ];
 
   const missing: string[] = [];
@@ -65,12 +71,16 @@ function validateStripeEnv(): void {
   if (process.env.PLATFORM_FEE_RATE) {
     const rate = parseFloat(process.env.PLATFORM_FEE_RATE);
     if (isNaN(rate) || rate < 0 || rate > 1) {
-      console.warn('⚠️  PLATFORM_FEE_RATE must be a number between 0 and 1 (e.g. 0.05 for 5%)');
+      console.warn(
+        '⚠️  PLATFORM_FEE_RATE must be a number between 0 and 1 (e.g. 0.05 for 5%)'
+      );
     }
   }
 
   if (missing.length > 0) {
-    console.warn(`⚠️  ${missing.length} Stripe env var(s) not set — payment features will not work. See server/.env.example for details.`);
+    console.warn(
+      `⚠️  ${missing.length} Stripe env var(s) not set — payment features will not work. See server/.env.example for details.`
+    );
   } else {
     console.log('✅ Stripe environment variables configured');
   }
@@ -95,15 +105,21 @@ const corsOptions: cors.CorsOptions = {
       'http://localhost:8081',
       'http://localhost:19006',
       'http://localhost:19000',
-      ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [])
+      ...(process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+        : []),
     ];
 
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
 
     // Allow any Vercel preview deployment for this project
-    if (/^https:\/\/muster[a-z0-9-]*\.vercel\.app$/.test(origin)
-        || /^https:\/\/muster-[a-z0-9-]+-edwinburnham-1336s-projects\.vercel\.app$/.test(origin)) {
+    if (
+      /^https:\/\/muster[a-z0-9-]*\.vercel\.app$/.test(origin) ||
+      /^https:\/\/muster-[a-z0-9-]+-edwinburnham-1336s-projects\.vercel\.app$/.test(
+        origin
+      )
+    ) {
       return callback(null, true);
     }
 
@@ -115,10 +131,17 @@ const corsOptions: cors.CorsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id', 'X-Active-User-Id', 'X-Request-ID'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-User-Id',
+    'x-user-id',
+    'X-Active-User-Id',
+    'X-Request-ID',
+  ],
   exposedHeaders: ['X-Request-ID'],
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
 };
 
 // Handle preflight requests explicitly — must come BEFORE other middleware
@@ -128,9 +151,13 @@ app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 // Stripe webhooks need raw body for signature verification — must come before express.json()
-app.use('/api/stripe/webhooks', express.raw({ type: 'application/json' }), stripeWebhookRoutes);
+app.use(
+  '/api/stripe/webhooks',
+  express.raw({ type: 'application/json' }),
+  stripeWebhookRoutes
+);
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -176,41 +203,52 @@ app.use('/api/conversations', conversationsRouter);
 app.use('/api/messages', messagesRouter);
 
 // Error handling
-app.use(async (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
+app.use(
+  async (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error('Error:', err);
 
-  // Log to app_logs table
-  try {
-    const userId = (req as any).user?.userId || req.headers['x-user-id'] as string || null;
-    await prisma.appLog.create({
-      data: {
-        logType: 'error',
-        message: (err.message || 'Internal server error').substring(0, 2000),
-        userId,
-        screen: req.headers['x-screen'] as string || null,
-        metadata: {
-          method: req.method,
-          url: req.originalUrl,
-          status: err.status || 500,
-          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    // Log to app_logs table
+    try {
+      const userId =
+        (req as any).user?.userId ||
+        (req.headers['x-user-id'] as string) ||
+        null;
+      await prisma.appLog.create({
+        data: {
+          logType: 'error',
+          message: (err.message || 'Internal server error').substring(0, 2000),
+          userId,
+          screen: (req.headers['x-screen'] as string) || null,
+          metadata: {
+            method: req.method,
+            url: req.originalUrl,
+            status: err.status || 500,
+            stack:
+              process.env.NODE_ENV === 'development' ? err.stack : undefined,
+          },
         },
-      },
-    });
-  } catch (logErr) {
-    console.error('Failed to write error log:', logErr);
-  }
+      });
+    } catch (logErr) {
+      console.error('Failed to write error log:', logErr);
+    }
 
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
+    res.status(err.status || 500).json({
+      error: err.message || 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
+  }
+);
 
 // Global process error handlers — catch unhandled promise rejections and exceptions
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
 });

@@ -61,6 +61,7 @@ import {
 } from '../../types';
 import type { Match } from '../../types/league';
 import { API_BASE_URL } from '../../services/api/config';
+import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 
 function formatDateHero(dateInput: string | Date): string {
   const d = new Date(dateInput as any);
@@ -897,6 +898,7 @@ export function EventDetailsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ContextualReturnButton />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={

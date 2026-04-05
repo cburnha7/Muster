@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerBackTitleVisible: false,
   headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,

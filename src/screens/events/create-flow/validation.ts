@@ -14,7 +14,10 @@ export function canContinue(state: WizardState, step: number): boolean {
     case 1:
       return state.eventType !== null;
     case 2: {
-      const hasDateTime = state.startDate !== null && state.startTime !== null && state.endTime !== null;
+      const hasDateTime =
+        state.startDate !== null &&
+        state.startTime !== null &&
+        state.endTime !== null;
       if (!hasDateTime) return false;
       if (state.recurring) {
         return (
@@ -30,12 +33,16 @@ export function canContinue(state: WizardState, step: number): boolean {
         return state.locationName.trim().length > 0;
       }
       if (state.locationMode === 'muster') {
-        return state.facilityId !== '' && state.courtId !== '';
+        return (
+          state.facilityId !== '' &&
+          state.courtId !== '' &&
+          state.selectedSlots.length > 0
+        );
       }
       return false;
     }
     case 4:
-      return true;
+      return state.visibility !== null;
     default:
       return false;
   }

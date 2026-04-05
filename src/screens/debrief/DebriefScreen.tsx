@@ -8,17 +8,25 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing } from '../../theme';
+import { colors, fonts } from '../../theme';
 import { salute as saluteConstants } from '../../theme/brand';
-import { debriefService, DebriefParticipant, DebriefDetails } from '../../services/api/DebriefService';
+import {
+  debriefService,
+  DebriefParticipant,
+  DebriefDetails,
+} from '../../services/api/DebriefService';
 import { SaluteOverlay } from '../../components/SaluteOverlay';
+import { useAuth } from '../../context/AuthContext';
+import { eventService } from '../../services/api/EventService';
 
-export function DebriefScreen(): JSX.Element {
+export function DebriefScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const { user } = useAuth();
   const { eventId, readonly: readonlyParam } = route.params as {
     eventId: string;
     readonly?: boolean;
@@ -40,24 +48,52 @@ export function DebriefScreen(): JSX.Element {
     try {
       setLoading(true);
       const data = await debriefService.getDebriefDetails(eventId);
-      setDetails(data);
-      setSalutedIds(new Set(data.salutedUserIds));
 
-      // Auto-detect readonly: already submitted OR past 24h window
+      // If the backend returned no participants, try loading them from the event API
+      if ((!data.participants || data.participants.length === 0) && user?.id) {
+        try {
+          const eventParticipants = await eventService.getEventParticipants(
+            eventId,
+            true
+          );
+          const participants: DebriefParticipant[] = (
+            eventParticipants.participants || []
+          )
+            .filter((p: any) => p.userId !== user.id)
+            .map((p: any) => ({
+              id: p.userId || p.user?.id || p.id,
+              firstName: p.user?.firstName || p.firstName || '?',
+              lastName: p.user?.lastName || p.lastName || '',
+              profileImage: p.user?.profileImage || p.profileImage,
+              saluted: (data.salutedUserIds || []).includes(
+                p.userId || p.user?.id || p.id
+              ),
+            }));
+          data.participants = participants;
+        } catch {
+          // Non-fatal — keep whatever the debrief endpoint returned
+        }
+      }
+
+      setDetails(data);
+      setSalutedIds(new Set(data.salutedUserIds || []));
+
       const endTime = new Date(data.event.endTime);
       const hoursSinceEnd = (Date.now() - endTime.getTime()) / (1000 * 60 * 60);
-      if (readonlyParam || data.debriefSubmitted || hoursSinceEnd > saluteConstants.windowHours) {
+      if (
+        readonlyParam ||
+        data.debriefSubmitted ||
+        hoursSinceEnd > saluteConstants.windowHours
+      ) {
         setIsReadonly(true);
       }
       if (data.debriefSubmitted) {
         setHasSubmitted(true);
       }
-
-      // Pre-fill facility rating from server if already submitted
       if (data.facilityRating != null) {
         setFacilityRating(data.facilityRating);
       }
-    } catch (err) {
+    } catch {
       Alert.alert('Error', 'Failed to load debrief details');
       navigation.goBack();
     } finally {
@@ -72,6 +108,7 @@ export function DebriefScreen(): JSX.Element {
       if (next.has(userId)) {
         next.delete(userId);
       } else {
+        if (next.size >= saluteConstants.maxPerGame) return prev;
         next.add(userId);
       }
       return next;
@@ -87,8 +124,6 @@ export function DebriefScreen(): JSX.Element {
 
   const handleSubmit = async () => {
     if (!details) return;
-
-    // Guard: give clear feedback if minimum salutes not met
     if (salutedIds.size < minSalutes) {
       Alert.alert(
         'More Salutes Needed',
@@ -96,7 +131,6 @@ export function DebriefScreen(): JSX.Element {
       );
       return;
     }
-
     try {
       setSubmitting(true);
       await debriefService.submitDebrief(
@@ -111,9 +145,7 @@ export function DebriefScreen(): JSX.Element {
       ]);
     } catch (err: any) {
       const message =
-        err?.details?.error ||
-        err?.message ||
-        'Failed to submit debrief';
+        err?.details?.error || err?.message || 'Failed to submit debrief';
       Alert.alert('Error', message);
     } finally {
       setSubmitting(false);
@@ -122,9 +154,9 @@ export function DebriefScreen(): JSX.Element {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.cobalt} />
-      </View>
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.pine} />
+      </SafeAreaView>
     );
   }
 
@@ -133,75 +165,87 @@ export function DebriefScreen(): JSX.Element {
   const getInitials = (p: DebriefParticipant) =>
     `${p.firstName?.[0] || ''}${p.lastName?.[0] || ''}`.toUpperCase();
 
-  const salutedCount = salutedIds.size;
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.container}>
+      {/* Header — event name only */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.ink} />
-        </TouchableOpacity>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>
-            {isReadonly ? 'Debrief Summary' : 'Debrief'}
-          </Text>
-          <Text style={styles.subtitle} numberOfLines={1}>{details.event.title}</Text>
-        </View>
+        <Text style={styles.title} numberOfLines={1}>
+          {details.event.title}
+        </Text>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Participants */}
         <Text style={styles.sectionTitle}>
           {isReadonly
-            ? `Players (${salutedCount} saluted)`
-            : `Salute your fellow players (${salutedCount}/${minSalutes} min)`}
+            ? `Players (${salutedIds.size} saluted)`
+            : `Salute your fellow players (${salutedIds.size}/${minSalutes} min)`}
         </Text>
-        <View style={styles.participantsGrid}>
-          {details.participants.map((p) => {
-            const isSaluted = salutedIds.has(p.id);
-            return (
-              <TouchableOpacity
-                key={p.id}
-                style={[styles.participantCard, isSaluted && styles.participantCardSaluted]}
-                onPress={() => toggleSalute(p.id)}
-                activeOpacity={isReadonly ? 1 : 0.7}
-                disabled={isReadonly}
-              >
-                <SaluteOverlay saluted={isSaluted} size={56}>
-                  {p.profileImage ? (
-                    <Image source={{ uri: p.profileImage }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarInitials}>{getInitials(p)}</Text>
-                    </View>
-                  )}
-                </SaluteOverlay>
-                <Text style={styles.participantName} numberOfLines={1}>
-                  {p.firstName} {p.lastName?.[0]}.
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+
+        {details.participants.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="people-outline" size={32} color={colors.inkFaint} />
+            <Text style={styles.emptyText}>
+              No other players found for this event.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.participantsGrid}>
+            {details.participants.map(p => {
+              const isSaluted = salutedIds.has(p.id);
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[
+                    styles.participantCard,
+                    isSaluted && styles.participantCardSaluted,
+                  ]}
+                  onPress={() => toggleSalute(p.id)}
+                  activeOpacity={isReadonly ? 1 : 0.7}
+                  disabled={isReadonly}
+                >
+                  <SaluteOverlay saluted={isSaluted} size={56}>
+                    {p.profileImage ? (
+                      <Image
+                        source={{ uri: p.profileImage }}
+                        style={styles.avatar}
+                      />
+                    ) : (
+                      <View style={styles.avatarPlaceholder}>
+                        <Text style={styles.avatarInitials}>
+                          {getInitials(p)}
+                        </Text>
+                      </View>
+                    )}
+                  </SaluteOverlay>
+                  <Text style={styles.participantName} numberOfLines={1}>
+                    {p.firstName} {p.lastName?.[0]}.
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {/* Facility Rating */}
         {details.event.facilityId && details.event.facility && (
           <View style={styles.ratingSection}>
             <Text style={styles.sectionTitle}>
               {isReadonly
-                ? `${details.event.facility?.name || 'the venue'}`
-                : `Rate ${details.event.facility?.name || 'the venue'}`}
+                ? `${details.event.facility.name || 'the venue'}`
+                : `Rate ${details.event.facility.name || 'the venue'}`}
             </Text>
             {!isReadonly && <Text style={styles.ratingHint}>Optional</Text>}
             <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
+              {[1, 2, 3, 4, 5].map(star => (
                 <TouchableOpacity
                   key={star}
                   onPress={() => {
-                    if (!isReadonly) {
+                    if (!isReadonly)
                       setFacilityRating(star === facilityRating ? 0 : star);
-                    }
                   }}
                   disabled={isReadonly}
                   activeOpacity={isReadonly ? 1 : 0.7}
@@ -209,7 +253,9 @@ export function DebriefScreen(): JSX.Element {
                   <Ionicons
                     name={star <= facilityRating ? 'star' : 'star-outline'}
                     size={36}
-                    color={star <= facilityRating ? colors.gold : colors.inkFaint}
+                    color={
+                      star <= facilityRating ? colors.gold : colors.inkFaint
+                    }
                   />
                 </TouchableOpacity>
               ))}
@@ -231,12 +277,19 @@ export function DebriefScreen(): JSX.Element {
       ) : !isReadonly ? (
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton,
+              !canSubmit && styles.submitButtonDisabled,
+            ]}
             onPress={handleSubmit}
             disabled={submitting}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel={canSubmit ? 'Submit Debrief' : `Salute ${salutesNeeded} more players`}
+            accessibilityLabel={
+              canSubmit
+                ? 'Submit Debrief'
+                : `Salute ${salutesNeeded} more players`
+            }
           >
             {submitting ? (
               <ActivityIndicator color="#FFFFFF" />
@@ -248,78 +301,111 @@ export function DebriefScreen(): JSX.Element {
           </TouchableOpacity>
         </View>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
-  header: {
-    flexDirection: 'row',
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.lg,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
+    backgroundColor: colors.white,
   },
-  backButton: { marginRight: Spacing.md },
-  headerText: { flex: 1 },
-  title: { fontSize: 20, fontWeight: '700', color: colors.ink },
-  subtitle: { fontSize: 14, color: colors.inkFaint, marginTop: 2 },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: {
+    fontFamily: fonts.heading,
+    fontSize: 22,
+    color: colors.ink,
+  },
   scroll: { flex: 1 },
-  scrollContent: { padding: Spacing.lg, paddingBottom: 100, alignItems: 'center' },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: colors.ink, marginBottom: Spacing.md, textAlign: 'center', alignSelf: 'stretch' },
+  scrollContent: { padding: 20, paddingBottom: 120 },
+  sectionTitle: {
+    fontFamily: fonts.headingSemi || fonts.heading,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.inkSoft,
+    textAlign: 'center',
+  },
   participantsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
+    gap: 12,
+    marginBottom: 32,
   },
   participantCard: {
     width: '30%',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   participantCardSaluted: {
     borderColor: colors.gold,
-    backgroundColor: colors.gold + '10',
+    backgroundColor: colors.goldTint,
   },
   avatar: { width: 56, height: 56, borderRadius: 28 },
   avatarPlaceholder: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarInitials: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
-  participantName: { fontSize: 13, color: colors.ink, textAlign: 'center', marginTop: Spacing.sm },
-  ratingSection: { marginBottom: Spacing.xl, alignItems: 'center', alignSelf: 'stretch' },
-  ratingHint: { fontSize: 13, color: colors.inkFaint, marginBottom: Spacing.md, textAlign: 'center' },
-  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.sm },
+  avatarInitials: { fontFamily: fonts.ui, fontSize: 18, color: '#FFFFFF' },
+  participantName: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.ink,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  ratingSection: { marginBottom: 32, alignItems: 'center' },
+  ratingHint: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: Spacing.lg,
+    padding: 20,
     backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: '#FFFFFF',
+    borderTopColor: colors.border,
   },
   submitButton: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     borderRadius: 12,
-    paddingVertical: Spacing.lg,
+    paddingVertical: 16,
     alignItems: 'center',
   },
   submitButtonDisabled: { backgroundColor: colors.inkFaint },
-  submitButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  submitButtonText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
 });

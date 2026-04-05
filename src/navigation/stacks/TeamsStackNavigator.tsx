@@ -12,23 +12,43 @@ const Stack = createNativeStackNavigator<TeamsStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerBackTitleVisible: false,
   headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.background },
   headerShadowVisible: false,
-  headerTitleStyle: { fontFamily: fonts.headingSemi, fontSize: 17, color: colors.onSurface },
+  headerTitleStyle: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 17,
+    color: colors.onSurface,
+  },
 };
 
 export function TeamsStackNavigator(): JSX.Element {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="TeamsList" component={TeamsListScreen} />
-      <Stack.Screen name="TeamDetails" component={TeamDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
-      <Stack.Screen name="CreateTeam" component={CreateTeamScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="JoinTeam" component={JoinTeamScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="EventDetails" component={EventDetailsScreen} options={{ ...detailHeader, headerTitle: '' }} />
+      <Stack.Screen
+        name="TeamDetails"
+        component={TeamDetailsScreen}
+        options={{ ...detailHeader, headerTitle: '' }}
+      />
+      <Stack.Screen
+        name="CreateTeam"
+        component={CreateTeamScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="JoinTeam"
+        component={JoinTeamScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetailsScreen}
+        options={{ ...detailHeader, headerTitle: '' }}
+      />
     </Stack.Navigator>
   );
 }

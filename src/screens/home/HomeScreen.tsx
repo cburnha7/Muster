@@ -18,32 +18,48 @@ import { useSelector } from 'react-redux';
 import { Calendar, DateData } from 'react-native-calendars';
 
 // Components
-import { BookingCard } from '../../components/ui/BookingCard';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { EventSearchPanel } from '../../components/home/EventSearchPanel';
 import { InboxSection } from '../../components/home/InboxSection';
-import { NextUpCard } from '../../components/home/NextUpCard';
-import { UpcomingRow } from '../../components/home/UpcomingRow';
 import { EmptyHomeState } from '../../components/home/EmptyHomeState';
 import { LiveGameBanner } from '../../components/home/LiveGameBanner';
-import { FamilyPulseSection } from '../../components/home/FamilyPulseSection';
+import { MyCrewRow, CrewMember } from '../../components/home/MyCrewRow';
+import { CrewEventCard } from '../../components/home/CrewEventCard';
 import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
 // Services
 import { debriefService } from '../../services/api/DebriefService';
-import { userService, RosterInvitation, LeagueInvitation, EventInvitation, ReadyToScheduleLeague } from '../../services/api/UserService';
+import {
+  userService,
+  RosterInvitation,
+  LeagueInvitation,
+  EventInvitation,
+  ReadyToScheduleLeague,
+} from '../../services/api/UserService';
 
 // Context
 import { useAuth } from '../../context/AuthContext';
 
 // Store
 import { selectUser } from '../../store/slices/authSlice';
-import { selectActiveUserId, selectDependents } from '../../store/slices/contextSlice';
-import { useGetUserBookingsQuery, useCancelBookingMutation, useGetEventsQuery, useBookEventMutation } from '../../store/api/eventsApi';
-import { useGetPendingCancelRequestsQuery, useApproveCancelRequestMutation, useDenyCancelRequestMutation } from '../../store/api/cancelRequestsApi';
+import {
+  selectActiveUserId,
+  selectDependents,
+} from '../../store/slices/contextSlice';
+import {
+  useGetUserBookingsQuery,
+  useCancelBookingMutation,
+  useGetEventsQuery,
+  useBookEventMutation,
+} from '../../store/api/eventsApi';
+import {
+  useGetPendingCancelRequestsQuery,
+  useApproveCancelRequestMutation,
+  useDenyCancelRequestMutation,
+} from '../../store/api/cancelRequestsApi';
 
 // Theme
 import { colors, fonts, Spacing } from '../../theme';
@@ -54,12 +70,22 @@ import { HomeStackParamList } from '../../navigation/types';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // Utils
-import { PersonFilter } from '../../types/eventsCalendar';
-import { formatDateForCalendar, calendarTheme } from '../../utils/calendarUtils';
+import { PersonFilter, PERSON_COLORS } from '../../types/eventsCalendar';
+import {
+  assignPersonColors,
+  buildMarkedDates,
+} from '../../utils/eventsCalendarUtils';
+import {
+  formatDateForCalendar,
+  calendarTheme,
+} from '../../utils/calendarUtils';
 import { searchEventBus } from '../../utils/searchEventBus';
 import { getSportEmoji } from '../../constants/sports';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'HomeScreen'>;
+type HomeScreenNavigationProp = NativeStackNavigationProp<
+  HomeStackParamList,
+  'HomeScreen'
+>;
 
 export function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -76,8 +102,12 @@ export function HomeScreen() {
   const dependents = useSelector(selectDependents);
 
   // Calendar state
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    formatDateForCalendar(new Date())
+  );
+
+  // My Crew selection: null = "All"
+  const [selectedCrewId, setSelectedCrewId] = useState<string | null>(null);
 
   // Search modal state
   const [searchModalVisible, setSearchModalVisible] = useState(false);
@@ -95,9 +125,14 @@ export function HomeScreen() {
   const [bookEventMutation] = useBookEventMutation();
 
   // Cancel requests hooks
-  const { data: cancelRequests = [] } = useGetPendingCancelRequestsQuery(user?.id || '', { skip: !user?.id });
-  const [approveCancelRequest, { isLoading: isApproving }] = useApproveCancelRequestMutation();
-  const [denyCancelRequest, { isLoading: isDenying }] = useDenyCancelRequestMutation();
+  const { data: cancelRequests = [] } = useGetPendingCancelRequestsQuery(
+    user?.id || '',
+    { skip: !user?.id }
+  );
+  const [approveCancelRequest, { isLoading: isApproving }] =
+    useApproveCancelRequestMutation();
+  const [denyCancelRequest, { isLoading: isDenying }] =
+    useDenyCancelRequestMutation();
 
   // Discover events query (games near you, filtered by sport preferences)
   const sportPrefs = user?.sportPreferences;
@@ -108,17 +143,23 @@ export function HomeScreen() {
   } = useGetEventsQuery({
     filters: {
       status: EventStatus.ACTIVE,
-      ...(sportPrefs && sportPrefs.length > 0 ? { sportTypes: sportPrefs.join(',') } : {}),
+      ...(sportPrefs && sportPrefs.length > 0
+        ? { sportTypes: sportPrefs.join(',') }
+        : {}),
     },
     pagination: { page: 1, limit: 6 },
   });
 
   const discoverEvents = useMemo(() => {
     const events = discoverData?.data || [];
-    // Exclude events the user is already booked into
-    const bookedEventIds = new Set((bookingsData?.data || []).map((b) => b.eventId));
-    return events.filter((e) => !bookedEventIds.has(e.id));
-  }, [discoverData, bookingsData]);
+    // Exclude events that the active profile has already joined
+    const allBookingsList = bookingsData?.data || [];
+    const profileBookings = selectedCrewId
+      ? allBookingsList.filter(b => b.userId === selectedCrewId)
+      : allBookingsList;
+    const bookedEventIds = new Set(profileBookings.map(b => b.eventId));
+    return events.filter(e => !bookedEventIds.has(e.id));
+  }, [discoverData, bookingsData, selectedCrewId]);
 
   // User teams state
   const [userTeams, setUserTeams] = useState<Team[]>([]);
@@ -136,33 +177,68 @@ export function HomeScreen() {
 
   const loadOrganizedEvents = useCallback(async () => {
     try {
-      const result = await userService.getUserEvents(undefined, { page: 1, limit: 100 });
-      const bookedEventIds = new Set((bookingsData?.data || []).map((b) => b.eventId));
-      setOrganizedEvents((result.data || []).filter((e: Event) => !bookedEventIds.has(e.id)));
+      const result = await userService.getUserEvents(undefined, {
+        page: 1,
+        limit: 100,
+      });
+      const bookedEventIds = new Set(
+        (bookingsData?.data || []).map(b => b.eventId)
+      );
+      setOrganizedEvents(
+        (result.data || []).filter((e: Event) => !bookedEventIds.has(e.id))
+      );
     } catch {
       setOrganizedEvents([]);
     }
   }, [bookingsData]);
 
   // DependentToggle state
-  const [activeFilter, setActiveFilter] = useState<PersonFilter>({
-    type: 'individual',
-    userId: currentUser?.id || '',
-  });
+  const activeFilter: PersonFilter = useMemo(() => {
+    if (selectedCrewId === null) return { type: 'wholeCrew' };
+    return { type: 'individual', userId: selectedCrewId };
+  }, [selectedCrewId]);
 
-  const handleFilterChange = useCallback((filter: PersonFilter) => {
-    setActiveFilter(filter);
-  }, []);
+  // ── My Crew: color map + member list ──
+  const personColors = useMemo(
+    () => assignPersonColors(currentUser?.id || '', dependents),
+    [currentUser?.id, dependents]
+  );
+
+  const crewMembers: CrewMember[] = useMemo(() => {
+    const members: CrewMember[] = [];
+    if (currentUser) {
+      members.push({
+        id: currentUser.id,
+        firstName: currentUser.firstName || 'Me',
+        profileImage: currentUser.profileImage,
+        color: personColors.get(currentUser.id) || PERSON_COLORS[0],
+      });
+    }
+    for (const dep of dependents) {
+      members.push({
+        id: dep.id,
+        firstName: dep.firstName || '?',
+        profileImage: dep.profileImage,
+        color: personColors.get(dep.id) || PERSON_COLORS[1],
+      });
+    }
+    return members;
+  }, [currentUser, dependents, personColors]);
 
   // All bookings sorted chronologically
   const allBookings = useMemo(() => {
     const all = bookingsData?.data || [];
-    const filtered = activeFilter.type === 'individual'
-      ? all.filter((b) => b.userId === activeFilter.userId)
-      : all;
+    const filtered =
+      activeFilter.type === 'individual'
+        ? all.filter(b => b.userId === activeFilter.userId)
+        : all;
     return [...filtered].sort((a, b) => {
-      const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
-      const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+      const aTime = a.event?.startTime
+        ? new Date(a.event.startTime).getTime()
+        : 0;
+      const bTime = b.event?.startTime
+        ? new Date(b.event.startTime).getTime()
+        : 0;
       return aTime - bTime;
     });
   }, [bookingsData, activeFilter]);
@@ -170,129 +246,160 @@ export function HomeScreen() {
   // Future bookings + organized events (for cards view)
   const futureBookings = useMemo(() => {
     const now = new Date();
-    const fromBookings = allBookings.filter((b) => {
+    const fromBookings = allBookings.filter(b => {
       if (!b.event?.startTime) return false;
       if (b.status === 'cancelled') return false;
       return new Date(b.event.endTime || b.event.startTime) >= now;
     });
-    // Add organized events not already in bookings
-    const bookedEventIds = new Set(fromBookings.map((b) => b.eventId));
-    const fromOrganized = organizedEvents
-      .filter((e) => e.startTime && new Date(e.endTime || e.startTime) >= now && !bookedEventIds.has(e.id))
-      .map((e) => ({
-        id: `org-${e.id}`,
-        eventId: e.id,
-        userId: currentUser?.id || '',
-        status: 'confirmed',
-        bookingType: 'event',
-        totalPrice: 0,
-        paymentStatus: 'paid',
-        debriefSubmitted: false,
-        createdAt: e.createdAt || new Date().toISOString(),
-        updatedAt: e.updatedAt || new Date().toISOString(),
-        event: e,
-      } as Booking));
+    // Add organized events not already in bookings, filtered by crew selection
+    const bookedEventIds = new Set(fromBookings.map(b => b.eventId));
+    const filteredOrganized =
+      activeFilter.type === 'individual'
+        ? organizedEvents.filter(e => e.organizerId === activeFilter.userId)
+        : organizedEvents;
+    const fromOrganized = filteredOrganized
+      .filter(
+        e =>
+          e.startTime &&
+          new Date(e.endTime || e.startTime) >= now &&
+          !bookedEventIds.has(e.id)
+      )
+      .map(
+        e =>
+          ({
+            id: `org-${e.id}`,
+            eventId: e.id,
+            userId: currentUser?.id || '',
+            status: 'confirmed',
+            bookingType: 'event',
+            totalPrice: 0,
+            paymentStatus: 'paid',
+            debriefSubmitted: false,
+            createdAt: e.createdAt || new Date().toISOString(),
+            updatedAt: e.updatedAt || new Date().toISOString(),
+            event: e,
+          }) as Booking
+      );
     return [...fromBookings, ...fromOrganized].sort((a, b) => {
-      const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
-      const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+      const aTime = a.event?.startTime
+        ? new Date(a.event.startTime).getTime()
+        : 0;
+      const bTime = b.event?.startTime
+        ? new Date(b.event.startTime).getTime()
+        : 0;
       return aTime - bTime;
     });
-  }, [allBookings, organizedEvents, currentUser]);
+  }, [allBookings, organizedEvents, currentUser, activeFilter]);
 
   // Live game = any booking currently in progress
   const liveGameBooking = useMemo(() => {
     const now = new Date();
-    return allBookings.find((b) => {
-      if (!b.event?.startTime || !b.event?.endTime) return false;
-      if (b.status === 'cancelled') return false;
-      return new Date(b.event.startTime) <= now && now <= new Date(b.event.endTime);
-    }) || null;
+    return (
+      allBookings.find(b => {
+        if (!b.event?.startTime || !b.event?.endTime) return false;
+        if (b.status === 'cancelled') return false;
+        return (
+          new Date(b.event.startTime) <= now && now <= new Date(b.event.endTime)
+        );
+      }) || null
+    );
   }, [allBookings]);
 
-  // Next up = first future booking
-  const nextUpBooking = futureBookings[0] || null;
-
-  // Upcoming = rest of future bookings (next 7 days, max 10)
+  // Upcoming = future bookings (max 10)
   const upcomingBookings = useMemo(() => {
-    const sevenDaysOut = new Date();
-    sevenDaysOut.setDate(sevenDaysOut.getDate() + 7);
-    return futureBookings
-      .slice(1) // skip the "next up" one
-      .filter((b) => new Date(b.event!.startTime) <= sevenDaysOut)
-      .slice(0, 10);
+    return futureBookings.slice(0, 10);
   }, [futureBookings]);
 
-  // Calendar marked dates — include both bookings and organized events
-  const calendarMarkedDates = useMemo(() => {
-    const marks: Record<string, any> = {};
+  // Resolve crew color for a booking
+  const getBookingCrewColor = useCallback(
+    (booking: Booking): string => {
+      const userId = booking.userId;
+      return (
+        personColors.get(userId) ||
+        personColors.get(currentUser?.id || '') ||
+        PERSON_COLORS[0]
+      );
+    },
+    [personColors, currentUser]
+  );
+
+  // Color-coded calendar marked dates using multi-dot
+  const familyUserIds = useMemo(() => {
+    const ids = [currentUser?.id || ''];
+    for (const dep of dependents) ids.push(dep.id);
+    return ids;
+  }, [currentUser, dependents]);
+
+  const allEventsForCalendar = useMemo(() => {
+    const events: Array<{
+      startTime: string | Date;
+      organizerId?: string;
+      participants?: Array<{ userId: string }>;
+    }> = [];
     for (const b of allBookings) {
-      if (!b.event?.startTime) continue;
-      const dateStr = formatDateForCalendar(new Date(b.event.startTime));
-      if (dateStr === selectedDate) continue;
-      marks[dateStr] = {
-        customStyles: {
-          container: {
-            borderWidth: 1.5,
-            borderColor: colors.primary,
-            borderRadius: 16,
-          },
-          text: { color: colors.onSurface },
-        },
-      };
+      if (b.event) events.push(b.event);
     }
     for (const e of organizedEvents) {
-      if (!e.startTime) continue;
-      const dateStr = formatDateForCalendar(new Date(e.startTime));
-      if (dateStr === selectedDate || marks[dateStr]) continue;
-      marks[dateStr] = {
-        customStyles: {
-          container: {
-            borderWidth: 1.5,
-            borderColor: colors.primary,
-            borderRadius: 16,
-          },
-          text: { color: colors.onSurface },
-        },
-      };
+      if (!events.some(ev => (ev as any).id === e.id)) events.push(e);
     }
-    marks[selectedDate] = {
-      selected: true,
-      customStyles: {
-        container: {
-          backgroundColor: colors.primary,
-          borderRadius: 16,
-        },
-        text: { color: '#FFFFFF' },
-      },
-    };
-    return marks;
-  }, [allBookings, organizedEvents, selectedDate]);
+    return events;
+  }, [allBookings, organizedEvents]);
+
+  const calendarMarkedDates = useMemo(() => {
+    return buildMarkedDates(
+      allEventsForCalendar,
+      activeFilter,
+      familyUserIds,
+      personColors,
+      selectedDate
+    );
+  }, [
+    allEventsForCalendar,
+    activeFilter,
+    familyUserIds,
+    personColors,
+    selectedDate,
+  ]);
 
   // Bookings + organized events for selected calendar date
   const calendarDateBookings = useMemo(() => {
-    const fromBookings = allBookings.filter((b) => {
+    const fromBookings = allBookings.filter(b => {
       if (!b.event?.startTime) return false;
-      return formatDateForCalendar(new Date(b.event.startTime)) === selectedDate;
+      return (
+        formatDateForCalendar(new Date(b.event.startTime)) === selectedDate
+      );
     });
-    // Create pseudo-bookings for organized events on this date
-    const bookedEventIds = new Set(fromBookings.map((b) => b.eventId));
-    const fromOrganized = organizedEvents
-      .filter((e) => e.startTime && formatDateForCalendar(new Date(e.startTime)) === selectedDate && !bookedEventIds.has(e.id))
-      .map((e) => ({
-        id: `org-${e.id}`,
-        eventId: e.id,
-        userId: currentUser?.id || '',
-        status: 'confirmed',
-        bookingType: 'event',
-        totalPrice: 0,
-        paymentStatus: 'paid',
-        debriefSubmitted: false,
-        createdAt: e.createdAt || new Date().toISOString(),
-        updatedAt: e.updatedAt || new Date().toISOString(),
-        event: e,
-      } as Booking));
+    // Create pseudo-bookings for organized events on this date, filtered by crew
+    const bookedEventIds = new Set(fromBookings.map(b => b.eventId));
+    const filteredOrganized =
+      activeFilter.type === 'individual'
+        ? organizedEvents.filter(e => e.organizerId === activeFilter.userId)
+        : organizedEvents;
+    const fromOrganized = filteredOrganized
+      .filter(
+        e =>
+          e.startTime &&
+          formatDateForCalendar(new Date(e.startTime)) === selectedDate &&
+          !bookedEventIds.has(e.id)
+      )
+      .map(
+        e =>
+          ({
+            id: `org-${e.id}`,
+            eventId: e.id,
+            userId: currentUser?.id || '',
+            status: 'confirmed',
+            bookingType: 'event',
+            totalPrice: 0,
+            paymentStatus: 'paid',
+            debriefSubmitted: false,
+            createdAt: e.createdAt || new Date().toISOString(),
+            updatedAt: e.updatedAt || new Date().toISOString(),
+            event: e,
+          }) as Booking
+      );
     return [...fromBookings, ...fromOrganized];
-  }, [allBookings, organizedEvents, selectedDate, currentUser]);
+  }, [allBookings, organizedEvents, selectedDate, currentUser, activeFilter]);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [stepOutModalVisible, setStepOutModalVisible] = useState(false);
@@ -305,13 +412,27 @@ export function HomeScreen() {
   const [debriefEvents, setDebriefEvents] = useState<Booking[]>([]);
 
   // Invitations state
-  const [rosterInvitations, setRosterInvitations] = useState<RosterInvitation[]>([]);
-  const [leagueInvitations, setLeagueInvitations] = useState<LeagueInvitation[]>([]);
-  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>([]);
-  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<ReadyToScheduleLeague[]>([]);
+  const [rosterInvitations, setRosterInvitations] = useState<
+    RosterInvitation[]
+  >([]);
+  const [leagueInvitations, setLeagueInvitations] = useState<
+    LeagueInvitation[]
+  >([]);
+  const [eventInvitations, setEventInvitations] = useState<EventInvitation[]>(
+    []
+  );
+  const [readyToScheduleLeagues, setReadyToScheduleLeagues] = useState<
+    ReadyToScheduleLeague[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
 
-  const inboxCount = rosterInvitations.length + leagueInvitations.length + eventInvitations.length + readyToScheduleLeagues.length + debriefEvents.length + cancelRequests.length;
+  const inboxCount =
+    rosterInvitations.length +
+    leagueInvitations.length +
+    eventInvitations.length +
+    readyToScheduleLeagues.length +
+    debriefEvents.length +
+    cancelRequests.length;
 
   const loadDebriefEvents = useCallback(async () => {
     try {
@@ -347,9 +468,25 @@ export function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
-    await Promise.all([refetchBookings(), refetchDiscover(), loadDebriefEvents(), loadInvitations(), loadReadyToScheduleLeagues(), loadUserTeams(), loadOrganizedEvents()]);
+    await Promise.all([
+      refetchBookings(),
+      refetchDiscover(),
+      loadDebriefEvents(),
+      loadInvitations(),
+      loadReadyToScheduleLeagues(),
+      loadUserTeams(),
+      loadOrganizedEvents(),
+    ]);
     setIsRefreshing(false);
-  }, [refetchBookings, refetchDiscover, loadDebriefEvents, loadInvitations, loadReadyToScheduleLeagues, loadUserTeams, loadOrganizedEvents]);
+  }, [
+    refetchBookings,
+    refetchDiscover,
+    loadDebriefEvents,
+    loadInvitations,
+    loadReadyToScheduleLeagues,
+    loadUserTeams,
+    loadOrganizedEvents,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -362,13 +499,27 @@ export function HomeScreen() {
         loadUserTeams();
         loadOrganizedEvents();
       }
-    }, [authLoading])
+    }, [
+      authLoading,
+      loadDebriefEvents,
+      loadInvitations,
+      loadReadyToScheduleLeagues,
+      loadUserTeams,
+      loadOrganizedEvents,
+    ])
   );
 
   useEffect(() => {
-    const unsubscribe = searchEventBus.subscribe(() => setSearchModalVisible(true));
-    const unsubClose = searchEventBus.subscribeClose(() => setSearchModalVisible(false));
-    return () => { unsubscribe(); unsubClose(); };
+    const unsubscribe = searchEventBus.subscribe(() =>
+      setSearchModalVisible(true)
+    );
+    const unsubClose = searchEventBus.subscribeClose(() =>
+      setSearchModalVisible(false)
+    );
+    return () => {
+      unsubscribe();
+      unsubClose();
+    };
   }, []);
 
   useEffect(() => {
@@ -383,13 +534,19 @@ export function HomeScreen() {
     }
   }, [activeUserId]);
 
-  const handleBookingPress = useCallback((booking: Booking) => {
-    navigation.navigate('EventDetails', { eventId: booking.eventId });
-  }, [navigation]);
+  const handleBookingPress = useCallback(
+    (booking: Booking) => {
+      navigation.navigate('EventDetails', { eventId: booking.eventId });
+    },
+    [navigation]
+  );
 
-  const handleDebriefPress = useCallback((booking: Booking) => {
-    navigation.navigate('Debrief', { eventId: booking.eventId });
-  }, [navigation]);
+  const handleDebriefPress = useCallback(
+    (booking: Booking) => {
+      navigation.navigate('Debrief', { eventId: booking.eventId });
+    },
+    [navigation]
+  );
 
   const handleStepOut = useCallback((booking: Booking) => {
     setSelectedBooking(booking);
@@ -399,7 +556,10 @@ export function HomeScreen() {
   const handleStepOutConfirm = useCallback(async () => {
     if (!selectedBooking) return;
     try {
-      await cancelBookingMutation({ eventId: selectedBooking.eventId, bookingId: selectedBooking.id }).unwrap();
+      await cancelBookingMutation({
+        eventId: selectedBooking.eventId,
+        bookingId: selectedBooking.id,
+      }).unwrap();
       setStepOutModalVisible(false);
       setSelectedBooking(null);
       Alert.alert('Success', 'You have stepped out of the event');
@@ -432,21 +592,42 @@ export function HomeScreen() {
     }
   };
 
-  const handleRosterInvitationPress = useCallback((inv: RosterInvitation) => {
-    (navigation as any).navigate('Teams', { screen: 'TeamDetails', params: { teamId: inv.rosterId, readOnly: true } });
-  }, [navigation]);
+  const handleRosterInvitationPress = useCallback(
+    (inv: RosterInvitation) => {
+      (navigation as any).navigate('Teams', {
+        screen: 'TeamDetails',
+        params: { teamId: inv.rosterId, readOnly: true },
+      });
+    },
+    [navigation]
+  );
 
-  const handleLeagueInvitationPress = useCallback((inv: LeagueInvitation) => {
-    (navigation as any).navigate('Teams', { screen: 'TeamDetails', params: { teamId: inv.rosterId, readOnly: true } });
-  }, [navigation]);
+  const handleLeagueInvitationPress = useCallback(
+    (inv: LeagueInvitation) => {
+      (navigation as any).navigate('Teams', {
+        screen: 'TeamDetails',
+        params: { teamId: inv.rosterId, readOnly: true },
+      });
+    },
+    [navigation]
+  );
 
-  const handleEventInvitationPress = useCallback((inv: EventInvitation) => {
-    navigation.navigate('EventDetails', { eventId: inv.eventId });
-  }, [navigation]);
+  const handleEventInvitationPress = useCallback(
+    (inv: EventInvitation) => {
+      navigation.navigate('EventDetails', { eventId: inv.eventId });
+    },
+    [navigation]
+  );
 
-  const handleReadyToSchedulePress = useCallback((league: ReadyToScheduleLeague) => {
-    (navigation as any).navigate('Leagues', { screen: 'LeagueScheduling', params: { leagueId: league.id } });
-  }, [navigation]);
+  const handleReadyToSchedulePress = useCallback(
+    (league: ReadyToScheduleLeague) => {
+      (navigation as any).navigate('Leagues', {
+        screen: 'LeagueScheduling',
+        params: { leagueId: league.id },
+      });
+    },
+    [navigation]
+  );
 
   // ── Discover helpers ─────────────────────────
 
@@ -460,29 +641,36 @@ export function HomeScreen() {
     return `${days[d.getDay()]} ${h}${mins > 0 ? ':' + mins.toString().padStart(2, '0') : ''}${ampm}`;
   }, []);
 
-  const handleJoinEvent = useCallback(async (eventId: string) => {
-    if (!user?.id) {
-      Alert.alert('Error', 'You must be logged in to join a game.');
-      return;
-    }
-    try {
-      await bookEventMutation({ eventId, userId: user.id }).unwrap();
-      Alert.alert('Joined!', 'You have been added to the game.');
-    } catch (err: any) {
-      const msg = err?.data?.message || 'Failed to join game. Please try again.';
-      Alert.alert('Error', msg);
-    }
-  }, [bookEventMutation, user?.id]);
+  const handleJoinEvent = useCallback(
+    async (eventId: string) => {
+      if (!user?.id) {
+        Alert.alert('Error', 'You must be logged in to join a game.');
+        return;
+      }
+      try {
+        await bookEventMutation({ eventId, userId: user.id }).unwrap();
+        Alert.alert('Joined!', 'You have been added to the game.');
+      } catch (err: any) {
+        const msg =
+          err?.data?.message || 'Failed to join game. Please try again.';
+        Alert.alert('Error', msg);
+      }
+    },
+    [bookEventMutation, user?.id]
+  );
 
   const handleCreateEvent = useCallback(() => {
     setSearchModalVisible(false);
     navigation.navigate('CreateEvent', {});
   }, [navigation]);
 
-  const handleSearchEventPress = useCallback((event: any) => {
-    setSearchModalVisible(false);
-    navigation.navigate('EventDetails', { eventId: event.id });
-  }, [navigation]);
+  const handleSearchEventPress = useCallback(
+    (event: any) => {
+      setSearchModalVisible(false);
+      navigation.navigate('EventDetails', { eventId: event.id });
+    },
+    [navigation]
+  );
 
   if (authLoading || isLoading) {
     return (
@@ -495,10 +683,7 @@ export function HomeScreen() {
   if (error) {
     return (
       <View style={styles.loadingContainer}>
-        <ErrorDisplay
-          message={error}
-          onRetry={handleRefresh}
-        />
+        <ErrorDisplay message={error} onRetry={handleRefresh} />
       </View>
     );
   }
@@ -514,11 +699,41 @@ export function HomeScreen() {
           contentMaxWidth && { alignItems: 'center' as const },
         ]}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.inner, contentMaxWidth && { maxWidth: contentMaxWidth, width: '100%' }]}>
+        <View
+          style={[
+            styles.inner,
+            contentMaxWidth && { maxWidth: contentMaxWidth, width: '100%' },
+          ]}
+        >
+          {/* ── Upcoming Events ─────────────────── */}
+          {hasEvents ? (
+            <View style={styles.upcomingSection}>
+              <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>
+                Upcoming
+              </Text>
+              {upcomingBookings.map(booking => (
+                <CrewEventCard
+                  key={booking.id}
+                  booking={booking}
+                  crewColor={getBookingCrewColor(booking)}
+                  onPress={handleBookingPress}
+                />
+              ))}
+            </View>
+          ) : (
+            <EmptyHomeState
+              userName={currentUser?.firstName}
+              onCreateEvent={handleCreateEvent}
+            />
+          )}
 
           {/* ── Live game banner ────────────────── */}
           {liveGameBooking && (
@@ -528,139 +743,103 @@ export function HomeScreen() {
             />
           )}
 
-          {/* ── Cards view: Next Up + Upcoming ──── */}
-          {hasEvents ? (
-            <>
-              <NextUpCard
-                booking={nextUpBooking!}
-                onPress={handleBookingPress}
-              />
+          {/* ── My Crew ────────────────────────── */}
+          <MyCrewRow
+            members={crewMembers}
+            selectedId={selectedCrewId}
+            onSelect={setSelectedCrewId}
+          />
 
-              <UpcomingRow
-                bookings={upcomingBookings}
-                onPress={handleBookingPress}
+          {/* ── Calendar (always visible) ──────── */}
+          <View style={styles.calendarSection}>
+            <View style={styles.calendarCard}>
+              <Calendar
+                current={selectedDate}
+                markedDates={calendarMarkedDates}
+                markingType="multi-dot"
+                onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
+                theme={calendarTheme}
+                style={styles.calendar}
               />
-            </>
-          ) : (
-            <EmptyHomeState
-              userName={currentUser?.firstName}
-              onCreateEvent={handleCreateEvent}
-            />
-          )}
+            </View>
 
-          {/* ── Family pulse (guardians only) ───── */}
-          <FamilyPulseSection />
+            {calendarDateBookings.length === 0 ? (
+              <Text style={styles.emptyText}>No events on this day</Text>
+            ) : (
+              calendarDateBookings.map(booking => (
+                <CrewEventCard
+                  key={booking.id}
+                  booking={booking}
+                  crewColor={getBookingCrewColor(booking)}
+                  onPress={handleBookingPress}
+                />
+              ))
+            )}
+          </View>
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Games near you</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Events' as any)}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Events' as any)}
+            >
               <Text style={styles.seeAll}>See all</Text>
             </TouchableOpacity>
           </View>
 
           {discoverLoading ? (
-            <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} />
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              style={{ marginVertical: 16 }}
+            />
           ) : discoverEvents.length > 0 ? (
-            discoverEvents.map((event) => (
+            discoverEvents.map(event => (
               <TouchableOpacity
                 key={event.id}
                 style={styles.discoverCard}
-                onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
+                onPress={() =>
+                  navigation.navigate('EventDetails', { eventId: event.id })
+                }
                 activeOpacity={0.8}
               >
                 <View style={styles.discoverIcon}>
-                  <Text style={{ fontSize: 20 }}>{getSportEmoji(event.sportType)}</Text>
-                </View>
-                <View style={styles.discoverInfo}>
-                  <Text style={styles.discoverTitle} numberOfLines={1}>{event.title}</Text>
-                  <Text style={styles.discoverMeta} numberOfLines={1}>
-                    {formatEventTime(event.startTime)} {'\u00B7'} {event.facility?.name || event.locationName || 'Location TBD'} {'\u00B7'} {event.currentParticipants}/{event.maxParticipants || '\u221E'}
+                  <Text style={{ fontSize: 20 }}>
+                    {getSportEmoji(event.sportType)}
                   </Text>
                 </View>
-                <TouchableOpacity style={styles.joinBtn} onPress={() => handleJoinEvent(event.id)}>
+                <View style={styles.discoverInfo}>
+                  <Text style={styles.discoverTitle} numberOfLines={1}>
+                    {event.title}
+                  </Text>
+                  <Text style={styles.discoverMeta} numberOfLines={1}>
+                    {formatEventTime(event.startTime)} {'\u00B7'}{' '}
+                    {event.facility?.name ||
+                      event.locationName ||
+                      'Location TBD'}{' '}
+                    {'\u00B7'} {event.currentParticipants}/
+                    {event.maxParticipants || '\u221E'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.joinBtn}
+                  onPress={() => handleJoinEvent(event.id)}
+                >
                   <Text style={styles.joinBtnText}>Join</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
           ) : (
             <View style={styles.discoverEmpty}>
-              <Text style={styles.discoverEmptyText}>No games near you yet</Text>
-              <TouchableOpacity style={styles.hostFirstBtn} onPress={handleCreateEvent}>
+              <Text style={styles.discoverEmptyText}>
+                No games near you yet
+              </Text>
+              <TouchableOpacity
+                style={styles.hostFirstBtn}
+                onPress={handleCreateEvent}
+              >
                 <Text style={styles.hostFirstBtnText}>Host the first one</Text>
               </TouchableOpacity>
-            </View>
-          )}
-
-          {/* ── Your teams ─────────────────────── */}
-          {userTeams.length > 0 && (
-            <>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Your teams</Text>
-                <TouchableOpacity onPress={() => (navigation as any).navigate('Teams')}>
-                  <Text style={styles.seeAll}>See all</Text>
-                </TouchableOpacity>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.teamsRow}>
-                {userTeams.map((team) => (
-                  <TouchableOpacity
-                    key={team.id}
-                    style={styles.teamCard}
-                    onPress={() => (navigation as any).navigate('Teams', { screen: 'TeamDetails', params: { teamId: team.id } })}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={{ fontSize: 24 }}>{getSportEmoji(team.sportType)}</Text>
-                    <Text style={styles.teamCardName} numberOfLines={1}>{team.name}</Text>
-                    <Text style={styles.teamCardMeta}>{team.members?.length || '\u2014'} members</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </>
-          )}
-
-          {/* ── Calendar toggle ─────────────────── */}
-          <TouchableOpacity
-            style={styles.calendarToggle}
-            onPress={() => setShowCalendar(!showCalendar)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="calendar-outline" size={18} color={colors.onSurfaceVariant} />
-            <Text style={styles.calendarToggleText}>
-              {showCalendar ? 'Hide Calendar' : 'View Calendar'}
-            </Text>
-            <Ionicons
-              name={showCalendar ? 'chevron-up' : 'chevron-down'}
-              size={16}
-              color={colors.outline}
-            />
-          </TouchableOpacity>
-
-          {/* ── Calendar view ──────────────────── */}
-          {showCalendar && (
-            <View style={styles.calendarSection}>
-              <View style={styles.calendarCard}>
-                <Calendar
-                  current={selectedDate}
-                  markedDates={calendarMarkedDates}
-                  markingType="custom"
-                  onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
-                  theme={calendarTheme}
-                  style={styles.calendar}
-                />
-              </View>
-
-              {calendarDateBookings.length === 0 ? (
-                <Text style={styles.emptyText}>No events on this day</Text>
-              ) : (
-                calendarDateBookings.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    onPress={handleBookingPress}
-                    onCancel={handleStepOut}
-                  />
-                ))
-              )}
             </View>
           )}
         </View>
@@ -677,14 +856,18 @@ export function HomeScreen() {
         <Ionicons name="add" size={26} color="#FFFFFF" />
       </TouchableOpacity>
 
-      <StepOutModal visible={stepOutModalVisible} eventTitle={selectedBooking?.event?.title || 'Event'} onConfirm={handleStepOutConfirm} onCancel={handleStepOutCancel} />
+      <StepOutModal
+        visible={stepOutModalVisible}
+        eventTitle={selectedBooking?.event?.title || 'Event'}
+        onConfirm={handleStepOutConfirm}
+        onCancel={handleStepOutCancel}
+      />
 
       <EventSearchPanel
         visible={searchModalVisible}
         onCreateEvent={handleCreateEvent}
         onEventPress={handleSearchEventPress}
       />
-
     </View>
   );
 }
@@ -738,7 +921,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
   },
   inboxBtnText: {
     flex: 1,
@@ -747,24 +930,9 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
 
-  // ── Calendar toggle ─────────────────────
-  calendarToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-    paddingVertical: 12,
-    gap: 6,
-  },
-  calendarToggleText: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-  },
-
   // ── Calendar section ────────────────────
   calendarSection: {
-    marginTop: 8,
+    marginTop: 24,
   },
   calendarCard: {
     backgroundColor: colors.surfaceContainerLowest,
@@ -803,7 +971,7 @@ const styles = StyleSheet.create({
   seeAll: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.primary,
+    color: colors.pine,
   },
 
   // ── Discover cards ────────────────────
@@ -845,7 +1013,7 @@ const styles = StyleSheet.create({
   joinBtnText: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.primary,
+    color: colors.pine,
   },
 
   // ── Discover empty ────────────────────
@@ -862,7 +1030,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   hostFirstBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     borderRadius: 9999,
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -873,29 +1041,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // ── Teams row ─────────────────────────
-  teamsRow: {
-    marginBottom: 8,
-  },
-  teamCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 16,
-    marginRight: 12,
-    width: 140,
-    alignItems: 'center',
-    gap: 6,
-  },
-  teamCardName: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 14,
-    color: colors.onSurface,
-    textAlign: 'center',
-  },
-  teamCardMeta: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
+  // ── Upcoming section ───────────────────
+  upcomingSection: {
+    marginTop: 20,
   },
 
   // ── FAB ─────────────────────────────────

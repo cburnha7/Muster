@@ -118,12 +118,9 @@ export class UserService extends BaseApiService {
       ...(currentUser?.id && { userId: currentUser.id }), // Add userId to query params
     };
 
-    console.log('📚 UserService.getUserBookings - params:', params);
-    console.log(
-      '📚 UserService.getUserBookings - currentUser:',
-      currentUser?.email,
-      currentUser?.id
-    );
+    if (__DEV__) {
+      console.log('📚 UserService.getUserBookings - params:', params);
+    }
 
     return this.get<PaginatedResponse<Booking>>(API_ENDPOINTS.USERS.BOOKINGS, {
       params,

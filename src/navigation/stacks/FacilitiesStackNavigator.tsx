@@ -18,7 +18,7 @@ const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
 
 const detailHeader = {
   headerShown: true as const,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerBackTitleVisible: false,
   headerTintColor: colors.onSurface,
   headerTitleAlign: 'center' as const,
@@ -51,8 +51,6 @@ export function FacilitiesStackNavigator(): JSX.Element {
         options={{
           ...detailHeader,
           headerTitle: 'Edit Ground',
-          headerBackTitle: 'Grounds',
-          headerBackTitleVisible: true,
         }}
       />
       <Stack.Screen

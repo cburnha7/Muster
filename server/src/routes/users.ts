@@ -12,7 +12,12 @@ const router = Router();
 function resolveUserId(req: any): string | undefined {
   const activeId = req.headers['x-active-user-id'] as string | undefined;
   if (activeId) return activeId;
-  return req.user?.userId || req.headers['x-user-id'] as string || req.query.userId as string || undefined;
+  return (
+    req.user?.userId ||
+    (req.headers['x-user-id'] as string) ||
+    (req.query.userId as string) ||
+    undefined
+  );
 }
 
 // Search users by name or email
@@ -25,7 +30,9 @@ router.get('/search', optionalAuthMiddleware, async (req, res) => {
     }
 
     if (query.length < 2) {
-      return res.status(400).json({ error: 'Search query must be at least 2 characters' });
+      return res
+        .status(400)
+        .json({ error: 'Search query must be at least 2 characters' });
     }
 
     // Search users by first name, last name, or email
@@ -116,14 +123,15 @@ router.get('/profile', optionalAuthMiddleware, async (req, res) => {
 // Upload profile image
 router.post('/profile/image', optionalAuthMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
-    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
 
     // For now, accept a base64 image or URL in the body
     const { imageUrl, imageData } = req.body;
-    
+
     let finalUrl = imageUrl;
-    
+
     // If base64 data is provided, store it (in production this would go to S3/CloudStorage)
     if (imageData && !imageUrl) {
       // Store as a data URI for now — in production, upload to cloud storage
@@ -150,8 +158,9 @@ router.post('/profile/image', optionalAuthMiddleware, async (req, res) => {
 // Delete profile image
 router.delete('/profile/image', optionalAuthMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
-    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
 
     await prisma.user.update({
       where: { id: userId },
@@ -282,7 +291,12 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
     let userId = resolveUserId(req);
 
     console.log('📋 GET /users/bookings');
-    console.log('📋 Auth header:', req.headers.authorization ? `Bearer ${req.headers.authorization.substring(7, 27)}...` : 'none');
+    console.log(
+      '📋 Auth header:',
+      req.headers.authorization
+        ? `Bearer ${req.headers.authorization.substring(7, 27)}...`
+        : 'none'
+    );
     console.log('📋 X-User-Id header:', req.headers['x-user-id']);
     console.log('📋 X-Active-User-Id header:', req.headers['x-active-user-id']);
     console.log('📋 Resolved user ID:', userId);
@@ -296,7 +310,11 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
       where: { id: userId },
       select: { email: true, firstName: true, lastName: true },
     });
-    console.log('📋 Fetching bookings for user:', user?.email, `${user?.firstName} ${user?.lastName}`);
+    console.log(
+      '📋 Fetching bookings for user:',
+      user?.email,
+      `${user?.firstName} ${user?.lastName}`
+    );
 
     const { page = '1', limit = '20', status } = req.query;
     const pageNum = parseInt(page as string);
@@ -305,7 +323,7 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
 
     // Build where clause
     const where: any = { userId };
-    
+
     if (status === 'upcoming') {
       where.status = { not: 'cancelled' };
       where.event = {
@@ -419,7 +437,7 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
       orderBy: { joinedAt: 'desc' },
     });
 
-    const rosterInvitations = pendingRosterMemberships.map((m) => ({
+    const rosterInvitations = pendingRosterMemberships.map(m => ({
       id: m.id,
       type: 'roster' as const,
       rosterId: m.teamId,
@@ -436,7 +454,7 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
       where: { userId, status: 'active', role: 'captain' },
       select: { teamId: true },
     });
-    const teamIds = captainedTeamIds.map((t) => t.teamId);
+    const teamIds = captainedTeamIds.map(t => t.teamId);
 
     let leagueInvitations: any[] = [];
     if (teamIds.length > 0) {
@@ -474,14 +492,14 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
         select: { leagueId: true, memberId: true },
       });
       const activeKeys = new Set(
-        activeLeagueMemberships.map((m) => `${m.leagueId}:${m.memberId}`)
+        activeLeagueMemberships.map(m => `${m.leagueId}:${m.memberId}`)
       );
 
       const filteredPending = pendingLeagueMemberships.filter(
-        (m) => !activeKeys.has(`${m.leagueId}:${m.memberId}`)
+        m => !activeKeys.has(`${m.leagueId}:${m.memberId}`)
       );
 
-      leagueInvitations = filteredPending.map((m) => ({
+      leagueInvitations = filteredPending.map(m => ({
         id: m.id,
         type: 'league' as const,
         leagueId: m.league.id,
@@ -501,7 +519,9 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
         invitedUserIds: { has: userId },
         status: 'active',
         startTime: { gte: new Date() },
-        bookings: { none: { userId, status: { in: ['confirmed', 'pending'] } } },
+        bookings: {
+          none: { userId, status: { in: ['confirmed', 'pending'] } },
+        },
       },
       select: {
         id: true,
@@ -518,7 +538,7 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
       take: 50,
     });
 
-    const mappedEventInvitations = eventInvitations.map((e) => ({
+    const mappedEventInvitations = eventInvitations.map(e => ({
       id: e.id,
       type: 'event' as const,
       eventId: e.id,
@@ -534,7 +554,10 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
       rosterInvitations,
       leagueInvitations,
       eventInvitations: mappedEventInvitations,
-      total: rosterInvitations.length + leagueInvitations.length + mappedEventInvitations.length,
+      total:
+        rosterInvitations.length +
+        leagueInvitations.length +
+        mappedEventInvitations.length,
     });
   } catch (error) {
     console.error('Get user invitations error:', error);
@@ -543,48 +566,52 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get leagues ready to schedule for the current user (Commissioner only)
-router.get('/leagues-ready-to-schedule', optionalAuthMiddleware, async (req, res) => {
-  try {
-    let userId = resolveUserId(req);
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
+router.get(
+  '/leagues-ready-to-schedule',
+  optionalAuthMiddleware,
+  async (req, res) => {
+    try {
+      let userId = resolveUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Find leagues where user is commissioner, notification was sent, and schedule not yet generated
+      const readyLeagues = await prisma.league.findMany({
+        where: {
+          organizerId: userId,
+          readyNotificationSent: true,
+          scheduleGenerated: false,
+          isActive: true,
+          OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+        },
+        select: {
+          id: true,
+          name: true,
+          sportType: true,
+          endDate: true,
+          isActive: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      res.json(readyLeagues);
+    } catch (error) {
+      console.error('Get leagues ready to schedule error:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to fetch leagues ready to schedule' });
     }
-
-    // Find leagues where user is commissioner, notification was sent, and schedule not yet generated
-    const readyLeagues = await prisma.league.findMany({
-      where: {
-        organizerId: userId,
-        readyNotificationSent: true,
-        scheduleGenerated: false,
-        isActive: true,
-        OR: [
-          { endDate: null },
-          { endDate: { gte: new Date() } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        sportType: true,
-        endDate: true,
-        isActive: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    res.json(readyLeagues);
-  } catch (error) {
-    console.error('Get leagues ready to schedule error:', error);
-    res.status(500).json({ error: 'Failed to fetch leagues ready to schedule' });
   }
-});
+);
 
 // Get current user's events (organized + confirmed participant)
 router.get('/events', optionalAuthMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
     if (!userId) {
-      userId = req.headers['x-user-id'] as string || req.query.userId as string;
+      userId =
+        (req.headers['x-user-id'] as string) || (req.query.userId as string);
     }
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -617,7 +644,12 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
       OR: [
         organizedWhere,
         ...(participantEventIds.length > 0
-          ? [{ id: { in: participantEventIds }, ...(status && status !== 'all' ? { status } : {}) }]
+          ? [
+              {
+                id: { in: participantEventIds },
+                ...(status && status !== 'all' ? { status } : {}),
+              },
+            ]
           : []),
       ],
     };
@@ -688,7 +720,7 @@ router.get('/teams', optionalAuthMiddleware, async (req, res) => {
       orderBy: { joinedAt: 'desc' },
     });
 
-    const teams = memberships.map((m) => {
+    const teams = memberships.map(m => {
       const { isPrivate, ...rest } = m.team;
       return { ...rest, isPublic: !isPrivate, currentUserRole: m.role };
     });
@@ -717,70 +749,115 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
     }
 
     // Find teams the user is an active member of
-    const userTeamIds = (await prisma.teamMember.findMany({
-      where: { userId, status: 'active' },
-      select: { teamId: true },
-    })).map(t => t.teamId);
+    const userTeamIds = (
+      await prisma.teamMember.findMany({
+        where: { userId, status: 'active' },
+        select: { teamId: true },
+      })
+    ).map(t => t.teamId);
 
     // Find leagues where user is organizer, direct member, or roster member
-    const [organizedLeagues, directMemberships, rosterMemberships] = await Promise.all([
-      prisma.league.findMany({
-        where: { organizerId: userId },
-        select: {
-          id: true, name: true, sportType: true, leagueType: true,
-          isActive: true, imageUrl: true, isCertified: true, organizerId: true,
-          memberships: { where: { status: 'active' }, select: { id: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 50,
-      }),
-      prisma.leagueMembership.findMany({
-        where: { memberId: userId, status: 'active' },
-        include: {
-          league: {
-            select: {
-              id: true, name: true, sportType: true, leagueType: true,
-              isActive: true, imageUrl: true, isCertified: true, organizerId: true,
-              memberships: { where: { status: 'active' }, select: { id: true } },
-            },
+    const [organizedLeagues, directMemberships, rosterMemberships] =
+      await Promise.all([
+        prisma.league.findMany({
+          where: { organizerId: userId },
+          select: {
+            id: true,
+            name: true,
+            sportType: true,
+            leagueType: true,
+            isActive: true,
+            imageUrl: true,
+            isCertified: true,
+            organizerId: true,
+            memberships: { where: { status: 'active' }, select: { id: true } },
           },
-        },
-        take: 50,
-      }),
-      userTeamIds.length > 0
-        ? prisma.leagueMembership.findMany({
-            where: { memberId: { in: userTeamIds }, memberType: 'roster', status: 'active' },
-            include: {
-              league: {
-                select: {
-                  id: true, name: true, sportType: true, leagueType: true,
-                  isActive: true, imageUrl: true, isCertified: true, organizerId: true,
-                  memberships: { where: { status: 'active' }, select: { id: true } },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        }),
+        prisma.leagueMembership.findMany({
+          where: { memberId: userId, status: 'active' },
+          include: {
+            league: {
+              select: {
+                id: true,
+                name: true,
+                sportType: true,
+                leagueType: true,
+                isActive: true,
+                imageUrl: true,
+                isCertified: true,
+                organizerId: true,
+                memberships: {
+                  where: { status: 'active' },
+                  select: { id: true },
                 },
               },
             },
-            take: 50,
-          })
-        : Promise.resolve([]),
-    ]);
+          },
+          take: 50,
+        }),
+        userTeamIds.length > 0
+          ? prisma.leagueMembership.findMany({
+              where: {
+                memberId: { in: userTeamIds },
+                memberType: 'roster',
+                status: 'active',
+              },
+              include: {
+                league: {
+                  select: {
+                    id: true,
+                    name: true,
+                    sportType: true,
+                    leagueType: true,
+                    isActive: true,
+                    imageUrl: true,
+                    isCertified: true,
+                    organizerId: true,
+                    memberships: {
+                      where: { status: 'active' },
+                      select: { id: true },
+                    },
+                  },
+                },
+              },
+              take: 50,
+            })
+          : Promise.resolve([]),
+      ]);
 
     // Merge and deduplicate
     const leagueMap = new Map<string, any>();
     organizedLeagues.forEach(l => {
-      leagueMap.set(l.id, { ...l, memberCount: l.memberships.length, role: 'commissioner' });
+      leagueMap.set(l.id, {
+        ...l,
+        memberCount: l.memberships.length,
+        role: 'commissioner',
+      });
     });
     directMemberships.forEach(m => {
       if (m.league && !leagueMap.has(m.league.id)) {
-        leagueMap.set(m.league.id, { ...m.league, memberCount: m.league.memberships.length, role: 'player' });
+        leagueMap.set(m.league.id, {
+          ...m.league,
+          memberCount: m.league.memberships.length,
+          role: 'player',
+        });
       }
     });
     rosterMemberships.forEach(m => {
       if (m.league && !leagueMap.has(m.league.id)) {
-        leagueMap.set(m.league.id, { ...m.league, memberCount: m.league.memberships.length, role: 'player' });
+        leagueMap.set(m.league.id, {
+          ...m.league,
+          memberCount: m.league.memberships.length,
+          role: 'player',
+        });
       }
     });
 
-    const leagues = Array.from(leagueMap.values()).map(({ memberships, ...rest }) => rest);
+    const leagues = Array.from(leagueMap.values()).map(
+      ({ memberships, ...rest }) => rest
+    );
     res.json(leagues);
   } catch (error) {
     console.error('Get user leagues error:', error);
@@ -791,16 +868,29 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
 // Complete onboarding
 router.put('/onboarding', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { intents, sportPreferences, locationCity, locationState, locationLat, locationLng } = req.body;
+    const {
+      intents,
+      sportPreferences,
+      locationCity,
+      locationState,
+      locationLat,
+      locationLng,
+    } = req.body;
 
     if (!intents || !Array.isArray(intents) || intents.length === 0) {
       return res.status(400).json({ error: 'At least one intent is required' });
     }
-    if (!sportPreferences || !Array.isArray(sportPreferences) || sportPreferences.length === 0) {
-      return res.status(400).json({ error: 'At least one sport preference is required' });
+    if (
+      !sportPreferences ||
+      !Array.isArray(sportPreferences) ||
+      sportPreferences.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'At least one sport preference is required' });
     }
 
     const user = await prisma.user.update({
@@ -826,7 +916,7 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
 // Update user intents
 router.put('/intents', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { intents } = req.body;
@@ -929,7 +1019,46 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Update user profile
+// Update current user profile
+router.put('/profile', optionalAuthMiddleware, async (req, res) => {
+  try {
+    let userId = req.user?.userId;
+
+    if (!userId) {
+      const user = await prisma.user.findFirst({ select: { id: true } });
+      userId = user?.id;
+    }
+
+    if (!userId) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { password, ...updateData } = req.body;
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        dateOfBirth: true,
+        profileImage: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Update user by ID
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;

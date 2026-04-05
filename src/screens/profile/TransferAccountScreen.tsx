@@ -105,7 +105,9 @@ export function TransferAccountScreen() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         const message =
-          errorData?.error ?? errorData?.message ?? 'Something went wrong. Please try again.';
+          errorData?.error ??
+          errorData?.message ??
+          'Something went wrong. Please try again.';
         Alert.alert('Error', message);
         return;
       }
@@ -116,7 +118,12 @@ export function TransferAccountScreen() {
       Alert.alert(
         'Account Transferred',
         'The account has been successfully transferred to an independent account. The dependent can now log in with their new credentials.',
-        [{ text: 'OK', onPress: () => (navigation as any).navigate('ProfileScreen') }]
+        [
+          {
+            text: 'OK',
+            onPress: () => (navigation as any).navigate('ProfileScreen'),
+          },
+        ]
       );
     } catch {
       Alert.alert('Error', 'Something went wrong. Please try again.');
@@ -127,11 +134,7 @@ export function TransferAccountScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader
-        title="Transfer Account"
-        showBack
-        onBackPress={() => (navigation as any).goBack()}
-      />
+      <ScreenHeader title="Transfer Account" />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -143,14 +146,19 @@ export function TransferAccountScreen() {
         >
           {/* Permanent action warning */}
           <View style={styles.warningCard}>
-            <Ionicons name="warning-outline" size={24} color={colors.tertiary} />
+            <Ionicons
+              name="warning-outline"
+              size={24}
+              color={colors.tertiary}
+            />
             <View style={styles.warningTextContainer}>
               <Text style={styles.warningTitle}>This action is permanent</Text>
               <Text style={styles.warningBody}>
-                Transferring this account will create an independent Muster account
-                for the dependent. They will be removed from your dependents list and
-                will manage their own account going forward. All existing history,
-                Salutes, Roster memberships, and League memberships will be preserved.
+                Transferring this account will create an independent Muster
+                account for the dependent. They will be removed from your
+                dependents list and will manage their own account going forward.
+                All existing history, Salutes, Roster memberships, and League
+                memberships will be preserved.
               </Text>
             </View>
           </View>
@@ -193,7 +201,9 @@ export function TransferAccountScreen() {
             placeholder="Re-enter password"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            {...(errors.confirmPassword ? { error: errors.confirmPassword } : {})}
+            {...(errors.confirmPassword
+              ? { error: errors.confirmPassword }
+              : {})}
             required
             leftIcon="lock-closed-outline"
             secureTextEntry

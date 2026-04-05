@@ -18,8 +18,12 @@ import { debounce } from '../../utils/performance';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 import { GroundsMapViewWrapper } from '../../components/maps/GroundsMapViewWrapper';
-import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
+import {
+  TabSearchModal,
+  TabSearchResult,
+} from '../../components/search/TabSearchModal';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService, Rental } from '../../services/api/CourtService';
 import { colors, fonts, Spacing } from '../../theme';
@@ -74,36 +78,57 @@ export function FacilitiesListScreen() {
   const [sportFilter, setSportFilter] = useState('');
   const [freeOnly, setFreeOnly] = useState(false);
   const [reservations, setReservations] = useState<Rental[]>([]);
-  const [reservationsModalVisible, setReservationsModalVisible] = useState(false);
+  const [reservationsModalVisible, setReservationsModalVisible] =
+    useState(false);
 
   useEffect(() => {
     const unsub = searchEventBus.subscribeTab('Facilities', () => {
       // Inline search — just let the header pill handle text input
       // The query comes via subscribeQuery
     });
-    const unsubQuery = searchEventBus.subscribeQuery((q) => setSearchQuery(q));
+    const unsubQuery = searchEventBus.subscribeQuery(q => setSearchQuery(q));
     const unsubClose = searchEventBus.subscribeClose(() => {
       setSearchModalVisible(false);
     });
-    return () => { unsub(); unsubQuery(); unsubClose(); };
+    return () => {
+      unsub();
+      unsubQuery();
+      unsubClose();
+    };
   }, []);
 
-  const handleSearchGrounds = useCallback(async (query: string, sport: any): Promise<TabSearchResult[]> => {
-    try {
-      const res = await facilityService.getFacilities({ page: 1, limit: 30 });
-      return (res.data || [])
-        .filter((f: any) => {
-          const nameMatch = !query.trim() || f.name.toLowerCase().includes(query.toLowerCase());
-          const sportMatch = !sport || (f.sportTypes || []).includes(sport);
-          return nameMatch && sportMatch;
-        })
-        .map((f: any) => ({ id: f.id, name: f.name, subtitle: `${f.city}, ${f.state}` }));
-    } catch { return []; }
-  }, []);
+  const handleSearchGrounds = useCallback(
+    async (query: string, sport: any): Promise<TabSearchResult[]> => {
+      try {
+        const res = await facilityService.getFacilities({ page: 1, limit: 30 });
+        return (res.data || [])
+          .filter((f: any) => {
+            const nameMatch =
+              !query.trim() ||
+              f.name.toLowerCase().includes(query.toLowerCase());
+            const sportMatch = !sport || (f.sportTypes || []).includes(sport);
+            return nameMatch && sportMatch;
+          })
+          .map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            subtitle: `${f.city}, ${f.state}`,
+          }));
+      } catch {
+        return [];
+      }
+    },
+    []
+  );
 
-  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
-    (navigation as any).navigate('FacilityDetails', { facilityId: result.id });
-  }, [navigation]);
+  const handleSearchResultPress = useCallback(
+    (result: TabSearchResult) => {
+      (navigation as any).navigate('FacilityDetails', {
+        facilityId: result.id,
+      });
+    },
+    [navigation]
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState<FacilityFilters>(filters);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -139,7 +164,7 @@ export function FacilitiesListScreen() {
     try {
       dispatch(setLoading(true));
       const response = await facilityService.getFacilities(
-        forceRefresh ? { ...filters } as any : filters,
+        forceRefresh ? ({ ...filters } as any) : filters,
         { page: 1, limit: pagination.limit }
       );
       dispatch(setFacilities(response));
@@ -159,7 +184,9 @@ export function FacilitiesListScreen() {
   const loadReservations = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
-      const rentals = await courtService.getMyRentals(currentUser.id, { upcoming: true });
+      const rentals = await courtService.getMyRentals(currentUser.id, {
+        upcoming: true,
+      });
       // Filter to future only
       const now = new Date();
       const future = (rentals || []).filter((r: Rental) => {
@@ -167,47 +194,68 @@ export function FacilitiesListScreen() {
         return new Date(r.timeSlot.date) >= now;
       });
       setReservations(future);
-    } catch { setReservations([]); }
+    } catch {
+      setReservations([]);
+    }
   }, [currentUser?.id]);
 
-  useEffect(() => { loadReservations(); }, [loadReservations]);
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
 
   const debouncedSearch = useMemo(
-    () => debounce(async (query: string) => {
-      setSearchQuery(query);
-      if (query.trim()) {
-        try {
-          dispatch(setLoading(true));
-          const response = await facilityService.searchFacilities(query, filters, {
-            page: 1, limit: pagination.limit,
-          });
-          dispatch(setFacilities({
-            data: response.results,
-            pagination: {
-              page: 1, limit: pagination.limit,
-              total: response.total,
-              totalPages: Math.ceil(response.total / pagination.limit),
-            },
-          }));
-        } catch (err: any) {
-          dispatch(setError(err.message || 'Search failed'));
+    () =>
+      debounce(async (query: string) => {
+        setSearchQuery(query);
+        if (query.trim()) {
+          try {
+            dispatch(setLoading(true));
+            const response = await facilityService.searchFacilities(
+              query,
+              filters,
+              {
+                page: 1,
+                limit: pagination.limit,
+              }
+            );
+            dispatch(
+              setFacilities({
+                data: response.results,
+                pagination: {
+                  page: 1,
+                  limit: pagination.limit,
+                  total: response.total,
+                  totalPages: Math.ceil(response.total / pagination.limit),
+                },
+              })
+            );
+          } catch (err: any) {
+            dispatch(setError(err.message || 'Search failed'));
+          }
+        } else {
+          loadFacilities();
         }
-      } else {
-        loadFacilities();
-      }
-    }, 300),
+      }, 300),
     [filters, pagination.limit, loadFacilities, dispatch]
   );
 
-  const handleSearch = useCallback((query: string) => {
-    debouncedSearch(query);
-  }, [debouncedSearch]);
+  const handleSearch = useCallback(
+    (query: string) => {
+      debouncedSearch(query);
+    },
+    [debouncedSearch]
+  );
 
   const handleFacilityPress = (facility: Facility) => {
+    const params = route.params as any;
+    const returnTo = params?.returnTo;
     if (currentUser && facility.ownerId === currentUser.id) {
       (navigation as any).navigate('EditFacility', { facilityId: facility.id });
     } else {
-      (navigation as any).navigate('FacilityDetails', { facilityId: facility.id });
+      (navigation as any).navigate('FacilityDetails', {
+        facilityId: facility.id,
+        ...(returnTo ? { returnTo } : {}),
+      });
     }
   };
 
@@ -235,13 +283,20 @@ export function FacilitiesListScreen() {
   const displayFacilities = useMemo(() => {
     let list = [...sortedFacilities];
     // Sport filter
-    if (sportFilter) list = list.filter((f) => (f.sportTypes || []).includes(sportFilter as SportType));
+    if (sportFilter)
+      list = list.filter(f =>
+        (f.sportTypes || []).includes(sportFilter as SportType)
+      );
     // Free only
-    if (freeOnly) list = list.filter((f) => !f.pricePerHour || f.pricePerHour === 0);
+    if (freeOnly)
+      list = list.filter(f => !f.pricePerHour || f.pricePerHour === 0);
     // Text search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      list = list.filter((f) => f.name.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q));
+      list = list.filter(
+        f =>
+          f.name.toLowerCase().includes(q) || f.city?.toLowerCase().includes(q)
+      );
     }
     // Limit to 10
     return list.slice(0, 10);
@@ -269,12 +324,20 @@ export function FacilitiesListScreen() {
               <Text style={styles.numberText}>{index + 1}</Text>
             </View>
             <View style={styles.facilityTitleContainer}>
-              <Text style={styles.facilityName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.facilityName} numberOfLines={1}>
+                {item.name}
+              </Text>
             </View>
           </View>
           <View style={styles.facilityInfo}>
-            <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
-            <Text style={styles.facilityAddress} numberOfLines={1}>{formattedAddress}</Text>
+            <Ionicons
+              name="location-outline"
+              size={16}
+              color={colors.onSurfaceVariant}
+            />
+            <Text style={styles.facilityAddress} numberOfLines={1}>
+              {formattedAddress}
+            </Text>
           </View>
           {item.sportTypes && item.sportTypes.length > 0 && (
             <View style={styles.sportTypes}>
@@ -286,13 +349,17 @@ export function FacilitiesListScreen() {
                 </View>
               ))}
               {item.sportTypes.length > 3 && (
-                <Text style={styles.moreText}>+{item.sportTypes.length - 3}</Text>
+                <Text style={styles.moreText}>
+                  +{item.sportTypes.length - 3}
+                </Text>
               )}
               <View style={{ flex: 1 }} />
               {item.rating && item.rating > 0 && (
                 <View style={styles.rating}>
                   <Ionicons name="star" size={14} color={colors.gold} />
-                  <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+                  <Text style={styles.ratingText}>
+                    {item.rating.toFixed(1)}
+                  </Text>
                 </View>
               )}
             </View>
@@ -320,21 +387,32 @@ export function FacilitiesListScreen() {
           <ScrollView style={styles.filterContent}>
             <Text style={styles.filterLabel}>Sport Type</Text>
             <View style={styles.sportTypeContainer}>
-              {Object.values(SportType).map((sport) => {
+              {Object.values(SportType).map(sport => {
                 const isSelected = localFilters.sportTypes?.includes(sport);
                 return (
                   <TouchableOpacity
                     key={sport}
-                    style={[styles.sportChip, isSelected && styles.sportChipSelected]}
+                    style={[
+                      styles.sportChip,
+                      isSelected && styles.sportChipSelected,
+                    ]}
                     onPress={() => {
                       const currentSports = localFilters.sportTypes || [];
                       const newSports = isSelected
-                        ? currentSports.filter((s) => s !== sport)
+                        ? currentSports.filter(s => s !== sport)
                         : [...currentSports, sport];
-                      setLocalFilters({ ...localFilters, sportTypes: newSports });
+                      setLocalFilters({
+                        ...localFilters,
+                        sportTypes: newSports,
+                      });
                     }}
                   >
-                    <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                    <Text
+                      style={[
+                        styles.sportChipText,
+                        isSelected && styles.sportChipTextSelected,
+                      ]}
+                    >
                       {sport.charAt(0).toUpperCase() + sport.slice(1)}
                     </Text>
                   </TouchableOpacity>
@@ -343,10 +421,16 @@ export function FacilitiesListScreen() {
             </View>
           </ScrollView>
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={handleClearFilters}
+            >
               <Text style={styles.clearButtonText}>Clear All</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={handleApplyFilters}
+            >
               <Text style={styles.applyButtonText}>Apply Filters</Text>
             </TouchableOpacity>
           </View>
@@ -365,11 +449,13 @@ export function FacilitiesListScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Contextual return button when navigated from another flow */}
+      <ContextualReturnButton />
       {/* Sport filter chips */}
       <FlatList
         horizontal
         data={SPORT_CHIP_OPTIONS}
-        keyExtractor={(item) => item.value || '_all'}
+        keyExtractor={item => item.value || '_all'}
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0 }}
         contentContainerStyle={styles.chipRow}
@@ -381,7 +467,9 @@ export function FacilitiesListScreen() {
               onPress={() => setSportFilter(item.value)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+              <Text
+                style={[styles.chipText, isActive && styles.chipTextActive]}
+              >
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -393,10 +481,18 @@ export function FacilitiesListScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          windowWidth > 600 && { maxWidth: 540, alignSelf: 'center' as const, width: '100%' as any },
+          windowWidth > 600 && {
+            maxWidth: 540,
+            alignSelf: 'center' as const,
+            width: '100%' as any,
+          },
         ]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
         {/* Map */}
@@ -409,15 +505,27 @@ export function FacilitiesListScreen() {
 
         {/* Numbered facility list */}
         {isLoading && !facilities.length ? (
-          <View>{Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}</View>
+          <View>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SkeletonRow key={i} />
+            ))}
+          </View>
         ) : displayFacilities.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="map-outline" size={48} color={colors.outlineVariant} />
+            <Ionicons
+              name="map-outline"
+              size={48}
+              color={colors.outlineVariant}
+            />
             <Text style={styles.emptyTitle}>No grounds found</Text>
-            <Text style={styles.emptySubtitle}>Try adjusting your filters or search</Text>
+            <Text style={styles.emptySubtitle}>
+              Try adjusting your filters or search
+            </Text>
           </View>
         ) : (
-          displayFacilities.map((item, index) => renderFacilityCard(item, index))
+          displayFacilities.map((item, index) =>
+            renderFacilityCard(item, index)
+          )
         )}
 
         <View style={{ height: 80 }} />
@@ -425,42 +533,104 @@ export function FacilitiesListScreen() {
 
       {/* Reservations button */}
       {reservations.length > 0 && (
-        <TouchableOpacity style={styles.reservationsBtn} onPress={() => setReservationsModalVisible(true)} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.reservationsBtn}
+          onPress={() => setReservationsModalVisible(true)}
+          activeOpacity={0.85}
+        >
           <View style={styles.reservationsDot} />
-          <Text style={styles.reservationsBtnText}>Reservations ({reservations.length})</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
+          <Text style={styles.reservationsBtnText}>
+            Reservations ({reservations.length})
+          </Text>
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={colors.onSurfaceVariant}
+          />
         </TouchableOpacity>
       )}
 
       {/* Reservations modal */}
-      <Modal visible={reservationsModalVisible} transparent animationType="fade" onRequestClose={() => setReservationsModalVisible(false)}>
-        <Pressable style={styles.resBackdrop} onPress={() => setReservationsModalVisible(false)}>
+      <Modal
+        visible={reservationsModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReservationsModalVisible(false)}
+      >
+        <Pressable
+          style={styles.resBackdrop}
+          onPress={() => setReservationsModalVisible(false)}
+        >
           <View style={styles.resModal}>
             <View style={styles.resHeader}>
               <Text style={styles.resTitle}>Reservations</Text>
-              <TouchableOpacity onPress={() => setReservationsModalVisible(false)}>
+              <TouchableOpacity
+                onPress={() => setReservationsModalVisible(false)}
+              >
                 <Ionicons name="close" size={22} color={colors.onSurface} />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.resScroll} showsVerticalScrollIndicator={false}>
-              {reservations.map((r) => {
+            <ScrollView
+              style={styles.resScroll}
+              showsVerticalScrollIndicator={false}
+            >
+              {reservations.map(r => {
                 const isPending = r.status !== 'confirmed';
-                const facilityName = (r.timeSlot as any)?.court?.facility?.name || (r.timeSlot as any)?.court?.name || 'Ground';
+                const facilityName =
+                  (r.timeSlot as any)?.court?.facility?.name ||
+                  (r.timeSlot as any)?.court?.name ||
+                  'Ground';
                 const courtName = r.timeSlot?.court?.name || '';
-                const date = r.timeSlot?.date ? new Date(r.timeSlot.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '';
-                const formatT = (t: string) => { const [hh, mm] = t.split(':').map(Number); const h12 = (hh ?? 0) % 12 || 12; const ap = (hh ?? 0) >= 12 ? 'PM' : 'AM'; return `${h12}:${String(mm ?? 0).padStart(2, '0')} ${ap}`; };
-                const time = r.timeSlot ? `${formatT(r.timeSlot.startTime)} – ${formatT(r.timeSlot.endTime)}` : '';
+                const date = r.timeSlot?.date
+                  ? new Date(r.timeSlot.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      timeZone: 'UTC',
+                    })
+                  : '';
+                const formatT = (t: string) => {
+                  const [hh, mm] = t.split(':').map(Number);
+                  const h12 = (hh ?? 0) % 12 || 12;
+                  const ap = (hh ?? 0) >= 12 ? 'PM' : 'AM';
+                  return `${h12}:${String(mm ?? 0).padStart(2, '0')} ${ap}`;
+                };
+                const time = r.timeSlot
+                  ? `${formatT(r.timeSlot.startTime)} – ${formatT(r.timeSlot.endTime)}`
+                  : '';
                 return (
-                  <TouchableOpacity key={r.id} style={styles.resCard} onPress={() => { setReservationsModalVisible(false); (navigation as any).navigate('CourtAvailability', { facilityId: (r.timeSlot as any)?.court?.facilityId }); }} activeOpacity={0.7}>
+                  <TouchableOpacity
+                    key={r.id}
+                    style={styles.resCard}
+                    onPress={() => {
+                      setReservationsModalVisible(false);
+                      (navigation as any).navigate('CourtAvailability', {
+                        facilityId: (r.timeSlot as any)?.court?.facilityId,
+                      });
+                    }}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.resCardBody}>
                       <View style={styles.resCardTop}>
-                        <Text style={styles.resCardFacility} numberOfLines={1}>{facilityName}</Text>
-                        {isPending && <View style={styles.pendingBadge}><Text style={styles.pendingBadgeText}>Pending</Text></View>}
+                        <Text style={styles.resCardFacility} numberOfLines={1}>
+                          {facilityName}
+                        </Text>
+                        {isPending && (
+                          <View style={styles.pendingBadge}>
+                            <Text style={styles.pendingBadgeText}>Pending</Text>
+                          </View>
+                        )}
                       </View>
                       <Text style={styles.resCardCourt}>{courtName}</Text>
-                      <Text style={styles.resCardMeta}>{date} · {time}</Text>
+                      <Text style={styles.resCardMeta}>
+                        {date} · {time}
+                      </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={colors.onSurfaceVariant}
+                    />
                   </TouchableOpacity>
                 );
               })}
@@ -880,9 +1050,33 @@ const styles = StyleSheet.create({
   },
   resCardBody: { flex: 1 },
   resCardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  resCardFacility: { fontFamily: fonts.label, fontSize: 15, color: colors.onSurface, flex: 1 },
-  pendingBadge: { backgroundColor: colors.goldTint, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  pendingBadgeText: { fontFamily: fonts.label, fontSize: 10, color: colors.gold },
-  resCardCourt: { fontFamily: fonts.body, fontSize: 13, color: colors.onSurfaceVariant, marginTop: 2 },
-  resCardMeta: { fontFamily: fonts.body, fontSize: 12, color: colors.onSurfaceVariant, marginTop: 1 },
+  resCardFacility: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.onSurface,
+    flex: 1,
+  },
+  pendingBadge: {
+    backgroundColor: colors.goldTint,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  pendingBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    color: colors.gold,
+  },
+  resCardCourt: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  resCardMeta: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+    marginTop: 1,
+  },
 });

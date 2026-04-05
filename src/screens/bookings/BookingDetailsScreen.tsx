@@ -277,7 +277,7 @@ export function BookingDetailsScreen(): JSX.Element {
       <View style={styles.container}>
         <ScreenHeader
           title="Booking Details"
-          showBack={true}
+          showBack={false}
           onBackPress={() => navigation.goBack()}
         />
         <LoadingSpinner />
@@ -290,7 +290,7 @@ export function BookingDetailsScreen(): JSX.Element {
       <View style={styles.container}>
         <ScreenHeader
           title="Booking Details"
-          showBack={true}
+          showBack={false}
           onBackPress={() => navigation.goBack()}
         />
         <ErrorDisplay
@@ -311,7 +311,7 @@ export function BookingDetailsScreen(): JSX.Element {
     <View style={styles.container}>
       <ScreenHeader
         title="Booking Details"
-        showBack={true}
+        showBack={false}
         onBackPress={() => navigation.goBack()}
       />
 

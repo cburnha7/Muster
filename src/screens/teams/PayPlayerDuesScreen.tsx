@@ -91,8 +91,8 @@ export const PayPlayerDuesScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader
           title="Season Dues"
-          leftIcon="arrow-back"
-          onLeftPress={() => navigation.goBack()}
+          leftIcon="""
+          
         />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.cobalt} />
@@ -107,8 +107,8 @@ export const PayPlayerDuesScreen: React.FC = () => {
       <View style={styles.container}>
         <ScreenHeader
           title="Season Dues"
-          leftIcon="arrow-back"
-          onLeftPress={() => navigation.goBack()}
+          leftIcon="""
+          
         />
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
@@ -130,8 +130,8 @@ export const PayPlayerDuesScreen: React.FC = () => {
     <View style={styles.container}>
       <ScreenHeader
         title="Season Dues"
-        leftIcon="arrow-back"
-        onLeftPress={() => navigation.goBack()}
+        leftIcon="""
+        
       />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
