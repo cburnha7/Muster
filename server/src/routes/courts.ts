@@ -576,6 +576,7 @@ router.get(
         date: targetDate,
         courtId,
         courtName: court.name,
+        minimumBookingMinutes: court.minimumBookingMinutes || 60,
         totalSlots: futureSlots.length,
         availableSlots: availableSlots.length,
         slots: futureSlots,
