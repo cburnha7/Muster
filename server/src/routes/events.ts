@@ -1411,8 +1411,6 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
         where: { id: bookingId },
         data: {
           status: 'cancelled',
-          cancellationReason: 'Stepped out by player',
-          cancelledAt: new Date(),
         },
       }),
       prisma.event.update({
