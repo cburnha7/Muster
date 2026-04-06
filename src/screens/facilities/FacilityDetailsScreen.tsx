@@ -9,6 +9,7 @@ import {
   Platform,
   Modal,
   Linking,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -486,11 +487,24 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
       {/* Fixed bottom — Edit for owner, Book for non-owner */}
       {isOwner ? (
-        <FixedBottomCTA
-          label="Edit Ground"
-          onPress={handleEdit}
-          variant="primary"
-        />
+        <View style={styles.ownerBottomBar}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={handleEdit}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={18} color={colors.pine} />
+            <Text style={styles.editBtnText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={handleDeleteGround}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.heart} />
+            <Text style={styles.deleteBtnText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <FixedBottomCTA
           label="Book a court"
@@ -774,4 +788,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.heart,
   },
+  ownerBottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  editBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.pineTint,
+    borderWidth: 1,
+    borderColor: colors.pine,
+  },
+  editBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
+  deleteBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.heartTint,
+    borderWidth: 1,
+    borderColor: colors.heart,
+  },
+  deleteBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.heart },
 });

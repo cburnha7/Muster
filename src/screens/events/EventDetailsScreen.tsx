@@ -62,6 +62,11 @@ import {
 import type { Match } from '../../types/league';
 import { API_BASE_URL } from '../../services/api/config';
 import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
+import {
+  ProfileSelectorModal,
+  ProfileOption,
+} from '../../components/ui/ProfileSelectorModal';
+import { selectDependents } from '../../store/slices/contextSlice';
 
 function formatDateHero(dateInput: string | Date): string {
   const d = new Date(dateInput as any);
@@ -102,6 +107,8 @@ export function EventDetailsScreen() {
   const [event, setEvent] = useState<Event | null>(selectedEvent);
   const [isLoading, setIsLoading] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [showProfileSelector, setShowProfileSelector] = useState(false);
+  const dependents = useSelector(selectDependents);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -294,12 +301,23 @@ export function EventDetailsScreen() {
       );
     }
 
-    console.log('Γ£à Proceeding with booking...');
-    await proceedWithBooking();
+    console.log('✅ Proceeding with booking...');
+    // If user has dependents, show profile selector
+    if (dependents.length > 0) {
+      setShowProfileSelector(true);
+    } else {
+      await proceedWithBooking();
+    }
   };
 
-  const proceedWithBooking = async () => {
-    if (!event || !currentUser) {
+  const handleProfileSelected = async (profileId: string) => {
+    setShowProfileSelector(false);
+    await proceedWithBooking(profileId);
+  };
+
+  const proceedWithBooking = async (profileId?: string) => {
+    const bookingUserId = profileId || currentUser?.id;
+    if (!event || !bookingUserId) {
       console.log('Γ¥î proceedWithBooking: Missing event or currentUser');
       return;
     }
@@ -320,7 +338,7 @@ export function EventDetailsScreen() {
         userId: currentUser.id,
       });
 
-      const booking = await eventService.bookEvent(event.id, currentUser.id);
+      const booking = await eventService.bookEvent(event.id, bookingUserId);
 
       console.log('Γ£à Booking API call successful!');
       console.log('≡ƒôª Booking response:', JSON.stringify(booking, null, 2));
@@ -1420,6 +1438,31 @@ export function EventDetailsScreen() {
         eventTitle={event?.title || 'Event'}
         onCancel={() => setShowStepOutModal(false)}
         onConfirm={handleStepOutConfirm}
+      />
+
+      {/* Profile Selector for Join Up */}
+      <ProfileSelectorModal
+        visible={showProfileSelector}
+        profiles={[
+          ...(currentUser
+            ? [
+                {
+                  id: currentUser.id,
+                  firstName: currentUser.firstName,
+                  lastName: currentUser.lastName,
+                  profileImage: currentUser.profileImage,
+                },
+              ]
+            : []),
+          ...dependents.map(d => ({
+            id: d.id,
+            firstName: d.firstName,
+            lastName: d.lastName,
+            profileImage: d.profileImage,
+          })),
+        ]}
+        onSelect={handleProfileSelected}
+        onCancel={() => setShowProfileSelector(false)}
       />
 
       {/* Player Card Popup */}
