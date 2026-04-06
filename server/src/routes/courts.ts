@@ -322,6 +322,167 @@ router.delete('/facilities/:facilityId/courts/:courtId', async (req, res) => {
   }
 });
 
+// ── On-demand schedule: compute availability from operating hours + rentals ──
+router.get(
+  '/facilities/:facilityId/courts/:courtId/schedule',
+  async (req, res) => {
+    try {
+      const { facilityId, courtId } = req.params;
+      const { date, userId } = req.query;
+
+      if (!date)
+        return res.status(400).json({ error: 'date is required (YYYY-MM-DD)' });
+
+      const court = await prisma.facilityCourt.findFirst({
+        where: { id: courtId, facilityId, isActive: true },
+        include: {
+          facility: {
+            select: {
+              id: true,
+              ownerId: true,
+              pricePerHour: true,
+              slotIncrementMinutes: true,
+            },
+          },
+        },
+      });
+      if (!court)
+        return res.status(404).json({ error: 'Court not found or inactive' });
+
+      const isOwner = userId
+        ? court.facility.ownerId === (userId as string)
+        : false;
+      const slotIncrement = court.facility.slotIncrementMinutes || 60;
+      const pricePerHour =
+        court.pricePerHour ?? court.facility.pricePerHour ?? 0;
+      const pricePerSlot = (pricePerHour / 60) * slotIncrement;
+
+      // Parse date and get day of week
+      const targetDate = new Date((date as string) + 'T00:00:00Z');
+      const dayOfWeek = targetDate.getUTCDay(); // 0=Sun
+
+      // Get operating hours for this day
+      const opHours = await prisma.facilityCourtAvailability.findMany({
+        where: {
+          courtId,
+          OR: [
+            { isRecurring: true, dayOfWeek },
+            { isRecurring: false, specificDate: targetDate },
+          ],
+        },
+      });
+
+      // If no operating hours defined, use default 8am-10pm
+      const windows =
+        opHours.length > 0
+          ? opHours
+              .filter(h => !h.isBlocked)
+              .map(h => ({ start: h.startTime, end: h.endTime }))
+          : [{ start: '08:00', end: '22:00' }];
+
+      // Get all confirmed rentals for this court on this date
+      // Rentals reference FacilityTimeSlot which has the date/time
+      const rentals = await prisma.facilityRental.findMany({
+        where: {
+          status: { in: ['confirmed', 'pending_approval'] },
+          timeSlot: {
+            courtId,
+            date: targetDate,
+          },
+        },
+        include: {
+          timeSlot: { select: { startTime: true, endTime: true } },
+        },
+      });
+
+      // Also get owner-blocked slots
+      const blockedSlots = await prisma.facilityTimeSlot.findMany({
+        where: {
+          courtId,
+          date: targetDate,
+          status: 'blocked',
+        },
+        select: { startTime: true, endTime: true },
+      });
+
+      // Build a set of booked time ranges (in minutes from midnight)
+      const bookedRanges: { start: number; end: number; userId?: string }[] =
+        [];
+      for (const r of rentals) {
+        const [sh, sm] = r.timeSlot.startTime.split(':').map(Number);
+        const [eh, em] = r.timeSlot.endTime.split(':').map(Number);
+        bookedRanges.push({
+          start: (sh || 0) * 60 + (sm || 0),
+          end: (eh || 0) * 60 + (em || 0),
+          userId: r.userId,
+        });
+      }
+      for (const b of blockedSlots) {
+        const [sh, sm] = b.startTime.split(':').map(Number);
+        const [eh, em] = b.endTime.split(':').map(Number);
+        bookedRanges.push({
+          start: (sh || 0) * 60 + (sm || 0),
+          end: (eh || 0) * 60 + (em || 0),
+        });
+      }
+
+      // Generate schedule slots from operating hours
+      const schedule: Array<{
+        startTime: string;
+        endTime: string;
+        status: 'available' | 'booked' | 'own_reservation';
+        price: number;
+      }> = [];
+
+      for (const window of windows) {
+        const [wsh, wsm] = window.start.split(':').map(Number);
+        const [weh, wem] = window.end.split(':').map(Number);
+        const windowStart = (wsh || 0) * 60 + (wsm || 0);
+        const windowEnd = (weh || 0) * 60 + (wem || 0);
+
+        for (let t = windowStart; t < windowEnd; t += slotIncrement) {
+          const slotEnd = t + slotIncrement;
+          const startStr = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+          const endStr = `${String(Math.floor(slotEnd / 60)).padStart(2, '0')}:${String(slotEnd % 60).padStart(2, '0')}`;
+
+          // Check if this slot overlaps any booked range
+          const overlap = bookedRanges.find(
+            br => t < br.end && slotEnd > br.start
+          );
+
+          let status: 'available' | 'booked' | 'own_reservation' = 'available';
+          if (overlap) {
+            status =
+              userId && overlap.userId === userId
+                ? 'own_reservation'
+                : 'booked';
+          }
+
+          schedule.push({
+            startTime: startStr,
+            endTime: endStr,
+            status,
+            price: Math.round(pricePerSlot * 100) / 100,
+          });
+        }
+      }
+
+      res.json({
+        courtId,
+        courtName: court.name,
+        date: date as string,
+        isOwner,
+        slotIncrementMinutes: slotIncrement,
+        minimumBookingMinutes: court.minimumBookingMinutes || 60,
+        schedule,
+      });
+    } catch (error) {
+      console.error('Get court schedule error:', error);
+      res.status(500).json({ error: 'Failed to compute court schedule' });
+    }
+  }
+);
+
 export default router;
 
 // Get time slots for a court

@@ -4,12 +4,12 @@ import { rateCalculator } from '../services/RateCalculator';
 import { availabilityService } from '../services/AvailabilityService';
 import { verificationService } from '../services/VerificationService';
 import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
-import { 
-  uploadMap, 
-  validateImageFile, 
-  generateImageUrl, 
+import {
+  uploadMap,
+  validateImageFile,
+  generateImageUrl,
   processMapImage,
-  deleteImageFiles 
+  deleteImageFiles,
 } from '../services/ImageUploadService';
 import { isValidPolicyHours } from '../services/cancellation-window';
 import { requireNonDependent } from '../middleware/require-non-dependent';
@@ -22,7 +22,7 @@ const timeSlotGenerator = new TimeSlotGeneratorService();
 router.get('/', async (req, res) => {
   try {
     const { sportType, ownerId, page = '1', limit = '10' } = req.query;
-    
+
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
 
@@ -105,10 +105,7 @@ router.get('/:id', async (req, res) => {
           orderBy: { displayOrder: 'asc' },
           include: {
             availability: {
-              orderBy: [
-                { dayOfWeek: 'asc' },
-                { startTime: 'asc' },
-              ],
+              orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
             },
           },
         },
@@ -271,7 +268,10 @@ router.get('/authorized/for-events', async (req, res) => {
         },
       });
     } catch (rentalErr: any) {
-      console.error('Rental query failed, continuing with owned facilities only:', rentalErr?.message);
+      console.error(
+        'Rental query failed, continuing with owned facilities only:',
+        rentalErr?.message
+      );
     }
 
     // Filter out rentals with inactive facilities (in JS to avoid nested where issues)
@@ -282,7 +282,7 @@ router.get('/authorized/for-events', async (req, res) => {
     // Extract unique facilities from rentals
     const rentalFacilityIds = new Set<string>();
     const rentalFacilitiesMap = new Map();
-    
+
     rentalsWithFacilities.forEach(rental => {
       const facility = rental.timeSlot.court.facility;
       if (!rentalFacilityIds.has(facility.id)) {
@@ -375,10 +375,7 @@ router.get('/:id/available-slots', async (req, res) => {
             },
           },
         },
-        orderBy: [
-          { date: 'asc' },
-          { startTime: 'asc' },
-        ],
+        orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
       });
 
       res.json({
@@ -446,7 +443,7 @@ router.get('/:id/available-slots', async (req, res) => {
 // ============================================================================
 
 // Get courts available for event creation at a facility
-// Returns courts filtered by ownership (all active with available slots) or rentals (only user's rented courts)
+// Returns all active courts filtered by sport type only — availability is checked on-demand
 router.get('/:facilityId/courts-for-event', async (req, res) => {
   try {
     const { facilityId } = req.params;
@@ -456,7 +453,6 @@ router.get('/:facilityId/courts-for-event', async (req, res) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    // Check if facility exists and determine ownership
     const facility = await prisma.facility.findUnique({
       where: { id: facilityId },
       select: { id: true, ownerId: true },
@@ -468,101 +464,21 @@ router.get('/:facilityId/courts-for-event', async (req, res) => {
 
     const isOwner = facility.ownerId === (userId as string);
 
-    // Normalize today's date to midnight UTC for comparison
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    if (isOwner) {
-      // Owner: return all active courts with at least one available future time slot
-      const courtWhere: any = {
-        facilityId,
-        isActive: true,
-      };
-      if (sportType) {
-        courtWhere.sportType = sportType as string;
-      }
-
-      const courts = await prisma.facilityCourt.findMany({
-        where: courtWhere,
-        include: {
-          timeSlots: {
-            where: {
-              status: 'available',
-              date: { gte: today },
-            },
-            select: { id: true },
-          },
-        },
-      });
-
-      // Filter to only courts that have at least one available slot
-      const courtsWithSlots = courts
-        .filter(court => court.timeSlots.length > 0)
-        .map(court => ({
-          id: court.id,
-          name: court.name,
-          sportType: court.sportType,
-          capacity: court.capacity,
-          availableSlotCount: court.timeSlots.length,
-        }));
-
-      res.json({ data: courtsWithSlots, isOwner: true });
-    } else {
-      // Non-owner: return only courts where user has a confirmed future rental
-      const rentalWhere: any = {
-        userId: userId as string,
-        status: 'confirmed',
-        usedForEventId: null,
-        timeSlot: {
-          court: {
-            facilityId,
-            isActive: true,
-          },
-          date: { gte: today },
-        },
-      };
-      if (sportType) {
-        rentalWhere.timeSlot.court.sportType = sportType as string;
-      }
-
-      const rentals = await prisma.facilityRental.findMany({
-        where: rentalWhere,
-        include: {
-          timeSlot: {
-            include: {
-              court: {
-                select: {
-                  id: true,
-                  name: true,
-                  sportType: true,
-                  capacity: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      // Group by court and count slots
-      const courtMap = new Map<string, { id: string; name: string; sportType: string; capacity: number; availableSlotCount: number }>();
-      for (const rental of rentals) {
-        const court = rental.timeSlot.court;
-        const existing = courtMap.get(court.id);
-        if (existing) {
-          existing.availableSlotCount += 1;
-        } else {
-          courtMap.set(court.id, {
-            id: court.id,
-            name: court.name,
-            sportType: court.sportType,
-            capacity: court.capacity,
-            availableSlotCount: 1,
-          });
-        }
-      }
-
-      res.json({ data: Array.from(courtMap.values()), isOwner: false });
+    const courtWhere: any = { facilityId, isActive: true };
+    if (sportType) {
+      courtWhere.sportType = sportType as string;
     }
+
+    const courts = await prisma.facilityCourt.findMany({
+      where: courtWhere,
+      select: { id: true, name: true, sportType: true, capacity: true },
+      orderBy: { displayOrder: 'asc' },
+    });
+
+    res.json({
+      data: courts.map(c => ({ ...c, availableSlotCount: 0 })),
+      isOwner,
+    });
   } catch (error) {
     console.error('Get courts for event error:', error);
     res.status(500).json({ error: 'Failed to fetch courts for event' });
@@ -828,15 +744,20 @@ router.post('/', requireNonDependent, async (req, res) => {
 
     // Validate required fields
     if (!name || !sportTypes || !street || !city || !state || !zipCode) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: name, sportTypes, street, city, state, zipCode' 
+      return res.status(400).json({
+        error:
+          'Missing required fields: name, sportTypes, street, city, state, zipCode',
       });
     }
 
     // Validate cancellation policy hours if provided
-    if (cancellationPolicyHours !== undefined && !isValidPolicyHours(cancellationPolicyHours)) {
+    if (
+      cancellationPolicyHours !== undefined &&
+      !isValidPolicyHours(cancellationPolicyHours)
+    ) {
       return res.status(400).json({
-        error: 'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
+        error:
+          'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
       });
     }
 
@@ -846,26 +767,61 @@ router.post('/', requireNonDependent, async (req, res) => {
       // For testing: use the first user in the database
       const firstUser = await prisma.user.findFirst();
       if (!firstUser) {
-        return res.status(400).json({ error: 'No users found. Please create a user first.' });
+        return res
+          .status(400)
+          .json({ error: 'No users found. Please create a user first.' });
       }
       facilityOwnerId = firstUser.id;
     }
 
     // Plan gate: facility creation requires facility_basic; 4th+ requires facility_pro
     const { userBypassesPlanGate } = require('../middleware/subscription');
-    const bypassed = await userBypassesPlanGate(facilityOwnerId, 'facility_basic');
+    const bypassed = await userBypassesPlanGate(
+      facilityOwnerId,
+      'facility_basic'
+    );
     if (!bypassed) {
-      const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
-      const existingFacilityCount = await prisma.facility.count({ where: { ownerId: facilityOwnerId } });
-      const sub = await prisma.subscription.findUnique({ where: { userId: facilityOwnerId }, select: { plan: true, status: true } });
+      const PLAN_HIERARCHY = [
+        'free',
+        'roster',
+        'league',
+        'facility_basic',
+        'facility_pro',
+      ];
+      const existingFacilityCount = await prisma.facility.count({
+        where: { ownerId: facilityOwnerId },
+      });
+      const sub = await prisma.subscription.findUnique({
+        where: { userId: facilityOwnerId },
+        select: { plan: true, status: true },
+      });
       const userPlan = sub?.plan || 'free';
-      const isActive = !sub || sub.status === 'active' || sub.status === 'trialing';
+      const isActive =
+        !sub || sub.status === 'active' || sub.status === 'trialing';
       const userPlanIndex = PLAN_HIERARCHY.indexOf(userPlan);
 
-      if (existingFacilityCount >= 3 && (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))) {
-        return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_pro', currentPlan: userPlan });
-      } else if (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')) {
-        return res.status(403).json({ error: 'Plan upgrade required', requiredPlan: 'facility_basic', currentPlan: userPlan });
+      if (
+        existingFacilityCount >= 3 &&
+        (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))
+      ) {
+        return res
+          .status(403)
+          .json({
+            error: 'Plan upgrade required',
+            requiredPlan: 'facility_pro',
+            currentPlan: userPlan,
+          });
+      } else if (
+        !isActive ||
+        userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')
+      ) {
+        return res
+          .status(403)
+          .json({
+            error: 'Plan upgrade required',
+            requiredPlan: 'facility_basic',
+            currentPlan: userPlan,
+          });
       }
     }
 
@@ -897,7 +853,9 @@ router.post('/', requireNonDependent, async (req, res) => {
         ownerId: facilityOwnerId,
         requiresInsurance: requiresInsurance === true,
         requiresBookingConfirmation: requiresBookingConfirmation === true,
-        ...(cancellationPolicyHours !== undefined && { cancellationPolicyHours }),
+        ...(cancellationPolicyHours !== undefined && {
+          cancellationPolicyHours,
+        }),
       },
     });
 
@@ -918,7 +876,9 @@ router.post('/', requireNonDependent, async (req, res) => {
       });
     }
 
-    console.log(`Created facility ${facility.id} with ${hoursOfOperation.length} hours of operation`);
+    console.log(
+      `Created facility ${facility.id} with ${hoursOfOperation.length} hours of operation`
+    );
 
     res.status(201).json(facility);
   } catch (error) {
@@ -931,12 +891,24 @@ router.post('/', requireNonDependent, async (req, res) => {
 router.put('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params;
-    const { hoursOfOperation, slotIncrementMinutes, requiresInsurance, requiresBookingConfirmation, ...rawData } = req.body;
+    const {
+      hoursOfOperation,
+      slotIncrementMinutes,
+      requiresInsurance,
+      requiresBookingConfirmation,
+      ...rawData
+    } = req.body;
 
     // Authorization check - only owner can update
-    const userId = (req as any).user?.userId || req.headers['x-user-id'] as string;
+    const userId =
+      (req as any).user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) {
-      return sendError(res, 401, ErrorCode.UNAUTHORIZED, 'Authentication required');
+      return sendError(
+        res,
+        401,
+        ErrorCode.UNAUTHORIZED,
+        'Authentication required'
+      );
     }
 
     const existingFacility = await prisma.facility.findUnique({
@@ -949,20 +921,53 @@ router.put('/:id', requireNonDependent, async (req, res) => {
     }
 
     if (existingFacility.ownerId !== userId) {
-      return sendError(res, 403, ErrorCode.FORBIDDEN, 'Only the facility owner can update this facility');
+      return sendError(
+        res,
+        403,
+        ErrorCode.FORBIDDEN,
+        'Only the facility owner can update this facility'
+      );
     }
 
     // Whitelist only known Facility columns to prevent Prisma "Unknown arg" errors
     const ALLOWED_FIELDS = [
-      'name', 'description', 'sportTypes', 'amenities', 'imageUrl',
-      'rating', 'pricePerHour', 'isActive', 'isVerified', 'verificationStatus',
-      'accessInstructions', 'parkingInfo', 'minimumBookingHours', 'bufferTimeMins',
-      'contactName', 'contactPhone', 'contactEmail', 'contactWebsite',
-      'facilityMapUrl', 'facilityMapThumbnailUrl',
-      'street', 'city', 'state', 'zipCode', 'country', 'latitude', 'longitude',
-      'noticeWindowHours', 'teamPenaltyPct', 'penaltyDestination', 'policyVersion',
-      'cancellationPolicyHours', 'stripeConnectAccountId', 'requiresInsurance',
-      'requiresBookingConfirmation', 'waiverRequired', 'waiverText',
+      'name',
+      'description',
+      'sportTypes',
+      'amenities',
+      'imageUrl',
+      'rating',
+      'pricePerHour',
+      'isActive',
+      'isVerified',
+      'verificationStatus',
+      'accessInstructions',
+      'parkingInfo',
+      'minimumBookingHours',
+      'bufferTimeMins',
+      'contactName',
+      'contactPhone',
+      'contactEmail',
+      'contactWebsite',
+      'facilityMapUrl',
+      'facilityMapThumbnailUrl',
+      'street',
+      'city',
+      'state',
+      'zipCode',
+      'country',
+      'latitude',
+      'longitude',
+      'noticeWindowHours',
+      'teamPenaltyPct',
+      'penaltyDestination',
+      'policyVersion',
+      'cancellationPolicyHours',
+      'stripeConnectAccountId',
+      'requiresInsurance',
+      'requiresBookingConfirmation',
+      'waiverRequired',
+      'waiverText',
     ];
 
     const updateData: Record<string, any> = {};
@@ -979,7 +984,8 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 
     // Coerce requiresBookingConfirmation to boolean if provided
     if (requiresBookingConfirmation !== undefined) {
-      updateData.requiresBookingConfirmation = requiresBookingConfirmation === true;
+      updateData.requiresBookingConfirmation =
+        requiresBookingConfirmation === true;
       // If confirmation is turned off, also turn off insurance requirement
       if (!updateData.requiresBookingConfirmation) {
         updateData.requiresInsurance = false;
@@ -987,31 +993,38 @@ router.put('/:id', requireNonDependent, async (req, res) => {
     }
 
     // Validate cancellation policy hours if provided
-    if (updateData.cancellationPolicyHours !== undefined && !isValidPolicyHours(updateData.cancellationPolicyHours)) {
+    if (
+      updateData.cancellationPolicyHours !== undefined &&
+      !isValidPolicyHours(updateData.cancellationPolicyHours)
+    ) {
       return res.status(400).json({
-        error: 'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
+        error:
+          'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
       });
     }
 
     // Check if slot increment is changing
     let incrementChanged = false;
     let oldIncrement: number | undefined;
-    
+
     if (slotIncrementMinutes !== undefined) {
       // Validate slot increment (must be 30 or 60)
       if (slotIncrementMinutes !== 30 && slotIncrementMinutes !== 60) {
-        return res.status(400).json({ 
-          error: 'Invalid slot increment. Must be 30 or 60 minutes.' 
+        return res.status(400).json({
+          error: 'Invalid slot increment. Must be 30 or 60 minutes.',
         });
       }
-      
+
       // Get current increment value
       const currentFacility = await prisma.facility.findUnique({
         where: { id },
         select: { slotIncrementMinutes: true },
       });
-      
-      if (currentFacility && currentFacility.slotIncrementMinutes !== slotIncrementMinutes) {
+
+      if (
+        currentFacility &&
+        currentFacility.slotIncrementMinutes !== slotIncrementMinutes
+      ) {
         incrementChanged = true;
         oldIncrement = currentFacility.slotIncrementMinutes;
       }
@@ -1019,7 +1032,10 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 
     // Auto-bump waiverVersion if waiverText changed
     if (updateData.waiverText !== undefined) {
-      const current = await prisma.facility.findUnique({ where: { id }, select: { waiverText: true } });
+      const current = await prisma.facility.findUnique({
+        where: { id },
+        select: { waiverText: true },
+      });
       if (current && updateData.waiverText !== current.waiverText) {
         updateData.waiverVersion = new Date().toISOString();
       }
@@ -1043,7 +1059,7 @@ router.put('/:id', requireNonDependent, async (req, res) => {
     if (hoursOfOperation && hoursOfOperation.length > 0) {
       // Delete existing hours
       await prisma.facilityAvailability.deleteMany({
-        where: { 
+        where: {
           facilityId: id,
           isRecurring: true,
           specificDate: null,
@@ -1068,16 +1084,19 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 
     // Regenerate time slots if increment changed
     if (incrementChanged) {
-      console.log(`🔄 Slot increment changed from ${oldIncrement} to ${slotIncrementMinutes} minutes for facility ${id}`);
-      
+      console.log(
+        `🔄 Slot increment changed from ${oldIncrement} to ${slotIncrementMinutes} minutes for facility ${id}`
+      );
+
       try {
-        const regenerateResult = await timeSlotGenerator.regenerateSlotsAfterIncrementChange(
-          id,
-          slotIncrementMinutes
-        );
-        
+        const regenerateResult =
+          await timeSlotGenerator.regenerateSlotsAfterIncrementChange(
+            id,
+            slotIncrementMinutes
+          );
+
         console.log('✅ Slot regeneration complete:', regenerateResult);
-        
+
         res.json({
           ...facility,
           slotRegenerationResult: {
@@ -1087,14 +1106,15 @@ router.put('/:id', requireNonDependent, async (req, res) => {
         });
       } catch (regenerateError: any) {
         console.error('❌ Slot regeneration failed:', regenerateError);
-        
+
         // Return facility update success but note regeneration failure
         res.json({
           ...facility,
           slotRegenerationResult: {
             success: false,
             error: regenerateError.message,
-            message: 'Facility updated but slot regeneration failed. Please regenerate slots manually.',
+            message:
+              'Facility updated but slot regeneration failed. Please regenerate slots manually.',
           },
         });
       }
@@ -1113,9 +1133,15 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
     const { id } = req.params;
 
     // Authorization check - only owner can delete
-    const userId = (req as any).user?.userId || req.headers['x-user-id'] as string;
+    const userId =
+      (req as any).user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) {
-      return sendError(res, 401, ErrorCode.UNAUTHORIZED, 'Authentication required');
+      return sendError(
+        res,
+        401,
+        ErrorCode.UNAUTHORIZED,
+        'Authentication required'
+      );
     }
 
     // Check if facility exists and verify ownership
@@ -1134,7 +1160,12 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
     }
 
     if (facility.ownerId !== userId) {
-      return sendError(res, 403, ErrorCode.FORBIDDEN, 'Only the facility owner can delete this facility');
+      return sendError(
+        res,
+        403,
+        ErrorCode.FORBIDDEN,
+        'Only the facility owner can delete this facility'
+      );
     }
 
     // Check for future rentals
@@ -1166,7 +1197,8 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
 
     if (futureRentalsList.length > 0) {
       return res.status(400).json({
-        error: 'Cannot delete ground with future rentals. Cancel all rentals first.',
+        error:
+          'Cannot delete ground with future rentals. Cancel all rentals first.',
         rentals: futureRentalsList.map((r: any) => ({
           id: r.id,
           court: r.timeSlot?.court?.name || 'Unknown court',
@@ -1196,7 +1228,8 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
 
     if (futureEventsList.length > 0) {
       return res.status(400).json({
-        error: 'Cannot delete ground with future events. Cancel all events first.',
+        error:
+          'Cannot delete ground with future events. Cancel all events first.',
         events: futureEventsList.map((e: any) => ({
           id: e.id,
           title: e.title,
@@ -1220,7 +1253,7 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
     }
 
     // Clean up references that don't cascade before deleting
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // Nullify facility references on events
       await tx.event.updateMany({
         where: { facilityId: id },
@@ -1270,18 +1303,25 @@ router.post('/:id/verification', requireNonDependent, async (req, res) => {
     const { documents } = req.body;
 
     if (!documents || documents.length === 0) {
-      return res.status(400).json({ error: 'At least one document is required' });
+      return res
+        .status(400)
+        .json({ error: 'At least one document is required' });
     }
 
     if (documents.length > 5) {
       return res.status(400).json({ error: 'Maximum 5 documents allowed' });
     }
 
-    const verification = await verificationService.submitVerification(id, documents);
+    const verification = await verificationService.submitVerification(
+      id,
+      documents
+    );
     res.status(201).json(verification);
   } catch (error: any) {
     console.error('Submit verification error:', error);
-    res.status(500).json({ error: error.message || 'Failed to submit verification' });
+    res
+      .status(500)
+      .json({ error: error.message || 'Failed to submit verification' });
   }
 });
 
@@ -1314,7 +1354,9 @@ router.post('/:id/rates', requireNonDependent, async (req, res) => {
 
     // Validate rate
     if (rateData.hourlyRate < 1 || rateData.hourlyRate > 500) {
-      return res.status(400).json({ error: 'Hourly rate must be between $1 and $500' });
+      return res
+        .status(400)
+        .json({ error: 'Hourly rate must be between $1 and $500' });
     }
 
     const rate = await prisma.facilityRateSchedule.create({
@@ -1389,7 +1431,9 @@ router.post('/:id/calculate-price', async (req, res) => {
     const { startTime, endTime } = req.body;
 
     if (!startTime || !endTime) {
-      return res.status(400).json({ error: 'startTime and endTime are required' });
+      return res
+        .status(400)
+        .json({ error: 'startTime and endTime are required' });
     }
 
     const start = new Date(startTime);
@@ -1403,7 +1447,9 @@ router.post('/:id/calculate-price', async (req, res) => {
     res.json(breakdown);
   } catch (error: any) {
     console.error('Calculate price error:', error);
-    res.status(500).json({ error: error.message || 'Failed to calculate price' });
+    res
+      .status(500)
+      .json({ error: error.message || 'Failed to calculate price' });
   }
 });
 
@@ -1454,10 +1500,7 @@ router.get('/:id/availability', async (req, res) => {
 
     const slots = await prisma.facilityAvailability.findMany({
       where,
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { startTime: 'asc' },
-      ],
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
     });
 
     res.json(slots);
@@ -1508,7 +1551,9 @@ router.get('/:id/availability/check', async (req, res) => {
     const { startTime, endTime } = req.query;
 
     if (!startTime || !endTime) {
-      return res.status(400).json({ error: 'startTime and endTime are required' });
+      return res
+        .status(400)
+        .json({ error: 'startTime and endTime are required' });
     }
 
     const start = new Date(startTime as string);
@@ -1533,103 +1578,111 @@ router.get('/:id/availability/check', async (req, res) => {
 // ============================================================================
 
 // Upload facility map image
-router.post('/:id/map', uploadMap.single('image'), requireNonDependent, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const file = req.file;
+router.post(
+  '/:id/map',
+  uploadMap.single('image'),
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const file = req.file;
 
-    // Validate file
-    const validation = validateImageFile(file as Express.Multer.File);
-    if (!validation.valid) {
-      return res.status(400).json({ error: validation.error });
-    }
-
-    if (!file) {
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    // Check if facility exists
-    const facility = await prisma.facility.findUnique({
-      where: { id },
-      select: { 
-        id: true, 
-        facilityMapUrl: true, 
-        facilityMapThumbnailUrl: true 
+      // Validate file
+      const validation = validateImageFile(file as Express.Multer.File);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
       }
-    });
 
-    if (!facility) {
-      // Clean up uploaded file
-      if (file.path) {
-        const fs = require('fs');
-        fs.unlinkSync(file.path);
+      if (!file) {
+        return res.status(400).json({ error: 'No image file provided' });
       }
-      return res.status(404).json({ error: 'Facility not found' });
-    }
 
-    // Process and optimize image
-    const { optimizedPath, thumbnailPath } = await processMapImage(file.path, {
-      maxWidth: 4000,
-      maxHeight: 4000,
-      quality: 85
-    });
+      // Check if facility exists
+      const facility = await prisma.facility.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          facilityMapUrl: true,
+          facilityMapThumbnailUrl: true,
+        },
+      });
 
-    // Generate URLs
-    const facilityMapUrl = generateImageUrl(optimizedPath);
-    const facilityMapThumbnailUrl = generateImageUrl(thumbnailPath);
-
-    // Delete old images if they exist
-    if (facility.facilityMapUrl) {
-      try {
-        await deleteImageFiles(
-          facility.facilityMapUrl, 
-          facility.facilityMapThumbnailUrl || undefined
-        );
-      } catch (error) {
-        console.error('Error deleting old map images:', error);
-        // Continue even if deletion fails
-      }
-    }
-
-    // Update facility with new map URLs
-    const updatedFacility = await prisma.facility.update({
-      where: { id },
-      data: {
-        facilityMapUrl,
-        facilityMapThumbnailUrl
-      },
-      select: {
-        id: true,
-        facilityMapUrl: true,
-        facilityMapThumbnailUrl: true
-      }
-    });
-
-    res.status(200).json({
-      facilityMapUrl: updatedFacility.facilityMapUrl,
-      facilityMapThumbnailUrl: updatedFacility.facilityMapThumbnailUrl,
-      message: 'Facility map uploaded successfully'
-    });
-  } catch (error: any) {
-    console.error('Upload facility map error:', error);
-    
-    // Clean up uploaded file on error
-    if (req.file?.path) {
-      try {
-        const fs = require('fs');
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+      if (!facility) {
+        // Clean up uploaded file
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
         }
-      } catch (cleanupError) {
-        console.error('Error cleaning up file:', cleanupError);
+        return res.status(404).json({ error: 'Facility not found' });
       }
+
+      // Process and optimize image
+      const { optimizedPath, thumbnailPath } = await processMapImage(
+        file.path,
+        {
+          maxWidth: 4000,
+          maxHeight: 4000,
+          quality: 85,
+        }
+      );
+
+      // Generate URLs
+      const facilityMapUrl = generateImageUrl(optimizedPath);
+      const facilityMapThumbnailUrl = generateImageUrl(thumbnailPath);
+
+      // Delete old images if they exist
+      if (facility.facilityMapUrl) {
+        try {
+          await deleteImageFiles(
+            facility.facilityMapUrl,
+            facility.facilityMapThumbnailUrl || undefined
+          );
+        } catch (error) {
+          console.error('Error deleting old map images:', error);
+          // Continue even if deletion fails
+        }
+      }
+
+      // Update facility with new map URLs
+      const updatedFacility = await prisma.facility.update({
+        where: { id },
+        data: {
+          facilityMapUrl,
+          facilityMapThumbnailUrl,
+        },
+        select: {
+          id: true,
+          facilityMapUrl: true,
+          facilityMapThumbnailUrl: true,
+        },
+      });
+
+      res.status(200).json({
+        facilityMapUrl: updatedFacility.facilityMapUrl,
+        facilityMapThumbnailUrl: updatedFacility.facilityMapThumbnailUrl,
+        message: 'Facility map uploaded successfully',
+      });
+    } catch (error: any) {
+      console.error('Upload facility map error:', error);
+
+      // Clean up uploaded file on error
+      if (req.file?.path) {
+        try {
+          const fs = require('fs');
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up file:', cleanupError);
+        }
+      }
+
+      res.status(500).json({
+        error: error.message || 'Failed to upload facility map',
+      });
     }
-    
-    res.status(500).json({ 
-      error: error.message || 'Failed to upload facility map' 
-    });
   }
-});
+);
 
 // Delete facility map image
 router.delete('/:id/map', async (req, res) => {
@@ -1639,11 +1692,11 @@ router.delete('/:id/map', async (req, res) => {
     // Check if facility exists
     const facility = await prisma.facility.findUnique({
       where: { id },
-      select: { 
-        id: true, 
-        facilityMapUrl: true, 
-        facilityMapThumbnailUrl: true 
-      }
+      select: {
+        id: true,
+        facilityMapUrl: true,
+        facilityMapThumbnailUrl: true,
+      },
     });
 
     if (!facility) {
@@ -1656,7 +1709,7 @@ router.delete('/:id/map', async (req, res) => {
 
     // Delete image files
     await deleteImageFiles(
-      facility.facilityMapUrl, 
+      facility.facilityMapUrl,
       facility.facilityMapThumbnailUrl || undefined
     );
 
@@ -1665,15 +1718,15 @@ router.delete('/:id/map', async (req, res) => {
       where: { id },
       data: {
         facilityMapUrl: null,
-        facilityMapThumbnailUrl: null
-      }
+        facilityMapThumbnailUrl: null,
+      },
     });
 
     res.status(200).json({ message: 'Facility map deleted successfully' });
   } catch (error: any) {
     console.error('Delete facility map error:', error);
-    res.status(500).json({ 
-      error: error.message || 'Failed to delete facility map' 
+    res.status(500).json({
+      error: error.message || 'Failed to delete facility map',
     });
   }
 });
@@ -1723,70 +1776,87 @@ router.get('/:id/cancellation-policy', async (req, res) => {
 });
 
 // Update cancellation policy for a facility
-router.put('/:id/cancellation-policy', requireNonDependent, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { noticeWindowHours, teamPenaltyPct, penaltyDestination } = req.body;
+router.put(
+  '/:id/cancellation-policy',
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { noticeWindowHours, teamPenaltyPct, penaltyDestination } =
+        req.body;
 
-    // Validate all fields present
-    if (noticeWindowHours === undefined || noticeWindowHours === null) {
-      return res.status(400).json({ error: 'noticeWindowHours is required' });
-    }
-    if (teamPenaltyPct === undefined || teamPenaltyPct === null) {
-      return res.status(400).json({ error: 'teamPenaltyPct is required' });
-    }
-    if (!penaltyDestination) {
-      return res.status(400).json({ error: 'penaltyDestination is required' });
-    }
+      // Validate all fields present
+      if (noticeWindowHours === undefined || noticeWindowHours === null) {
+        return res.status(400).json({ error: 'noticeWindowHours is required' });
+      }
+      if (teamPenaltyPct === undefined || teamPenaltyPct === null) {
+        return res.status(400).json({ error: 'teamPenaltyPct is required' });
+      }
+      if (!penaltyDestination) {
+        return res
+          .status(400)
+          .json({ error: 'penaltyDestination is required' });
+      }
 
-    // Validate types and ranges
-    if (!Number.isInteger(noticeWindowHours) || noticeWindowHours < 0) {
-      return res.status(400).json({ error: 'noticeWindowHours must be a non-negative integer' });
-    }
-    if (!Number.isInteger(teamPenaltyPct) || teamPenaltyPct < 0 || teamPenaltyPct > 100) {
-      return res.status(400).json({ error: 'teamPenaltyPct must be an integer between 0 and 100' });
-    }
-    if (!VALID_PENALTY_DESTINATIONS.includes(penaltyDestination)) {
-      return res.status(400).json({
-        error: `penaltyDestination must be one of: ${VALID_PENALTY_DESTINATIONS.join(', ')}`,
+      // Validate types and ranges
+      if (!Number.isInteger(noticeWindowHours) || noticeWindowHours < 0) {
+        return res
+          .status(400)
+          .json({ error: 'noticeWindowHours must be a non-negative integer' });
+      }
+      if (
+        !Number.isInteger(teamPenaltyPct) ||
+        teamPenaltyPct < 0 ||
+        teamPenaltyPct > 100
+      ) {
+        return res
+          .status(400)
+          .json({
+            error: 'teamPenaltyPct must be an integer between 0 and 100',
+          });
+      }
+      if (!VALID_PENALTY_DESTINATIONS.includes(penaltyDestination)) {
+        return res.status(400).json({
+          error: `penaltyDestination must be one of: ${VALID_PENALTY_DESTINATIONS.join(', ')}`,
+        });
+      }
+
+      // Check facility exists
+      const facility = await prisma.facility.findUnique({
+        where: { id },
+        select: { id: true },
       });
+
+      if (!facility) {
+        return res.status(404).json({ error: 'Facility not found' });
+      }
+
+      const policyVersion = new Date().toISOString();
+
+      const updated = await prisma.facility.update({
+        where: { id },
+        data: {
+          noticeWindowHours,
+          teamPenaltyPct,
+          penaltyDestination,
+          policyVersion,
+        },
+        select: {
+          id: true,
+          noticeWindowHours: true,
+          teamPenaltyPct: true,
+          penaltyDestination: true,
+          policyVersion: true,
+        },
+      });
+
+      res.json({
+        ...updated,
+        hasPolicy: true,
+      });
+    } catch (error) {
+      console.error('Update cancellation policy error:', error);
+      res.status(500).json({ error: 'Failed to update cancellation policy' });
     }
-
-    // Check facility exists
-    const facility = await prisma.facility.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-
-    if (!facility) {
-      return res.status(404).json({ error: 'Facility not found' });
-    }
-
-    const policyVersion = new Date().toISOString();
-
-    const updated = await prisma.facility.update({
-      where: { id },
-      data: {
-        noticeWindowHours,
-        teamPenaltyPct,
-        penaltyDestination,
-        policyVersion,
-      },
-      select: {
-        id: true,
-        noticeWindowHours: true,
-        teamPenaltyPct: true,
-        penaltyDestination: true,
-        policyVersion: true,
-      },
-    });
-
-    res.json({
-      ...updated,
-      hasPolicy: true,
-    });
-  } catch (error) {
-    console.error('Update cancellation policy error:', error);
-    res.status(500).json({ error: 'Failed to update cancellation policy' });
   }
-});
+);

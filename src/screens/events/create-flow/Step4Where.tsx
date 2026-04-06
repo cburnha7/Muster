@@ -108,105 +108,22 @@ export function Step4Where() {
 
     setCheckingAvailability(true);
     facilityService
-      .getSlotsForDate(state.facilityId, state.courtId, user.id, dateStr)
+      .getCourtSchedule(state.facilityId, state.courtId, user.id, dateStr)
       .then(res => {
-        const slots = res.data || [];
-        const isOwnerResult = res.isOwner;
-        setAvailabilityIsOwner(isOwnerResult);
+        setAvailabilityIsOwner(res.isOwner);
+        const schedule = res.schedule || [];
 
-        // Filter slots within the event time window
-        const matching = slots.filter(
-          s => s.startTime >= eventStart && s.endTime <= eventEnd
+        // Check if all slots in the event window are available or own_reservation
+        const slotsInWindow = schedule.filter(
+          s => s.startTime >= eventStart && s.startTime < eventEnd
         );
+        const allAvailable =
+          slotsInWindow.length > 0 &&
+          slotsInWindow.every(
+            s => s.status === 'available' || s.status === 'own_reservation'
+          );
 
-        if (isOwnerResult) {
-          // Owner: available unless slots in the window are all rented/blocked
-          // If matching slots exist, they're available (backend only returns available for owners)
-          // If no matching slots, owner can still use the court — treat as available
-          setIsAvailable(true);
-          // Auto-select matching slots if any exist
-          if (matching.length > 0) {
-            const courtInfo = courts.find(c => c.value === state.courtId);
-            for (const s of matching) {
-              dispatch({
-                type: 'TOGGLE_SLOT',
-                slot: {
-                  id: s.id,
-                  date: dateStr,
-                  startTime: s.startTime,
-                  endTime: s.endTime,
-                  price: s.price,
-                  court: {
-                    id: state.courtId,
-                    name: courtInfo?.label || state.courtName,
-                    sportType: state.sport || '',
-                    capacity: 0,
-                  },
-                  isFromRental: s.isFromRental,
-                  rentalId: s.rentalId,
-                },
-                slotsForDate: matching.map(sl => ({
-                  id: sl.id,
-                  date: dateStr,
-                  startTime: sl.startTime,
-                  endTime: sl.endTime,
-                  price: sl.price,
-                  court: {
-                    id: state.courtId,
-                    name: courtInfo?.label || state.courtName,
-                    sportType: state.sport || '',
-                    capacity: 0,
-                  },
-                  isFromRental: sl.isFromRental,
-                  rentalId: sl.rentalId,
-                })),
-              });
-            }
-          }
-        } else {
-          // Non-owner: available only if they have reservations in the window
-          if (matching.length > 0) {
-            setIsAvailable(true);
-            const courtInfo = courts.find(c => c.value === state.courtId);
-            for (const s of matching) {
-              dispatch({
-                type: 'TOGGLE_SLOT',
-                slot: {
-                  id: s.id,
-                  date: dateStr,
-                  startTime: s.startTime,
-                  endTime: s.endTime,
-                  price: s.price,
-                  court: {
-                    id: state.courtId,
-                    name: courtInfo?.label || state.courtName,
-                    sportType: state.sport || '',
-                    capacity: 0,
-                  },
-                  isFromRental: s.isFromRental,
-                  rentalId: s.rentalId,
-                },
-                slotsForDate: matching.map(sl => ({
-                  id: sl.id,
-                  date: dateStr,
-                  startTime: sl.startTime,
-                  endTime: sl.endTime,
-                  price: sl.price,
-                  court: {
-                    id: state.courtId,
-                    name: courtInfo?.label || state.courtName,
-                    sportType: state.sport || '',
-                    capacity: 0,
-                  },
-                  isFromRental: sl.isFromRental,
-                  rentalId: sl.rentalId,
-                })),
-              });
-            }
-          } else {
-            setIsAvailable(false);
-          }
-        }
+        setIsAvailable(allAvailable ? true : false);
       })
       .catch(() => setIsAvailable(false))
       .finally(() => setCheckingAvailability(false));
