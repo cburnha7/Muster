@@ -33,10 +33,11 @@ export function canContinue(state: WizardState, step: number): boolean {
         return state.locationName.trim().length > 0;
       }
       if (state.locationMode === 'muster') {
+        // Owner can proceed without selected slots; non-owner needs at least one
         return (
           state.facilityId !== '' &&
           state.courtId !== '' &&
-          state.selectedSlots.length > 0
+          (state.isOwner || state.selectedSlots.length > 0)
         );
       }
       return false;
