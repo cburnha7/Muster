@@ -12,7 +12,11 @@ import {
   CancellationPolicy,
   CancellationPolicyResponse,
 } from '../../types';
-import { CourtForEvent, DateForCourt, SlotForDate } from '../../screens/events/create-flow/types';
+import {
+  CourtForEvent,
+  DateForCourt,
+  SlotForDate,
+} from '../../screens/events/create-flow/types';
 
 export class FacilityService extends BaseApiService {
   constructor() {
@@ -31,7 +35,10 @@ export class FacilityService extends BaseApiService {
       ...pagination,
     };
 
-    return this.get<PaginatedResponse<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
+    return this.get<PaginatedResponse<Facility>>(
+      API_ENDPOINTS.FACILITIES.BASE,
+      { params }
+    );
   }
 
   /**
@@ -39,7 +46,7 @@ export class FacilityService extends BaseApiService {
    */
   async getFacility(id: string, skipCache: boolean = false): Promise<Facility> {
     return this.get<Facility>(API_ENDPOINTS.FACILITIES.BY_ID(id), {
-      cacheOptions: { skipCache }
+      cacheOptions: { skipCache },
     });
   }
 
@@ -52,8 +59,10 @@ export class FacilityService extends BaseApiService {
     state: string;
     zipCode: string;
   }): Promise<Facility[]> {
-    return this.post<{ duplicates: Facility[] }>(`${API_ENDPOINTS.FACILITIES.BASE}/check-duplicates`, address)
-      .then(response => response.duplicates);
+    return this.post<{ duplicates: Facility[] }>(
+      `${API_ENDPOINTS.FACILITIES.BASE}/check-duplicates`,
+      address
+    ).then(response => response.duplicates);
   }
 
   /**
@@ -66,7 +75,10 @@ export class FacilityService extends BaseApiService {
   /**
    * Update an existing facility
    */
-  async updateFacility(id: string, updates: UpdateFacilityData): Promise<Facility> {
+  async updateFacility(
+    id: string,
+    updates: UpdateFacilityData
+  ): Promise<Facility> {
     return this.put<Facility>(API_ENDPOINTS.FACILITIES.BY_ID(id), updates);
   }
 
@@ -91,7 +103,9 @@ export class FacilityService extends BaseApiService {
       ...pagination,
     };
 
-    return this.get<SearchResult<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
+    return this.get<SearchResult<Facility>>(API_ENDPOINTS.FACILITIES.BASE, {
+      params,
+    });
   }
 
   /**
@@ -150,10 +164,16 @@ export class FacilityService extends BaseApiService {
   /**
    * Delete facility image
    */
-  async deleteFacilityImage(facilityId: string, imageUrl: string): Promise<void> {
-    return this.delete<void>(`${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`, {
-      data: { imageUrl },
-    });
+  async deleteFacilityImage(
+    facilityId: string,
+    imageUrl: string
+  ): Promise<void> {
+    return this.delete<void>(
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`,
+      {
+        data: { imageUrl },
+      }
+    );
   }
 
   /**
@@ -168,7 +188,10 @@ export class FacilityService extends BaseApiService {
       ownerId,
     };
 
-    return this.get<PaginatedResponse<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
+    return this.get<PaginatedResponse<Facility>>(
+      API_ENDPOINTS.FACILITIES.BASE,
+      { params }
+    );
   }
 
   /**
@@ -178,21 +201,26 @@ export class FacilityService extends BaseApiService {
     facilityId: string,
     startDate: Date,
     endDate: Date
-  ): Promise<{
-    date: string;
-    timeSlots: {
-      start: string;
-      end: string;
-      available: boolean;
-      eventId?: string;
-    }[];
-  }[]> {
+  ): Promise<
+    {
+      date: string;
+      timeSlots: {
+        start: string;
+        end: string;
+        available: boolean;
+        eventId?: string;
+      }[];
+    }[]
+  > {
     const params = {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
     };
 
-    return this.get(`${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/availability`, { params });
+    return this.get(
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/availability`,
+      { params }
+    );
   }
 
   /**
@@ -223,7 +251,10 @@ export class FacilityService extends BaseApiService {
       sportTypes: [sportType],
     };
 
-    return this.get<PaginatedResponse<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
+    return this.get<PaginatedResponse<Facility>>(
+      API_ENDPOINTS.FACILITIES.BASE,
+      { params }
+    );
   }
 
   /**
@@ -240,21 +271,30 @@ export class FacilityService extends BaseApiService {
       amenities,
     };
 
-    return this.get<PaginatedResponse<Facility>>(API_ENDPOINTS.FACILITIES.BASE, { params });
+    return this.get<PaginatedResponse<Facility>>(
+      API_ENDPOINTS.FACILITIES.BASE,
+      { params }
+    );
   }
 
   /**
    * Check facility name availability
    */
-  async checkNameAvailability(name: string, excludeId?: string): Promise<{ available: boolean }> {
+  async checkNameAvailability(
+    name: string,
+    excludeId?: string
+  ): Promise<{ available: boolean }> {
     const params = {
       name,
       excludeId,
     };
 
-    return this.get<{ available: boolean }>(`${API_ENDPOINTS.FACILITIES.BASE}/check-name`, {
-      params,
-    });
+    return this.get<{ available: boolean }>(
+      `${API_ENDPOINTS.FACILITIES.BASE}/check-name`,
+      {
+        params,
+      }
+    );
   }
 
   /**
@@ -270,7 +310,9 @@ export class FacilityService extends BaseApiService {
       sortBy: 'popularity',
     };
 
-    return this.get<Facility[]>(`${API_ENDPOINTS.FACILITIES.BASE}/popular`, { params });
+    return this.get<Facility[]>(`${API_ENDPOINTS.FACILITIES.BASE}/popular`, {
+      params,
+    });
   }
 
   /**
@@ -282,14 +324,19 @@ export class FacilityService extends BaseApiService {
     total: number;
   }> {
     const params = { userId };
-    return this.get(`${API_ENDPOINTS.FACILITIES.BASE}/authorized/for-events`, { params });
+    return this.get(`${API_ENDPOINTS.FACILITIES.BASE}/authorized/for-events`, {
+      params,
+    });
   }
 
   /**
    * Get available time slots for event creation at a facility
    * Returns slots based on ownership (all available) or rentals (only user's rentals)
    */
-  async getAvailableSlots(facilityId: string, userId: string): Promise<{
+  async getAvailableSlots(
+    facilityId: string,
+    userId: string
+  ): Promise<{
     data: Array<{
       id: string;
       date: string;
@@ -309,7 +356,10 @@ export class FacilityService extends BaseApiService {
     total: number;
   }> {
     const params = { userId };
-    return this.get(`${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/available-slots`, { params });
+    return this.get(
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/available-slots`,
+      { params }
+    );
   }
   /**
    * Get courts available for event creation at a facility
@@ -318,11 +368,13 @@ export class FacilityService extends BaseApiService {
   async getCourtsForEvent(
     facilityId: string,
     userId: string,
-    sportType?: string,
+    sportType?: string
   ): Promise<{ data: CourtForEvent[]; isOwner: boolean }> {
     const params: Record<string, string> = { userId };
     if (sportType) params.sportType = sportType;
-    return this.get(API_ENDPOINTS.FACILITIES.COURTS_FOR_EVENT(facilityId), { params });
+    return this.get(API_ENDPOINTS.FACILITIES.COURTS_FOR_EVENT(facilityId), {
+      params,
+    });
   }
 
   /**
@@ -331,10 +383,12 @@ export class FacilityService extends BaseApiService {
   async getDatesForCourt(
     facilityId: string,
     courtId: string,
-    userId: string,
+    userId: string
   ): Promise<{ data: DateForCourt[]; isOwner: boolean }> {
     const params = { userId };
-    return this.get(API_ENDPOINTS.FACILITIES.COURT_DATES(facilityId, courtId), { params });
+    return this.get(API_ENDPOINTS.FACILITIES.COURT_DATES(facilityId, courtId), {
+      params,
+    });
   }
 
   /**
@@ -344,16 +398,49 @@ export class FacilityService extends BaseApiService {
     facilityId: string,
     courtId: string,
     userId: string,
-    date: string,
+    date: string
   ): Promise<{ data: SlotForDate[]; isOwner: boolean }> {
     const params = { userId, date };
-    return this.get(API_ENDPOINTS.FACILITIES.COURT_SLOTS(facilityId, courtId), { params });
+    return this.get(API_ENDPOINTS.FACILITIES.COURT_SLOTS(facilityId, courtId), {
+      params,
+    });
+  }
+
+  /**
+   * Get on-demand court schedule for a date (computed from operating hours + rentals)
+   */
+  async getCourtSchedule(
+    facilityId: string,
+    courtId: string,
+    userId: string,
+    date: string
+  ): Promise<{
+    courtId: string;
+    courtName: string;
+    date: string;
+    isOwner: boolean;
+    slotIncrementMinutes: number;
+    minimumBookingMinutes: number;
+    schedule: Array<{
+      startTime: string;
+      endTime: string;
+      status: 'available' | 'booked' | 'own_reservation';
+      price: number;
+    }>;
+  }> {
+    const params = { userId, date };
+    return this.get(`/facilities/${facilityId}/courts/${courtId}/schedule`, {
+      params,
+      cacheOptions: { skipCache: true },
+    });
   }
 
   /**
    * Get cancellation policy for a facility
    */
-  async getCancellationPolicy(facilityId: string): Promise<CancellationPolicyResponse> {
+  async getCancellationPolicy(
+    facilityId: string
+  ): Promise<CancellationPolicyResponse> {
     return this.get<CancellationPolicyResponse>(
       API_ENDPOINTS.FACILITIES.CANCELLATION_POLICY(facilityId)
     );

@@ -37,6 +37,7 @@ export function Step4Where() {
   // Availability check state
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [availabilityIsOwner, setAvailabilityIsOwner] = useState(false);
 
   const loadFacilities = useCallback(async () => {
     if (!user?.id) return;
@@ -107,57 +108,22 @@ export function Step4Where() {
 
     setCheckingAvailability(true);
     facilityService
-      .getSlotsForDate(state.facilityId, state.courtId, user.id, dateStr)
+      .getCourtSchedule(state.facilityId, state.courtId, user.id, dateStr)
       .then(res => {
-        const slots = res.data || [];
-        // Check if all slots within the event window are available
-        const matching = slots.filter(
-          s => s.startTime >= eventStart && s.endTime <= eventEnd
-        );
+        setAvailabilityIsOwner(res.isOwner);
+        const schedule = res.schedule || [];
 
-        if (matching.length > 0) {
-          // All matching slots are available (the API already filters by ownership/rental)
-          setIsAvailable(true);
-          // Auto-select the matching slots
-          const courtInfo = courts.find(c => c.value === state.courtId);
-          for (const s of matching) {
-            dispatch({
-              type: 'TOGGLE_SLOT',
-              slot: {
-                id: s.id,
-                date: dateStr,
-                startTime: s.startTime,
-                endTime: s.endTime,
-                price: s.price,
-                court: {
-                  id: state.courtId,
-                  name: courtInfo?.label || state.courtName,
-                  sportType: state.sport || '',
-                  capacity: 0,
-                },
-                isFromRental: s.isFromRental,
-                rentalId: s.rentalId,
-              },
-              slotsForDate: matching.map(sl => ({
-                id: sl.id,
-                date: dateStr,
-                startTime: sl.startTime,
-                endTime: sl.endTime,
-                price: sl.price,
-                court: {
-                  id: state.courtId,
-                  name: courtInfo?.label || state.courtName,
-                  sportType: state.sport || '',
-                  capacity: 0,
-                },
-                isFromRental: sl.isFromRental,
-                rentalId: sl.rentalId,
-              })),
-            });
-          }
-        } else {
-          setIsAvailable(false);
-        }
+        // Check if all slots in the event window are available or own_reservation
+        const slotsInWindow = schedule.filter(
+          s => s.startTime >= eventStart && s.startTime < eventEnd
+        );
+        const allAvailable =
+          slotsInWindow.length > 0 &&
+          slotsInWindow.every(
+            s => s.status === 'available' || s.status === 'own_reservation'
+          );
+
+        setIsAvailable(allAvailable ? true : false);
       })
       .catch(() => setIsAvailable(false))
       .finally(() => setCheckingAvailability(false));
@@ -374,6 +340,9 @@ export function Step4Where() {
                     <Text style={styles.availableLabel}>Available</Text>
                     <Text style={styles.availableDate}>{eventDateLabel}</Text>
                     <Text style={styles.availableTime}>{eventTimeLabel}</Text>
+                    {availabilityIsOwner && (
+                      <Text style={styles.ownerNote}>You own this ground</Text>
+                    )}
                   </View>
                 </View>
               ) : isAvailable === false ? (
@@ -384,7 +353,9 @@ export function Step4Where() {
                     color={colors.heart}
                   />
                   <Text style={styles.unavailableText}>
-                    This time is not available on the selected court.
+                    {availabilityIsOwner
+                      ? 'This time slot is reserved by another user.'
+                      : 'You don\u2019t have a reservation for this time.'}
                   </Text>
                   <TouchableOpacity
                     style={styles.bookCourtBtn}
@@ -580,6 +551,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.inkSoft,
+  },
+  ownerNote: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.pine,
+    marginTop: 2,
   },
   unavailableCard: {
     alignItems: 'center',
