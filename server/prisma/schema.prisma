@@ -720,7 +720,7 @@ model FacilityCourt {
   pricePerHour Float?
 
   // Minimum booking duration in minutes (e.g. 30, 60)
-  minimumBookingMinutes Int @default(60)
+  minimumBookingMinutes Int? @default(60)
 
   // Display order for listing
   displayOrder Int @default(0)
