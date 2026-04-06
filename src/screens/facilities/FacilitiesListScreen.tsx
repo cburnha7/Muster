@@ -249,14 +249,10 @@ export function FacilitiesListScreen() {
   const handleFacilityPress = (facility: Facility) => {
     const params = route.params as any;
     const returnTo = params?.returnTo;
-    if (currentUser && facility.ownerId === currentUser.id) {
-      (navigation as any).navigate('EditFacility', { facilityId: facility.id });
-    } else {
-      (navigation as any).navigate('FacilityDetails', {
-        facilityId: facility.id,
-        ...(returnTo ? { returnTo } : {}),
-      });
-    }
+    (navigation as any).navigate('FacilityDetails', {
+      facilityId: facility.id,
+      ...(returnTo ? { returnTo } : {}),
+    });
   };
 
   const handleCreateFacility = () => {

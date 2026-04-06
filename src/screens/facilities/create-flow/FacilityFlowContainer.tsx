@@ -54,11 +54,6 @@ export function FacilityFlowContainer({
   const enabled = canContinue(state, currentStep);
   const isLastStep = currentStep === 4;
 
-  const handleBack = () => {
-    if (currentStep === 0) navigation.goBack();
-    else dispatch({ type: 'PREV_STEP' });
-  };
-
   const handlePress = () => {
     if (isLastStep) onSubmit();
     else dispatch({ type: 'NEXT_STEP' });
@@ -67,13 +62,7 @@ export function FacilityFlowContainer({
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.headerRow}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.ink} />
-        </TouchableOpacity>
+        <View style={styles.backBtn} />
         <View style={styles.dotsWrapper}>
           <WizardProgressDots current={currentStep} total={5} />
         </View>
@@ -120,7 +109,7 @@ const styles = StyleSheet.create({
   stageContainer: { flex: 1 },
   buttonContainer: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 8 },
   button: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',

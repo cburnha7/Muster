@@ -34,9 +34,9 @@ import {
 } from '../../components/facilities';
 import type { TimeSlot } from '../../components/facilities/TimeSlotGrid';
 import {
-  DayScheduleTimeline,
-  ScheduleSlot,
-} from '../../components/facilities/DayScheduleTimeline';
+  VisualDaySchedule,
+  ScheduleBlock,
+} from '../../components/facilities/VisualDaySchedule';
 import type { CartSlot } from '../../components/facilities/BulkBookingConfirmationModal';
 import type { ConflictSlot } from '../../components/facilities/BookingConflictModal';
 import { useAuth } from '../../context/AuthContext';
@@ -74,6 +74,14 @@ interface AvailabilityData {
   totalSlots: number;
   availableSlots: number;
   slots: TimeSlot[];
+}
+
+function fmt12Time(t: string): string {
+  const p = t.split(':').map(Number);
+  const h = p[0] || 0;
+  const m = p[1] || 0;
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
 
 export function CourtAvailabilityScreen() {
@@ -231,23 +239,22 @@ export function CourtAvailabilityScreen() {
   const loadAvailability = async (cId: string, date: string) => {
     try {
       setLoadingSlots(true);
-      setScheduleStart(null);
-      setScheduleEnd(null);
-      const tzOffset = new Date().getTimezoneOffset();
+      setOverlapError(null);
       const response = await fetch(
-        `${API_BASE_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}&tzOffset=${tzOffset}`
+        `${API_BASE_URL}/facilities/${facilityId}/courts/${cId}/schedule?date=${date}&userId=${user?.id || ''}`
       );
-      if (!response.ok) throw new Error('Failed to load availability');
+      if (!response.ok) throw new Error('Failed to load schedule');
       const data = await response.json();
-      setAvailabilityData(data as AvailabilityData);
-      if (data.minimumBookingMinutes) {
+      setScheduleData(data.schedule || []);
+      if (data.minimumBookingMinutes)
         setMinimumBookingMinutes(data.minimumBookingMinutes);
-      }
+      if (data.slotIncrementMinutes)
+        setSlotIncrement(data.slotIncrementMinutes);
       const marked = createMarkedDates([], [], [], selectedDate);
       setMarkedDates(marked);
     } catch (error) {
-      console.error('Load availability error:', error);
-      Alert.alert('Error', 'Failed to load availability. Please try again.');
+      console.error('Load schedule error:', error);
+      Alert.alert('Error', 'Failed to load court schedule. Please try again.');
     } finally {
       setLoadingSlots(false);
     }
@@ -329,6 +336,35 @@ export function CourtAvailabilityScreen() {
     availabilityData,
     facilityId,
   ]);
+
+  // Check for overlap when booking times change
+  React.useEffect(() => {
+    if (!bookingStart || !bookingEnd || scheduleData.length === 0) {
+      setOverlapError(null);
+      return;
+    }
+    const toMin = (t: string) => {
+      const p = t.split(':').map(Number);
+      return (p[0] || 0) * 60 + (p[1] || 0);
+    };
+    const startMin = toMin(bookingStart);
+    const endMin = toMin(bookingEnd);
+    if (endMin <= startMin) {
+      setOverlapError(null);
+      return;
+    }
+    const overlap = scheduleData.some(s => {
+      if (s.status !== 'booked') return false;
+      const bs = toMin(s.startTime);
+      const be = toMin(s.endTime);
+      return startMin < be && endMin > bs;
+    });
+    setOverlapError(
+      overlap
+        ? 'Your selected time overlaps with an existing reservation.'
+        : null
+    );
+  }, [bookingStart, bookingEnd, scheduleData]);
 
   const handleDateSelect = (day: DateData) => {
     setSelectedDate(day.dateString);
@@ -695,49 +731,137 @@ export function CourtAvailabilityScreen() {
           />
         </View>
 
-        {/* Whole Day Toggle */}
-        {availabilityData &&
-          availabilityData.slots.some(s => s.status === 'available') && (
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLabel}>
-                <Ionicons name="sunny" size={18} color={colors.gold} />
-                <Text style={styles.toggleText}>Book the Whole Day</Text>
-              </View>
-              <Switch
-                value={wholeDayOn}
-                onValueChange={handleWholeDayToggle}
-                trackColor={{ false: '#DDD', true: colors.cobaltLight }}
-                thumbColor={wholeDayOn ? colors.cobalt : '#F4F4F4'}
-              />
+        {/* Start/End Time + Visual Schedule */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Select Time</Text>
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.label,
+                  fontSize: 12,
+                  color: colors.inkSoft,
+                  marginBottom: 4,
+                  textAlign: 'center',
+                }}
+              >
+                Start Time
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: 14,
+                  alignItems: 'center',
+                }}
+                onPress={() => {
+                  // Simple time picker — cycle through schedule times
+                  if (scheduleData.length === 0) return;
+                  const times = scheduleData
+                    .filter(s => s.status === 'available')
+                    .map(s => s.startTime);
+                  if (times.length === 0) return;
+                  const idx = bookingStart ? times.indexOf(bookingStart) : -1;
+                  const next = times[(idx + 1) % times.length] || times[0];
+                  setBookingStart(next || '');
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.headingSemi || fonts.heading,
+                    fontSize: 18,
+                    color: bookingStart ? colors.ink : colors.inkFaint,
+                  }}
+                >
+                  {bookingStart ? fmt12Time(bookingStart) : 'Select'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.label,
+                  fontSize: 12,
+                  color: colors.inkSoft,
+                  marginBottom: 4,
+                  textAlign: 'center',
+                }}
+              >
+                End Time
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: 14,
+                  alignItems: 'center',
+                }}
+                onPress={() => {
+                  if (scheduleData.length === 0) return;
+                  const times = scheduleData
+                    .filter(s => s.status === 'available')
+                    .map(s => s.endTime);
+                  const unique = [...new Set(times)];
+                  if (unique.length === 0) return;
+                  const idx = bookingEnd ? unique.indexOf(bookingEnd) : -1;
+                  const next = unique[(idx + 1) % unique.length] || unique[0];
+                  setBookingEnd(next || '');
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: fonts.headingSemi || fonts.heading,
+                    fontSize: 18,
+                    color: bookingEnd ? colors.ink : colors.inkFaint,
+                  }}
+                >
+                  {bookingEnd ? fmt12Time(bookingEnd) : 'Select'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {overlapError && (
+            <View
+              style={{
+                backgroundColor: colors.heartTint,
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Ionicons name="warning-outline" size={16} color={colors.heart} />
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 13,
+                  color: colors.heart,
+                  flex: 1,
+                }}
+              >
+                {overlapError}
+              </Text>
             </View>
           )}
 
-        {/* Time Slots */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Available Time Slots</Text>
-            {availabilityData && (
-              <Text style={styles.availabilityCount}>
-                {availabilityData.availableSlots} of{' '}
-                {availabilityData.totalSlots} available
-              </Text>
-            )}
-          </View>
-
           {loadingSlots ? (
             <View style={styles.loadingSlotsContainer}>
-              <ActivityIndicator size="small" color={colors.cobalt} />
-              <Text style={styles.loadingSlotsText}>Loading time slots...</Text>
+              <ActivityIndicator size="small" color={colors.pine} />
+              <Text style={styles.loadingSlotsText}>Loading schedule...</Text>
             </View>
-          ) : availabilityData && availabilityData.slots.length > 0 ? (
-            <DayScheduleTimeline
-              slots={scheduleSlots}
-              selectedStart={scheduleStart}
-              selectedEnd={scheduleEnd}
-              onSelectStart={setScheduleStart}
-              onSelectEnd={setScheduleEnd}
-              minimumMinutes={minimumBookingMinutes}
-              incrementMinutes={30}
+          ) : scheduleData.length > 0 ? (
+            <VisualDaySchedule
+              schedule={scheduleData}
+              proposedStart={bookingStart || null}
+              proposedEnd={bookingEnd || null}
+              slotIncrementMinutes={slotIncrement}
             />
           ) : (
             <View style={styles.noSlotsContainer}>
@@ -747,41 +871,10 @@ export function CourtAvailabilityScreen() {
                 color={colors.inkFaint}
               />
               <Text style={styles.noSlotsText}>
-                No time slots available for this date
+                No schedule available for this date
               </Text>
             </View>
           )}
-        </View>
-
-        {/* Legend */}
-        <View style={styles.legend}>
-          <Text style={styles.legendTitle}>Legend</Text>
-          <View style={styles.legendItems}>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: colors.cobalt }]}
-              />
-              <Text style={styles.legendText}>Available</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: colors.ink }]}
-              />
-              <Text style={styles.legendText}>Reserved</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: colors.heart }]}
-              />
-              <Text style={styles.legendText}>Blocked</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View
-                style={[styles.legendDot, { backgroundColor: colors.gold }]}
-              />
-              <Text style={styles.legendText}>Selected</Text>
-            </View>
-          </View>
         </View>
 
         {/* Recurring Booking Toggle — shown when exactly 1 slot is selected */}

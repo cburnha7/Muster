@@ -27,6 +27,7 @@ import { EmptyHomeState } from '../../components/home/EmptyHomeState';
 import { LiveGameBanner } from '../../components/home/LiveGameBanner';
 import { MyCrewRow, CrewMember } from '../../components/home/MyCrewRow';
 import { CrewEventCard } from '../../components/home/CrewEventCard';
+import { ProfileSelectorModal } from '../../components/ui/ProfileSelectorModal';
 import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
 import { useMilestoneCheck } from '../../hooks/useMilestoneCheck';
 
@@ -641,14 +642,30 @@ export function HomeScreen() {
     return `${days[d.getDay()]} ${h}${mins > 0 ? ':' + mins.toString().padStart(2, '0') : ''}${ampm}`;
   }, []);
 
+  // Profile selector for join
+  const [joinEventId, setJoinEventId] = useState<string | null>(null);
+  const [showJoinProfileSelector, setShowJoinProfileSelector] = useState(false);
+
   const handleJoinEvent = useCallback(
-    async (eventId: string) => {
+    (eventId: string) => {
       if (!user?.id) {
         Alert.alert('Error', 'You must be logged in to join a game.');
         return;
       }
+      if (dependents.length > 0) {
+        setJoinEventId(eventId);
+        setShowJoinProfileSelector(true);
+      } else {
+        doJoinEvent(eventId, user.id);
+      }
+    },
+    [user?.id, dependents]
+  );
+
+  const doJoinEvent = useCallback(
+    async (eventId: string, userId: string) => {
       try {
-        await bookEventMutation({ eventId, userId: user.id }).unwrap();
+        await bookEventMutation({ eventId, userId }).unwrap();
         Alert.alert('Joined!', 'You have been added to the game.');
       } catch (err: any) {
         const msg =
@@ -656,7 +673,16 @@ export function HomeScreen() {
         Alert.alert('Error', msg);
       }
     },
-    [bookEventMutation, user?.id]
+    [bookEventMutation]
+  );
+
+  const handleJoinProfileSelected = useCallback(
+    (profileId: string) => {
+      setShowJoinProfileSelector(false);
+      if (joinEventId) doJoinEvent(joinEventId, profileId);
+      setJoinEventId(null);
+    },
+    [joinEventId, doJoinEvent]
   );
 
   const handleCreateEvent = useCallback(() => {
@@ -867,6 +893,33 @@ export function HomeScreen() {
         visible={searchModalVisible}
         onCreateEvent={handleCreateEvent}
         onEventPress={handleSearchEventPress}
+      />
+
+      <ProfileSelectorModal
+        visible={showJoinProfileSelector}
+        profiles={[
+          ...(currentUser
+            ? [
+                {
+                  id: currentUser.id,
+                  firstName: currentUser.firstName,
+                  lastName: currentUser.lastName || '',
+                  profileImage: currentUser.profileImage,
+                },
+              ]
+            : []),
+          ...dependents.map(d => ({
+            id: d.id,
+            firstName: d.firstName,
+            lastName: d.lastName,
+            profileImage: d.profileImage,
+          })),
+        ]}
+        onSelect={handleJoinProfileSelected}
+        onCancel={() => {
+          setShowJoinProfileSelector(false);
+          setJoinEventId(null);
+        }}
       />
     </View>
   );
