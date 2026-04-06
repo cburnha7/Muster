@@ -29,6 +29,7 @@ export function AddCourtScreen(): JSX.Element {
     capacity: '1',
     isIndoor: false,
     pricePerHour: '',
+    minimumBookingMinutes: '60',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
@@ -96,7 +97,10 @@ export function AddCourtScreen(): JSX.Element {
         sportType: formData.sportType,
         capacity: parseInt(formData.capacity),
         isIndoor: formData.isIndoor,
-        pricePerHour: formData.pricePerHour ? parseFloat(formData.pricePerHour) : undefined,
+        pricePerHour: formData.pricePerHour
+          ? parseFloat(formData.pricePerHour)
+          : undefined,
+        minimumBookingMinutes: parseInt(formData.minimumBookingMinutes) || 60,
       };
 
       await courtService.createCourt(facilityId, data);
@@ -116,12 +120,15 @@ export function AddCourtScreen(): JSX.Element {
     >
       <ScreenHeader title="Add Court" showBack />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <FormInput
           label="Court Name"
           placeholder="e.g., Court 1, Field A"
           value={formData.name}
-          onChangeText={(value) => handleInputChange('name', value)}
+          onChangeText={value => handleInputChange('name', value)}
           error={errors.name}
           required
         />
@@ -131,7 +138,9 @@ export function AddCourtScreen(): JSX.Element {
           placeholder="Select sport"
           value={formData.sportType}
           options={sportTypeOptions}
-          onSelect={(option) => handleInputChange('sportType', option.value.toString())}
+          onSelect={option =>
+            handleInputChange('sportType', option.value.toString())
+          }
           error={errors.sportType}
           required
         />
@@ -141,14 +150,16 @@ export function AddCourtScreen(): JSX.Element {
           placeholder="Select location"
           value={formData.isIndoor.toString()}
           options={locationOptions}
-          onSelect={(option) => handleInputChange('isIndoor', option.value === 'true')}
+          onSelect={option =>
+            handleInputChange('isIndoor', option.value === 'true')
+          }
         />
 
         <FormInput
           label="Capacity"
           placeholder="Number of players"
           value={formData.capacity}
-          onChangeText={(value) => handleInputChange('capacity', value)}
+          onChangeText={value => handleInputChange('capacity', value)}
           error={errors.capacity}
           keyboardType="numeric"
           required
@@ -158,9 +169,24 @@ export function AddCourtScreen(): JSX.Element {
           label="Price Per Hour (Optional)"
           placeholder="Leave empty to use facility rate"
           value={formData.pricePerHour}
-          onChangeText={(value) => handleInputChange('pricePerHour', value)}
+          onChangeText={value => handleInputChange('pricePerHour', value)}
           error={errors.pricePerHour}
           keyboardType="decimal-pad"
+        />
+
+        <FormSelect
+          label="Minimum Booking Duration"
+          placeholder="Select minimum"
+          value={parseInt(formData.minimumBookingMinutes) || 60}
+          options={[
+            { label: '30 minutes', value: 30 },
+            { label: '1 hour', value: 60 },
+            { label: '1.5 hours', value: 90 },
+            { label: '2 hours', value: 120 },
+          ]}
+          onValueChange={v =>
+            handleInputChange('minimumBookingMinutes', String(v))
+          }
         />
       </ScrollView>
 

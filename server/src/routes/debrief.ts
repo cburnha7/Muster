@@ -7,7 +7,7 @@ const router = Router();
 // Events that ended within last 24 hours where user hasn't submitted debrief
 router.get('/', async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -26,6 +26,7 @@ router.get('/', async (req, res) => {
             lt: now,
           },
           status: { not: 'cancelled' },
+          eventType: { in: ['game', 'pickup'] },
         },
       },
       include: {
@@ -56,7 +57,7 @@ router.get('/', async (req, res) => {
 // Get debrief details for a specific event (participants list)
 router.get('/:eventId', async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -156,7 +157,7 @@ router.get('/:eventId', async (req, res) => {
 // Submit debrief (salutes + optional facility rating)
 router.post('/:eventId/submit', async (req, res) => {
   try {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -170,6 +171,7 @@ router.post('/:eventId/submit', async (req, res) => {
       select: {
         id: true,
         endTime: true,
+        eventType: true,
         facilityId: true,
         bookings: {
           where: { status: 'confirmed' },
@@ -182,10 +184,19 @@ router.post('/:eventId/submit', async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    if (event.eventType === 'practice') {
+      return res
+        .status(400)
+        .json({ error: 'Debriefs are not available for practice events' });
+    }
+
     const now = new Date();
-    const hoursSinceEnd = (now.getTime() - new Date(event.endTime).getTime()) / (1000 * 60 * 60);
+    const hoursSinceEnd =
+      (now.getTime() - new Date(event.endTime).getTime()) / (1000 * 60 * 60);
     if (hoursSinceEnd > 24 || new Date(event.endTime) > now) {
-      return res.status(400).json({ error: 'Debrief window has closed or event has not ended' });
+      return res
+        .status(400)
+        .json({ error: 'Debrief window has closed or event has not ended' });
     }
 
     // Validate user was a participant
@@ -193,7 +204,9 @@ router.post('/:eventId/submit', async (req, res) => {
       where: { userId, eventId, status: 'confirmed' },
     });
     if (!booking) {
-      return res.status(403).json({ error: 'You were not a participant in this event' });
+      return res
+        .status(403)
+        .json({ error: 'You were not a participant in this event' });
     }
     if (booking.debriefSubmitted) {
       return res.status(400).json({ error: 'Debrief already submitted' });
@@ -214,13 +227,19 @@ router.post('/:eventId/submit', async (req, res) => {
       if (!event.facilityId) {
         return res.status(400).json({ error: 'Event has no facility to rate' });
       }
-      if (facilityRating < 1 || facilityRating > 5 || !Number.isInteger(facilityRating)) {
-        return res.status(400).json({ error: 'Rating must be an integer between 1 and 5' });
+      if (
+        facilityRating < 1 ||
+        facilityRating > 5 ||
+        !Number.isInteger(facilityRating)
+      ) {
+        return res
+          .status(400)
+          .json({ error: 'Rating must be an integer between 1 and 5' });
       }
     }
 
     // Execute all writes in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // Create salutes (skip duplicates)
       for (const toUserId of salutedUserIds) {
         await tx.salute.upsert({

@@ -24,6 +24,7 @@ export interface CreateCourtData {
   boundaryCoordinates?: any;
   pricePerHour?: number;
   displayOrder?: number;
+  minimumBookingMinutes?: number;
 }
 
 export interface UpdateCourtData extends Partial<CreateCourtData> {
@@ -70,9 +71,12 @@ class CourtService extends BaseApiService {
   }
 
   // Court Management
-  async getCourts(facilityId: string, skipCache: boolean = false): Promise<Court[]> {
+  async getCourts(
+    facilityId: string,
+    skipCache: boolean = false
+  ): Promise<Court[]> {
     return this.get<Court[]>(`/facilities/${facilityId}/courts`, {
-      cacheOptions: { skipCache }
+      cacheOptions: { skipCache },
     });
   }
 
@@ -84,7 +88,11 @@ class CourtService extends BaseApiService {
     return this.post<Court>(`/facilities/${facilityId}/courts`, data);
   }
 
-  async updateCourt(facilityId: string, courtId: string, data: UpdateCourtData): Promise<Court> {
+  async updateCourt(
+    facilityId: string,
+    courtId: string,
+    data: UpdateCourtData
+  ): Promise<Court> {
     return this.put<Court>(`/facilities/${facilityId}/courts/${courtId}`, data);
   }
 
@@ -108,7 +116,12 @@ class CourtService extends BaseApiService {
   async blockTimeSlot(
     facilityId: string,
     courtId: string,
-    data: { date: string; startTime: string; endTime: string; blockReason?: string }
+    data: {
+      date: string;
+      startTime: string;
+      endTime: string;
+      blockReason?: string;
+    }
   ): Promise<TimeSlot> {
     return this.post<TimeSlot>(
       `/facilities/${facilityId}/courts/${courtId}/slots/block`,
@@ -116,7 +129,11 @@ class CourtService extends BaseApiService {
     );
   }
 
-  async unblockTimeSlot(facilityId: string, courtId: string, slotId: string): Promise<TimeSlot> {
+  async unblockTimeSlot(
+    facilityId: string,
+    courtId: string,
+    slotId: string
+  ): Promise<TimeSlot> {
     return this.delete<TimeSlot>(
       `/facilities/${facilityId}/courts/${courtId}/slots/${slotId}/unblock`
     );
@@ -154,13 +171,20 @@ class CourtService extends BaseApiService {
     );
   }
 
-  async cancelRental(rentalId: string, userId: string, cancellationReason?: string): Promise<Rental> {
+  async cancelRental(
+    rentalId: string,
+    userId: string,
+    cancellationReason?: string
+  ): Promise<Rental> {
     return this.delete<Rental>(`/rentals/${rentalId}`, {
       data: { userId, cancellationReason },
     });
   }
 
-  async getMyRentals(userId: string, params?: { status?: string; upcoming?: boolean }): Promise<Rental[]> {
+  async getMyRentals(
+    userId: string,
+    params?: { status?: string; upcoming?: boolean }
+  ): Promise<Rental[]> {
     return this.get<Rental[]>('/rentals/my-rentals', {
       params: { userId, ...params },
     });

@@ -29,11 +29,14 @@ import {
   createMarkedDates,
 } from '../../utils/calendarUtils';
 import {
-  TimeSlotGrid,
   BulkBookingConfirmationModal,
   BookingConflictModal,
 } from '../../components/facilities';
 import type { TimeSlot } from '../../components/facilities/TimeSlotGrid';
+import {
+  DayScheduleTimeline,
+  ScheduleSlot,
+} from '../../components/facilities/DayScheduleTimeline';
 import type { CartSlot } from '../../components/facilities/BulkBookingConfirmationModal';
 import type { ConflictSlot } from '../../components/facilities/BookingConflictModal';
 import { useAuth } from '../../context/AuthContext';
@@ -118,6 +121,11 @@ export function CourtAvailabilityScreen() {
 
   // Whole day toggle
   const [wholeDayOn, setWholeDayOn] = useState(false);
+
+  // Visual schedule selection
+  const [scheduleStart, setScheduleStart] = useState<string | null>(null);
+  const [scheduleEnd, setScheduleEnd] = useState<string | null>(null);
+  const [minimumBookingMinutes, setMinimumBookingMinutes] = useState(60);
 
   // Modals
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -223,13 +231,18 @@ export function CourtAvailabilityScreen() {
   const loadAvailability = async (cId: string, date: string) => {
     try {
       setLoadingSlots(true);
+      setScheduleStart(null);
+      setScheduleEnd(null);
       const tzOffset = new Date().getTimezoneOffset();
       const response = await fetch(
         `${API_BASE_URL}/facilities/${facilityId}/courts/${cId}/availability?date=${date}&tzOffset=${tzOffset}`
       );
       if (!response.ok) throw new Error('Failed to load availability');
-      const data: AvailabilityData = await response.json();
-      setAvailabilityData(data);
+      const data = await response.json();
+      setAvailabilityData(data as AvailabilityData);
+      if (data.minimumBookingMinutes) {
+        setMinimumBookingMinutes(data.minimumBookingMinutes);
+      }
       const marked = createMarkedDates([], [], [], selectedDate);
       setMarkedDates(marked);
     } catch (error) {
@@ -239,6 +252,83 @@ export function CourtAvailabilityScreen() {
       setLoadingSlots(false);
     }
   };
+
+  // Convert availability slots to schedule format
+  const scheduleSlots: ScheduleSlot[] = React.useMemo(() => {
+    if (!availabilityData?.slots) return [];
+    return availabilityData.slots.map(slot => {
+      let status: ScheduleSlot['status'] = 'available';
+      if (slot.status === 'blocked') status = 'blocked';
+      else if (slot.status === 'rented') {
+        status =
+          (slot as any).rentalUserId === user?.id ? 'own_rental' : 'rented';
+      }
+      return {
+        time: slot.startTime,
+        status,
+        slotId: slot.id,
+        label:
+          status === 'rented'
+            ? 'Booked'
+            : status === 'own_rental'
+              ? 'Your Reservation'
+              : undefined,
+      };
+    });
+  }, [availabilityData, user?.id]);
+
+  // When schedule selection changes, sync to cart
+  React.useEffect(() => {
+    if (!scheduleStart || !scheduleEnd || !selectedCourt || !availabilityData)
+      return;
+    const startMin =
+      parseInt(scheduleStart.split(':')[0]) * 60 +
+      parseInt(scheduleStart.split(':')[1]);
+    const endMin =
+      parseInt(scheduleEnd.split(':')[0]) * 60 +
+      parseInt(scheduleEnd.split(':')[1]);
+    // Clear existing cart for this court/date, add selected slots
+    setSelectionCart(prev => {
+      const next = new Map(prev);
+      // Remove old selections for this court+date
+      for (const [key, val] of next) {
+        if (val.courtId === selectedCourt.id && val.date === selectedDate) {
+          next.delete(key);
+        }
+      }
+      // Add slots in the selected range
+      for (const slot of availabilityData.slots) {
+        const slotMin =
+          parseInt(slot.startTime.split(':')[0]) * 60 +
+          parseInt(slot.startTime.split(':')[1]);
+        if (
+          slot.status === 'available' &&
+          slot.id &&
+          slotMin >= startMin &&
+          slotMin < endMin
+        ) {
+          next.set(slot.id, {
+            slotId: slot.id,
+            facilityId,
+            courtId: selectedCourt.id,
+            courtName: selectedCourt.name,
+            date: selectedDate,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            price: slot.price || 0,
+          });
+        }
+      }
+      return next;
+    });
+  }, [
+    scheduleStart,
+    scheduleEnd,
+    selectedCourt,
+    selectedDate,
+    availabilityData,
+    facilityId,
+  ]);
 
   const handleDateSelect = (day: DateData) => {
     setSelectedDate(day.dateString);
@@ -640,12 +730,14 @@ export function CourtAvailabilityScreen() {
               <Text style={styles.loadingSlotsText}>Loading time slots...</Text>
             </View>
           ) : availabilityData && availabilityData.slots.length > 0 ? (
-            <TimeSlotGrid
-              timeSlots={availabilityData.slots}
-              onSlotPress={handleSlotPress}
-              selectable={true}
-              selectedSlots={currentViewSelectedIds}
-              currentUserId={user?.id}
+            <DayScheduleTimeline
+              slots={scheduleSlots}
+              selectedStart={scheduleStart}
+              selectedEnd={scheduleEnd}
+              onSelectStart={setScheduleStart}
+              onSelectEnd={setScheduleEnd}
+              minimumMinutes={minimumBookingMinutes}
+              incrementMinutes={30}
             />
           ) : (
             <View style={styles.noSlotsContainer}>
