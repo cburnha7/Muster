@@ -24,22 +24,70 @@ const SKILL_OPTIONS: SelectOption[] = [
   { label: 'Advanced', value: SkillLevel.ADVANCED },
 ];
 
-export function Step2Details() {
+/** Builds the auto-generated event name from host + sport + event type. */
+export function buildEventName(
+  host: string,
+  sport: string | null,
+  eventType: string | null
+): string {
+  const parts: string[] = [];
+  if (host.trim()) parts.push(host.trim());
+  if (sport) {
+    parts.push(
+      sport
+        .split('_')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+    );
+  }
+  if (eventType) {
+    parts.push(
+      eventType.charAt(0).toUpperCase() + eventType.slice(1).toLowerCase()
+    );
+  }
+  return parts.join(' ');
+}
+
+export function Step2Details(): React.JSX.Element {
   const { state, dispatch } = useCreateEvent();
 
   const maxParticipantsLabel =
     state.eventType === EventType.GAME ? 'Max Rosters' : 'Max Players';
 
+  const eventName = buildEventName(state.host, state.sport, state.eventType);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>How's it set up?</Text>
 
+      {/* Host */}
+      <Text style={styles.label}>Host</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="e.g. Burnham Bros"
+        placeholderTextColor={colors.inkFaint}
+        value={state.host}
+        onChangeText={v =>
+          dispatch({ type: 'SET_FIELD', field: 'host', value: v })
+        }
+        autoCapitalize="words"
+        returnKeyType="done"
+      />
+
+      {/* Event name preview */}
+      <View style={styles.namePreview}>
+        <Text style={styles.namePreviewLabel}>Event name</Text>
+        <Text style={styles.namePreviewValue} numberOfLines={2}>
+          {eventName || '—'}
+        </Text>
+      </View>
+
       <FormSelect
         label="Event Type"
         placeholder="Select event type"
-        value={state.eventType ?? undefined}
+        value={state.eventType ?? ''}
         options={EVENT_TYPE_OPTIONS}
-        onValueChange={(v) =>
+        onValueChange={v =>
           dispatch({ type: 'SET_EVENT_TYPE', eventType: v as EventType })
         }
       />
@@ -53,7 +101,7 @@ export function Step2Details() {
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
             value={state.minAge}
-            onChangeText={(v) =>
+            onChangeText={v =>
               dispatch({ type: 'SET_FIELD', field: 'minAge', value: v })
             }
           />
@@ -65,7 +113,7 @@ export function Step2Details() {
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
             value={state.maxAge}
-            onChangeText={(v) =>
+            onChangeText={v =>
               dispatch({ type: 'SET_FIELD', field: 'maxAge', value: v })
             }
           />
@@ -77,7 +125,7 @@ export function Step2Details() {
         placeholder="Select gender"
         value={state.genderRestriction}
         options={GENDER_OPTIONS}
-        onValueChange={(v) =>
+        onValueChange={v =>
           dispatch({ type: 'SET_FIELD', field: 'genderRestriction', value: v })
         }
       />
@@ -87,7 +135,7 @@ export function Step2Details() {
         placeholder="Select skill level"
         value={state.skillLevel}
         options={SKILL_OPTIONS}
-        onValueChange={(v) =>
+        onValueChange={v =>
           dispatch({ type: 'SET_FIELD', field: 'skillLevel', value: v })
         }
       />
@@ -99,7 +147,7 @@ export function Step2Details() {
         placeholderTextColor={colors.inkSoft}
         keyboardType="numeric"
         value={state.maxParticipants}
-        onChangeText={(v) =>
+        onChangeText={v =>
           dispatch({ type: 'SET_FIELD', field: 'maxParticipants', value: v })
         }
       />
@@ -113,7 +161,7 @@ export function Step2Details() {
           placeholderTextColor={colors.inkSoft}
           keyboardType="numeric"
           value={state.price}
-          onChangeText={(v) =>
+          onChangeText={v =>
             dispatch({ type: 'SET_FIELD', field: 'price', value: v })
           }
         />
@@ -144,14 +192,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginBottom: 8,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  halfField: {
-    flex: 1,
-  },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -163,6 +203,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.ink,
     marginBottom: 16,
+  },
+  // Auto-generated name preview
+  namePreview: {
+    backgroundColor: colors.cobaltTint,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.cobalt + '30',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  namePreviewLabel: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.cobalt,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  namePreviewValue: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.ink,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  halfField: {
+    flex: 1,
   },
   priceRow: {
     flexDirection: 'row',

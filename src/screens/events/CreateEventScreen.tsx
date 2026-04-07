@@ -2,10 +2,13 @@ import React, { useCallback } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { CreateEventProvider, useCreateEvent } from './create-flow/CreateEventContext';
+import {
+  CreateEventProvider,
+  useCreateEvent,
+} from './create-flow/CreateEventContext';
 import { EventFlowContainer } from './create-flow/EventFlowContainer';
 import { Step1Sport } from './create-flow/Step1Sport';
-import { Step2Details } from './create-flow/Step2Details';
+import { Step2Details, buildEventName } from './create-flow/Step2Details';
 import { Step3When } from './create-flow/Step3When';
 import { Step4Where } from './create-flow/Step4Where';
 import { Step5Invite } from './create-flow/Step5Invite';
@@ -26,23 +29,38 @@ function CreateEventInner() {
     if (!user || !state.sport) return;
     dispatch({ type: 'SUBMIT_START' });
     try {
-      const sportLabel = state.sport.charAt(0).toUpperCase() + state.sport.slice(1).replace(/_/g, ' ');
-      const typeLabel = state.eventType
-        ? state.eventType.charAt(0).toUpperCase() + state.eventType.slice(1)
-        : 'Event';
-
       // Build start/end times from date + time pickers
       const d = state.startDate ?? new Date();
       const st = state.startTime ?? new Date();
       const et = state.endTime ?? new Date();
-      const startTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), st.getHours(), st.getMinutes());
-      const endTime = new Date(d.getFullYear(), d.getMonth(), d.getDate(), et.getHours(), et.getMinutes());
+      const startTime = new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        st.getHours(),
+        st.getMinutes()
+      );
+      const endTime = new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        et.getHours(),
+        et.getMinutes()
+      );
 
-      const rosterIds = state.invitedItems.filter((i) => i.type === 'roster').map((i) => i.id);
-      const playerIds = state.invitedItems.filter((i) => i.type === 'player').map((i) => i.id);
+      const rosterIds = state.invitedItems
+        .filter(i => i.type === 'roster')
+        .map(i => i.id);
+      const playerIds = state.invitedItems
+        .filter(i => i.type === 'player')
+        .map(i => i.id);
 
       const eventData: any = {
-        title: `${sportLabel} ${typeLabel}`,
+        title: buildEventName(
+          state.host,
+          state.sport,
+          state.eventType || EventType.PICKUP
+        ),
         description: '',
         sportType: state.sport,
         eventType: state.eventType || EventType.PICKUP,
@@ -62,8 +80,10 @@ function CreateEventInner() {
         if (state.selectedSlots.length > 0) {
           const firstSlot = state.selectedSlots[0]!;
           eventData.timeSlotId = firstSlot.id;
-          eventData.timeSlotIds = state.selectedSlots.map((s) => s.id);
-          eventData.rentalIds = state.selectedSlots.map((s) => s.rentalId).filter(Boolean);
+          eventData.timeSlotIds = state.selectedSlots.map(s => s.id);
+          eventData.rentalIds = state.selectedSlots
+            .map(s => s.rentalId)
+            .filter(Boolean);
           if (firstSlot.rentalId) eventData.rentalId = firstSlot.rentalId;
         }
       } else if (state.locationMode === 'open') {
@@ -81,8 +101,10 @@ function CreateEventInner() {
           maxAge: state.maxAge ? parseInt(state.maxAge) : undefined,
         };
       }
-      if (state.genderRestriction) eventData.genderRestriction = state.genderRestriction;
-      if (state.minPlayerRating) eventData.minPlayerRating = parseInt(state.minPlayerRating);
+      if (state.genderRestriction)
+        eventData.genderRestriction = state.genderRestriction;
+      if (state.minPlayerRating)
+        eventData.minPlayerRating = parseInt(state.minPlayerRating);
 
       // Invites
       if (rosterIds.length > 0) {
@@ -105,6 +127,29 @@ function CreateEventInner() {
 
       const newEvent = await eventService.createEvent(eventData);
       reduxDispatch(addEvent(newEvent));
+
+      // Persist open ground location for future reuse
+      if (
+        state.locationMode === 'open' &&
+        state.locationName.trim() &&
+        user?.id
+      ) {
+        fetch(
+          `${require('../../services/api/config').API_BASE_URL}/users/open-ground-locations`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user.id,
+            },
+            body: JSON.stringify({
+              name: state.locationName.trim(),
+              address: state.locationAddress.trim() || undefined,
+            }),
+          }
+        ).catch(() => {}); // fire-and-forget
+      }
+
       dispatch({ type: 'SUBMIT_SUCCESS', eventId: newEvent.id });
     } catch (error: any) {
       dispatch({ type: 'SUBMIT_FAIL' });

@@ -90,6 +90,7 @@ export interface WizardState {
   sport: SportType | null;
   // Step 2: Details
   eventType: EventType | null;
+  host: string;
   minAge: string;
   maxAge: string;
   genderRestriction: string;
@@ -173,6 +174,7 @@ export function createInitialState(): WizardState {
     currentStep: 0,
     sport: null,
     eventType: null,
+    host: '',
     minAge: '',
     maxAge: '',
     genderRestriction: '',

@@ -89,6 +89,7 @@ model User {
   promoCodesCreated      PromoCode[]            @relation("AdminPromoCodes")
   redemptions            PromoCodeRedemption[]  @relation("UserRedemptions")
   cancelRequests         CancelRequest[]
+  savedOpenGroundLocations SavedOpenGroundLocation[]
 
   insuranceDocuments     InsuranceDocument[]
   waiverSignatures       WaiverSignature[]
@@ -728,6 +729,22 @@ model PlayerOpponentHistory {
   @@index([playerAId])
   @@index([playerBId])
   @@map("player_opponent_history")
+}
+
+// Previously used Open Ground locations per user
+model SavedOpenGroundLocation {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  address     String?
+  lastUsedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name, address])
+  @@index([userId, lastUsedAt(sort: Desc)])
+  @@map("saved_open_ground_locations")
 }
 
 model FacilityCourt {

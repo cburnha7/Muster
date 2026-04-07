@@ -14,7 +14,14 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { facilityService } from '../../../services/api/FacilityService';
+import { API_BASE_URL } from '../../../services/api/config';
 import { colors, fonts } from '../../../theme';
+
+interface SavedLocation {
+  id: string;
+  name: string;
+  address: string | null;
+}
 
 export function Step4Where() {
   const { state, dispatch } = useCreateEvent();
@@ -33,6 +40,25 @@ export function Step4Where() {
   const [courts, setCourts] = useState<SelectOption[]>([]);
   const [loadingCourts, setLoadingCourts] = useState(false);
   const [noSportMatch, setNoSportMatch] = useState(false);
+
+  // Saved open ground locations
+  const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
+
+  const loadSavedLocations = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/open-ground-locations`, {
+        headers: { 'x-user-id': user.id },
+      });
+      if (res.ok) setSavedLocations(await res.json());
+    } catch {
+      // non-fatal
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (isOpen) loadSavedLocations();
+  }, [isOpen, loadSavedLocations]);
 
   // Availability check state
   const [checkingAvailability, setCheckingAvailability] = useState(false);
@@ -453,6 +479,53 @@ export function Step4Where() {
               />
             </View>
           </View>
+
+          {/* Previously used locations */}
+          {savedLocations.length > 0 && (
+            <View style={styles.savedSection}>
+              <Text style={styles.savedTitle}>Previously used</Text>
+              {savedLocations.map(loc => (
+                <TouchableOpacity
+                  key={loc.id}
+                  style={styles.savedRow}
+                  onPress={() => {
+                    dispatch({
+                      type: 'SET_FIELD',
+                      field: 'locationName',
+                      value: loc.name,
+                    });
+                    dispatch({
+                      type: 'SET_FIELD',
+                      field: 'locationAddress',
+                      value: loc.address ?? '',
+                    });
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="location-outline"
+                    size={16}
+                    color={colors.cobalt}
+                  />
+                  <View style={styles.savedInfo}>
+                    <Text style={styles.savedName} numberOfLines={1}>
+                      {loc.name}
+                    </Text>
+                    {loc.address ? (
+                      <Text style={styles.savedAddress} numberOfLines={1}>
+                        {loc.address}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={14}
+                    color={colors.inkFaint}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </>
       )}
     </ScrollView>
@@ -605,4 +678,42 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   addressRow: { flexDirection: 'row', gap: 8 },
+  savedSection: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 16,
+  },
+  savedTitle: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  savedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  savedInfo: { flex: 1 },
+  savedName: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  savedAddress: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkSoft,
+    marginTop: 2,
+  },
 });
