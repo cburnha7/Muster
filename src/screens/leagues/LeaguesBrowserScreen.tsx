@@ -16,7 +16,10 @@ import { LeagueCard } from '../../components/ui/LeagueCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
+import {
+  TabSearchModal,
+  TabSearchResult,
+} from '../../components/search/TabSearchModal';
 import { colors, fonts, Spacing } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { userService } from '../../services/api/UserService';
@@ -58,9 +61,16 @@ export function LeaguesBrowserScreen() {
 
   // Search modal toggle
   useEffect(() => {
-    const unsub = searchEventBus.subscribeTab('Leagues', () => setSearchModalVisible(true));
-    const unsubClose = searchEventBus.subscribeClose(() => setSearchModalVisible(false));
-    return () => { unsub(); unsubClose(); };
+    const unsub = searchEventBus.subscribeTab('Leagues', () =>
+      setSearchModalVisible(true)
+    );
+    const unsubClose = searchEventBus.subscribeClose(() =>
+      setSearchModalVisible(false)
+    );
+    return () => {
+      unsub();
+      unsubClose();
+    };
   }, []);
 
   const loadData = useCallback(async () => {
@@ -75,20 +85,30 @@ export function LeaguesBrowserScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
-  useEffect(() => { loadData(); }, [activeUserId]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+  useEffect(() => {
+    loadData();
+  }, [activeUserId]);
 
-  const handleRefresh = useCallback(() => { setRefreshing(true); loadData(); }, [loadData]);
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadData();
+  }, [loadData]);
 
   // Split into active and past
   const { activeLeagues, pastLeagues } = useMemo(() => {
     const now = new Date();
     let filtered = myLeagues;
-    if (sportFilter) filtered = filtered.filter((l) => l.sportType === sportFilter);
+    if (sportFilter)
+      filtered = filtered.filter(l => l.sportType === sportFilter);
 
     const active: LeagueItem[] = [];
     const past: LeagueItem[] = [];
-    filtered.forEach((l) => {
+    filtered.forEach(l => {
       if (l.endDate && new Date(l.endDate) < now) {
         past.push(l);
       } else {
@@ -96,8 +116,12 @@ export function LeaguesBrowserScreen() {
       }
     });
     return {
-      activeLeagues: active.sort((a: LeagueItem, b: LeagueItem) => a.name.localeCompare(b.name)),
-      pastLeagues: past.sort((a: LeagueItem, b: LeagueItem) => a.name.localeCompare(b.name)),
+      activeLeagues: active.sort((a: LeagueItem, b: LeagueItem) =>
+        a.name.localeCompare(b.name)
+      ),
+      pastLeagues: past.sort((a: LeagueItem, b: LeagueItem) =>
+        a.name.localeCompare(b.name)
+      ),
     };
   }, [myLeagues, sportFilter]);
 
@@ -110,31 +134,58 @@ export function LeaguesBrowserScreen() {
   };
 
   // Search modal handlers
-  const handleSearchLeagues = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {
-    try {
-      const res = await leagueService.getLeagues({ page: 1, limit: 30 });
-      return (res.data || [])
-        .filter((l: LeagueItem) => {
-          const nameMatch = !query.trim() || l.name.toLowerCase().includes(query.toLowerCase());
-          const sportMatch = !sport || l.sportType === sport;
-          return nameMatch && sportMatch;
-        })
-        .map((l: LeagueItem) => ({ id: l.id, name: l.seasonName || l.name, subtitle: l.sportType }));
-    } catch { return []; }
-  }, []);
+  const handleSearchLeagues = useCallback(
+    async (
+      query: string,
+      sport: SportType | null
+    ): Promise<TabSearchResult[]> => {
+      try {
+        const res = await leagueService.getLeagues({ page: 1, limit: 30 });
+        return (res.data || [])
+          .filter((l: LeagueItem) => {
+            const nameMatch =
+              !query.trim() ||
+              l.name.toLowerCase().includes(query.toLowerCase());
+            const sportMatch = !sport || l.sportType === sport;
+            return nameMatch && sportMatch;
+          })
+          .map((l: LeagueItem) => ({
+            id: l.id,
+            name: l.seasonName || l.name,
+            subtitle: l.sportType,
+          }));
+      } catch {
+        return [];
+      }
+    },
+    []
+  );
 
-  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
-    (navigation as any).navigate('LeagueDetails', { leagueId: result.id });
-  }, [navigation]);
+  const handleSearchResultPress = useCallback(
+    (result: TabSearchResult) => {
+      (navigation as any).navigate('LeagueDetails', { leagueId: result.id });
+    },
+    [navigation]
+  );
 
   const contentMaxWidth = screenWidth > 600 ? 540 : undefined;
 
   if (error && !myLeagues.length) {
-    return <View style={styles.container}><ErrorDisplay message={error} onRetry={loadData} /></View>;
+    return (
+      <View style={styles.container}>
+        <ErrorDisplay message={error} onRetry={loadData} />
+      </View>
+    );
   }
 
   if (loading && !refreshing && !myLeagues.length) {
-    return <View style={styles.container}>{Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}</View>;
+    return (
+      <View style={styles.container}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonRow key={i} />
+        ))}
+      </View>
+    );
   }
 
   return (
@@ -144,15 +195,28 @@ export function LeaguesBrowserScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0 }}
-        contentContainerStyle={[styles.chipRow, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const } : undefined]}
+        contentContainerStyle={[
+          styles.chipRow,
+          contentMaxWidth
+            ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const }
+            : undefined,
+        ]}
       >
-        {SPORTS.map((sport) => (
+        {SPORTS.map(sport => (
           <TouchableOpacity
             key={sport.value}
-            style={[styles.chip, sportFilter === sport.value && styles.chipActive]}
+            style={[
+              styles.chip,
+              sportFilter === sport.value && styles.chipActive,
+            ]}
             onPress={() => setSportFilter(sport.value)}
           >
-            <Text style={[styles.chipText, sportFilter === sport.value && styles.chipTextActive]}>
+            <Text
+              style={[
+                styles.chipText,
+                sportFilter === sport.value && styles.chipTextActive,
+              ]}
+            >
               {sport.label}
             </Text>
           </TouchableOpacity>
@@ -162,39 +226,99 @@ export function LeaguesBrowserScreen() {
       {/* Active leagues */}
       <FlatList
         data={activeLeagues}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
-            <LeagueCard league={item} onPress={() => handleLeaguePress(item)} isOwner={item.organizerId === currentUser?.id} />
+          <View
+            style={
+              contentMaxWidth
+                ? {
+                    maxWidth: contentMaxWidth,
+                    alignSelf: 'center' as const,
+                    width: '100%',
+                  }
+                : undefined
+            }
+          >
+            <LeagueCard
+              league={item}
+              onPress={() => handleLeaguePress(item)}
+              isOwner={item.organizerId === currentUser?.id}
+            />
           </View>
         )}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           activeLeagues.length > 0 ? (
-            <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
+            <View
+              style={
+                contentMaxWidth
+                  ? {
+                      maxWidth: contentMaxWidth,
+                      alignSelf: 'center' as const,
+                      width: '100%',
+                    }
+                  : undefined
+              }
+            >
               <Text style={styles.sectionTitle}>Active</Text>
             </View>
           ) : null
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons name="trophy-outline" size={40} color={colors.outlineVariant} />
+            <Ionicons
+              name="trophy-outline"
+              size={40}
+              color={colors.outlineVariant}
+            />
             <Text style={styles.emptyTitle}>No active leagues</Text>
-            <Text style={styles.emptySubtitle}>Join or create a league to get started</Text>
+            <Text style={styles.emptySubtitle}>
+              Join or create a league to get started
+            </Text>
           </View>
         }
         ListFooterComponent={
           pastLeagues.length > 0 ? (
-            <View style={contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' } : undefined}>
-              <TouchableOpacity style={styles.pastHeader} onPress={() => setPastExpanded((v) => !v)} activeOpacity={0.7}>
+            <View
+              style={
+                contentMaxWidth
+                  ? {
+                      maxWidth: contentMaxWidth,
+                      alignSelf: 'center' as const,
+                      width: '100%',
+                    }
+                  : undefined
+              }
+            >
+              <TouchableOpacity
+                style={styles.pastHeader}
+                onPress={() => setPastExpanded(v => !v)}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.sectionTitle}>Past Seasons</Text>
-                <Ionicons name={pastExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.onSurfaceVariant} />
+                <Ionicons
+                  name={pastExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={colors.onSurfaceVariant}
+                />
               </TouchableOpacity>
-              {pastExpanded && pastLeagues.map((league) => (
-                <LeagueCard key={league.id} league={league} onPress={() => handleLeaguePress(league)} isOwner={league.organizerId === currentUser?.id} />
-              ))}
+              {pastExpanded &&
+                pastLeagues.map(league => (
+                  <LeagueCard
+                    key={league.id}
+                    league={league}
+                    onPress={() => handleLeaguePress(league)}
+                    isOwner={league.organizerId === currentUser?.id}
+                  />
+                ))}
             </View>
           ) : null
         }
@@ -241,7 +365,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
   },
   chipText: {
     fontFamily: fonts.headingSemi,
@@ -254,7 +378,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.pine,
     paddingHorizontal: 20,
     paddingTop: 4,
     paddingBottom: 8,

@@ -254,30 +254,46 @@ router.get('/sport-ratings/:userId', async (req, res) => {
       where: {
         userId,
         OR: [
-          { bracketEventCount: { gt: 0 } },
-          { overallEventCount: { gt: 0 } },
+          { openGamesPlayed: { gt: 0 } },
+          { ageGroupGamesPlayed: { gt: 0 } },
           { gamesPlayed: { gt: 0 } },
         ],
       },
       select: {
         sportType: true,
+        openRating: true,
+        openPercentile: true,
+        openGamesPlayed: true,
+        ageGroupRating: true,
+        ageGroupPercentile: true,
+        ageGroupGamesPlayed: true,
+        leagueRatingHistory: true,
+        ageBracket: true,
+        // Legacy fields for backward compat
         bracketRating: true,
         overallRating: true,
         bracketPercentile: true,
         overallPercentile: true,
-        ageBracket: true,
         bracketEventCount: true,
         overallEventCount: true,
-        // Legacy fields
         rating: true,
         percentile: true,
         gamesPlayed: true,
         lastUpdated: true,
       },
-      orderBy: { overallRating: 'desc' },
+      orderBy: { openRating: 'desc' },
     });
 
-    res.json(ratings);
+    // Collect all archived league records across sports for Past Seasons display
+    const leagueHistory: any[] = [];
+    for (const r of ratings) {
+      const history = JSON.parse((r.leagueRatingHistory as string) || '[]');
+      for (const record of history) {
+        if (record.archivedAt) leagueHistory.push(record);
+      }
+    }
+
+    res.json({ sportRatings: ratings, leagueHistory });
   } catch (error) {
     console.error('Get sport ratings error:', error);
     res.status(500).json({ error: 'Failed to fetch sport ratings' });

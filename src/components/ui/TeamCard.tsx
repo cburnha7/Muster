@@ -15,30 +15,44 @@ interface TeamCardProps {
   currentUserId?: string | undefined;
 }
 
-export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, currentUserId }) => {
+export const TeamCard: React.FC<TeamCardProps> = ({
+  team,
+  onPress,
+  style,
+  currentUserId,
+}) => {
   const sport = team.sportTypes?.[0] || team.sportType;
   const availableSlots = team.maxMembers - team.members.length;
   const isFull = availableSlots <= 0;
   const sportColor = getSportColor(sport);
 
-  const isManager = currentUserId && (
-    team.captainId === currentUserId ||
-    team.members.some(
-      (m) => m.userId === currentUserId && (m.role === 'captain' || m.role === 'co_captain') && m.status === 'active'
-    )
-  );
+  const isManager =
+    currentUserId &&
+    (team.captainId === currentUserId ||
+      team.members.some(
+        m =>
+          m.userId === currentUserId &&
+          (m.role === 'captain' || m.role === 'co_captain') &&
+          m.status === 'active'
+      ));
 
   return (
     <PressableCard style={[styles.card, style]} onPress={() => onPress?.(team)}>
       {/* Sport icon with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
-        <Ionicons name={getSportIcon(sport) as any} size={20} color={sportColor} />
+        <Ionicons
+          name={getSportIcon(sport) as any}
+          size={20}
+          color={sportColor}
+        />
       </View>
 
       {/* Team info */}
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>{team.name}</Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {team.name}
+          </Text>
           {isManager && (
             <View style={styles.managerBadge}>
               <Text style={styles.managerText}>Manager</Text>
@@ -46,17 +60,22 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, onPress, style, curren
           )}
         </View>
         <Text style={styles.meta}>
-          {formatSport(sport)}{' '}
-          <Text style={styles.metaDot}>&middot;</Text>{' '}
+          {formatSport(sport)} <Text style={styles.metaDot}>&middot;</Text>{' '}
           {isFull ? (
             <Text style={styles.metaFull}>Full</Text>
           ) : (
-            <Text>{team.members.length}/{team.maxMembers} players</Text>
+            <Text>
+              {team.members.length}/{team.maxMembers} players
+            </Text>
           )}
         </Text>
       </View>
 
-      <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
+      <Ionicons
+        name="chevron-forward"
+        size={16}
+        color={colors.outlineVariant}
+      />
     </PressableCard>
   );
 };
@@ -94,8 +113,9 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     flexShrink: 1,
   },
+  // Manager badge — pine green (positive role)
   managerBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 9999,

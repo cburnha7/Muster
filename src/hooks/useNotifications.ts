@@ -7,6 +7,8 @@ import {
   EventInvitation,
   ReadyToScheduleLeague,
 } from '../services/api/UserService';
+import { debriefService } from '../services/api/DebriefService';
+import { notificationsEventBus } from '../utils/notificationsEventBus';
 
 export interface NotificationItem {
   id: string;
@@ -36,26 +38,16 @@ export function useNotifications() {
     setLoading(true);
     try {
       const [invitations, readyLeagues, debriefBookings] = await Promise.all([
-        userService
-          .getInvitations()
-          .catch(() => ({
-            rosterInvitations: [],
-            leagueInvitations: [],
-            eventInvitations: [],
-            total: 0,
-          })),
+        userService.getInvitations().catch(() => ({
+          rosterInvitations: [],
+          leagueInvitations: [],
+          eventInvitations: [],
+          total: 0,
+        })),
         userService.getLeaguesReadyToSchedule().catch(() => []),
-        userService
-          .getUserBookings('past', { page: 1, limit: 50 })
-          .then((res: any) =>
-            (res?.data || []).filter(
-              (b: any) =>
-                b.debriefSubmitted === false &&
-                b.event &&
-                b.event.status === 'active' &&
-                new Date(b.event.endTime) < new Date()
-            )
-          )
+        debriefService
+          .getDebriefEvents()
+          .then(res => res.data || [])
           .catch(() => []),
       ]);
 
@@ -131,6 +123,11 @@ export function useNotifications() {
   useEffect(() => {
     const interval = setInterval(refresh, 60000);
     return () => clearInterval(interval);
+  }, [refresh]);
+
+  // Refresh when explicitly triggered (e.g. after debrief submit)
+  useEffect(() => {
+    return notificationsEventBus.subscribe(refresh);
   }, [refresh]);
 
   return { items, count: items.length, loading, refresh };

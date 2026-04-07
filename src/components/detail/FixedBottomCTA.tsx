@@ -46,13 +46,18 @@ export function FixedBottomCTA({
 
   const textStyle = [
     styles.label,
-    (variant === 'primary' || variant === 'confirmed' || variant === 'danger') && styles.labelLight,
+    (variant === 'primary' ||
+      variant === 'confirmed' ||
+      variant === 'danger') &&
+      styles.labelLight,
     variant === 'secondary' && styles.labelPrimary,
     isDisabled && styles.labelDimmed,
   ];
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <View
+      style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}
+    >
       <TouchableOpacity
         style={buttonStyle}
         onPress={onPress}
@@ -80,7 +85,11 @@ export function FixedBottomCTA({
       </TouchableOpacity>
 
       {secondaryLabel && onSecondaryPress ? (
-        <TouchableOpacity onPress={onSecondaryPress} activeOpacity={0.7} style={styles.secondary2}>
+        <TouchableOpacity
+          onPress={onSecondaryPress}
+          activeOpacity={0.7}
+          style={styles.secondary2}
+        >
           <Text style={styles.secondaryText}>{secondaryLabel}</Text>
         </TouchableOpacity>
       ) : null}
@@ -114,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   confirmed: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.cobalt,
   },
   secondary: {
     backgroundColor: colors.surfaceContainerLowest,

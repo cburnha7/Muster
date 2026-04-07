@@ -1,15 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { colors, fonts } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
+import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
 
 interface SportRating {
   sportType: string;
-  bracketPercentile: number | null;
-  overallPercentile: number | null;
+  // New fields
+  openPercentile: number | null;
+  ageGroupPercentile: number | null;
+  openGamesPlayed: number;
+  ageGroupGamesPlayed: number;
+  openRating: number | null;
+  ageGroupRating: number | null;
   ageBracket: string | null;
-  bracketEventCount: number;
-  overallEventCount: number;
+  // Legacy fallbacks
+  overallPercentile?: number | null;
+  bracketPercentile?: number | null;
+  overallEventCount?: number;
+  bracketEventCount?: number;
 }
 
 interface SportRatingsSectionProps {
@@ -17,13 +32,10 @@ interface SportRatingsSectionProps {
 }
 
 const formatSportName = (sportType: string): string =>
-  sportType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-
-const ordinal = (n: number) => {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-};
+  sportType
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
 
 export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
   const [ratings, setRatings] = useState<SportRating[]>([]);
@@ -36,8 +48,18 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
           `${API_BASE_URL}/users/sport-ratings/${userId}`
         );
         if (!response.ok) throw new Error('Failed');
-        const data: SportRating[] = await response.json();
-        setRatings((data || []).filter(r => r.overallEventCount > 0 || r.bracketEventCount > 0));
+        const data = await response.json();
+        const list: SportRating[] = Array.isArray(data)
+          ? data
+          : (data.sportRatings ?? []);
+        // Show cards for any sport with at least one game played
+        setRatings(
+          list.filter(
+            r =>
+              (r.openGamesPlayed ?? r.overallEventCount ?? 0) > 0 ||
+              (r.ageGroupGamesPlayed ?? r.bracketEventCount ?? 0) > 0
+          )
+        );
       } catch {
         setRatings([]);
       } finally {
@@ -46,32 +68,66 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
     })();
   }, [userId]);
 
-  if (loading) return <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 16 }} />;
+  if (loading)
+    return (
+      <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 16 }} />
+    );
   if (ratings.length === 0) return null;
 
   return (
     <View style={styles.wrapper}>
       <Text style={styles.title}>Rankings</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {ratings.map((r) => (
-          <View key={r.sportType} style={styles.card}>
-            <Text style={styles.sportName}>{formatSportName(r.sportType)}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
+        {ratings.map(r => {
+          const openPct = r.openPercentile ?? r.overallPercentile;
+          const agePct = r.ageGroupPercentile ?? r.bracketPercentile;
+          const openGames = r.openGamesPlayed ?? r.overallEventCount ?? 0;
+          const ageGames = r.ageGroupGamesPlayed ?? r.bracketEventCount ?? 0;
 
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Open</Text>
-              <Text style={styles.statValue}>
-                {r.overallPercentile != null ? `${ordinal(Math.round(r.overallPercentile))}` : '—'}
-              </Text>
-            </View>
+          const openDisplay = formatRatingDisplay(
+            openPct,
+            openGames,
+            r.openRating
+          );
+          const ageDisplay = formatRatingDisplay(
+            agePct,
+            ageGames,
+            r.ageGroupRating
+          );
 
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Age</Text>
-              <Text style={styles.statValue}>
-                {r.bracketPercentile != null ? `${ordinal(Math.round(r.bracketPercentile))}` : '—'}
+          const openIsLove = openDisplay === LOVE_LABEL;
+          const ageIsLove = ageDisplay === LOVE_LABEL;
+
+          return (
+            <View key={r.sportType} style={styles.card}>
+              <Text style={styles.sportName}>
+                {formatSportName(r.sportType)}
               </Text>
+
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Open</Text>
+                <Text
+                  style={[styles.statValue, openIsLove && styles.loveLabel]}
+                >
+                  {openDisplay}
+                </Text>
+              </View>
+
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>
+                  {r.ageBracket ? r.ageBracket : 'Age'}
+                </Text>
+                <Text style={[styles.statValue, ageIsLove && styles.loveLabel]}>
+                  {ageDisplay}
+                </Text>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -96,7 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    width: 150,
+    width: 160,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -126,5 +182,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 14,
     color: colors.ink,
+  },
+  loveLabel: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+    fontStyle: 'italic',
   },
 });

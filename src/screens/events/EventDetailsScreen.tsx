@@ -108,6 +108,8 @@ export function EventDetailsScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [showProfileSelector, setShowProfileSelector] = useState(false);
+  const [profileSelectorFamilyOnly, setProfileSelectorFamilyOnly] =
+    useState(false);
   const dependents = useSelector(selectDependents);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -304,6 +306,7 @@ export function EventDetailsScreen() {
     console.log('✅ Proceeding with booking...');
     // If user has dependents, show profile selector
     if (dependents.length > 0) {
+      setProfileSelectorFamilyOnly(false);
       setShowProfileSelector(true);
     } else {
       await proceedWithBooking();
@@ -312,6 +315,7 @@ export function EventDetailsScreen() {
 
   const handleProfileSelected = async (profileId: string) => {
     setShowProfileSelector(false);
+    setProfileSelectorFamilyOnly(false);
     await proceedWithBooking(profileId);
   };
 
@@ -872,6 +876,37 @@ export function EventDetailsScreen() {
   let ctaVariant: CTAVariant;
   let ctaAction: () => void;
 
+  // Build family-aware "who's in" label when dependents exist
+  const familyInLabel = (() => {
+    if (!participantsLoaded || dependents.length === 0) return null;
+    const participantIds = new Set(participants.map(p => p.userId));
+    const meIn = currentUser?.id ? participantIds.has(currentUser.id) : false;
+    const depsIn = dependents.filter(d => participantIds.has(d.id));
+    if (!meIn && depsIn.length === 0) return null;
+    if (meIn && depsIn.length === 0) return null; // plain "You're in" is fine
+    if (!meIn && depsIn.length === 1)
+      return `${depsIn[0].firstName} is in \u2713`;
+    if (!meIn && depsIn.length === 2)
+      return `${depsIn[0].firstName} and ${depsIn[1].firstName} are in \u2713`;
+    if (!meIn)
+      return `${depsIn[0].firstName} and ${depsIn.length - 1} others are in \u2713`;
+    if (depsIn.length === 1)
+      return `You and ${depsIn[0].firstName} are in \u2713`;
+    if (depsIn.length === 2)
+      return `You, ${depsIn[0].firstName} and ${depsIn[1].firstName} are in \u2713`;
+    return `You and ${depsIn.length} others are in \u2713`;
+  })();
+
+  // Dependents not yet in the event (for "More from the family?" prompt)
+  const unjoinedDependents = participantsLoaded
+    ? dependents.filter(d => !participants.some(p => p.userId === d.id))
+    : [];
+
+  const handleMoreFromFamily = () => {
+    setProfileSelectorFamilyOnly(true);
+    setShowProfileSelector(true);
+  };
+
   if (!participantsLoaded) {
     ctaLabel = 'Loading...';
     ctaVariant = 'disabled';
@@ -889,7 +924,7 @@ export function EventDetailsScreen() {
     ctaVariant = 'disabled';
     ctaAction = () => {};
   } else if (isOrganizer && isUserBooked) {
-    ctaLabel = "You're in ✓";
+    ctaLabel = familyInLabel ?? "You're in ✓";
     ctaVariant = 'confirmed';
     ctaAction = () => {};
   } else if (isOrganizer && !isUserBooked) {
@@ -897,7 +932,7 @@ export function EventDetailsScreen() {
     ctaVariant = 'primary';
     ctaAction = handleBookEvent;
   } else if (isUserBooked) {
-    ctaLabel = "You're in ✓";
+    ctaLabel = familyInLabel ?? "You're in ✓";
     ctaVariant = 'confirmed';
     ctaAction = () => {};
   } else if (!canBook && availableSpots <= 0) {
@@ -918,6 +953,7 @@ export function EventDetailsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ContextualReturnButton />
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
         refreshControl={
           <RefreshControl
@@ -1372,7 +1408,7 @@ export function EventDetailsScreen() {
                 onPress={handleCancelBooking}
                 activeOpacity={0.7}
               >
-                <Ionicons name="exit-outline" size={18} color={colors.heart} />
+                <Ionicons name="exit-outline" size={18} color={colors.gold} />
                 <Text style={styles.ownerStepOutBtnText}>Step Out</Text>
               </TouchableOpacity>
             ) : (
@@ -1415,12 +1451,17 @@ export function EventDetailsScreen() {
           onPress={ctaAction}
           variant={ctaVariant}
           loading={isBooking}
-          {...(isUserBooked && !isOrganizer
+          {...(isUserBooked && !isOrganizer && unjoinedDependents.length === 0
             ? {
                 secondaryLabel: 'Back out',
                 onSecondaryPress: handleCancelBooking,
               }
-            : {})}
+            : isUserBooked && unjoinedDependents.length > 0
+              ? {
+                  secondaryLabel: 'More from the family?',
+                  onSecondaryPress: handleMoreFromFamily,
+                }
+              : {})}
         />
       )}
 
@@ -1443,26 +1484,38 @@ export function EventDetailsScreen() {
       {/* Profile Selector for Join Up */}
       <ProfileSelectorModal
         visible={showProfileSelector}
-        profiles={[
-          ...(currentUser
-            ? [
-                {
-                  id: currentUser.id,
-                  firstName: currentUser.firstName,
-                  lastName: currentUser.lastName,
-                  profileImage: currentUser.profileImage,
-                },
+        profiles={
+          profileSelectorFamilyOnly
+            ? unjoinedDependents.map(d => ({
+                id: d.id,
+                firstName: d.firstName,
+                lastName: d.lastName,
+                profileImage: d.profileImage,
+              }))
+            : [
+                ...(currentUser
+                  ? [
+                      {
+                        id: currentUser.id,
+                        firstName: currentUser.firstName,
+                        lastName: currentUser.lastName,
+                        profileImage: currentUser.profileImage,
+                      },
+                    ]
+                  : []),
+                ...dependents.map(d => ({
+                  id: d.id,
+                  firstName: d.firstName,
+                  lastName: d.lastName,
+                  profileImage: d.profileImage,
+                })),
               ]
-            : []),
-          ...dependents.map(d => ({
-            id: d.id,
-            firstName: d.firstName,
-            lastName: d.lastName,
-            profileImage: d.profileImage,
-          })),
-        ]}
+        }
         onSelect={handleProfileSelected}
-        onCancel={() => setShowProfileSelector(false)}
+        onCancel={() => {
+          setShowProfileSelector(false);
+          setProfileSelectorFamilyOnly(false);
+        }}
       />
 
       {/* Player Card Popup */}
@@ -1884,7 +1937,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ownerEditBtn: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1915,14 +1968,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: colors.heart,
+    borderColor: colors.gold,
     borderRadius: 12,
     paddingVertical: 14,
+    backgroundColor: colors.goldTint,
   },
   ownerStepOutBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.heart,
+    color: colors.gold,
   },
   ownerDeleteBtn: {
     borderWidth: 2,

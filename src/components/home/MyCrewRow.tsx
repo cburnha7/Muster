@@ -29,7 +29,7 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Crew</Text>
+      <Text style={styles.title}>The Family</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

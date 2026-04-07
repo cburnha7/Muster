@@ -20,16 +20,24 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
 }) => {
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
-      case SportType.BASKETBALL: return 'basketball-outline';
-      case SportType.SOCCER: return 'football-outline';
+      case SportType.BASKETBALL:
+        return 'basketball-outline';
+      case SportType.SOCCER:
+        return 'football-outline';
       case SportType.TENNIS:
-      case SportType.PICKLEBALL: return 'tennisball-outline';
-      case SportType.VOLLEYBALL: return 'american-football-outline';
+      case SportType.PICKLEBALL:
+        return 'tennisball-outline';
+      case SportType.VOLLEYBALL:
+        return 'american-football-outline';
       case SportType.SOFTBALL:
-      case SportType.BASEBALL: return 'baseball-outline';
-      case SportType.FLAG_FOOTBALL: return 'flag-outline';
-      case SportType.KICKBALL: return 'football-outline';
-      default: return 'fitness-outline';
+      case SportType.BASEBALL:
+        return 'baseball-outline';
+      case SportType.FLAG_FOOTBALL:
+        return 'flag-outline';
+      case SportType.KICKBALL:
+        return 'football-outline';
+      default:
+        return 'fitness-outline';
     }
   };
 
@@ -39,19 +47,31 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
     const hasHalfStar = rating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<Ionicons key={i} name="star" size={14} color={colors.gold} />);
+      stars.push(
+        <Ionicons key={i} name="star" size={14} color={colors.gold} />
+      );
     }
     if (hasHalfStar) {
-      stars.push(<Ionicons key="half" name="star-half" size={14} color={colors.gold} />);
+      stars.push(
+        <Ionicons key="half" name="star-half" size={14} color={colors.gold} />
+      );
     }
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Ionicons key={`empty-${i}`} name="star-outline" size={14} color={colors.gold} />);
+      stars.push(
+        <Ionicons
+          key={`empty-${i}`}
+          name="star-outline"
+          size={14}
+          color={colors.gold}
+        />
+      );
     }
     return stars;
   };
 
-  const formatAddress = () => `${facility.street}, ${facility.city}, ${facility.state}`;
+  const formatAddress = () =>
+    `${facility.street}, ${facility.city}, ${facility.state}`;
 
   return (
     <PressableCard
@@ -59,12 +79,18 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
       onPress={() => onPress?.(facility)}
     >
       {facility.imageUrl && (
-        <Image source={{ uri: facility.imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={{ uri: facility.imageUrl }}
+          style={styles.image}
+          resizeMode="cover"
+        />
       )}
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.name} numberOfLines={1}>{facility.name}</Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {facility.name}
+          </Text>
           <View style={styles.rating}>
             <View style={styles.stars}>{renderStars(facility.rating)}</View>
             <Text style={styles.ratingText}>
@@ -73,27 +99,41 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
           </View>
         </View>
 
-        <Text style={styles.description} numberOfLines={2}>{facility.description}</Text>
+        <Text style={styles.description} numberOfLines={2}>
+          {facility.description}
+        </Text>
 
         <View style={styles.details}>
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
-            <Text style={styles.detailText} numberOfLines={1}>{formatAddress()}</Text>
+            <Ionicons
+              name="location-outline"
+              size={16}
+              color={colors.onSurfaceVariant}
+            />
+            <Text style={styles.detailText} numberOfLines={1}>
+              {formatAddress()}
+            </Text>
           </View>
         </View>
 
         <View style={styles.footer}>
           <View style={styles.sportsContainer}>
-            {facility.sportTypes.slice(0, 3).map((sport) => (
+            {facility.sportTypes.slice(0, 3).map(sport => (
               <View key={sport} style={styles.sportBadge}>
-                <Ionicons name={getSportIcon(sport) as any} size={14} color={colors.primary} />
+                <Ionicons
+                  name={getSportIcon(sport) as any}
+                  size={14}
+                  color={colors.primary}
+                />
                 <Text style={styles.sportText}>
                   {sport.charAt(0).toUpperCase() + sport.slice(1)}
                 </Text>
               </View>
             ))}
             {facility.sportTypes.length > 3 && (
-              <Text style={styles.moreText}>+{facility.sportTypes.length - 3} more</Text>
+              <Text style={styles.moreText}>
+                +{facility.sportTypes.length - 3} more
+              </Text>
             )}
           </View>
 
@@ -194,7 +234,7 @@ const styles = StyleSheet.create({
   sportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary + '14',
+    backgroundColor: colors.cobaltTint,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 9999,
@@ -203,7 +243,7 @@ const styles = StyleSheet.create({
   sportText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.primary,
+    color: colors.cobalt,
   },
   moreText: {
     fontFamily: fonts.body,

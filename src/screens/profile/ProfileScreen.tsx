@@ -38,7 +38,11 @@ export function ProfileScreen() {
   const { width } = useWindowDimensions();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState<{ games: number; salutes: number; teams: number } | null>(null);
+  const [stats, setStats] = useState<{
+    games: number;
+    salutes: number;
+    teams: number;
+  } | null>(null);
   const [recentGames, setRecentGames] = useState<Event[]>([]);
   const [myTeams, setMyTeams] = useState<Team[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -46,16 +50,27 @@ export function ProfileScreen() {
   // Set header title to user's name
   useEffect(() => {
     if (authUser) {
-      navigation.setOptions({ headerTitle: `${authUser.firstName} ${authUser.lastName}` });
+      navigation.setOptions({
+        headerTitle: `${authUser.firstName} ${authUser.lastName}`,
+      });
     }
   }, [navigation, authUser]);
 
   const loadProfileData = useCallback(async () => {
     try {
       const [statsData, teamsData, eventsData] = await Promise.all([
-        userService.getUserStats().catch((e) => { console.warn('Stats fetch failed:', e); return null; }),
-        userService.getUserTeams().catch((e) => { console.warn('Teams fetch failed:', e); return { data: [] }; }),
-        userService.getUserEvents('completed', { limit: 5 }).catch((e) => { console.warn('Events fetch failed:', e); return { data: [] }; }),
+        userService.getUserStats().catch(e => {
+          console.warn('Stats fetch failed:', e);
+          return null;
+        }),
+        userService.getUserTeams().catch(e => {
+          console.warn('Teams fetch failed:', e);
+          return { data: [] };
+        }),
+        userService.getUserEvents('completed', { limit: 5 }).catch(e => {
+          console.warn('Events fetch failed:', e);
+          return { data: [] };
+        }),
       ]);
 
       const teams: Team[] = (teamsData as any)?.data ?? [];
@@ -88,7 +103,9 @@ export function ProfileScreen() {
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to log out?')) { logout(); }
+      if (window.confirm('Are you sure you want to log out?')) {
+        logout();
+      }
     } else {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
         { text: 'Not Now', style: 'cancel' },
@@ -116,8 +133,23 @@ export function ProfileScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, contentMaxWidth ? { maxWidth: contentMaxWidth, alignSelf: 'center' as const, width: '100%' as unknown as number } : undefined]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+      contentContainerStyle={[
+        styles.content,
+        contentMaxWidth
+          ? {
+              maxWidth: contentMaxWidth,
+              alignSelf: 'center' as const,
+              width: '100%' as unknown as number,
+            }
+          : undefined,
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       {/* ── Profile Card ──────────────────────────── */}
@@ -149,11 +181,17 @@ export function ProfileScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, styles.actionBtnCobalt]}
-          onPress={() => (navigation as any).navigate('AvailabilityCalendar', { userId: authUser.id })}
+          onPress={() =>
+            (navigation as any).navigate('AvailabilityCalendar', {
+              userId: authUser.id,
+            })
+          }
           activeOpacity={0.7}
         >
           <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, styles.actionBtnTextCobalt]}>Availability</Text>
+          <Text style={[styles.actionBtnText, styles.actionBtnTextCobalt]}>
+            Availability
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -164,9 +202,20 @@ export function ProfileScreen() {
           Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
         ) : recentGames.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons name="calendar-outline" size={32} color={colors.outlineVariant} />
+            <Ionicons
+              name="calendar-outline"
+              size={32}
+              color={colors.outlineVariant}
+            />
             <Text style={styles.emptyText}>No games played yet</Text>
-            <TouchableOpacity onPress={() => (navigation as any).getParent()?.navigate('Home', { screen: 'HomeScreen' })} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={() =>
+                (navigation as any)
+                  .getParent()
+                  ?.navigate('Home', { screen: 'HomeScreen' })
+              }
+              activeOpacity={0.7}
+            >
               <Text style={styles.emptyAction}>Find one nearby</Text>
             </TouchableOpacity>
           </View>
@@ -177,17 +226,36 @@ export function ProfileScreen() {
             return (
               <PressableCard
                 key={event.id}
-                style={[styles.gameRow, idx === recentGames.length - 1 && styles.gameRowLast]}
-                onPress={() => (navigation as any).navigate('Home', { screen: 'EventDetails', params: { eventId: event.id } })}
+                style={[
+                  styles.gameRow,
+                  idx === recentGames.length - 1 && styles.gameRowLast,
+                ]}
+                onPress={() =>
+                  (navigation as any).navigate('Home', {
+                    screen: 'EventDetails',
+                    params: { eventId: event.id },
+                  })
+                }
               >
-                <View style={[styles.sportDot, { backgroundColor: sportColor }]} />
+                <View
+                  style={[styles.sportDot, { backgroundColor: sportColor }]}
+                />
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>{event.title}</Text>
+                  <Text style={styles.gameName} numberOfLines={1}>
+                    {event.title}
+                  </Text>
                   <Text style={styles.gameMeta} numberOfLines={1}>
-                    {formatEventDate(event.startTime as any)} {(event as any).facility?.name ? `· ${(event as any).facility.name}` : ''}
+                    {formatEventDate(event.startTime as any)}{' '}
+                    {(event as any).facility?.name
+                      ? `· ${(event as any).facility.name}`
+                      : ''}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={14} color={colors.outlineVariant} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={14}
+                  color={colors.outlineVariant}
+                />
               </PressableCard>
             );
           })
@@ -201,29 +269,63 @@ export function ProfileScreen() {
           Array.from({ length: 2 }).map((_, i) => <SkeletonRow key={i} />)
         ) : myTeams.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons name="people-outline" size={32} color={colors.outlineVariant} />
+            <Ionicons
+              name="people-outline"
+              size={32}
+              color={colors.outlineVariant}
+            />
             <Text style={styles.emptyText}>No teams yet</Text>
-            <TouchableOpacity onPress={() => (navigation as any).getParent()?.navigate('Teams', { screen: 'TeamsList' })} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={() =>
+                (navigation as any)
+                  .getParent()
+                  ?.navigate('Teams', { screen: 'TeamsList' })
+              }
+              activeOpacity={0.7}
+            >
               <Text style={styles.emptyAction}>Join or create one</Text>
             </TouchableOpacity>
           </View>
         ) : (
           myTeams.map((team, idx) => {
-            const sport = (team.sportTypes?.[0] ?? (team as any).sportType ?? '') as string;
+            const sport = (team.sportTypes?.[0] ??
+              (team as any).sportType ??
+              '') as string;
             return (
               <PressableCard
                 key={team.id}
-                style={[styles.gameRow, idx === myTeams.length - 1 && styles.gameRowLast]}
-                onPress={() => (navigation as any).getParent()?.navigate('Teams', { screen: 'TeamDetails', params: { teamId: team.id } })}
+                style={[
+                  styles.gameRow,
+                  idx === myTeams.length - 1 && styles.gameRowLast,
+                ]}
+                onPress={() =>
+                  (navigation as any).getParent()?.navigate('Teams', {
+                    screen: 'TeamDetails',
+                    params: { teamId: team.id },
+                  })
+                }
               >
-                <View style={[styles.teamIconCircle, { backgroundColor: getSportColor(sport) + '18' }]}>
+                <View
+                  style={[
+                    styles.teamIconCircle,
+                    { backgroundColor: getSportColor(sport) + '18' },
+                  ]}
+                >
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>{team.name}</Text>
-                  <Text style={styles.gameMeta}>{team.members?.length ?? 0} players</Text>
+                  <Text style={styles.gameName} numberOfLines={1}>
+                    {team.name}
+                  </Text>
+                  <Text style={styles.gameMeta}>
+                    {team.members?.length ?? 0} players
+                  </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={14} color={colors.outlineVariant} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={14}
+                  color={colors.outlineVariant}
+                />
               </PressableCard>
             );
           })
@@ -231,7 +333,11 @@ export function ProfileScreen() {
       </View>
 
       {/* ── Log Out ────────────────────────────────── */}
-      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.logoutBtn}
+        onPress={handleLogout}
+        activeOpacity={0.7}
+      >
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
@@ -284,15 +390,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.onSurface,
+    color: colors.pine,
     marginTop: 24,
     marginBottom: 10,
     letterSpacing: -0.2,
   },
   sectionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
 
   // ── Game / Team Rows ───────────────────────────
@@ -353,7 +461,7 @@ const styles = StyleSheet.create({
   emptyAction: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.primary,
+    color: colors.pine,
     marginTop: 4,
   },
 
