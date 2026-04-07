@@ -16,7 +16,10 @@ import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { TabSearchModal, TabSearchResult } from '../../components/search/TabSearchModal';
+import {
+  TabSearchModal,
+  TabSearchResult,
+} from '../../components/search/TabSearchModal';
 import { teamService } from '../../services/api/TeamService';
 import { userService } from '../../services/api/UserService';
 import { setUserTeams } from '../../store/slices/teamsSlice';
@@ -28,14 +31,30 @@ import { searchEventBus } from '../../utils/searchEventBus';
 
 const SPORTS: { label: string; value: string; icon: string }[] = [
   { label: 'All', value: '', icon: 'apps-outline' },
-  { label: 'Basketball', value: SportType.BASKETBALL, icon: 'basketball-outline' },
+  {
+    label: 'Basketball',
+    value: SportType.BASKETBALL,
+    icon: 'basketball-outline',
+  },
   { label: 'Soccer', value: SportType.SOCCER, icon: 'football-outline' },
   { label: 'Tennis', value: SportType.TENNIS, icon: 'tennisball-outline' },
-  { label: 'Pickleball', value: SportType.PICKLEBALL, icon: 'tennisball-outline' },
+  {
+    label: 'Pickleball',
+    value: SportType.PICKLEBALL,
+    icon: 'tennisball-outline',
+  },
   { label: 'Softball', value: SportType.SOFTBALL, icon: 'baseball-outline' },
   { label: 'Baseball', value: SportType.BASEBALL, icon: 'baseball-outline' },
-  { label: 'Volleyball', value: SportType.VOLLEYBALL, icon: 'american-football-outline' },
-  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL, icon: 'flag-outline' },
+  {
+    label: 'Volleyball',
+    value: SportType.VOLLEYBALL,
+    icon: 'american-football-outline',
+  },
+  {
+    label: 'Flag Football',
+    value: SportType.FLAG_FOOTBALL,
+    icon: 'flag-outline',
+  },
   { label: 'Kickball', value: SportType.KICKBALL, icon: 'fitness-outline' },
 ];
 
@@ -57,9 +76,16 @@ export function TeamsListScreen() {
   const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   useEffect(() => {
-    const unsub = searchEventBus.subscribeTab('Teams', () => setSearchModalVisible(true));
-    const unsubClose = searchEventBus.subscribeClose(() => setSearchModalVisible(false));
-    return () => { unsub(); unsubClose(); };
+    const unsub = searchEventBus.subscribeTab('Teams', () =>
+      setSearchModalVisible(true)
+    );
+    const unsubClose = searchEventBus.subscribeClose(() =>
+      setSearchModalVisible(false)
+    );
+    return () => {
+      unsub();
+      unsubClose();
+    };
   }, []);
 
   const loadData = useCallback(async () => {
@@ -69,10 +95,12 @@ export function TeamsListScreen() {
         teamService.getTeams({}, { page: 1, limit: 100 }),
       ]);
       const myTeams = myRes?.data ?? [];
-      const myTeamIds = new Set(myTeams.map((t) => t.id));
+      const myTeamIds = new Set(myTeams.map(t => t.id));
       setMyRosters(myTeams);
       dispatch(setUserTeams(myTeams));
-      setPublicRosters((allRes?.data ?? []).filter((t) => t.isPublic && !myTeamIds.has(t.id)));
+      setPublicRosters(
+        (allRes?.data ?? []).filter(t => t.isPublic && !myTeamIds.has(t.id))
+      );
     } catch (err: any) {
       setError(err.message || 'Failed to load teams');
     } finally {
@@ -81,58 +109,108 @@ export function TeamsListScreen() {
     }
   }, [dispatch]);
 
-  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
-  useEffect(() => { loadData(); }, [effectiveUserId]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+  useEffect(() => {
+    loadData();
+  }, [effectiveUserId]);
 
-  const handleRefresh = useCallback(() => { setRefreshing(true); loadData(); }, [loadData]);
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadData();
+  }, [loadData]);
 
   const allTeams = useMemo(() => {
     const merged = [...myRosters, ...publicRosters];
     const seen = new Set<string>();
-    const unique = merged.filter((t) => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
+    const unique = merged.filter(t => {
+      if (seen.has(t.id)) return false;
+      seen.add(t.id);
+      return true;
+    });
     const filtered = sportFilter
-      ? unique.filter((t) => t.sportType === sportFilter || (t.sportTypes || []).includes(sportFilter as SportType))
+      ? unique.filter(
+          t =>
+            t.sportType === sportFilter ||
+            (t.sportTypes || []).includes(sportFilter as SportType)
+        )
       : unique;
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
   }, [myRosters, publicRosters, sportFilter]);
 
   // Split into my teams and others
-  const myTeamIds = useMemo(() => new Set(myRosters.map(t => t.id)), [myRosters]);
-  const myTeams = useMemo(() => allTeams.filter(t => myTeamIds.has(t.id)), [allTeams, myTeamIds]);
-  const otherTeams = useMemo(() => allTeams.filter(t => !myTeamIds.has(t.id)), [allTeams, myTeamIds]);
+  const myTeamIds = useMemo(
+    () => new Set(myRosters.map(t => t.id)),
+    [myRosters]
+  );
+  const myTeams = useMemo(
+    () => allTeams.filter(t => myTeamIds.has(t.id)),
+    [allTeams, myTeamIds]
+  );
+  const otherTeams = useMemo(
+    () => allTeams.filter(t => !myTeamIds.has(t.id)),
+    [allTeams, myTeamIds]
+  );
 
-  const handleTeamPress = (team: Team) => (navigation as any).navigate('TeamDetails', { teamId: team.id });
+  const handleTeamPress = (team: Team) =>
+    (navigation as any).navigate('TeamDetails', { teamId: team.id });
   const handleCreateTeam = () => (navigation as any).navigate('CreateTeam');
   const handleJoinTeam = () => (navigation as any).navigate('JoinTeam');
 
-  const handleSearchRosters = useCallback(async (query: string, sport: SportType | null): Promise<TabSearchResult[]> => {
-    try {
-      const filters: any = {};
-      if (sport) filters.sportType = sport;
-      const res = await teamService.getTeams(filters, { page: 1, limit: 30 });
-      const myIds = new Set(myRosters.map((t) => t.id));
-      return (res.data || [])
-        .filter((t: Team) => {
-          const nameMatch = !query.trim() || t.name.toLowerCase().includes(query.toLowerCase());
-          const isRelevant = t.isPublic || myIds.has(t.id);
-          return nameMatch && isRelevant;
-        })
-        .map((t: Team) => ({ id: t.id, name: t.name, subtitle: t.sportType }));
-    } catch { return []; }
-  }, [myRosters]);
+  const handleSearchRosters = useCallback(
+    async (
+      query: string,
+      sport: SportType | null
+    ): Promise<TabSearchResult[]> => {
+      try {
+        const filters: any = {};
+        if (sport) filters.sportType = sport;
+        const res = await teamService.getTeams(filters, { page: 1, limit: 30 });
+        const myIds = new Set(myRosters.map(t => t.id));
+        return (res.data || [])
+          .filter((t: Team) => {
+            const nameMatch =
+              !query.trim() ||
+              t.name.toLowerCase().includes(query.toLowerCase());
+            const isRelevant = t.isPublic || myIds.has(t.id);
+            return nameMatch && isRelevant;
+          })
+          .map((t: Team) => ({
+            id: t.id,
+            name: t.name,
+            subtitle: t.sportType,
+          }));
+      } catch {
+        return [];
+      }
+    },
+    [myRosters]
+  );
 
-  const handleSearchResultPress = useCallback((result: TabSearchResult) => {
-    (navigation as any).navigate('TeamDetails', { teamId: result.id });
-  }, [navigation]);
+  const handleSearchResultPress = useCallback(
+    (result: TabSearchResult) => {
+      (navigation as any).navigate('TeamDetails', { teamId: result.id });
+    },
+    [navigation]
+  );
 
   if (error && !myRosters.length && !publicRosters.length) {
-    return <View style={styles.container}><ErrorDisplay message={error} onRetry={loadData} /></View>;
+    return (
+      <View style={styles.container}>
+        <ErrorDisplay message={error} onRetry={loadData} />
+      </View>
+    );
   }
 
   if (loading && !refreshing && !myRosters.length && !publicRosters.length) {
     return (
       <View style={styles.container}>
-        {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonRow key={i} />
+        ))}
       </View>
     );
   }
@@ -143,7 +221,7 @@ export function TeamsListScreen() {
       <FlatList
         horizontal
         data={SPORTS}
-        keyExtractor={(item) => item.value}
+        keyExtractor={item => item.value}
         showsHorizontalScrollIndicator={false}
         style={{ flexGrow: 0 }}
         contentContainerStyle={styles.chipRow}
@@ -155,7 +233,9 @@ export function TeamsListScreen() {
               onPress={() => setSportFilter(item.value)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+              <Text
+                style={[styles.chipText, isActive && styles.chipTextActive]}
+              >
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -164,9 +244,7 @@ export function TeamsListScreen() {
       />
 
       {/* My Teams section */}
-      {myTeams.length > 0 && (
-        <Text style={styles.sectionTitle}>My Teams</Text>
-      )}
+      {myTeams.length > 0 && <Text style={styles.sectionTitle}>My Teams</Text>}
     </>
   );
 
@@ -176,17 +254,30 @@ export function TeamsListScreen() {
       {otherTeams.length > 0 && (
         <>
           <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Discover</Text>
-          {otherTeams.map((team) => (
-            <TeamCard key={team.id} team={team} onPress={() => handleTeamPress(team)} currentUserId={user?.id ?? undefined} />
+          {otherTeams.map(team => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              onPress={() => handleTeamPress(team)}
+              currentUserId={user?.id ?? undefined}
+            />
           ))}
         </>
       )}
 
       {/* Join with code */}
-      <TouchableOpacity style={styles.joinBtn} onPress={handleJoinTeam} activeOpacity={0.85}>
+      <TouchableOpacity
+        style={styles.joinBtn}
+        onPress={handleJoinTeam}
+        activeOpacity={0.85}
+      >
         <Ionicons name="key-outline" size={18} color={colors.primary} />
         <Text style={styles.joinBtnText}>Join a Team with Code</Text>
-        <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={colors.outlineVariant}
+        />
       </TouchableOpacity>
 
       <View style={{ height: 100 }} />
@@ -197,24 +288,44 @@ export function TeamsListScreen() {
     <View style={styles.container}>
       <FlatList
         data={myTeams}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <TeamCard team={item} onPress={() => handleTeamPress(item)} currentUserId={user?.id ?? undefined} />
+          <TeamCard
+            team={item}
+            onPress={() => handleTeamPress(item)}
+            currentUserId={user?.id ?? undefined}
+          />
         )}
         contentContainerStyle={[
           styles.listContent,
-          isWide && { maxWidth: 540, alignSelf: 'center' as const, width: '100%' },
+          isWide && {
+            maxWidth: 540,
+            alignSelf: 'center' as const,
+            width: '100%',
+          },
         ]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={
           myTeams.length === 0 && otherTeams.length === 0 ? (
             <View style={styles.empty}>
-              <Ionicons name="people-outline" size={36} color={colors.outlineVariant} />
+              <Ionicons
+                name="people-outline"
+                size={36}
+                color={colors.outlineVariant}
+              />
               <Text style={styles.emptyTitle}>No teams yet</Text>
-              <Text style={styles.emptyText}>Create a team or join one with a code</Text>
+              <Text style={styles.emptyText}>
+                Create a team or join one with a code
+              </Text>
             </View>
           ) : null
         }
@@ -222,7 +333,11 @@ export function TeamsListScreen() {
 
       {/* FAB */}
       {!isDependent && (
-        <TouchableOpacity style={styles.fab} onPress={handleCreateTeam} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={handleCreateTeam}
+          activeOpacity={0.85}
+        >
           <Ionicons name="add" size={26} color="#FFFFFF" />
         </TouchableOpacity>
       )}
@@ -266,7 +381,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
   },
   chipText: {
     fontFamily: fonts.headingSemi,
@@ -281,7 +396,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.pine,
     letterSpacing: -0.3,
     marginBottom: 10,
     marginTop: 8,
@@ -309,18 +424,20 @@ const styles = StyleSheet.create({
   joinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.cobaltTint,
     marginTop: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
+    borderWidth: 1,
+    borderColor: colors.cobalt + '30',
   },
   joinBtnText: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurface,
+    color: colors.cobalt,
   },
 
   // ── FAB ─────────────────────────────────

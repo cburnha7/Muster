@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
   },
   chipText: {
     fontFamily: fonts.headingSemi,
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.primaryFixed,
+    backgroundColor: colors.cobaltTint,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 9999,
@@ -832,7 +832,7 @@ const styles = StyleSheet.create({
   sportTagText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.primary,
+    color: colors.cobalt,
   },
   moreText: {
     fontSize: 13,
@@ -897,7 +897,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: 9999,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     alignItems: 'center',
   },
   applyButtonText: {
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
   },
   reservationsBtnText: {
     flex: 1,

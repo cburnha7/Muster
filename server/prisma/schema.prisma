@@ -639,14 +639,23 @@ model FacilityAccessImage {
 
 model GameParticipation {
   id               String   @id @default(uuid())
-  gameScore        Float    @default(0) // vote_share × game_rating
-  votesReceived    Int      @default(0)
+  gameScore        Float    @default(0) // New: pre-game rating + position adj + outperformance bonus
+  votesReceived    Int      @default(0) // salutes received in this game
   votesCast        Int      @default(0)
-  gameRating       Float    @default(1.0) // 1 + mean(rating of all participants)
+  gameRating       Float    @default(1.0) // average pre-game rating of all participants
   participantCount Int      @default(0)
   playedAt         DateTime
   eventType        String // pickup, league, tournament
   seasonId         String? // For league games
+  leagueId         String? // For league-scoped rating
+
+  // Pre-game snapshot fields (new rating algorithm)
+  preGameRating    Float?   // Player's rating at game start
+  preGameRank      Int?     // Player's rank among participants at game start (1 = highest)
+  postGameRank     Int?     // Player's rank by salutes received (1 = most salutes)
+  saluteCount      Int      @default(0) // Salutes received in this game
+  sportType        String?  // Denormalised for efficient sport-scoped queries
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -659,6 +668,8 @@ model GameParticipation {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
+  @@index([userId, sportType])
+  @@index([userId, leagueId])
   @@map("game_participations")
 }
 
@@ -702,6 +713,21 @@ model Salute {
   @@index([fromUserId])
   @@index([toUserId])
   @@map("salutes")
+}
+
+// Tracks how many times two players have faced each other (for diminishing returns)
+model PlayerOpponentHistory {
+  id           String   @id @default(uuid())
+  playerAId    String   // always the lower UUID lexicographically for dedup
+  playerBId    String
+  gamesPlayed  Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([playerAId, playerBId])
+  @@index([playerAId])
+  @@index([playerBId])
+  @@map("player_opponent_history")
 }
 
 model FacilityCourt {
@@ -1190,24 +1216,39 @@ model PlayerSportRating {
   id                String   @id @default(uuid())
   userId            String
   sportType         String
-  
-  // Bracket rating — from age-restricted events matching player's bracket
-  bracketRating     Float    @default(1.0)
-  bracketPercentile Float?   // Cached: ranked vs same bracket + sport
-  bracketEventCount Int      @default(0)
-  
-  // Overall rating — from all open (non-age-restricted) events in this sport
-  overallRating     Float    @default(1.0)
-  overallPercentile Float?   // Cached: ranked vs all players in sport
-  overallEventCount Int      @default(0)
-  
-  ageBracket        String?  // e.g. "18-24", "25-34", "35-44", "45-54", "55+"
-  
+
+  // ── Open Rating (all qualified games, percentile vs all players) ──────────
+  openRating        Float    @default(50)
+  openPercentile    Float?   // Cached percentile vs all players in this sport
+  openGamesPlayed   Int      @default(0)
+  openLastDecayAt   DateTime? // When decay last ran
+
+  // ── Age Group Rating (same formula, percentile vs same age bracket) ───────
+  ageGroupRating    Float    @default(50)
+  ageGroupPercentile Float?  // Cached percentile vs same bracket in this sport
+  ageGroupGamesPlayed Int    @default(0)
+
+  // ── League Rating (per-league, stored as JSON array of historical records) ─
+  // Each entry: { leagueId, leagueName, rating, percentile, gamesPlayed, archivedAt }
+  leagueRatingHistory Json   @default("[]")
+
+  // Rolling game score history (last 10 scores, JSON array of floats)
+  openScoreHistory     Json  @default("[]") // last 10 game scores for open rating
+  ageGroupScoreHistory Json  @default("[]") // last 10 game scores for age group rating
+
+  ageBracket        String?  // e.g. "Adult", "U14", "Senior"
+
   // Legacy fields kept for backward compat
+  bracketRating     Float    @default(1.0)
+  bracketPercentile Float?
+  bracketEventCount Int      @default(0)
+  overallRating     Float    @default(1.0)
+  overallPercentile Float?
+  overallEventCount Int      @default(0)
   rating            Float    @default(1.0)
   percentile        Float?
   gamesPlayed       Int      @default(0)
-  
+
   lastUpdated       DateTime @default(now())
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

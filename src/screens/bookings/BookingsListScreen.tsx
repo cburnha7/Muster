@@ -17,7 +17,10 @@ import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
-import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
+import {
+  getOptimalBatchSize,
+  getOptimalWindowSize,
+} from '../../utils/performance';
 
 import { userService } from '../../services/api/UserService';
 import { eventService } from '../../services/api/EventService';
@@ -69,12 +72,18 @@ export function BookingsListScreen(): JSX.Element {
       case 'past':
         return pastBookings;
       case 'cancelled': {
-        const cancelled = allBookings.filter(booking => booking.status === BookingStatus.CANCELLED);
+        const cancelled = allBookings.filter(
+          booking => booking.status === BookingStatus.CANCELLED
+        );
         const now = new Date();
         // Sort: nearest future events first, then past events most-recent-first
         return cancelled.sort((a, b) => {
-          const aTime = a.event?.startTime ? new Date(a.event.startTime).getTime() : 0;
-          const bTime = b.event?.startTime ? new Date(b.event.startTime).getTime() : 0;
+          const aTime = a.event?.startTime
+            ? new Date(a.event.startTime).getTime()
+            : 0;
+          const bTime = b.event?.startTime
+            ? new Date(b.event.startTime).getTime()
+            : 0;
           const aFuture = aTime >= now.getTime();
           const bFuture = bTime >= now.getTime();
           // Future events come before past events
@@ -94,57 +103,80 @@ export function BookingsListScreen(): JSX.Element {
   const filteredBookings = getFilteredBookings();
 
   // Load bookings
-  const loadBookings = useCallback(async (isRefresh = false, isLoadMore = false) => {
-    if (!isAuthenticated || !user) {
-      return;
-    }
-
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else if (isLoadMore) {
-        dispatch(setLoadingMore(true));
-      } else {
-        dispatch(setLoading(true));
-      }
-
-      const currentPage = isLoadMore ? pagination.page + 1 : 1;
-      const statusFilter = activeFilter === 'all' ? undefined : 
-                          activeFilter === 'upcoming' ? 'upcoming' :
-                          activeFilter === 'past' ? 'past' : 
-                          'cancelled';
-
-      const response = await userService.getUserBookings(statusFilter as any, {
-        page: currentPage,
-        limit: pagination.limit,
-      });
-
-      if (isLoadMore) {
-        dispatch(appendBookings(response));
-      } else {
-        dispatch(setBookings(response));
-      }
-    } catch (err: any) {
-      if (err?.code === 'SESSION_EXPIRED') {
+  const loadBookings = useCallback(
+    async (isRefresh = false, isLoadMore = false) => {
+      if (!isAuthenticated || !user) {
         return;
       }
 
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load bookings';
-      dispatch(setError(errorMessage));
-      
-      if (isRefresh) {
-        Alert.alert('Error', errorMessage);
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else if (isLoadMore) {
+          dispatch(setLoadingMore(true));
+        } else {
+          dispatch(setLoading(true));
+        }
+
+        const currentPage = isLoadMore ? pagination.page + 1 : 1;
+        const statusFilter =
+          activeFilter === 'all'
+            ? undefined
+            : activeFilter === 'upcoming'
+              ? 'upcoming'
+              : activeFilter === 'past'
+                ? 'past'
+                : 'cancelled';
+
+        const response = await userService.getUserBookings(
+          statusFilter as any,
+          {
+            page: currentPage,
+            limit: pagination.limit,
+          }
+        );
+
+        if (isLoadMore) {
+          dispatch(appendBookings(response));
+        } else {
+          dispatch(setBookings(response));
+        }
+      } catch (err: any) {
+        if (err?.code === 'SESSION_EXPIRED') {
+          return;
+        }
+
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load bookings';
+        dispatch(setError(errorMessage));
+
+        if (isRefresh) {
+          Alert.alert('Error', errorMessage);
+        }
+      } finally {
+        setRefreshing(false);
       }
-    } finally {
-      setRefreshing(false);
-    }
-  }, [dispatch, activeFilter, pagination.page, pagination.limit, isAuthenticated, user]);
+    },
+    [
+      dispatch,
+      activeFilter,
+      pagination.page,
+      pagination.limit,
+      isAuthenticated,
+      user,
+    ]
+  );
 
   // Handle booking press
   const handleBookingPress = (booking: Booking) => {
     // Past or completed bookings go to the Debrief screen
-    if (booking.event && (activeFilter === 'past' || booking.status === BookingStatus.CONFIRMED)) {
-      const endTime = booking.event.endTime ? new Date(booking.event.endTime) : null;
+    if (
+      booking.event &&
+      (activeFilter === 'past' || booking.status === BookingStatus.CONFIRMED)
+    ) {
+      const endTime = booking.event.endTime
+        ? new Date(booking.event.endTime)
+        : null;
       const isPast = endTime && endTime < new Date();
 
       if (isPast) {
@@ -156,19 +188,28 @@ export function BookingsListScreen(): JSX.Element {
 
         // Within 24h and not submitted → interactive debrief
         // Otherwise → readonly debrief summary
-        navigation.navigate('Debrief' as never, {
-          eventId: booking.event.id,
-          readonly: !withinWindow || alreadySubmitted,
-        } as never);
+        navigation.navigate(
+          'Debrief' as never,
+          {
+            eventId: booking.event.id,
+            readonly: !withinWindow || alreadySubmitted,
+          } as never
+        );
         return;
       }
     }
 
     // Upcoming / other bookings go to event details
     if (booking.event) {
-      navigation.navigate('EventDetails' as never, { eventId: booking.event.id } as never);
+      navigation.navigate(
+        'EventDetails' as never,
+        { eventId: booking.event.id } as never
+      );
     } else {
-      navigation.navigate('BookingDetails' as never, { bookingId: booking.id } as never);
+      navigation.navigate(
+        'BookingDetails' as never,
+        { bookingId: booking.id } as never
+      );
     }
   };
 
@@ -181,7 +222,8 @@ export function BookingsListScreen(): JSX.Element {
 
     const mockUser = { id: booking.userId } as any;
 
-    const BookingValidationService = require('../../services/booking').BookingValidationService;
+    const BookingValidationService =
+      require('../../services/booking').BookingValidationService;
     const validationResult = BookingValidationService.validateCancellation(
       booking.event,
       mockUser,
@@ -189,7 +231,10 @@ export function BookingsListScreen(): JSX.Element {
     );
 
     if (!validationResult.canBook) {
-      Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
+      Alert.alert(
+        'Cannot Leave',
+        validationResult.reason || 'Cannot leave this event'
+      );
       return;
     }
 
@@ -203,18 +248,24 @@ export function BookingsListScreen(): JSX.Element {
     }
 
     try {
-      await eventService.cancelBooking(selectedBooking.event.id, selectedBooking.id);
-      
-      dispatch(cancelBookingAction({
-        bookingId: selectedBooking.id,
-        cancellationReason: 'Cancelled by user',
-      }));
+      await eventService.cancelBooking(
+        selectedBooking.event.id,
+        selectedBooking.id
+      );
+
+      dispatch(
+        cancelBookingAction({
+          bookingId: selectedBooking.id,
+          cancellationReason: 'Cancelled by user',
+        })
+      );
 
       setShowStepOutModal(false);
       setSelectedBooking(null);
       await loadBookings(true);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to cancel booking';
       Alert.alert('Error', errorMessage);
       setShowStepOutModal(false);
       setSelectedBooking(null);
@@ -257,8 +308,10 @@ export function BookingsListScreen(): JSX.Element {
         <View style={styles.emptyState}>
           <Ionicons name="log-in-outline" size={64} color={colors.inkFaint} />
           <Text style={styles.emptyTitle}>Not Logged In</Text>
-          <Text style={styles.emptySubtitle}>Please log in to view your schedule</Text>
-          <TouchableOpacity 
+          <Text style={styles.emptySubtitle}>
+            Please log in to view your schedule
+          </Text>
+          <TouchableOpacity
             style={styles.browseButton}
             onPress={() => navigation.navigate('Auth' as never)}
           >
@@ -269,14 +322,21 @@ export function BookingsListScreen(): JSX.Element {
     );
   }
 
-  const renderBookingItem = useCallback(({ item }: { item: Booking }) => (
-    <BookingCard
-      booking={item}
-      onPress={handleBookingPress}
-      onCancel={item.status === BookingStatus.CONFIRMED ? () => handleCancelBooking(item) : undefined}
-      hidePrice={activeFilter === 'past'}
-    />
-  ), [handleBookingPress, handleCancelBooking, activeFilter]);
+  const renderBookingItem = useCallback(
+    ({ item }: { item: Booking }) => (
+      <BookingCard
+        booking={item}
+        onPress={handleBookingPress}
+        onCancel={
+          item.status === BookingStatus.CONFIRMED
+            ? () => handleCancelBooking(item)
+            : undefined
+        }
+        hidePrice={activeFilter === 'past'}
+      />
+    ),
+    [handleBookingPress, handleCancelBooking, activeFilter]
+  );
 
   const keyExtractor = useCallback((item: Booking) => item.id, []);
 
@@ -299,7 +359,7 @@ export function BookingsListScreen(): JSX.Element {
 
     return (
       <View style={styles.filterTabs}>
-        {filters.map((filter) => (
+        {filters.map(filter => (
           <TouchableOpacity
             key={filter.key}
             style={[
@@ -327,13 +387,29 @@ export function BookingsListScreen(): JSX.Element {
     const getEmptyMessage = () => {
       switch (activeFilter) {
         case 'upcoming':
-          return { title: 'No Upcoming Events', subtitle: 'Join an event to see it here', icon: 'calendar-outline' };
+          return {
+            title: 'No Upcoming Events',
+            subtitle: 'Join an event to see it here',
+            icon: 'calendar-outline',
+          };
         case 'past':
-          return { title: 'No Past Events', subtitle: 'Your completed events will appear here', icon: 'time-outline' };
+          return {
+            title: 'No Past Events',
+            subtitle: 'Your completed events will appear here',
+            icon: 'time-outline',
+          };
         case 'cancelled':
-          return { title: 'No Cancelled Events', subtitle: 'Cancelled events will appear here', icon: 'close-circle-outline' };
+          return {
+            title: 'No Cancelled Events',
+            subtitle: 'Cancelled events will appear here',
+            icon: 'close-circle-outline',
+          };
         default:
-          return { title: 'Nothing Scheduled', subtitle: 'Start joining events to see them here', icon: 'calendar-outline' };
+          return {
+            title: 'Nothing Scheduled',
+            subtitle: 'Start joining events to see them here',
+            icon: 'calendar-outline',
+          };
       }
     };
 
@@ -341,11 +417,15 @@ export function BookingsListScreen(): JSX.Element {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name={emptyState.icon as any} size={64} color={colors.inkFaint} />
+        <Ionicons
+          name={emptyState.icon as any}
+          size={64}
+          color={colors.inkFaint}
+        />
         <Text style={styles.emptyTitle}>{emptyState.title}</Text>
         <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
         {activeFilter === 'upcoming' && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.browseButton}
             onPress={() => navigation.navigate('Home' as never)}
           >
@@ -385,7 +465,11 @@ export function BookingsListScreen(): JSX.Element {
           renderItem={renderBookingItem}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
-          contentContainerStyle={filteredBookings.length === 0 ? styles.emptyContainer : styles.listContent}
+          contentContainerStyle={
+            filteredBookings.length === 0
+              ? styles.emptyContainer
+              : styles.listContent
+          }
           ListEmptyComponent={renderEmptyState}
           ListFooterComponent={renderFooter}
           refreshControl={
@@ -410,7 +494,10 @@ export function BookingsListScreen(): JSX.Element {
       <StepOutModal
         visible={showStepOutModal}
         eventTitle={selectedBooking?.event?.title || 'Event'}
-        onCancel={() => { setShowStepOutModal(false); setSelectedBooking(null); }}
+        onCancel={() => {
+          setShowStepOutModal(false);
+          setSelectedBooking(null);
+        }}
         onConfirm={confirmCancelBooking}
       />
     </View>
@@ -424,11 +511,11 @@ const styles = StyleSheet.create({
   },
   filterTabs: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
+    borderBottomColor: colors.border,
   },
   filterTab: {
     flex: 1,
@@ -440,7 +527,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   activeFilterTab: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
   },
   filterTabText: {
     fontSize: 14,
@@ -482,7 +569,7 @@ const styles = StyleSheet.create({
   browseButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     borderRadius: 9999,
   },
   browseButtonText: {

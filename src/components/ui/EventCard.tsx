@@ -15,8 +15,14 @@ interface EventCardProps {
   colorIndicator?: string;
 }
 
-
-export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, compact = false, isHost, colorIndicator }) => {
+export const EventCard: React.FC<EventCardProps> = ({
+  event,
+  onPress,
+  style,
+  compact = false,
+  isHost,
+  colorIndicator,
+}) => {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -35,25 +41,37 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
-      case SportType.BASKETBALL: return 'basketball-outline';
-      case SportType.SOCCER: return 'football-outline';
+      case SportType.BASKETBALL:
+        return 'basketball-outline';
+      case SportType.SOCCER:
+        return 'football-outline';
       case SportType.TENNIS:
-      case SportType.PICKLEBALL: return 'tennisball-outline';
-      case SportType.VOLLEYBALL: return 'american-football-outline';
+      case SportType.PICKLEBALL:
+        return 'tennisball-outline';
+      case SportType.VOLLEYBALL:
+        return 'american-football-outline';
       case SportType.SOFTBALL:
-      case SportType.BASEBALL: return 'baseball-outline';
-      case SportType.FLAG_FOOTBALL: return 'flag-outline';
-      case SportType.KICKBALL: return 'football-outline';
-      default: return 'fitness-outline';
+      case SportType.BASEBALL:
+        return 'baseball-outline';
+      case SportType.FLAG_FOOTBALL:
+        return 'flag-outline';
+      case SportType.KICKBALL:
+        return 'football-outline';
+      default:
+        return 'fitness-outline';
     }
   };
 
   const getSkillLevelColor = (skillLevel: SkillLevel) => {
     switch (skillLevel) {
-      case SkillLevel.BEGINNER: return '#34C759';
-      case SkillLevel.INTERMEDIATE: return colors.gold;
-      case SkillLevel.ADVANCED: return colors.error;
-      default: return colors.primary;
+      case SkillLevel.BEGINNER:
+        return '#34C759';
+      case SkillLevel.INTERMEDIATE:
+        return colors.gold;
+      case SkillLevel.ADVANCED:
+        return colors.error;
+      default:
+        return colors.primary;
     }
   };
 
@@ -65,16 +83,27 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
   const availableSpots = event.maxParticipants - event.currentParticipants;
   const isFullyBooked = availableSpots <= 0;
-  const isInviteOnly = event.eligibility?.isInviteOnly && !event.eligibility?.wasAutoOpenedToPublic;
+  const isInviteOnly =
+    event.eligibility?.isInviteOnly &&
+    !event.eligibility?.wasAutoOpenedToPublic;
   const wasAutoOpened = event.eligibility?.wasAutoOpenedToPublic;
 
   return (
     <PressableCard
-      style={[styles.container, colorIndicator ? styles.containerWithIndicator : undefined, style]}
+      style={[
+        styles.container,
+        colorIndicator ? styles.containerWithIndicator : undefined,
+        style,
+      ]}
       onPress={() => onPress?.(event)}
     >
       {colorIndicator && (
-        <View style={[styles.colorIndicatorStripe, { backgroundColor: colorIndicator }]} />
+        <View
+          style={[
+            styles.colorIndicatorStripe,
+            { backgroundColor: colorIndicator },
+          ]}
+        />
       )}
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
@@ -91,44 +120,83 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           </View>
         )}
         {event.minPlayerRating != null && event.minPlayerRating > 0 && (
-          <View style={[styles.skillBadge, { backgroundColor: getRatingBadgeColor(event.minPlayerRating) }]}>
-            <Text style={styles.skillText}>{event.minPlayerRating}+ RATING</Text>
+          <View
+            style={[
+              styles.skillBadge,
+              { backgroundColor: getRatingBadgeColor(event.minPlayerRating) },
+            ]}
+          >
+            <Text style={styles.skillText}>
+              {event.minPlayerRating}+ RATING
+            </Text>
           </View>
         )}
       </View>
 
       <View style={styles.header}>
         <View style={styles.sportInfo}>
-          <Ionicons name={getSportIcon(event.sportType) as any} size={24} color={colors.primary} />
-          <Text style={styles.title} numberOfLines={1}>{event.title}</Text>
+          <Ionicons
+            name={getSportIcon(event.sportType) as any}
+            size={24}
+            color={colors.inkSoft}
+          />
+          <Text style={styles.title} numberOfLines={1}>
+            {event.title}
+          </Text>
         </View>
       </View>
 
-      <View style={[
-        styles.participantsTracker,
-        isFullyBooked && { backgroundColor: colors.error + '15', borderColor: colors.error + '30' }
-      ]}>
-        <Ionicons name="people" size={16} color={isFullyBooked ? colors.error : colors.primary} />
-        <Text style={[styles.participantsText, isFullyBooked && styles.participantsFullText]}>
+      <View
+        style={[
+          styles.participantsTracker,
+          isFullyBooked && {
+            backgroundColor: colors.error + '15',
+            borderColor: colors.error + '30',
+          },
+        ]}
+      >
+        <Ionicons
+          name="people"
+          size={16}
+          color={isFullyBooked ? colors.error : colors.primary}
+        />
+        <Text
+          style={[
+            styles.participantsText,
+            isFullyBooked && styles.participantsFullText,
+          ]}
+        >
           {event.currentParticipants}/{event.maxParticipants} players
         </Text>
       </View>
 
-      <Text style={styles.description} numberOfLines={2}>{event.description}</Text>
+      <Text style={styles.description} numberOfLines={2}>
+        {event.description}
+      </Text>
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color={colors.onSurfaceVariant} />
+          <Ionicons
+            name="calendar-outline"
+            size={16}
+            color={colors.onSurfaceVariant}
+          />
           <Text style={styles.detailText}>
             {formatDate(event.startTime)} at {formatTime(event.startTime)}
           </Text>
         </View>
 
         <View style={styles.detailRow}>
-          <Ionicons name="hourglass-outline" size={16} color={colors.onSurfaceVariant} />
+          <Ionicons
+            name="hourglass-outline"
+            size={16}
+            color={colors.onSurfaceVariant}
+          />
           <Text style={styles.detailText}>
             {(() => {
-              const ms = new Date(event.endTime).getTime() - new Date(event.startTime).getTime();
+              const ms =
+                new Date(event.endTime).getTime() -
+                new Date(event.startTime).getTime();
               const totalMinutes = Math.round(ms / 60000);
               const hours = Math.floor(totalMinutes / 60);
               const minutes = totalMinutes % 60;
@@ -140,7 +208,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         </View>
 
         <View style={styles.detailRow}>
-          <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
+          <Ionicons
+            name="location-outline"
+            size={16}
+            color={colors.onSurfaceVariant}
+          />
           <Text style={styles.detailText} numberOfLines={1}>
             {event.facility?.name || event.locationName || 'Location TBD'}
           </Text>
@@ -149,15 +221,24 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
         {event.rental && (
           <View style={styles.rentalIndicator}>
             <Ionicons name="calendar" size={14} color={colors.primary} />
-            <Text style={styles.rentalText} numberOfLines={1}>{event.rental.timeSlot.court.name}</Text>
+            <Text style={styles.rentalText} numberOfLines={1}>
+              {event.rental.timeSlot.court.name}
+            </Text>
           </View>
         )}
 
         {event.eligibility && (
           <View style={styles.detailRow}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.gold} />
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={16}
+              color={colors.gold}
+            />
             <Text style={styles.eligibilityText} numberOfLines={1}>
-              {EventEligibilityService.getEligibilitySummary(event.eligibility, event.minPlayerRating).join(', ')}
+              {EventEligibilityService.getEligibilitySummary(
+                event.eligibility,
+                event.minPlayerRating
+              ).join(', ')}
             </Text>
           </View>
         )}
@@ -168,7 +249,9 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
           {event.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
         </Text>
         <View style={[styles.statusBadge, isFullyBooked && styles.fullBadge]}>
-          <Text style={[styles.statusText, isFullyBooked && styles.fullStatusText]}>
+          <Text
+            style={[styles.statusText, isFullyBooked && styles.fullStatusText]}
+          >
             {isFullyBooked ? 'Full' : `${availableSpots} spots left`}
           </Text>
         </View>
@@ -176,8 +259,14 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onPress, style, com
 
       {wasAutoOpened && (
         <View style={styles.autoOpenedBanner}>
-          <Ionicons name="megaphone-outline" size={14} color={colors.onSurface} />
-          <Text style={styles.autoOpenedText}>Now open to public - was invite-only</Text>
+          <Ionicons
+            name="megaphone-outline"
+            size={14}
+            color={colors.onSurface}
+          />
+          <Text style={styles.autoOpenedText}>
+            Now open to public - was invite-only
+          </Text>
         </View>
       )}
     </PressableCard>
@@ -235,19 +324,19 @@ const styles = StyleSheet.create({
   participantsTracker: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary + '15',
+    backgroundColor: colors.cobaltTint,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'flex-start',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.primary + '30',
+    borderColor: colors.cobalt + '40',
   },
   participantsText: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.primary,
+    color: colors.cobalt,
     marginLeft: 6,
   },
   participantsFullText: {
@@ -312,18 +401,18 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   statusBadge: {
-    backgroundColor: colors.secondaryContainer,
+    backgroundColor: colors.pineTint,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
   fullBadge: {
-    backgroundColor: colors.error + '15',
+    backgroundColor: colors.heartTint,
   },
   statusText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.secondary,
+    color: colors.pine,
   },
   fullStatusText: {
     color: colors.error,
@@ -371,7 +460,7 @@ const styles = StyleSheet.create({
   hostBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 9999,

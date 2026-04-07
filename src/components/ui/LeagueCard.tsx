@@ -14,19 +14,33 @@ interface LeagueCardProps {
   style?: any;
 }
 
-export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner, style }) => {
+export const LeagueCard: React.FC<LeagueCardProps> = ({
+  league,
+  onPress,
+  isOwner,
+  style,
+}) => {
   const seasonName = league.seasonName || league.name;
   const sportColor = getSportColor(league.sportType);
 
   return (
-    <PressableCard style={[styles.card, style]} onPress={() => onPress?.(league)}>
+    <PressableCard
+      style={[styles.card, style]}
+      onPress={() => onPress?.(league)}
+    >
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
-        <Ionicons name={getSportIcon(league.sportType) as any} size={20} color={sportColor} />
+        <Ionicons
+          name={getSportIcon(league.sportType) as any}
+          size={20}
+          color={sportColor}
+        />
       </View>
 
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>{seasonName}</Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {seasonName}
+          </Text>
           {isOwner && (
             <View style={styles.commissionerBadge}>
               <Text style={styles.commissionerText}>Commissioner</Text>
@@ -36,7 +50,11 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({ league, onPress, isOwner
         <Text style={styles.meta}>{formatSport(league.sportType)}</Text>
       </View>
 
-      <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
+      <Ionicons
+        name="chevron-forward"
+        size={16}
+        color={colors.outlineVariant}
+      />
     </PressableCard>
   );
 };
@@ -74,14 +92,17 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     flexShrink: 1,
   },
+  // Commissioner badge — cobalt tint (leadership role, distinct from Manager)
   commissionerBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobaltTint,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: colors.cobalt,
   },
   commissionerText: {
-    color: '#FFFFFF',
+    color: colors.cobalt,
     fontSize: 10,
     fontFamily: fonts.label,
     letterSpacing: 0.4,

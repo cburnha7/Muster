@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
+import { processCompletedGame } from '../services/PlayerRatingService';
 
 const router = Router();
 
@@ -294,24 +295,19 @@ router.post('/:eventId/submit', async (req, res) => {
       });
     });
 
-    // Recalculate ratings for saluted users (outside transaction for performance)
-    for (const salutedUserId of salutedUserIds) {
-      const totalSalutes = await prisma.salute.count({
-        where: { toUserId: salutedUserId },
-      });
-      const totalGames = await prisma.booking.count({
-        where: { userId: salutedUserId, status: 'confirmed' },
-      });
-      const saluteRatio = totalGames > 0 ? totalSalutes / totalGames : 0;
-      const newRating = Math.min(5.0, 1.0 + saluteRatio * 2);
-      await prisma.user.update({
-        where: { id: salutedUserId },
-        data: {
-          currentRating: newRating,
-          pickupRating: newRating,
-          ratingLastUpdated: new Date(),
-        },
-      });
+    // Recalculate ratings using the new algorithm
+    // Check if all participants have submitted debriefs; if so, process immediately.
+    // Otherwise, the game will be processed when the 24h window closes.
+    const allBookings = await prisma.booking.findMany({
+      where: { eventId, status: 'confirmed' },
+      select: { debriefSubmitted: true },
+    });
+    const allSubmitted = allBookings.every(b => b.debriefSubmitted);
+    if (allSubmitted) {
+      // Fire-and-forget — don't block the response
+      processCompletedGame(eventId).catch(err =>
+        console.error('Rating calculation error:', err)
+      );
     }
 
     res.json({ success: true });

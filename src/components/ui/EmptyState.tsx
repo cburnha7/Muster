@@ -20,11 +20,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={48} color={colors.outlineVariant} />
+      <Ionicons name={icon} size={48} color={colors.cobaltTint} />
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       {actionLabel && onAction ? (
-        <TouchableOpacity style={styles.actionButton} onPress={onAction} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={onAction}
+          activeOpacity={0.8}
+        >
           <Text style={styles.actionLabel}>{actionLabel}</Text>
         </TouchableOpacity>
       ) : null}
@@ -56,7 +60,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginTop: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 9999,

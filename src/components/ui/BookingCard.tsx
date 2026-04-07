@@ -36,9 +36,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     });
   };
 
-  const canCancel = booking.status === BookingStatus.CONFIRMED &&
-                   booking.event &&
-                   new Date(booking.event.startTime) > new Date();
+  const canCancel =
+    booking.status === BookingStatus.CONFIRMED &&
+    booking.event &&
+    new Date(booking.event.startTime) > new Date();
 
   const isCancelled =
     booking.status === BookingStatus.CANCELLED ||
@@ -121,19 +122,30 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
         {booking.event && (
           <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={16} color={colors.inkFaint} />
+            <Ionicons
+              name="calendar-outline"
+              size={16}
+              color={colors.inkFaint}
+            />
             <Text style={styles.detailText}>
-              {formatDate(booking.event.startTime)} at {formatTime(booking.event.startTime)}
+              {formatDate(booking.event.startTime)} at{' '}
+              {formatTime(booking.event.startTime)}
             </Text>
           </View>
         )}
 
         {booking.event && (
           <View style={styles.detailRow}>
-            <Ionicons name="hourglass-outline" size={16} color={colors.inkFaint} />
+            <Ionicons
+              name="hourglass-outline"
+              size={16}
+              color={colors.inkFaint}
+            />
             <Text style={styles.detailText}>
               {(() => {
-                const ms = new Date(booking.event.endTime).getTime() - new Date(booking.event.startTime).getTime();
+                const ms =
+                  new Date(booking.event.endTime).getTime() -
+                  new Date(booking.event.startTime).getTime();
                 const totalMinutes = Math.round(ms / 60000);
                 const hours = Math.floor(totalMinutes / 60);
                 const minutes = totalMinutes % 60;
@@ -148,9 +160,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         {booking.team && (
           <View style={styles.detailRow}>
             <Ionicons name="people-outline" size={16} color={colors.inkFaint} />
-            <Text style={styles.detailText}>
-              Roster: {booking.team.name}
-            </Text>
+            <Text style={styles.detailText}>Roster: {booking.team.name}</Text>
           </View>
         )}
       </View>
@@ -160,17 +170,23 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         <View style={styles.footerLeft}>
           {booking.event && (
             <Text style={styles.participants}>
-              {booking.event.currentParticipants}/{booking.event.maxParticipants} players
+              {booking.event.currentParticipants}/
+              {booking.event.maxParticipants} players
             </Text>
           )}
           {!hidePrice && (
             <Text style={styles.price}>
-              {booking.event?.price != null && booking.event.price > 0 ? `$${booking.event.price.toFixed(2)}` : 'Free'}
+              {booking.event?.price != null && booking.event.price > 0
+                ? `$${booking.event.price.toFixed(2)}`
+                : 'Free'}
             </Text>
           )}
-          {!hidePrice && booking.event?.price != null && booking.event.price > 0 && booking.paymentStatus === PaymentStatus.PENDING && (
-            <Text style={styles.pendingLabel}>Pending</Text>
-          )}
+          {!hidePrice &&
+            booking.event?.price != null &&
+            booking.event.price > 0 &&
+            booking.paymentStatus === PaymentStatus.PENDING && (
+              <Text style={styles.pendingLabel}>Pending</Text>
+            )}
         </View>
 
         {canCancel && onCancel && (
@@ -185,14 +201,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </TouchableOpacity>
         )}
       </View>
-
     </PressableCard>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     paddingRight: 90,
@@ -200,16 +215,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     shadowColor: '#191C1E',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.08,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 3,
     position: 'relative' as const,
   },
   containerCancelled: {
+    backgroundColor: colors.heartTint,
   },
   containerLive: {
+    backgroundColor: colors.goldTint,
   },
   containerPast: {
+    backgroundColor: colors.surface,
   },
   bubbleStack: {
     position: 'absolute' as const,
@@ -325,11 +343,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
+    borderColor: colors.gold,
+    backgroundColor: colors.goldTint,
   },
   cancelText: {
     fontFamily: fonts.ui,
-    color: colors.inkFaint,
+    color: colors.gold,
     fontSize: 13,
   },
   bookingInfo: {

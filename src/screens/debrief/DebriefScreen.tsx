@@ -22,6 +22,7 @@ import {
 import { SaluteOverlay } from '../../components/SaluteOverlay';
 import { useAuth } from '../../context/AuthContext';
 import { eventService } from '../../services/api/EventService';
+import { notificationsEventBus } from '../../utils/notificationsEventBus';
 
 export function DebriefScreen() {
   const navigation = useNavigation();
@@ -140,6 +141,7 @@ export function DebriefScreen() {
       );
       setHasSubmitted(true);
       setIsReadonly(true);
+      notificationsEventBus.emit();
       Alert.alert('Debrief Submitted', 'Thanks for the feedback!', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);

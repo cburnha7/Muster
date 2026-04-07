@@ -12,14 +12,32 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
+import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
 
 interface SportRating {
   sportType: string;
-  overallPercentile: number | null;
-  bracketPercentile: number | null;
+  openPercentile: number | null;
+  ageGroupPercentile: number | null;
+  openGamesPlayed: number;
+  ageGroupGamesPlayed: number;
+  openRating: number | null;
+  ageGroupRating: number | null;
   ageBracket: string | null;
-  overallEventCount: number;
-  bracketEventCount: number;
+  // Legacy fallbacks
+  overallPercentile?: number | null;
+  bracketPercentile?: number | null;
+  overallEventCount?: number;
+  bracketEventCount?: number;
+}
+
+interface LeagueRatingRecord {
+  leagueId: string;
+  leagueName: string;
+  sportType: string;
+  rating: number;
+  percentile: number | null;
+  gamesPlayed: number;
+  archivedAt: string | null;
 }
 
 interface PlayerCardProps {
@@ -35,55 +53,94 @@ interface PlayerCardProps {
   } | null;
 }
 
-const formatSport = (s: string) => s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-
-const ordinal = (n: number) => {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-};
+const formatSport = (s: string) =>
+  s
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
 
 export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
   const [ratings, setRatings] = useState<SportRating[]>([]);
+  const [leagueHistory, setLeagueHistory] = useState<LeagueRatingRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'open' | 'age'>('open');
 
   useEffect(() => {
-    if (!visible || !player) { setRatings([]); return; }
+    if (!visible || !player) {
+      setRatings([]);
+      setLeagueHistory([]);
+      return;
+    }
     setLoading(true);
     fetch(`${API_BASE_URL}/users/sport-ratings/${player.id}`)
       .then(r => r.json())
-      .then((data: SportRating[]) => setRatings((data || []).filter(r => r.overallEventCount > 0 || r.bracketEventCount > 0)))
-      .catch(() => setRatings([]))
+      .then((data: any) => {
+        const list: SportRating[] = Array.isArray(data)
+          ? data
+          : (data.sportRatings ?? []);
+        setRatings(
+          list.filter(
+            r =>
+              (r.openGamesPlayed ?? r.overallEventCount ?? 0) > 0 ||
+              (r.ageGroupGamesPlayed ?? r.bracketEventCount ?? 0) > 0
+          )
+        );
+        setLeagueHistory(data.leagueHistory ?? []);
+      })
+      .catch(() => {
+        setRatings([]);
+        setLeagueHistory([]);
+      })
       .finally(() => setLoading(false));
   }, [visible, player?.id]);
 
   if (!visible || !player) return null;
 
   const age = player.dateOfBirth
-    ? Math.floor((Date.now() - new Date(player.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+    ? Math.floor(
+        (Date.now() - new Date(player.dateOfBirth).getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000)
+      )
     : null;
 
   const initial = player.firstName?.[0]?.toUpperCase() || '?';
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.backdrop} onPress={onClose}>
         <View style={styles.card}>
           {/* Photo + Info */}
           <View style={styles.header}>
             {player.profileImage ? (
-              <Image source={{ uri: player.profileImage }} style={styles.avatar} />
+              <Image
+                source={{ uri: player.profileImage }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={[styles.avatar, styles.avatarFallback]}>
                 <Text style={styles.avatarInitial}>{initial}</Text>
               </View>
             )}
             <View style={styles.info}>
-              <Text style={styles.name}>{player.firstName} {player.lastName}</Text>
+              <Text style={styles.name}>
+                {player.firstName} {player.lastName}
+              </Text>
               <View style={styles.metaRow}>
                 {age != null && <Text style={styles.meta}>{age} yrs</Text>}
-                {player.gender && <Text style={styles.meta}>{player.gender === 'male' ? 'Male' : player.gender === 'female' ? 'Female' : player.gender}</Text>}
+                {player.gender && (
+                  <Text style={styles.meta}>
+                    {player.gender === 'male'
+                      ? 'Male'
+                      : player.gender === 'female'
+                        ? 'Female'
+                        : player.gender}
+                  </Text>
+                )}
               </View>
             </View>
           </View>
@@ -91,33 +148,116 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
           {/* Toggle */}
           {ratings.length > 0 && (
             <View style={styles.toggleRow}>
-              <TouchableOpacity style={[styles.toggleBtn, mode === 'open' && styles.toggleBtnActive]} onPress={() => setMode('open')}>
-                <Text style={[styles.toggleText, mode === 'open' && styles.toggleTextActive]}>Open</Text>
+              <TouchableOpacity
+                style={[
+                  styles.toggleBtn,
+                  mode === 'open' && styles.toggleBtnActive,
+                ]}
+                onPress={() => setMode('open')}
+              >
+                <Text
+                  style={[
+                    styles.toggleText,
+                    mode === 'open' && styles.toggleTextActive,
+                  ]}
+                >
+                  Open
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.toggleBtn, mode === 'age' && styles.toggleBtnActive]} onPress={() => setMode('age')}>
-                <Text style={[styles.toggleText, mode === 'age' && styles.toggleTextActive]}>Age Restricted</Text>
+              <TouchableOpacity
+                style={[
+                  styles.toggleBtn,
+                  mode === 'age' && styles.toggleBtnActive,
+                ]}
+                onPress={() => setMode('age')}
+              >
+                <Text
+                  style={[
+                    styles.toggleText,
+                    mode === 'age' && styles.toggleTextActive,
+                  ]}
+                >
+                  Age Restricted
+                </Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* Ratings */}
           {loading ? (
-            <ActivityIndicator color={colors.cobalt} style={{ marginVertical: 16 }} />
+            <ActivityIndicator
+              color={colors.cobalt}
+              style={{ marginVertical: 16 }}
+            />
           ) : ratings.length === 0 ? (
             <Text style={styles.noRatings}>No sport ratings yet</Text>
           ) : (
             <View style={styles.ratingsList}>
-              {ratings.map((r) => {
-                const pct = mode === 'open' ? r.overallPercentile : r.bracketPercentile;
+              {ratings.map(r => {
+                const pct =
+                  mode === 'open'
+                    ? (r.openPercentile ?? r.overallPercentile)
+                    : (r.ageGroupPercentile ?? r.bracketPercentile);
+                const games =
+                  mode === 'open'
+                    ? (r.openGamesPlayed ?? r.overallEventCount ?? 0)
+                    : (r.ageGroupGamesPlayed ?? r.bracketEventCount ?? 0);
+                const rating =
+                  mode === 'open' ? r.openRating : r.ageGroupRating;
+                const display = formatRatingDisplay(pct, games, rating);
+                const isLove = display === LOVE_LABEL;
                 return (
                   <View key={r.sportType} style={styles.ratingRow}>
-                    <Text style={styles.sportName}>{formatSport(r.sportType)}</Text>
-                    <Text style={styles.percentile}>
-                      {pct != null ? `${ordinal(Math.round(pct))} percentile` : '—'}
+                    <View>
+                      <Text style={styles.sportName}>
+                        {formatSport(r.sportType)}
+                      </Text>
+                      {mode === 'age' && r.ageBracket && (
+                        <Text style={styles.bracketLabel}>{r.ageBracket}</Text>
+                      )}
+                    </View>
+                    <Text
+                      style={[styles.percentile, isLove && styles.loveLabel]}
+                    >
+                      {display}
                     </Text>
                   </View>
                 );
               })}
+            </View>
+          )}
+
+          {/* Past Seasons — league rating history */}
+          {leagueHistory.length > 0 && (
+            <View style={styles.leagueSection}>
+              <Text style={styles.leagueSectionTitle}>Past Seasons</Text>
+              {leagueHistory
+                .filter(l => l.archivedAt !== null)
+                .map(l => {
+                  const display = formatRatingDisplay(
+                    l.percentile,
+                    l.gamesPlayed,
+                    l.rating
+                  );
+                  const isLove = display === LOVE_LABEL;
+                  return (
+                    <View key={l.leagueId} style={styles.leagueRow}>
+                      <View style={styles.leagueInfo}>
+                        <Text style={styles.leagueName} numberOfLines={1}>
+                          {l.leagueName}
+                        </Text>
+                        <Text style={styles.leagueMeta}>
+                          {formatSport(l.sportType)} · {l.gamesPlayed} games
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.percentile, isLove && styles.loveLabel]}
+                      >
+                        {display}
+                      </Text>
+                    </View>
+                  );
+                })}
             </View>
           )}
         </View>
@@ -238,9 +378,58 @@ const styles = StyleSheet.create({
     color: colors.ink,
     textTransform: 'uppercase',
   },
+  bracketLabel: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.inkFaint,
+    marginTop: 1,
+  },
   percentile: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.label,
     fontSize: 14,
     color: colors.cobalt,
+  },
+  loveLabel: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+    fontStyle: 'italic',
+  },
+  leagueSection: {
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 12,
+  },
+  leagueSectionTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 13,
+    color: colors.pine,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  leagueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  leagueInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  leagueName: {
+    fontFamily: fonts.label,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  leagueMeta: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.inkFaint,
+    marginTop: 1,
   },
 });
