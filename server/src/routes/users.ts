@@ -254,22 +254,16 @@ router.get('/sport-ratings/:userId', async (req, res) => {
       where: {
         userId,
         OR: [
-          { openGamesPlayed: { gt: 0 } },
-          { ageGroupGamesPlayed: { gt: 0 } },
+          { overallEventCount: { gt: 0 } },
+          { bracketEventCount: { gt: 0 } },
           { gamesPlayed: { gt: 0 } },
         ],
       },
       select: {
         sportType: true,
-        openRating: true,
-        openPercentile: true,
-        openGamesPlayed: true,
-        ageGroupRating: true,
-        ageGroupPercentile: true,
-        ageGroupGamesPlayed: true,
-        leagueRatingHistory: true,
+        // New fields — may not exist in DB yet; accessed via raw object spread below
         ageBracket: true,
-        // Legacy fields for backward compat
+        // Legacy fields — always present
         bracketRating: true,
         overallRating: true,
         bracketPercentile: true,
@@ -281,19 +275,51 @@ router.get('/sport-ratings/:userId', async (req, res) => {
         gamesPlayed: true,
         lastUpdated: true,
       },
-      orderBy: { openRating: 'desc' },
+      orderBy: { overallRating: 'desc' },
     });
 
-    // Collect all archived league records across sports for Past Seasons display
+    // Safely read new columns that may not exist yet in production
+    const sportRatings = ratings.map((r: any) => ({
+      sportType: r.sportType,
+      ageBracket: r.ageBracket ?? null,
+      // New tier fields — fall back to legacy values if columns don't exist
+      openRating: r.openRating ?? r.overallRating ?? r.rating ?? 50,
+      openPercentile:
+        r.openPercentile ?? r.overallPercentile ?? r.percentile ?? null,
+      openGamesPlayed:
+        r.openGamesPlayed ?? r.overallEventCount ?? r.gamesPlayed ?? 0,
+      ageGroupRating: r.ageGroupRating ?? r.bracketRating ?? r.rating ?? 50,
+      ageGroupPercentile: r.ageGroupPercentile ?? r.bracketPercentile ?? null,
+      ageGroupGamesPlayed:
+        r.ageGroupGamesPlayed ?? r.bracketEventCount ?? r.gamesPlayed ?? 0,
+      // Legacy fields kept for any older clients
+      overallRating: r.overallRating ?? r.rating ?? 50,
+      overallPercentile: r.overallPercentile ?? r.percentile ?? null,
+      overallEventCount: r.overallEventCount ?? r.gamesPlayed ?? 0,
+      bracketRating: r.bracketRating ?? r.rating ?? 50,
+      bracketPercentile: r.bracketPercentile ?? null,
+      bracketEventCount: r.bracketEventCount ?? 0,
+      rating: r.rating ?? 50,
+      percentile: r.percentile ?? null,
+      gamesPlayed: r.gamesPlayed ?? 0,
+      lastUpdated: r.lastUpdated,
+    }));
+
+    // Safely parse league history — only if the column exists
     const leagueHistory: any[] = [];
-    for (const r of ratings) {
-      const history = JSON.parse((r.leagueRatingHistory as string) || '[]');
-      for (const record of history) {
-        if (record.archivedAt) leagueHistory.push(record);
+    for (const r of ratings as any[]) {
+      if (!r.leagueRatingHistory) continue;
+      try {
+        const history = JSON.parse(r.leagueRatingHistory as string);
+        for (const record of history) {
+          if (record.archivedAt) leagueHistory.push(record);
+        }
+      } catch {
+        // malformed JSON — skip
       }
     }
 
-    res.json({ sportRatings: ratings, leagueHistory });
+    res.json({ sportRatings, leagueHistory });
   } catch (error) {
     console.error('Get sport ratings error:', error);
     res.status(500).json({ error: 'Failed to fetch sport ratings' });
@@ -1100,6 +1126,60 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// ── Open Ground saved locations ──────────────────────────────────────────────
+
+// GET /users/open-ground-locations — fetch saved locations for the current user
+router.get('/open-ground-locations', async (req, res) => {
+  try {
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
+
+    const locations = await prisma.savedOpenGroundLocation.findMany({
+      where: { userId },
+      orderBy: { lastUsedAt: 'desc' },
+      select: { id: true, name: true, address: true, lastUsedAt: true },
+      take: 10,
+    });
+
+    res.json(locations);
+  } catch (error) {
+    console.error('Get open ground locations error:', error);
+    res.status(500).json({ error: 'Failed to fetch locations' });
+  }
+});
+
+// POST /users/open-ground-locations — upsert a location (create or bump lastUsedAt)
+router.post('/open-ground-locations', async (req, res) => {
+  try {
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
+
+    const { name, address } = req.body as { name: string; address?: string };
+    if (!name?.trim())
+      return res.status(400).json({ error: 'name is required' });
+
+    const location = await prisma.savedOpenGroundLocation.upsert({
+      where: {
+        userId_name_address: {
+          userId,
+          name: name.trim(),
+          address: address?.trim() ?? '',
+        },
+      },
+      create: { userId, name: name.trim(), address: address?.trim() ?? null },
+      update: { lastUsedAt: new Date() },
+      select: { id: true, name: true, address: true, lastUsedAt: true },
+    });
+
+    res.json(location);
+  } catch (error) {
+    console.error('Save open ground location error:', error);
+    res.status(500).json({ error: 'Failed to save location' });
   }
 });
 
