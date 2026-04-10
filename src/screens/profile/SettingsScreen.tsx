@@ -412,12 +412,63 @@ function AccountsTab({
   const [loading, setLoading] = useState(true);
   const [onboardingId, setOnboardingId] = useState<string | null>(null);
 
+  // ── User-level payment account state ──
+  const [paymentStatus, setPaymentStatus] = useState<{
+    onboarded: boolean;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+    detailsSubmitted: boolean;
+  } | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(true);
+  const [paymentOnboarding, setPaymentOnboarding] = useState(false);
+
   // ── Auth headers helper ──
   const authHeaders = useCallback((): Record<string, string> => {
     const h: Record<string, string> = { 'x-user-id': userId };
     if (token) h['Authorization'] = `Bearer ${token}`;
     return h;
   }, [userId, token]);
+
+  // ── Load user-level payment account status ──
+  const loadPaymentStatus = useCallback(async () => {
+    try {
+      setPaymentLoading(true);
+      const res = await fetch(`${API_BASE_URL}/stripe/connect/status`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      setPaymentStatus(data);
+    } catch {
+      setPaymentStatus(null);
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, [authHeaders]);
+
+  const handlePaymentOnboard = useCallback(async () => {
+    try {
+      setPaymentOnboarding(true);
+      const returnUrl =
+        Platform.OS === 'web'
+          ? typeof window !== 'undefined'
+            ? window.location.href
+            : 'https://muster.app'
+          : 'muster://settings/accounts';
+      const res = await fetch(`${API_BASE_URL}/stripe/connect/onboard`, {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshUrl: returnUrl, returnUrl }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      if (data.url) await Linking.openURL(data.url);
+    } catch (err) {
+      console.error('handlePaymentOnboard error', err);
+    } finally {
+      setPaymentOnboarding(false);
+    }
+  }, [authHeaders]);
 
   // ── Load all accounts from /connect/accounts ──
   const loadAccounts = useCallback(async () => {
@@ -439,11 +490,13 @@ function AccountsTab({
 
   useEffect(() => {
     loadAccounts();
-  }, [loadAccounts]);
+    loadPaymentStatus();
+  }, [loadAccounts, loadPaymentStatus]);
   useFocusEffect(
     useCallback(() => {
       loadAccounts();
-    }, [loadAccounts])
+      loadPaymentStatus();
+    }, [loadAccounts, loadPaymentStatus])
   );
 
   // ── Re-fetch a single entity's status after returning from Stripe ──
@@ -490,6 +543,9 @@ function AccountsTab({
   useEffect(() => {
     const handleUrl = ({ url }: { url: string }) => {
       if (!url.includes('settings/accounts')) return;
+      // Refresh user-level payment status
+      loadPaymentStatus();
+      // Refresh entity-level status if an entity onboard was in progress
       const pending = pendingOnboardRef.current;
       if (pending) {
         refreshEntityStatus(pending.entityType, pending.entityId);
@@ -498,7 +554,7 @@ function AccountsTab({
     };
     const sub = Linking.addEventListener('url', handleUrl);
     return () => sub.remove();
-  }, [refreshEntityStatus]);
+  }, [refreshEntityStatus, loadPaymentStatus]);
 
   // ── Onboard handler ──
   const handleOnboard = useCallback(
@@ -551,6 +607,88 @@ function AccountsTab({
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      {/* Payment Account — user-level Stripe Connect */}
+      <Text style={s.sectionLabel}>Payment Account</Text>
+      <View style={s.card}>
+        {paymentLoading ? (
+          <View style={[s.row, s.rowLast]}>
+            <ActivityIndicator size="small" color={colors.cobalt} />
+          </View>
+        ) : paymentStatus?.chargesEnabled && paymentStatus?.payoutsEnabled ? (
+          <View style={[s.row, s.rowLast]}>
+            <View style={[s.iconWrap, { backgroundColor: colors.pineTint }]}>
+              <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.rowLabel}>Connected</Text>
+              <Text style={[s.rowSubtitle, { color: colors.pine }]}>
+                You can receive payments from bookings and join fees
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={s.btnFilled}
+              onPress={handlePaymentOnboard}
+              disabled={paymentOnboarding}
+              activeOpacity={0.7}
+            >
+              {paymentOnboarding ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Text style={s.btnFilledText}>Manage</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : paymentStatus?.detailsSubmitted ? (
+          <View style={[s.row, s.rowLast]}>
+            <View style={[s.iconWrap, { backgroundColor: colors.goldTint }]}>
+              <Ionicons name="time-outline" size={18} color={colors.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.rowLabel}>Pending Review</Text>
+              <Text style={s.rowSubtitle}>
+                Your account is under review. Resume onboarding if needed.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={s.btnGhost}
+              onPress={handlePaymentOnboard}
+              disabled={paymentOnboarding}
+              activeOpacity={0.7}
+            >
+              {paymentOnboarding ? (
+                <ActivityIndicator size="small" color={colors.cobalt} />
+              ) : (
+                <Text style={s.btnGhostText}>Resume</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={[s.row, s.rowLast]}>
+            <View style={[s.iconWrap, { backgroundColor: colors.cobaltTint }]}>
+              <Ionicons name="card-outline" size={18} color={colors.cobalt} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.rowLabel}>Set Up Payments</Text>
+              <Text style={s.rowSubtitle}>
+                Connect a payment account to receive funds
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={s.btnGhost}
+              onPress={handlePaymentOnboard}
+              disabled={paymentOnboarding}
+              activeOpacity={0.7}
+            >
+              {paymentOnboarding ? (
+                <ActivityIndicator size="small" color={colors.cobalt} />
+              ) : (
+                <Text style={s.btnGhostText}>Connect</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
       <Text style={s.sectionLabel}>Accounts</Text>
       <View style={s.card}>
         <AccountGroup

@@ -18,42 +18,42 @@ export interface MapImageUploaderProps {
    * Current image URI (if any)
    */
   imageUri?: string | undefined;
-  
+
   /**
    * Callback when image is selected
    */
   onImageSelected: (uri: string) => void;
-  
+
   /**
    * Callback when image is removed
    */
   onImageRemoved: () => void;
-  
+
   /**
    * Whether the component is disabled (e.g., during upload)
    */
   disabled?: boolean;
-  
+
   /**
    * Minimum image dimensions (default: 800x600)
    */
   minDimensions?: { width: number; height: number };
-  
+
   /**
    * Maximum image dimensions (default: 4000x4000)
    */
   maxDimensions?: { width: number; height: number };
-  
+
   /**
    * Image quality (0-1, default: 0.9)
    */
   quality?: number;
-  
+
   /**
    * Custom placeholder text
    */
   placeholderText?: string;
-  
+
   /**
    * Show instructions card
    */
@@ -62,17 +62,17 @@ export interface MapImageUploaderProps {
 
 /**
  * MapImageUploader Component
- * 
+ *
  * Reusable component for uploading facility map images with preview functionality.
  * Handles image selection, validation, preview, and removal.
- * 
+ *
  * Features:
  * - Image selection from device library
  * - Dimension validation (min/max)
  * - Image preview with change/remove actions
  * - Permission handling
  * - Customizable constraints
- * 
+ *
  * @example
  * ```tsx
  * <MapImageUploader
@@ -102,7 +102,8 @@ export function MapImageUploader({
 
   const requestImagePermissions = async () => {
     if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status === 'granted') {
         setPermissionGranted(true);
       } else {
@@ -124,25 +125,31 @@ export function MapImageUploader({
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'] as ImagePicker.MediaType[],
         allowsEditing: false,
         quality,
       });
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        
+
         // Validate image dimensions
         if (asset.width && asset.height) {
-          if (asset.width < minDimensions.width || asset.height < minDimensions.height) {
+          if (
+            asset.width < minDimensions.width ||
+            asset.height < minDimensions.height
+          ) {
             Alert.alert(
               'Image Too Small',
               `Please select an image with minimum dimensions of ${minDimensions.width}x${minDimensions.height} pixels.`
             );
             return;
           }
-          
-          if (asset.width > maxDimensions.width || asset.height > maxDimensions.height) {
+
+          if (
+            asset.width > maxDimensions.width ||
+            asset.height > maxDimensions.height
+          ) {
             Alert.alert(
               'Image Too Large',
               `Please select an image with maximum dimensions of ${maxDimensions.width}x${maxDimensions.height} pixels.`
@@ -159,18 +166,14 @@ export function MapImageUploader({
   };
 
   const handleRemoveImage = () => {
-    Alert.alert(
-      'Remove Image',
-      'Are you sure you want to remove this image?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: onImageRemoved,
-        },
-      ]
-    );
+    Alert.alert('Remove Image', 'Are you sure you want to remove this image?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: onImageRemoved,
+      },
+    ]);
   };
 
   return (
@@ -183,17 +186,21 @@ export function MapImageUploader({
             <Text style={styles.instructionTitle}>Upload Facility Map</Text>
           </View>
           <Text style={styles.instructionText}>
-            Upload a clear image showing the layout of your facility. This will help users
-            understand the location of courts and fields.
+            Upload a clear image showing the layout of your facility. This will
+            help users understand the location of courts and fields.
           </Text>
           <View style={styles.requirementsList}>
             <Text style={styles.requirementItem}>
-              • Minimum size: {minDimensions.width}x{minDimensions.height} pixels
+              • Minimum size: {minDimensions.width}x{minDimensions.height}{' '}
+              pixels
             </Text>
             <Text style={styles.requirementItem}>
-              • Maximum size: {maxDimensions.width}x{maxDimensions.height} pixels
+              • Maximum size: {maxDimensions.width}x{maxDimensions.height}{' '}
+              pixels
             </Text>
-            <Text style={styles.requirementItem}>• Maximum file size: 10MB</Text>
+            <Text style={styles.requirementItem}>
+              • Maximum file size: 10MB
+            </Text>
             <Text style={styles.requirementItem}>• Formats: JPEG, PNG</Text>
           </View>
         </View>
@@ -202,7 +209,11 @@ export function MapImageUploader({
       {/* Image Preview or Upload Placeholder */}
       {imageUri ? (
         <View style={styles.imageContainer}>
-          <Image source={{ uri: imageUri }} style={styles.mapImage} resizeMode="contain" />
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.mapImage}
+            resizeMode="contain"
+          />
           <View style={styles.imageOverlay}>
             <TouchableOpacity
               style={[styles.imageButton, styles.changeButton]}
@@ -228,7 +239,11 @@ export function MapImageUploader({
           onPress={handlePickImage}
           disabled={disabled}
         >
-          <Ionicons name="cloud-upload-outline" size={48} color={colors.inkFaint} />
+          <Ionicons
+            name="cloud-upload-outline"
+            size={48}
+            color={colors.inkFaint}
+          />
           <Text style={styles.uploadPlaceholderTitle}>Upload Facility Map</Text>
           <Text style={styles.uploadPlaceholderText}>{placeholderText}</Text>
         </TouchableOpacity>

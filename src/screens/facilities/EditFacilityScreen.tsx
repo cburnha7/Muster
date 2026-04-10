@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Modal,
   Switch,
   TextInput,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +26,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
+import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
 import {
@@ -39,6 +41,55 @@ import {
 } from '../../types';
 import { colors, fonts, Spacing, TextStyles } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
+import { getSurfaceName } from '../../utils/getSurfaceName';
+import { getSportLabel } from '../../constants/sports';
+
+const TABS = [
+  'Basics',
+  'Location',
+  'Contact',
+  'Site Details',
+  'Courts / Fields',
+] as const;
+
+/* ─── Tab Bar ─────────────────────────────────────────────────────────────── */
+
+function TabBar({
+  activeIndex,
+  onPress,
+}: {
+  activeIndex: number;
+  onPress: (i: number) => void;
+}) {
+  return (
+    <View style={s.tabBarOuter}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.tabBarContent}
+      >
+        {TABS.map((tab, i) => {
+          const active = i === activeIndex;
+          return (
+            <TouchableOpacity
+              key={tab}
+              style={s.tabItem}
+              onPress={() => onPress(i)}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+                {tab}
+              </Text>
+              {active && <View style={s.tabUnderline} />}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+/* ─── Types ───────────────────────────────────────────────────────────────── */
 
 interface CourtFormData {
   id: string;
@@ -47,7 +98,7 @@ interface CourtFormData {
   capacity: number;
   isIndoor: boolean;
   pricePerHour: number;
-  isExisting?: boolean; // Track if this is an existing court or new
+  isExisting?: boolean;
 }
 
 interface DayHours {
@@ -58,12 +109,10 @@ interface DayHours {
 }
 
 interface EditFacilityScreenProps {
-  route: {
-    params: {
-      facilityId: string;
-    };
-  };
+  route: { params: { facilityId: string } };
 }
+
+/* ─── Main Screen ─────────────────────────────────────────────────────────── */
 
 export function EditFacilityScreen({
   route,
@@ -72,6 +121,7 @@ export function EditFacilityScreen({
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,8 +136,8 @@ export function EditFacilityScreen({
   const [courts, setCourts] = useState<CourtFormData[]>([]);
   const [showAddCourtModal, setShowAddCourtModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingCourtId, setEditingCourtId] = useState<string | null>(null); // Track which court is being edited
-  const [originalCourts, setOriginalCourts] = useState<string[]>([]); // Track original court IDs
+  const [editingCourtId, setEditingCourtId] = useState<string | null>(null);
+  const [originalCourts, setOriginalCourts] = useState<string[]>([]);
   const [hoursOfOperation, setHoursOfOperation] = useState<DayHours[]>([]);
   const [requiresInsurance, setRequiresInsurance] = useState(false);
   const [requiresBookingConfirmation, setRequiresBookingConfirmation] =
@@ -99,25 +149,11 @@ export function EditFacilityScreen({
   const [formData, setFormData] = useState<Partial<CreateFacilityData>>({
     name: '',
     description: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'USA',
-    },
-    contactInfo: {
-      name: '',
-      phone: '',
-      email: '',
-      website: '',
-    },
+    address: { street: '', city: '', state: '', zipCode: '', country: 'USA' },
+    contactInfo: { name: '', phone: '', email: '', website: '' },
     sportTypes: [],
     amenities: [],
-    pricing: {
-      wholeFacilityRate: 0,
-      currency: 'USD',
-    },
+    pricing: { wholeFacilityRate: 0, currency: 'USD' },
     cancellationPolicyHours: null,
   });
 
@@ -134,18 +170,32 @@ export function EditFacilityScreen({
   const [addressQuery, setAddressQuery] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
 
+  const [activeTab, setActiveTab] = useState(0);
+  const pagerRef = useRef<ScrollView>(null);
+
+  const handleTabPress = (index: number) => {
+    setActiveTab(index);
+    pagerRef.current?.scrollTo({ x: index * screenWidth, animated: true });
+  };
+
+  const handlePagerScroll = (e: any) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / screenWidth);
+    if (index !== activeTab) setActiveTab(index);
+  };
+
+  /* ─── Data Loading ──────────────────────────────────────────────────────── */
+
   useEffect(() => {
     loadFacilityData();
   }, [facilityId]);
 
-  // Reload facility data when screen comes into focus
-  // This ensures we always have fresh data when returning to this screen
   useFocusEffect(
     useCallback(() => {
       console.log(
         '📍 EditFacilityScreen focused, reloading data with skipCache'
       );
-      loadFacilityData(true); // Skip cache when screen comes into focus
+      loadFacilityData(true);
     }, [facilityId])
   );
 
@@ -153,14 +203,12 @@ export function EditFacilityScreen({
     try {
       setIsLoading(true);
       setError(null);
-
       const facility = await facilityService.getFacility(facilityId, skipCache);
       const facilityCourts = await courtService.getCourts(
         facilityId,
         skipCache
       );
 
-      // Prepopulate form data
       setFormData({
         name: facility.name,
         description: facility.description,
@@ -186,7 +234,6 @@ export function EditFacilityScreen({
         cancellationPolicyHours: facility.cancellationPolicyHours ?? null,
       });
 
-      // Prepopulate courts
       const loadedCourts = facilityCourts.map(court => ({
         id: court.id,
         name: court.name,
@@ -198,16 +245,11 @@ export function EditFacilityScreen({
       }));
       setCourts(loadedCourts);
       setOriginalCourts(facilityCourts.map(c => c.id));
-
-      // Prepopulate insurance requirement
       setRequiresInsurance(facility.requiresInsurance === true);
-
-      // Load photos and map
       setPhotos(facility.photos ?? []);
       setFacilityMapUrl(facility.facilityMapUrl ?? null);
       setFacilityMapThumbnailUrl(facility.facilityMapThumbnailUrl ?? null);
 
-      // Prepopulate address search bar with existing address
       const addr = [
         facility.street,
         facility.city,
@@ -224,7 +266,6 @@ export function EditFacilityScreen({
       setWaiverText((facility as any).waiverText || '');
       setOriginalWaiverText((facility as any).waiverText || '');
 
-      // Load hours of operation from availabilitySlots
       if (facility.availabilitySlots && facility.availabilitySlots.length > 0) {
         const hours = facility.availabilitySlots
           .filter((slot: any) => slot.isRecurring && !slot.specificDate)
@@ -243,13 +284,15 @@ export function EditFacilityScreen({
     }
   };
 
+  /* ─── Form Helpers ──────────────────────────────────────────────────────── */
+
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
+        const n = { ...prev };
+        delete n[field];
+        return n;
       });
     }
   };
@@ -264,13 +307,16 @@ export function EditFacilityScreen({
     }));
   };
 
-  const toggleSportType = (sport: SportType) => {
+  const toggleSportType = (sport: string) => {
     const currentSports = formData.sportTypes || [];
-    const newSports = currentSports.includes(sport)
-      ? currentSports.filter(s => s !== sport)
-      : [...currentSports, sport];
+    const sportEnum = sport as SportType;
+    const newSports = currentSports.includes(sportEnum)
+      ? currentSports.filter(s => s !== sportEnum)
+      : [...currentSports, sportEnum];
     updateField('sportTypes', newSports);
   };
+
+  /* ─── Court CRUD ────────────────────────────────────────────────────────── */
 
   const handleAddCourt = () => {
     if (!newCourt.name.trim()) {
@@ -283,7 +329,6 @@ export function EditFacilityScreen({
     }
 
     if (editingCourtId) {
-      // Update existing court
       setCourts(
         courts.map(c =>
           c.id === editingCourtId
@@ -297,15 +342,11 @@ export function EditFacilityScreen({
       );
       setEditingCourtId(null);
     } else {
-      // Add new court
-      const court: CourtFormData = {
-        ...newCourt,
-        id: `new-${Date.now()}`,
-        isExisting: false,
-      };
-      setCourts([...courts, court]);
+      setCourts([
+        ...courts,
+        { ...newCourt, id: `new-${Date.now()}`, isExisting: false },
+      ]);
     }
-
     setNewCourt({
       id: '',
       name: '',
@@ -331,28 +372,17 @@ export function EditFacilityScreen({
   };
 
   const handleRemoveCourt = (courtId: string) => {
-    console.log('🗑️ handleRemoveCourt called with courtId:', courtId);
-    console.log(
-      'Current courts:',
-      courts.map(c => ({ id: c.id, name: c.name }))
-    );
-
-    setCourts(prevCourts => {
-      const filtered = prevCourts.filter(c => c.id !== courtId);
-      console.log(
-        '🗑️ New courts list:',
-        filtered.map(c => ({ id: c.id, name: c.name }))
-      );
-      return filtered;
-    });
+    setCourts(prev => prev.filter(c => c.id !== courtId));
   };
+
+  /* ─── Photos ────────────────────────────────────────────────────────────── */
 
   const handleAddPhotos = async () => {
     setPhotoError(null);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         allowsMultipleSelection: true,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'] as ImagePicker.MediaType[],
         quality: 0.9,
       });
       if (result.canceled) return;
@@ -386,6 +416,8 @@ export function EditFacilityScreen({
       setPhotoError(err?.message || 'Failed to delete photo.');
     }
   };
+
+  /* ─── Map ───────────────────────────────────────────────────────────────── */
 
   const handleUploadMap = async () => {
     setMapError(null);
@@ -422,38 +454,22 @@ export function EditFacilityScreen({
     }
   };
 
+  /* ─── Validation & Submit ───────────────────────────────────────────────── */
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.name?.trim()) {
-      newErrors.name = 'Ground name is required';
-    }
-
-    if (!formData.description?.trim()) {
+    if (!formData.name?.trim()) newErrors.name = 'Ground name is required';
+    if (!formData.description?.trim())
       newErrors.description = 'Description is required';
-    }
-
-    if (!formData.address?.street?.trim()) {
+    if (!formData.address?.street?.trim())
       newErrors.street = 'Street address is required';
-    }
-
-    if (!formData.address?.city?.trim()) {
-      newErrors.city = 'City is required';
-    }
-
-    if (!formData.address?.state?.trim()) {
-      newErrors.state = 'State is required';
-    }
-
-    if (!formData.address?.zipCode?.trim()) {
+    if (!formData.address?.city?.trim()) newErrors.city = 'City is required';
+    if (!formData.address?.state?.trim()) newErrors.state = 'State is required';
+    if (!formData.address?.zipCode?.trim())
       newErrors.zipCode = 'ZIP code is required';
-    }
-
-    if (!formData.sportTypes || formData.sportTypes.length === 0) {
+    if (!formData.sportTypes || formData.sportTypes.length === 0)
       newErrors.sportTypes = 'Select at least one sport type';
-    }
 
-    // Log each validation failure
     Object.entries(newErrors).forEach(([field, msg]) => {
       loggingService.logValidation(
         'EditFacilityScreen',
@@ -462,7 +478,6 @@ export function EditFacilityScreen({
         msg
       );
     });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -472,13 +487,10 @@ export function EditFacilityScreen({
       Alert.alert('Validation Error', 'Please fill in all required fields');
       return;
     }
-
     loggingService.logButton('Save Changes', 'EditFacilityScreen');
 
     try {
       setIsSubmitting(true);
-
-      // Update facility
       const facilityData = {
         name: formData.name || '',
         description: formData.description || '',
@@ -507,23 +519,15 @@ export function EditFacilityScreen({
         facilityData as any
       );
 
-      // Handle courts
       const currentCourtIds = courts.map(c => c.id);
-
-      // Delete removed courts
       for (const originalId of originalCourts) {
-        if (!currentCourtIds.includes(originalId)) {
+        if (!currentCourtIds.includes(originalId))
           await courtService.deleteCourt(facilityId, originalId);
-        }
       }
-
-      // Create new courts or update existing ones
       for (let i = 0; i < courts.length; i++) {
         const court = courts[i];
         if (!court) continue;
-
         if (court.isExisting) {
-          // Update existing court
           await courtService.updateCourt(facilityId, court.id, {
             name: court.name,
             sportType: court.sportType,
@@ -533,7 +537,6 @@ export function EditFacilityScreen({
             displayOrder: i,
           });
         } else {
-          // Create new court
           await courtService.createCourt(facilityId, {
             name: court.name,
             sportType: court.sportType,
@@ -546,15 +549,10 @@ export function EditFacilityScreen({
       }
 
       dispatch(updateFacility(updatedFacility));
-
-      // Navigate back immediately - the list will reload with fresh data
       setIsSubmitting(false);
       navigation.navigate(
         'Facilities' as never,
-        {
-          screen: 'FacilitiesList',
-          params: { refresh: Date.now() }, // Force refresh
-        } as never
+        { screen: 'FacilitiesList', params: { refresh: Date.now() } } as never
       );
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update ground');
@@ -563,31 +561,23 @@ export function EditFacilityScreen({
     }
   };
 
+  /* ─── Delete ────────────────────────────────────────────────────────────── */
+
   const handleDelete = () => {
     loggingService.logButton('Delete Ground', 'EditFacilityScreen');
     setShowDeleteModal(true);
   };
 
   const performDelete = async () => {
-    console.log('🗑️ Delete confirmed, starting deletion...');
     try {
       setIsSubmitting(true);
-      console.log('🗑️ Calling deleteFacility API...');
       await facilityService.deleteFacility(facilityId);
-      console.log('🗑️ Facility deleted, updating Redux...');
       dispatch(removeFacility(facilityId));
-      console.log('🗑️ Navigating back...');
-
-      // Navigate with refresh parameter to force list reload
       navigation.navigate(
         'Facilities' as never,
-        {
-          screen: 'FacilitiesList',
-          params: { refresh: Date.now() },
-        } as never
+        { screen: 'FacilitiesList', params: { refresh: Date.now() } } as never
       );
     } catch (err: any) {
-      console.error('❌ Delete error:', err);
       setShowDeleteModal(false);
       const details = err.details || {};
       if (details.rentals?.length) {
@@ -619,716 +609,862 @@ export function EditFacilityScreen({
     }
   };
 
-  if (isLoading) {
+  /* ─── Loading / Error ───────────────────────────────────────────────────── */
+
+  if (isLoading)
     return (
-      <View style={styles.container}>
+      <View style={s.container}>
         <LoadingSpinner />
       </View>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
-      <View style={styles.container}>
+      <View style={s.container}>
         <ErrorDisplay message={error} onRetry={loadFacilityData} />
       </View>
     );
-  }
+
+  const primarySport = (formData.sportTypes?.[0] ?? 'other') as string;
+  const surfaceName = getSurfaceName(primarySport);
+
+  /* ─── Render ────────────────────────────────────────────────────────────── */
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={s.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <TabBar activeIndex={activeTab} onPress={handleTabPress} />
+
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        ref={pagerRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={handlePagerScroll}
+        style={{ flex: 1 }}
       >
-        {/* Photos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Photos</Text>
-          {photos.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 12 }}
-              contentContainerStyle={{ gap: 8 }}
-            >
-              {photos.map(photo => (
-                <View
-                  key={photo.id}
+        {/* ── TAB 1 — Basics ─────────────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            <Text style={s.sectionLabel}>GROUND NAME</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <FormInput
+                  label="Ground Name *"
+                  value={formData.name || ''}
+                  onChangeText={value => updateField('name', value)}
+                  placeholder="Enter ground name"
+                  error={errors.name || ''}
+                />
+              </View>
+            </View>
+
+            <Text style={s.sectionLabel}>DESCRIPTION</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <FormInput
+                  label="Description *"
+                  value={formData.description || ''}
+                  onChangeText={value => updateField('description', value)}
+                  placeholder="Describe your ground"
+                  multiline
+                  numberOfLines={4}
+                  error={errors.description || ''}
+                />
+              </View>
+            </View>
+
+            <Text style={s.sectionLabel}>PHOTOS</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                {photos.length > 0 && (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginBottom: 12 }}
+                    contentContainerStyle={{ gap: 8 }}
+                  >
+                    {photos.map(photo => (
+                      <View
+                        key={photo.id}
+                        style={{
+                          position: 'relative',
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <OptimizedImage
+                          source={{ uri: photo.imageUrl }}
+                          style={{ width: 200, height: 150, borderRadius: 8 }}
+                          resizeMode="cover"
+                          fallback={
+                            <View
+                              style={{
+                                width: 200,
+                                height: 150,
+                                backgroundColor: colors.surface,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Ionicons
+                                name="camera-outline"
+                                size={32}
+                                color={colors.inkSoft}
+                              />
+                            </View>
+                          }
+                        />
+                        <TouchableOpacity
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            backgroundColor: 'rgba(255,255,255,0.85)',
+                            borderRadius: 12,
+                          }}
+                          onPress={() => handleDeletePhoto(photo)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons
+                            name="close-circle"
+                            size={22}
+                            color={colors.heart}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
+                <TouchableOpacity
                   style={{
-                    position: 'relative',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
                     borderRadius: 8,
-                    overflow: 'hidden',
+                    borderWidth: 1,
+                    borderColor: colors.cobalt,
+                    alignSelf: 'flex-start',
+                  }}
+                  onPress={handleAddPhotos}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="images-outline"
+                    size={16}
+                    color={colors.cobalt}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: fonts.ui,
+                      fontSize: 14,
+                      color: colors.cobalt,
+                    }}
+                  >
+                    {photos.length > 0 ? 'Add more photos' : 'Add photos'}
+                  </Text>
+                </TouchableOpacity>
+                {photoError ? (
+                  <Text
+                    style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}
+                  >
+                    {photoError}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* ── TAB 2 — Location ───────────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            <Text style={s.sectionLabel}>SEARCH ADDRESS</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <TextInput
+                  style={s.addressSearchInput}
+                  placeholder="Start typing an address..."
+                  placeholderTextColor={colors.inkSoft}
+                  value={addressQuery}
+                  onChangeText={text => {
+                    setAddressQuery(text);
+                    if (text.length >= 3) {
+                      const apiKey =
+                        process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                      if (apiKey) {
+                        fetch(
+                          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
+                        )
+                          .then(r => r.json())
+                          .then(data =>
+                            setAddressSuggestions(data.predictions || [])
+                          )
+                          .catch(() => setAddressSuggestions([]));
+                      }
+                    } else {
+                      setAddressSuggestions([]);
+                    }
+                  }}
+                />
+                {addressSuggestions.length > 0 && (
+                  <View style={s.suggestionsContainer}>
+                    {addressSuggestions
+                      .slice(0, 5)
+                      .map((suggestion: any, idx: number) => (
+                        <TouchableOpacity
+                          key={suggestion.place_id || idx}
+                          style={[
+                            s.suggestionItem,
+                            idx < 4 && s.suggestionBorder,
+                          ]}
+                          onPress={() => {
+                            const apiKey =
+                              process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                            if (apiKey && suggestion.place_id) {
+                              fetch(
+                                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=address_components&key=${apiKey}`
+                              )
+                                .then(r => r.json())
+                                .then(data => {
+                                  const components =
+                                    data.result?.address_components || [];
+                                  let street = '',
+                                    city = '',
+                                    st = '',
+                                    zip = '';
+                                  for (const c of components) {
+                                    if (c.types.includes('street_number'))
+                                      street = c.long_name + ' ';
+                                    if (c.types.includes('route'))
+                                      street += c.long_name;
+                                    if (c.types.includes('locality'))
+                                      city = c.long_name;
+                                    if (
+                                      c.types.includes(
+                                        'administrative_area_level_1'
+                                      )
+                                    )
+                                      st = c.short_name;
+                                    if (c.types.includes('postal_code'))
+                                      zip = c.long_name;
+                                  }
+                                  updateNestedField(
+                                    'address',
+                                    'street',
+                                    street.trim()
+                                  );
+                                  updateNestedField('address', 'city', city);
+                                  updateNestedField('address', 'state', st);
+                                  updateNestedField('address', 'zipCode', zip);
+                                  setAddressQuery(suggestion.description);
+                                  setAddressSuggestions([]);
+                                })
+                                .catch(() => {
+                                  setAddressQuery(suggestion.description);
+                                  setAddressSuggestions([]);
+                                });
+                            } else {
+                              setAddressQuery(suggestion.description);
+                              setAddressSuggestions([]);
+                            }
+                          }}
+                        >
+                          <Ionicons
+                            name="location-outline"
+                            size={16}
+                            color={colors.inkSoft}
+                            style={{ marginRight: 8 }}
+                          />
+                          <Text style={s.suggestionText} numberOfLines={1}>
+                            {suggestion.description}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                  </View>
+                )}
+              </View>
+            </View>
+
+            <Text style={s.sectionLabel}>ADDRESS DETAILS</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <FormInput
+                  label="Street Address *"
+                  value={formData.address?.street || ''}
+                  onChangeText={value =>
+                    updateNestedField('address', 'street', value)
+                  }
+                  placeholder="123 Main St"
+                  error={errors.street || ''}
+                />
+                <FormInput
+                  label="City *"
+                  value={formData.address?.city || ''}
+                  onChangeText={value =>
+                    updateNestedField('address', 'city', value)
+                  }
+                  placeholder="City"
+                  error={errors.city || ''}
+                />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    marginHorizontal: -Spacing.sm,
                   }}
                 >
+                  <View style={{ flex: 1, paddingHorizontal: Spacing.sm }}>
+                    <FormInput
+                      label="State *"
+                      value={formData.address?.state || ''}
+                      onChangeText={value =>
+                        updateNestedField('address', 'state', value)
+                      }
+                      placeholder="State"
+                      error={errors.state || ''}
+                    />
+                  </View>
+                  <View style={{ flex: 1, paddingHorizontal: Spacing.sm }}>
+                    <FormInput
+                      label="ZIP Code *"
+                      value={formData.address?.zipCode || ''}
+                      onChangeText={value =>
+                        updateNestedField('address', 'zipCode', value)
+                      }
+                      placeholder="12345"
+                      keyboardType="numeric"
+                      error={errors.zipCode || ''}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* ── TAB 3 — Contact ────────────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            <Text style={s.sectionLabel}>CONTACT INFORMATION</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <FormInput
+                  label="Contact Name"
+                  value={formData.contactInfo?.name || ''}
+                  onChangeText={value =>
+                    updateNestedField('contactInfo', 'name', value)
+                  }
+                  placeholder="John Doe"
+                />
+                <FormInput
+                  label="Phone"
+                  value={formData.contactInfo?.phone || ''}
+                  onChangeText={value =>
+                    updateNestedField('contactInfo', 'phone', value)
+                  }
+                  placeholder="(555) 123-4567"
+                  keyboardType="phone-pad"
+                />
+                <FormInput
+                  label="Email"
+                  value={formData.contactInfo?.email || ''}
+                  onChangeText={value =>
+                    updateNestedField('contactInfo', 'email', value)
+                  }
+                  placeholder="contact@ground.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <FormInput
+                  label="Website"
+                  value={formData.contactInfo?.website || ''}
+                  onChangeText={value =>
+                    updateNestedField('contactInfo', 'website', value)
+                  }
+                  placeholder="https://ground.com"
+                  keyboardType="url"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* ── TAB 4 — Site Details ───────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {/* Hours of Operation */}
+            <HoursOfOperationSection
+              hours={hoursOfOperation}
+              onChange={setHoursOfOperation}
+            />
+
+            {/* Sports Available — SportIconGrid */}
+            <Text style={s.sectionLabel}>SPORTS AVAILABLE</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                {errors.sportTypes && (
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: colors.heart,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {errors.sportTypes}
+                  </Text>
+                )}
+                <SportIconGrid
+                  selected={formData.sportTypes || []}
+                  onSelect={toggleSportType}
+                  multiSelect
+                />
+              </View>
+            </View>
+
+            {/* Booking Confirmation Required */}
+            <Text style={s.sectionLabel}>REQUIREMENTS</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                {/* Toggle 1: Booking Confirmation */}
+                <View style={s.toggleRow}>
+                  <View style={{ flex: 1, marginRight: Spacing.md }}>
+                    <Text style={s.toggleLabel}>
+                      Requires Booking Confirmation
+                    </Text>
+                    <Text style={s.toggleDescription}>
+                      All reservation requests must be approved before they are
+                      confirmed
+                    </Text>
+                  </View>
+                  <Switch
+                    value={requiresBookingConfirmation}
+                    onValueChange={val => {
+                      setRequiresBookingConfirmation(val);
+                      if (!val) setRequiresInsurance(false);
+                    }}
+                    trackColor={{
+                      false: colors.white,
+                      true: colors.cobaltLight,
+                    }}
+                    thumbColor={
+                      requiresBookingConfirmation
+                        ? colors.cobalt
+                        : colors.surface
+                    }
+                  />
+                </View>
+
+                {/* Toggle 2: Proof of Insurance (only when booking confirmation is on) */}
+                {requiresBookingConfirmation && (
+                  <View style={[s.toggleRow, { marginTop: 16 }]}>
+                    <View style={{ flex: 1, marginRight: Spacing.md }}>
+                      <Text style={s.toggleLabel}>
+                        Requires Proof of Insurance
+                      </Text>
+                      <Text style={s.toggleDescription}>
+                        Renters must attach a valid insurance document when
+                        reserving a court
+                      </Text>
+                    </View>
+                    <Switch
+                      value={requiresInsurance}
+                      onValueChange={setRequiresInsurance}
+                      trackColor={{
+                        false: colors.white,
+                        true: colors.cobaltLight,
+                      }}
+                      thumbColor={
+                        requiresInsurance ? colors.cobalt : colors.surface
+                      }
+                    />
+                  </View>
+                )}
+
+                {/* Toggle 3: Waiver Required */}
+                <View style={[s.toggleRow, { marginTop: 16 }]}>
+                  <View style={{ flex: 1, marginRight: Spacing.md }}>
+                    <Text style={s.toggleLabel}>Require Waiver</Text>
+                    <Text style={s.toggleDescription}>
+                      Players must sign a waiver before attending events at this
+                      facility.
+                    </Text>
+                  </View>
+                  <Switch
+                    value={waiverRequired}
+                    onValueChange={setWaiverRequired}
+                    trackColor={{
+                      false: colors.white,
+                      true: colors.cobaltLight,
+                    }}
+                    thumbColor={waiverRequired ? colors.cobalt : colors.surface}
+                  />
+                </View>
+
+                {waiverRequired && (
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={s.toggleLabel}>Waiver Document</Text>
+                    <Text style={s.toggleDescription}>
+                      Players will be required to read and accept this waiver
+                      before joining events. Uploading a new version will
+                      require all players to re-sign.
+                    </Text>
+                    {originalWaiverText &&
+                      waiverText !== originalWaiverText && (
+                        <View
+                          style={{
+                            backgroundColor: colors.goldTint,
+                            padding: 10,
+                            borderRadius: 8,
+                            marginTop: 8,
+                            marginBottom: 8,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: fonts.body,
+                              fontSize: 13,
+                              color: colors.gold,
+                            }}
+                          >
+                            Saving a new waiver will invalidate all previously
+                            signed waivers. Players will be prompted to re-sign
+                            before their next event.
+                          </Text>
+                        </View>
+                      )}
+                    <TextInput
+                      style={{
+                        backgroundColor: colors.surface,
+                        borderRadius: 10,
+                        padding: 12,
+                        minHeight: 120,
+                        fontFamily: fonts.body,
+                        fontSize: 14,
+                        color: colors.ink,
+                        textAlignVertical: 'top',
+                        marginTop: 8,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                      }}
+                      multiline
+                      numberOfLines={6}
+                      placeholder="Enter your full waiver text here…"
+                      placeholderTextColor={colors.inkFaint}
+                      value={waiverText}
+                      onChangeText={setWaiverText}
+                    />
+                    <Text
+                      style={{
+                        fontFamily: fonts.body,
+                        fontSize: 12,
+                        color: colors.inkFaint,
+                        marginTop: 4,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {waiverText.length} characters
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Cancellation Policy */}
+            <Text style={s.sectionLabel}>CANCELLATION POLICY</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <CancellationPolicyPicker
+                  value={formData.cancellationPolicyHours ?? null}
+                  onChange={val => updateField('cancellationPolicyHours', val)}
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* ── TAB 5 — Courts / Fields ────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {/* Facility Map */}
+            <Text style={s.sectionLabel}>FACILITY MAP</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                {facilityMapUrl ? (
                   <OptimizedImage
-                    source={{ uri: photo.imageUrl }}
-                    style={{ width: 200, height: 150, borderRadius: 8 }}
+                    source={{ uri: facilityMapUrl }}
+                    style={{
+                      width: '100%',
+                      height: 160,
+                      borderRadius: 8,
+                      marginBottom: 12,
+                    }}
                     resizeMode="cover"
                     fallback={
                       <View
                         style={{
-                          width: 200,
-                          height: 150,
+                          width: '100%',
+                          height: 160,
                           backgroundColor: colors.surface,
                           justifyContent: 'center',
                           alignItems: 'center',
+                          borderRadius: 8,
+                          marginBottom: 12,
                         }}
                       >
                         <Ionicons
-                          name="camera-outline"
-                          size={32}
+                          name="map-outline"
+                          size={40}
                           color={colors.inkSoft}
                         />
                       </View>
                     }
                   />
+                ) : null}
+                <View
+                  style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}
+                >
                   <TouchableOpacity
                     style={{
-                      position: 'absolute',
-                      top: 4,
-                      right: 4,
-                      backgroundColor: 'rgba(255,255,255,0.85)',
-                      borderRadius: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: colors.cobalt,
                     }}
-                    onPress={() => handleDeletePhoto(photo)}
-                    activeOpacity={0.8}
+                    onPress={handleUploadMap}
+                    activeOpacity={0.7}
                   >
                     <Ionicons
-                      name="close-circle"
-                      size={22}
-                      color={colors.heart}
+                      name="cloud-upload-outline"
+                      size={16}
+                      color={colors.cobalt}
                     />
+                    <Text
+                      style={{
+                        fontFamily: fonts.ui,
+                        fontSize: 14,
+                        color: colors.cobalt,
+                      }}
+                    >
+                      {facilityMapUrl ? 'Replace map' : 'Upload map'}
+                    </Text>
                   </TouchableOpacity>
+                  {facilityMapUrl ? (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: colors.heart,
+                      }}
+                      onPress={handleDeleteMap}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={16}
+                        color={colors.heart}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: fonts.ui,
+                          fontSize: 14,
+                          color: colors.heart,
+                        }}
+                      >
+                        Remove map
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
-              ))}
-            </ScrollView>
-          )}
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              paddingVertical: 10,
-              paddingHorizontal: 16,
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: colors.cobalt,
-              alignSelf: 'flex-start',
-            }}
-            onPress={handleAddPhotos}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="images-outline" size={16} color={colors.cobalt} />
-            <Text
-              style={{
-                fontFamily: fonts.ui,
-                fontSize: 14,
-                color: colors.cobalt,
-              }}
-            >
-              {photos.length > 0 ? 'Add more photos' : 'Add photos'}
-            </Text>
-          </TouchableOpacity>
-          {photoError ? (
-            <Text style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}>
-              {photoError}
-            </Text>
-          ) : null}
-        </View>
+                {mapError ? (
+                  <Text
+                    style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}
+                  >
+                    {mapError}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
 
-        {/* Facility map */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Facility map</Text>
-          {facilityMapUrl ? (
-            <OptimizedImage
-              source={{ uri: facilityMapUrl }}
-              style={{
-                width: '100%',
-                height: 160,
-                borderRadius: 8,
-                marginBottom: 12,
-              }}
-              resizeMode="cover"
-              fallback={
-                <View
-                  style={{
-                    width: '100%',
-                    height: 160,
-                    backgroundColor: colors.surface,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Ionicons
-                    name="map-outline"
-                    size={40}
-                    color={colors.inkSoft}
-                  />
+            {/* Courts / Fields list */}
+            <Text style={s.sectionLabel}>{surfaceName.toUpperCase()}S</Text>
+            {courts.length === 0 ? (
+              <View style={s.card}>
+                <View style={{ padding: 24, alignItems: 'center' }}>
+                  <Text
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: 14,
+                      color: colors.inkFaint,
+                    }}
+                  >
+                    No {surfaceName.toLowerCase()}s added yet. Add{' '}
+                    {surfaceName.toLowerCase()}s to set individual pricing.
+                  </Text>
                 </View>
-              }
-            />
-          ) : null}
-          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-                paddingVertical: 10,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: colors.cobalt,
-              }}
-              onPress={handleUploadMap}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="cloud-upload-outline"
-                size={16}
-                color={colors.cobalt}
-              />
-              <Text
-                style={{
-                  fontFamily: fonts.ui,
-                  fontSize: 14,
-                  color: colors.cobalt,
-                }}
-              >
-                {facilityMapUrl ? 'Replace map' : 'Upload map'}
-              </Text>
-            </TouchableOpacity>
-            {facilityMapUrl ? (
+              </View>
+            ) : (
+              courts.map(court => (
+                <TouchableOpacity
+                  key={court.id}
+                  onPress={() => handleEditCourt(court)}
+                  activeOpacity={0.7}
+                >
+                  <View style={s.card}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: 16,
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontFamily: fonts.heading,
+                            fontSize: 16,
+                            color: colors.ink,
+                            marginBottom: 4,
+                          }}
+                        >
+                          {court.name}
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: fonts.body,
+                            fontSize: 13,
+                            color: colors.inkSoft,
+                          }}
+                        >
+                          {getSportLabel(court.sportType)}{' '}
+                          {getSurfaceName(court.sportType)} •
+                          {court.isIndoor ? ' Indoor' : ' Outdoor'} • Capacity:{' '}
+                          {court.capacity}
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: fonts.ui,
+                            fontSize: 14,
+                            color: colors.cobalt,
+                            marginTop: 4,
+                          }}
+                        >
+                          ${court.pricePerHour}/hr
+                        </Text>
+                      </View>
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                        pointerEvents="box-none"
+                      >
+                        <Ionicons
+                          name="create-outline"
+                          size={20}
+                          color={colors.cobalt}
+                          style={{ marginRight: Spacing.sm }}
+                        />
+                        <TouchableOpacity
+                          style={{ padding: Spacing.sm }}
+                          activeOpacity={0.7}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          onPress={e => {
+                            e.stopPropagation();
+                            handleRemoveCourt(court.id);
+                          }}
+                        >
+                          <Ionicons
+                            name="trash-outline"
+                            size={20}
+                            color={colors.heart}
+                            pointerEvents="none"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+
+            <View style={{ marginHorizontal: 16, marginTop: 8 }}>
               <TouchableOpacity
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 8,
-                  paddingVertical: 10,
-                  paddingHorizontal: 16,
-                  borderRadius: 8,
+                  paddingVertical: 14,
+                  borderRadius: 12,
                   borderWidth: 1,
-                  borderColor: colors.heart,
+                  borderColor: colors.cobalt,
                 }}
-                onPress={handleDeleteMap}
+                onPress={() => setShowAddCourtModal(true)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="trash-outline" size={16} color={colors.heart} />
+                <Ionicons name="add-circle" size={20} color={colors.cobalt} />
                 <Text
                   style={{
                     fontFamily: fonts.ui,
-                    fontSize: 14,
-                    color: colors.heart,
+                    fontSize: 15,
+                    color: colors.cobalt,
                   }}
                 >
-                  Remove map
+                  Add {surfaceName}
                 </Text>
               </TouchableOpacity>
-            ) : null}
-          </View>
-          {mapError ? (
-            <Text style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}>
-              {mapError}
-            </Text>
-          ) : null}
-        </View>
-
-        {/* Basic Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
-
-          <FormInput
-            label="Ground Name *"
-            value={formData.name || ''}
-            onChangeText={value => updateField('name', value)}
-            placeholder="Enter ground name"
-            error={errors.name || ''}
-          />
-
-          <FormInput
-            label="Description *"
-            value={formData.description || ''}
-            onChangeText={value => updateField('description', value)}
-            placeholder="Describe your ground"
-            multiline
-            numberOfLines={4}
-            error={errors.description || ''}
-          />
-        </View>
-
-        {/* Address */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Address</Text>
-
-          <Text style={styles.inputLabel}>Search Address</Text>
-          <TextInput
-            style={styles.addressSearchInput}
-            placeholder="Start typing an address..."
-            placeholderTextColor={colors.inkSoft}
-            value={addressQuery}
-            onChangeText={text => {
-              setAddressQuery(text);
-              if (text.length >= 3) {
-                const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-                if (apiKey) {
-                  fetch(
-                    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
-                  )
-                    .then(r => r.json())
-                    .then(data => setAddressSuggestions(data.predictions || []))
-                    .catch(() => setAddressSuggestions([]));
-                }
-              } else {
-                setAddressSuggestions([]);
-              }
-            }}
-          />
-          {addressSuggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
-              {addressSuggestions
-                .slice(0, 5)
-                .map((suggestion: any, idx: number) => (
-                  <TouchableOpacity
-                    key={suggestion.place_id || idx}
-                    style={[
-                      styles.suggestionItem,
-                      idx < 4 && styles.suggestionBorder,
-                    ]}
-                    onPress={() => {
-                      const apiKey =
-                        process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-                      if (apiKey && suggestion.place_id) {
-                        fetch(
-                          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=address_components&key=${apiKey}`
-                        )
-                          .then(r => r.json())
-                          .then(data => {
-                            const components =
-                              data.result?.address_components || [];
-                            let street = '';
-                            let city = '';
-                            let st = '';
-                            let zip = '';
-                            for (const c of components) {
-                              if (c.types.includes('street_number'))
-                                street = c.long_name + ' ';
-                              if (c.types.includes('route'))
-                                street += c.long_name;
-                              if (c.types.includes('locality'))
-                                city = c.long_name;
-                              if (
-                                c.types.includes('administrative_area_level_1')
-                              )
-                                st = c.short_name;
-                              if (c.types.includes('postal_code'))
-                                zip = c.long_name;
-                            }
-                            updateNestedField(
-                              'address',
-                              'street',
-                              street.trim()
-                            );
-                            updateNestedField('address', 'city', city);
-                            updateNestedField('address', 'state', st);
-                            updateNestedField('address', 'zipCode', zip);
-                            setAddressQuery(suggestion.description);
-                            setAddressSuggestions([]);
-                          })
-                          .catch(() => {
-                            setAddressQuery(suggestion.description);
-                            setAddressSuggestions([]);
-                          });
-                      } else {
-                        setAddressQuery(suggestion.description);
-                        setAddressSuggestions([]);
-                      }
-                    }}
-                  >
-                    <Ionicons
-                      name="location-outline"
-                      size={16}
-                      color={colors.inkSoft}
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={styles.suggestionText} numberOfLines={1}>
-                      {suggestion.description}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
             </View>
-          )}
 
-          <FormInput
-            label="Street Address *"
-            value={formData.address?.street || ''}
-            onChangeText={value =>
-              updateNestedField('address', 'street', value)
-            }
-            placeholder="123 Main St"
-            error={errors.street || ''}
-          />
-
-          <FormInput
-            label="City *"
-            value={formData.address?.city || ''}
-            onChangeText={value => updateNestedField('address', 'city', value)}
-            placeholder="City"
-            error={errors.city || ''}
-          />
-
-          <View style={styles.row}>
-            <View style={styles.halfWidth}>
-              <FormInput
-                label="State *"
-                value={formData.address?.state || ''}
-                onChangeText={value =>
-                  updateNestedField('address', 'state', value)
-                }
-                placeholder="State"
-                error={errors.state || ''}
+            {/* Save & Delete buttons at bottom of last tab */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+              <FormButton
+                title="Update Ground"
+                onPress={handleSubmit}
+                loading={isSubmitting}
+                disabled={isSubmitting}
               />
             </View>
-            <View style={styles.halfWidth}>
-              <FormInput
-                label="ZIP Code *"
-                value={formData.address?.zipCode || ''}
-                onChangeText={value =>
-                  updateNestedField('address', 'zipCode', value)
-                }
-                placeholder="12345"
-                keyboardType="numeric"
-                error={errors.zipCode || ''}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Contact Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-
-          <FormInput
-            label="Name"
-            value={formData.contactInfo?.name || ''}
-            onChangeText={value =>
-              updateNestedField('contactInfo', 'name', value)
-            }
-            placeholder="John Doe"
-          />
-
-          <FormInput
-            label="Phone"
-            value={formData.contactInfo?.phone || ''}
-            onChangeText={value =>
-              updateNestedField('contactInfo', 'phone', value)
-            }
-            placeholder="(555) 123-4567"
-            keyboardType="phone-pad"
-          />
-
-          <FormInput
-            label="Email"
-            value={formData.contactInfo?.email || ''}
-            onChangeText={value =>
-              updateNestedField('contactInfo', 'email', value)
-            }
-            placeholder="contact@ground.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <FormInput
-            label="Website"
-            value={formData.contactInfo?.website || ''}
-            onChangeText={value =>
-              updateNestedField('contactInfo', 'website', value)
-            }
-            placeholder="https://ground.com"
-            keyboardType="url"
-            autoCapitalize="none"
-          />
-        </View>
-
-        {/* Sport Types */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sport Types *</Text>
-          {errors.sportTypes && (
-            <Text style={styles.errorText}>{errors.sportTypes}</Text>
-          )}
-          <View style={styles.sportTypeContainer}>
-            {Object.values(SportType).map(sport => {
-              const isSelected = formData.sportTypes?.includes(sport);
-              return (
-                <TouchableOpacity
-                  key={sport}
-                  style={[
-                    styles.sportChip,
-                    isSelected && styles.sportChipSelected,
-                  ]}
-                  onPress={() => toggleSportType(sport)}
-                >
-                  <Text
-                    style={[
-                      styles.sportChipText,
-                      isSelected && styles.sportChipTextSelected,
-                    ]}
-                  >
-                    {sport.charAt(0).toUpperCase() + sport.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Hours of Operation */}
-        <HoursOfOperationSection
-          hours={hoursOfOperation}
-          onChange={setHoursOfOperation}
-        />
-
-        {/* Courts/Fields */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Courts/Fields</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => setShowAddCourtModal(true)}
-            >
-              <Ionicons
-                name="add-circle"
-                size={24}
-                color={colors.cobalt}
-                style={{ marginRight: Spacing.xs }}
-              />
-              <Text style={styles.addButtonText}>Add Court</Text>
-            </TouchableOpacity>
-          </View>
-
-          {courts.length === 0 ? (
-            <Text style={styles.emptyText}>
-              No courts added yet. Add courts to set individual pricing.
-            </Text>
-          ) : (
-            courts.map(court => (
+            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
               <TouchableOpacity
-                key={court.id}
-                style={styles.courtCard}
-                onPress={() => handleEditCourt(court)}
+                style={{
+                  backgroundColor: colors.heart,
+                  paddingVertical: 14,
+                  paddingHorizontal: 24,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={handleDelete}
+                disabled={isSubmitting}
                 activeOpacity={0.7}
               >
-                <View style={styles.courtInfo}>
-                  <Text style={styles.courtName}>{court.name}</Text>
-                  <Text style={styles.courtDetails}>
-                    {court.sportType.charAt(0).toUpperCase() +
-                      court.sportType.slice(1)}{' '}
-                    •{court.isIndoor ? ' Indoor' : ' Outdoor'} • Capacity:{' '}
-                    {court.capacity}
-                  </Text>
-                  <Text style={styles.courtPrice}>
-                    ${court.pricePerHour}/hour
-                  </Text>
-                </View>
-                <View style={styles.courtActions} pointerEvents="box-none">
-                  <Ionicons
-                    name="create-outline"
-                    size={20}
-                    color={colors.cobalt}
-                    style={{ marginRight: Spacing.sm }}
-                  />
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    onPress={e => {
-                      e.stopPropagation();
-                      console.log('🗑️ Delete button pressed');
-                      handleRemoveCourt(court.id);
-                    }}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={20}
-                      color={colors.heart}
-                      pointerEvents="none"
-                    />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-
-        {/* Cancellation Policy */}
-        <View style={styles.section}>
-          <CancellationPolicyPicker
-            value={formData.cancellationPolicyHours ?? null}
-            onChange={val => updateField('cancellationPolicyHours', val)}
-          />
-        </View>
-
-        {/* Booking Confirmation Requirement */}
-        <View style={styles.section}>
-          <View style={styles.insuranceToggleRow}>
-            <View style={styles.insuranceToggleInfo}>
-              <Text style={styles.insuranceToggleLabel}>
-                Requires Booking Confirmation
-              </Text>
-              <Text style={styles.insuranceToggleDescription}>
-                All reservation requests must be approved before they are
-                confirmed
-              </Text>
-            </View>
-            <Switch
-              value={requiresBookingConfirmation}
-              onValueChange={val => {
-                setRequiresBookingConfirmation(val);
-                if (!val) setRequiresInsurance(false);
-              }}
-              trackColor={{ false: colors.white, true: colors.cobaltLight }}
-              thumbColor={
-                requiresBookingConfirmation ? colors.cobalt : colors.surface
-              }
-            />
-          </View>
-        </View>
-
-        {/* Insurance Requirement — only visible when confirmation is on */}
-        {requiresBookingConfirmation && (
-          <View style={styles.section}>
-            <View style={styles.insuranceToggleRow}>
-              <View style={styles.insuranceToggleInfo}>
-                <Text style={styles.insuranceToggleLabel}>
-                  Requires Proof of Insurance
-                </Text>
-                <Text style={styles.insuranceToggleDescription}>
-                  Renters must attach a valid insurance document when reserving
-                  a court
-                </Text>
-              </View>
-              <Switch
-                value={requiresInsurance}
-                onValueChange={setRequiresInsurance}
-                trackColor={{ false: colors.white, true: colors.cobaltLight }}
-                thumbColor={requiresInsurance ? colors.cobalt : colors.surface}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* Waiver Section */}
-        <View style={styles.section}>
-          <View style={styles.insuranceToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.insuranceLabel}>Require Waiver</Text>
-              <Text style={styles.insuranceDescription}>
-                Players must sign a waiver before attending events at this
-                facility.
-              </Text>
-            </View>
-            <Switch
-              value={waiverRequired}
-              onValueChange={setWaiverRequired}
-              trackColor={{ false: colors.white, true: colors.cobaltLight }}
-              thumbColor={waiverRequired ? colors.cobalt : colors.surface}
-            />
-          </View>
-          {waiverRequired && (
-            <View style={{ marginTop: 12 }}>
-              <Text style={styles.insuranceLabel}>Waiver Document</Text>
-              <Text style={styles.insuranceDescription}>
-                Players will be required to read and accept this waiver before
-                joining events. Uploading a new version will require all players
-                to re-sign.
-              </Text>
-              {originalWaiverText && waiverText !== originalWaiverText && (
-                <View
+                <Text
                   style={{
-                    backgroundColor: colors.goldTint,
-                    padding: 10,
-                    borderRadius: 8,
-                    marginTop: 8,
-                    marginBottom: 8,
+                    color: colors.white,
+                    fontSize: 16,
+                    fontWeight: '600',
                   }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: fonts.body,
-                      fontSize: 13,
-                      color: colors.gold,
-                    }}
-                  >
-                    Saving a new waiver will invalidate all previously signed
-                    waivers. Players will be prompted to re-sign before their
-                    next event.
-                  </Text>
-                </View>
-              )}
-              <TextInput
-                style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 10,
-                  padding: 12,
-                  minHeight: 120,
-                  fontFamily: fonts.body,
-                  fontSize: 14,
-                  color: colors.ink,
-                  textAlignVertical: 'top',
-                  marginTop: 8,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-                multiline
-                numberOfLines={6}
-                placeholder="Enter your full waiver text here…"
-                placeholderTextColor={colors.inkFaint}
-                value={waiverText}
-                onChangeText={setWaiverText}
-              />
-              <Text
-                style={{
-                  fontFamily: fonts.body,
-                  fontSize: 12,
-                  color: colors.inkFaint,
-                  marginTop: 4,
-                  textAlign: 'right',
-                }}
-              >
-                {waiverText.length} characters
-              </Text>
+                  Delete Ground
+                </Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
-
-        {/* Submit Button */}
-        <View style={styles.buttonContainer}>
-          <FormButton
-            title="Update Ground"
-            onPress={handleSubmit}
-            loading={isSubmitting}
-            disabled={isSubmitting}
-          />
-        </View>
-
-        {/* Delete Button */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            disabled={isSubmitting}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.deleteButtonText}>Delete Ground</Text>
-          </TouchableOpacity>
+          </ScrollView>
         </View>
       </ScrollView>
 
-      {/* Add Court Modal */}
+      {/* ── Add/Edit Court Modal ──────────────────────────────────────────── */}
       <Modal
         visible={showAddCourtModal}
         transparent
@@ -1346,11 +1482,11 @@ export function EditFacilityScreen({
           });
         }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.addCourtModal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {editingCourtId ? 'Edit Court/Field' : 'Add Court/Field'}
+        <View style={s.modalOverlay}>
+          <View style={s.courtModal}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>
+                {editingCourtId ? `Edit ${surfaceName}` : `Add ${surfaceName}`}
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -1366,39 +1502,47 @@ export function EditFacilityScreen({
                   });
                 }}
               >
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
+                <Ionicons name="close" size={24} color={colors.ink} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            <ScrollView style={{ padding: Spacing.lg }}>
               <FormInput
-                label="Court Name *"
+                label={`${surfaceName} Name *`}
                 value={newCourt.name}
                 onChangeText={value =>
                   setNewCourt({ ...newCourt, name: value })
                 }
-                placeholder="e.g., Court 1, Field A"
+                placeholder={`e.g., ${surfaceName} 1, ${surfaceName} A`}
               />
 
-              <Text style={styles.inputLabel}>Sport Type *</Text>
-              <View style={styles.sportTypeContainer}>
+              <Text
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 15,
+                  color: colors.ink,
+                  fontWeight: '600',
+                  marginBottom: Spacing.sm,
+                  marginTop: Spacing.md,
+                }}
+              >
+                Sport Type *
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {Object.values(SportType).map(sport => {
                   const isSelected = newCourt.sportType === sport;
                   return (
                     <TouchableOpacity
                       key={sport}
-                      style={[
-                        styles.sportChip,
-                        isSelected && styles.sportChipSelected,
-                      ]}
+                      style={[s.sportChip, isSelected && s.sportChipSelected]}
                       onPress={() =>
                         setNewCourt({ ...newCourt, sportType: sport })
                       }
                     >
                       <Text
                         style={[
-                          styles.sportChipText,
-                          isSelected && styles.sportChipTextSelected,
+                          s.sportChipText,
+                          isSelected && s.sportChipTextSelected,
                         ]}
                       >
                         {sport.charAt(0).toUpperCase() + sport.slice(1)}
@@ -1419,16 +1563,17 @@ export function EditFacilityScreen({
               />
 
               <TouchableOpacity
-                style={styles.checkboxRow}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginVertical: Spacing.md,
+                }}
                 onPress={() =>
                   setNewCourt({ ...newCourt, isIndoor: !newCourt.isIndoor })
                 }
               >
                 <View
-                  style={[
-                    styles.checkbox,
-                    newCourt.isIndoor && styles.checkboxChecked,
-                  ]}
+                  style={[s.checkbox, newCourt.isIndoor && s.checkboxChecked]}
                 >
                   {newCourt.isIndoor && (
                     <Ionicons
@@ -1438,7 +1583,16 @@ export function EditFacilityScreen({
                     />
                   )}
                 </View>
-                <Text style={styles.checkboxLabel}>Indoor Court</Text>
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: 15,
+                    color: colors.ink,
+                    marginLeft: Spacing.sm,
+                  }}
+                >
+                  Indoor {surfaceName}
+                </Text>
               </TouchableOpacity>
 
               <FormInput
@@ -1455,9 +1609,23 @@ export function EditFacilityScreen({
               />
             </ScrollView>
 
-            <View style={styles.modalActions}>
+            <View
+              style={{
+                flexDirection: 'row',
+                padding: Spacing.lg,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+              }}
+            >
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={{
+                  flex: 1,
+                  paddingVertical: Spacing.md,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  marginHorizontal: Spacing.xs,
+                  backgroundColor: colors.white,
+                }}
                 onPress={() => {
                   setShowAddCourtModal(false);
                   setEditingCourtId(null);
@@ -1471,14 +1639,37 @@ export function EditFacilityScreen({
                   });
                 }}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontWeight: '600',
+                    color: colors.inkSoft,
+                  }}
+                >
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.addCourtButton]}
+                style={{
+                  flex: 1,
+                  paddingVertical: Spacing.md,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  marginHorizontal: Spacing.xs,
+                  backgroundColor: colors.cobalt,
+                }}
                 onPress={handleAddCourt}
               >
-                <Text style={styles.addCourtButtonText}>
-                  {editingCourtId ? 'Update Court' : 'Add Court'}
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontWeight: '600',
+                    color: colors.white,
+                  }}
+                >
+                  {editingCourtId
+                    ? `Update ${surfaceName}`
+                    : `Add ${surfaceName}`}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1486,40 +1677,114 @@ export function EditFacilityScreen({
         </View>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* ── Delete Confirmation Modal ─────────────────────────────────────── */}
       <Modal
         visible={showDeleteModal}
         transparent
         animationType="fade"
         onRequestClose={() => setShowDeleteModal(false)}
       >
-        <View style={styles.deleteModalOverlay}>
-          <View style={styles.deleteModalContent}>
-            <View style={styles.deleteModalIcon}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: Spacing.xl,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.white,
+              borderRadius: 16,
+              padding: Spacing.xl,
+              width: '100%',
+              maxWidth: 400,
+              alignItems: 'center',
+            }}
+          >
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: colors.white,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: Spacing.lg,
+              }}
+            >
               <Ionicons name="warning" size={48} color={colors.heart} />
             </View>
-
-            <Text style={styles.deleteModalTitle}>Delete Ground?</Text>
-            <Text style={styles.deleteModalMessage}>
+            <Text
+              style={{
+                fontFamily: fonts.heading,
+                fontSize: 24,
+                color: colors.ink,
+                marginBottom: Spacing.md,
+                textAlign: 'center',
+              }}
+            >
+              Delete Ground?
+            </Text>
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 15,
+                color: colors.inkSoft,
+                textAlign: 'center',
+                marginBottom: Spacing.xl,
+                lineHeight: 22,
+              }}
+            >
               Are you sure you want to delete this ground? This action cannot be
               undone and will remove all associated courts and data.
             </Text>
-
-            <View style={styles.deleteModalButtons}>
+            <View
+              style={{ flexDirection: 'row', width: '100%', gap: Spacing.md }}
+            >
               <TouchableOpacity
-                style={[styles.deleteModalButton, styles.cancelDeleteButton]}
+                style={{
+                  flex: 1,
+                  paddingVertical: Spacing.md,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  backgroundColor: colors.white,
+                }}
                 onPress={() => setShowDeleteModal(false)}
               >
-                <Text style={styles.cancelDeleteButtonText}>Cancel</Text>
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontWeight: '600',
+                    color: colors.ink,
+                  }}
+                >
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.deleteModalButton, styles.confirmDeleteButton]}
+                style={{
+                  flex: 1,
+                  paddingVertical: Spacing.md,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  backgroundColor: colors.heart,
+                }}
                 onPress={() => {
                   setShowDeleteModal(false);
                   performDelete();
                 }}
               >
-                <Text style={styles.confirmDeleteButtonText}>Delete</Text>
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontWeight: '600',
+                    color: colors.white,
+                  }}
+                >
+                  Delete
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1529,330 +1794,94 @@ export function EditFacilityScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.surface,
+  },
+
+  /* ── Tab bar ── */
+  tabBarOuter: {
     backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  scrollView: {
-    flex: 1,
+  tabBarContent: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
   },
-  content: {
-    paddingBottom: 40,
+  tabItem: {
+    height: 44,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
-  section: {
-    backgroundColor: '#FFFFFF',
-    padding: Spacing.lg,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.md,
-    borderRadius: 12,
-    shadowColor: colors.ink,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+  tabLabel: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.inkSoft,
+  },
+  tabLabelActive: {
+    color: colors.cobalt,
+  },
+  tabUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: 16,
+    right: 16,
+    height: 2,
+    backgroundColor: colors.cobalt,
+    borderRadius: 1,
+  },
+
+  /* ── Section label ── */
+  sectionLabel: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkSoft,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+
+  /* ── Card ── */
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
+    overflow: 'hidden',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    ...TextStyles.h3,
-    color: colors.textPrimary,
-  },
-  sectionSubtitle: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
-    marginBottom: Spacing.md,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    ...TextStyles.body,
-    color: colors.cobalt,
-    fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
-    marginHorizontal: -Spacing.sm,
-  },
-  halfWidth: {
-    flex: 1,
-    paddingHorizontal: Spacing.sm,
-  },
-  sportTypeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  sportChip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    marginRight: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-  },
-  sportChipText: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
-  },
-  sportChipTextSelected: {
-    color: colors.surface,
-    fontWeight: '600',
-  },
-  errorText: {
-    ...TextStyles.caption,
-    color: colors.heart,
-    marginBottom: Spacing.sm,
-  },
-  emptyText: {
-    ...TextStyles.body,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    paddingVertical: Spacing.lg,
-  },
-  courtCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    padding: Spacing.md,
-    borderRadius: 8,
-    marginBottom: Spacing.sm,
-  },
-  courtInfo: {
-    flex: 1,
-  },
-  courtActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  courtName: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  courtDetails: {
-    ...TextStyles.caption,
-    color: colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  courtPrice: {
-    ...TextStyles.body,
-    color: colors.cobalt,
-    fontWeight: '600',
-  },
-  removeButton: {
-    padding: Spacing.sm,
-  },
-  helperText: {
-    ...TextStyles.caption,
-    color: colors.textTertiary,
-    marginTop: -Spacing.sm,
-  },
-  buttonContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.lg,
-  },
-  deleteButton: {
-    backgroundColor: colors.heart,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteButtonText: {
-    color: colors.surface,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  addCourtModal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    width: '100%',
-    maxWidth: 500,
-    maxHeight: '90%',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: Spacing.lg,
-    width: '100%',
-    maxWidth: 500,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  modalTitle: {
-    ...TextStyles.h3,
-    color: colors.textPrimary,
-  },
-  inputLabel: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.md,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.border,
-    marginRight: Spacing.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
-  checkboxLabel: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    padding: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: Spacing.xs,
-  },
-  cancelButton: {
-    backgroundColor: colors.white,
-  },
-  cancelButtonText: {
-    ...TextStyles.body,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  addCourtButton: {
-    backgroundColor: colors.cobalt,
-  },
-  addCourtButtonText: {
-    ...TextStyles.body,
-    fontWeight: '600',
-    color: colors.surface,
-  },
-  deleteModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
-  },
-  deleteModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: Spacing.xl,
-    width: '100%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-  deleteModalIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  deleteModalTitle: {
-    ...TextStyles.h2,
-    color: colors.textPrimary,
-    marginBottom: Spacing.md,
-    textAlign: 'center',
-  },
-  deleteModalMessage: {
-    ...TextStyles.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: Spacing.xl,
-    lineHeight: 22,
-  },
-  deleteModalButtons: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: Spacing.md,
-  },
-  deleteModalButton: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelDeleteButton: {
-    backgroundColor: colors.white,
-  },
-  cancelDeleteButtonText: {
-    ...TextStyles.body,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  confirmDeleteButton: {
-    backgroundColor: colors.heart,
-  },
-  confirmDeleteButtonText: {
-    ...TextStyles.body,
-    fontWeight: '600',
-    color: colors.surface,
-  },
-  insuranceToggleRow: {
+
+  /* ── Unified toggle row ── */
+  toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  insuranceToggleInfo: {
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  insuranceToggleLabel: {
-    fontFamily: 'PlusJakartaSans_600SemiBold',
+  toggleLabel: {
+    fontFamily: fonts.ui,
     fontSize: 15,
     lineHeight: 22,
     color: colors.ink,
     marginBottom: Spacing.xs,
   },
-  insuranceToggleDescription: {
-    ...TextStyles.body,
+  toggleDescription: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.inkFaint,
   },
+
+  /* ── Address search ── */
   addressSearchInput: {
     backgroundColor: colors.surface,
     borderRadius: 10,
@@ -1866,7 +1895,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   suggestionsContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -1888,5 +1917,71 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     flex: 1,
+  },
+
+  /* ── Sport chips (court modal) ── */
+  sportChip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    marginRight: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  sportChipSelected: {
+    backgroundColor: colors.cobalt,
+  },
+  sportChipText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.inkSoft,
+  },
+  sportChipTextSelected: {
+    color: colors.white,
+    fontWeight: '600',
+  },
+
+  /* ── Checkbox ── */
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
+  },
+
+  /* ── Modals ── */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(32, 64, 224, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  courtModal: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 500,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modalTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    color: colors.ink,
   },
 });

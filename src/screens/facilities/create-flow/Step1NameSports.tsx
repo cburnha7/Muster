@@ -30,7 +30,7 @@ export function Step1NameSports() {
   const handlePickPhotos = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
       quality: 0.9,
     });
     if (result.canceled) return;

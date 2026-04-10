@@ -151,11 +151,22 @@ export class FacilityService extends BaseApiService {
     onProgress?: (progress: number) => void
   ): Promise<{ facilityMapUrl: string; facilityMapThumbnailUrl: string }> {
     const formData = new FormData();
-    formData.append('image', {
-      uri: file.uri,
-      name: file.name,
-      type: file.type,
-    } as any);
+
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.document !== 'undefined'
+    ) {
+      const response = await fetch(file.uri);
+      const blob = await response.blob();
+      const fileObj = new File([blob], file.name, { type: file.type });
+      formData.append('image', fileObj);
+    } else {
+      formData.append('image', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as any);
+    }
 
     return this.uploadFile<{
       facilityMapUrl: string;
@@ -185,11 +196,25 @@ export class FacilityService extends BaseApiService {
     onProgress?: (p: number) => void
   ): Promise<FacilityPhoto> {
     const formData = new FormData();
-    formData.append('photos', {
-      uri: image.uri,
-      name: image.name,
-      type: image.type,
-    } as any);
+
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.document !== 'undefined'
+    ) {
+      // Web: fetch the blob URI and create a proper File object
+      const response = await fetch(image.uri);
+      const blob = await response.blob();
+      const file = new File([blob], image.name, { type: image.type });
+      formData.append('photos', file);
+    } else {
+      // React Native: use the { uri, name, type } pattern
+      formData.append('photos', {
+        uri: image.uri,
+        name: image.name,
+        type: image.type,
+      } as any);
+    }
+
     return this.uploadFile<FacilityPhoto>(
       `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/photos`,
       formData,

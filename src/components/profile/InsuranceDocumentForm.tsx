@@ -49,7 +49,10 @@ interface FormErrors {
   expiryDate?: string | undefined;
 }
 
-export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentFormProps) {
+export function InsuranceDocumentForm({
+  userId,
+  onClose,
+}: InsuranceDocumentFormProps) {
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [policyName, setPolicyName] = useState('');
   const [expiryDateText, setExpiryDateText] = useState('');
@@ -65,21 +68,26 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
 
   const getMimeType = (ext: string): string => {
     switch (ext) {
-      case 'pdf': return 'application/pdf';
+      case 'pdf':
+        return 'application/pdf';
       case 'jpg':
-      case 'jpeg': return 'image/jpeg';
-      case 'png': return 'image/png';
-      default: return 'application/octet-stream';
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      default:
+        return 'application/octet-stream';
     }
   };
 
   const handlePickFile = async () => {
     if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
           'Permission Required',
-          'We need media library permissions to select insurance documents.',
+          'We need media library permissions to select insurance documents.'
         );
         return;
       }
@@ -87,7 +95,7 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'] as ImagePicker.MediaType[],
         allowsEditing: false,
         quality: 1,
       });
@@ -97,13 +105,22 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
         const ext = getFileExtension(asset.uri);
         const mimeType = asset.mimeType ?? getMimeType(ext);
 
-        if (!ALLOWED_MIME_TYPES.includes(mimeType) && !ALLOWED_EXTENSIONS.includes(ext)) {
-          setErrors((prev) => ({ ...prev, file: 'Only PDF, JPEG, and PNG files are accepted' }));
+        if (
+          !ALLOWED_MIME_TYPES.includes(mimeType) &&
+          !ALLOWED_EXTENSIONS.includes(ext)
+        ) {
+          setErrors(prev => ({
+            ...prev,
+            file: 'Only PDF, JPEG, and PNG files are accepted',
+          }));
           return;
         }
 
         if (asset.fileSize != null && asset.fileSize > MAX_FILE_SIZE) {
-          setErrors((prev) => ({ ...prev, file: 'File must be 10 MB or smaller' }));
+          setErrors(prev => ({
+            ...prev,
+            file: 'File must be 10 MB or smaller',
+          }));
           return;
         }
 
@@ -115,7 +132,7 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
           type: mimeType,
           ...(asset.fileSize != null ? { size: asset.fileSize } : {}),
         });
-        setErrors((prev) => ({ ...prev, file: undefined }));
+        setErrors(prev => ({ ...prev, file: undefined }));
       }
     } catch (err: any) {
       Alert.alert('Error', 'Failed to pick file: ' + err.message);
@@ -132,7 +149,11 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
     if (month < 1 || month > 12 || day < 1 || day > 31) return null;
     const date = new Date(year, month - 1, day);
     // Verify the date components match (catches invalid dates like Feb 30)
-    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
       return null;
     }
     return date;
@@ -185,13 +206,19 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
       await uploadDocument(formData).unwrap();
       onClose();
     } catch (err: any) {
-      const message = err?.data?.error || err?.message || 'Upload failed. Please try again.';
+      const message =
+        err?.data?.error || err?.message || 'Upload failed. Please try again.';
       Alert.alert('Upload Failed', message);
     }
   };
 
   return (
-    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <KeyboardAvoidingView
         style={styles.modalContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -229,27 +256,43 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
             >
               {selectedFile ? (
                 <View style={styles.fileSelected}>
-                  <Ionicons name="document-attach" size={22} color={colors.cobalt} />
+                  <Ionicons
+                    name="document-attach"
+                    size={22}
+                    color={colors.cobalt}
+                  />
                   <Text style={styles.fileName} numberOfLines={1}>
                     {selectedFile.name}
                   </Text>
                   <TouchableOpacity
                     onPress={() => {
                       setSelectedFile(null);
-                      setErrors((prev) => ({ ...prev, file: undefined }));
+                      setErrors(prev => ({ ...prev, file: undefined }));
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     accessibilityRole="button"
                     accessibilityLabel="Remove selected file"
                   >
-                    <Ionicons name="close-circle" size={20} color={colors.inkFaint} />
+                    <Ionicons
+                      name="close-circle"
+                      size={20}
+                      color={colors.inkFaint}
+                    />
                   </TouchableOpacity>
                 </View>
               ) : (
                 <View style={styles.filePlaceholder}>
-                  <Ionicons name="cloud-upload-outline" size={28} color={colors.inkFaint} />
-                  <Text style={styles.filePlaceholderText}>Tap to select a file</Text>
-                  <Text style={styles.fileHint}>PDF, JPEG, or PNG — 10 MB max</Text>
+                  <Ionicons
+                    name="cloud-upload-outline"
+                    size={28}
+                    color={colors.inkFaint}
+                  />
+                  <Text style={styles.filePlaceholderText}>
+                    Tap to select a file
+                  </Text>
+                  <Text style={styles.fileHint}>
+                    PDF, JPEG, or PNG — 10 MB max
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -262,18 +305,24 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
               Policy Name <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={[styles.textInput, errors.policyName && styles.textInputError]}
+              style={[
+                styles.textInput,
+                errors.policyName && styles.textInputError,
+              ]}
               value={policyName}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setPolicyName(text);
-                if (errors.policyName) setErrors((prev) => ({ ...prev, policyName: undefined }));
+                if (errors.policyName)
+                  setErrors(prev => ({ ...prev, policyName: undefined }));
               }}
               placeholder="e.g. General Liability Policy"
               placeholderTextColor={colors.inkFaint}
               autoCapitalize="words"
               accessibilityLabel="Policy name"
             />
-            {errors.policyName && <Text style={styles.errorText}>{errors.policyName}</Text>}
+            {errors.policyName && (
+              <Text style={styles.errorText}>{errors.policyName}</Text>
+            )}
           </View>
 
           {/* Expiry Date */}
@@ -282,11 +331,15 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
               Expiry Date <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={[styles.textInput, errors.expiryDate && styles.textInputError]}
+              style={[
+                styles.textInput,
+                errors.expiryDate && styles.textInputError,
+              ]}
               value={expiryDateText}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setExpiryDateText(text);
-                if (errors.expiryDate) setErrors((prev) => ({ ...prev, expiryDate: undefined }));
+                if (errors.expiryDate)
+                  setErrors(prev => ({ ...prev, expiryDate: undefined }));
               }}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.inkFaint}
@@ -294,14 +347,19 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
               maxLength={10}
               accessibilityLabel="Expiry date"
             />
-            {errors.expiryDate && <Text style={styles.errorText}>{errors.expiryDate}</Text>}
+            {errors.expiryDate && (
+              <Text style={styles.errorText}>{errors.expiryDate}</Text>
+            )}
           </View>
         </ScrollView>
 
         {/* Submit Button */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton,
+              isLoading && styles.submitButtonDisabled,
+            ]}
             onPress={handleSubmit}
             disabled={isLoading}
             activeOpacity={0.7}
@@ -322,7 +380,6 @@ export function InsuranceDocumentForm({ userId, onClose }: InsuranceDocumentForm
     </Modal>
   );
 }
-
 
 const styles = StyleSheet.create({
   modalContainer: {
