@@ -739,22 +739,15 @@ export function HomeScreen() {
             contentMaxWidth && { maxWidth: contentMaxWidth, width: '100%' },
           ]}
         >
-          {/* ── Upcoming Events ─────────────────── */}
-          {hasEvents ? (
-            <View style={styles.upcomingSection}>
-              <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>
-                Upcoming
-              </Text>
-              {upcomingBookings.map(booking => (
-                <CrewEventCard
-                  key={booking.id}
-                  booking={booking}
-                  crewColor={getBookingCrewColor(booking)}
-                  onPress={handleBookingPress}
-                />
-              ))}
-            </View>
-          ) : (
+          {/* ── My Crew ────────────────────────── */}
+          <MyCrewRow
+            members={crewMembers}
+            selectedId={selectedCrewId}
+            onSelect={setSelectedCrewId}
+          />
+
+          {/* ── Empty state when no events ──── */}
+          {!hasEvents && (
             <EmptyHomeState
               userName={currentUser?.firstName}
               onCreateEvent={handleCreateEvent}
@@ -768,13 +761,6 @@ export function HomeScreen() {
               onPress={handleBookingPress}
             />
           )}
-
-          {/* ── My Crew ────────────────────────── */}
-          <MyCrewRow
-            members={crewMembers}
-            selectedId={selectedCrewId}
-            onSelect={setSelectedCrewId}
-          />
 
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
@@ -938,7 +924,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 0,
   },
 
   // ── Loading ─────────────────────────────
