@@ -17,7 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { EventCard } from '../../components/ui/EventCard';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { CancellationPolicyDisplay } from '../../components/facilities/CancellationPolicyDisplay';
 import { facilityService } from '../../services/api/FacilityService';
@@ -28,7 +27,7 @@ import {
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
 import { colors, fonts, Spacing } from '../../theme';
-import { Event, FacilityPhoto, FacilityWithVerification } from '../../types';
+import { FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { FixedBottomCTA } from '../../components/detail';
 import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
@@ -116,7 +115,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
   const [showFullMap, setShowFullMap] = useState(false);
   const [photos, setPhotos] = useState<FacilityPhoto[]>([]);
   const [facilityMapUrl, setFacilityMapUrl] = useState<string | null>(null);
@@ -139,7 +137,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   useEffect(() => {
     loadFacilityDetails();
-    loadFacilityEvents();
   }, [facilityId]);
 
   const loadFacilityDetails = async () => {
@@ -152,24 +149,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
       setError(err.message || 'Failed to load ground details');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadFacilityEvents = async () => {
-    try {
-      const response = await facilityService.getFacilityEvents(facilityId, {
-        page: 1,
-        limit: 20,
-      });
-      const now = Date.now();
-      const upcoming = (response.data || []).filter(e =>
-        e.endTime
-          ? new Date(e.endTime).getTime() > now
-          : new Date(e.startTime).getTime() > now
-      );
-      setEvents(upcoming);
-    } catch (err: any) {
-      console.error('Failed to load ground events:', err);
     }
   };
 
@@ -208,10 +187,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         err instanceof Error ? err.message : 'Failed to delete ground';
       Alert.alert('Error', msg);
     }
-  };
-
-  const handleEventPress = (event: Event) => {
-    (navigation as any).navigate('EventDetails', { eventId: event.id });
   };
 
   const handleTabPress = (index: number) => {
@@ -382,24 +357,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                 </View>
               </>
             ) : null}
-
-            {/* Upcoming events */}
-            {events.length > 0 && (
-              <>
-                <Text style={s.sectionLabel}>UPCOMING EVENTS</Text>
-                <View style={s.card}>
-                  <View style={{ padding: 16 }}>
-                    {events.map(event => (
-                      <EventCard
-                        key={event.id}
-                        event={event}
-                        onPress={handleEventPress}
-                      />
-                    ))}
-                  </View>
-                </View>
-              </>
-            )}
 
             {/* Owner reservations */}
             {isOwner && <OwnerReservationsSection facilityId={facility.id} />}
