@@ -269,6 +269,18 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   return (
     <View style={s.container}>
       <ContextualReturnButton />
+      <Text
+        style={{
+          backgroundColor: 'red',
+          color: 'white',
+          textAlign: 'center',
+          padding: 8,
+          fontSize: 16,
+          fontWeight: 'bold',
+        }}
+      >
+        BUILD TEST v2 — TABBED LAYOUT
+      </Text>
       <TabBar activeIndex={activeTab} onPress={handleTabPress} />
 
       <ScrollView

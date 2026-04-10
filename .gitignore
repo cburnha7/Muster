@@ -53,3 +53,4 @@ AppData/
 
 # Old backup copy of the app — exclude from bundling and deployments
 All Roads/
+.vercel
