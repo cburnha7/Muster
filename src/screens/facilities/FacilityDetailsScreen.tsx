@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,11 @@ import {
   Modal,
   Linking,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { EventCard } from '../../components/ui/EventCard';
@@ -31,15 +30,11 @@ import {
 import { colors, fonts, Spacing } from '../../theme';
 import { Event, FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
-import {
-  HeroSection,
-  PersonRow,
-  DetailCard,
-  FixedBottomCTA,
-} from '../../components/detail';
+import { FixedBottomCTA } from '../../components/detail';
 import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
 import { getSportColor } from '../../constants/sportColors';
-import { getSportLabel } from '../../constants/sports';
+import { getSportLabel, getSportEmoji } from '../../constants/sports';
+import { getSurfaceName } from '../../utils/getSurfaceName';
 
 // Only import MapView on native platforms
 let MapView: any = null;
@@ -53,6 +48,14 @@ if (Platform.OS !== 'web') {
   PROVIDER_GOOGLE = MapViewModule.PROVIDER_GOOGLE;
 }
 
+const TABS = [
+  'Basics',
+  'Location',
+  'Contact',
+  'Site Details',
+  'Courts / Fields',
+] as const;
+
 interface FacilityDetailsScreenProps {
   route: {
     params: {
@@ -61,10 +64,50 @@ interface FacilityDetailsScreenProps {
   };
 }
 
+/* ─── Tab Bar ─────────────────────────────────────────────────────────────── */
+
+function TabBar({
+  activeIndex,
+  onPress,
+}: {
+  activeIndex: number;
+  onPress: (i: number) => void;
+}) {
+  return (
+    <View style={s.tabBarOuter}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.tabBarContent}
+      >
+        {TABS.map((tab, i) => {
+          const active = i === activeIndex;
+          return (
+            <TouchableOpacity
+              key={tab}
+              style={s.tabItem}
+              onPress={() => onPress(i)}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+                {tab}
+              </Text>
+              {active && <View style={s.tabUnderline} />}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+/* ─── Main Screen ─────────────────────────────────────────────────────────── */
+
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const { facilityId, ...restParams } = route.params as any;
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const { width: screenWidth } = useWindowDimensions();
 
   const selectedFacility = useSelector(
     selectSelectedFacility
@@ -75,19 +118,15 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [showFullMap, setShowFullMap] = useState(false);
-
-  // Task 5.1 — local photo/map state
   const [photos, setPhotos] = useState<FacilityPhoto[]>([]);
   const [facilityMapUrl, setFacilityMapUrl] = useState<string | null>(null);
   const [facilityMapThumbnailUrl, setFacilityMapThumbnailUrl] = useState<
     string | null
   >(null);
 
-  // Task 5.9 — inline error state
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const pagerRef = useRef<ScrollView>(null);
 
-  // Sync local state when Redux store updates
   useEffect(() => {
     if (selectedFacility) {
       setPhotos(selectedFacility.photos ?? []);
@@ -134,113 +173,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     }
   };
 
-  // Task 5.3 / 5.4 — pick and upload photos
-  const handleAddPhotos = async () => {
-    setPhotoError(null);
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        allowsMultipleSelection: true,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.9,
-      });
-      if (result.canceled) return;
-      for (const asset of result.assets) {
-        try {
-          const uploaded = await facilityService.uploadFacilityPhoto(
-            facilityId,
-            {
-              uri: asset.uri,
-              name: asset.fileName || 'photo.jpg',
-              type: asset.mimeType || 'image/jpeg',
-            }
-          );
-          setPhotos(prev => [...prev, uploaded]);
-        } catch (err: any) {
-          const msg: string = err?.message || '';
-          if (
-            msg.toLowerCase().includes('type') ||
-            msg.toLowerCase().includes('jpeg') ||
-            msg.toLowerCase().includes('png')
-          ) {
-            setPhotoError('Only JPEG and PNG images are allowed.');
-          } else if (
-            msg.toLowerCase().includes('size') ||
-            msg.toLowerCase().includes('10')
-          ) {
-            setPhotoError('Photos must be under 10 MB.');
-          } else {
-            setPhotoError(msg || 'Failed to upload photo.');
-          }
-        }
-      }
-    } catch (err: any) {
-      setPhotoError(err?.message || 'Failed to open image picker.');
-    }
-  };
-
-  // Task 5.5 — delete a photo
-  const handleDeletePhoto = async (photo: FacilityPhoto) => {
-    try {
-      await facilityService.deleteFacilityPhoto(facilityId, photo.id);
-      setPhotos(prev => prev.filter(p => p.id !== photo.id));
-    } catch (err: any) {
-      setPhotoError(err?.message || 'Failed to delete photo.');
-    }
-  };
-
-  // Task 5.7 — upload map
-  const handleUploadMap = async () => {
-    setMapError(null);
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/jpeg', 'image/png', 'application/pdf'],
-      });
-      if (result.canceled || !result.assets || result.assets.length === 0)
-        return;
-      const asset = result.assets[0];
-      try {
-        const uploaded = await facilityService.uploadFacilityMap(facilityId, {
-          uri: asset.uri,
-          name: asset.name,
-          type: asset.mimeType || 'image/jpeg',
-        });
-        setFacilityMapUrl(uploaded.facilityMapUrl);
-        setFacilityMapThumbnailUrl(uploaded.facilityMapThumbnailUrl);
-      } catch (err: any) {
-        const msg: string = err?.message || '';
-        if (
-          msg.toLowerCase().includes('type') ||
-          msg.toLowerCase().includes('jpeg') ||
-          msg.toLowerCase().includes('png') ||
-          msg.toLowerCase().includes('pdf')
-        ) {
-          setMapError('Only JPEG, PNG, and PDF files are allowed.');
-        } else if (
-          msg.toLowerCase().includes('size') ||
-          msg.toLowerCase().includes('20')
-        ) {
-          setMapError('Map file must be under 20 MB.');
-        } else {
-          setMapError(msg || 'Failed to upload map.');
-        }
-      }
-    } catch (err: any) {
-      setMapError(err?.message || 'Failed to open file picker.');
-    }
-  };
-
-  // Task 5.8 — delete map
-  const handleDeleteMap = async () => {
-    setMapError(null);
-    try {
-      await facilityService.deleteFacilityMap(facilityId);
-      setFacilityMapUrl(null);
-      setFacilityMapThumbnailUrl(null);
-    } catch (err: any) {
-      setMapError(err?.message || 'Failed to remove map.');
-    }
-  };
-
   const handleEdit = () => {
     (navigation as any).navigate('EditFacility', { facilityId });
   };
@@ -282,51 +214,20 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     (navigation as any).navigate('EventDetails', { eventId: event.id });
   };
 
-  const openMapsDirections = () => {
-    if (!selectedFacility) return;
-    const address = encodeURIComponent(
-      `${selectedFacility.street}, ${selectedFacility.city}, ${selectedFacility.state} ${selectedFacility.zipCode}`
-    );
-    const url =
-      Platform.OS === 'ios' ? `maps://?q=${address}` : `geo:0,0?q=${address}`;
-    Linking.openURL(url).catch(() => {
-      Linking.openURL(`https://maps.google.com/?q=${address}`);
-    });
+  const handleTabPress = (index: number) => {
+    setActiveTab(index);
+    pagerRef.current?.scrollTo({ x: index * screenWidth, animated: true });
   };
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Ionicons key={i} name="star" size={20} color="#FFD700" />);
-    }
-
-    if (hasHalfStar) {
-      stars.push(
-        <Ionicons key="half" name="star-half" size={20} color="#FFD700" />
-      );
-    }
-
-    const emptyStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <Ionicons
-          key={`empty-${i}`}
-          name="star-outline"
-          size={20}
-          color="#FFD700"
-        />
-      );
-    }
-
-    return stars;
+  const handlePagerScroll = (e: any) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / screenWidth);
+    if (index !== activeTab) setActiveTab(index);
   };
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={s.container}>
         <LoadingSpinner />
       </View>
     );
@@ -334,7 +235,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   if (error || !selectedFacility) {
     return (
-      <View style={styles.container}>
+      <View style={s.container}>
         <ErrorDisplay
           message={error || 'Ground not found'}
           onRetry={loadFacilityDetails}
@@ -360,385 +261,674 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     facility.teamPenaltyPct != null &&
     facility.penaltyDestination != null;
 
+  const courts = (facility as any).courts ?? [];
+  const primarySport = facility.sportTypes?.[0] ?? 'other';
+
+  const formatHoursForDay = (dayOfWeek: number) => {
+    const slots = (facility.availabilitySlots ?? []).filter(
+      (sl: any) =>
+        sl.isRecurring && !sl.specificDate && sl.dayOfWeek === dayOfWeek
+    );
+    if (slots.length === 0) return null;
+    const slot = slots[0];
+    if (slot.isBlocked) return 'Closed';
+    const fmt = (t: string) => {
+      const [h, m] = t.split(':');
+      const hour = parseInt(h);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      return `${hour % 12 || 12}:${m} ${ampm}`;
+    };
+    return `${fmt(slot.startTime)} – ${fmt(slot.endTime)}`;
+  };
+
+  const DAYS = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <ContextualReturnButton />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Task 5.2 — Photo strip (all users, when photos exist) */}
-        {photos.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.photoStrip}
-            contentContainerStyle={styles.photoStripContent}
-          >
-            {photos.map(photo => (
-              <View key={photo.id} style={styles.photoItem}>
-                <OptimizedImage
-                  source={{ uri: photo.imageUrl }}
-                  style={styles.photoImg}
-                  resizeMode="cover"
-                  fallback={
-                    <View style={styles.photoFallback}>
-                      <Ionicons
-                        name="camera-outline"
-                        size={32}
-                        color={colors.onSurfaceVariant}
-                      />
-                    </View>
-                  }
-                />
-                {/* Task 5.5 — delete overlay for owner */}
-                {isOwner && (
-                  <TouchableOpacity
-                    style={styles.photoDeleteBtn}
-                    onPress={() => handleDeletePhoto(photo)}
-                    activeOpacity={0.8}
+      <TabBar activeIndex={activeTab} onPress={handleTabPress} />
+
+      <ScrollView
+        ref={pagerRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={handlePagerScroll}
+        style={{ flex: 1 }}
+      >
+        {/* ── TAB 1 — Basics ─────────────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {photos.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ paddingVertical: 16 }}
+                contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+              >
+                {photos.map(photo => (
+                  <View
+                    key={photo.id}
+                    style={{ borderRadius: 8, overflow: 'hidden' }}
                   >
-                    <Ionicons
-                      name="close-circle"
-                      size={24}
-                      color={colors.heart}
+                    <OptimizedImage
+                      source={{ uri: photo.imageUrl }}
+                      style={{ width: 280, height: 220, borderRadius: 8 }}
+                      resizeMode="cover"
+                      fallback={
+                        <View
+                          style={{
+                            width: 280,
+                            height: 220,
+                            borderRadius: 8,
+                            backgroundColor: colors.surface,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Ionicons
+                            name="camera-outline"
+                            size={32}
+                            color={colors.inkSoft}
+                          />
+                        </View>
+                      }
                     />
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Task 5.3 — "Add photos" button for owner */}
-        {isOwner && (
-          <View style={styles.addPhotosRow}>
-            <TouchableOpacity
-              style={styles.addPhotosBtn}
-              onPress={handleAddPhotos}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="images-outline" size={18} color={colors.cobalt} />
-              <Text style={styles.addPhotosBtnText}>
-                {photos.length > 0 ? 'Add more photos' : 'Add photos'}
-              </Text>
-            </TouchableOpacity>
-            {/* Task 5.9 — inline photo error */}
-            {photoError ? (
-              <Text style={styles.inlineError}>{photoError}</Text>
-            ) : null}
-          </View>
-        )}
-
-        {/* Hero image */}
-        {facility.imageUrl && (
-          <Image
-            source={{ uri: facility.imageUrl }}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
-        )}
-
-        {/* HeroSection */}
-        <HeroSection
-          title={facility.name}
-          sportColor={getSportColor(facility.sportTypes?.[0])}
-          badges={
-            [
-              ...facility.sportTypes.map(s => ({ label: getSportLabel(s) })),
-              facility.isVerified
-                ? {
-                    label: '✓ Verified',
-                    bgColor: colors.secondaryContainer,
-                    textColor: colors.secondary,
-                  }
-                : null,
-            ].filter(Boolean) as any
-          }
-          {...(facility.pricePerHour
-            ? { headline: `From $${facility.pricePerHour}/hr` }
-            : {})}
-          subline={[facility.city, facility.state].filter(Boolean).join(', ')}
-          onSublinePress={openMapsDirections}
-        >
-          {/* Rating */}
-          <View style={styles.ratingRow}>
-            <View style={styles.stars}>{renderStars(facility.rating)}</View>
-            <Text style={styles.ratingText}>
-              {facility.rating.toFixed(1)} ({facility.reviewCount} reviews)
-            </Text>
-          </View>
-        </HeroSection>
-
-        {/* About card */}
-        {facility.description ? (
-          <DetailCard title="About" delay={0}>
-            <Text style={styles.bodyText}>{facility.description}</Text>
-            {facility.amenities?.length > 0 ? (
-              <View style={styles.amenitiesGrid}>
-                {facility.amenities.map((a, i) => (
-                  <View key={i} style={styles.amenityRow}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={16}
-                      color={colors.secondary}
-                    />
-                    <Text style={styles.amenityText}>
-                      {typeof a === 'string' ? a : (a as any).name}
-                    </Text>
                   </View>
                 ))}
-              </View>
-            ) : null}
-          </DetailCard>
-        ) : null}
-
-        {/* Location card */}
-        <DetailCard title="Location" delay={50}>
-          <Text style={styles.address}>{fullAddressString}</Text>
-          <View style={styles.mapContainer}>
-            {Platform.OS === 'web' ? (
-              <View style={[styles.map, styles.mapPlaceholder]}>
-                <Ionicons
-                  name="location"
-                  size={48}
-                  color={colors.onSurfaceVariant}
-                />
-                <Text style={styles.mapPlaceholderText}>
-                  Map view not available on web
-                </Text>
-                <Text style={styles.addressSubText}>
-                  {facility.street}, {facility.city}
-                </Text>
-              </View>
-            ) : (
-              <MapView
-                style={styles.map}
-                provider={PROVIDER_GOOGLE}
-                initialRegion={{
-                  latitude: facility.latitude,
-                  longitude: facility.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                scrollEnabled={false}
-                zoomEnabled={false}
-                pitchEnabled={false}
-                rotateEnabled={false}
-              >
-                <Marker
-                  coordinate={{
-                    latitude: facility.latitude,
-                    longitude: facility.longitude,
-                  }}
-                  title={facility.name}
-                  description={facility.street}
-                />
-              </MapView>
+              </ScrollView>
             )}
-          </View>
-          {facility.accessInstructions ? (
-            <Text style={[styles.bodyText, { marginTop: 12 }]}>
-              {facility.accessInstructions}
-            </Text>
-          ) : null}
-          {facility.parkingInfo ? (
-            <View style={styles.parkingBox}>
-              <Ionicons name="car-outline" size={16} color={colors.primary} />
-              <Text style={styles.parkingText}>{facility.parkingInfo}</Text>
-            </View>
-          ) : null}
-          <View style={{ marginTop: 12 }}>
-            <GetDirectionsButton
-              latitude={facility.latitude}
-              longitude={facility.longitude}
-              address={fullAddressString}
-            />
-          </View>
-        </DetailCard>
 
-        {/* Facility map image */}
-        {facilityMapUrl || isOwner ? (
-          <DetailCard title="Facility map" delay={100}>
-            {facilityMapUrl ? (
-              <TouchableOpacity
-                onPress={() => setShowFullMap(true)}
-                style={styles.facilityMapThumb}
-                activeOpacity={0.8}
-              >
-                <OptimizedImage
-                  source={{ uri: facilityMapUrl }}
-                  style={styles.facilityMapImg}
-                  resizeMode="cover"
-                  fallback={
-                    <View style={styles.mapFallback}>
-                      <Ionicons
-                        name="map-outline"
-                        size={48}
-                        color={colors.onSurfaceVariant}
-                      />
-                      <Text style={styles.mapFallbackText}>
-                        Map unavailable
-                      </Text>
-                    </View>
-                  }
-                />
-                <View style={styles.facilityMapOverlay}>
-                  <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
-                  <Text style={styles.facilityMapOverlayText}>
-                    Tap to view full size
-                  </Text>
+            <Text style={s.sectionLabel}>GROUND NAME</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.heading,
+                    fontSize: 24,
+                    color: colors.ink,
+                  }}
+                >
+                  {facility.name}
+                </Text>
+              </View>
+            </View>
+
+            {facility.description ? (
+              <>
+                <Text style={s.sectionLabel}>DESCRIPTION</Text>
+                <View style={s.card}>
+                  <View style={{ padding: 16 }}>
+                    <Text
+                      style={{
+                        fontFamily: fonts.body,
+                        fontSize: 15,
+                        lineHeight: 22,
+                        color: colors.inkSoft,
+                      }}
+                    >
+                      {facility.description}
+                    </Text>
+                  </View>
                 </View>
-              </TouchableOpacity>
+              </>
             ) : null}
 
-            {/* Task 5.6 — Map upload controls for owner */}
-            {isOwner && (
-              <View style={styles.mapOwnerControls}>
-                <TouchableOpacity
-                  style={styles.mapUploadBtn}
-                  onPress={handleUploadMap}
-                  activeOpacity={0.7}
+            {/* Upcoming events */}
+            {events.length > 0 && (
+              <>
+                <Text style={s.sectionLabel}>UPCOMING EVENTS</Text>
+                <View style={s.card}>
+                  <View style={{ padding: 16 }}>
+                    {events.map(event => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        onPress={handleEventPress}
+                      />
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
+
+            {/* Owner reservations */}
+            {isOwner && <OwnerReservationsSection facilityId={facility.id} />}
+          </ScrollView>
+        </View>
+
+        {/* ── TAB 2 — Location ───────────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            <Text style={s.sectionLabel}>ADDRESS</Text>
+            <View style={s.card}>
+              <View style={{ padding: 16 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: 15,
+                    color: colors.ink,
+                  }}
                 >
-                  <Ionicons
-                    name="cloud-upload-outline"
-                    size={16}
-                    color={colors.cobalt}
-                  />
-                  <Text style={styles.mapUploadBtnText}>
-                    {facilityMapUrl ? 'Replace map' : 'Upload map'}
-                  </Text>
-                </TouchableOpacity>
-                {facilityMapUrl ? (
-                  <TouchableOpacity
-                    style={styles.mapRemoveBtn}
-                    onPress={handleDeleteMap}
-                    activeOpacity={0.7}
+                  {fullAddressString}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={s.sectionLabel}>MAP</Text>
+            <View style={s.card}>
+              <View
+                style={{ height: 200, borderRadius: 16, overflow: 'hidden' }}
+              >
+                {Platform.OS === 'web' ? (
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.surface,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
                   >
                     <Ionicons
-                      name="trash-outline"
-                      size={16}
-                      color={colors.heart}
+                      name="location"
+                      size={48}
+                      color={colors.inkSoft}
                     />
-                    <Text style={styles.mapRemoveBtnText}>Remove map</Text>
-                  </TouchableOpacity>
-                ) : null}
-                {/* Task 5.9 — inline map error */}
-                {mapError ? (
-                  <Text style={styles.inlineError}>{mapError}</Text>
-                ) : null}
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: colors.inkSoft,
+                        marginTop: 8,
+                      }}
+                    >
+                      Map view not available on web
+                    </Text>
+                  </View>
+                ) : (
+                  MapView && (
+                    <MapView
+                      style={{ width: '100%', height: '100%' }}
+                      provider={PROVIDER_GOOGLE}
+                      initialRegion={{
+                        latitude: facility.latitude,
+                        longitude: facility.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                      }}
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                    >
+                      <Marker
+                        coordinate={{
+                          latitude: facility.latitude,
+                          longitude: facility.longitude,
+                        }}
+                        title={facility.name}
+                        description={facility.street}
+                      />
+                    </MapView>
+                  )
+                )}
               </View>
-            )}
-          </DetailCard>
-        ) : null}
+            </View>
 
-        {/* Contact card */}
-        <DetailCard title="Contact" delay={200}>
-          {facility.owner && (
-            <PersonRow
-              name={`${facility.owner.firstName} ${facility.owner.lastName}`}
-              role="Facility Owner"
-            />
-          )}
-          {facility.contactPhone ? (
-            <TouchableOpacity
-              onPress={() => Linking.openURL(`tel:${facility.contactPhone}`)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.contactRow}>
+            {facility.accessInstructions ? (
+              <>
+                <Text style={s.sectionLabel}>ACCESS INSTRUCTIONS</Text>
+                <View style={s.card}>
+                  <View style={{ padding: 16 }}>
+                    <Text
+                      style={{
+                        fontFamily: fonts.body,
+                        fontSize: 15,
+                        lineHeight: 22,
+                        color: colors.inkSoft,
+                      }}
+                    >
+                      {facility.accessInstructions}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            ) : null}
+
+            {facility.parkingInfo ? (
+              <>
+                <Text style={s.sectionLabel}>PARKING</Text>
+                <View style={s.card}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: 16,
+                      gap: 8,
+                    }}
+                  >
+                    <Ionicons
+                      name="car-outline"
+                      size={16}
+                      color={colors.cobalt}
+                    />
+                    <Text
+                      style={{
+                        fontFamily: fonts.body,
+                        fontSize: 14,
+                        color: colors.ink,
+                        flex: 1,
+                      }}
+                    >
+                      {facility.parkingInfo}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            ) : null}
+
+            <View style={{ marginHorizontal: 16, marginTop: 12 }}>
+              <GetDirectionsButton
+                latitude={facility.latitude}
+                longitude={facility.longitude}
+                address={fullAddressString}
+              />
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* ── TAB 3 — Contact ────────────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {facility.contactName ||
+            facility.contactPhone ||
+            facility.contactEmail ||
+            facility.contactWebsite ? (
+              <>
+                <Text style={s.sectionLabel}>CONTACT INFO</Text>
+                <View style={s.card}>
+                  <View style={{ padding: 16 }}>
+                    {facility.contactName ? (
+                      <View style={s.contactRow}>
+                        <Ionicons
+                          name="person-outline"
+                          size={16}
+                          color={colors.cobalt}
+                        />
+                        <Text style={s.contactText}>
+                          {facility.contactName}
+                        </Text>
+                      </View>
+                    ) : null}
+                    {facility.contactPhone ? (
+                      <TouchableOpacity
+                        onPress={() =>
+                          Linking.openURL(`tel:${facility.contactPhone}`)
+                        }
+                        activeOpacity={0.7}
+                      >
+                        <View style={s.contactRow}>
+                          <Ionicons
+                            name="call-outline"
+                            size={16}
+                            color={colors.cobalt}
+                          />
+                          <Text
+                            style={[s.contactText, { color: colors.cobalt }]}
+                          >
+                            {facility.contactPhone}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ) : null}
+                    {facility.contactEmail ? (
+                      <TouchableOpacity
+                        onPress={() =>
+                          Linking.openURL(`mailto:${facility.contactEmail}`)
+                        }
+                        activeOpacity={0.7}
+                      >
+                        <View style={s.contactRow}>
+                          <Ionicons
+                            name="mail-outline"
+                            size={16}
+                            color={colors.cobalt}
+                          />
+                          <Text
+                            style={[s.contactText, { color: colors.cobalt }]}
+                          >
+                            {facility.contactEmail}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ) : null}
+                    {facility.contactWebsite ? (
+                      <TouchableOpacity
+                        onPress={() =>
+                          Linking.openURL(facility.contactWebsite!)
+                        }
+                        activeOpacity={0.7}
+                      >
+                        <View style={s.contactRow}>
+                          <Ionicons
+                            name="globe-outline"
+                            size={16}
+                            color={colors.cobalt}
+                          />
+                          <Text
+                            style={[s.contactText, { color: colors.cobalt }]}
+                          >
+                            {facility.contactWebsite}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+              </>
+            ) : (
+              <View style={{ padding: 40, alignItems: 'center' }}>
                 <Ionicons
                   name="call-outline"
-                  size={16}
-                  color={colors.primary}
+                  size={32}
+                  color={colors.inkFaint}
                 />
-                <Text style={styles.contactText}>{facility.contactPhone}</Text>
-              </View>
-            </TouchableOpacity>
-          ) : null}
-          {facility.contactEmail ? (
-            <TouchableOpacity
-              onPress={() => Linking.openURL(`mailto:${facility.contactEmail}`)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.contactRow}>
-                <Ionicons
-                  name="mail-outline"
-                  size={16}
-                  color={colors.primary}
-                />
-                <Text style={styles.contactText}>{facility.contactEmail}</Text>
-              </View>
-            </TouchableOpacity>
-          ) : null}
-          {facility.contactWebsite ? (
-            <TouchableOpacity
-              onPress={() => Linking.openURL(facility.contactWebsite!)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.contactRow}>
-                <Ionicons
-                  name="globe-outline"
-                  size={16}
-                  color={colors.primary}
-                />
-                <Text style={styles.contactText}>
-                  {facility.contactWebsite}
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: 14,
+                    color: colors.inkFaint,
+                    marginTop: 8,
+                  }}
+                >
+                  No contact info provided
                 </Text>
               </View>
-            </TouchableOpacity>
-          ) : null}
-        </DetailCard>
+            )}
+          </ScrollView>
+        </View>
 
-        {/* Cancellation policy */}
-        {showCancellationPolicy && (
-          <DetailCard title="Cancellation policy" delay={250}>
-            <CancellationPolicyDisplay
-              noticeWindowHours={facility.noticeWindowHours!}
-              teamPenaltyPct={facility.teamPenaltyPct!}
-              penaltyDestination={facility.penaltyDestination!}
-            />
-          </DetailCard>
-        )}
+        {/* ── TAB 4 — Site Details ───────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {/* Hours of operation */}
+            {facility.availabilitySlots &&
+              facility.availabilitySlots.length > 0 && (
+                <>
+                  <Text style={s.sectionLabel}>HOURS OF OPERATION</Text>
+                  <View style={s.card}>
+                    <View style={{ padding: 16 }}>
+                      {DAYS.map((day, idx) => {
+                        const hours = formatHoursForDay(idx);
+                        return (
+                          <View
+                            key={idx}
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              paddingVertical: 8,
+                              borderBottomWidth:
+                                idx < 6 ? StyleSheet.hairlineWidth : 0,
+                              borderBottomColor: colors.border,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontFamily: fonts.body,
+                                fontSize: 14,
+                                color: colors.ink,
+                                fontWeight: '600',
+                              }}
+                            >
+                              {day}
+                            </Text>
+                            <Text
+                              style={{
+                                fontFamily: fonts.body,
+                                fontSize: 14,
+                                color:
+                                  hours === 'Closed'
+                                    ? colors.inkFaint
+                                    : colors.inkSoft,
+                              }}
+                            >
+                              {hours ?? '—'}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </>
+              )}
 
-        {/* Upcoming events */}
-        {events.length > 0 && (
-          <DetailCard title="Upcoming events" delay={300}>
-            {events.map(event => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onPress={handleEventPress}
-              />
-            ))}
-          </DetailCard>
-        )}
+            {/* Sports */}
+            {facility.sportTypes && facility.sportTypes.length > 0 && (
+              <>
+                <Text style={s.sectionLabel}>SPORTS AVAILABLE</Text>
+                <View style={s.card}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      padding: 16,
+                      gap: 8,
+                    }}
+                  >
+                    {facility.sportTypes.map((sport: string) => (
+                      <View
+                        key={sport}
+                        style={{
+                          backgroundColor: colors.surface,
+                          borderRadius: 12,
+                          paddingHorizontal: 12,
+                          paddingVertical: 8,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <Text style={{ fontSize: 20 }}>
+                          {getSportEmoji(sport)}
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: fonts.label,
+                            fontSize: 13,
+                            color: colors.ink,
+                          }}
+                        >
+                          {getSportLabel(sport)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
 
-        {/* Owner reservations */}
-        {isOwner && (
-          <DetailCard title="Your reservations" delay={350}>
-            <OwnerReservationsSection facilityId={facility.id} />
-          </DetailCard>
-        )}
+            {/* Cancellation policy */}
+            {showCancellationPolicy && (
+              <>
+                <Text style={s.sectionLabel}>CANCELLATION POLICY</Text>
+                <View style={s.card}>
+                  <View style={{ padding: 16 }}>
+                    <CancellationPolicyDisplay
+                      noticeWindowHours={facility.noticeWindowHours!}
+                      teamPenaltyPct={facility.teamPenaltyPct!}
+                      penaltyDestination={facility.penaltyDestination!}
+                    />
+                  </View>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
 
-        {/* Spacer for fixed bottom button */}
-        <View style={{ height: 20 }} />
+        {/* ── TAB 5 — Courts / Fields ────────────────────────────────────── */}
+        <View style={{ width: screenWidth }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {/* Facility map */}
+            {facilityMapUrl ? (
+              <>
+                <Text style={s.sectionLabel}>FACILITY MAP</Text>
+                <View style={s.card}>
+                  <TouchableOpacity
+                    onPress={() => setShowFullMap(true)}
+                    activeOpacity={0.8}
+                  >
+                    <OptimizedImage
+                      source={{ uri: facilityMapUrl }}
+                      style={{ width: '100%', height: 200 }}
+                      resizeMode="cover"
+                      fallback={
+                        <View
+                          style={{
+                            width: '100%',
+                            height: 200,
+                            backgroundColor: colors.surface,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Ionicons
+                            name="map-outline"
+                            size={48}
+                            color={colors.inkSoft}
+                          />
+                        </View>
+                      }
+                    />
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        padding: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <Ionicons
+                        name="expand-outline"
+                        size={18}
+                        color="#FFFFFF"
+                      />
+                      <Text
+                        style={{
+                          color: '#FFFFFF',
+                          fontSize: 13,
+                          fontWeight: '600',
+                        }}
+                      >
+                        View Map
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : null}
+
+            {/* Courts list */}
+            {courts.length > 0 ? (
+              <>
+                <Text style={s.sectionLabel}>
+                  {getSurfaceName(primarySport).toUpperCase()}S
+                </Text>
+                {courts.map((court: any) => (
+                  <View key={court.id} style={s.card}>
+                    <View style={{ padding: 16 }}>
+                      <Text
+                        style={{
+                          fontFamily: fonts.heading,
+                          fontSize: 16,
+                          color: colors.ink,
+                          marginBottom: 4,
+                        }}
+                      >
+                        {court.name}
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: fonts.body,
+                          fontSize: 13,
+                          color: colors.inkSoft,
+                        }}
+                      >
+                        {getSportLabel(court.sportType)}{' '}
+                        {getSurfaceName(court.sportType)} •
+                        {court.isIndoor ? ' Indoor' : ' Outdoor'} • Capacity:{' '}
+                        {court.capacity}
+                      </Text>
+                      {court.pricePerHour ? (
+                        <Text
+                          style={{
+                            fontFamily: fonts.ui,
+                            fontSize: 14,
+                            color: colors.cobalt,
+                            marginTop: 4,
+                          }}
+                        >
+                          ${court.pricePerHour}/hr
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                ))}
+              </>
+            ) : (
+              <View style={{ padding: 40, alignItems: 'center' }}>
+                <Ionicons
+                  name="grid-outline"
+                  size={32}
+                  color={colors.inkFaint}
+                />
+                <Text
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: 14,
+                    color: colors.inkFaint,
+                    marginTop: 8,
+                  }}
+                >
+                  No {getSurfaceName(primarySport).toLowerCase()}s listed
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
       </ScrollView>
 
       {/* Fixed bottom — Edit for owner, Book for non-owner */}
       {isOwner ? (
-        <View style={styles.ownerBottomBar}>
+        <View style={s.ownerBottomBar}>
           <TouchableOpacity
-            style={styles.editBtn}
+            style={s.editBtn}
             onPress={handleEdit}
             activeOpacity={0.7}
           >
             <Ionicons name="create-outline" size={18} color={colors.white} />
-            <Text style={styles.editBtnText}>Edit</Text>
+            <Text style={s.editBtnText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.deleteBtn}
+            style={s.deleteBtn}
             onPress={handleDeleteGround}
             activeOpacity={0.7}
           >
             <Ionicons name="trash-outline" size={18} color={colors.heart} />
-            <Text style={styles.deleteBtnText}>Delete</Text>
+            <Text style={s.deleteBtnText}>Delete</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -763,40 +953,59 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
       {/* Full-size map modal */}
       <Modal
         visible={showFullMap}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setShowFullMap(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Facility Layout</Text>
+        <View style={s.modalContainer}>
+          <View style={s.modalContent}>
+            <View style={s.modalHeader}>
+              <Text style={s.modalTitle}>Facility Layout</Text>
               <TouchableOpacity
-                style={styles.closeButton}
+                style={{ padding: 4 }}
                 onPress={() => setShowFullMap(false)}
               >
-                <Ionicons name="close" size={28} color={colors.onSurface} />
+                <Ionicons name="close" size={28} color={colors.ink} />
               </TouchableOpacity>
             </View>
             <ScrollView
-              style={styles.modalScrollView}
-              contentContainerStyle={styles.modalScrollContent}
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: 16,
+              }}
               maximumZoomScale={3}
               minimumZoomScale={1}
             >
               {facilityMapUrl && (
                 <OptimizedImage
                   source={{ uri: facilityMapUrl }}
-                  style={styles.fullMapImage}
+                  style={{ width: '100%', height: 600 }}
                   resizeMode="contain"
                   fallback={
-                    <View style={styles.mapFallback}>
+                    <View
+                      style={{
+                        width: '100%',
+                        height: 200,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: colors.surface,
+                      }}
+                    >
                       <Ionicons
                         name="map-outline"
                         size={64}
-                        color={colors.onSurfaceVariant}
+                        color={colors.inkSoft}
                       />
-                      <Text style={styles.mapFallbackText}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          color: colors.inkSoft,
+                          marginTop: 12,
+                        }}
+                      >
                         Map unavailable
                       </Text>
                     </View>
@@ -811,135 +1020,74 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
   },
-  scrollContent: {
-    paddingBottom: 100,
+
+  /* ── Tab bar ── */
+  tabBarOuter: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  heroImage: {
-    width: '100%',
-    height: 250,
-  },
-  ratingRow: {
+  tabBarContent: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  tabItem: {
+    height: 44,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    marginTop: 8,
-  },
-  stars: {
-    flexDirection: 'row',
-    marginRight: Spacing.sm,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-  },
-  bodyText: {
-    fontSize: 15,
-    color: colors.onSurfaceVariant,
-    lineHeight: 22,
-  },
-  amenitiesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 12,
-  },
-  amenityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '50%',
-    marginBottom: 8,
-    gap: 6,
-  },
-  amenityText: {
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-  },
-  address: {
-    fontSize: 15,
-    color: colors.onSurface,
-    marginBottom: 12,
-  },
-  mapContainer: {
-    height: 200,
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
-  mapPlaceholder: {
-    backgroundColor: colors.surfaceContainerLow,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mapPlaceholderText: {
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-    marginTop: 8,
-  },
-  addressSubText: {
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  parkingBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    padding: 12,
-    backgroundColor: colors.primaryFixed,
-    borderRadius: 8,
-    gap: 8,
-  },
-  parkingText: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.onPrimaryFixed,
-  },
-  facilityMapThumb: {
-    borderRadius: 8,
-    overflow: 'hidden',
     position: 'relative',
   },
-  facilityMapImg: {
-    width: '100%',
-    height: 200,
+  tabLabel: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.inkSoft,
   },
-  facilityMapOverlay: {
+  tabLabelActive: {
+    color: colors.cobalt,
+  },
+  tabUnderline: {
     position: 'absolute',
     bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+    left: 16,
+    right: 16,
+    height: 2,
+    backgroundColor: colors.cobalt,
+    borderRadius: 1,
   },
-  facilityMapOverlayText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
+
+  /* ── Section label ── */
+  sectionLabel: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkSoft,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 8,
   },
-  mapFallback: {
-    width: '100%',
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLow,
+
+  /* ── Card ── */
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  mapFallbackText: {
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-    marginTop: 12,
-  },
+
+  /* ── Contact ── */
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -947,83 +1095,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   contactText: {
+    fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
     flex: 1,
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '95%',
-    height: '90%',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLowest,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.onSurface,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  modalScrollView: {
-    flex: 1,
-  },
-  modalScrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  fullMapImage: {
-    width: '100%',
-    height: 600,
-  },
-  // Owner edit/delete actions
-  ownerActions: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    gap: 10,
-  },
-  ownerEditBtn: {
-    backgroundColor: colors.cobalt,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center' as const,
-  },
-  ownerEditBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  ownerDeleteBtn: {
-    borderWidth: 2,
-    borderColor: colors.heart,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center' as const,
-  },
-  ownerDeleteBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 16,
-    color: colors.heart,
-  },
+
+  /* ── Owner bottom bar ── */
   ownerBottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -1058,102 +1136,32 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.heart },
 
-  // Photo strip styles (tasks 5.2, 5.3, 5.5)
-  photoStrip: {
-    paddingVertical: 16,
-  },
-  photoStripContent: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  photoItem: {
-    position: 'relative',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  photoImg: {
-    width: 280,
-    height: 220,
-    borderRadius: 8,
-  },
-  photoFallback: {
-    width: 280,
-    height: 220,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceContainerLow,
+  /* ── Modal ── */
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  photoDeleteBtn: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+  modalContent: {
+    width: '95%',
+    height: '90%',
+    backgroundColor: colors.white,
     borderRadius: 12,
+    overflow: 'hidden',
   },
-  addPhotosRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  addPhotosBtn: {
+  modalHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.cobalt,
-    alignSelf: 'flex-start' as const,
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
   },
-  addPhotosBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.cobalt,
-  },
-
-  // Map owner controls (tasks 5.6, 5.7, 5.8)
-  mapOwnerControls: {
-    marginTop: 12,
-    gap: 8,
-  },
-  mapUploadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.cobalt,
-    alignSelf: 'flex-start' as const,
-  },
-  mapUploadBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.cobalt,
-  },
-  mapRemoveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.heart,
-    alignSelf: 'flex-start' as const,
-  },
-  mapRemoveBtnText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    color: colors.heart,
-  },
-
-  // Inline error (task 5.9)
-  inlineError: {
-    fontSize: 13,
-    color: colors.heart,
-    marginTop: 6,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.ink,
   },
 });

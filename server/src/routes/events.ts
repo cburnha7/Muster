@@ -1364,8 +1364,8 @@ router.post('/:id/book', async (req, res) => {
           where: { id: userId },
           select: { firstName: true, lastName: true },
         });
-        const totalParticipants = await prisma.gameParticipation.count({
-          where: { eventId: id },
+        const totalParticipants = await prisma.booking.count({
+          where: { eventId: id, status: 'confirmed' },
         });
         await MessagingService.addParticipant(conv.id, userId, 'MEMBER');
         if (user) {
@@ -1438,8 +1438,8 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
             conv.id,
             bookingToCancel.userId
           );
-          const remaining = await prisma.gameParticipation.count({
-            where: { eventId: id },
+          const remaining = await prisma.booking.count({
+            where: { eventId: id, status: 'confirmed' },
           });
           if (user) {
             const eventRecord = await prisma.event.findUnique({
