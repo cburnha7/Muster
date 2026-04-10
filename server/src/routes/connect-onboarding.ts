@@ -6,7 +6,7 @@
 
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { authMiddleware } from '../middleware/auth';
+import { optionalAuthMiddleware } from '../middleware/auth';
 import {
   EntityType,
   startOnboarding,
@@ -16,8 +16,7 @@ import {
 
 const router = Router();
 
-// All endpoints require authentication
-router.use(authMiddleware);
+router.use(optionalAuthMiddleware);
 
 // ---------------------------------------------------------------------------
 // POST /onboard — Start or resume Connect onboarding
@@ -25,12 +24,15 @@ router.use(authMiddleware);
 
 router.post('/onboard', async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user?.userId;
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
     const { entityType, entityId, refreshUrl, returnUrl } = req.body;
 
     if (!entityType || !entityId || !refreshUrl || !returnUrl) {
       return res.status(400).json({
-        error: 'Missing required fields: entityType, entityId, refreshUrl, returnUrl',
+        error:
+          'Missing required fields: entityType, entityId, refreshUrl, returnUrl',
       });
     }
 
@@ -41,7 +43,12 @@ router.post('/onboard', async (req: Request, res: Response) => {
     }
 
     const result = await startOnboarding(
-      prisma, userId, entityType as EntityType, entityId, refreshUrl, returnUrl,
+      prisma,
+      userId,
+      entityType as EntityType,
+      entityId,
+      refreshUrl,
+      returnUrl
     );
 
     if (result.error) {
@@ -51,7 +58,9 @@ router.post('/onboard', async (req: Request, res: Response) => {
     return res.json({ url: result.url });
   } catch (err) {
     console.error('Connect onboarding error:', err);
-    return res.status(500).json({ error: 'Failed to start Connect onboarding' });
+    return res
+      .status(500)
+      .json({ error: 'Failed to start Connect onboarding' });
   }
 });
 
@@ -59,31 +68,41 @@ router.post('/onboard', async (req: Request, res: Response) => {
 // GET /status/:entityType/:entityId — Check onboarding status
 // ---------------------------------------------------------------------------
 
-router.get('/status/:entityType/:entityId', async (req: Request, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { entityType, entityId } = req.params;
+router.get(
+  '/status/:entityType/:entityId',
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+      if (!userId)
+        return res.status(401).json({ error: 'Authentication required' });
+      const { entityType, entityId } = req.params;
 
-    if (!['roster', 'facility', 'league'].includes(entityType)) {
-      return res.status(400).json({
-        error: 'Invalid entityType. Must be roster, facility, or league',
-      });
+      if (!['roster', 'facility', 'league'].includes(entityType)) {
+        return res.status(400).json({
+          error: 'Invalid entityType. Must be roster, facility, or league',
+        });
+      }
+
+      const result = await checkOnboardingStatus(
+        prisma,
+        userId,
+        entityType as EntityType,
+        entityId
+      );
+
+      if (result.error) {
+        return res.status(result.status || 500).json({ error: result.error });
+      }
+
+      return res.json(result.data);
+    } catch (err) {
+      console.error('Connect status error:', err);
+      return res
+        .status(500)
+        .json({ error: 'Failed to retrieve Connect status' });
     }
-
-    const result = await checkOnboardingStatus(
-      prisma, userId, entityType as EntityType, entityId,
-    );
-
-    if (result.error) {
-      return res.status(result.status || 500).json({ error: result.error });
-    }
-
-    return res.json(result.data);
-  } catch (err) {
-    console.error('Connect status error:', err);
-    return res.status(500).json({ error: 'Failed to retrieve Connect status' });
   }
-});
+);
 
 // ---------------------------------------------------------------------------
 // GET /accounts — List all Connect accounts for the current user
@@ -91,7 +110,9 @@ router.get('/status/:entityType/:entityId', async (req: Request, res: Response) 
 
 router.get('/accounts', async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user?.userId;
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
     const accounts = await listConnectAccounts(prisma, userId);
     return res.json({ accounts });
   } catch (err) {

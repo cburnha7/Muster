@@ -6,11 +6,15 @@ import { verificationService } from '../services/VerificationService';
 import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
 import {
   uploadMap,
+  uploadPhoto,
   validateImageFile,
+  validatePhotoFile,
   generateImageUrl,
   processMapImage,
   deleteImageFiles,
 } from '../services/ImageUploadService';
+import fs from 'fs';
+import path from 'path';
 import { isValidPolicyHours } from '../services/cancellation-window';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 import { sendError, ErrorCode, asyncHandler } from '../utils/errors';
@@ -97,6 +101,9 @@ router.get('/:id', async (req, res) => {
           orderBy: { priority: 'desc' },
         },
         availabilitySlots: true,
+        photos: {
+          orderBy: { displayOrder: 'asc' },
+        },
         accessImages: {
           orderBy: { displayOrder: 'asc' },
         },
@@ -804,24 +811,20 @@ router.post('/', requireNonDependent, async (req, res) => {
         existingFacilityCount >= 3 &&
         (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))
       ) {
-        return res
-          .status(403)
-          .json({
-            error: 'Plan upgrade required',
-            requiredPlan: 'facility_pro',
-            currentPlan: userPlan,
-          });
+        return res.status(403).json({
+          error: 'Plan upgrade required',
+          requiredPlan: 'facility_pro',
+          currentPlan: userPlan,
+        });
       } else if (
         !isActive ||
         userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')
       ) {
-        return res
-          .status(403)
-          .json({
-            error: 'Plan upgrade required',
-            requiredPlan: 'facility_basic',
-            currentPlan: userPlan,
-          });
+        return res.status(403).json({
+          error: 'Plan upgrade required',
+          requiredPlan: 'facility_basic',
+          currentPlan: userPlan,
+        });
       }
     }
 
@@ -1252,6 +1255,26 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
       }
     }
 
+    // Delete all facility photo files from disk
+    const facilityPhotos = await prisma.facilityPhoto.findMany({
+      where: { facilityId: id },
+      select: { imageUrl: true },
+    });
+    for (const photo of facilityPhotos) {
+      try {
+        const photoPath = path.join(
+          __dirname,
+          '../../uploads',
+          photo.imageUrl.replace('/uploads/', '')
+        );
+        if (fs.existsSync(photoPath)) {
+          fs.unlinkSync(photoPath);
+        }
+      } catch (err) {
+        console.error('Error deleting photo file:', err);
+      }
+    }
+
     // Clean up references that don't cascade before deleting
     await prisma.$transaction(async tx => {
       // Nullify facility references on events
@@ -1574,6 +1597,156 @@ router.get('/:id/availability/check', async (req, res) => {
 });
 
 // ============================================================================
+// FACILITY PHOTO ROUTES
+// ============================================================================
+
+// Upload facility photos
+router.post(
+  '/:id/photos',
+  uploadPhoto.array('photos', 20),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.headers['x-user-id'] as string;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const facility = await prisma.facility.findUnique({
+        where: { id },
+        select: { id: true, ownerId: true },
+      });
+
+      if (!facility) {
+        return res.status(404).json({ error: 'Facility not found' });
+      }
+
+      if (facility.ownerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can upload photos' });
+      }
+
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: 'No photo files provided' });
+      }
+
+      // Validate each file before creating DB records
+      for (const file of files) {
+        const error = validatePhotoFile(file);
+        if (error) {
+          // Clean up all uploaded files on validation failure
+          for (const f of files) {
+            try {
+              if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
+            } catch {}
+          }
+          return res.status(400).json({ error });
+        }
+      }
+
+      // Get current max displayOrder for this facility
+      const lastPhoto = await prisma.facilityPhoto.findFirst({
+        where: { facilityId: id },
+        orderBy: { displayOrder: 'desc' },
+        select: { displayOrder: true },
+      });
+      const baseOrder = (lastPhoto?.displayOrder ?? -1) + 1;
+
+      // Create DB records
+      const createdPhotos = await Promise.all(
+        files.map((file, index) => {
+          const imageUrl = generateImageUrl(file.path);
+          return prisma.facilityPhoto.create({
+            data: {
+              facilityId: id,
+              imageUrl,
+              displayOrder: baseOrder + index,
+            },
+            select: { id: true, imageUrl: true },
+          });
+        })
+      );
+
+      res.status(201).json(createdPhotos);
+    } catch (error: any) {
+      console.error('Upload facility photos error:', error);
+      // Clean up any uploaded files on error
+      const files = req.files as Express.Multer.File[] | undefined;
+      if (files) {
+        for (const f of files) {
+          try {
+            if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
+          } catch {}
+        }
+      }
+      res
+        .status(500)
+        .json({ error: error.message || 'Failed to upload photos' });
+    }
+  }
+);
+
+// Delete a facility photo
+router.delete('/:id/photos/:photoId', async (req, res) => {
+  try {
+    const { id, photoId } = req.params;
+    const userId = req.headers['x-user-id'] as string;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const facility = await prisma.facility.findUnique({
+      where: { id },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    if (facility.ownerId !== userId) {
+      return res
+        .status(403)
+        .json({ error: 'Only the facility owner can delete photos' });
+    }
+
+    const photo = await prisma.facilityPhoto.findFirst({
+      where: { id: photoId, facilityId: id },
+    });
+
+    if (!photo) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    // Delete file from disk
+    try {
+      const photoPath = path.join(
+        __dirname,
+        '../../uploads',
+        photo.imageUrl.replace('/uploads/', '')
+      );
+      if (fs.existsSync(photoPath)) {
+        fs.unlinkSync(photoPath);
+      }
+    } catch (err) {
+      console.error('Error deleting photo file:', err);
+    }
+
+    // Delete DB record
+    await prisma.facilityPhoto.delete({ where: { id: photoId } });
+
+    res.status(200).json({ message: 'Photo deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete facility photo error:', error);
+    res.status(500).json({ error: error.message || 'Failed to delete photo' });
+  }
+});
+
+// ============================================================================
 // FACILITY MAP ROUTES
 // ============================================================================
 
@@ -1809,11 +1982,9 @@ router.put(
         teamPenaltyPct < 0 ||
         teamPenaltyPct > 100
       ) {
-        return res
-          .status(400)
-          .json({
-            error: 'teamPenaltyPct must be an integer between 0 and 100',
-          });
+        return res.status(400).json({
+          error: 'teamPenaltyPct must be an integer between 0 and 100',
+        });
       }
       if (!VALID_PENALTY_DESTINATIONS.includes(penaltyDestination)) {
         return res.status(400).json({

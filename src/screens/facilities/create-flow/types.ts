@@ -1,5 +1,9 @@
 import { SportType } from '../../../types';
 
+// ── Media file shape ──
+
+export type MediaFile = { uri: string; name: string; type: string };
+
 // ── Court & Hours shapes ──
 
 export interface CourtFormData {
@@ -46,6 +50,9 @@ export interface FacilityWizardState {
   waiverRequired: boolean;
   waiverFileName: string;
   waiverFileUri: string;
+  // Pending media (collected in Step 1, uploaded after facility creation)
+  pendingPhotos: MediaFile[];
+  pendingMapFile: MediaFile | null;
   // Submission
   isSubmitting: boolean;
   showSuccess: boolean;
@@ -64,7 +71,15 @@ export type FacilityWizardAction =
   | { type: 'PREV_STEP' }
   | { type: 'SUBMIT_START' }
   | { type: 'SUBMIT_SUCCESS'; facilityId: string }
-  | { type: 'SUBMIT_FAIL' };
+  | { type: 'SUBMIT_FAIL' }
+  | {
+      type: 'SET_PENDING_PHOTOS';
+      photos: Array<{ uri: string; name: string; type: string }>;
+    }
+  | {
+      type: 'SET_PENDING_MAP';
+      file: { uri: string; name: string; type: string } | null;
+    };
 
 // ── Initial state factory ──
 
@@ -90,6 +105,8 @@ export function createInitialFacilityState(): FacilityWizardState {
     waiverRequired: false,
     waiverFileName: '',
     waiverFileUri: '',
+    pendingPhotos: [],
+    pendingMapFile: null,
     isSubmitting: false,
     showSuccess: false,
     createdFacilityId: null,

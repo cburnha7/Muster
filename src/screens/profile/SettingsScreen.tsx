@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,351 +8,1231 @@ import {
   Switch,
   Alert,
   Linking,
+  ActivityIndicator,
+  useWindowDimensions,
+  Platform,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
-import { PurchaseHistorySection } from '../../components/profile/PurchaseHistorySection';
-import { UserConnectSection } from '../../components/profile/UserConnectSection';
-import { ConnectAccountsSection } from '../../components/profile/ConnectAccountsSection';
-import { InsuranceDocumentsSection } from '../../components/profile/InsuranceDocumentsSection';
-import { InsuranceDocumentForm } from '../../components/profile/InsuranceDocumentForm';
-import { userService } from '../../services/api/UserService';
-import { loggingService } from '../../services/LoggingService';
+import * as StoreReview from 'expo-store-review';
+import { colors, fonts, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
+import { userService } from '../../services/api/UserService';
 import { setUser } from '../../store/slices/authSlice';
-import { colors, fonts } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
+import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocumentsApi';
+import { loggingService } from '../../services/LoggingService';
+import appJson from '../../../app.json';
 import type { OnboardingIntent } from '../../navigation/types';
 
-// ── Helpers ──
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+// entityType values as accepted by the server: 'facility' | 'league' | 'roster'
+// We display 'facility' as "Grounds" in the UI.
+interface ConnectStatus {
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+}
+
+interface ConnectAccount {
+  entityType: 'facility' | 'league' | 'roster';
+  entityId: string;
+  entityName: string;
+  accountId: string | null;
+  status: ConnectStatus | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  'Accounts',
+  'Documents',
+  'Preferences',
+  'Account Books',
+  'About',
+] as const;
+
+const INTENT_OPTIONS: Array<{
+  key: OnboardingIntent;
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle: string;
+}> = [
+  {
+    key: 'PLAYER',
+    icon: 'basketball-outline',
+    title: 'Find games to play',
+    subtitle: 'Browse and join pickup games near me',
+  },
+  {
+    key: 'CAPTAIN',
+    icon: 'clipboard-outline',
+    title: 'Organize my roster',
+    subtitle: 'Manage rosters and schedule games',
+  },
+  {
+    key: 'GUARDIAN',
+    icon: 'people-outline',
+    title: "Manage my kid's sports",
+    subtitle: 'Schedules, RSVPs, and logistics',
+  },
+  {
+    key: 'COMMISSIONER',
+    icon: 'trophy-outline',
+    title: 'Run a league',
+    subtitle: 'Organize seasons, standings, and playoffs',
+  },
+  {
+    key: 'FACILITY_OWNER',
+    icon: 'business-outline',
+    title: 'List my ground',
+    subtitle: 'Manage courts, bookings, and availability',
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared sub-components
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface MenuRowProps {
   icon: keyof typeof Ionicons.glyphMap;
+  iconBg?: string;
+  iconColor?: string;
   label: string;
+  labelColor?: string;
+  subtitle?: string;
   onPress?: () => void;
-  value?: string;
   chevron?: boolean;
-  color?: string;
-  disabled?: boolean;
+  rightValue?: string;
+  badge?: number | null;
   isLast?: boolean;
 }
 
-function MenuRow({ icon, label, onPress, value, chevron = true, color, disabled, isLast }: MenuRowProps) {
+function MenuRow({
+  icon,
+  iconBg,
+  iconColor,
+  label,
+  labelColor,
+  subtitle,
+  onPress,
+  chevron = true,
+  rightValue,
+  badge,
+  isLast,
+}: MenuRowProps) {
   return (
     <TouchableOpacity
-      style={[styles.menuRow, isLast && styles.menuRowLast]}
+      style={[s.row, isLast && s.rowLast]}
       onPress={onPress}
       activeOpacity={onPress ? 0.6 : 1}
-      disabled={disabled || !onPress}
+      disabled={!onPress}
     >
-      <View style={[styles.menuIconWrap, color ? { backgroundColor: color + '15' } : undefined]}>
-        <Ionicons name={icon} size={18} color={color ?? colors.onSurfaceVariant} />
+      <View style={[s.iconWrap, { backgroundColor: iconBg ?? colors.surface }]}>
+        <Ionicons name={icon} size={18} color={iconColor ?? colors.inkSoft} />
       </View>
-      <Text style={[styles.menuLabel, color ? { color } : undefined]} numberOfLines={1}>
-        {label}
-      </Text>
-      {value && <Text style={styles.menuValue}>{value}</Text>}
-      {chevron && !value && <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />}
+      <View style={{ flex: 1 }}>
+        <Text
+          style={[s.rowLabel, labelColor ? { color: labelColor } : undefined]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+        {subtitle ? <Text style={s.rowSubtitle}>{subtitle}</Text> : null}
+      </View>
+      {badge != null ? (
+        <View style={s.badge}>
+          <Text style={s.badgeText}>{badge}</Text>
+        </View>
+      ) : null}
+      {rightValue ? <Text style={s.rowValue}>{rightValue}</Text> : null}
+      {chevron && !rightValue ? (
+        <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+      ) : null}
     </TouchableOpacity>
   );
 }
 
 interface ToggleRowProps {
   icon: keyof typeof Ionicons.glyphMap;
+  iconBg?: string;
   label: string;
   value: boolean;
   onValueChange: (v: boolean) => void;
   isLast?: boolean;
 }
 
-function ToggleRow({ icon, label, value, onValueChange, isLast }: ToggleRowProps) {
+function ToggleRow({
+  icon,
+  iconBg,
+  label,
+  value,
+  onValueChange,
+  isLast,
+}: ToggleRowProps) {
   return (
-    <View style={[styles.menuRow, isLast && styles.menuRowLast]}>
-      <View style={styles.menuIconWrap}>
-        <Ionicons name={icon} size={18} color={colors.onSurfaceVariant} />
+    <View style={[s.row, isLast && s.rowLast]}>
+      <View style={[s.iconWrap, { backgroundColor: iconBg ?? colors.surface }]}>
+        <Ionicons name={icon} size={18} color={colors.inkSoft} />
       </View>
-      <Text style={styles.menuLabel}>{label}</Text>
+      <Text style={[s.rowLabel, { flex: 1 }]}>{label}</Text>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: colors.surfaceContainerHigh, true: colors.primary + '50' }}
-        thumbColor={value ? colors.primary : colors.surfaceContainerLow}
+        trackColor={{ false: colors.border, true: colors.cobalt + '50' }}
+        thumbColor={value ? colors.cobalt : colors.inkFaint}
         style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
       />
     </View>
   );
 }
 
-// ── Screen ──
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab Bar
+// ─────────────────────────────────────────────────────────────────────────────
 
-const INTENT_OPTIONS: Array<{ key: OnboardingIntent; icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string }> = [
-  { key: 'PLAYER', icon: 'basketball-outline', title: 'Find games to play', subtitle: 'Browse and join pickup games near me' },
-  { key: 'CAPTAIN', icon: 'clipboard-outline', title: 'Organize my team', subtitle: 'Manage rosters and schedule games' },
-  { key: 'GUARDIAN', icon: 'people-outline', title: "Manage my kid's sports", subtitle: 'Schedules, RSVPs, and logistics' },
-  { key: 'COMMISSIONER', icon: 'trophy-outline', title: 'Run a league', subtitle: 'Organize seasons, standings, and playoffs' },
-  { key: 'FACILITY_OWNER', icon: 'business-outline', title: 'List my facility', subtitle: 'Manage courts, bookings, and availability' },
-];
+interface TabBarProps {
+  activeIndex: number;
+  onPress: (index: number) => void;
+}
+
+function TabBar({ activeIndex, onPress }: TabBarProps) {
+  return (
+    <View style={s.tabBarOuter}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={s.tabBarContent}
+      >
+        {TABS.map((tab, i) => {
+          const active = i === activeIndex;
+          return (
+            <TouchableOpacity
+              key={tab}
+              style={s.tabItem}
+              onPress={() => onPress(i)}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+                {tab}
+              </Text>
+              {active && <View style={s.tabUnderline} />}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 1 — ACCOUNTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Derive display status from a ConnectAccount
+function getConnectState(
+  account: ConnectAccount
+): 'connected' | 'incomplete' | 'not_connected' {
+  if (!account.accountId || !account.status) return 'not_connected';
+  if (account.status.chargesEnabled) return 'connected';
+  if (account.status.detailsSubmitted) return 'incomplete';
+  return 'not_connected';
+}
+
+// ── Animated entity row ──────────────────────────────────────────────────────
+
+interface EntityRowProps {
+  account: ConnectAccount;
+  isLast: boolean;
+  onboardingId: string | null;
+  onOnboard: (
+    entityType: ConnectAccount['entityType'],
+    entityId: string
+  ) => void;
+}
+
+function EntityRow({
+  account,
+  isLast,
+  onboardingId,
+  onOnboard,
+}: EntityRowProps) {
+  const state = getConnectState(account);
+  const isOnboarding = onboardingId === account.entityId;
+
+  // Animated fill: 0 = ghost, 1 = filled cobalt
+  const fillAnim = useRef(
+    new Animated.Value(state === 'connected' ? 1 : 0)
+  ).current;
+
+  // When state transitions to connected, animate the button fill
+  useEffect(() => {
+    Animated.timing(fillAnim, {
+      toValue: state === 'connected' ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [state]);
+
+  const btnBg = fillAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['transparent', colors.cobalt],
+  });
+  const btnBorderColor = colors.cobalt;
+  const btnTextColor = fillAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.cobalt, colors.white],
+  });
+
+  let statusText = 'Not connected';
+  let statusColor = colors.inkFaint;
+  if (state === 'connected') {
+    statusText = 'Connected · payouts enabled';
+    statusColor = colors.pine;
+  } else if (state === 'incomplete') {
+    statusText = 'Setup incomplete';
+    statusColor = colors.gold;
+  }
+
+  const btnLabel = state === 'connected' ? 'Manage' : 'Connect';
+
+  return (
+    <View style={[s.row, isLast && s.rowLast]}>
+      <View style={{ flex: 1 }}>
+        <Text style={s.entityName}>{account.entityName}</Text>
+        <Text style={[s.entityStatus, { color: statusColor }]}>
+          {statusText}
+        </Text>
+      </View>
+      <TouchableOpacity
+        onPress={() => onOnboard(account.entityType, account.entityId)}
+        disabled={isOnboarding}
+        activeOpacity={0.7}
+      >
+        <Animated.View
+          style={[
+            s.entityBtn,
+            { backgroundColor: btnBg, borderColor: btnBorderColor },
+          ]}
+        >
+          {isOnboarding ? (
+            <ActivityIndicator
+              size="small"
+              color={state === 'connected' ? colors.white : colors.cobalt}
+            />
+          ) : (
+            <Animated.Text style={[s.entityBtnText, { color: btnTextColor }]}>
+              {btnLabel}
+            </Animated.Text>
+          )}
+        </Animated.View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ── Account group ────────────────────────────────────────────────────────────
+
+interface AccountGroupProps {
+  label: string;
+  dotColor: string;
+  entities: ConnectAccount[];
+  onboardingId: string | null;
+  onOnboard: (
+    entityType: ConnectAccount['entityType'],
+    entityId: string
+  ) => void;
+  loading: boolean;
+}
+
+function AccountGroup({
+  label,
+  dotColor,
+  entities,
+  onboardingId,
+  onOnboard,
+  loading,
+}: AccountGroupProps) {
+  return (
+    <View>
+      <View style={s.groupHeader}>
+        <View style={[s.groupDot, { backgroundColor: dotColor }]} />
+        <Text style={s.groupHeaderText}>{label}</Text>
+      </View>
+      {loading ? (
+        <View style={s.groupLoadingRow}>
+          <ActivityIndicator size="small" color={colors.cobalt} />
+        </View>
+      ) : entities.length === 0 ? (
+        <View style={[s.row, s.rowLast]}>
+          <Text style={s.emptyText}>No {label} yet</Text>
+        </View>
+      ) : (
+        entities.map((account, idx) => (
+          <EntityRow
+            key={`${account.entityType}-${account.entityId}`}
+            account={account}
+            isLast={idx === entities.length - 1}
+            onboardingId={onboardingId}
+            onOnboard={onOnboard}
+          />
+        ))
+      )}
+    </View>
+  );
+}
+
+// ── Accounts tab ─────────────────────────────────────────────────────────────
+
+interface AccountsTabProps {
+  userId: string;
+  token: string | null;
+  navigation: any;
+  deleting: boolean;
+  onDeleteAccount: () => void;
+}
+
+function AccountsTab({
+  userId,
+  token,
+  navigation,
+  deleting,
+  onDeleteAccount,
+}: AccountsTabProps) {
+  const [accounts, setAccounts] = useState<ConnectAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [onboardingId, setOnboardingId] = useState<string | null>(null);
+
+  // ── Auth headers helper ──
+  const authHeaders = useCallback((): Record<string, string> => {
+    const h: Record<string, string> = { 'x-user-id': userId };
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    return h;
+  }, [userId, token]);
+
+  // ── Load all accounts from /connect/accounts ──
+  const loadAccounts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/connect/accounts`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error('Failed to load accounts');
+      const data = await res.json();
+      setAccounts(data.accounts ?? []);
+    } catch (err) {
+      console.error('loadAccounts error', err);
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [authHeaders]);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
+  useFocusEffect(
+    useCallback(() => {
+      loadAccounts();
+    }, [loadAccounts])
+  );
+
+  // ── Re-fetch a single entity's status after returning from Stripe ──
+  const refreshEntityStatus = useCallback(
+    async (entityType: ConnectAccount['entityType'], entityId: string) => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/connect/status/${entityType}/${entityId}`,
+          { headers: authHeaders() }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        // data shape: { onboarded: boolean, chargesEnabled?, payoutsEnabled?, detailsSubmitted? }
+        setAccounts(prev =>
+          prev.map(a => {
+            if (a.entityId !== entityId || a.entityType !== entityType)
+              return a;
+            if (!data.onboarded) return { ...a, accountId: null, status: null };
+            return {
+              ...a,
+              accountId: data.accountId ?? a.accountId,
+              status: {
+                chargesEnabled: data.chargesEnabled ?? false,
+                payoutsEnabled: data.payoutsEnabled ?? false,
+                detailsSubmitted: data.detailsSubmitted ?? false,
+              },
+            };
+          })
+        );
+      } catch (err) {
+        console.error('refreshEntityStatus error', err);
+      }
+    },
+    [authHeaders]
+  );
+
+  // ── Deep-link listener: muster://settings/accounts ──
+  // When the user returns from Stripe, re-fetch the entity that was being onboarded.
+  const pendingOnboardRef = useRef<{
+    entityType: ConnectAccount['entityType'];
+    entityId: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const handleUrl = ({ url }: { url: string }) => {
+      if (!url.includes('settings/accounts')) return;
+      const pending = pendingOnboardRef.current;
+      if (pending) {
+        refreshEntityStatus(pending.entityType, pending.entityId);
+        pendingOnboardRef.current = null;
+      }
+    };
+    const sub = Linking.addEventListener('url', handleUrl);
+    return () => sub.remove();
+  }, [refreshEntityStatus]);
+
+  // ── Onboard handler ──
+  const handleOnboard = useCallback(
+    async (entityType: ConnectAccount['entityType'], entityId: string) => {
+      try {
+        setOnboardingId(entityId);
+        pendingOnboardRef.current = { entityType, entityId };
+
+        const returnUrl =
+          Platform.OS === 'web'
+            ? typeof window !== 'undefined'
+              ? window.location.href
+              : 'https://muster.app'
+            : 'muster://settings/accounts';
+
+        const res = await fetch(`${API_BASE_URL}/connect/onboard`, {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            entityType,
+            entityId,
+            refreshUrl: returnUrl,
+            returnUrl,
+          }),
+        });
+        if (!res.ok) throw new Error('Failed to start onboarding');
+        const data = await res.json();
+        if (data.url) await Linking.openURL(data.url);
+      } catch (err) {
+        console.error('handleOnboard error', err);
+        pendingOnboardRef.current = null;
+      } finally {
+        setOnboardingId(null);
+      }
+    },
+    [authHeaders]
+  );
+
+  // ── Group by entity type ──
+  const grounds = accounts.filter(a => a.entityType === 'facility');
+  const leagues = accounts.filter(a => a.entityType === 'league');
+  const rosters = accounts.filter(a => a.entityType === 'roster');
+
+  const handleLogout = () => {
+    Alert.alert('Log Out', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log Out', onPress: () => navigation.navigate('Login') },
+    ]);
+  };
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={s.sectionLabel}>Accounts</Text>
+      <View style={s.card}>
+        <AccountGroup
+          label="Grounds"
+          dotColor={colors.cobalt}
+          entities={grounds}
+          onboardingId={onboardingId}
+          onOnboard={handleOnboard}
+          loading={loading}
+        />
+        <View style={s.groupDivider} />
+        <AccountGroup
+          label="Leagues"
+          dotColor={colors.pine}
+          entities={leagues}
+          onboardingId={onboardingId}
+          onOnboard={handleOnboard}
+          loading={loading}
+        />
+        <View style={s.groupDivider} />
+        <AccountGroup
+          label="Rosters"
+          dotColor={colors.gold}
+          entities={rosters}
+          onboardingId={onboardingId}
+          onOnboard={handleOnboard}
+          loading={loading}
+        />
+      </View>
+
+      <Text style={s.sectionLabel}>Account</Text>
+      <View style={s.card}>
+        <MenuRow
+          icon="log-out-outline"
+          iconBg={colors.surface}
+          label="Log Out"
+          chevron={false}
+          onPress={handleLogout}
+        />
+        <MenuRow
+          icon="trash-outline"
+          iconBg={colors.heartTint}
+          iconColor={colors.heart}
+          label={deleting ? 'Deleting…' : 'Delete Account'}
+          labelColor={colors.heart}
+          chevron={false}
+          onPress={onDeleteAccount}
+          isLast
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 2 — DOCUMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface DocumentsTabProps {
+  userId: string;
+  navigation: any;
+}
+
+function DocumentsTab({ userId, navigation }: DocumentsTabProps) {
+  const { data: docs } = useGetInsuranceDocumentsQuery({ userId });
+  const count = docs?.length ?? 0;
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={s.sectionLabel}>Documents</Text>
+      <View style={s.card}>
+        <MenuRow
+          icon="document-text-outline"
+          iconBg={colors.cobaltTint}
+          iconColor={colors.cobalt}
+          label="Insurance Documents"
+          badge={count}
+          onPress={() => (navigation as any).navigate('InsuranceDocuments')}
+          isLast
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 3 — PREFERENCES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface PreferencesTabProps {
+  intents: string[];
+  onToggleIntent: (key: string) => void;
+}
+
+function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
+  const [darkMode, setDarkMode] = useState(false);
+  const [locationServices, setLocationServices] = useState(true);
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={s.sectionLabel}>Preferences</Text>
+      <View style={s.card}>
+        <ToggleRow
+          icon="moon-outline"
+          iconBg={colors.surface}
+          label="Dark Mode"
+          value={darkMode}
+          onValueChange={setDarkMode}
+        />
+        <ToggleRow
+          icon="location-outline"
+          iconBg={colors.surface}
+          label="Location Services"
+          value={locationServices}
+          onValueChange={setLocationServices}
+          isLast
+        />
+      </View>
+
+      <Text style={s.sectionLabel}>How I Use Muster</Text>
+      <View style={s.card}>
+        {INTENT_OPTIONS.map((opt, idx) => {
+          const isOn = intents.includes(opt.key);
+          const isLast = idx === INTENT_OPTIONS.length - 1;
+          return (
+            <View key={opt.key} style={[s.row, isLast && s.rowLast]}>
+              <View
+                style={[
+                  s.iconWrap,
+                  { backgroundColor: isOn ? colors.cobalt : colors.cobaltTint },
+                ]}
+              >
+                <Ionicons
+                  name={opt.icon}
+                  size={18}
+                  color={isOn ? colors.white : colors.cobalt}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.intentTitle}>{opt.title}</Text>
+                <Text style={s.intentSubtitle}>{opt.subtitle}</Text>
+              </View>
+              <Switch
+                value={isOn}
+                onValueChange={() => onToggleIntent(opt.key)}
+                trackColor={{
+                  false: colors.border,
+                  true: colors.cobalt + '50',
+                }}
+                thumbColor={isOn ? colors.cobalt : colors.inkFaint}
+                style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+              />
+            </View>
+          );
+        })}
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 4 — ACCOUNT BOOKS
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface AccountBooksTabProps {
+  userId: string;
+  token: string | null;
+  navigation: any;
+  onExportData: () => void;
+}
+
+function AccountBooksTab({
+  userId,
+  token,
+  navigation,
+  onExportData,
+}: AccountBooksTabProps) {
+  const [purchaseCount, setPurchaseCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers: Record<string, string> = { 'x-user-id': userId };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(
+          `${API_BASE_URL}/rentals/my-rentals?userId=${userId}`,
+          { headers }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const rentals: any[] = data.rentals ?? data ?? [];
+        const past = rentals.filter((r: any) =>
+          ['past', 'cancelled', 'used', 'completed'].includes(
+            (r.status ?? '').toLowerCase()
+          )
+        );
+        setPurchaseCount(past.length);
+      } catch {
+        // silently ignore
+      }
+    })();
+  }, [userId, token]);
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={s.sectionLabel}>Account Books</Text>
+      <View style={s.card}>
+        <MenuRow
+          icon="receipt-outline"
+          iconBg={colors.cobaltTint}
+          iconColor={colors.cobalt}
+          label="Purchase History"
+          badge={purchaseCount}
+          onPress={() => (navigation as any).navigate('BookingHistory')}
+        />
+        <MenuRow
+          icon="download-outline"
+          iconBg={colors.surface}
+          label="Export Data"
+          subtitle="Download your activity and records"
+          onPress={onExportData}
+        />
+        <MenuRow
+          icon="ticket-outline"
+          iconBg={colors.surface}
+          label="Redeem a Code"
+          subtitle="Enter a promo or access code"
+          onPress={() => (navigation as any).navigate('RedeemCode')}
+          isLast
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB 5 — ABOUT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AboutTab() {
+  const version = `${appJson.expo.version} (${appJson.expo.android?.versionCode ?? 1})`;
+
+  const handleRateApp = async () => {
+    try {
+      if (await StoreReview.hasAction()) {
+        StoreReview.requestReview();
+      }
+    } catch (err) {
+      console.warn('StoreReview error', err);
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={s.sectionLabel}>About</Text>
+      <View style={s.card}>
+        <MenuRow
+          icon="shield-outline"
+          iconBg={colors.surface}
+          label="Privacy Policy"
+          onPress={() => Linking.openURL('https://muster.app/privacy')}
+        />
+        <MenuRow
+          icon="document-text-outline"
+          iconBg={colors.surface}
+          label="Terms of Service"
+          onPress={() => Linking.openURL('https://muster.app/terms')}
+        />
+        <MenuRow
+          icon="help-circle-outline"
+          iconBg={colors.surface}
+          label="Help & Support"
+          onPress={() => Linking.openURL('mailto:support@muster.app')}
+        />
+        <MenuRow
+          icon="star-outline"
+          iconBg={colors.goldTint}
+          iconColor={colors.gold}
+          label="Rate Muster"
+          onPress={handleRateApp}
+        />
+        <MenuRow
+          icon="information-circle-outline"
+          iconBg={colors.surface}
+          label="Version"
+          rightValue={version}
+          chevron={false}
+          isLast
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Screen
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function SettingsScreen(): JSX.Element {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user: authUser } = useAuth();
+  const { user: authUser, token } = useAuth();
   const { isDependent } = useDependentContext();
-  const [darkMode, setDarkMode] = useState(false);
-  const [locationServices, setLocationServices] = useState(true);
+  const { width: screenWidth } = useWindowDimensions();
+
+  const [activeTab, setActiveTab] = useState(0);
   const [intents, setIntents] = useState<string[]>(authUser?.intents ?? []);
+  const [deleting, setDeleting] = useState(false);
+
+  const pagerRef = useRef<ScrollView>(null);
+
+  const handleTabPress = (index: number) => {
+    setActiveTab(index);
+    pagerRef.current?.scrollTo({ x: index * screenWidth, animated: true });
+  };
+
+  const handlePagerScroll = (e: any) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / screenWidth);
+    if (index !== activeTab) setActiveTab(index);
+  };
 
   const handleToggleIntent = async (key: string) => {
-    const next = intents.includes(key) ? intents.filter((k) => k !== key) : [...intents, key];
+    const prev = intents;
+    const next = intents.includes(key)
+      ? intents.filter(k => k !== key)
+      : [...intents, key];
     setIntents(next);
     try {
       const { user } = await userService.updateIntents(next);
       if (user) dispatch(setUser(user));
     } catch {
-      setIntents(intents); // revert on failure
+      setIntents(prev);
     }
   };
-  const [deleting, setDeleting] = useState(false);
-  const [showInsuranceForm, setShowInsuranceForm] = useState(false);
 
-  const handleExportData = async () => {
+  const handleExportData = () => {
     Alert.alert('Export Data', 'Your data will be prepared for download.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Export', onPress: async () => {
-        try { await userService.exportUserData(); Alert.alert('Success', 'Check your email for the download link.'); }
-        catch (err: any) { Alert.alert('Error', err.message || 'Failed to export data'); }
-      }},
+      {
+        text: 'Export',
+        onPress: async () => {
+          try {
+            await userService.exportUserData();
+            Alert.alert('Success', 'Check your email for the download link.');
+          } catch (err: any) {
+            Alert.alert('Error', err.message || 'Failed to export data');
+          }
+        },
+      },
     ]);
   };
 
   const handleDeleteAccount = () => {
     loggingService.logButton('Delete Account', 'SettingsScreen');
-    Alert.alert('Delete Account', 'This action cannot be undone. All your data will be permanently deleted.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        try { setDeleting(true); await userService.deleteAccount(''); Alert.alert('Account Deleted', 'Your account has been deleted.', [{ text: 'OK', onPress: () => navigation.navigate('Login' as never) }]); }
-        catch (err: any) { Alert.alert('Error', err.message || 'Failed to delete account'); }
-        finally { setDeleting(false); }
-      }},
-    ]);
+    Alert.alert(
+      'Delete Account',
+      'This action cannot be undone. All your data will be permanently deleted.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeleting(true);
+              await userService.deleteAccount('');
+              Alert.alert('Account Deleted', 'Your account has been deleted.', [
+                {
+                  text: 'OK',
+                  onPress: () => (navigation as any).navigate('Login'),
+                },
+              ]);
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to delete account');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', onPress: () => navigation.navigate('Login' as never) },
-    ]);
-  };
-
-
-  const isHost = authUser?.membershipTier === 'host' || authUser?.membershipTier === 'facility' || authUser?.trialTier === 'host';
+  const userId = authUser?.id ?? '';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <View style={s.screen}>
+      <TabBar activeIndex={activeTab} onPress={handleTabPress} />
 
-      {/* Payment & Stripe — wrapped in card styling */}
-      {!isDependent && authUser?.id && (
-        <>
-          <Text style={styles.sectionHeader}>Payments</Text>
-          <View style={styles.card}>
-            <View style={styles.embeddedSection}>
-              <UserConnectSection userId={authUser.id} />
-            </View>
-          </View>
-        </>
-      )}
-
-      {!isDependent && authUser?.id && (
-        <View style={styles.card}>
-          <View style={styles.embeddedSection}>
-            <ConnectAccountsSection userId={authUser.id} />
-          </View>
+      <ScrollView
+        ref={pagerRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={handlePagerScroll}
+        style={{ flex: 1 }}
+      >
+        {/* TAB 1 — ACCOUNTS */}
+        <View style={{ width: screenWidth }}>
+          {!isDependent && userId ? (
+            <AccountsTab
+              userId={userId}
+              token={token}
+              navigation={navigation}
+              deleting={deleting}
+              onDeleteAccount={handleDeleteAccount}
+            />
+          ) : (
+            <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+              <Text
+                style={[s.sectionLabel, { marginTop: 40, textAlign: 'center' }]}
+              >
+                Not available in dependent mode
+              </Text>
+            </ScrollView>
+          )}
         </View>
-      )}
 
-      {authUser?.id && <PurchaseHistorySection userId={authUser.id} />}
+        {/* TAB 2 — DOCUMENTS */}
+        <View style={{ width: screenWidth }}>
+          {userId ? (
+            <DocumentsTab userId={userId} navigation={navigation} />
+          ) : null}
+        </View>
 
-      {!isDependent && authUser?.id && isHost && (
-        <InsuranceDocumentsSection userId={authUser.id} onAddDocument={() => setShowInsuranceForm(true)} />
-      )}
-      {!isDependent && showInsuranceForm && authUser?.id && (
-        <InsuranceDocumentForm userId={authUser.id} onClose={() => setShowInsuranceForm(false)} />
-      )}
+        {/* TAB 3 — PREFERENCES */}
+        <View style={{ width: screenWidth }}>
+          <PreferencesTab
+            intents={intents}
+            onToggleIntent={handleToggleIntent}
+          />
+        </View>
 
-      {/* Preferences */}
-      <Text style={styles.sectionHeader}>Preferences</Text>
-      <View style={styles.card}>
-        <ToggleRow icon="moon-outline" label="Dark Mode" value={darkMode} onValueChange={setDarkMode} />
-        <ToggleRow icon="location-outline" label="Location Services" value={locationServices} onValueChange={setLocationServices} isLast />
-      </View>
+        {/* TAB 4 — ACCOUNT BOOKS */}
+        <View style={{ width: screenWidth }}>
+          {userId ? (
+            <AccountBooksTab
+              userId={userId}
+              token={token}
+              navigation={navigation}
+              onExportData={handleExportData}
+            />
+          ) : null}
+        </View>
 
-      {/* How I Use Muster */}
-      <Text style={styles.sectionHeader}>How I Use Muster</Text>
-      <View style={styles.card}>
-        {INTENT_OPTIONS.map((option) => {
-          const isOn = intents.includes(option.key);
-          return (
-            <TouchableOpacity
-              key={option.key}
-              style={styles.intentRow}
-              onPress={() => handleToggleIntent(option.key)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.intentIconCircle, isOn && styles.intentIconCircleActive]}>
-                <Ionicons name={option.icon} size={20} color={isOn ? '#FFFFFF' : colors.primary} />
-              </View>
-              <View style={styles.intentTextBlock}>
-                <Text style={styles.intentTitle}>{option.title}</Text>
-                <Text style={styles.intentSubtitle}>{option.subtitle}</Text>
-              </View>
-              <Switch
-                value={isOn}
-                onValueChange={() => handleToggleIntent(option.key)}
-                trackColor={{ false: colors.surfaceContainerHigh, true: colors.primary + '50' }}
-                thumbColor={isOn ? colors.primary : colors.surfaceContainerLow}
-                style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
-              />
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Account */}
-      <Text style={styles.sectionHeader}>Account</Text>
-      <View style={styles.card}>
-        <MenuRow icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => Linking.openURL('https://muster.app/privacy')} />
-        <MenuRow icon="document-text-outline" label="Terms of Service" onPress={() => Linking.openURL('https://muster.app/terms')} />
-        <MenuRow icon="download-outline" label="Export My Data" onPress={handleExportData} />
-        <MenuRow icon="ticket-outline" label="Redeem a Code" onPress={() => (navigation as any).navigate('RedeemCode')} />
-        <MenuRow icon="log-out-outline" label="Log Out" onPress={handleLogout} color={colors.onSurfaceVariant} chevron={false} />
-        <MenuRow
-          icon="trash-outline"
-          label={deleting ? 'Deleting...' : 'Delete Account'}
-          onPress={handleDeleteAccount}
-          color={colors.error}
-          chevron={false}
-          disabled={deleting}
-          isLast
-        />
-      </View>
-
-      {/* About */}
-      <Text style={styles.sectionHeader}>About</Text>
-      <View style={styles.card}>
-        <MenuRow icon="information-circle-outline" label="Version" value="1.0.0" chevron={false} />
-        <MenuRow icon="help-circle-outline" label="Help & Support" onPress={() => Linking.openURL('mailto:support@muster.app?subject=Help%20%26%20Support')} />
-        <MenuRow icon="star-outline" label="Rate the App" onPress={() => Linking.openURL('https://muster.app/rate')} isLast />
-      </View>
-
-    </ScrollView>
+        {/* TAB 5 — ABOUT */}
+        <View style={{ width: screenWidth }}>
+          <AboutTab />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+// ─────────────────────────────────────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  screen: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingBottom: 48,
+    backgroundColor: colors.surface,
   },
 
-  // ── Section headers ──
-  sectionHeader: {
+  // ── Tab bar ──
+  tabBarOuter: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tabBarContent: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  tabItem: {
+    height: 44,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  tabLabel: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.inkSoft,
+  },
+  tabLabelActive: {
+    color: colors.cobalt,
+  },
+  tabUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: 16,
+    right: 16,
+    height: 2,
+    backgroundColor: colors.cobalt,
+    borderRadius: 1,
+  },
+
+  // ── Section label ──
+  sectionLabel: {
     fontFamily: fonts.label,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
+    fontSize: 11,
+    color: colors.inkSoft,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: 24,
+    letterSpacing: 1.2,
+    marginHorizontal: 16,
+    marginTop: 20,
     marginBottom: 8,
-    marginHorizontal: 20,
   },
 
-  // ── Cards ──
+  // ── Card ──
   card: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
+    backgroundColor: colors.white,
     borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 2,
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 1,
-  },
-  embeddedSection: {
+    elevation: 2,
     overflow: 'hidden',
   },
 
-  // ── Menu rows ──
-  menuRow: {
+  // ── Row ──
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 13,
     paddingHorizontal: 14,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant + '60',
+    borderBottomColor: colors.border,
   },
-  menuRowLast: {
+  rowLast: {
     borderBottomWidth: 0,
   },
-  menuIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceContainer,
+  rowLabel: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+  },
+  rowSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+    marginTop: 1,
+  },
+  rowValue: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.inkSoft,
+  },
+
+  // ── Icon wrap ──
+  iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuLabel: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.onSurface,
+
+  // ── Badge ──
+  badge: {
+    backgroundColor: colors.cobaltTint,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 4,
   },
-  menuValue: {
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.onSurfaceVariant,
+  badgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.cobalt,
   },
 
-
-  // ── Intent rows (How I Use Muster) ──
-  intentRow: {
+  // ── Account groups ──
+  groupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
     paddingHorizontal: 14,
-    gap: 12,
+    paddingTop: 12,
+    paddingBottom: 4,
+    gap: 6,
   },
-  intentIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.primaryFixed,
-    justifyContent: 'center',
+  groupHeaderText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkSoft,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
+  groupDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  groupDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  groupLoadingRow: {
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  intentIconCircleActive: {
-    backgroundColor: colors.primary,
+
+  // ── Entity rows ──
+  entityName: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 15,
+    color: colors.ink,
   },
-  intentTextBlock: {
-    flex: 1,
+  entityStatus: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    marginTop: 1,
   },
+  emptyText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+  },
+
+  // ── Buttons ──
+  entityBtn: {
+    borderWidth: 1,
+    borderColor: colors.cobalt,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    minWidth: 80,
+    height: 34,
+  },
+  entityBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+  },
+  // kept for any remaining references
+  btnFilled: {
+    backgroundColor: colors.cobalt,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    minWidth: 72,
+  },
+  btnFilledText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.white,
+  },
+  btnGhost: {
+    borderWidth: 1,
+    borderColor: colors.cobalt,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    minWidth: 72,
+  },
+  btnGhostText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.cobalt,
+  },
+
+  // ── Intent rows ──
   intentTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.onSurface,
+    color: colors.ink,
     marginBottom: 1,
   },
   intentSubtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
-    lineHeight: 16,
+    color: colors.inkSoft,
   },
 });

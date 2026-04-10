@@ -1352,7 +1352,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ownerEditBtn: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

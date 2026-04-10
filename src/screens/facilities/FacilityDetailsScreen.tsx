@@ -14,6 +14,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { EventCard } from '../../components/ui/EventCard';
@@ -27,7 +29,7 @@ import {
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
 import { colors, fonts, Spacing } from '../../theme';
-import { Event, FacilityWithVerification } from '../../types';
+import { Event, FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import {
   HeroSection,
@@ -74,6 +76,28 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [showFullMap, setShowFullMap] = useState(false);
 
+  // Task 5.1 — local photo/map state
+  const [photos, setPhotos] = useState<FacilityPhoto[]>([]);
+  const [facilityMapUrl, setFacilityMapUrl] = useState<string | null>(null);
+  const [facilityMapThumbnailUrl, setFacilityMapThumbnailUrl] = useState<
+    string | null
+  >(null);
+
+  // Task 5.9 — inline error state
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  // Sync local state when Redux store updates
+  useEffect(() => {
+    if (selectedFacility) {
+      setPhotos(selectedFacility.photos ?? []);
+      setFacilityMapUrl(selectedFacility.facilityMapUrl ?? null);
+      setFacilityMapThumbnailUrl(
+        selectedFacility.facilityMapThumbnailUrl ?? null
+      );
+    }
+  }, [selectedFacility]);
+
   useEffect(() => {
     loadFacilityDetails();
     loadFacilityEvents();
@@ -107,6 +131,113 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
       setEvents(upcoming);
     } catch (err: any) {
       console.error('Failed to load ground events:', err);
+    }
+  };
+
+  // Task 5.3 / 5.4 — pick and upload photos
+  const handleAddPhotos = async () => {
+    setPhotoError(null);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsMultipleSelection: true,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.9,
+      });
+      if (result.canceled) return;
+      for (const asset of result.assets) {
+        try {
+          const uploaded = await facilityService.uploadFacilityPhoto(
+            facilityId,
+            {
+              uri: asset.uri,
+              name: asset.fileName || 'photo.jpg',
+              type: asset.mimeType || 'image/jpeg',
+            }
+          );
+          setPhotos(prev => [...prev, uploaded]);
+        } catch (err: any) {
+          const msg: string = err?.message || '';
+          if (
+            msg.toLowerCase().includes('type') ||
+            msg.toLowerCase().includes('jpeg') ||
+            msg.toLowerCase().includes('png')
+          ) {
+            setPhotoError('Only JPEG and PNG images are allowed.');
+          } else if (
+            msg.toLowerCase().includes('size') ||
+            msg.toLowerCase().includes('10')
+          ) {
+            setPhotoError('Photos must be under 10 MB.');
+          } else {
+            setPhotoError(msg || 'Failed to upload photo.');
+          }
+        }
+      }
+    } catch (err: any) {
+      setPhotoError(err?.message || 'Failed to open image picker.');
+    }
+  };
+
+  // Task 5.5 — delete a photo
+  const handleDeletePhoto = async (photo: FacilityPhoto) => {
+    try {
+      await facilityService.deleteFacilityPhoto(facilityId, photo.id);
+      setPhotos(prev => prev.filter(p => p.id !== photo.id));
+    } catch (err: any) {
+      setPhotoError(err?.message || 'Failed to delete photo.');
+    }
+  };
+
+  // Task 5.7 — upload map
+  const handleUploadMap = async () => {
+    setMapError(null);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/jpeg', 'image/png', 'application/pdf'],
+      });
+      if (result.canceled || !result.assets || result.assets.length === 0)
+        return;
+      const asset = result.assets[0];
+      try {
+        const uploaded = await facilityService.uploadFacilityMap(facilityId, {
+          uri: asset.uri,
+          name: asset.name,
+          type: asset.mimeType || 'image/jpeg',
+        });
+        setFacilityMapUrl(uploaded.facilityMapUrl);
+        setFacilityMapThumbnailUrl(uploaded.facilityMapThumbnailUrl);
+      } catch (err: any) {
+        const msg: string = err?.message || '';
+        if (
+          msg.toLowerCase().includes('type') ||
+          msg.toLowerCase().includes('jpeg') ||
+          msg.toLowerCase().includes('png') ||
+          msg.toLowerCase().includes('pdf')
+        ) {
+          setMapError('Only JPEG, PNG, and PDF files are allowed.');
+        } else if (
+          msg.toLowerCase().includes('size') ||
+          msg.toLowerCase().includes('20')
+        ) {
+          setMapError('Map file must be under 20 MB.');
+        } else {
+          setMapError(msg || 'Failed to upload map.');
+        }
+      }
+    } catch (err: any) {
+      setMapError(err?.message || 'Failed to open file picker.');
+    }
+  };
+
+  // Task 5.8 — delete map
+  const handleDeleteMap = async () => {
+    setMapError(null);
+    try {
+      await facilityService.deleteFacilityMap(facilityId);
+      setFacilityMapUrl(null);
+      setFacilityMapThumbnailUrl(null);
+    } catch (err: any) {
+      setMapError(err?.message || 'Failed to remove map.');
     }
   };
 
@@ -233,6 +364,69 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     <View style={styles.container}>
       <ContextualReturnButton />
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Task 5.2 — Photo strip (all users, when photos exist) */}
+        {photos.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.photoStrip}
+            contentContainerStyle={styles.photoStripContent}
+          >
+            {photos.map(photo => (
+              <View key={photo.id} style={styles.photoItem}>
+                <OptimizedImage
+                  source={{ uri: photo.imageUrl }}
+                  style={styles.photoImg}
+                  resizeMode="cover"
+                  fallback={
+                    <View style={styles.photoFallback}>
+                      <Ionicons
+                        name="camera-outline"
+                        size={32}
+                        color={colors.onSurfaceVariant}
+                      />
+                    </View>
+                  }
+                />
+                {/* Task 5.5 — delete overlay for owner */}
+                {isOwner && (
+                  <TouchableOpacity
+                    style={styles.photoDeleteBtn}
+                    onPress={() => handleDeletePhoto(photo)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={24}
+                      color={colors.heart}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        )}
+
+        {/* Task 5.3 — "Add photos" button for owner */}
+        {isOwner && (
+          <View style={styles.addPhotosRow}>
+            <TouchableOpacity
+              style={styles.addPhotosBtn}
+              onPress={handleAddPhotos}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="images-outline" size={18} color={colors.cobalt} />
+              <Text style={styles.addPhotosBtnText}>
+                {photos.length > 0 ? 'Add more photos' : 'Add photos'}
+              </Text>
+            </TouchableOpacity>
+            {/* Task 5.9 — inline photo error */}
+            {photoError ? (
+              <Text style={styles.inlineError}>{photoError}</Text>
+            ) : null}
+          </View>
+        )}
+
         {/* Hero image */}
         {facility.imageUrl && (
           <Image
@@ -361,35 +555,77 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         </DetailCard>
 
         {/* Facility map image */}
-        {facility.facilityMapUrl ? (
+        {facilityMapUrl || isOwner ? (
           <DetailCard title="Facility map" delay={100}>
-            <TouchableOpacity
-              onPress={() => setShowFullMap(true)}
-              style={styles.facilityMapThumb}
-              activeOpacity={0.8}
-            >
-              <OptimizedImage
-                source={{ uri: facility.facilityMapUrl }}
-                style={styles.facilityMapImg}
-                resizeMode="cover"
-                fallback={
-                  <View style={styles.mapFallback}>
+            {facilityMapUrl ? (
+              <TouchableOpacity
+                onPress={() => setShowFullMap(true)}
+                style={styles.facilityMapThumb}
+                activeOpacity={0.8}
+              >
+                <OptimizedImage
+                  source={{ uri: facilityMapUrl }}
+                  style={styles.facilityMapImg}
+                  resizeMode="cover"
+                  fallback={
+                    <View style={styles.mapFallback}>
+                      <Ionicons
+                        name="map-outline"
+                        size={48}
+                        color={colors.onSurfaceVariant}
+                      />
+                      <Text style={styles.mapFallbackText}>
+                        Map unavailable
+                      </Text>
+                    </View>
+                  }
+                />
+                <View style={styles.facilityMapOverlay}>
+                  <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
+                  <Text style={styles.facilityMapOverlayText}>
+                    Tap to view full size
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ) : null}
+
+            {/* Task 5.6 — Map upload controls for owner */}
+            {isOwner && (
+              <View style={styles.mapOwnerControls}>
+                <TouchableOpacity
+                  style={styles.mapUploadBtn}
+                  onPress={handleUploadMap}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="cloud-upload-outline"
+                    size={16}
+                    color={colors.cobalt}
+                  />
+                  <Text style={styles.mapUploadBtnText}>
+                    {facilityMapUrl ? 'Replace map' : 'Upload map'}
+                  </Text>
+                </TouchableOpacity>
+                {facilityMapUrl ? (
+                  <TouchableOpacity
+                    style={styles.mapRemoveBtn}
+                    onPress={handleDeleteMap}
+                    activeOpacity={0.7}
+                  >
                     <Ionicons
-                      name="map-outline"
-                      size={48}
-                      color={colors.onSurfaceVariant}
+                      name="trash-outline"
+                      size={16}
+                      color={colors.heart}
                     />
-                    <Text style={styles.mapFallbackText}>Map unavailable</Text>
-                  </View>
-                }
-              />
-              <View style={styles.facilityMapOverlay}>
-                <Ionicons name="expand-outline" size={18} color="#FFFFFF" />
-                <Text style={styles.facilityMapOverlayText}>
-                  Tap to view full size
-                </Text>
+                    <Text style={styles.mapRemoveBtnText}>Remove map</Text>
+                  </TouchableOpacity>
+                ) : null}
+                {/* Task 5.9 — inline map error */}
+                {mapError ? (
+                  <Text style={styles.inlineError}>{mapError}</Text>
+                ) : null}
               </View>
-            </TouchableOpacity>
+            )}
           </DetailCard>
         ) : null}
 
@@ -493,7 +729,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             onPress={handleEdit}
             activeOpacity={0.7}
           >
-            <Ionicons name="create-outline" size={18} color={colors.pine} />
+            <Ionicons name="create-outline" size={18} color={colors.white} />
             <Text style={styles.editBtnText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -548,9 +784,9 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               maximumZoomScale={3}
               minimumZoomScale={1}
             >
-              {facility.facilityMapUrl && (
+              {facilityMapUrl && (
                 <OptimizedImage
-                  source={{ uri: facility.facilityMapUrl }}
+                  source={{ uri: facilityMapUrl }}
                   style={styles.fullMapImage}
                   resizeMode="contain"
                   fallback={
@@ -793,37 +1029,131 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    gap: 12,
+    flexDirection: 'column',
+    gap: 10,
     padding: 20,
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
   editBtn: {
-    flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.pineTint,
-    borderWidth: 1,
-    borderColor: colors.pine,
+    backgroundColor: colors.pine,
   },
-  editBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.pine },
+  editBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
   deleteBtn: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.heartTint,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: colors.heart,
   },
   deleteBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.heart },
+
+  // Photo strip styles (tasks 5.2, 5.3, 5.5)
+  photoStrip: {
+    paddingVertical: 16,
+  },
+  photoStripContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  photoItem: {
+    position: 'relative',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  photoImg: {
+    width: 280,
+    height: 220,
+    borderRadius: 8,
+  },
+  photoFallback: {
+    width: 280,
+    height: 220,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceContainerLow,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoDeleteBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 12,
+  },
+  addPhotosRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  addPhotosBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.cobalt,
+    alignSelf: 'flex-start' as const,
+  },
+  addPhotosBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.cobalt,
+  },
+
+  // Map owner controls (tasks 5.6, 5.7, 5.8)
+  mapOwnerControls: {
+    marginTop: 12,
+    gap: 8,
+  },
+  mapUploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.cobalt,
+    alignSelf: 'flex-start' as const,
+  },
+  mapUploadBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.cobalt,
+  },
+  mapRemoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.heart,
+    alignSelf: 'flex-start' as const,
+  },
+  mapRemoveBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.heart,
+  },
+
+  // Inline error (task 5.9)
+  inlineError: {
+    fontSize: 13,
+    color: colors.heart,
+    marginTop: 6,
+  },
 });

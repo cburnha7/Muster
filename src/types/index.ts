@@ -126,6 +126,14 @@ export interface NotificationPreferences {
 // FACILITY MODELS
 // ============================================================================
 
+export interface FacilityPhoto {
+  id: string;
+  facilityId: string;
+  imageUrl: string;
+  displayOrder: number;
+  createdAt: string;
+}
+
 export interface Facility {
   id: string;
   name: string;
@@ -144,6 +152,8 @@ export interface Facility {
   sportTypes: SportType[];
   imageUrl?: string;
   facilityMapUrl?: string;
+  facilityMapThumbnailUrl?: string;
+  photos?: FacilityPhoto[];
   // Contact information (flattened from ContactInfo interface)
   contactName?: string;
   contactPhone?: string;
@@ -686,7 +696,6 @@ export interface SyncConflict {
 // Re-export type guards and utilities
 export * from './type-guards';
 export * from './rating';
-
 
 // ============================================================================
 // FACILITY VERIFICATION TYPES

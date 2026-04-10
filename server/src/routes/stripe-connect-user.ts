@@ -1,16 +1,6 @@
-/**
- * User-Level Stripe Connect Express Onboarding
- *
- * POST /onboard — Create Express account for the authenticated user, return account link URL
- * GET  /status  — Check the user's Connect account onboarding status
- *
- * This is separate from the entity-level onboarding in connect-onboarding.ts.
- * Here the stripeAccountId lives on the User record directly.
- */
-
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { authMiddleware } from '../middleware/auth';
+import { optionalAuthMiddleware } from '../middleware/auth';
 import {
   createConnectAccount,
   createConnectAccountLink,
@@ -19,7 +9,7 @@ import {
 
 const router = Router();
 
-router.use(authMiddleware);
+router.use(optionalAuthMiddleware);
 
 // ---------------------------------------------------------------------------
 // POST /onboard — Start or resume Connect onboarding for the current user
@@ -27,7 +17,10 @@ router.use(authMiddleware);
 
 router.post('/onboard', async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user?.userId;
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
+
     const { refreshUrl, returnUrl } = req.body;
 
     if (!refreshUrl || !returnUrl) {
@@ -41,11 +34,13 @@ router.post('/onboard', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Dependent accounts have no email — use a placeholder so Stripe doesn't reject
+    const email = user.email ?? undefined;
+
     let accountId = user.stripeAccountId;
 
-    // Create a new Express account if the user doesn't have one yet
     if (!accountId) {
-      const account = await createConnectAccount(user.email);
+      const account = await createConnectAccount(email);
       accountId = account.id;
       await prisma.user.update({
         where: { id: userId },
@@ -53,13 +48,18 @@ router.post('/onboard', async (req: Request, res: Response) => {
       });
     }
 
-    // Generate an account link for onboarding
-    const accountLink = await createConnectAccountLink(accountId, refreshUrl, returnUrl);
+    const accountLink = await createConnectAccountLink(
+      accountId,
+      refreshUrl,
+      returnUrl
+    );
 
     return res.json({ url: accountLink.url, accountId });
   } catch (err) {
     console.error('User Connect onboarding error:', err);
-    return res.status(500).json({ error: 'Failed to start Connect onboarding' });
+    return res
+      .status(500)
+      .json({ error: 'Failed to start Connect onboarding' });
   }
 });
 
@@ -69,7 +69,9 @@ router.post('/onboard', async (req: Request, res: Response) => {
 
 router.get('/status', async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = req.user?.userId;
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

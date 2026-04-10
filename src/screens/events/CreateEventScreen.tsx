@@ -169,7 +169,7 @@ function CreateEventInner() {
             icon: 'eye-outline',
             onPress: () => {
               navigation.navigate('Events', {
-                screen: 'EventDetail',
+                screen: 'EventDetails',
                 params: { eventId: state.createdEventId },
               });
             },

@@ -390,13 +390,11 @@ router.post(
               PLAN_HIERARCHY.indexOf(userPlan) <
                 PLAN_HIERARCHY.indexOf('roster')
             ) {
-              return res
-                .status(403)
-                .json({
-                  error: 'Plan upgrade required',
-                  requiredPlan: 'roster',
-                  currentPlan: userPlan,
-                });
+              return res.status(403).json({
+                error: 'Plan upgrade required',
+                requiredPlan: 'roster',
+                currentPlan: userPlan,
+              });
             }
           }
         }
@@ -585,12 +583,6 @@ router.delete('/:id', async (req, res) => {
       // Delete booking participants referencing this roster
       await tx.bookingParticipant.deleteMany({ where: { rosterId: id } });
 
-      // Nullify events where this roster was covering the fee
-      await tx.event.updateMany({
-        where: { coveringTeamId: id },
-        data: { coveringTeamId: null, isGroupFeeCovered: false },
-      });
-
       // Remove roster from eligibilityRestrictedToTeams arrays
       const eventsWithRestriction = await tx.event.findMany({
         where: { eligibilityRestrictedToTeams: { has: id } },
@@ -727,11 +719,9 @@ router.post('/:id/join', async (req, res) => {
       const wasInvited = team.members.some(m => m.userId === userId);
 
       if (!wasInvited && !validInviteLink) {
-        return res
-          .status(403)
-          .json({
-            error: 'This is a private roster. You need an invite to join.',
-          });
+        return res.status(403).json({
+          error: 'This is a private roster. You need an invite to join.',
+        });
       }
     }
 
@@ -814,12 +804,10 @@ router.post('/:id/leave', async (req, res) => {
     }
 
     if (member.role === 'captain') {
-      return res
-        .status(400)
-        .json({
-          error:
-            'Captains cannot leave. Transfer captaincy first or delete the roster.',
-        });
+      return res.status(400).json({
+        error:
+          'Captains cannot leave. Transfer captaincy first or delete the roster.',
+      });
     }
 
     await prisma.teamMember.delete({ where: { id: member.id } });
@@ -950,11 +938,9 @@ router.post('/:id/invite-link', async (req, res) => {
       !member ||
       (member.role !== 'captain' && member.role !== 'co_captain')
     ) {
-      return res
-        .status(403)
-        .json({
-          error: 'Only captains and co-captains can generate invite links',
-        });
+      return res.status(403).json({
+        error: 'Only captains and co-captains can generate invite links',
+      });
     }
 
     // Check for existing active, non-expired link with >1 day remaining
