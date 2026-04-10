@@ -17,17 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
-// expo-store-review is optional — not available in all build environments
-let StoreReview: {
-  hasAction?: () => Promise<boolean>;
-  requestReview?: () => void;
-} = {};
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  StoreReview = require('expo-store-review');
-} catch {
-  // package not installed — Rate Muster row will fall back to App Store URL
-}
+import * as StoreReview from 'expo-store-review';
 import { colors, fonts, Spacing } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
@@ -805,19 +795,8 @@ function AboutTab() {
 
   const handleRateApp = async () => {
     try {
-      if (
-        StoreReview.hasAction &&
-        StoreReview.requestReview &&
-        (await StoreReview.hasAction())
-      ) {
+      if (await StoreReview.hasAction()) {
         StoreReview.requestReview();
-      } else {
-        // Fallback when expo-store-review isn't installed
-        await Linking.openURL(
-          Platform.OS === 'ios'
-            ? 'itms-apps://itunes.apple.com/app/id0'
-            : 'market://details?id=com.muster.app'
-        );
       }
     } catch (err) {
       console.warn('StoreReview error', err);
