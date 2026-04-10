@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,8 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { CancellationPolicyDisplay } from '../../components/facilities/CancellationPolicyDisplay';
 import { facilityService } from '../../services/api/FacilityService';
-import { OwnerReservationsSection } from '../../components/facilities/OwnerReservationsSection';
+import { OwnerScheduleTab } from '../../components/facilities/OwnerScheduleTab';
+import { UserReservationsTab } from '../../components/facilities/UserReservationsTab';
 import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 import {
   setSelectedFacility,
@@ -47,13 +48,13 @@ if (Platform.OS !== 'web') {
   PROVIDER_GOOGLE = MapViewModule.PROVIDER_GOOGLE;
 }
 
-const TABS = [
+const BASE_TABS = [
   'Basics',
   'Location',
   'Contact',
   'Site Details',
   'Courts / Fields',
-] as const;
+];
 
 interface FacilityDetailsScreenProps {
   route: {
@@ -66,9 +67,11 @@ interface FacilityDetailsScreenProps {
 /* ─── Tab Bar ─────────────────────────────────────────────────────────────── */
 
 function TabBar({
+  tabs,
   activeIndex,
   onPress,
 }: {
+  tabs: string[];
   activeIndex: number;
   onPress: (i: number) => void;
 }) {
@@ -79,7 +82,7 @@ function TabBar({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={s.tabBarContent}
       >
-        {TABS.map((tab, i) => {
+        {tabs.map((tab, i) => {
           const active = i === activeIndex;
           return (
             <TouchableOpacity
@@ -221,6 +224,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   const facility = selectedFacility;
   const isOwner = currentUser?.id === facility.ownerId;
+  const tabs = useMemo(
+    () => [...BASE_TABS, isOwner ? 'Schedule' : 'Reservations'],
+    [isOwner]
+  );
 
   const fullAddressString = [
     facility.street,
@@ -269,19 +276,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   return (
     <View style={s.container}>
       <ContextualReturnButton />
-      <Text
-        style={{
-          backgroundColor: 'red',
-          color: 'white',
-          textAlign: 'center',
-          padding: 8,
-          fontSize: 16,
-          fontWeight: 'bold',
-        }}
-      >
-        BUILD TEST v2 — TABBED LAYOUT
-      </Text>
-      <TabBar activeIndex={activeTab} onPress={handleTabPress} />
+      <TabBar tabs={tabs} activeIndex={activeTab} onPress={handleTabPress} />
 
       <ScrollView
         ref={pagerRef}
@@ -369,9 +364,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                 </View>
               </>
             ) : null}
-
-            {/* Owner reservations */}
-            {isOwner && <OwnerReservationsSection facilityId={facility.id} />}
           </ScrollView>
         </View>
 
@@ -877,6 +869,18 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </View>
             )}
           </ScrollView>
+        </View>
+
+        {/* ── TAB 6 — Schedule (owner) / Reservations (non-owner) ────── */}
+        <View style={{ width: screenWidth }}>
+          {isOwner ? (
+            <OwnerScheduleTab facilityId={facility.id} />
+          ) : (
+            <UserReservationsTab
+              facilityId={facility.id}
+              facilityName={facility.name}
+            />
+          )}
         </View>
       </ScrollView>
 
