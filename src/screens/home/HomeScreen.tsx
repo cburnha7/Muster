@@ -120,6 +120,7 @@ export function HomeScreen() {
   } = useGetUserBookingsQuery({
     status: 'all',
     pagination: { page: 1, limit: 200 },
+    includeFamily: dependents.length > 0,
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
@@ -153,14 +154,11 @@ export function HomeScreen() {
 
   const discoverEvents = useMemo(() => {
     const events = discoverData?.data || [];
-    // Exclude events that the active profile has already joined
+    // Exclude events that ANY family member has already joined
     const allBookingsList = bookingsData?.data || [];
-    const profileBookings = selectedCrewId
-      ? allBookingsList.filter(b => b.userId === selectedCrewId)
-      : allBookingsList;
-    const bookedEventIds = new Set(profileBookings.map(b => b.eventId));
+    const bookedEventIds = new Set(allBookingsList.map(b => b.eventId));
     return events.filter(e => !bookedEventIds.has(e.id));
-  }, [discoverData, bookingsData, selectedCrewId]);
+  }, [discoverData, bookingsData]);
 
   // User teams state
   const [userTeams, setUserTeams] = useState<Team[]>([]);
