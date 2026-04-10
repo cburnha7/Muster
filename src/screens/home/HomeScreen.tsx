@@ -23,7 +23,6 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { EventSearchPanel } from '../../components/home/EventSearchPanel';
 import { InboxSection } from '../../components/home/InboxSection';
-import { EmptyHomeState } from '../../components/home/EmptyHomeState';
 import { LiveGameBanner } from '../../components/home/LiveGameBanner';
 import { MyCrewRow, CrewMember } from '../../components/home/MyCrewRow';
 import { CrewEventCard } from '../../components/home/CrewEventCard';
@@ -120,7 +119,7 @@ export function HomeScreen() {
   } = useGetUserBookingsQuery({
     status: 'all',
     pagination: { page: 1, limit: 200 },
-    includeFamily: dependents.length > 0,
+    includeFamily: true,
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
@@ -712,8 +711,6 @@ export function HomeScreen() {
     );
   }
 
-  const hasEvents = futureBookings.length > 0;
-
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -744,14 +741,6 @@ export function HomeScreen() {
             onSelect={setSelectedCrewId}
           />
 
-          {/* ── Empty state when no events ──── */}
-          {!hasEvents && (
-            <EmptyHomeState
-              userName={currentUser?.firstName}
-              onCreateEvent={handleCreateEvent}
-            />
-          )}
-
           {/* ── Live game banner ────────────────── */}
           {liveGameBooking && (
             <LiveGameBanner
@@ -773,18 +762,14 @@ export function HomeScreen() {
               />
             </View>
 
-            {calendarDateBookings.length === 0 ? (
-              <Text style={styles.emptyText}>No events on this day</Text>
-            ) : (
-              calendarDateBookings.map(booking => (
-                <CrewEventCard
-                  key={booking.id}
-                  booking={booking}
-                  crewColor={getBookingCrewColor(booking)}
-                  onPress={handleBookingPress}
-                />
-              ))
-            )}
+            {calendarDateBookings.map(booking => (
+              <CrewEventCard
+                key={booking.id}
+                booking={booking}
+                crewColor={getBookingCrewColor(booking)}
+                onPress={handleBookingPress}
+              />
+            ))}
           </View>
 
           {/* ── Games near you ─────────────────── */}
