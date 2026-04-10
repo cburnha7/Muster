@@ -358,13 +358,25 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
       `${user?.firstName} ${user?.lastName}`
     );
 
-    const { page = '1', limit = '20', status } = req.query;
+    const { page = '1', limit = '20', status, includeFamily } = req.query;
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
+    // When includeFamily=true, fetch bookings for this user AND all their dependents
+    let userIds: string[] = [userId];
+    if (includeFamily === 'true') {
+      const dependents = await prisma.user.findMany({
+        where: { guardianId: userId, isDependent: true },
+        select: { id: true },
+      });
+      userIds = [userId, ...dependents.map(d => d.id)];
+      console.log('📋 Including family members:', userIds.length, 'users');
+    }
+
     // Build where clause
-    const where: any = { userId };
+    const where: any =
+      userIds.length > 1 ? { userId: { in: userIds } } : { userId };
 
     if (status === 'upcoming') {
       where.status = { not: 'cancelled' };

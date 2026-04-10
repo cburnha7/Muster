@@ -23,7 +23,6 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { EventSearchPanel } from '../../components/home/EventSearchPanel';
 import { InboxSection } from '../../components/home/InboxSection';
-import { EmptyHomeState } from '../../components/home/EmptyHomeState';
 import { LiveGameBanner } from '../../components/home/LiveGameBanner';
 import { MyCrewRow, CrewMember } from '../../components/home/MyCrewRow';
 import { CrewEventCard } from '../../components/home/CrewEventCard';
@@ -120,6 +119,7 @@ export function HomeScreen() {
   } = useGetUserBookingsQuery({
     status: 'all',
     pagination: { page: 1, limit: 200 },
+    includeFamily: true,
   });
 
   const [cancelBookingMutation] = useCancelBookingMutation();
@@ -153,14 +153,11 @@ export function HomeScreen() {
 
   const discoverEvents = useMemo(() => {
     const events = discoverData?.data || [];
-    // Exclude events that the active profile has already joined
+    // Exclude events that ANY family member has already joined
     const allBookingsList = bookingsData?.data || [];
-    const profileBookings = selectedCrewId
-      ? allBookingsList.filter(b => b.userId === selectedCrewId)
-      : allBookingsList;
-    const bookedEventIds = new Set(profileBookings.map(b => b.eventId));
+    const bookedEventIds = new Set(allBookingsList.map(b => b.eventId));
     return events.filter(e => !bookedEventIds.has(e.id));
-  }, [discoverData, bookingsData, selectedCrewId]);
+  }, [discoverData, bookingsData]);
 
   // User teams state
   const [userTeams, setUserTeams] = useState<Team[]>([]);
@@ -714,8 +711,6 @@ export function HomeScreen() {
     );
   }
 
-  const hasEvents = futureBookings.length > 0;
-
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -746,14 +741,6 @@ export function HomeScreen() {
             onSelect={setSelectedCrewId}
           />
 
-          {/* ── Empty state when no events ──── */}
-          {!hasEvents && (
-            <EmptyHomeState
-              userName={currentUser?.firstName}
-              onCreateEvent={handleCreateEvent}
-            />
-          )}
-
           {/* ── Live game banner ────────────────── */}
           {liveGameBooking && (
             <LiveGameBanner
@@ -775,18 +762,14 @@ export function HomeScreen() {
               />
             </View>
 
-            {calendarDateBookings.length === 0 ? (
-              <Text style={styles.emptyText}>No events on this day</Text>
-            ) : (
-              calendarDateBookings.map(booking => (
-                <CrewEventCard
-                  key={booking.id}
-                  booking={booking}
-                  crewColor={getBookingCrewColor(booking)}
-                  onPress={handleBookingPress}
-                />
-              ))
-            )}
+            {calendarDateBookings.map(booking => (
+              <CrewEventCard
+                key={booking.id}
+                booking={booking}
+                crewColor={getBookingCrewColor(booking)}
+                onPress={handleBookingPress}
+              />
+            ))}
           </View>
 
           {/* ── Games near you ─────────────────── */}
