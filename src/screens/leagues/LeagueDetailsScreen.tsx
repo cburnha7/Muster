@@ -9,7 +9,11 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 
@@ -29,7 +33,12 @@ import { LeagueLedger } from '../../components/league/LeagueLedger';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
 import { loggingService } from '../../services/LoggingService';
-import { HeroSection, PersonRow, DetailCard, FixedBottomCTA } from '../../components/detail';
+import {
+  HeroSection,
+  PersonRow,
+  DetailCard,
+  FixedBottomCTA,
+} from '../../components/detail';
 import { getSportColor } from '../../constants/sportColors';
 
 // Import tab components
@@ -46,7 +55,11 @@ function formatDateShort(date?: Date | string | null): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function formatTime(time?: string | null): string {
@@ -64,10 +77,14 @@ function buildSeasonSummary(league: League): string {
   const parts: string[] = [];
   if (league.preferredGameDays?.length) {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    parts.push('Games on ' + league.preferredGameDays.map((d) => dayNames[d]).join(', '));
+    parts.push(
+      'Games on ' + league.preferredGameDays.map(d => dayNames[d]).join(', ')
+    );
   }
   if (league.preferredTimeWindowStart && league.preferredTimeWindowEnd) {
-    parts.push(`${formatTime(league.preferredTimeWindowStart)}–${formatTime(league.preferredTimeWindowEnd)}`);
+    parts.push(
+      `${formatTime(league.preferredTimeWindowStart)}–${formatTime(league.preferredTimeWindowEnd)}`
+    );
   }
   if (league.startDate) {
     parts.push('Starts ' + formatDateShort(league.startDate));
@@ -84,7 +101,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const { leagueId, readOnly } = (route.params as any) || {};
 
   const currentUser = useSelector((state: RootState) => state.auth?.user);
-  const isAuthenticated = useSelector((state: RootState) => state.auth?.isAuthenticated);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth?.isAuthenticated
+  );
   const userRosters = useSelector(selectUserTeams) as Team[];
 
   const [league, setLeague] = useState<League | null>(null);
@@ -98,64 +117,84 @@ export function LeagueDetailsScreen(): React.ReactElement {
   const [isUpdating, setIsUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-
   // ── Data loading ────────────────────────────────────────────────
-  const loadLeague = useCallback(async (isRefresh = false) => {
-    if (!leagueId) return;
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setIsLoading(true);
+  const loadLeague = useCallback(
+    async (isRefresh = false) => {
+      if (!leagueId) return;
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+        // Always clear caches to ensure fresh data (especially for invitation flows)
+        cacheService.clearBySubstring('users');
+        cacheService.clearBySubstring('leagues');
+        setError(null);
+
+        const svc = new LeagueService();
+        const [leagueData, membersResponse, , userTeamsRes] = await Promise.all(
+          [
+            svc.getLeagueById(leagueId, true),
+            svc.getMembers(leagueId, 1, 100, true), // includePending for commissioner
+            svc.getLeagueEvents(leagueId),
+            currentUser?.id
+              ? userService.getUserTeams()
+              : Promise.resolve({ data: [] }),
+          ]
+        );
+
+        const typedLeague = leagueData as any as League;
+        setLeague(typedLeague);
+
+        // membersResponse is { leagueType, data, pagination } — extract the data array
+        const membersData =
+          (membersResponse as any).data || membersResponse.data || [];
+        setMembers(Array.isArray(membersData) ? membersData : []);
+        setFetchedUserRosters((userTeamsRes as any)?.data ?? []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load league');
+      } finally {
+        setIsLoading(false);
+        setRefreshing(false);
       }
-      // Always clear caches to ensure fresh data (especially for invitation flows)
-      cacheService.clearBySubstring('users');
-      cacheService.clearBySubstring('leagues');
-      setError(null);
+    },
+    [leagueId, currentUser]
+  );
 
-      const svc = new LeagueService();
-      const [leagueData, membersResponse, , userTeamsRes] = await Promise.all([
-        svc.getLeagueById(leagueId, true),
-        svc.getMembers(leagueId, 1, 100, true), // includePending for commissioner
-        svc.getLeagueEvents(leagueId),
-        currentUser?.id ? userService.getUserTeams() : Promise.resolve({ data: [] }),
-      ]);
-
-      const typedLeague = leagueData as any as League;
-      setLeague(typedLeague);
-
-      // membersResponse is { leagueType, data, pagination } — extract the data array
-      const membersData = (membersResponse as any).data || membersResponse.data || [];
-      setMembers(Array.isArray(membersData) ? membersData : []);
-      setFetchedUserRosters((userTeamsRes as any)?.data ?? []);
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load league');
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  }, [leagueId, currentUser]);
-
-  useFocusEffect(useCallback(() => { loadLeague(); }, [loadLeague]));
-
+  useFocusEffect(
+    useCallback(() => {
+      loadLeague();
+    }, [loadLeague])
+  );
 
   // ── Derived state ───────────────────────────────────────────────
-  const isOperator = league ? (currentUser?.id === league.organizerId && !readOnly) : false;
+  const isOperator = league
+    ? currentUser?.id === league.organizerId && !readOnly
+    : false;
 
-  const activeMembers = members.filter((m) => m.status === 'active' || m.status === 'pending');
+  const activeMembers = members.filter(
+    m => m.status === 'active' || m.status === 'pending'
+  );
 
   const rosterIdsInLeague = new Set(
-    activeMembers.filter((m) => m.memberType === 'roster').map((m) => m.memberId)
+    activeMembers.filter(m => m.memberType === 'roster').map(m => m.memberId)
   );
-  const allRostersSource = fetchedUserRosters.length ? fetchedUserRosters : (userRosters || []);
-  const userOwnedRosters = allRostersSource.filter((r: any) =>
-    r.currentUserRole === TeamRole.CAPTAIN ||
-    r.captainId === currentUser?.id ||
-    r.members?.some((m: any) => m.userId === currentUser?.id && m.role === TeamRole.CAPTAIN)
+  const allRostersSource = fetchedUserRosters.length
+    ? fetchedUserRosters
+    : userRosters || [];
+  const userOwnedRosters = allRostersSource.filter(
+    (r: any) =>
+      r.currentUserRole === TeamRole.CAPTAIN ||
+      r.captainId === currentUser?.id ||
+      r.members?.some(
+        (m: any) => m.userId === currentUser?.id && m.role === TeamRole.CAPTAIN
+      )
   );
 
-  const eligibleRosters = userOwnedRosters.filter((r) => !rosterIdsInLeague.has(r.id));
+  const eligibleRosters = userOwnedRosters.filter(
+    r => !rosterIdsInLeague.has(r.id)
+  );
   const hasEligibleRoster = eligibleRosters.length > 0;
 
   // Check if user has a pending roster invitation they can confirm
@@ -163,41 +202,54 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // Use both members state (from getMembers) and league.memberships (from getLeagueById) for robustness
   const leagueMembershipsData: any[] = (league as any)?.memberships || [];
   const pendingFromMembers = members.filter(
-    (m) => m.status === 'pending' && m.memberType === 'roster' &&
-      userOwnedRosters.some((r) => r.id === m.memberId)
+    m =>
+      m.status === 'pending' &&
+      m.memberType === 'roster' &&
+      userOwnedRosters.some(r => r.id === m.memberId)
   );
   const pendingFromLeague = leagueMembershipsData.filter(
-    (m: any) => m.status === 'pending' && m.memberType === 'roster' &&
+    (m: any) =>
+      m.status === 'pending' &&
+      m.memberType === 'roster' &&
       userOwnedRosters.some((r: Team) => r.id === m.memberId)
   );
   // Prefer members state (has full data), fall back to league.memberships
-  const pendingUserRosterInvitations = pendingFromMembers.length > 0
-    ? pendingFromMembers
-    : pendingFromLeague;
+  const pendingUserRosterInvitations =
+    pendingFromMembers.length > 0 ? pendingFromMembers : pendingFromLeague;
 
   // ── Helpers ─────────────────────────────────────────────────────
   const formatSkillLevel = (level?: string): string => {
     if (!level) return 'Open';
     switch (level.toLowerCase()) {
-      case 'beginner': return 'Beginner';
-      case 'intermediate': return 'Intermediate';
-      case 'advanced': return 'Advanced';
-      case 'all_levels': return 'All Levels';
-      default: return level.charAt(0).toUpperCase() + level.slice(1).replace(/_/g, ' ');
+      case 'beginner':
+        return 'Beginner';
+      case 'intermediate':
+        return 'Intermediate';
+      case 'advanced':
+        return 'Advanced';
+      case 'all_levels':
+        return 'All Levels';
+      default:
+        return (
+          level.charAt(0).toUpperCase() + level.slice(1).replace(/_/g, ' ')
+        );
     }
   };
 
   // ── Commissioner actions ────────────────────────────────────────
   const handleUpdateLeague = async (data: UpdateLeagueData) => {
     if (!currentUser?.id) return;
-    loggingService.logButton('Update League', 'LeagueDetailsScreen', { leagueId });
+    loggingService.logButton('Update League', 'LeagueDetailsScreen', {
+      leagueId,
+    });
     try {
       setIsUpdating(true);
       await leagueService.updateLeague(leagueId, data, currentUser.id);
       Alert.alert('Success', 'League updated successfully');
       (navigation as any).replace('LeaguesBrowser');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to update league';
+      const msg =
+        err instanceof Error ? err.message : 'Failed to update league';
       Alert.alert('Error', msg);
     } finally {
       setIsUpdating(false);
@@ -206,7 +258,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleDeleteLeague = () => {
     if (!currentUser?.id || !league) return;
-    loggingService.logButton('Delete League', 'LeagueDetailsScreen', { leagueId });
+    loggingService.logButton('Delete League', 'LeagueDetailsScreen', {
+      leagueId,
+    });
 
     const doDelete = async () => {
       try {
@@ -219,7 +273,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
         }
         navigation.goBack();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Failed to delete league';
+        const msg =
+          err instanceof Error ? err.message : 'Failed to delete league';
         if (Platform.OS === 'web') {
           window.alert(msg);
         } else {
@@ -231,29 +286,49 @@ export function LeagueDetailsScreen(): React.ReactElement {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm(`Are you sure you want to delete "${league.name}"? This cannot be undone.`)) {
+      if (
+        window.confirm(
+          `Are you sure you want to delete "${league.name}"? This cannot be undone.`
+        )
+      ) {
         doDelete();
       }
     } else {
-      Alert.alert('Delete League', `Are you sure you want to delete "${league.name}"? This cannot be undone.`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: doDelete },
-      ]);
+      Alert.alert(
+        'Delete League',
+        `Are you sure you want to delete "${league.name}"? This cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: doDelete },
+        ]
+      );
     }
   };
 
   // ── Non-commissioner actions ────────────────────────────────────
   const handleJoinTeamLeague = async () => {
     if (!league || !currentUser || eligibleRosters.length === 0) return;
-    loggingService.logButton('Join (Roster)', 'LeagueDetailsScreen', { leagueId });
+    loggingService.logButton('Join (Roster)', 'LeagueDetailsScreen', {
+      leagueId,
+    });
     const roster = eligibleRosters[0]!;
     try {
       setIsActionLoading(true);
-      await leagueService.joinLeagueAsRoster(league.id, roster.id, currentUser.id);
-      Alert.alert('Request Sent', `Your roster "${roster.name}" has requested to join.`);
+      await leagueService.joinLeagueAsRoster(
+        league.id,
+        roster.id,
+        currentUser.id
+      );
+      Alert.alert(
+        'Request Sent',
+        `Your roster "${roster.name}" has requested to join.`
+      );
       await loadLeague(true);
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to send join request');
+      Alert.alert(
+        'Error',
+        err instanceof Error ? err.message : 'Failed to send join request'
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -261,7 +336,10 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   const handleStepOut = async (teamId?: string) => {
     if (!league || !currentUser) return;
-    loggingService.logButton('Leave', 'LeagueDetailsScreen', { leagueId, teamId });
+    loggingService.logButton('Leave', 'LeagueDetailsScreen', {
+      leagueId,
+      teamId,
+    });
 
     const doStepOut = async () => {
       try {
@@ -273,9 +351,14 @@ export function LeagueDetailsScreen(): React.ReactElement {
         await loadLeague(true);
       } catch (err) {
         if (Platform.OS === 'web') {
-          window.alert(err instanceof Error ? err.message : 'Failed to leave league');
+          window.alert(
+            err instanceof Error ? err.message : 'Failed to leave league'
+          );
         } else {
-          Alert.alert('Error', err instanceof Error ? err.message : 'Failed to leave league');
+          Alert.alert(
+            'Error',
+            err instanceof Error ? err.message : 'Failed to leave league'
+          );
         }
       } finally {
         setIsActionLoading(false);
@@ -299,11 +382,21 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!currentUser?.id || !league) return;
     try {
       setIsActionLoading(true);
-      const newMembership = await leagueService.joinLeagueAsRoster(league.id, roster.id, currentUser.id);
-      setMembers((prev) => [...prev, newMembership as LeagueMembership]);
-      Alert.alert('Roster Added', `"${roster.name}" has been added to the league.`);
+      const newMembership = await leagueService.joinLeagueAsRoster(
+        league.id,
+        roster.id,
+        currentUser.id
+      );
+      setMembers(prev => [...prev, newMembership as LeagueMembership]);
+      Alert.alert(
+        'Roster Added',
+        `"${roster.name}" has been added to the league.`
+      );
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to add roster');
+      Alert.alert(
+        'Error',
+        err instanceof Error ? err.message : 'Failed to add roster'
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -313,8 +406,19 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!currentUser?.id) return;
     try {
       setIsActionLoading(true);
-      console.log('[ConfirmInvitation] Sending:', { leagueId, membershipId: membership.id, memberType: membership.memberType, memberId: membership.memberId, userId: currentUser.id });
-      const result = await leagueService.respondToInvitation(leagueId, membership.id, true, currentUser.id);
+      console.log('[ConfirmInvitation] Sending:', {
+        leagueId,
+        membershipId: membership.id,
+        memberType: membership.memberType,
+        memberId: membership.memberId,
+        userId: currentUser.id,
+      });
+      const result = await leagueService.respondToInvitation(
+        leagueId,
+        membership.id,
+        true,
+        currentUser.id
+      );
       console.log('[ConfirmInvitation] Response:', JSON.stringify(result));
       // Invalidate both users and leagues cache so home screen invitations and league data refetch fresh
       cacheService.clearBySubstring('users');
@@ -331,7 +435,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
       }
     } catch (err) {
       console.error('[ConfirmInvitation] Error:', err);
-      const msg = err instanceof Error ? err.message : 'Failed to confirm invitation';
+      const msg =
+        err instanceof Error ? err.message : 'Failed to confirm invitation';
       if (Platform.OS === 'web') {
         window.alert(msg);
       } else {
@@ -348,12 +453,18 @@ export function LeagueDetailsScreen(): React.ReactElement {
     const doDecline = async () => {
       try {
         setIsActionLoading(true);
-        await leagueService.respondToInvitation(leagueId, membership.id, false, currentUser.id);
+        await leagueService.respondToInvitation(
+          leagueId,
+          membership.id,
+          false,
+          currentUser.id
+        );
         cacheService.clearBySubstring('users');
         cacheService.clearBySubstring('leagues');
-        setMembers((prev) => prev.filter((m) => m.id !== membership.id));
+        setMembers(prev => prev.filter(m => m.id !== membership.id));
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Failed to decline invitation';
+        const msg =
+          err instanceof Error ? err.message : 'Failed to decline invitation';
         if (Platform.OS === 'web') {
           window.alert(msg);
         } else {
@@ -365,25 +476,47 @@ export function LeagueDetailsScreen(): React.ReactElement {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to decline this league invitation?')) {
+      if (
+        window.confirm(
+          'Are you sure you want to decline this league invitation?'
+        )
+      ) {
         await doDecline();
       }
     } else {
-      Alert.alert('Decline Invitation', 'Are you sure you want to decline this league invitation?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Decline', style: 'destructive', onPress: doDecline },
-      ]);
+      Alert.alert(
+        'Decline Invitation',
+        'Are you sure you want to decline this league invitation?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Decline', style: 'destructive', onPress: doDecline },
+        ]
+      );
     }
   };
 
   const renderTabBar = () => (
     <View style={styles.tabBar}>
-      {([
-        { key: 'standings' as TabKey, label: 'Standings', icon: 'trophy-outline' },
-        { key: 'matches' as TabKey, label: 'Matches', icon: 'football-outline' },
-        { key: 'teams' as TabKey, label: 'Rosters', icon: 'shield-outline' },
-        { key: 'info' as TabKey, label: 'Info', icon: 'information-circle-outline' },
-      ] as Array<{ key: TabKey; label: string; icon: string }>).map((tab) => (
+      {(
+        [
+          {
+            key: 'standings' as TabKey,
+            label: 'Standings',
+            icon: 'trophy-outline',
+          },
+          {
+            key: 'matches' as TabKey,
+            label: 'Matches',
+            icon: 'football-outline',
+          },
+          { key: 'teams' as TabKey, label: 'Rosters', icon: 'shield-outline' },
+          {
+            key: 'info' as TabKey,
+            label: 'Info',
+            icon: 'information-circle-outline',
+          },
+        ] as Array<{ key: TabKey; label: string; icon: string }>
+      ).map(tab => (
         <TouchableOpacity
           key={tab.key}
           style={[styles.tab, activeTab === tab.key && styles.tabActive]}
@@ -397,7 +530,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
             size={18}
             color={activeTab === tab.key ? colors.cobalt : colors.inkFaint}
           />
-          <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === tab.key && styles.tabLabelActive,
+            ]}
+          >
             {tab.label}
           </Text>
         </TouchableOpacity>
@@ -437,12 +575,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.cobalt} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => loadLeague(true)}
+              tintColor={colors.cobalt}
+            />
+          }
         >
           {/* Commissioner: Schedule button — navigate to Scheduling Screen */}
           <TouchableOpacity
             style={styles.scheduleBtn}
-            onPress={() => (navigation as any).navigate('LeagueScheduling', { leagueId })}
+            onPress={() =>
+              (navigation as any).navigate('LeagueScheduling', { leagueId })
+            }
             accessibilityRole="button"
             accessibilityLabel="Schedule"
           >
@@ -458,36 +604,45 @@ export function LeagueDetailsScreen(): React.ReactElement {
             onDelete={handleDeleteLeague}
             isEdit={true}
             loading={isUpdating}
-            initialRosters={
-              ((league as any).memberships || [])
-                .filter((m: any) => m.memberType === 'roster' && m.team && m.status === 'active')
-                .map((m: any) => ({
-                  id: m.team.id,
-                  name: m.team.name,
-                  sportType: m.team.sportType,
-                  memberCount: m.team._count?.members ?? m.team.members?.length ?? 0,
-                }))
-            }
-            initialInvitedRosters={
-              ((league as any).memberships || [])
-                .filter((m: any) => m.memberType === 'roster' && m.team && m.status === 'pending')
-                .map((m: any) => ({
-                  id: m.team.id,
-                  name: m.team.name,
-                  sportType: m.team.sportType,
-                  memberCount: m.team._count?.members ?? m.team.members?.length ?? 0,
-                }))
-            }
+            initialRosters={((league as any).memberships || [])
+              .filter(
+                (m: any) =>
+                  m.memberType === 'roster' && m.team && m.status === 'active'
+              )
+              .map((m: any) => ({
+                id: m.team.id,
+                name: m.team.name,
+                sportType: m.team.sportType,
+                memberCount:
+                  m.team._count?.members ?? m.team.members?.length ?? 0,
+              }))}
+            initialInvitedRosters={((league as any).memberships || [])
+              .filter(
+                (m: any) =>
+                  m.memberType === 'roster' && m.team && m.status === 'pending'
+              )
+              .map((m: any) => ({
+                id: m.team.id,
+                name: m.team.name,
+                sportType: m.team.sportType,
+                memberCount:
+                  m.team._count?.members ?? m.team.members?.length ?? 0,
+              }))}
           />
 
           {/* League financial ledger — visible to commissioner for paid leagues */}
           {(() => {
             const leagueAny = league as any;
-            const activeSeason = leagueAny.seasons?.find((s: any) => s.isActive);
+            const activeSeason = leagueAny.seasons?.find(
+              (s: any) => s.isActive
+            );
             if (leagueAny.pricingType === 'paid' && activeSeason) {
               return (
                 <View style={styles.ledgerSection}>
-                  <LeagueLedger leagueId={leagueId} seasonId={activeSeason.id} />
+                  <LeagueLedger
+                    leagueId={leagueId}
+                    seasonId={activeSeason.id}
+                  />
                 </View>
               );
             }
@@ -502,28 +657,41 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   // Derive roster lists — prefer league.memberships (from GET /leagues/:id), fall back to members state
   const leagueMemberships: any[] = (league as any)?.memberships || [];
-  const allRosterData = leagueMemberships.length > 0
-    ? leagueMemberships.filter((m: any) => m.memberType === 'roster')
-    : members.filter((m) => m.memberType === 'roster');
-  const confirmedRosters = allRosterData.filter((m: any) => m.status === 'active');
-  const invitedRosters = allRosterData.filter((m: any) => m.status === 'pending');
+  const allRosterData =
+    leagueMemberships.length > 0
+      ? leagueMemberships.filter((m: any) => m.memberType === 'roster')
+      : members.filter(m => m.memberType === 'roster');
+  const confirmedRosters = allRosterData.filter(
+    (m: any) => m.status === 'active'
+  );
+  const invitedRosters = allRosterData.filter(
+    (m: any) => m.status === 'pending'
+  );
 
   // Labels for HeroSection badges
   const sportLabel = league.sportType
-    ? league.sportType.charAt(0).toUpperCase() + league.sportType.slice(1).replace(/_/g, ' ')
+    ? league.sportType.charAt(0).toUpperCase() +
+      league.sportType.slice(1).replace(/_/g, ' ')
     : '';
   const skillLabel = formatSkillLevel(league.skillLevel);
-  const formatLabel = (league as any).leagueFormat === 'season' ? 'Season'
-    : (league as any).leagueFormat === 'season_with_playoffs' ? 'Season + Playoffs'
-    : (league as any).leagueFormat === 'tournament' ? 'Tournament'
-    : '';
+  const formatLabel =
+    (league as any).leagueFormat === 'season'
+      ? 'Season'
+      : (league as any).leagueFormat === 'season_with_playoffs'
+        ? 'Season + Playoffs'
+        : (league as any).leagueFormat === 'tournament'
+          ? 'Tournament'
+          : '';
   const statusLabel = league.isActive ? 'In progress' : 'Registration open';
 
   // Season summary subline for hero
-  const seasonSummaryLine = [
-    confirmedRosters.length ? `${confirmedRosters.length} teams` : null,
-    league.startDate ? `Starts ${formatDateShort(league.startDate)}` : null,
-  ].filter(Boolean).join(' · ') || undefined;
+  const seasonSummaryLine =
+    [
+      confirmedRosters.length ? `${confirmedRosters.length} teams` : null,
+      league.startDate ? `Starts ${formatDateShort(league.startDate)}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') || undefined;
 
   // hasSeasonInfo: true if buildSeasonSummary has real content
   const hasSeasonInfo = !!(
@@ -535,19 +703,29 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   // Max roster count from league config
   const leagueAny = league as any;
-  const maxRosters: number | null = leagueAny.maxRosters ?? leagueAny.teamCount ?? null;
+  const maxRosters: number | null =
+    leagueAny.maxRosters ?? leagueAny.teamCount ?? null;
   const registrationOpen = !league.isActive;
-  const spotsRemaining = maxRosters != null ? maxRosters - confirmedRosters.length : 0;
+  const spotsRemaining =
+    maxRosters != null ? maxRosters - confirmedRosters.length : 0;
 
   // Commissioner info
   const commissioner: { name: string } | null = league.organizer
-    ? { name: (league.organizer as any).displayName || (league.organizer as any).name || (league.organizer as any).email || 'Commissioner' }
+    ? {
+        name:
+          (league.organizer as any).displayName ||
+          (league.organizer as any).name ||
+          (league.organizer as any).email ||
+          'Commissioner',
+      }
     : null;
 
   // User's active roster in the league (for "Leave" logic)
   const userActiveRosterInLeague = members.find(
-    (m) => m.memberType === 'roster' && m.status === 'active' &&
-      userOwnedRosters.some((r) => r.id === m.memberId)
+    m =>
+      m.memberType === 'roster' &&
+      m.status === 'active' &&
+      userOwnedRosters.some(r => r.id === m.memberId)
   );
 
   // ── FixedBottomCTA logic ─────────────────────────────────────────
@@ -562,11 +740,15 @@ export function LeagueDetailsScreen(): React.ReactElement {
       return (
         <FixedBottomCTA
           label="Accept invitation"
-          onPress={() => handleConfirmInvitation(pendingUserRosterInvitations[0]!)}
+          onPress={() =>
+            handleConfirmInvitation(pendingUserRosterInvitations[0]!)
+          }
           variant="primary"
           loading={isActionLoading}
           secondaryLabel="Decline"
-          onSecondaryPress={() => handleDeclineInvitation(pendingUserRosterInvitations[0]!)}
+          onSecondaryPress={() =>
+            handleDeclineInvitation(pendingUserRosterInvitations[0]!)
+          }
         />
       );
     }
@@ -582,7 +764,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
           onPress={() => {}}
           variant="confirmed"
           secondaryLabel="Leave league"
-          onSecondaryPress={() => handleStepOut(userActiveRosterInLeague.memberId)}
+          onSecondaryPress={() =>
+            handleStepOut(userActiveRosterInLeague.memberId)
+          }
         />
       );
     }
@@ -590,7 +774,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
     // Registration open + eligible user: "Register your team"
     if (hasEligibleRoster && registrationOpen) {
       const userRosterInLeague = members.some(
-        (m) => m.memberType === 'roster' && userOwnedRosters.some((r) => r.id === m.memberId)
+        m =>
+          m.memberType === 'roster' &&
+          userOwnedRosters.some(r => r.id === m.memberId)
       );
       if (!userRosterInLeague) {
         return (
@@ -612,16 +798,26 @@ export function LeagueDetailsScreen(): React.ReactElement {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeague(true)} tintColor={colors.cobalt} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => loadLeague(true)}
+            tintColor={colors.cobalt}
+          />
+        }
       >
         {/* Pending roster invitations the commissioner can confirm */}
         {isOperator && pendingUserRosterInvitations.length > 0 && (
           <View style={styles.commissionerInviteBanner}>
             <Ionicons name="mail-outline" size={20} color={colors.gold} />
             <View style={styles.invitationBannerContent}>
-              <Text style={styles.invitationBannerTitle}>Your Roster Invitations</Text>
-              {pendingUserRosterInvitations.map((inv) => {
-                const rosterName = userOwnedRosters.find((r) => r.id === inv.memberId)?.name || 'Your roster';
+              <Text style={styles.invitationBannerTitle}>
+                Your Roster Invitations
+              </Text>
+              {pendingUserRosterInvitations.map(inv => {
+                const rosterName =
+                  userOwnedRosters.find(r => r.id === inv.memberId)?.name ||
+                  'Your roster';
                 return (
                   <View key={inv.id} style={styles.invitationRow}>
                     <Text style={styles.invitationText}>
@@ -663,8 +859,14 @@ export function LeagueDetailsScreen(): React.ReactElement {
             { label: skillLabel },
             { label: formatLabel },
             { label: statusLabel },
-          ].filter((b) => b.label && b.label !== '—' && b.label !== '')}
-          {...(league.description ? { headline: league.description.slice(0, 80) + (league.description.length > 80 ? '…' : '') } : {})}
+          ].filter(b => b.label && b.label !== '—' && b.label !== '')}
+          {...(league.description
+            ? {
+                headline:
+                  league.description.slice(0, 80) +
+                  (league.description.length > 80 ? '…' : ''),
+              }
+            : {})}
           {...(seasonSummaryLine ? { subline: seasonSummaryLine } : {})}
         />
 
@@ -674,19 +876,31 @@ export function LeagueDetailsScreen(): React.ReactElement {
             style={styles.chatBtn}
             onPress={async () => {
               try {
-                const conv = await conversationService.getOrCreateLeagueChannel(leagueId);
+                const conv =
+                  await conversationService.getOrCreateLeagueChannel(leagueId);
                 (navigation as any).navigate('Messages', {
                   screen: 'Chat',
-                  params: { conversationId: conv.id, title: league.name ?? 'League Channel', type: 'LEAGUE_CHANNEL' },
+                  params: {
+                    conversationId: conv.id,
+                    title: league.name ?? 'League Channel',
+                    type: 'LEAGUE_CHANNEL',
+                  },
                 });
               } catch (e) {
                 console.error('Navigate to chat error:', e);
-                Alert.alert('Error', 'Could not open league channel. Please try again.');
+                Alert.alert(
+                  'Error',
+                  'Could not open league channel. Please try again.'
+                );
               }
             }}
             activeOpacity={0.8}
           >
-            <Ionicons name="chatbubbles-outline" size={18} color={colors.cobalt} />
+            <Ionicons
+              name="chatbubbles-outline"
+              size={18}
+              color={colors.cobalt}
+            />
             <Text style={styles.chatBtnText}>League Channel</Text>
           </TouchableOpacity>
         )}
@@ -695,28 +909,24 @@ export function LeagueDetailsScreen(): React.ReactElement {
         {renderTabBar()}
 
         {/* Tab content */}
-        {activeTab === 'standings' && (
-          <StandingsTab leagueId={leagueId} />
-        )}
+        {activeTab === 'standings' && <StandingsTab leagueId={leagueId} />}
 
         {activeTab === 'matches' && (
           <MatchesTab leagueId={leagueId} isOperator={isOperator} />
         )}
 
-        {activeTab === 'players' && (
-          <PlayersTab leagueId={leagueId} />
-        )}
+        {activeTab === 'players' && <PlayersTab leagueId={leagueId} />}
 
-        {activeTab === 'teams' && (
-          <TeamsTab leagueId={leagueId} />
-        )}
+        {activeTab === 'teams' && <TeamsTab leagueId={leagueId} />}
 
         {activeTab === 'info' && (
           <>
             {/* Season card — only show if there are real values */}
             {hasSeasonInfo && (
               <DetailCard title="The season" delay={0}>
-                <Text style={styles.seasonSummary}>{buildSeasonSummary(league)}</Text>
+                <Text style={styles.seasonSummary}>
+                  {buildSeasonSummary(league)}
+                </Text>
               </DetailCard>
             )}
 
@@ -728,20 +938,25 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 confirmedRosters.map((m: any) => {
                   const team = m.team;
                   const name = team?.name || m.memberId;
-                  const playerCount = team?._count?.members ?? team?.playerCount ?? 0;
+                  const playerCount =
+                    team?._count?.members ?? team?.playerCount ?? 0;
                   const teamId = team?.id || m.memberId;
                   return (
                     <PersonRow
                       key={m.id}
                       name={name}
                       subtitle={`${playerCount} players`}
-                      onPress={() => (navigation as any).navigate('TeamDetails', { teamId })}
+                      onPress={() =>
+                        (navigation as any).navigate('TeamDetails', { teamId })
+                      }
                     />
                   );
                 })
               )}
               {registrationOpen && maxRosters != null && spotsRemaining > 0 && (
-                <Text style={styles.spotsText}>{spotsRemaining} spots remaining</Text>
+                <Text style={styles.spotsText}>
+                  {spotsRemaining} spots remaining
+                </Text>
               )}
             </DetailCard>
 
@@ -751,13 +966,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 {invitedRosters.map((m: any) => {
                   const team = m.team;
                   const name = team?.name || m.memberId;
-                  return (
-                    <PersonRow
-                      key={m.id}
-                      name={name}
-                      role="Pending"
-                    />
-                  );
+                  return <PersonRow key={m.id} name={name} role="Pending" />;
                 })}
               </DetailCard>
             )}
@@ -765,18 +974,19 @@ export function LeagueDetailsScreen(): React.ReactElement {
             {/* Commissioner card */}
             {commissioner && (
               <DetailCard title="Commissioner" delay={150}>
-                <PersonRow
-                  name={commissioner.name}
-                  role="Commissioner"
-                />
+                <PersonRow name={commissioner.name} role="Commissioner" />
               </DetailCard>
             )}
 
             {/* Add roster section (if user has eligible rosters not in league) */}
             {eligibleRosters.length > 0 && registrationOpen && !readOnly && (
               <DetailCard title="Join with your team" delay={200}>
-                {eligibleRosters.map((r) => (
-                  <TouchableOpacity key={r.id} onPress={() => handleAddRosterToLeague(r)} style={styles.joinRosterRow}>
+                {eligibleRosters.map(r => (
+                  <TouchableOpacity
+                    key={r.id}
+                    onPress={() => handleAddRosterToLeague(r)}
+                    style={styles.joinRosterRow}
+                  >
                     <Text style={styles.joinRosterName}>{r.name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -788,10 +998,18 @@ export function LeagueDetailsScreen(): React.ReactElement {
         {/* Edit / Delete for commissioner */}
         {isOperator && (
           <View style={styles.ownerActions}>
-            <TouchableOpacity style={styles.ownerEditBtn} onPress={() => setEditMode(true)} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.ownerEditBtn}
+              onPress={() => setEditMode(true)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.ownerEditBtnText}>Edit League</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.ownerDeleteBtn} onPress={handleDeleteLeague} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.ownerDeleteBtn}
+              onPress={handleDeleteLeague}
+              activeOpacity={0.7}
+            >
               <Text style={styles.ownerDeleteBtnText}>Delete League</Text>
             </TouchableOpacity>
           </View>
@@ -811,157 +1029,321 @@ const styles = StyleSheet.create({
   formSection: { backgroundColor: '#FFFFFF', marginBottom: 12 },
   section: { backgroundColor: '#FFFFFF', marginBottom: 12, paddingBottom: 12 },
   sectionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   sectionTitle: {
-    fontFamily: fonts.heading, fontSize: 24, color: colors.ink,
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.ink,
   },
   sectionSubtext: {
-    fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint,
-    paddingHorizontal: 16, paddingBottom: 8,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   countText: {
-    fontFamily: fonts.semibold, fontSize: 14, color: colors.cobalt,
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.cobalt,
   },
   countBadge: {
-    backgroundColor: colors.gold, borderRadius: 10,
-    minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.gold,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 6,
   },
   countBadgeText: {
-    fontFamily: fonts.label, fontSize: 11, color: '#FFFFFF',
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: '#FFFFFF',
   },
   emptyState: { alignItems: 'center', padding: 24 },
-  emptyText: { fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint, marginTop: 8 },
-  errorRow: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 8, gap: 6,
+  emptyText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    marginTop: 8,
   },
-  errorRowText: { fontFamily: fonts.body, fontSize: 13, color: colors.heart, flex: 1 },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 6,
+  },
+  errorRowText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.heart,
+    flex: 1,
+  },
   // Join request styles
   requestItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   requestInfo: { flex: 1, marginRight: 12 },
   requestName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
-  requestMeta: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
+  requestMeta: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   requestActions: { flexDirection: 'row', gap: 8 },
   approveBtn: {
-    backgroundColor: colors.cobalt, borderRadius: 8, width: 34, height: 34,
-    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.cobalt,
+    borderRadius: 8,
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   declineBtn: {
-    backgroundColor: colors.heart, borderRadius: 8, width: 34, height: 34,
-    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.heart,
+    borderRadius: 8,
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Member list styles
   memberItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   memberInfo: { flex: 1, marginRight: 12 },
   memberName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
-  memberMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  memberMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
   memberStats: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint },
   statusBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
   statusActive: { backgroundColor: '#EDF7F0' },
   statusPending: { backgroundColor: colors.goldLight },
-  statusText: { fontFamily: fonts.label, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statusText: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   statusTextActive: { color: colors.cobalt },
   statusTextPending: { color: colors.ink },
   removeBtn: { padding: 6 },
   // Confirm / decline invitation
   confirmActions: { flexDirection: 'row', gap: 6 },
   confirmBtn: {
-    backgroundColor: colors.cobalt, borderRadius: 8,
-    paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center',
+    backgroundColor: colors.cobalt,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    alignItems: 'center',
   },
   confirmBtnText: { fontFamily: fonts.ui, fontSize: 13, color: '#FFFFFF' },
   declineBtnSmall: {
-    borderWidth: 1, borderColor: colors.heart, borderRadius: 8,
-    paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.heart,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    alignItems: 'center',
   },
-  declineBtnSmallText: { fontFamily: fonts.ui, fontSize: 13, color: colors.heart },
+  declineBtnSmallText: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    color: colors.heart,
+  },
   // Events section
   generateBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: colors.cobalt, borderRadius: 10, marginHorizontal: 16,
-    paddingVertical: 12, marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.cobalt,
+    borderRadius: 10,
+    marginHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 12,
   },
   generateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
   matchupList: { paddingHorizontal: 16 },
   matchupLabel: {
-    fontFamily: fonts.label, fontSize: 11, color: colors.inkFaint,
-    textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8,
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   matchupCard: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFF8EE', borderRadius: 10, padding: 14, marginBottom: 8,
-    borderWidth: 1, borderColor: colors.goldLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF8EE',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.goldLight,
   },
   matchupInfo: { flex: 1, marginRight: 12 },
   matchupTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
-  matchupRosters: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
+  matchupRosters: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   unscheduledBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  unscheduledText: { fontFamily: fonts.label, fontSize: 11, color: colors.gold, textTransform: 'uppercase' },
+  unscheduledText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.gold,
+    textTransform: 'uppercase',
+  },
   // Event action buttons
-  eventActions: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, gap: 8 },
+  eventActions: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 8,
+  },
   createEventBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.cobalt, borderRadius: 10, paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.cobalt,
+    borderRadius: 10,
+    paddingVertical: 12,
   },
-  createEventBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.cobalt },
+  createEventBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.cobalt,
+  },
   viewMatchupsBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.gold, borderRadius: 10, paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.gold,
+    borderRadius: 10,
+    paddingVertical: 12,
   },
-  viewMatchupsBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.gold },
+  viewMatchupsBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.gold,
+  },
   // Event card styles
   eventCard: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   eventDateCol: { marginRight: 14, alignItems: 'center', minWidth: 60 },
   eventDay: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
-  eventTime: { fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginTop: 2 },
+  eventTime: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   eventDetails: { flex: 1, marginRight: 8 },
   eventTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
-  eventRosters: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
+  eventRosters: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   // Add roster option
   addRosterItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  addRosterName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cobalt },
+  addRosterName: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.cobalt,
+  },
   // Tab bar
   tabBar: {
-    flexDirection: 'row', backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
     marginBottom: 2,
   },
   tab: {
-    flex: 1, alignItems: 'center', paddingVertical: 10, gap: 2,
-    borderBottomWidth: 2, borderBottomColor: 'transparent',
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    gap: 2,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   tabActive: { borderBottomColor: colors.cobalt },
-  tabLabel: { fontFamily: fonts.label, fontSize: 10, color: colors.inkFaint, textTransform: 'uppercase' },
+  tabLabel: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+  },
   tabLabelActive: { color: colors.cobalt },
   // Action bar (bottom) — kept for backwards compat
   actionBar: {
-    backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 12,
-    borderTopWidth: 1, borderTopColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
   joinBtn: {
-    backgroundColor: colors.cobalt, borderRadius: 12, paddingVertical: 14,
+    backgroundColor: colors.cobalt,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
   },
   joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
   stepOutBtn: {
-    borderWidth: 2, borderColor: colors.inkFaint, borderRadius: 12, paddingVertical: 14,
+    borderWidth: 2,
+    borderColor: colors.inkFaint,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
   },
   stepOutBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.ink },
@@ -984,11 +1366,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   commissionerActions: {
-    paddingHorizontal: 16, paddingVertical: 16, paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 32,
   },
   deleteBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 2, borderColor: colors.heart, borderRadius: 12, paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.heart,
+    borderRadius: 12,
+    paddingVertical: 14,
   },
   deleteBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.heart },
   // Owner edit/delete actions
@@ -999,7 +1389,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ownerEditBtn: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
@@ -1023,79 +1413,162 @@ const styles = StyleSheet.create({
   },
   // Read-only league header
   leagueHeader: {
-    backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 16, marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 12,
   },
   headerTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   sportBadge: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#EDF7F0',
-    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EDF7F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerTitleArea: { flex: 1 },
   leagueName: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
-  leagueType: { fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint, marginTop: 2 },
+  leagueType: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   leagueDescription: {
-    fontFamily: fonts.body, fontSize: 15, color: colors.ink, lineHeight: 22, marginBottom: 12,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    lineHeight: 22,
+    marginBottom: 12,
   },
   headerStats: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.white, borderRadius: 12, paddingVertical: 12, marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginBottom: 8,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontFamily: fonts.semibold, fontSize: 18, color: colors.ink },
-  statLabel: { fontFamily: fonts.body, fontSize: 12, color: colors.inkFaint, marginTop: 2 },
+  statLabel: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   statDivider: { width: 1, height: 28, backgroundColor: '#E5E7EB' },
   headerDates: {
-    fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, textAlign: 'center', marginTop: 4,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    textAlign: 'center',
+    marginTop: 4,
   },
   // Invitation banner
   invitationBanner: {
-    flexDirection: 'row', backgroundColor: '#FFF8EE', paddingHorizontal: 16, paddingVertical: 14,
-    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.gold,
+    flexDirection: 'row',
+    backgroundColor: '#FFF8EE',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.gold,
   },
   commissionerInviteBanner: {
-    flexDirection: 'row', backgroundColor: '#FFF8EE', paddingHorizontal: 16, paddingVertical: 14,
-    marginBottom: 12, borderLeftWidth: 4, borderLeftColor: colors.gold,
+    flexDirection: 'row',
+    backgroundColor: '#FFF8EE',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.gold,
   },
   invitationBannerContent: { flex: 1, marginLeft: 12 },
-  invitationBannerTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, marginBottom: 6 },
+  invitationBannerTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.ink,
+    marginBottom: 6,
+  },
   invitationRow: { marginBottom: 8 },
-  invitationText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink, marginBottom: 6 },
+  invitationText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.ink,
+    marginBottom: 6,
+  },
   invitationActions: { flexDirection: 'row', gap: 8 },
   // Roster list sections (non-commissioner view)
   rosterListSection: {
-    backgroundColor: '#FFFFFF', borderRadius: 12, marginHorizontal: 16, marginBottom: 12,
-    padding: 16, gap: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 16,
+    gap: 8,
   },
   rosterListTitle: {
-    fontFamily: fonts.semibold, fontSize: 16, color: colors.ink, marginBottom: 4,
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 4,
   },
   rosterListSubtext: {
-    fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginBottom: 4,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginBottom: 4,
   },
   rosterListEmpty: {
-    fontFamily: fonts.body, fontSize: 14, color: colors.inkFaint, paddingVertical: 8,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkFaint,
+    paddingVertical: 8,
   },
   rosterListItem: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   rosterListIcon: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: `${colors.gold}18`,
-    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${colors.gold}18`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   rosterListInfo: { flex: 1 },
   rosterListName: {
-    fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, flex: 1,
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: colors.ink,
+    flex: 1,
   },
   rosterListPlayerCount: {
-    fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
   },
   rosterListMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   invitedBadge: {
-    backgroundColor: `${colors.gold}18`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8,
+    backgroundColor: `${colors.gold}18`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   invitedBadgeText: {
-    fontFamily: fonts.label, fontSize: 11, color: colors.gold,
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: colors.gold,
   },
   // Info tab — new design system styles
   seasonSummary: {

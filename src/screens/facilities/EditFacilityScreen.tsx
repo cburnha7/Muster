@@ -15,11 +15,14 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '../../context/AuthContext';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
+import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import { HoursOfOperationSection } from '../../components/facilities/HoursOfOperationSection';
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
 import { facilityService } from '../../services/api/FacilityService';
@@ -28,7 +31,12 @@ import {
   updateFacility,
   removeFacility,
 } from '../../store/slices/facilitiesSlice';
-import { SportType, CreateFacilityData, Facility } from '../../types';
+import {
+  SportType,
+  CreateFacilityData,
+  Facility,
+  FacilityPhoto,
+} from '../../types';
 import { colors, fonts, Spacing, TextStyles } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
@@ -68,6 +76,13 @@ export function EditFacilityScreen({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<FacilityPhoto[]>([]);
+  const [facilityMapUrl, setFacilityMapUrl] = useState<string | null>(null);
+  const [facilityMapThumbnailUrl, setFacilityMapThumbnailUrl] = useState<
+    string | null
+  >(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
   const [courts, setCourts] = useState<CourtFormData[]>([]);
   const [showAddCourtModal, setShowAddCourtModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -186,6 +201,11 @@ export function EditFacilityScreen({
 
       // Prepopulate insurance requirement
       setRequiresInsurance(facility.requiresInsurance === true);
+
+      // Load photos and map
+      setPhotos(facility.photos ?? []);
+      setFacilityMapUrl(facility.facilityMapUrl ?? null);
+      setFacilityMapThumbnailUrl(facility.facilityMapThumbnailUrl ?? null);
 
       // Prepopulate address search bar with existing address
       const addr = [
@@ -325,6 +345,81 @@ export function EditFacilityScreen({
       );
       return filtered;
     });
+  };
+
+  const handleAddPhotos = async () => {
+    setPhotoError(null);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsMultipleSelection: true,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.9,
+      });
+      if (result.canceled) return;
+      for (const asset of result.assets) {
+        try {
+          const uploaded = await facilityService.uploadFacilityPhoto(
+            facilityId,
+            {
+              uri: asset.uri,
+              name: asset.fileName || 'photo.jpg',
+              type: asset.mimeType || 'image/jpeg',
+            }
+          );
+          setPhotos(prev => [...prev, uploaded]);
+        } catch (err: any) {
+          setPhotoError(err?.message || 'Failed to upload photo.');
+        }
+      }
+    } catch (err: any) {
+      setPhotoError(err?.message || 'Failed to open image picker.');
+    }
+  };
+
+  const handleDeletePhoto = async (photo: FacilityPhoto) => {
+    const prev = photos;
+    setPhotos(p => p.filter(x => x.id !== photo.id));
+    try {
+      await facilityService.deleteFacilityPhoto(facilityId, photo.id);
+    } catch (err: any) {
+      setPhotos(prev);
+      setPhotoError(err?.message || 'Failed to delete photo.');
+    }
+  };
+
+  const handleUploadMap = async () => {
+    setMapError(null);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/jpeg', 'image/png', 'application/pdf'],
+      });
+      if (result.canceled || !result.assets || result.assets.length === 0)
+        return;
+      const asset = result.assets[0];
+      const uploaded = await facilityService.uploadFacilityMap(facilityId, {
+        uri: asset.uri,
+        name: asset.name,
+        type: asset.mimeType || 'image/jpeg',
+      });
+      setFacilityMapUrl(uploaded.facilityMapUrl);
+      setFacilityMapThumbnailUrl(uploaded.facilityMapThumbnailUrl);
+    } catch (err: any) {
+      setMapError(err?.message || 'Failed to upload map.');
+    }
+  };
+
+  const handleDeleteMap = async () => {
+    const prevUrl = facilityMapUrl;
+    const prevThumb = facilityMapThumbnailUrl;
+    setFacilityMapUrl(null);
+    setFacilityMapThumbnailUrl(null);
+    try {
+      await facilityService.deleteFacilityMap(facilityId);
+    } catch (err: any) {
+      setFacilityMapUrl(prevUrl);
+      setFacilityMapThumbnailUrl(prevThumb);
+      setMapError(err?.message || 'Failed to remove map.');
+    }
   };
 
   const validateForm = (): boolean => {
@@ -549,6 +644,200 @@ export function EditFacilityScreen({
         style={styles.scrollView}
         contentContainerStyle={styles.content}
       >
+        {/* Photos */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Photos</Text>
+          {photos.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginBottom: 12 }}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {photos.map(photo => (
+                <View
+                  key={photo.id}
+                  style={{
+                    position: 'relative',
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <OptimizedImage
+                    source={{ uri: photo.imageUrl }}
+                    style={{ width: 200, height: 150, borderRadius: 8 }}
+                    resizeMode="cover"
+                    fallback={
+                      <View
+                        style={{
+                          width: 200,
+                          height: 150,
+                          backgroundColor: colors.surface,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Ionicons
+                          name="camera-outline"
+                          size={32}
+                          color={colors.inkSoft}
+                        />
+                      </View>
+                    }
+                  />
+                  <TouchableOpacity
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      backgroundColor: 'rgba(255,255,255,0.85)',
+                      borderRadius: 12,
+                    }}
+                    onPress={() => handleDeletePhoto(photo)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={22}
+                      color={colors.heart}
+                    />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.cobalt,
+              alignSelf: 'flex-start',
+            }}
+            onPress={handleAddPhotos}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="images-outline" size={16} color={colors.cobalt} />
+            <Text
+              style={{
+                fontFamily: fonts.ui,
+                fontSize: 14,
+                color: colors.cobalt,
+              }}
+            >
+              {photos.length > 0 ? 'Add more photos' : 'Add photos'}
+            </Text>
+          </TouchableOpacity>
+          {photoError ? (
+            <Text style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}>
+              {photoError}
+            </Text>
+          ) : null}
+        </View>
+
+        {/* Facility map */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Facility map</Text>
+          {facilityMapUrl ? (
+            <OptimizedImage
+              source={{ uri: facilityMapUrl }}
+              style={{
+                width: '100%',
+                height: 160,
+                borderRadius: 8,
+                marginBottom: 12,
+              }}
+              resizeMode="cover"
+              fallback={
+                <View
+                  style={{
+                    width: '100%',
+                    height: 160,
+                    backgroundColor: colors.surface,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <Ionicons
+                    name="map-outline"
+                    size={40}
+                    color={colors.inkSoft}
+                  />
+                </View>
+              }
+            />
+          ) : null}
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.cobalt,
+              }}
+              onPress={handleUploadMap}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="cloud-upload-outline"
+                size={16}
+                color={colors.cobalt}
+              />
+              <Text
+                style={{
+                  fontFamily: fonts.ui,
+                  fontSize: 14,
+                  color: colors.cobalt,
+                }}
+              >
+                {facilityMapUrl ? 'Replace map' : 'Upload map'}
+              </Text>
+            </TouchableOpacity>
+            {facilityMapUrl ? (
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: colors.heart,
+                }}
+                onPress={handleDeleteMap}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="trash-outline" size={16} color={colors.heart} />
+                <Text
+                  style={{
+                    fontFamily: fonts.ui,
+                    fontSize: 14,
+                    color: colors.heart,
+                  }}
+                >
+                  Remove map
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+          {mapError ? (
+            <Text style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}>
+              {mapError}
+            </Text>
+          ) : null}
+        </View>
+
         {/* Basic Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Basic Information</Text>

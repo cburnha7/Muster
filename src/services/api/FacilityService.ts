@@ -2,6 +2,7 @@ import { BaseApiService } from './BaseApiService';
 import { apiConfig, API_ENDPOINTS, TIMEOUT_CONFIG } from './config';
 import {
   Facility,
+  FacilityPhoto,
   CreateFacilityData,
   UpdateFacilityData,
   FacilityFilters,
@@ -142,19 +143,24 @@ export class FacilityService extends BaseApiService {
   }
 
   /**
-   * Upload facility images
+   * Upload facility map (image or PDF)
    */
-  async uploadFacilityImages(
+  async uploadFacilityMap(
     facilityId: string,
-    images: File[],
+    file: { uri: string; name: string; type: string },
     onProgress?: (progress: number) => void
-  ): Promise<string[]> {
+  ): Promise<{ facilityMapUrl: string; facilityMapThumbnailUrl: string }> {
     const formData = new FormData();
-    images.forEach((image, index) => {
-      formData.append(`images`, image);
-    });
+    formData.append('image', {
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
+    } as any);
 
-    return this.uploadFile<string[]>(
+    return this.uploadFile<{
+      facilityMapUrl: string;
+      facilityMapThumbnailUrl: string;
+    }>(
       `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`,
       formData,
       onProgress
@@ -162,17 +168,44 @@ export class FacilityService extends BaseApiService {
   }
 
   /**
-   * Delete facility image
+   * Delete facility map
    */
-  async deleteFacilityImage(
+  async deleteFacilityMap(facilityId: string): Promise<void> {
+    return this.delete<void>(
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`
+    );
+  }
+
+  /**
+   * Upload a facility photo
+   */
+  async uploadFacilityPhoto(
     facilityId: string,
-    imageUrl: string
+    image: { uri: string; name: string; type: string },
+    onProgress?: (p: number) => void
+  ): Promise<FacilityPhoto> {
+    const formData = new FormData();
+    formData.append('photos', {
+      uri: image.uri,
+      name: image.name,
+      type: image.type,
+    } as any);
+    return this.uploadFile<FacilityPhoto>(
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/photos`,
+      formData,
+      onProgress
+    ).then((result: any) => (Array.isArray(result) ? result[0] : result));
+  }
+
+  /**
+   * Delete a facility photo
+   */
+  async deleteFacilityPhoto(
+    facilityId: string,
+    photoId: string
   ): Promise<void> {
     return this.delete<void>(
-      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/map`,
-      {
-        data: { imageUrl },
-      }
+      `${API_ENDPOINTS.FACILITIES.BY_ID(facilityId)}/photos/${photoId}`
     );
   }
 

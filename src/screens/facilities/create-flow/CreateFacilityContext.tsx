@@ -11,7 +11,7 @@ const TOTAL_STEPS = 5;
 
 export function facilityWizardReducer(
   state: FacilityWizardState,
-  action: FacilityWizardAction,
+  action: FacilityWizardAction
 ): FacilityWizardState {
   switch (action.type) {
     case 'SET_FIELD':
@@ -23,15 +23,15 @@ export function facilityWizardReducer(
     case 'UPDATE_COURT':
       return {
         ...state,
-        courts: state.courts.map((c) =>
-          c.id === action.court.id ? action.court : c,
+        courts: state.courts.map(c =>
+          c.id === action.court.id ? action.court : c
         ),
       };
 
     case 'REMOVE_COURT':
       return {
         ...state,
-        courts: state.courts.filter((c) => c.id !== action.courtId),
+        courts: state.courts.filter(c => c.id !== action.courtId),
       };
 
     case 'SET_HOURS':
@@ -63,6 +63,12 @@ export function facilityWizardReducer(
     case 'SUBMIT_FAIL':
       return { ...state, isSubmitting: false };
 
+    case 'SET_PENDING_PHOTOS':
+      return { ...state, pendingPhotos: action.photos };
+
+    case 'SET_PENDING_MAP':
+      return { ...state, pendingMapFile: action.file };
+
     default:
       return state;
   }
@@ -75,13 +81,19 @@ interface CreateFacilityContextValue {
   dispatch: React.Dispatch<FacilityWizardAction>;
 }
 
-const CreateFacilityContext = createContext<CreateFacilityContextValue | null>(null);
+const CreateFacilityContext = createContext<CreateFacilityContextValue | null>(
+  null
+);
 
-export function CreateFacilityProvider({ children }: { children: React.ReactNode }) {
+export function CreateFacilityProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [state, dispatch] = useReducer(
     facilityWizardReducer,
     undefined,
-    createInitialFacilityState,
+    createInitialFacilityState
   );
   const value = useMemo(() => ({ state, dispatch }), [state]);
   return (
@@ -93,6 +105,9 @@ export function CreateFacilityProvider({ children }: { children: React.ReactNode
 
 export function useCreateFacility(): CreateFacilityContextValue {
   const ctx = useContext(CreateFacilityContext);
-  if (!ctx) throw new Error('useCreateFacility must be used within a CreateFacilityProvider');
+  if (!ctx)
+    throw new Error(
+      'useCreateFacility must be used within a CreateFacilityProvider'
+    );
   return ctx;
 }

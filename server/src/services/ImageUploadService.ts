@@ -23,17 +23,26 @@ const mapStorage = multer.diskStorage({
     const timestamp = Date.now();
     const ext = path.extname(file.originalname);
     cb(null, `map-${timestamp}${ext}`);
-  }
+  },
 });
 
-// File filter - only images
-const imageFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  
+// File filter for maps - JPEG, PNG, and PDF
+const imageFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedMimeTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'application/pdf',
+  ];
+
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only JPEG, PNG, and WebP images are allowed'));
+    cb(new Error('Only JPEG, PNG, and PDF files are allowed'));
   }
 };
 
@@ -42,26 +51,99 @@ export const uploadMap = multer({
   storage: mapStorage,
   fileFilter: imageFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  }
+    fileSize: 20 * 1024 * 1024, // 20MB limit
+  },
 });
 
-// Validate image file
-export function validateImageFile(file: Express.Multer.File): { valid: boolean; error?: string } {
+// Configure storage for facility photos
+const photoStorage = multer.diskStorage({
+  destination: (req: Request, file: Express.Multer.File, cb) => {
+    const { id } = req.params; // facility ID
+    const facilityId = Array.isArray(id) ? id[0] : id;
+    const uploadPath = path.join(
+      __dirname,
+      '../../uploads/facility-photos',
+      facilityId || 'temp'
+    );
+
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req: Request, file: Express.Multer.File, cb) => {
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname);
+    cb(null, `photo-${timestamp}${ext}`);
+  },
+});
+
+// File filter for photos - JPEG and PNG only
+const photoFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only JPEG and PNG images are allowed'));
+  }
+};
+
+// Configure multer for photo uploads
+export const uploadPhoto = multer({
+  storage: photoStorage,
+  fileFilter: photoFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});
+
+// Validate map/image file (JPEG, PNG, PDF; ≤ 20 MB)
+export function validateImageFile(file: Express.Multer.File): {
+  valid: boolean;
+  error?: string;
+} {
   if (!file) {
     return { valid: false, error: 'No file provided' };
   }
 
-  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const allowedMimeTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'application/pdf',
+  ];
   if (!allowedMimeTypes.includes(file.mimetype)) {
-    return { valid: false, error: 'File must be JPEG, PNG, or WebP' };
+    return { valid: false, error: 'Only JPEG, PNG, and PDF files are allowed' };
   }
 
-  if (file.size > 10 * 1024 * 1024) {
-    return { valid: false, error: 'File size must not exceed 10MB' };
+  if (file.size > 20 * 1024 * 1024) {
+    return { valid: false, error: 'File size must not exceed 20MB' };
   }
 
   return { valid: true };
+}
+
+// Validate photo file (JPEG/PNG only; ≤ 10 MB)
+// Returns an error string if invalid, null if valid
+export function validatePhotoFile(file: Express.Multer.File): string | null {
+  if (!file) {
+    return 'No file provided';
+  }
+
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return 'Only JPEG and PNG images are allowed';
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return 'File size must not exceed 10MB';
+  }
+
+  return null;
 }
 
 // Generate image URL
@@ -82,18 +164,18 @@ export async function processMapImage(
   } = {}
 ): Promise<{ optimizedPath: string; thumbnailPath: string }> {
   const { maxWidth = 4000, maxHeight = 4000, quality = 85 } = options;
-  
+
   const dir = path.dirname(filePath);
   const ext = path.extname(filePath);
   const basename = path.basename(filePath, ext);
-  
+
   const optimizedPath = path.join(dir, `${basename}-optimized${ext}`);
   const thumbnailPath = path.join(dir, `${basename}-thumb${ext}`);
 
   try {
     // Get image metadata
     const metadata = await sharp(filePath).metadata();
-    
+
     // Validate dimensions
     if (metadata.width && metadata.height) {
       if (metadata.width < 800 || metadata.height < 600) {
@@ -105,7 +187,7 @@ export async function processMapImage(
     await sharp(filePath)
       .resize(maxWidth, maxHeight, {
         fit: 'inside',
-        withoutEnlargement: true
+        withoutEnlargement: true,
       })
       .jpeg({ quality })
       .toFile(optimizedPath);
@@ -113,7 +195,7 @@ export async function processMapImage(
     // Create thumbnail (300x225)
     await sharp(filePath)
       .resize(300, 225, {
-        fit: 'cover'
+        fit: 'cover',
       })
       .jpeg({ quality: 80 })
       .toFile(thumbnailPath);
@@ -131,17 +213,28 @@ export async function processMapImage(
 }
 
 // Delete image files
-export async function deleteImageFiles(imageUrl: string, thumbnailUrl?: string): Promise<void> {
+export async function deleteImageFiles(
+  imageUrl: string,
+  thumbnailUrl?: string
+): Promise<void> {
   try {
     // Delete main image
-    const imagePath = path.join(__dirname, '../../uploads', imageUrl.replace('/uploads/', ''));
+    const imagePath = path.join(
+      __dirname,
+      '../../uploads',
+      imageUrl.replace('/uploads/', '')
+    );
     if (fs.existsSync(imagePath)) {
       fs.unlinkSync(imagePath);
     }
 
     // Delete thumbnail if provided
     if (thumbnailUrl) {
-      const thumbPath = path.join(__dirname, '../../uploads', thumbnailUrl.replace('/uploads/', ''));
+      const thumbPath = path.join(
+        __dirname,
+        '../../uploads',
+        thumbnailUrl.replace('/uploads/', '')
+      );
       if (fs.existsSync(thumbPath)) {
         fs.unlinkSync(thumbPath);
       }

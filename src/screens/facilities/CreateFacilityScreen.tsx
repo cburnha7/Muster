@@ -1,5 +1,13 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, Alert, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Alert,
+  StyleSheet,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,7 +15,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService } from '../../services/api/CourtService';
-import { addFacility, selectFacilities } from '../../store/slices/facilitiesSlice';
+import {
+  addFacility,
+  selectFacilities,
+} from '../../store/slices/facilitiesSlice';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { getSportEmoji } from '../../constants/sports';
@@ -15,7 +26,10 @@ import { Facility } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
 import { colors, fonts, Spacing } from '../../theme';
 
-import { CreateFacilityProvider, useCreateFacility } from './create-flow/CreateFacilityContext';
+import {
+  CreateFacilityProvider,
+  useCreateFacility,
+} from './create-flow/CreateFacilityContext';
 import { FacilityFlowContainer } from './create-flow/FacilityFlowContainer';
 import { Step1NameSports } from './create-flow/Step1NameSports';
 import { Step2Location } from './create-flow/Step2Location';
@@ -32,12 +46,17 @@ function CreateFacilityInner() {
   const reduxDispatch = useDispatch();
   const { user } = useAuth();
   const allFacilities = useSelector(selectFacilities);
-  const userFacilityCount = allFacilities.filter((f) => f.ownerId === user?.id).length;
+  const userFacilityCount = allFacilities.filter(
+    f => f.ownerId === user?.id
+  ).length;
 
-  const { allowed: basicAllowed, requiredPlan: basicPlan } = useFeatureGate('facility_basic');
-  const { allowed: proAllowed, requiredPlan: proPlan } = useFeatureGate('facility_pro');
+  const { allowed: basicAllowed, requiredPlan: basicPlan } =
+    useFeatureGate('facility_basic');
+  const { allowed: proAllowed, requiredPlan: proPlan } =
+    useFeatureGate('facility_pro');
   const [showUpsell, setShowUpsell] = useState(false);
-  const [upsellPlan, setUpsellPlan] = useState<SubscriptionPlan>('facility_basic');
+  const [upsellPlan, setUpsellPlan] =
+    useState<SubscriptionPlan>('facility_basic');
 
   const [duplicates, setDuplicates] = useState<Facility[]>([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
@@ -70,7 +89,8 @@ function CreateFacilityInner() {
       minimumBookingHours: 1,
       bufferTimeMins: 0,
       ownerId: user?.id,
-      hoursOfOperation: state.hoursOfOperation.length > 0 ? state.hoursOfOperation : undefined,
+      hoursOfOperation:
+        state.hoursOfOperation.length > 0 ? state.hoursOfOperation : undefined,
       cancellationPolicyHours: state.cancellationPolicyHours,
       requiresInsurance: state.requiresInsurance,
       requiresBookingConfirmation: state.requiresBookingConfirmation,
@@ -78,7 +98,9 @@ function CreateFacilityInner() {
       waiverText: state.waiverRequired ? state.waiverFileName : '',
     };
 
-    const newFacility = await facilityService.createFacility(facilityData as any);
+    const newFacility = await facilityService.createFacility(
+      facilityData as any
+    );
 
     // Create courts
     const createdCourts = [];
@@ -97,7 +119,54 @@ function CreateFacilityInner() {
       }
     }
 
-    reduxDispatch(addFacility({ ...newFacility, courts: createdCourts } as any));
+    // Task 8.1 — upload pending photos
+    if (state.pendingPhotos.length > 0) {
+      try {
+        for (const photo of state.pendingPhotos) {
+          await facilityService.uploadFacilityPhoto(newFacility.id, photo);
+        }
+      } catch (uploadErr: any) {
+        // Task 8.3 — facility created but photo upload failed
+        Alert.alert(
+          'Ground created',
+          'Your ground was created successfully, but some photos could not be uploaded. You can add them from the Edit screen.'
+        );
+        reduxDispatch(
+          addFacility({ ...newFacility, courts: createdCourts } as any)
+        );
+        dispatch({ type: 'SUBMIT_SUCCESS', facilityId: newFacility.id });
+        isSubmittingRef.current = false;
+        isCreatingFacility = false;
+        return;
+      }
+    }
+
+    // Task 8.2 — upload pending map
+    if (state.pendingMapFile) {
+      try {
+        await facilityService.uploadFacilityMap(
+          newFacility.id,
+          state.pendingMapFile
+        );
+      } catch (uploadErr: any) {
+        // Task 8.3 — facility created but map upload failed
+        Alert.alert(
+          'Ground created',
+          'Your ground was created successfully, but the facility map could not be uploaded. You can add it from the Edit screen.'
+        );
+        reduxDispatch(
+          addFacility({ ...newFacility, courts: createdCourts } as any)
+        );
+        dispatch({ type: 'SUBMIT_SUCCESS', facilityId: newFacility.id });
+        isSubmittingRef.current = false;
+        isCreatingFacility = false;
+        return;
+      }
+    }
+
+    reduxDispatch(
+      addFacility({ ...newFacility, courts: createdCourts } as any)
+    );
     dispatch({ type: 'SUBMIT_SUCCESS', facilityId: newFacility.id });
     isSubmittingRef.current = false;
     isCreatingFacility = false;
@@ -106,7 +175,8 @@ function CreateFacilityInner() {
   // ── Submit handler ──
 
   const handleSubmit = useCallback(async () => {
-    if (state.isSubmitting || isSubmittingRef.current || isCreatingFacility) return;
+    if (state.isSubmitting || isSubmittingRef.current || isCreatingFacility)
+      return;
 
     // Feature gate checks
     if (userFacilityCount >= 3 && !proAllowed) {
@@ -149,7 +219,14 @@ function CreateFacilityInner() {
       isSubmittingRef.current = false;
       isCreatingFacility = false;
     }
-  }, [state, createFacility, dispatch, basicAllowed, proAllowed, userFacilityCount]);
+  }, [
+    state,
+    createFacility,
+    dispatch,
+    basicAllowed,
+    proAllowed,
+    userFacilityCount,
+  ]);
 
   const handleContinueAnyway = async () => {
     setShowDuplicateModal(false);
@@ -170,7 +247,9 @@ function CreateFacilityInner() {
 
   if (state.showSuccess) {
     const emoji =
-      state.sportTypes.length > 0 ? getSportEmoji(state.sportTypes[0] as string) : '🏟️';
+      state.sportTypes.length > 0
+        ? getSportEmoji(state.sportTypes[0] as string)
+        : '🏟️';
 
     return (
       <WizardSuccessScreen
@@ -180,11 +259,12 @@ function CreateFacilityInner() {
           { label: 'Address', value: `${state.city}, ${state.state}` },
           {
             label: 'Sports',
-            value: state.sportTypes.map((s) => getSportEmoji(s)).join('  '),
+            value: state.sportTypes.map(s => getSportEmoji(s)).join('  '),
           },
           {
             label: 'Courts',
-            value: state.courts.length === 0 ? 'None' : `${state.courts.length}`,
+            value:
+              state.courts.length === 0 ? 'None' : `${state.courts.length}`,
           },
         ]}
         actions={[
@@ -253,14 +333,15 @@ function CreateFacilityInner() {
             </Text>
 
             <ScrollView style={styles.duplicateList}>
-              {duplicates.map((facility) => (
+              {duplicates.map(facility => (
                 <View key={facility.id} style={styles.duplicateCard}>
                   <Text style={styles.duplicateName}>{facility.name}</Text>
                   <Text style={styles.duplicateAddress}>
-                    {facility.street}, {facility.city}, {facility.state} {facility.zipCode}
+                    {facility.street}, {facility.city}, {facility.state}{' '}
+                    {facility.zipCode}
                   </Text>
                   <View style={styles.sportTypeRow}>
-                    {facility.sportTypes.map((sport) => (
+                    {facility.sportTypes.map(sport => (
                       <View key={sport} style={styles.sportBadge}>
                         <Text style={styles.sportBadgeText}>{sport}</Text>
                       </View>
@@ -402,7 +483,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   cancelButton: { backgroundColor: colors.surface },
-  cancelButtonText: { fontFamily: fonts.ui, fontSize: 14, color: colors.inkSoft },
+  cancelButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.inkSoft,
+  },
   continueButton: { backgroundColor: colors.cobalt },
-  continueButtonText: { fontFamily: fonts.ui, fontSize: 14, color: colors.white },
+  continueButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.white,
+  },
 });

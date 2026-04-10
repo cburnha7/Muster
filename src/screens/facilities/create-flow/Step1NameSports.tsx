@@ -1,5 +1,15 @@
 import React from 'react';
-import { ScrollView, Text, TextInput, StyleSheet } from 'react-native';
+import {
+  ScrollView,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { Ionicons } from '@expo/vector-icons';
 import { SportIconGrid } from '../../../components/wizard/SportIconGrid';
 import { useCreateFacility } from './CreateFacilityContext';
 import { SportType } from '../../../types';
@@ -12,9 +22,40 @@ export function Step1NameSports() {
     const current = state.sportTypes;
     const typed = sport as SportType;
     const next = current.includes(typed)
-      ? current.filter((s) => s !== typed)
+      ? current.filter(s => s !== typed)
       : [...current, typed];
     dispatch({ type: 'SET_FIELD', field: 'sportTypes', value: next });
+  };
+
+  const handlePickPhotos = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsMultipleSelection: true,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.9,
+    });
+    if (result.canceled) return;
+    const photos = result.assets.map(a => ({
+      uri: a.uri,
+      name: a.fileName || 'photo.jpg',
+      type: a.mimeType || 'image/jpeg',
+    }));
+    dispatch({ type: 'SET_PENDING_PHOTOS', photos });
+  };
+
+  const handlePickMap = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['image/jpeg', 'image/png', 'application/pdf'],
+    });
+    if (result.canceled || !result.assets || result.assets.length === 0) return;
+    const asset = result.assets[0];
+    dispatch({
+      type: 'SET_PENDING_MAP',
+      file: {
+        uri: asset.uri,
+        name: asset.name,
+        type: asset.mimeType || 'image/jpeg',
+      },
+    });
   };
 
   return (
@@ -29,7 +70,9 @@ export function Step1NameSports() {
       <TextInput
         style={styles.textInput}
         value={state.name}
-        onChangeText={(v) => dispatch({ type: 'SET_FIELD', field: 'name', value: v })}
+        onChangeText={v =>
+          dispatch({ type: 'SET_FIELD', field: 'name', value: v })
+        }
         placeholder="Ground name"
         placeholderTextColor={colors.inkSoft}
       />
@@ -40,6 +83,40 @@ export function Step1NameSports() {
         onSelect={toggleSport}
         multiSelect
       />
+
+      {/* Optional photos picker */}
+      <Text style={[styles.fieldLabel, { marginTop: 20 }]}>
+        Photos (optional)
+      </Text>
+      <TouchableOpacity
+        style={styles.pickerBtn}
+        onPress={handlePickPhotos}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="images-outline" size={18} color={colors.cobalt} />
+        <Text style={styles.pickerBtnText}>
+          {state.pendingPhotos.length > 0
+            ? `${state.pendingPhotos.length} photo${state.pendingPhotos.length > 1 ? 's' : ''} selected`
+            : 'Add photos'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Optional map picker */}
+      <Text style={[styles.fieldLabel, { marginTop: 16 }]}>
+        Facility map (optional)
+      </Text>
+      <TouchableOpacity
+        style={styles.pickerBtn}
+        onPress={handlePickMap}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="map-outline" size={18} color={colors.cobalt} />
+        <Text style={styles.pickerBtnText}>
+          {state.pendingMapFile
+            ? state.pendingMapFile.name
+            : 'Add map (JPEG, PNG, or PDF)'}
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -72,5 +149,22 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
+  },
+  pickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.cobalt,
+    marginBottom: 8,
+  },
+  pickerBtnText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.cobalt,
+    flex: 1,
   },
 });
