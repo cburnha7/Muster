@@ -1079,15 +1079,43 @@ router.put('/profile', optionalAuthMiddleware, async (req, res) => {
     let userId = req.user?.userId;
 
     if (!userId) {
-      const user = await prisma.user.findFirst({ select: { id: true } });
-      userId = user?.id;
+      const headerUserId = req.headers['x-user-id'] as string | undefined;
+      if (headerUserId) userId = headerUserId;
     }
 
     if (!userId) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const { password, ...updateData } = req.body;
+    // Whitelist allowed fields to prevent Prisma errors on unknown columns
+    const allowed = [
+      'firstName',
+      'lastName',
+      'email',
+      'phoneNumber',
+      'dateOfBirth',
+      'gender',
+      'profileImage',
+      'preferredSports',
+      'sportPreferences',
+      'locationCity',
+      'locationState',
+      'locationLat',
+      'locationLng',
+      'onboardingComplete',
+      'intents',
+    ];
+    const updateData: Record<string, any> = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
+
+    // Convert dateOfBirth string to Date if needed
+    if (updateData.dateOfBirth && typeof updateData.dateOfBirth === 'string') {
+      updateData.dateOfBirth = new Date(updateData.dateOfBirth);
+    }
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -1099,7 +1127,11 @@ router.put('/profile', optionalAuthMiddleware, async (req, res) => {
         lastName: true,
         phoneNumber: true,
         dateOfBirth: true,
+        gender: true,
         profileImage: true,
+        sportPreferences: true,
+        locationCity: true,
+        locationState: true,
         createdAt: true,
         updatedAt: true,
       },

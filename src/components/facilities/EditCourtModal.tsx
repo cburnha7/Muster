@@ -15,7 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { FormInput } from '../forms/FormInput';
 import { FormButton } from '../forms/FormButton';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
-import { courtService, Court, UpdateCourtData } from '../../services/api/CourtService';
+import {
+  courtService,
+  Court,
+  UpdateCourtData,
+} from '../../services/api/CourtService';
 import { SportType } from '../../types';
 import { colors, Spacing } from '../../theme';
 
@@ -59,15 +63,15 @@ export function EditCourtModal({
   }, [court]);
 
   const sportTypeOptions: SelectOption[] = [
-    { label: 'Basketball', value: SportType.BASKETBALL },
-    { label: 'Pickleball', value: SportType.PICKLEBALL },
-    { label: 'Tennis', value: SportType.TENNIS },
-    { label: 'Soccer', value: SportType.SOCCER },
-    { label: 'Softball', value: SportType.SOFTBALL },
     { label: 'Baseball', value: SportType.BASEBALL },
-    { label: 'Volleyball', value: SportType.VOLLEYBALL },
+    { label: 'Basketball', value: SportType.BASKETBALL },
     { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
     { label: 'Kickball', value: SportType.KICKBALL },
+    { label: 'Pickleball', value: SportType.PICKLEBALL },
+    { label: 'Soccer', value: SportType.SOCCER },
+    { label: 'Softball', value: SportType.SOFTBALL },
+    { label: 'Tennis', value: SportType.TENNIS },
+    { label: 'Volleyball', value: SportType.VOLLEYBALL },
     { label: 'Other', value: SportType.OTHER },
   ];
 
@@ -168,12 +172,15 @@ export function EditCourtModal({
           <View style={styles.closeButton} />
         </View>
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
           <FormInput
             label="Court Name"
             placeholder="e.g., Court 1, Field A"
             value={formData.name}
-            onChangeText={(value) => handleInputChange('name', value)}
+            onChangeText={value => handleInputChange('name', value)}
             {...(errors.name && { error: errors.name })}
             required
           />
@@ -183,7 +190,9 @@ export function EditCourtModal({
             placeholder="Select sport"
             value={formData.sportType}
             options={sportTypeOptions}
-            onSelect={(option) => handleInputChange('sportType', option.value.toString())}
+            onSelect={option =>
+              handleInputChange('sportType', option.value.toString())
+            }
             {...(errors.sportType && { error: errors.sportType })}
             required
           />
@@ -193,14 +202,16 @@ export function EditCourtModal({
             placeholder="Select location"
             value={formData.isIndoor.toString()}
             options={locationOptions}
-            onSelect={(option) => handleInputChange('isIndoor', option.value === 'true')}
+            onSelect={option =>
+              handleInputChange('isIndoor', option.value === 'true')
+            }
           />
 
           <FormInput
             label="Capacity"
             placeholder="Number of players"
             value={formData.capacity}
-            onChangeText={(value) => handleInputChange('capacity', value)}
+            onChangeText={value => handleInputChange('capacity', value)}
             {...(errors.capacity && { error: errors.capacity })}
             keyboardType="numeric"
             required
@@ -210,7 +221,7 @@ export function EditCourtModal({
             label="Price Per Hour (Optional)"
             placeholder="Leave empty to use facility rate"
             value={formData.pricePerHour}
-            onChangeText={(value) => handleInputChange('pricePerHour', value)}
+            onChangeText={value => handleInputChange('pricePerHour', value)}
             {...(errors.pricePerHour && { error: errors.pricePerHour })}
             keyboardType="decimal-pad"
           />

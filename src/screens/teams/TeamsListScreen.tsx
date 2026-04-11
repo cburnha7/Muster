@@ -31,24 +31,11 @@ import { searchEventBus } from '../../utils/searchEventBus';
 
 const SPORTS: { label: string; value: string; icon: string }[] = [
   { label: 'All', value: '', icon: 'apps-outline' },
+  { label: 'Baseball', value: SportType.BASEBALL, icon: 'baseball-outline' },
   {
     label: 'Basketball',
     value: SportType.BASKETBALL,
     icon: 'basketball-outline',
-  },
-  { label: 'Soccer', value: SportType.SOCCER, icon: 'football-outline' },
-  { label: 'Tennis', value: SportType.TENNIS, icon: 'tennisball-outline' },
-  {
-    label: 'Pickleball',
-    value: SportType.PICKLEBALL,
-    icon: 'tennisball-outline',
-  },
-  { label: 'Softball', value: SportType.SOFTBALL, icon: 'baseball-outline' },
-  { label: 'Baseball', value: SportType.BASEBALL, icon: 'baseball-outline' },
-  {
-    label: 'Volleyball',
-    value: SportType.VOLLEYBALL,
-    icon: 'american-football-outline',
   },
   {
     label: 'Flag Football',
@@ -56,6 +43,19 @@ const SPORTS: { label: string; value: string; icon: string }[] = [
     icon: 'flag-outline',
   },
   { label: 'Kickball', value: SportType.KICKBALL, icon: 'fitness-outline' },
+  {
+    label: 'Pickleball',
+    value: SportType.PICKLEBALL,
+    icon: 'tennisball-outline',
+  },
+  { label: 'Soccer', value: SportType.SOCCER, icon: 'football-outline' },
+  { label: 'Softball', value: SportType.SOFTBALL, icon: 'baseball-outline' },
+  { label: 'Tennis', value: SportType.TENNIS, icon: 'tennisball-outline' },
+  {
+    label: 'Volleyball',
+    value: SportType.VOLLEYBALL,
+    icon: 'american-football-outline',
+  },
 ];
 
 export function TeamsListScreen() {

@@ -21,15 +21,15 @@ import { searchEventBus } from '../../utils/searchEventBus';
 
 const SPORT_OPTIONS: SelectOption[] = [
   { label: 'All Sports', value: '' },
-  { label: 'Basketball', value: SportType.BASKETBALL },
-  { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Tennis', value: SportType.TENNIS },
-  { label: 'Soccer', value: SportType.SOCCER },
-  { label: 'Softball', value: SportType.SOFTBALL },
   { label: 'Baseball', value: SportType.BASEBALL },
-  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Basketball', value: SportType.BASKETBALL },
   { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
   { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
 ];
 
 const EVENT_TYPE_OPTIONS: SelectOption[] = [
@@ -51,7 +51,11 @@ interface EventSearchPanelProps {
   onEventPress: (event: Event) => void;
 }
 
-export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: EventSearchPanelProps) {
+export function EventSearchPanel({
+  visible,
+  onCreateEvent,
+  onEventPress,
+}: EventSearchPanelProps) {
   const [query, setQuery] = useState('');
   const [sportFilter, setSportFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -66,11 +70,18 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
   const [results, setResults] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const hasFilters = query.trim() !== '' || sportFilter !== '' || typeFilter !== '' || genderFilter !== '' || minAgeFilter !== '' || maxAgeFilter !== '' || locationText !== '';
+  const hasFilters =
+    query.trim() !== '' ||
+    sportFilter !== '' ||
+    typeFilter !== '' ||
+    genderFilter !== '' ||
+    minAgeFilter !== '' ||
+    maxAgeFilter !== '' ||
+    locationText !== '';
 
   // Listen for query changes from the header pill
   useEffect(() => {
-    const unsub = searchEventBus.subscribeQuery((q) => setQuery(q));
+    const unsub = searchEventBus.subscribeQuery(q => setQuery(q));
     return unsub;
   }, []);
 
@@ -98,25 +109,45 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
       try {
         const filters: any = { status: EventStatus.ACTIVE };
         if (sportFilter) filters.sportType = sportFilter;
-        const res = await eventService.getEvents(filters, { page: 1, limit: 40 });
+        const res = await eventService.getEvents(filters, {
+          page: 1,
+          limit: 40,
+        });
         let filtered = res.data || [];
 
         // Text filter
         if (query.trim()) {
           const q = query.toLowerCase();
-          filtered = filtered.filter((e: Event) =>
-            e.title.toLowerCase().includes(q) ||
-            e.facility?.name?.toLowerCase().includes(q) ||
-            e.description?.toLowerCase().includes(q)
+          filtered = filtered.filter(
+            (e: Event) =>
+              e.title.toLowerCase().includes(q) ||
+              e.facility?.name?.toLowerCase().includes(q) ||
+              e.description?.toLowerCase().includes(q)
           );
         }
         // Event type filter
-        if (typeFilter) filtered = filtered.filter((e: Event) => e.eventType === typeFilter);
+        if (typeFilter)
+          filtered = filtered.filter((e: Event) => e.eventType === typeFilter);
         // Gender filter
-        if (genderFilter) filtered = filtered.filter((e: Event) => (e as any).genderRestriction === genderFilter || !(e as any).genderRestriction);
+        if (genderFilter)
+          filtered = filtered.filter(
+            (e: Event) =>
+              (e as any).genderRestriction === genderFilter ||
+              !(e as any).genderRestriction
+          );
         // Age filter
-        if (minAgeFilter) filtered = filtered.filter((e: Event) => !(e as any).eligibilityMaxAge || (e as any).eligibilityMaxAge >= parseInt(minAgeFilter));
-        if (maxAgeFilter) filtered = filtered.filter((e: Event) => !(e as any).eligibilityMinAge || (e as any).eligibilityMinAge <= parseInt(maxAgeFilter));
+        if (minAgeFilter)
+          filtered = filtered.filter(
+            (e: Event) =>
+              !(e as any).eligibilityMaxAge ||
+              (e as any).eligibilityMaxAge >= parseInt(minAgeFilter)
+          );
+        if (maxAgeFilter)
+          filtered = filtered.filter(
+            (e: Event) =>
+              !(e as any).eligibilityMinAge ||
+              (e as any).eligibilityMinAge <= parseInt(maxAgeFilter)
+          );
 
         // Location filter (client-side distance calc if we have coords)
         if (userLat != null && userLng != null) {
@@ -124,8 +155,13 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
             if (!e.facility?.latitude || !e.facility?.longitude) return true;
             const dLat = ((e.facility.latitude - userLat) * Math.PI) / 180;
             const dLng = ((e.facility.longitude - userLng) * Math.PI) / 180;
-            const a = Math.sin(dLat / 2) ** 2 + Math.cos((userLat * Math.PI) / 180) * Math.cos((e.facility.latitude * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-            const distMiles = 3959 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const a =
+              Math.sin(dLat / 2) ** 2 +
+              Math.cos((userLat * Math.PI) / 180) *
+                Math.cos((e.facility.latitude * Math.PI) / 180) *
+                Math.sin(dLng / 2) ** 2;
+            const distMiles =
+              3959 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return distMiles <= radiusMiles;
           });
         }
@@ -134,21 +170,42 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
         const now = new Date();
         filtered = filtered
           .filter((e: Event) => new Date(e.startTime) >= now)
-          .sort((a: Event, b: Event) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+          .sort(
+            (a: Event, b: Event) =>
+              new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+          );
 
         setResults(filtered);
-      } catch { setResults([]); }
+      } catch {
+        setResults([]);
+      }
       setLoading(false);
     }, 250);
     return () => clearTimeout(timer);
-  }, [query, sportFilter, typeFilter, genderFilter, minAgeFilter, maxAgeFilter, visible, userLat, userLng, radiusMiles]);
+  }, [
+    query,
+    sportFilter,
+    typeFilter,
+    genderFilter,
+    minAgeFilter,
+    maxAgeFilter,
+    visible,
+    userLat,
+    userLng,
+    radiusMiles,
+  ]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     setLocationLoading(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') { setLocationLoading(false); return; }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      if (status !== 'granted') {
+        setLocationLoading(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       setUserLat(loc.coords.latitude);
       setUserLng(loc.coords.longitude);
       setLocationText('Current Location');
@@ -177,20 +234,52 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
-          <FormSelect label="" options={SPORT_OPTIONS} value={sportFilter} onSelect={(o) => setSportFilter(String(o.value))} placeholder="Sport" />
+          <FormSelect
+            label=""
+            options={SPORT_OPTIONS}
+            value={sportFilter}
+            onSelect={o => setSportFilter(String(o.value))}
+            placeholder="Sport"
+          />
         </View>
         <View style={{ flex: 1 }}>
-          <FormSelect label="" options={EVENT_TYPE_OPTIONS} value={typeFilter} onSelect={(o) => setTypeFilter(String(o.value))} placeholder="Type" />
+          <FormSelect
+            label=""
+            options={EVENT_TYPE_OPTIONS}
+            value={typeFilter}
+            onSelect={o => setTypeFilter(String(o.value))}
+            placeholder="Type"
+          />
         </View>
         <View style={{ flex: 1 }}>
-          <FormSelect label="" options={GENDER_OPTIONS} value={genderFilter} onSelect={(o) => setGenderFilter(String(o.value))} placeholder="Gender" />
+          <FormSelect
+            label=""
+            options={GENDER_OPTIONS}
+            value={genderFilter}
+            onSelect={o => setGenderFilter(String(o.value))}
+            placeholder="Gender"
+          />
         </View>
       </View>
 
       {/* Age filter */}
       <View style={styles.ageRow}>
-        <TextInput style={styles.ageInput} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAgeFilter} onChangeText={setMinAgeFilter} keyboardType="number-pad" />
-        <TextInput style={styles.ageInput} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAgeFilter} onChangeText={setMaxAgeFilter} keyboardType="number-pad" />
+        <TextInput
+          style={styles.ageInput}
+          placeholder="Min age"
+          placeholderTextColor={colors.inkFaint}
+          value={minAgeFilter}
+          onChangeText={setMinAgeFilter}
+          keyboardType="number-pad"
+        />
+        <TextInput
+          style={styles.ageInput}
+          placeholder="Max age"
+          placeholderTextColor={colors.inkFaint}
+          value={maxAgeFilter}
+          onChangeText={setMaxAgeFilter}
+          keyboardType="number-pad"
+        />
       </View>
 
       {/* Location */}
@@ -202,10 +291,20 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
             placeholder="City or venue"
             placeholderTextColor={colors.inkFaint}
             value={locationText}
-            onChangeText={(t) => { setLocationText(t); if (userLat) { setUserLat(null); setUserLng(null); } }}
+            onChangeText={t => {
+              setLocationText(t);
+              if (userLat) {
+                setUserLat(null);
+                setUserLng(null);
+              }
+            }}
           />
         </View>
-        <TouchableOpacity style={styles.gpsBtn} onPress={handleUseCurrentLocation} disabled={locationLoading}>
+        <TouchableOpacity
+          style={styles.gpsBtn}
+          onPress={handleUseCurrentLocation}
+          disabled={locationLoading}
+        >
           {locationLoading ? (
             <ActivityIndicator size="small" color={colors.cobalt} />
           ) : (
@@ -223,24 +322,34 @@ export function EventSearchPanel({ visible, onCreateEvent, onEventPress }: Event
 
       {/* Results */}
       {loading ? (
-        <View style={styles.centered}><ActivityIndicator color={colors.cobalt} /></View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.cobalt} />
+        </View>
       ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
-          <Text style={styles.emptyText}>{hasFilters ? 'No games found' : 'Start searching for games'}</Text>
+          <Text style={styles.emptyText}>
+            {hasFilters ? 'No games found' : 'Start searching for games'}
+          </Text>
         </View>
       ) : (
         <FlatList
           data={results}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <EventCard event={item} onPress={onEventPress} compact />}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <EventCard event={item} onPress={onEventPress} compact />
+          )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
       )}
 
       {/* Create Event pinned at bottom */}
-      <TouchableOpacity style={styles.createBtn} onPress={onCreateEvent} activeOpacity={0.85}>
+      <TouchableOpacity
+        style={styles.createBtn}
+        onPress={onCreateEvent}
+        activeOpacity={0.85}
+      >
         <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
         <Text style={styles.createBtnText}>Create Event</Text>
       </TouchableOpacity>

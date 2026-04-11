@@ -33,15 +33,15 @@ type LeagueItem = any;
 
 const SPORTS = [
   { label: 'All', value: '' },
-  { label: 'Basketball', value: SportType.BASKETBALL },
-  { label: 'Soccer', value: SportType.SOCCER },
-  { label: 'Tennis', value: SportType.TENNIS },
-  { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Softball', value: SportType.SOFTBALL },
   { label: 'Baseball', value: SportType.BASEBALL },
-  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Basketball', value: SportType.BASKETBALL },
   { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
   { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
 ];
 
 export function LeaguesBrowserScreen() {

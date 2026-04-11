@@ -63,16 +63,16 @@ interface TeamDetailsScreenProps {
 }
 
 const sportTypeOptions = [
+  { label: 'Baseball', value: SportType.BASEBALL },
   { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Hockey', value: SportType.HOCKEY },
+  { label: 'Kickball', value: SportType.KICKBALL },
   { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Tennis', value: SportType.TENNIS },
   { label: 'Soccer', value: SportType.SOCCER },
   { label: 'Softball', value: SportType.SOFTBALL },
-  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
-  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
-  { label: 'Kickball', value: SportType.KICKBALL },
-  { label: 'Hockey', value: SportType.HOCKEY },
   { label: 'Other', value: SportType.OTHER },
 ];
 

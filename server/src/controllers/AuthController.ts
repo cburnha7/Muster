@@ -407,12 +407,10 @@ class AuthController {
       const { provider, providerUserId, email, firstName, lastName } = req.body;
 
       if (!provider || !providerUserId) {
-        res
-          .status(400)
-          .json({
-            error: 'Validation Error',
-            message: 'provider and providerUserId are required',
-          });
+        res.status(400).json({
+          error: 'Validation Error',
+          message: 'provider and providerUserId are required',
+        });
         return;
       }
       if (provider !== 'apple' && provider !== 'google') {
@@ -428,9 +426,11 @@ class AuthController {
         providerUserId
       );
 
-      // 2. If not found and we have an email, try to find by email and link
-      if (!user && email) {
-        const existingByEmail = await AuthService.findUserByEmail(email);
+      // 2. If not found and we have a valid email, try to find by email and link
+      if (!user && email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        const existingByEmail = await AuthService.findUserByEmail(
+          email.trim().toLowerCase()
+        );
         if (existingByEmail) {
           await AuthService.linkSSOProvider(
             existingByEmail.id,
@@ -445,16 +445,37 @@ class AuthController {
 
       // 3. If still not found, create a new account
       if (!user) {
-        const regEmail = email || `${providerUserId}@${provider}.sso`;
+        // Sanitize provider data — discard garbled or obviously bad values
+        const cleanName = (val: string | undefined): string => {
+          if (!val) return '';
+          const trimmed = val.trim();
+          // Reject if it looks encoded, has special chars, or is too long
+          if (trimmed.length > 100) return '';
+          if (/[<>{}\\\/\x00-\x1f]/.test(trimmed)) return '';
+          if (/^[=+\-@]/.test(trimmed)) return '';
+          return trimmed;
+        };
+        const cleanEmail = (val: string | undefined): string => {
+          if (!val) return '';
+          const trimmed = val.trim().toLowerCase();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return '';
+          if (trimmed.length > 254) return '';
+          return trimmed;
+        };
+
+        const safeEmail = cleanEmail(email);
+        const safeFirst = cleanName(firstName);
+        const safeLast = cleanName(lastName);
+        const regEmail = safeEmail || `${providerUserId}@${provider}.sso`;
         const username =
-          (email ? email.split('@')[0] : providerUserId.slice(0, 10)) +
+          (safeEmail ? safeEmail.split('@')[0] : providerUserId.slice(0, 10)) +
           '_' +
           Date.now().toString(36);
         user = await AuthService.createSSOUser({
           email: regEmail,
           username,
-          firstName: firstName || regEmail.split('@')[0],
-          lastName: lastName || '',
+          firstName: safeFirst || regEmail.split('@')[0],
+          lastName: safeLast,
           dateOfBirth: new Date('2000-01-01'),
           ssoProvider: provider,
           ssoProviderId: providerUserId,
@@ -467,21 +488,17 @@ class AuthController {
       if (exp)
         await TokenService.storeRefreshToken(user!.id, refreshToken, exp);
 
-      res
-        .status(200)
-        .json({
-          user: toUserResponse(user!),
-          accessToken,
-          refreshToken,
-        } as AuthResponse);
+      res.status(200).json({
+        user: toUserResponse(user!),
+        accessToken,
+        refreshToken,
+      } as AuthResponse);
     } catch (error: any) {
       console.error('SSO find-or-create error:', error);
-      res
-        .status(500)
-        .json({
-          error: 'Internal Server Error',
-          message: error.message || 'SSO authentication failed',
-        });
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error.message || 'SSO authentication failed',
+      });
     }
   }
 

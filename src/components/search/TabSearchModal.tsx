@@ -17,15 +17,15 @@ import { searchEventBus } from '../../utils/searchEventBus';
 
 const SPORT_OPTIONS: SelectOption[] = [
   { label: 'All Sports', value: '' },
-  { label: 'Basketball', value: SportType.BASKETBALL },
-  { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Tennis', value: SportType.TENNIS },
-  { label: 'Soccer', value: SportType.SOCCER },
-  { label: 'Softball', value: SportType.SOFTBALL },
   { label: 'Baseball', value: SportType.BASEBALL },
-  { label: 'Volleyball', value: SportType.VOLLEYBALL },
+  { label: 'Basketball', value: SportType.BASKETBALL },
   { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
   { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Pickleball', value: SportType.PICKLEBALL },
+  { label: 'Soccer', value: SportType.SOCCER },
+  { label: 'Softball', value: SportType.SOFTBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
+  { label: 'Volleyball', value: SportType.VOLLEYBALL },
   { label: 'Other', value: SportType.OTHER },
 ];
 
@@ -46,7 +46,11 @@ interface TabSearchModalProps {
   onClose: () => void;
   title: string;
   placeholder: string;
-  onSearch: (query: string, sport: SportType | null, gender?: string) => Promise<TabSearchResult[]>;
+  onSearch: (
+    query: string,
+    sport: SportType | null,
+    gender?: string
+  ) => Promise<TabSearchResult[]>;
   onResultPress: (result: TabSearchResult) => void;
   createLabel?: string;
   onCreatePress?: () => void;
@@ -72,7 +76,7 @@ export function TabSearchModal({
 
   // Listen for query from header pill
   useEffect(() => {
-    const unsub = searchEventBus.subscribeQuery((q) => setQuery(q));
+    const unsub = searchEventBus.subscribeQuery(q => setQuery(q));
     return unsub;
   }, []);
 
@@ -94,13 +98,26 @@ export function TabSearchModal({
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await onSearch(query, selectedSport, selectedGender || undefined);
+        const res = await onSearch(
+          query,
+          selectedSport,
+          selectedGender || undefined
+        );
         setResults(res);
-      } catch { setResults([]); }
+      } catch {
+        setResults([]);
+      }
       setLoading(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, selectedSport, selectedGender, minAgeFilter, maxAgeFilter, visible]);
+  }, [
+    query,
+    selectedSport,
+    selectedGender,
+    minAgeFilter,
+    maxAgeFilter,
+    visible,
+  ]);
 
   if (!visible) return null;
 
@@ -109,22 +126,52 @@ export function TabSearchModal({
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
-          <FormSelect label="" options={SPORT_OPTIONS} value={selectedSport || ''} onSelect={(o) => setSelectedSport(o.value ? (o.value as SportType) : null)} placeholder="All Sports" />
+          <FormSelect
+            label=""
+            options={SPORT_OPTIONS}
+            value={selectedSport || ''}
+            onSelect={o =>
+              setSelectedSport(o.value ? (o.value as SportType) : null)
+            }
+            placeholder="All Sports"
+          />
         </View>
         <View style={{ flex: 1 }}>
-          <FormSelect label="" options={GENDER_OPTIONS} value={selectedGender} onSelect={(o) => setSelectedGender(String(o.value))} placeholder="All Genders" />
+          <FormSelect
+            label=""
+            options={GENDER_OPTIONS}
+            value={selectedGender}
+            onSelect={o => setSelectedGender(String(o.value))}
+            placeholder="All Genders"
+          />
         </View>
       </View>
 
       {/* Age filter */}
       <View style={styles.ageRow}>
-        <TextInput style={styles.ageInput} placeholder="Min age" placeholderTextColor={colors.inkFaint} value={minAgeFilter} onChangeText={setMinAgeFilter} keyboardType="number-pad" />
-        <TextInput style={styles.ageInput} placeholder="Max age" placeholderTextColor={colors.inkFaint} value={maxAgeFilter} onChangeText={setMaxAgeFilter} keyboardType="number-pad" />
+        <TextInput
+          style={styles.ageInput}
+          placeholder="Min age"
+          placeholderTextColor={colors.inkFaint}
+          value={minAgeFilter}
+          onChangeText={setMinAgeFilter}
+          keyboardType="number-pad"
+        />
+        <TextInput
+          style={styles.ageInput}
+          placeholder="Max age"
+          placeholderTextColor={colors.inkFaint}
+          value={maxAgeFilter}
+          onChangeText={setMaxAgeFilter}
+          keyboardType="number-pad"
+        />
       </View>
 
       {/* Results */}
       {loading ? (
-        <View style={styles.centered}><ActivityIndicator color={colors.cobalt} /></View>
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.cobalt} />
+        </View>
       ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
@@ -133,14 +180,31 @@ export function TabSearchModal({
       ) : (
         <FlatList
           data={results}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.resultRow} onPress={() => { onResultPress(item); onClose(); }} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.resultRow}
+              onPress={() => {
+                onResultPress(item);
+                onClose();
+              }}
+              activeOpacity={0.7}
+            >
               <View style={styles.resultBody}>
-                <Text style={styles.resultName} numberOfLines={1}>{item.name}</Text>
-                {item.subtitle && <Text style={styles.resultSub} numberOfLines={1}>{item.subtitle}</Text>}
+                <Text style={styles.resultName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                {item.subtitle && (
+                  <Text style={styles.resultSub} numberOfLines={1}>
+                    {item.subtitle}
+                  </Text>
+                )}
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={colors.inkFaint}
+              />
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.listContent}
@@ -150,7 +214,11 @@ export function TabSearchModal({
 
       {/* Create button */}
       {createLabel && onCreatePress && (
-        <TouchableOpacity style={styles.createBtn} onPress={onCreatePress} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.createBtn}
+          onPress={onCreatePress}
+          activeOpacity={0.85}
+        >
           <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
           <Text style={styles.createBtnText}>{createLabel}</Text>
         </TouchableOpacity>

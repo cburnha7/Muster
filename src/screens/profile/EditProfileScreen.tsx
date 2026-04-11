@@ -25,17 +25,17 @@ import { colors, fonts } from '../../theme';
 import { SportType } from '../../types';
 
 const SPORT_OPTIONS: SelectOption[] = [
+  { label: 'Baseball', value: SportType.BASEBALL },
   { label: 'Basketball', value: SportType.BASKETBALL },
+  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
+  { label: 'Hockey', value: SportType.HOCKEY },
+  { label: 'Kickball', value: SportType.KICKBALL },
+  { label: 'Other', value: SportType.OTHER },
   { label: 'Pickleball', value: SportType.PICKLEBALL },
-  { label: 'Tennis', value: SportType.TENNIS },
   { label: 'Soccer', value: SportType.SOCCER },
   { label: 'Softball', value: SportType.SOFTBALL },
-  { label: 'Baseball', value: SportType.BASEBALL },
+  { label: 'Tennis', value: SportType.TENNIS },
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
-  { label: 'Flag Football', value: SportType.FLAG_FOOTBALL },
-  { label: 'Kickball', value: SportType.KICKBALL },
-  { label: 'Hockey', value: SportType.HOCKEY },
-  { label: 'Other', value: SportType.OTHER },
 ];
 
 const GENDER_OPTIONS: SelectOption[] = [
@@ -251,12 +251,10 @@ export function EditProfileScreen(): JSX.Element {
         email,
         phoneNumber: phoneNumber || undefined,
         gender: gender || undefined,
-        preferredSports: selectedSports,
         dateOfBirth:
           birthYear && birthMonth && birthDay
             ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
             : undefined,
-        address: address || undefined,
       } as any;
 
       await userService.updateProfile(updates);
@@ -508,32 +506,6 @@ export function EditProfileScreen(): JSX.Element {
                 ))}
               </View>
             )}
-
-            {/* Preferred Sports */}
-            <Text style={styles.sportsLabel}>Preferred Sports</Text>
-            <View style={styles.sportsList}>
-              {SPORT_OPTIONS.map(sport => (
-                <TouchableOpacity
-                  key={String(sport.value)}
-                  style={[
-                    styles.sportTag,
-                    selectedSports.includes(String(sport.value)) &&
-                      styles.sportTagSelected,
-                  ]}
-                  onPress={() => toggleSport(String(sport.value))}
-                >
-                  <Text
-                    style={[
-                      styles.sportTagText,
-                      selectedSports.includes(String(sport.value)) &&
-                        styles.sportTagTextSelected,
-                    ]}
-                  >
-                    {sport.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
 
             {/* Save Button */}
             <FormButton

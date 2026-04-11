@@ -580,8 +580,9 @@ export interface UpdateTeamData extends Partial<CreateTeamData> {}
 export interface UpdateProfileData {
   firstName?: string;
   lastName?: string;
+  email?: string;
   phoneNumber?: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: Date | string;
   gender?: string;
   preferredSports?: SportType[];
   notificationPreferences?: NotificationPreferences;
