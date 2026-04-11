@@ -734,13 +734,6 @@ export function HomeScreen() {
             contentMaxWidth && { maxWidth: contentMaxWidth, width: '100%' },
           ]}
         >
-          {/* ── My Crew ────────────────────────── */}
-          <MyCrewRow
-            members={crewMembers}
-            selectedId={selectedCrewId}
-            onSelect={setSelectedCrewId}
-          />
-
           {/* ── Live game banner ────────────────── */}
           {liveGameBooking && (
             <LiveGameBanner
@@ -748,6 +741,13 @@ export function HomeScreen() {
               onPress={handleBookingPress}
             />
           )}
+
+          {/* ── My Crew ────────────────────────── */}
+          <MyCrewRow
+            members={crewMembers}
+            selectedId={selectedCrewId}
+            onSelect={setSelectedCrewId}
+          />
 
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
@@ -982,18 +982,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 28,
-    marginBottom: 12,
+    marginTop: 24,
+    marginBottom: 10,
   },
   sectionTitle: {
     fontFamily: fonts.heading,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.onSurface,
+    letterSpacing: -0.3,
   },
   seeAll: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 
   // ── Discover cards ────────────────────
@@ -1047,12 +1048,12 @@ const styles = StyleSheet.create({
   },
   discoverEmptyText: {
     fontFamily: fonts.body,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.onSurfaceVariant,
     marginBottom: 12,
   },
   hostFirstBtn: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingHorizontal: 20,
     paddingVertical: 10,

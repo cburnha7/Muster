@@ -1,13 +1,12 @@
 /**
  * Auth Slice
- * 
+ *
  * Redux store for authentication state management.
  * Requirements: 1.17, 6.7, 8.11, 8.12, 10.6, 33.3
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../../services/api/AuthService';
-import SSOService from '../../services/auth/SSOService';
 import TokenStorage from '../../services/auth/TokenStorage';
 import {
   User,
@@ -101,24 +100,32 @@ export const loginUser = createAsyncThunk(
 export const loginWithSSO = createAsyncThunk(
   'auth/loginSSO',
   async (
-    { provider }: { provider: 'apple' | 'google' },
+    {
+      provider,
+      token,
+      userId,
+      email,
+      firstName,
+      lastName,
+    }: {
+      provider: 'apple' | 'google';
+      token: string;
+      userId: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+    },
     { rejectWithValue }
   ) => {
     try {
-      // Get SSO user data from provider
-      let ssoData;
-      if (provider === 'apple') {
-        ssoData = await SSOService.signInWithApple();
-      } else {
-        ssoData = await SSOService.signInWithGoogle();
-      }
-
-      // Login with SSO
-      const response = await authService.loginWithSSO(
-        ssoData.provider,
-        ssoData.providerToken,
-        ssoData.providerId
-      );
+      // Single call — backend finds or creates the account
+      const response = await authService.ssoAuth({
+        provider,
+        providerUserId: userId,
+        email: email || undefined,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+      });
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'SSO login failed');
@@ -238,11 +245,11 @@ export const loadCachedUser = createAsyncThunk(
       const user = await authService.getStoredUser();
       const accessToken = await authService.getStoredToken();
       const refreshToken = await TokenStorage.getRefreshToken();
-      
+
       if (user && accessToken) {
         return { user, accessToken, refreshToken };
       }
-      
+
       return null;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to load cached user');
@@ -281,7 +288,10 @@ const authSlice = createSlice({
     },
 
     // Set tokens
-    setTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string }>) => {
+    setTokens: (
+      state,
+      action: PayloadAction<{ accessToken: string; refreshToken?: string }>
+    ) => {
       state.accessToken = action.payload.accessToken;
       if (action.payload.refreshToken) {
         state.refreshToken = action.payload.refreshToken;
@@ -290,7 +300,7 @@ const authSlice = createSlice({
     },
 
     // Clear auth state
-    clearAuth: (state) => {
+    clearAuth: state => {
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
@@ -313,25 +323,28 @@ const authSlice = createSlice({
     },
 
     // Clear error
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Register user
     builder
-      .addCase(registerUser.pending, (state) => {
+      .addCase(registerUser.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
-        state.isLoading = false;
-        state.error = null;
-      })
+      .addCase(
+        registerUser.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          state.isAuthenticated = true;
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
@@ -339,18 +352,21 @@ const authSlice = createSlice({
 
     // Register with SSO
     builder
-      .addCase(registerWithSSO.pending, (state) => {
+      .addCase(registerWithSSO.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerWithSSO.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
-        state.isLoading = false;
-        state.error = null;
-      })
+      .addCase(
+        registerWithSSO.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          state.isAuthenticated = true;
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
       .addCase(registerWithSSO.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
@@ -358,18 +374,21 @@ const authSlice = createSlice({
 
     // Login user
     builder
-      .addCase(loginUser.pending, (state) => {
+      .addCase(loginUser.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
-        state.isLoading = false;
-        state.error = null;
-      })
+      .addCase(
+        loginUser.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          state.isAuthenticated = true;
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
@@ -377,18 +396,21 @@ const authSlice = createSlice({
 
     // Login with SSO
     builder
-      .addCase(loginWithSSO.pending, (state) => {
+      .addCase(loginWithSSO.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loginWithSSO.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
-        state.isLoading = false;
-        state.error = null;
-      })
+      .addCase(
+        loginWithSSO.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          state.isAuthenticated = true;
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
       .addCase(loginWithSSO.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
@@ -396,18 +418,21 @@ const authSlice = createSlice({
 
     // Link account
     builder
-      .addCase(linkAccount.pending, (state) => {
+      .addCase(linkAccount.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(linkAccount.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
-        state.isLoading = false;
-        state.error = null;
-      })
+      .addCase(
+        linkAccount.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.user = action.payload.user;
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          state.isAuthenticated = true;
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
       .addCase(linkAccount.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
@@ -415,10 +440,10 @@ const authSlice = createSlice({
 
     // Logout user
     builder
-      .addCase(logoutUser.pending, (state) => {
+      .addCase(logoutUser.pending, state => {
         state.isLoading = true;
       })
-      .addCase(logoutUser.fulfilled, (state) => {
+      .addCase(logoutUser.fulfilled, state => {
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
@@ -438,14 +463,17 @@ const authSlice = createSlice({
 
     // Refresh token
     builder
-      .addCase(refreshAccessToken.pending, (state) => {
+      .addCase(refreshAccessToken.pending, state => {
         state.isLoading = true;
       })
-      .addCase(refreshAccessToken.fulfilled, (state, action: PayloadAction<TokenResponse>) => {
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isLoading = false;
-      })
+      .addCase(
+        refreshAccessToken.fulfilled,
+        (state, action: PayloadAction<TokenResponse>) => {
+          state.accessToken = action.payload.accessToken;
+          state.refreshToken = action.payload.refreshToken;
+          state.isLoading = false;
+        }
+      )
       .addCase(refreshAccessToken.rejected, (state, action) => {
         // Clear auth state on refresh failure
         state.user = null;
@@ -458,11 +486,11 @@ const authSlice = createSlice({
 
     // Request password reset
     builder
-      .addCase(requestPasswordReset.pending, (state) => {
+      .addCase(requestPasswordReset.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(requestPasswordReset.fulfilled, (state) => {
+      .addCase(requestPasswordReset.fulfilled, state => {
         state.isLoading = false;
       })
       .addCase(requestPasswordReset.rejected, (state, action) => {
@@ -472,11 +500,11 @@ const authSlice = createSlice({
 
     // Reset password
     builder
-      .addCase(resetPassword.pending, (state) => {
+      .addCase(resetPassword.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(resetPassword.fulfilled, (state) => {
+      .addCase(resetPassword.fulfilled, state => {
         state.isLoading = false;
       })
       .addCase(resetPassword.rejected, (state, action) => {
@@ -486,7 +514,7 @@ const authSlice = createSlice({
 
     // Load cached user
     builder
-      .addCase(loadCachedUser.pending, (state) => {
+      .addCase(loadCachedUser.pending, state => {
         state.isLoading = true;
       })
       .addCase(loadCachedUser.fulfilled, (state, action) => {
@@ -498,21 +526,24 @@ const authSlice = createSlice({
         }
         state.isLoading = false;
       })
-      .addCase(loadCachedUser.rejected, (state) => {
+      .addCase(loadCachedUser.rejected, state => {
         state.isLoading = false;
       });
 
     // Complete onboarding
     builder
-      .addCase(completeOnboarding.pending, (state) => {
+      .addCase(completeOnboarding.pending, state => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(completeOnboarding.fulfilled, (state, action: PayloadAction<User>) => {
-        state.user = action.payload;
-        state.isLoading = false;
-        state.error = null;
-      })
+      .addCase(
+        completeOnboarding.fulfilled,
+        (state, action: PayloadAction<User>) => {
+          state.user = action.payload;
+          state.isLoading = false;
+          state.error = null;
+        }
+      )
       .addCase(completeOnboarding.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
@@ -536,8 +567,12 @@ export default authSlice.reducer;
 // Selectors
 export const selectAuth = (state: { auth: AuthState }) => state.auth;
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;
-export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
-export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.isLoading;
+export const selectIsAuthenticated = (state: { auth: AuthState }) =>
+  state.auth.isAuthenticated;
+export const selectAuthLoading = (state: { auth: AuthState }) =>
+  state.auth.isLoading;
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
-export const selectAccessToken = (state: { auth: AuthState }) => state.auth.accessToken;
-export const selectRefreshToken = (state: { auth: AuthState }) => state.auth.refreshToken;
+export const selectAccessToken = (state: { auth: AuthState }) =>
+  state.auth.accessToken;
+export const selectRefreshToken = (state: { auth: AuthState }) =>
+  state.auth.refreshToken;

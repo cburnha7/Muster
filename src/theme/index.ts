@@ -19,3 +19,5 @@ export { Shadows, getShadow } from './shadows';
 export type { ShadowKey } from './shadows';
 
 export { ComponentStyles } from './componentStyles';
+
+export { ScreenStyles } from './screenStyles';

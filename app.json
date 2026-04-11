@@ -16,12 +16,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.muster.app",
+      "usesAppleSignIn": true,
       "icon": "./assets/muster-icon-1024.png",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to your camera to upload profile photos.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload profile photos.",
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show nearby facilities and events.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -52,6 +60,7 @@
     },
     "plugins": [
       "expo-splash-screen",
+      "expo-apple-authentication",
       [
         "expo-notifications",
         {

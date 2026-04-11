@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   chipText: {
     fontFamily: fonts.headingSemi,
@@ -707,6 +707,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.heading,
     fontSize: 18,
     color: colors.onSurface,
+    letterSpacing: -0.3,
     flex: 1,
   },
   countBadge: {
@@ -937,16 +938,16 @@ const styles = StyleSheet.create({
     borderColor: colors.outlineVariant,
   },
   sportChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   sportChipText: {
-    fontSize: 14,
+    fontSize: 13,
+    fontFamily: fonts.headingSemi,
     color: colors.onSurfaceVariant,
   },
   sportChipTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '500',
   },
   modalActions: {
     flexDirection: 'row',

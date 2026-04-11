@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginTop: 20,
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 9999,

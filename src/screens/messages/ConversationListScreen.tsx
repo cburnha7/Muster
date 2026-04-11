@@ -19,12 +19,22 @@ import { SkeletonConversationRow } from '../../components/ui/SkeletonBox';
 import { ConversationRow } from '../../components/messages/ConversationRow';
 import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
 import { conversationService } from '../../services/api/ConversationService';
-import { setConversations, setLoadingConversations, setError, setUnreadCount } from '../../store/slices/messagingSlice';
+import {
+  setConversations,
+  setLoadingConversations,
+  setError,
+  setUnreadCount,
+} from '../../store/slices/messagingSlice';
 import type { RootState } from '../../store/store';
 import type { Conversation } from '../../types/messaging';
 import type { MessagesStackParamList } from '../../navigation/types';
 
-type FilterType = 'ALL' | 'TEAM_CHAT' | 'GAME_THREAD' | 'LEAGUE_CHANNEL' | 'DIRECT_MESSAGE';
+type FilterType =
+  | 'ALL'
+  | 'TEAM_CHAT'
+  | 'GAME_THREAD'
+  | 'LEAGUE_CHANNEL'
+  | 'DIRECT_MESSAGE';
 
 const FILTERS: Array<{ key: FilterType; label: string }> = [
   { key: 'ALL', label: 'All' },
@@ -34,11 +44,22 @@ const FILTERS: Array<{ key: FilterType; label: string }> = [
   { key: 'DIRECT_MESSAGE', label: 'DMs' },
 ];
 
-const EMPTY_STATES: Record<FilterType, { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; actionLabel?: string; targetTab?: string; targetScreen?: string }> = {
+const EMPTY_STATES: Record<
+  FilterType,
+  {
+    icon: keyof typeof Ionicons.glyphMap;
+    title: string;
+    subtitle: string;
+    actionLabel?: string;
+    targetTab?: string;
+    targetScreen?: string;
+  }
+> = {
   ALL: {
     icon: 'chatbubble-outline',
     title: 'No conversations yet',
-    subtitle: 'Your conversations will show up here as you join teams and games.',
+    subtitle:
+      'Your conversations will show up here as you join teams and games.',
   },
   TEAM_CHAT: {
     icon: 'people-outline',
@@ -76,8 +97,12 @@ type Nav = NativeStackNavigationProp<MessagesStackParamList>;
 export function ConversationListScreen() {
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch();
-  const conversations = useSelector((state: RootState) => state.messaging?.conversations ?? []);
-  const isLoading = useSelector((state: RootState) => state.messaging?.isLoadingConversations ?? false);
+  const conversations = useSelector(
+    (state: RootState) => state.messaging?.conversations ?? []
+  );
+  const isLoading = useSelector(
+    (state: RootState) => state.messaging?.isLoadingConversations ?? false
+  );
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,7 +113,10 @@ export function ConversationListScreen() {
     try {
       const data = await conversationService.getConversations(activeFilter);
       dispatch(setConversations(data));
-      const total = data.reduce((sum, c) => sum + (c.myParticipant?.isMuted ? 0 : c.unreadCount), 0);
+      const total = data.reduce(
+        (sum, c) => sum + (c.myParticipant?.isMuted ? 0 : c.unreadCount),
+        0
+      );
       dispatch(setUnreadCount(total));
     } catch (err: any) {
       dispatch(setError(err.message ?? 'Failed to load conversations'));
@@ -120,7 +148,9 @@ export function ConversationListScreen() {
   const handlePress = (conversation: Conversation) => {
     let title = conversation.name ?? 'Chat';
     if (conversation.type === 'DIRECT_MESSAGE') {
-      const other = conversation.participants.find((p) => p.userId !== conversation.myParticipant?.userId);
+      const other = conversation.participants.find(
+        p => p.userId !== conversation.myParticipant?.userId
+      );
       if (other) title = `${other.user.firstName} ${other.user.lastName}`;
     }
     navigation.navigate('Chat', {
@@ -131,7 +161,7 @@ export function ConversationListScreen() {
   };
 
   // Filter by search query
-  const filtered = conversations.filter((c) => {
+  const filtered = conversations.filter(c => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const name = (c.name ?? '').toLowerCase();
@@ -154,7 +184,9 @@ export function ConversationListScreen() {
   const handleEmptyAction = () => {
     const emptyState = EMPTY_STATES[activeFilter];
     if (emptyState.targetTab && emptyState.targetScreen) {
-      (navigation as any).getParent()?.navigate(emptyState.targetTab, { screen: emptyState.targetScreen });
+      (navigation as any)
+        .getParent()
+        ?.navigate(emptyState.targetTab, { screen: emptyState.targetScreen });
     }
   };
 
@@ -162,11 +194,19 @@ export function ConversationListScreen() {
     const emptyState = EMPTY_STATES[activeFilter];
     return (
       <View style={styles.emptyState}>
-        <Ionicons name={emptyState.icon} size={56} color={colors.outlineVariant} />
+        <Ionicons
+          name={emptyState.icon}
+          size={56}
+          color={colors.outlineVariant}
+        />
         <Text style={styles.emptyTitle}>{emptyState.title}</Text>
         <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
         {emptyState.actionLabel && (
-          <TouchableOpacity style={styles.emptyAction} onPress={handleEmptyAction} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.emptyAction}
+            onPress={handleEmptyAction}
+            activeOpacity={0.7}
+          >
             <Text style={styles.emptyActionText}>{emptyState.actionLabel}</Text>
           </TouchableOpacity>
         )}
@@ -177,7 +217,9 @@ export function ConversationListScreen() {
   if (isLoading && conversations.length === 0) {
     return (
       <View style={styles.container}>
-        {Array.from({ length: 8 }).map((_, i) => <SkeletonConversationRow key={i} />)}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <SkeletonConversationRow key={i} />
+        ))}
       </View>
     );
   }
@@ -186,7 +228,11 @@ export function ConversationListScreen() {
     <View style={styles.container}>
       {/* Search */}
       <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={18} color={colors.onSurfaceVariant} />
+        <Ionicons
+          name="search-outline"
+          size={18}
+          color={colors.onSurfaceVariant}
+        />
         <TextInput
           style={styles.searchInput}
           value={searchQuery}
@@ -196,7 +242,11 @@ export function ConversationListScreen() {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={18} color={colors.onSurfaceVariant} />
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color={colors.onSurfaceVariant}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -208,13 +258,18 @@ export function ConversationListScreen() {
         style={styles.filterScroll}
         contentContainerStyle={styles.filterRow}
       >
-        {FILTERS.map((f) => (
+        {FILTERS.map(f => (
           <TouchableOpacity
             key={f.key}
             style={[styles.chip, activeFilter === f.key && styles.chipActive]}
             onPress={() => setActiveFilter(f.key)}
           >
-            <Text style={[styles.chipText, activeFilter === f.key && styles.chipTextActive]}>
+            <Text
+              style={[
+                styles.chipText,
+                activeFilter === f.key && styles.chipTextActive,
+              ]}
+            >
               {f.label}
             </Text>
           </TouchableOpacity>
@@ -225,10 +280,22 @@ export function ConversationListScreen() {
       <FlatList
         style={styles.list}
         data={sorted}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ConversationRow conversation={item} onPress={handlePress} onMute={handleMute} />}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <ConversationRow
+            conversation={item}
+            onPress={handlePress}
+            onMute={handleMute}
+          />
+        )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
         ListEmptyComponent={renderEmptyState}
       />
 
@@ -273,23 +340,42 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 9999,
     backgroundColor: colors.surfaceContainer,
   },
-  chipActive: { backgroundColor: colors.primary },
-  chipText: { fontFamily: fonts.label, fontSize: 13, color: colors.onSurfaceVariant },
+  chipActive: { backgroundColor: colors.cobalt },
+  chipText: {
+    fontFamily: fonts.headingSemi,
+    fontSize: 13,
+    color: colors.onSurfaceVariant,
+  },
   chipTextActive: { color: '#FFFFFF' },
-  separator: { height: 1, backgroundColor: colors.outlineVariant + '50', marginLeft: 76 },
+  separator: {
+    height: 1,
+    backgroundColor: colors.outlineVariant + '50',
+    marginLeft: 76,
+  },
   emptyState: {
     alignItems: 'center',
     paddingTop: 80,
     paddingHorizontal: 32,
     gap: 12,
   },
-  emptyTitle: { fontFamily: fonts.headingSemi, fontSize: 18, color: colors.onSurface, textAlign: 'center' },
-  emptySubtitle: { fontFamily: fonts.body, fontSize: 15, color: colors.onSurfaceVariant, textAlign: 'center', lineHeight: 22 },
+  emptyTitle: {
+    fontFamily: fonts.heading,
+    fontSize: 18,
+    color: colors.onSurface,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.onSurfaceVariant,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
   emptyAction: {
     marginTop: 8,
     paddingHorizontal: 24,
