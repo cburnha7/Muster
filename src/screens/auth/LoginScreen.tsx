@@ -34,19 +34,24 @@ export function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState<'apple' | 'google' | null>(null);
-  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{
+    username?: string;
+    password?: string;
+    general?: string;
+  }>({});
 
   const updateError = (field: string, error: string | undefined) => {
-    setErrors((prev) => ({ ...prev, [field]: error }));
+    setErrors(prev => ({ ...prev, [field]: error }));
   };
 
   const validateField = (field: string, value: string) => {
     if (field === 'username' && !value.trim()) {
       updateError('username', ErrorMessages.validation.credentials.required);
     } else if (field === 'password' && !value) {
-      updateError('password', ErrorMessages.validation.credentials.passwordRequired);
+      updateError(
+        'password',
+        ErrorMessages.validation.credentials.passwordRequired
+      );
     } else {
       updateError(field, undefined);
     }
@@ -57,12 +62,23 @@ export function LoginScreen() {
 
     if (!username.trim()) {
       newErrors.username = ErrorMessages.validation.credentials.required;
-      loggingService.logValidation('LoginScreen', 'username', 'required', ErrorMessages.validation.credentials.required);
+      loggingService.logValidation(
+        'LoginScreen',
+        'username',
+        'required',
+        ErrorMessages.validation.credentials.required
+      );
     }
 
     if (!password) {
-      newErrors.password = ErrorMessages.validation.credentials.passwordRequired;
-      loggingService.logValidation('LoginScreen', 'password', 'required', ErrorMessages.validation.credentials.passwordRequired);
+      newErrors.password =
+        ErrorMessages.validation.credentials.passwordRequired;
+      loggingService.logValidation(
+        'LoginScreen',
+        'password',
+        'required',
+        ErrorMessages.validation.credentials.passwordRequired
+      );
     }
 
     setErrors(newErrors);
@@ -103,7 +119,9 @@ export function LoginScreen() {
       } else if (error.message === 'Service temporarily unavailable') {
         setErrors({ general: ErrorMessages.network.serverUnavailable });
       } else {
-        setErrors({ general: error.message || ErrorMessages.network.unknownError });
+        setErrors({
+          general: error.message || ErrorMessages.network.unknownError,
+        });
       }
     } finally {
       setIsLoading(false);
@@ -116,36 +134,34 @@ export function LoginScreen() {
     setErrors({});
 
     try {
-      const userData = provider === 'apple'
-        ? await SSOService.signInWithApple()
-        : await SSOService.signInWithGoogle();
+      const userData =
+        provider === 'apple'
+          ? await SSOService.signInWithApple()
+          : await SSOService.signInWithGoogle();
 
       await dispatch(
         loginWithSSO({
           provider,
           token: userData.providerToken,
           userId: userData.providerId,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
         })
       ).unwrap();
 
       Alert.alert('Success', SuccessMessages.login.ssoSuccess);
     } catch (error: any) {
-      if (error.message !== 'User cancelled') {
-        if (error.status === 404) {
-          Alert.alert(
-            'Account Not Found',
-            ErrorMessages.auth.ssoAccountNotFound,
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Sign Up', onPress: () => {} },
-            ]
-          );
-        } else {
-          const errorMsg = provider === 'apple'
-            ? ErrorMessages.sso.appleFailed
-            : ErrorMessages.sso.googleFailed;
-          setErrors({ general: errorMsg });
-        }
+      if (error.message !== 'User cancelled' && error !== 'User cancelled') {
+        const detail =
+          typeof error === 'string'
+            ? error
+            : error.message || JSON.stringify(error);
+        const errorMsg =
+          provider === 'apple'
+            ? `Apple Sign In failed: ${detail}`
+            : `Google Sign In failed: ${detail}`;
+        setErrors({ general: errorMsg });
       }
     } finally {
       setSsoLoading(null);
@@ -180,7 +196,6 @@ export function LoginScreen() {
 
         {/* Form card — sits on a subtly different surface */}
         <View style={styles.formCard}>
-
           {/* SSO Buttons - Only show on native platforms */}
           {Platform.OS !== 'web' && (
             <>
@@ -216,7 +231,7 @@ export function LoginScreen() {
           <FormInput
             label="Username or Email"
             value={username}
-            onChangeText={(text) => {
+            onChangeText={text => {
               setUsername(text);
               updateError('username', undefined);
             }}
@@ -233,7 +248,7 @@ export function LoginScreen() {
           <FormInput
             label="Password"
             value={password}
-            onChangeText={(text) => {
+            onChangeText={text => {
               setPassword(text);
               updateError('password', undefined);
             }}
@@ -254,7 +269,10 @@ export function LoginScreen() {
               checked={rememberMe}
               onToggle={() => setRememberMe(!rememberMe)}
             />
-            <TouchableOpacity onPress={handleForgotPassword} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <TouchableOpacity
+              onPress={handleForgotPassword}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Text style={styles.forgotPassword}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>

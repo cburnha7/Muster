@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
-    backgroundColor: colors.pine,
+    backgroundColor: colors.cobalt,
   },
   chipText: {
     fontFamily: fonts.headingSemi,
@@ -378,7 +378,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.pine,
+    color: colors.onSurface,
+    letterSpacing: -0.3,
     paddingHorizontal: 20,
     paddingTop: 4,
     paddingBottom: 8,
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontFamily: fonts.heading,
-    fontSize: 17,
+    fontSize: 18,
     color: colors.onSurface,
   },
   emptySubtitle: {

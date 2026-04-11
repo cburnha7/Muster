@@ -21,18 +21,18 @@ import {
 
 /**
  * AuthController - Handles authentication HTTP requests
- * 
+ *
  * Coordinates authentication flows by orchestrating AuthService, TokenService,
  * and EmailService. Handles request validation, error responses, and proper
  * HTTP status codes.
- * 
+ *
  * Requirements: 22.1-22.9, 23.1-23.9, 24.1-24.9, 25.1-25.9, 26.1-26.9
  */
 class AuthController {
   /**
    * Register a new user with email and password
    * POST /api/auth/register
-   * 
+   *
    * Requirements: 22.1, 22.2, 22.3, 22.4, 22.5, 22.6
    */
   async register(req: Request, res: Response): Promise<void> {
@@ -40,7 +40,13 @@ class AuthController {
       const body = req.body as RegisterRequest;
 
       // Validate required fields
-      if (!body.firstName || !body.lastName || !body.email || !body.username || !body.password) {
+      if (
+        !body.firstName ||
+        !body.lastName ||
+        !body.email ||
+        !body.username ||
+        !body.password
+      ) {
         res.status(400).json({
           error: 'Validation Error',
           message: 'All fields are required',
@@ -71,7 +77,9 @@ class AuthController {
       }
 
       // Check if username already exists
-      const existingUsername = await AuthService.findUserByUsername(body.username);
+      const existingUsername = await AuthService.findUserByUsername(
+        body.username
+      );
       if (existingUsername) {
         res.status(409).json({
           error: 'Conflict',
@@ -97,13 +105,18 @@ class AuthController {
       const refreshToken = TokenService.generateRefreshToken(user.id, false);
 
       // Store refresh token
-      const refreshTokenExpiration = TokenService.getExpirationDate(refreshToken);
+      const refreshTokenExpiration =
+        TokenService.getExpirationDate(refreshToken);
       if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(user.id, refreshToken, refreshTokenExpiration);
+        await TokenService.storeRefreshToken(
+          user.id,
+          refreshToken,
+          refreshTokenExpiration
+        );
       }
 
       // Send welcome email (optional, don't block on failure)
-      EmailService.sendWelcomeEmail(user.email, user.firstName).catch((error) => {
+      EmailService.sendWelcomeEmail(user.email, user.firstName).catch(error => {
         console.error('Failed to send welcome email:', error);
       });
 
@@ -128,7 +141,7 @@ class AuthController {
   /**
    * Register a new user with SSO (Apple or Google)
    * POST /api/auth/register/sso
-   * 
+   *
    * Requirements: 22.7, 22.8, 22.9
    */
   async registerWithSSO(req: Request, res: Response): Promise<void> {
@@ -136,10 +149,16 @@ class AuthController {
       const body = req.body as SSORegisterRequest;
 
       // Validate required fields
-      if (!body.provider || !body.providerUserId || !body.email || !body.firstName || !body.lastName || !body.username) {
+      if (
+        !body.provider ||
+        !body.providerUserId ||
+        !body.email ||
+        !body.username
+      ) {
         res.status(400).json({
           error: 'Validation Error',
-          message: 'All fields are required',
+          message:
+            'Provider, provider user ID, email, and username are required',
           statusCode: 400,
         } as ErrorResponse);
         return;
@@ -167,7 +186,9 @@ class AuthController {
       }
 
       // Check if username already exists
-      const existingUsername = await AuthService.findUserByUsername(body.username);
+      const existingUsername = await AuthService.findUserByUsername(
+        body.username
+      );
       if (existingUsername) {
         res.status(409).json({
           error: 'Conflict',
@@ -182,8 +203,8 @@ class AuthController {
       const user = await AuthService.createSSOUser({
         email: body.email,
         username: body.username,
-        firstName: body.firstName,
-        lastName: body.lastName,
+        firstName: body.firstName || body.email.split('@')[0],
+        lastName: body.lastName || '',
         dateOfBirth: defaultDateOfBirth,
         ssoProvider: body.provider,
         ssoProviderId: body.providerUserId,
@@ -194,13 +215,18 @@ class AuthController {
       const refreshToken = TokenService.generateRefreshToken(user.id, false);
 
       // Store refresh token
-      const refreshTokenExpiration = TokenService.getExpirationDate(refreshToken);
+      const refreshTokenExpiration =
+        TokenService.getExpirationDate(refreshToken);
       if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(user.id, refreshToken, refreshTokenExpiration);
+        await TokenService.storeRefreshToken(
+          user.id,
+          refreshToken,
+          refreshTokenExpiration
+        );
       }
 
       // Send welcome email (optional)
-      EmailService.sendWelcomeEmail(user.email, user.firstName).catch((error) => {
+      EmailService.sendWelcomeEmail(user.email, user.firstName).catch(error => {
         console.error('Failed to send welcome email:', error);
       });
 
@@ -225,7 +251,7 @@ class AuthController {
   /**
    * Login with email/username and password
    * POST /api/auth/login
-   * 
+   *
    * Requirements: 23.1, 23.2, 23.3, 23.4, 23.5
    */
   async login(req: Request, res: Response): Promise<void> {
@@ -243,7 +269,10 @@ class AuthController {
       }
 
       // Authenticate user
-      const user = await AuthService.authenticateUser(body.emailOrUsername, body.password);
+      const user = await AuthService.authenticateUser(
+        body.emailOrUsername,
+        body.password
+      );
 
       if (!user) {
         res.status(401).json({
@@ -257,12 +286,20 @@ class AuthController {
       // Generate tokens with rememberMe flag
       const rememberMe = body.rememberMe || false;
       const accessToken = TokenService.generateAccessToken(user.id);
-      const refreshToken = TokenService.generateRefreshToken(user.id, rememberMe);
+      const refreshToken = TokenService.generateRefreshToken(
+        user.id,
+        rememberMe
+      );
 
       // Store refresh token
-      const refreshTokenExpiration = TokenService.getExpirationDate(refreshToken);
+      const refreshTokenExpiration =
+        TokenService.getExpirationDate(refreshToken);
       if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(user.id, refreshToken, refreshTokenExpiration);
+        await TokenService.storeRefreshToken(
+          user.id,
+          refreshToken,
+          refreshTokenExpiration
+        );
       }
 
       // Return success response
@@ -286,7 +323,7 @@ class AuthController {
   /**
    * Login with SSO (Apple or Google)
    * POST /api/auth/login/sso
-   * 
+   *
    * Requirements: 23.6, 23.7, 23.8, 23.9
    */
   async loginWithSSO(req: Request, res: Response): Promise<void> {
@@ -314,7 +351,10 @@ class AuthController {
       }
 
       // Authenticate SSO user
-      const user = await AuthService.authenticateSSOUser(body.provider, body.providerUserId);
+      const user = await AuthService.authenticateSSOUser(
+        body.provider,
+        body.providerUserId
+      );
 
       if (!user) {
         res.status(404).json({
@@ -330,9 +370,14 @@ class AuthController {
       const refreshToken = TokenService.generateRefreshToken(user.id, false);
 
       // Store refresh token
-      const refreshTokenExpiration = TokenService.getExpirationDate(refreshToken);
+      const refreshTokenExpiration =
+        TokenService.getExpirationDate(refreshToken);
       if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(user.id, refreshToken, refreshTokenExpiration);
+        await TokenService.storeRefreshToken(
+          user.id,
+          refreshToken,
+          refreshTokenExpiration
+        );
       }
 
       // Return success response
@@ -354,9 +399,96 @@ class AuthController {
   }
 
   /**
+   * Unified SSO — find existing account or create new one
+   * POST /api/auth/sso
+   */
+  async ssoFindOrCreate(req: Request, res: Response): Promise<void> {
+    try {
+      const { provider, providerUserId, email, firstName, lastName } = req.body;
+
+      if (!provider || !providerUserId) {
+        res
+          .status(400)
+          .json({
+            error: 'Validation Error',
+            message: 'provider and providerUserId are required',
+          });
+        return;
+      }
+      if (provider !== 'apple' && provider !== 'google') {
+        res
+          .status(400)
+          .json({ error: 'Validation Error', message: 'Invalid provider' });
+        return;
+      }
+
+      // 1. Try to find by SSO provider ID
+      let user = await AuthService.findUserBySSOProvider(
+        provider,
+        providerUserId
+      );
+
+      // 2. If not found and we have an email, try to find by email and link
+      if (!user && email) {
+        const existingByEmail = await AuthService.findUserByEmail(email);
+        if (existingByEmail) {
+          await AuthService.linkSSOProvider(
+            existingByEmail.id,
+            provider,
+            providerUserId
+          );
+          user = await prisma.user.findUnique({
+            where: { id: existingByEmail.id },
+          });
+        }
+      }
+
+      // 3. If still not found, create a new account
+      if (!user) {
+        const regEmail = email || `${providerUserId}@${provider}.sso`;
+        const username =
+          (email ? email.split('@')[0] : providerUserId.slice(0, 10)) +
+          '_' +
+          Date.now().toString(36);
+        user = await AuthService.createSSOUser({
+          email: regEmail,
+          username,
+          firstName: firstName || regEmail.split('@')[0],
+          lastName: lastName || '',
+          dateOfBirth: new Date('2000-01-01'),
+          ssoProvider: provider,
+          ssoProviderId: providerUserId,
+        });
+      }
+
+      const accessToken = TokenService.generateAccessToken(user!.id);
+      const refreshToken = TokenService.generateRefreshToken(user!.id, false);
+      const exp = TokenService.getExpirationDate(refreshToken);
+      if (exp)
+        await TokenService.storeRefreshToken(user!.id, refreshToken, exp);
+
+      res
+        .status(200)
+        .json({
+          user: toUserResponse(user!),
+          accessToken,
+          refreshToken,
+        } as AuthResponse);
+    } catch (error: any) {
+      console.error('SSO find-or-create error:', error);
+      res
+        .status(500)
+        .json({
+          error: 'Internal Server Error',
+          message: error.message || 'SSO authentication failed',
+        });
+    }
+  }
+
+  /**
    * Link an SSO account to an existing user account
    * POST /api/auth/link-account
-   * 
+   *
    * Requirements: 24.1, 24.2, 24.3, 24.4, 24.5, 24.6
    */
   async linkAccount(req: Request, res: Response): Promise<void> {
@@ -364,7 +496,12 @@ class AuthController {
       const body = req.body as LinkAccountRequest;
 
       // Validate required fields
-      if (!body.email || !body.password || !body.provider || !body.providerUserId) {
+      if (
+        !body.email ||
+        !body.password ||
+        !body.provider ||
+        !body.providerUserId
+      ) {
         res.status(400).json({
           error: 'Validation Error',
           message: 'All fields are required',
@@ -397,7 +534,10 @@ class AuthController {
 
       // Verify password (only if user has a password - not SSO-only account)
       if (user.password) {
-        const isValidPassword = await AuthService.comparePassword(body.password, user.password);
+        const isValidPassword = await AuthService.comparePassword(
+          body.password,
+          user.password
+        );
         if (!isValidPassword) {
           res.status(401).json({
             error: 'Unauthorized',
@@ -419,21 +559,37 @@ class AuthController {
       }
 
       // Link SSO provider
-      const updatedUser = await AuthService.linkSSOProvider(user.id, body.provider, body.providerUserId);
+      const updatedUser = await AuthService.linkSSOProvider(
+        user.id,
+        body.provider,
+        body.providerUserId
+      );
 
       // Generate tokens
       const accessToken = TokenService.generateAccessToken(updatedUser.id);
-      const refreshToken = TokenService.generateRefreshToken(updatedUser.id, false);
+      const refreshToken = TokenService.generateRefreshToken(
+        updatedUser.id,
+        false
+      );
 
       // Store refresh token
-      const refreshTokenExpiration = TokenService.getExpirationDate(refreshToken);
+      const refreshTokenExpiration =
+        TokenService.getExpirationDate(refreshToken);
       if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(updatedUser.id, refreshToken, refreshTokenExpiration);
+        await TokenService.storeRefreshToken(
+          updatedUser.id,
+          refreshToken,
+          refreshTokenExpiration
+        );
       }
 
       // Send account linked email (optional)
-      const providerName = body.provider.charAt(0).toUpperCase() + body.provider.slice(1);
-      EmailService.sendAccountLinkedEmail(updatedUser.email, providerName).catch((error) => {
+      const providerName =
+        body.provider.charAt(0).toUpperCase() + body.provider.slice(1);
+      EmailService.sendAccountLinkedEmail(
+        updatedUser.email,
+        providerName
+      ).catch(error => {
         console.error('Failed to send account linked email:', error);
       });
 
@@ -458,7 +614,7 @@ class AuthController {
   /**
    * Refresh access token using refresh token
    * POST /api/auth/refresh
-   * 
+   *
    * Requirements: 25.1, 25.2, 25.3, 25.4, 25.5
    */
   async refreshToken(req: Request, res: Response): Promise<void> {
@@ -500,15 +656,23 @@ class AuthController {
 
       // Generate new tokens
       const accessToken = TokenService.generateAccessToken(payload.userId);
-      const newRefreshToken = TokenService.generateRefreshToken(payload.userId, false);
+      const newRefreshToken = TokenService.generateRefreshToken(
+        payload.userId,
+        false
+      );
 
       // Invalidate old refresh token
       await TokenService.invalidateRefreshToken(body.refreshToken);
 
       // Store new refresh token
-      const refreshTokenExpiration = TokenService.getExpirationDate(newRefreshToken);
+      const refreshTokenExpiration =
+        TokenService.getExpirationDate(newRefreshToken);
       if (refreshTokenExpiration) {
-        await TokenService.storeRefreshToken(payload.userId, newRefreshToken, refreshTokenExpiration);
+        await TokenService.storeRefreshToken(
+          payload.userId,
+          newRefreshToken,
+          refreshTokenExpiration
+        );
       }
 
       // Return new tokens
@@ -531,7 +695,7 @@ class AuthController {
   /**
    * Logout user by invalidating refresh token
    * POST /api/auth/logout
-   * 
+   *
    * Requirements: 25.6, 25.7, 25.8, 25.9
    */
   async logout(req: Request, res: Response): Promise<void> {
@@ -567,7 +731,7 @@ class AuthController {
   /**
    * Request password reset email
    * POST /api/auth/forgot-password
-   * 
+   *
    * Requirements: 26.1, 26.2, 26.3, 26.4
    */
   async forgotPassword(req: Request, res: Response): Promise<void> {
@@ -627,7 +791,7 @@ class AuthController {
   /**
    * Reset password using reset token
    * POST /api/auth/reset-password
-   * 
+   *
    * Requirements: 26.5, 26.6, 26.7, 26.8, 26.9
    */
   async resetPassword(req: Request, res: Response): Promise<void> {
@@ -700,7 +864,8 @@ class AuthController {
       await TokenService.invalidateAllUserTokens(resetToken.userId);
 
       res.status(200).json({
-        message: 'Password reset successful. Please log in with your new password',
+        message:
+          'Password reset successful. Please log in with your new password',
       });
     } catch (error) {
       console.error('Reset password error:', error);
