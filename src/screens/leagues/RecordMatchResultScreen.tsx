@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator, Text, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  Text,
+  ScrollView,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { MatchResultForm } from '../../components/league/MatchResultForm';
@@ -10,7 +17,7 @@ import { leagueService } from '../../services/api/LeagueService';
 import { recordResult } from '../../store/slices/matchesSlice';
 import { selectUser } from '../../store/slices/authSlice';
 import { RecordMatchResultData, Match, TeamStanding } from '../../types';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 
 type RecordMatchResultScreenRouteProp = RouteProp<
   { RecordMatchResult: { matchId: string } },
@@ -18,13 +25,14 @@ type RecordMatchResultScreenRouteProp = RouteProp<
 >;
 
 export const RecordMatchResultScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<RecordMatchResultScreenRouteProp>();
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
-  
+
   const { matchId } = route.params;
-  
+
   const [loading, setLoading] = useState(false);
   const [match, setMatch] = useState<Match | null>(null);
   const [standings, setStandings] = useState<TeamStanding[]>([]);
@@ -38,15 +46,17 @@ export const RecordMatchResultScreen: React.FC = () => {
   const loadData = async () => {
     try {
       setLoadingData(true);
-      
+
       // Load match details
       const matchData = await matchService.getMatchById(matchId);
       setMatch(matchData);
-      
+
       // Load league details
       if (matchData.leagueId) {
-        const leagueData = await leagueService.getLeagueById(matchData.leagueId);
-        
+        const leagueData = await leagueService.getLeagueById(
+          matchData.leagueId
+        );
+
         // Check if user is the league operator
         if (user?.id && leagueData.organizerId !== user.id) {
           Alert.alert(
@@ -67,7 +77,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   const loadStandings = async () => {
     if (!match?.leagueId) return;
-    
+
     try {
       const standingsData = await leagueService.getStandings(
         match.leagueId,
@@ -109,27 +119,26 @@ export const RecordMatchResultScreen: React.FC = () => {
       await loadStandings();
 
       // Show success message
-      Alert.alert(
-        'Success',
-        'Match result recorded successfully!',
-        [
-          {
-            text: 'View Standings',
-            onPress: () => {
-              // Standings are already shown below
-            },
+      Alert.alert('Success', 'Match result recorded successfully!', [
+        {
+          text: 'View Standings',
+          onPress: () => {
+            // Standings are already shown below
           },
-          {
-            text: 'Done',
-            onPress: () => {
-              navigation.goBack();
-            },
+        },
+        {
+          text: 'Done',
+          onPress: () => {
+            navigation.goBack();
           },
-        ]
-      );
+        },
+      ]);
     } catch (error) {
       // Show error message
-      const errorMessage = error instanceof Error ? error.message : 'Failed to record match result';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to record match result';
       Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
@@ -147,7 +156,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -163,7 +172,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (!match) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -177,20 +186,23 @@ export const RecordMatchResultScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Record Match Result"
         leftIcon="arrow-back"
         onLeftPress={handleCancel}
       />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <MatchResultForm
           match={match}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           loading={loading}
         />
-        
+
         {showStandings && standings.length > 0 && (
           <View style={styles.standingsSection}>
             <Text style={styles.standingsTitle}>Updated Standings</Text>

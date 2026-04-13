@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, Spacing, TextStyles, useTheme } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import { requestPasswordReset } from '../../store/slices/authSlice';
 
@@ -28,6 +28,7 @@ interface ForgotPasswordState {
 }
 
 export const ForgotPasswordScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -39,11 +40,11 @@ export const ForgotPasswordScreen: React.FC = () => {
   });
 
   const updateField = (field: keyof ForgotPasswordState, value: any) => {
-    setState((prev) => ({ ...prev, [field]: value }));
+    setState(prev => ({ ...prev, [field]: value }));
   };
 
   const updateError = (field: string, error: string | undefined) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       errors: { ...prev.errors, [field]: error },
     }));
@@ -71,13 +72,22 @@ export const ForgotPasswordScreen: React.FC = () => {
       updateField('isSuccess', true);
     } catch (error: any) {
       if (error.status === 429) {
-        updateError('general', 'Too many password reset requests. Please try again in 15 minutes');
+        updateError(
+          'general',
+          'Too many password reset requests. Please try again in 15 minutes'
+        );
       } else if (error.message === 'No internet connection') {
-        updateError('general', 'No internet connection. Please check your network and try again');
+        updateError(
+          'general',
+          'No internet connection. Please check your network and try again'
+        );
       } else if (error.message === 'Request timed out') {
         updateError('general', 'Request timed out. Please try again');
       } else {
-        updateError('general', error.message || 'Failed to send reset email. Please try again');
+        updateError(
+          'general',
+          error.message || 'Failed to send reset email. Please try again'
+        );
       }
     } finally {
       updateField('isLoading', false);
@@ -99,14 +109,17 @@ export const ForgotPasswordScreen: React.FC = () => {
 
   if (state.isSuccess) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={80} color={colors.cobalt} />
           </View>
           <Text style={styles.successTitle}>Check Your Email</Text>
           <Text style={styles.successMessage}>
-            Password reset email sent. Please check your inbox and follow the instructions to reset your password.
+            Password reset email sent. Please check your inbox and follow the
+            instructions to reset your password.
           </Text>
           <Text style={styles.successNote}>
             If you don't see the email, check your spam folder.
@@ -116,10 +129,7 @@ export const ForgotPasswordScreen: React.FC = () => {
             onPress={handleBackToLogin}
             variant="primary"
           />
-          <TouchableOpacity
-            style={styles.retryLink}
-            onPress={handleRetry}
-          >
+          <TouchableOpacity style={styles.retryLink} onPress={handleRetry}>
             <Text style={styles.retryLinkText}>
               Didn't receive the email?{' '}
               <Text style={styles.link}>Try again</Text>
@@ -132,7 +142,7 @@ export const ForgotPasswordScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -152,14 +162,15 @@ export const ForgotPasswordScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>Forgot Password?</Text>
           <Text style={styles.subtitle}>
-            Enter your email address and we'll send you instructions to reset your password.
+            Enter your email address and we'll send you instructions to reset
+            your password.
           </Text>
         </View>
 
         <TextInput
           label="Email"
           value={state.email}
-          onChangeText={(text) => {
+          onChangeText={text => {
             updateField('email', text);
             updateError('email', undefined);
           }}
@@ -186,7 +197,11 @@ export const ForgotPasswordScreen: React.FC = () => {
         />
 
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
+          <Ionicons
+            name="information-circle-outline"
+            size={20}
+            color={colors.ink}
+          />
           <Text style={styles.infoText}>
             The reset link will expire in 1 hour for security reasons.
           </Text>

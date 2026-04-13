@@ -27,7 +27,7 @@ import {
   setSelectedFacility,
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { FixedBottomCTA } from '../../components/detail';
@@ -106,6 +106,7 @@ function TabBar({
 /* ─── Main Screen ─────────────────────────────────────────────────────────── */
 
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
+  const { colors: themeColors } = useTheme();
   const { facilityId, ...restParams } = route.params as any;
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -274,7 +275,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   ];
 
   return (
-    <View style={s.container}>
+    <View style={[s.container, { backgroundColor: themeColors.bgScreen }]}>
       <ContextualReturnButton />
       <TabBar tabs={tabs} activeIndex={activeTab} onPress={handleTabPress} />
 

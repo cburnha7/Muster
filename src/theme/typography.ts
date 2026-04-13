@@ -1,97 +1,134 @@
-// ── Fonts ───────────────────────────────────────────
-// Plus Jakarta Sans — Headlines: geometric clarity, aggressive bold weights
-// Inter — Body: high x-height workhorse for glance-and-go legibility
+import { TextStyle } from 'react-native';
 
-// NOTE: Font *assets* (ttf files for useFonts) are loaded in src/hooks/useFonts.ts.
-// This file only contains font *names* (strings) and type scale constants.
-// Keeping them separate prevents @expo-google-fonts ESM/CJS import issues
-// from crashing the entire theme module on web.
-
-// ── Font family names ────────────────────────────
-export const fonts = {
-  display:       'PlusJakartaSans_800ExtraBold',  // hero / display stats
-  displayBold:   'PlusJakartaSans_700Bold',       // display alternate
-  heading:       'PlusJakartaSans_700Bold',       // screen headings
-  headingSemi:   'PlusJakartaSans_600SemiBold',   // sub-headings
-  ui:            'PlusJakartaSans_600SemiBold',   // buttons / tab labels
-  label:         'PlusJakartaSans_500Medium',     // badges / caps labels
-  semibold:      'Inter_600SemiBold',             // card meta / emphasis
-  body:          'Inter_400Regular',              // body copy
-  bodyMedium:    'Inter_500Medium',               // medium body
-  bodyBold:      'Inter_700Bold',                 // bold body
+// Font families loaded via expo-google-fonts
+export const fontFamilies = {
+  display: 'Fraunces_700Bold',
+  displayItalic: 'Fraunces_700Bold_Italic',
+  heading: 'Fraunces_900Black',
+  uiBold: 'DMSans_700Bold',
+  uiSemiBold: 'DMSans_600SemiBold',
+  uiMedium: 'DMSans_500Medium',
+  uiRegular: 'DMSans_400Regular',
 } as const;
 
-// ── Type scale ───────────────────────────────────
-// Display: stadium-scale stats. Headline: section anchors.
-// Title: card headers. Body: essential info.
+// Type scale — colour is injected by useTheme() at usage time
 export const typeScale = {
-  displayLg:{ fontSize: 56, lineHeight: 62, letterSpacing: -1.2 },
-  display:  { fontSize: 48, lineHeight: 52, letterSpacing: -0.8 },
-  h1:       { fontSize: 32, lineHeight: 38, letterSpacing: -0.5 },
-  h2:       { fontSize: 24, lineHeight: 30, letterSpacing: -0.3 },
-  h3:       { fontSize: 20, lineHeight: 26, letterSpacing: -0.2 },
-  titleLg:  { fontSize: 22, lineHeight: 28, letterSpacing: -0.2 },
-  title:    { fontSize: 16, lineHeight: 22, letterSpacing: -0.1 },
-  bodyLg:   { fontSize: 17, lineHeight: 26, letterSpacing: 0 },
-  body:     { fontSize: 15, lineHeight: 22, letterSpacing: 0 },
-  bodySm:   { fontSize: 13, lineHeight: 20, letterSpacing: 0 },
-  label:    { fontSize: 11, lineHeight: 16, letterSpacing: 1.6 },
-  caption:  { fontSize: 10, lineHeight: 14, letterSpacing: 0.4 },
+  displayLg: {
+    fontFamily: fontFamilies.display,
+    fontSize: 44,
+    lineHeight: 52,
+    letterSpacing: -0.5,
+  } as TextStyle,
+  display: {
+    fontFamily: fontFamilies.display,
+    fontSize: 36,
+    lineHeight: 44,
+    letterSpacing: -0.3,
+  } as TextStyle,
+  displayItalic: {
+    fontFamily: fontFamilies.displayItalic,
+    fontSize: 36,
+    lineHeight: 44,
+    letterSpacing: -0.3,
+  } as TextStyle,
+  heading: {
+    fontFamily: fontFamilies.heading,
+    fontSize: 26,
+    lineHeight: 32,
+    letterSpacing: -0.2,
+  } as TextStyle,
+  headingSm: {
+    fontFamily: fontFamilies.heading,
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.1,
+  } as TextStyle,
+  ui: {
+    fontFamily: fontFamilies.uiBold,
+    fontSize: 16,
+    lineHeight: 22,
+  } as TextStyle,
+  uiSm: {
+    fontFamily: fontFamilies.uiBold,
+    fontSize: 14,
+    lineHeight: 18,
+  } as TextStyle,
+  label: {
+    fontFamily: fontFamilies.uiSemiBold,
+    fontSize: 11,
+    lineHeight: 15,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  } as TextStyle,
+  labelSm: {
+    fontFamily: fontFamilies.uiSemiBold,
+    fontSize: 10,
+    lineHeight: 14,
+    letterSpacing: 1.0,
+    textTransform: 'uppercase',
+  } as TextStyle,
+  body: {
+    fontFamily: fontFamilies.uiRegular,
+    fontSize: 15,
+    lineHeight: 22,
+  } as TextStyle,
+  bodySm: {
+    fontFamily: fontFamilies.uiRegular,
+    fontSize: 13,
+    lineHeight: 19,
+  } as TextStyle,
+  caption: {
+    fontFamily: fontFamilies.uiRegular,
+    fontSize: 12,
+    lineHeight: 16,
+  } as TextStyle,
+} as const;
+
+export type TypeKey = keyof typeof typeScale;
+
+// ─── Backward-compatible aliases ─────────────────────────────
+// Existing components use `fonts.heading`, `fonts.body`, etc.
+export const fonts = {
+  display: fontFamilies.display,
+  displayBold: fontFamilies.display,
+  displayItalic: fontFamilies.displayItalic,
+  heading: fontFamilies.heading,
+  headingSemi: fontFamilies.uiSemiBold,
+  ui: fontFamilies.uiBold,
+  label: fontFamilies.uiSemiBold,
+  semibold: fontFamilies.uiSemiBold,
+  body: fontFamilies.uiRegular,
+  bodyMedium: fontFamilies.uiMedium,
+  bodyBold: fontFamilies.uiBold,
 } as const;
 
 export type FontKey = keyof typeof fonts;
-export type TypeScaleKey = keyof typeof typeScale;
+export type TypeScaleKey = TypeKey;
 
-// ── Text Styles ──────────────────────────────────
-// Pre-composed text styles combining font family and type scale
+// Pre-composed text styles (backward compat)
 export const TextStyles = {
-  displayLarge: {
-    fontFamily: fonts.display,
-    ...typeScale.displayLg,
-  },
-  display: {
-    fontFamily: fonts.display,
-    ...typeScale.display,
-  },
-  h1: {
-    fontFamily: fonts.heading,
-    ...typeScale.h1,
-  },
-  h2: {
-    fontFamily: fonts.heading,
-    ...typeScale.h2,
-  },
-  h3: {
-    fontFamily: fonts.headingSemi,
-    ...typeScale.h3,
-  },
+  displayLarge: typeScale.displayLg,
+  display: typeScale.display,
+  h1: typeScale.heading,
+  h2: { ...typeScale.headingSm, fontSize: 24, lineHeight: 30 } as TextStyle,
+  h3: typeScale.headingSm,
   titleLarge: {
-    fontFamily: fonts.headingSemi,
-    ...typeScale.titleLg,
-  },
+    ...typeScale.headingSm,
+    fontSize: 22,
+    lineHeight: 28,
+  } as TextStyle,
   title: {
-    fontFamily: fonts.headingSemi,
-    ...typeScale.title,
-  },
+    fontFamily: fontFamilies.uiSemiBold,
+    fontSize: 16,
+    lineHeight: 22,
+  } as TextStyle,
   bodyLarge: {
-    fontFamily: fonts.body,
-    ...typeScale.bodyLg,
-  },
-  body: {
-    fontFamily: fonts.body,
-    ...typeScale.body,
-  },
-  bodySmall: {
-    fontFamily: fonts.body,
-    ...typeScale.bodySm,
-  },
-  label: {
-    fontFamily: fonts.label,
-    ...typeScale.label,
-    textTransform: 'uppercase' as const,
-  },
-  caption: {
-    fontFamily: fonts.body,
-    ...typeScale.caption,
-  },
+    fontFamily: fontFamilies.uiRegular,
+    fontSize: 17,
+    lineHeight: 26,
+  } as TextStyle,
+  body: typeScale.body,
+  bodySmall: typeScale.bodySm,
+  label: typeScale.label,
+  caption: typeScale.caption,
 } as const;

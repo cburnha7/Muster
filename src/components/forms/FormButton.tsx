@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 interface FormButtonProps {
   title: string;
@@ -44,6 +44,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
   textStyle,
 }) => {
   const isDisabled = disabled || loading;
+  const { colors: themeColors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -84,15 +85,29 @@ export const FormButton: React.FC<FormButtonProps> = ({
 
   const getIconSize = () => {
     switch (size) {
-      case 'small': return 16;
-      case 'medium': return 18;
-      case 'large': return 20;
-      default: return 18;
+      case 'small':
+        return 16;
+      case 'medium':
+        return 18;
+      case 'large':
+        return 20;
+      default:
+        return 18;
     }
   };
 
-  const sizeStyle = size === 'small' ? styles.small : size === 'large' ? styles.large : styles.medium;
-  const textSizeStyle = size === 'small' ? styles.smallText : size === 'large' ? styles.largeText : styles.mediumText;
+  const sizeStyle =
+    size === 'small'
+      ? styles.small
+      : size === 'large'
+        ? styles.large
+        : styles.medium;
+  const textSizeStyle =
+    size === 'small'
+      ? styles.smallText
+      : size === 'large'
+        ? styles.largeText
+        : styles.mediumText;
 
   const content = (
     <View style={styles.content}>

@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { conversationService } from '../../services/api/ConversationService';
 import { teamService } from '../../services/api/TeamService';
 import type { RootState } from '../../store/store';
@@ -25,6 +25,7 @@ interface RecentPlayer {
 }
 
 export function NewConversationScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const currentUserId = useSelector((state: RootState) => state.auth?.user?.id);
 
@@ -70,11 +71,11 @@ export function NewConversationScreen() {
   const lowerQ = query.toLowerCase();
 
   const filteredTeams = query
-    ? teams.filter((t) => t.name.toLowerCase().includes(lowerQ))
+    ? teams.filter(t => t.name.toLowerCase().includes(lowerQ))
     : teams;
 
   const filteredPlayers = query
-    ? recentPlayers.filter((p) => p.name.toLowerCase().includes(lowerQ))
+    ? recentPlayers.filter(p => p.name.toLowerCase().includes(lowerQ))
     : recentPlayers;
 
   // ── Navigation helpers ───────────────────────────
@@ -90,14 +91,17 @@ export function NewConversationScreen() {
           type: 'DIRECT_MESSAGE',
         });
       } catch (e: any) {
-        Alert.alert('Error', e?.message?.includes('shared context')
-          ? 'You need to share a team or game with this person to message them.'
-          : 'Could not start conversation. Please try again.');
+        Alert.alert(
+          'Error',
+          e?.message?.includes('shared context')
+            ? 'You need to share a team or game with this person to message them.'
+            : 'Could not start conversation. Please try again.'
+        );
       } finally {
         setNavigating(false);
       }
     },
-    [navigation, navigating],
+    [navigation, navigating]
   );
 
   const openTeamChat = useCallback(
@@ -117,21 +121,28 @@ export function NewConversationScreen() {
         setNavigating(false);
       }
     },
-    [navigation, navigating],
+    [navigation, navigating]
   );
 
   // ── Section data ─────────────────────────────────
   const sections: { title: string; data: any[] }[] = [];
 
   if (filteredTeams.length > 0) {
-    sections.push({ title: 'YOUR TEAMS', data: filteredTeams.map((t) => ({ ...t, _kind: 'team' as const })) });
+    sections.push({
+      title: 'YOUR TEAMS',
+      data: filteredTeams.map(t => ({ ...t, _kind: 'team' as const })),
+    });
   }
   if (filteredPlayers.length > 0) {
-    sections.push({ title: 'TEAMMATES', data: filteredPlayers.map((p) => ({ ...p, _kind: 'player' as const })) });
+    sections.push({
+      title: 'TEAMMATES',
+      data: filteredPlayers.map(p => ({ ...p, _kind: 'player' as const })),
+    });
   }
 
   // ── Render helpers ───────────────────────────────
-  const getInitial = (name: string) => (name ? name.charAt(0).toUpperCase() : '?');
+  const getInitial = (name: string) =>
+    name ? name.charAt(0).toUpperCase() : '?';
 
   const renderItem = ({ item }: { item: any }) => {
     if (item._kind === 'team') {
@@ -141,10 +152,14 @@ export function NewConversationScreen() {
           activeOpacity={0.6}
           onPress={() => openTeamChat(item.id, item.name)}
         >
-          <View style={[styles.avatar, { backgroundColor: colors.primaryFixed }]}>
+          <View
+            style={[styles.avatar, { backgroundColor: colors.primaryFixed }]}
+          >
             <Ionicons name="people" size={20} color={colors.primary} />
           </View>
-          <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
+          <Text style={styles.rowName} numberOfLines={1}>
+            {item.name}
+          </Text>
           <Ionicons name="chevron-forward" size={18} color={colors.outline} />
         </TouchableOpacity>
       );
@@ -157,10 +172,17 @@ export function NewConversationScreen() {
         activeOpacity={0.6}
         onPress={() => openDM(item.id, item.name)}
       >
-        <View style={[styles.avatar, { backgroundColor: colors.surfaceContainerHigh }]}>
+        <View
+          style={[
+            styles.avatar,
+            { backgroundColor: colors.surfaceContainerHigh },
+          ]}
+        >
           <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
         </View>
-        <Text style={styles.rowName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.rowName} numberOfLines={1}>
+          {item.name}
+        </Text>
         <Ionicons name="chevron-forward" size={18} color={colors.outline} />
       </TouchableOpacity>
     );
@@ -174,11 +196,16 @@ export function NewConversationScreen() {
 
   // ── Main render ──────────────────────────────────
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Search bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color={colors.onSurfaceVariant} style={{ marginRight: 8 }} />
+          <Ionicons
+            name="search"
+            size={18}
+            color={colors.onSurfaceVariant}
+            style={{ marginRight: 8 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search people or teams..."
@@ -190,7 +217,10 @@ export function NewConversationScreen() {
             returnKeyType="search"
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <TouchableOpacity
+              onPress={() => setQuery('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Ionicons name="close-circle" size={18} color={colors.outline} />
             </TouchableOpacity>
           )}
@@ -203,7 +233,12 @@ export function NewConversationScreen() {
         </View>
       ) : sections.length === 0 ? (
         <View style={styles.centered}>
-          <Ionicons name="people-outline" size={40} color={colors.outline} style={{ marginBottom: 12 }} />
+          <Ionicons
+            name="people-outline"
+            size={40}
+            color={colors.outline}
+            style={{ marginBottom: 12 }}
+          />
           <Text style={styles.emptyTitle}>
             {query ? 'No results' : 'No contacts yet'}
           </Text>
@@ -216,7 +251,7 @@ export function NewConversationScreen() {
       ) : (
         <SectionList
           sections={sections}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={renderItem}
           renderSectionHeader={renderSectionHeader}
           contentContainerStyle={styles.listContent}

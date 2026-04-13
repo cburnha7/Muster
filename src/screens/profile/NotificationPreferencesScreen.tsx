@@ -12,9 +12,10 @@ import { NotificationPreferences } from '../../types';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 export function NotificationPreferencesScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export function NotificationPreferencesScreen(): JSX.Element {
   };
 
   const handleToggle = (key: keyof NotificationPreferences) => {
-    setPreferences((prev) => ({
+    setPreferences(prev => ({
       ...prev,
       [key]: !prev[key],
     }));
@@ -78,7 +79,7 @@ export function NotificationPreferencesScreen(): JSX.Element {
     description: string,
     key: keyof NotificationPreferences,
     disabled = false,
-    isLast = false,
+    isLast = false
   ) => (
     <View style={[styles.preferenceItem, isLast && styles.preferenceItemLast]}>
       <View style={styles.preferenceInfo}>
@@ -88,8 +89,13 @@ export function NotificationPreferencesScreen(): JSX.Element {
       <Switch
         value={preferences[key]}
         onValueChange={() => handleToggle(key)}
-        trackColor={{ false: colors.surfaceContainerHigh, true: colors.primary + '50' }}
-        thumbColor={preferences[key] ? colors.primary : colors.surfaceContainerLow}
+        trackColor={{
+          false: colors.surfaceContainerHigh,
+          true: colors.primary + '50',
+        }}
+        thumbColor={
+          preferences[key] ? colors.primary : colors.surfaceContainerLow
+        }
         disabled={disabled}
         style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
       />
@@ -97,7 +103,11 @@ export function NotificationPreferencesScreen(): JSX.Element {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Push Notifications */}
       <Text style={styles.sectionHeader}>Push Notifications</Text>
       <View style={styles.card}>
@@ -109,22 +119,44 @@ export function NotificationPreferencesScreen(): JSX.Element {
           'Master switch for all push notifications',
           'pushNotifications',
           false,
-          true,
+          true
         )}
       </View>
 
       {/* Event Notifications */}
       <Text style={styles.sectionHeader}>Event Notifications</Text>
       <View style={styles.card}>
-        {renderToggle('Event Reminders', 'Get reminded about upcoming events', 'eventReminders', !preferences.pushNotifications)}
-        {renderToggle('Event Updates', 'Changes to events you\'re attending', 'eventUpdates', !preferences.pushNotifications)}
-        {renderToggle('New Event Alerts', 'New events matching your interests', 'newEventAlerts', !preferences.pushNotifications, true)}
+        {renderToggle(
+          'Event Reminders',
+          'Get reminded about upcoming events',
+          'eventReminders',
+          !preferences.pushNotifications
+        )}
+        {renderToggle(
+          'Event Updates',
+          "Changes to events you're attending",
+          'eventUpdates',
+          !preferences.pushNotifications
+        )}
+        {renderToggle(
+          'New Event Alerts',
+          'New events matching your interests',
+          'newEventAlerts',
+          !preferences.pushNotifications,
+          true
+        )}
       </View>
 
       {/* Email Notifications */}
       <Text style={styles.sectionHeader}>Email</Text>
       <View style={styles.card}>
-        {renderToggle('Marketing Emails', 'Promotional emails and special offers', 'marketingEmails', false, true)}
+        {renderToggle(
+          'Marketing Emails',
+          'Promotional emails and special offers',
+          'marketingEmails',
+          false,
+          true
+        )}
       </View>
 
       {/* Save Button */}

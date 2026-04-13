@@ -1,11 +1,7 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  View,
-} from 'react-native';
+import { TouchableOpacity, StyleSheet, Animated, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme';
 
 interface FloatingActionButtonProps {
   icon: string;
@@ -34,6 +30,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   disabled = false,
   style,
 }) => {
+  const { colors: themeColors } = useTheme();
   const getPositionStyle = () => {
     const baseStyle = {
       position: 'absolute' as const,

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 
 interface LoadingSpinnerProps {
   size?: number;
@@ -11,6 +11,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 40,
   color = colors.primary,
 }) => {
+  const { colors: themeColors } = useTheme();
   const spinValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

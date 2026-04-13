@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import type { OnboardingIntent } from '../../navigation/types';
 
 const TOTAL_STEPS = 5;
@@ -57,6 +57,7 @@ const INTENT_OPTIONS: IntentOption[] = [
 ];
 
 export const IntentSelectionScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<OnboardingIntent[]>([]);
@@ -70,8 +71,8 @@ export const IntentSelectionScreen: React.FC = () => {
   }, []);
 
   const toggleIntent = (key: OnboardingIntent) => {
-    setSelected((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    setSelected(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
 
@@ -87,7 +88,9 @@ export const IntentSelectionScreen: React.FC = () => {
   const canContinue = selected.length > 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       <View style={styles.content}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -126,7 +129,7 @@ export const IntentSelectionScreen: React.FC = () => {
             </Text>
 
             <View style={styles.cardList}>
-              {INTENT_OPTIONS.map((option) => {
+              {INTENT_OPTIONS.map(option => {
                 const isSelected = selected.includes(option.key);
                 return (
                   <TouchableOpacity

@@ -45,12 +45,12 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
       // Import userService dynamically to avoid circular dependencies
       const { userService } = await import('../../services/api/UserService');
       const results = await userService.searchUsers(query);
-      
+
       // Filter out users who are already members
       const filteredResults = results.filter(
         (user: User) => !existingMemberIds.includes(user.id)
       );
-      
+
       setSearchResults(filteredResults);
     } catch (error) {
       console.error('Error searching users:', error);
@@ -85,6 +85,7 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
         style={styles.userItem}
         onPress={() => handleAddMember(item)}
         disabled={isAdding}
+        activeOpacity={0.75}
       >
         <View style={styles.userInfo}>
           {item.profileImage ? (
@@ -95,9 +96,9 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
           ) : (
             <View style={[styles.userAvatar, styles.userAvatarPlaceholder]}>
               <Text style={styles.userAvatarText}>
-                {(item.firstName && item.firstName[0]) || 
-                 (item.email?.[0]?.toUpperCase()) || 
-                 '?'}
+                {(item.firstName && item.firstName[0]) ||
+                  item.email?.[0]?.toUpperCase() ||
+                  '?'}
               </Text>
             </View>
           )}
@@ -153,27 +154,30 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
       {searchResults.length > 0 && (
         <View style={styles.resultsContainer}>
           <Text style={styles.resultsHeader}>
-            {searchResults.length} member{searchResults.length !== 1 ? 's' : ''} found
+            {searchResults.length} member{searchResults.length !== 1 ? 's' : ''}{' '}
+            found
           </Text>
           <FlatList
             data={searchResults}
             renderItem={renderUserItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             style={styles.resultsList}
             scrollEnabled={false}
           />
         </View>
       )}
 
-      {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-        <View style={styles.noResults}>
-          <Ionicons name="search-outline" size={48} color={colors.inkFaint} />
-          <Text style={styles.noResultsText}>No members found</Text>
-          <Text style={styles.noResultsHint}>
-            Try searching by first name, last name, or email
-          </Text>
-        </View>
-      )}
+      {!isSearching &&
+        searchQuery.trim().length >= 2 &&
+        searchResults.length === 0 && (
+          <View style={styles.noResults}>
+            <Ionicons name="search-outline" size={48} color={colors.inkFaint} />
+            <Text style={styles.noResultsText}>No members found</Text>
+            <Text style={styles.noResultsHint}>
+              Try searching by first name, last name, or email
+            </Text>
+          </View>
+        )}
     </View>
   );
 };

@@ -13,7 +13,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { facilityService } from '../../../services/api/FacilityService';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 import { SlotData } from './types';
 
 const FREQUENCY_OPTIONS: SelectOption[] = [
@@ -23,6 +23,7 @@ const FREQUENCY_OPTIONS: SelectOption[] = [
 ];
 
 export function Step4When() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const { user } = useAuth();
 
@@ -44,12 +45,12 @@ export function Step4When() {
     setDateError('');
     facilityService
       .getDatesForCourt(state.facilityId, state.courtId, user.id)
-      .then((res) => {
+      .then(res => {
         setDateOptions(
-          res.data.map((d) => ({
+          res.data.map(d => ({
             label: `${d.date} (${d.slotCount} slots)`,
             value: d.date,
-          })),
+          }))
         );
       })
       .catch(() => {
@@ -61,26 +62,41 @@ export function Step4When() {
 
   // Load slots when date is selected
   useEffect(() => {
-    if (!state.facilityId || !state.courtId || !state.selectedDate || !user?.id) {
+    if (
+      !state.facilityId ||
+      !state.courtId ||
+      !state.selectedDate ||
+      !user?.id
+    ) {
       setSlotsForDate([]);
       return;
     }
     setLoadingSlots(true);
     setSlotError('');
     facilityService
-      .getSlotsForDate(state.facilityId, state.courtId, user.id, state.selectedDate)
-      .then((res) => {
+      .getSlotsForDate(
+        state.facilityId,
+        state.courtId,
+        user.id,
+        state.selectedDate
+      )
+      .then(res => {
         setSlotsForDate(
-          res.data.map((s) => ({
+          res.data.map(s => ({
             id: s.id,
             date: state.selectedDate,
             startTime: s.startTime,
             endTime: s.endTime,
             price: s.price,
-            court: { id: state.courtId, name: state.courtName, sportType: '', capacity: 0 },
+            court: {
+              id: state.courtId,
+              name: state.courtName,
+              sportType: '',
+              capacity: 0,
+            },
             isFromRental: s.isFromRental,
             rentalId: s.rentalId,
-          })),
+          }))
         );
       })
       .catch(() => {
@@ -88,7 +104,13 @@ export function Step4When() {
         setSlotsForDate([]);
       })
       .finally(() => setLoadingSlots(false));
-  }, [state.facilityId, state.courtId, state.selectedDate, state.courtName, user?.id]);
+  }, [
+    state.facilityId,
+    state.courtId,
+    state.selectedDate,
+    state.courtName,
+    user?.id,
+  ]);
 
   const handleDateSelect = (value: string | number | boolean) => {
     dispatch({ type: 'SET_DATE', date: String(value) });
@@ -99,30 +121,35 @@ export function Step4When() {
   };
 
   const isSlotSelected = (slot: SlotData) =>
-    state.selectedSlots.some((s) => s.id === slot.id);
+    state.selectedSlots.some(s => s.id === slot.id);
 
   const isSlotDisabled = (slot: SlotData) => {
     if (state.selectedSlots.length === 0) return false;
     if (isSlotSelected(slot)) return false;
     const sorted = [...slotsForDate].sort((a, b) =>
-      a.startTime.localeCompare(b.startTime),
+      a.startTime.localeCompare(b.startTime)
     );
-    const idx = sorted.findIndex((s) => s.id === slot.id);
-    const firstIdx = sorted.findIndex(
-      (s) => s.id === state.selectedSlots[0]?.id,
-    );
+    const idx = sorted.findIndex(s => s.id === slot.id);
+    const firstIdx = sorted.findIndex(s => s.id === state.selectedSlots[0]?.id);
     const lastIdx = sorted.findIndex(
-      (s) => s.id === state.selectedSlots[state.selectedSlots.length - 1]?.id,
+      s => s.id === state.selectedSlots[state.selectedSlots.length - 1]?.id
     );
     return idx !== firstIdx - 1 && idx !== lastIdx + 1;
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>When's it happening?</Text>
 
       {loadingDates ? (
-        <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
+        <ActivityIndicator
+          size="small"
+          color={colors.cobalt}
+          style={styles.loader}
+        />
       ) : dateError ? (
         <Text style={styles.errorText}>{dateError}</Text>
       ) : (
@@ -139,7 +166,11 @@ export function Step4When() {
         <>
           <Text style={styles.label}>Time Slots</Text>
           {loadingSlots ? (
-            <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
+            <ActivityIndicator
+              size="small"
+              color={colors.cobalt}
+              style={styles.loader}
+            />
           ) : slotError ? (
             <Text style={styles.errorText}>{slotError}</Text>
           ) : slotsForDate.length === 0 ? (
@@ -148,7 +179,7 @@ export function Step4When() {
             <View style={styles.slotsGrid}>
               {slotsForDate
                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                .map((slot) => {
+                .map(slot => {
                   const selected = isSlotSelected(slot);
                   const disabled = isSlotDisabled(slot);
                   return (
@@ -184,7 +215,7 @@ export function Step4When() {
         <Text style={styles.label}>Recurring</Text>
         <Switch
           value={state.recurring}
-          onValueChange={(v) =>
+          onValueChange={v =>
             dispatch({ type: 'SET_FIELD', field: 'recurring', value: v })
           }
           trackColor={{ false: colors.border, true: colors.cobalt }}
@@ -199,8 +230,12 @@ export function Step4When() {
             placeholder="Select frequency"
             value={state.recurringFrequency ?? ''}
             options={FREQUENCY_OPTIONS}
-            onValueChange={(v) =>
-              dispatch({ type: 'SET_FIELD', field: 'recurringFrequency', value: v })
+            onValueChange={v =>
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'recurringFrequency',
+                value: v,
+              })
             }
           />
 
@@ -210,8 +245,12 @@ export function Step4When() {
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.inkSoft}
             value={state.recurringEndDate}
-            onChangeText={(v) =>
-              dispatch({ type: 'SET_FIELD', field: 'recurringEndDate', value: v })
+            onChangeText={v =>
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'recurringEndDate',
+                value: v,
+              })
             }
           />
         </>

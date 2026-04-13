@@ -28,7 +28,7 @@ import { userService } from '../../services/api/UserService';
 import { cacheService } from '../../services/api/CacheService';
 import { Team, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { LeagueLedger } from '../../components/league/LeagueLedger';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
@@ -96,6 +96,7 @@ function buildSeasonSummary(league: League): string {
 }
 
 export function LeagueDetailsScreen(): React.ReactElement {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId, readOnly } = (route.params as any) || {};
@@ -794,7 +795,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

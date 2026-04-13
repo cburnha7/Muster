@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface EmptyStateProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -18,56 +18,59 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onAction,
 }) => {
+  const { colors, type, spacing, radius, shadow } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Ionicons name={icon} size={48} color={colors.cobaltTint} />
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <View
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.xxxl,
+        paddingHorizontal: spacing.xl,
+      }}
+    >
+      <Ionicons name={icon} size={48} color={colors.textMuted} />
+      <Text
+        style={{
+          ...type.headingSm,
+          color: colors.textPrimary,
+          marginTop: spacing.base,
+          textAlign: 'center',
+        }}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text
+          style={{
+            ...type.body,
+            color: colors.textSecondary,
+            marginTop: spacing.sm,
+            textAlign: 'center',
+            lineHeight: 22,
+          }}
+        >
+          {subtitle}
+        </Text>
+      ) : null}
       {actionLabel && onAction ? (
         <TouchableOpacity
-          style={styles.actionButton}
+          style={{
+            marginTop: spacing.lg,
+            backgroundColor: colors.cobalt,
+            paddingHorizontal: spacing.xl,
+            paddingVertical: spacing.md,
+            borderRadius: radius.full,
+            ...shadow.cta,
+          }}
           onPress={onAction}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
         >
-          <Text style={styles.actionLabel}>{actionLabel}</Text>
+          <Text style={{ ...type.ui, color: colors.textInverse }}>
+            {actionLabel}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 48,
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontFamily: fonts.heading,
-    fontSize: 18,
-    color: colors.onSurface,
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.onSurfaceVariant,
-    marginTop: 8,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  actionButton: {
-    marginTop: 20,
-    backgroundColor: colors.cobalt,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 9999,
-  },
-  actionLabel: {
-    fontFamily: fonts.ui,
-    fontSize: 15,
-    color: colors.onPrimary,
-  },
-});

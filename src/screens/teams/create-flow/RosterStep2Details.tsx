@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateRoster } from './CreateRosterContext';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { label: 'All', value: '' },
@@ -11,12 +11,17 @@ const GENDER_OPTIONS: SelectOption[] = [
 ];
 
 export function RosterStep2Details() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateRoster();
   const set = (field: string) => (value: string) =>
     dispatch({ type: 'SET_FIELD', field, value });
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.heading}>How's it set up?</Text>
 
       <Text style={styles.label}>Roster Name</Text>
@@ -34,7 +39,9 @@ export function RosterStep2Details() {
         placeholder="All"
         value={state.gender}
         options={GENDER_OPTIONS}
-        onValueChange={(v) => dispatch({ type: 'SET_FIELD', field: 'gender', value: v })}
+        onValueChange={v =>
+          dispatch({ type: 'SET_FIELD', field: 'gender', value: v })
+        }
       />
 
       <Text style={styles.label}>Age Limit</Text>
@@ -90,15 +97,40 @@ export function RosterStep2Details() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
-  heading: { fontFamily: fonts.heading, fontSize: 24, color: colors.ink, marginBottom: 24 },
-  label: { fontFamily: fonts.body, fontSize: 16, color: colors.ink, marginBottom: 8, marginTop: 16 },
+  heading: {
+    fontFamily: fonts.heading,
+    fontSize: 24,
+    color: colors.ink,
+    marginBottom: 24,
+  },
+  label: {
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 8,
+    marginTop: 16,
+  },
   input: {
-    backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: 16, paddingVertical: 12, fontFamily: fonts.body, fontSize: 16, color: colors.ink, marginBottom: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontFamily: fonts.body,
+    fontSize: 16,
+    color: colors.ink,
+    marginBottom: 8,
   },
   row: { flexDirection: 'row', gap: 12 },
   half: { flex: 1 },
   priceRow: { flexDirection: 'row', alignItems: 'center' },
-  dollar: { fontFamily: fonts.ui, fontSize: 18, color: colors.ink, marginRight: 8, marginBottom: 8 },
+  dollar: {
+    fontFamily: fonts.ui,
+    fontSize: 18,
+    color: colors.ink,
+    marginRight: 8,
+    marginBottom: 8,
+  },
   priceInput: { flex: 1 },
 });

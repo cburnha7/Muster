@@ -15,7 +15,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { matchService } from '../../services/api/MatchService';
 import { courtService } from '../../services/api/CourtService';
 import { selectUser } from '../../store/slices/authSlice';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { Match } from '../../types';
 
 /** Extended rental type matching the actual API response (court includes nested facility) */
@@ -49,6 +49,7 @@ type AssignFacilityRouteProp = RouteProp<
 >;
 
 export const AssignFacilityScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<AssignFacilityRouteProp>();
   const user = useSelector(selectUser);
@@ -68,12 +69,15 @@ export const AssignFacilityScreen: React.FC = () => {
       setError(null);
       const [matchData, userRentals] = await Promise.all([
         matchService.getMatchById(matchId),
-        courtService.getMyRentals(user!.id, { status: 'confirmed', upcoming: true }),
+        courtService.getMyRentals(user!.id, {
+          status: 'confirmed',
+          upcoming: true,
+        }),
       ]);
       setMatch(matchData);
       // Filter out rentals already assigned to another match
       const availableRentals = userRentals.filter(
-        (r) => r.status === 'confirmed'
+        r => r.status === 'confirmed'
       );
       setRentals(availableRentals);
     } catch (err) {
@@ -93,9 +97,11 @@ export const AssignFacilityScreen: React.FC = () => {
     setAssigning(true);
     try {
       await matchService.assignRental(matchId, selectedRentalId, user.id);
-      Alert.alert('Facility Assigned', 'The rental has been linked to this game.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      Alert.alert(
+        'Facility Assigned',
+        'The rental has been linked to this game.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Failed to assign facility.';
@@ -134,7 +140,7 @@ export const AssignFacilityScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Assign Facility"
           leftIcon="arrow-back"
@@ -150,7 +156,7 @@ export const AssignFacilityScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Assign Facility"
           leftIcon="arrow-back"
@@ -167,7 +173,7 @@ export const AssignFacilityScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Assign Facility"
         leftIcon="arrow-back"
@@ -182,7 +188,8 @@ export const AssignFacilityScreen: React.FC = () => {
           <View style={styles.matchInfo}>
             <Text style={styles.sectionLabel}>GAME DETAILS</Text>
             <Text style={styles.matchTeams}>
-              {match.homeTeam?.name ?? 'Home'} vs {match.awayTeam?.name ?? 'Away'}
+              {match.homeTeam?.name ?? 'Home'} vs{' '}
+              {match.awayTeam?.name ?? 'Away'}
             </Text>
             <Text style={styles.matchDate}>
               {formatDate(String(match.scheduledAt))}
@@ -194,14 +201,19 @@ export const AssignFacilityScreen: React.FC = () => {
         <Text style={styles.sectionLabel}>YOUR CONFIRMED RENTALS</Text>
         {rentals.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={40} color={colors.inkFaint} />
+            <Ionicons
+              name="calendar-outline"
+              size={40}
+              color={colors.inkFaint}
+            />
             <Text style={styles.emptyText}>No available rentals</Text>
             <Text style={styles.emptySubtext}>
-              You don't have any confirmed rentals to assign. Rent a facility first.
+              You don't have any confirmed rentals to assign. Rent a facility
+              first.
             </Text>
           </View>
         ) : (
-          rentals.map((rental) => {
+          rentals.map(rental => {
             const isSelected = selectedRentalId === rental.id;
             const slot = rental.timeSlot;
             const court = slot?.court;
@@ -211,7 +223,10 @@ export const AssignFacilityScreen: React.FC = () => {
               <TouchableOpacity
                 key={rental.id}
                 testID={`rental-card-${rental.id}`}
-                style={[styles.rentalCard, isSelected && styles.rentalCardSelected]}
+                style={[
+                  styles.rentalCard,
+                  isSelected && styles.rentalCardSelected,
+                ]}
                 onPress={() => setSelectedRentalId(rental.id)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: isSelected }}
@@ -284,7 +299,6 @@ export const AssignFacilityScreen: React.FC = () => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

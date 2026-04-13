@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import {
@@ -18,8 +18,10 @@ import { addEvent } from '../../store/slices/eventsSlice';
 import { useAuth } from '../../context/AuthContext';
 import { getSportEmoji } from '../../constants/sports';
 import { EventType, SkillLevel } from '../../types';
+import { useTheme } from '../../theme';
 
 function CreateEventInner() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
@@ -187,13 +189,15 @@ function CreateEventInner() {
   }
 
   return (
-    <EventFlowContainer onSubmit={handleSubmit}>
-      <Step1Sport />
-      <Step2Details />
-      <Step3When />
-      <Step4Where />
-      <Step5Invite />
-    </EventFlowContainer>
+    <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+      <EventFlowContainer onSubmit={handleSubmit}>
+        <Step1Sport />
+        <Step2Details />
+        <Step3When />
+        <Step4Where />
+        <Step5Invite />
+      </EventFlowContainer>
+    </View>
   );
 }
 

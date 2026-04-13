@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, Spacing, TextStyles, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import ValidationService from '../../services/auth/ValidationService';
 import { resetPassword } from '../../store/slices/authSlice';
@@ -32,6 +32,7 @@ interface ResetPasswordState {
 }
 
 export const ResetPasswordScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ export const ResetPasswordScreen: React.FC = () => {
 
   useEffect(() => {
     if (!resetToken) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         errors: {
           general: 'Invalid reset link. Please request a new password reset.',
@@ -60,11 +61,11 @@ export const ResetPasswordScreen: React.FC = () => {
   }, [resetToken]);
 
   const updateField = (field: keyof ResetPasswordState, value: any) => {
-    setState((prev) => ({ ...prev, [field]: value }));
+    setState(prev => ({ ...prev, [field]: value }));
   };
 
   const updateError = (field: string, error: string | undefined) => {
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       errors: { ...prev.errors, [field]: error },
     }));
@@ -76,13 +77,18 @@ export const ResetPasswordScreen: React.FC = () => {
     if (field === 'newPassword') {
       error = ValidationService.validatePassword(value);
     } else if (field === 'confirmPassword') {
-      error = ValidationService.validateConfirmPassword(state.newPassword, value);
+      error = ValidationService.validateConfirmPassword(
+        state.newPassword,
+        value
+      );
     }
 
     updateError(field, error || undefined);
   };
 
-  const getPasswordStrength = (password: string): { strength: string; color: string } => {
+  const getPasswordStrength = (
+    password: string
+  ): { strength: string; color: string } => {
     if (!password) return { strength: '', color: colors.textTertiary };
 
     let score = 0;
@@ -110,20 +116,33 @@ export const ResetPasswordScreen: React.FC = () => {
 
     if (passwordError) {
       updateError('newPassword', passwordError);
-      loggingService.logValidation('ResetPasswordScreen', 'newPassword', 'invalid', passwordError);
+      loggingService.logValidation(
+        'ResetPasswordScreen',
+        'newPassword',
+        'invalid',
+        passwordError
+      );
       return;
     }
 
     if (confirmError) {
       updateError('confirmPassword', confirmError);
-      loggingService.logValidation('ResetPasswordScreen', 'confirmPassword', 'mismatch', confirmError);
+      loggingService.logValidation(
+        'ResetPasswordScreen',
+        'confirmPassword',
+        'mismatch',
+        confirmError
+      );
       return;
     }
 
     loggingService.logButton('Reset Password', 'ResetPasswordScreen');
 
     if (!state.resetToken) {
-      updateError('general', 'Invalid reset link. Please request a new password reset.');
+      updateError(
+        'general',
+        'Invalid reset link. Please request a new password reset.'
+      );
       return;
     }
 
@@ -145,11 +164,17 @@ export const ResetPasswordScreen: React.FC = () => {
           'Password reset link is invalid or expired. Please request a new one.'
         );
       } else if (error.message === 'No internet connection') {
-        updateError('general', 'No internet connection. Please check your network and try again');
+        updateError(
+          'general',
+          'No internet connection. Please check your network and try again'
+        );
       } else if (error.message === 'Request timed out') {
         updateError('general', 'Request timed out. Please try again');
       } else {
-        updateError('general', error.message || 'Failed to reset password. Please try again');
+        updateError(
+          'general',
+          error.message || 'Failed to reset password. Please try again'
+        );
       }
     } finally {
       updateField('isLoading', false);
@@ -168,14 +193,17 @@ export const ResetPasswordScreen: React.FC = () => {
 
   if (state.isSuccess) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={80} color={colors.cobalt} />
           </View>
           <Text style={styles.successTitle}>Password Reset Successful</Text>
           <Text style={styles.successMessage}>
-            Your password has been reset successfully. You can now log in with your new password.
+            Your password has been reset successfully. You can now log in with
+            your new password.
           </Text>
           <Button
             title="Go to Login"
@@ -189,7 +217,7 @@ export const ResetPasswordScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -207,7 +235,7 @@ export const ResetPasswordScreen: React.FC = () => {
         <TextInput
           label="New Password"
           value={state.newPassword}
-          onChangeText={(text) => {
+          onChangeText={text => {
             updateField('newPassword', text);
             updateError('newPassword', undefined);
           }}
@@ -224,7 +252,9 @@ export const ResetPasswordScreen: React.FC = () => {
         {state.newPassword && !state.errors.newPassword && (
           <View style={styles.strengthContainer}>
             <Text style={styles.strengthLabel}>Password Strength:</Text>
-            <Text style={[styles.strengthValue, { color: passwordStrength.color }]}>
+            <Text
+              style={[styles.strengthValue, { color: passwordStrength.color }]}
+            >
               {passwordStrength.strength}
             </Text>
           </View>
@@ -233,7 +263,7 @@ export const ResetPasswordScreen: React.FC = () => {
         <TextInput
           label="Confirm Password"
           value={state.confirmPassword}
-          onChangeText={(text) => {
+          onChangeText={text => {
             updateField('confirmPassword', text);
             updateError('confirmPassword', undefined);
           }}
@@ -255,7 +285,9 @@ export const ResetPasswordScreen: React.FC = () => {
                 style={styles.requestNewLink}
                 onPress={handleRequestNewReset}
               >
-                <Text style={styles.requestNewLinkText}>Request new reset link</Text>
+                <Text style={styles.requestNewLinkText}>
+                  Request new reset link
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -278,41 +310,81 @@ export const ResetPasswordScreen: React.FC = () => {
           <Text style={styles.requirementsTitle}>Password Requirements:</Text>
           <View style={styles.requirement}>
             <Ionicons
-              name={state.newPassword.length >= 8 ? 'checkmark-circle' : 'ellipse-outline'}
+              name={
+                state.newPassword.length >= 8
+                  ? 'checkmark-circle'
+                  : 'ellipse-outline'
+              }
               size={16}
-              color={state.newPassword.length >= 8 ? colors.cobalt : colors.textTertiary}
+              color={
+                state.newPassword.length >= 8
+                  ? colors.cobalt
+                  : colors.textTertiary
+              }
             />
             <Text style={styles.requirementText}>At least 8 characters</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
-              name={/[A-Z]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
+              name={
+                /[A-Z]/.test(state.newPassword)
+                  ? 'checkmark-circle'
+                  : 'ellipse-outline'
+              }
               size={16}
-              color={/[A-Z]/.test(state.newPassword) ? colors.cobalt : colors.textTertiary}
+              color={
+                /[A-Z]/.test(state.newPassword)
+                  ? colors.cobalt
+                  : colors.textTertiary
+              }
             />
             <Text style={styles.requirementText}>One uppercase letter</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
-              name={/[a-z]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
+              name={
+                /[a-z]/.test(state.newPassword)
+                  ? 'checkmark-circle'
+                  : 'ellipse-outline'
+              }
               size={16}
-              color={/[a-z]/.test(state.newPassword) ? colors.cobalt : colors.textTertiary}
+              color={
+                /[a-z]/.test(state.newPassword)
+                  ? colors.cobalt
+                  : colors.textTertiary
+              }
             />
             <Text style={styles.requirementText}>One lowercase letter</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
-              name={/[0-9]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
+              name={
+                /[0-9]/.test(state.newPassword)
+                  ? 'checkmark-circle'
+                  : 'ellipse-outline'
+              }
               size={16}
-              color={/[0-9]/.test(state.newPassword) ? colors.cobalt : colors.textTertiary}
+              color={
+                /[0-9]/.test(state.newPassword)
+                  ? colors.cobalt
+                  : colors.textTertiary
+              }
             />
             <Text style={styles.requirementText}>One number</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
-              name={/[^A-Za-z0-9]/.test(state.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
+              name={
+                /[^A-Za-z0-9]/.test(state.newPassword)
+                  ? 'checkmark-circle'
+                  : 'ellipse-outline'
+              }
               size={16}
-              color={/[^A-Za-z0-9]/.test(state.newPassword) ? colors.cobalt : colors.textTertiary}
+              color={
+                /[^A-Za-z0-9]/.test(state.newPassword)
+                  ? colors.cobalt
+                  : colors.textTertiary
+              }
             />
             <Text style={styles.requirementText}>One special character</Text>
           </View>

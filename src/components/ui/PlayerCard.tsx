@@ -154,6 +154,7 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                   mode === 'open' && styles.toggleBtnActive,
                 ]}
                 onPress={() => setMode('open')}
+                activeOpacity={0.75}
               >
                 <Text
                   style={[
@@ -170,6 +171,7 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                   mode === 'age' && styles.toggleBtnActive,
                 ]}
                 onPress={() => setMode('age')}
+                activeOpacity={0.75}
               >
                 <Text
                   style={[

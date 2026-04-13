@@ -24,7 +24,7 @@ import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { getSportEmoji } from '../../constants/sports';
 import { Facility } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 
 import {
   CreateFacilityProvider,
@@ -42,6 +42,7 @@ import { Step5Policies } from './create-flow/Step5Policies';
 let isCreatingFacility = false;
 
 function CreateFacilityInner() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const reduxDispatch = useDispatch();
   const { user } = useAuth();
@@ -305,13 +306,15 @@ function CreateFacilityInner() {
 
   return (
     <>
-      <FacilityFlowContainer onSubmit={handleSubmit}>
-        <Step1NameSports />
-        <Step2Location />
-        <Step3Contact />
-        <Step4Courts />
-        <Step5Policies />
-      </FacilityFlowContainer>
+      <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+        <FacilityFlowContainer onSubmit={handleSubmit}>
+          <Step1NameSports />
+          <Step2Location />
+          <Step3Contact />
+          <Step4Courts />
+          <Step5Policies />
+        </FacilityFlowContainer>
+      </View>
 
       {/* Duplicate Warning Modal */}
       <Modal

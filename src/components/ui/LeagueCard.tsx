@@ -14,7 +14,7 @@ interface LeagueCardProps {
   style?: any;
 }
 
-export const LeagueCard: React.FC<LeagueCardProps> = ({
+const LeagueCardInner: React.FC<LeagueCardProps> = ({
   league,
   onPress,
   isOwner,
@@ -58,6 +58,8 @@ export const LeagueCard: React.FC<LeagueCardProps> = ({
     </PressableCard>
   );
 };
+
+export const LeagueCard = React.memo(LeagueCardInner);
 
 const styles = StyleSheet.create({
   card: {

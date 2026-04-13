@@ -15,7 +15,7 @@ interface EventCardProps {
   colorIndicator?: string;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({
+const EventCardInner: React.FC<EventCardProps> = ({
   event,
   onPress,
   style,
@@ -272,6 +272,8 @@ export const EventCard: React.FC<EventCardProps> = ({
     </PressableCard>
   );
 };
+
+export const EventCard = React.memo(EventCardInner);
 
 const styles = StyleSheet.create({
   container: {

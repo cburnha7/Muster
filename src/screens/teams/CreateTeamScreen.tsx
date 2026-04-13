@@ -1,8 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { CreateRosterProvider, useCreateRoster } from './create-flow/CreateRosterContext';
+import {
+  CreateRosterProvider,
+  useCreateRoster,
+} from './create-flow/CreateRosterContext';
 import { RosterFlowContainer } from './create-flow/RosterFlowContainer';
 import { RosterStep1Sport } from './create-flow/RosterStep1Sport';
 import { RosterStep2Details } from './create-flow/RosterStep2Details';
@@ -10,20 +13,27 @@ import { RosterStep3Invite } from './create-flow/RosterStep3Invite';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { teamService } from '../../services/api/TeamService';
-import { addTeam, joinTeam, selectUserTeams } from '../../store/slices/teamsSlice';
+import {
+  addTeam,
+  joinTeam,
+  selectUserTeams,
+} from '../../store/slices/teamsSlice';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { useAuth } from '../../context/AuthContext';
 import { SportType, SkillLevel } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
 import { getSportEmoji } from '../../constants/sports';
+import { useTheme } from '../../theme';
 
 function CreateTeamInner() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateRoster();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
   const { user } = useAuth();
   const userTeams = useSelector(selectUserTeams);
-  const { allowed: rosterAllowed, requiredPlan } = useFeatureGate('create_roster');
+  const { allowed: rosterAllowed, requiredPlan } =
+    useFeatureGate('create_roster');
   const [showUpsell, setShowUpsell] = useState(false);
   const [upsellPlan, setUpsellPlan] = useState<SubscriptionPlan>('roster');
 
@@ -36,7 +46,9 @@ function CreateTeamInner() {
     }
     dispatch({ type: 'SUBMIT_START' });
     try {
-      const playerIds = state.invitedItems.filter((i) => i.type === 'player').map((i) => i.id);
+      const playerIds = state.invitedItems
+        .filter(i => i.type === 'player')
+        .map(i => i.id);
       const newTeam = await teamService.createTeam({
         name: state.name.trim(),
         description: '',
@@ -55,11 +67,20 @@ function CreateTeamInner() {
       dispatch({ type: 'SUBMIT_FAIL' });
       Alert.alert('Error', error?.message || 'Failed to create roster.');
     }
-  }, [user, state, userTeams, rosterAllowed, requiredPlan, dispatch, reduxDispatch]);
+  }, [
+    user,
+    state,
+    userTeams,
+    rosterAllowed,
+    requiredPlan,
+    dispatch,
+    reduxDispatch,
+  ]);
 
   if (state.showSuccess) {
     const sportLabel = state.sport
-      ? state.sport.charAt(0).toUpperCase() + state.sport.slice(1).replace(/_/g, ' ')
+      ? state.sport.charAt(0).toUpperCase() +
+        state.sport.slice(1).replace(/_/g, ' ')
       : '';
     return (
       <WizardSuccessScreen
@@ -68,10 +89,18 @@ function CreateTeamInner() {
         subtitle="Your roster has been created"
         summaryRows={[
           { label: 'Sport', value: sportLabel },
-          { label: 'Visibility', value: state.visibility === 'public' ? 'Public' : 'Private' },
+          {
+            label: 'Visibility',
+            value: state.visibility === 'public' ? 'Public' : 'Private',
+          },
           { label: 'Max Players', value: state.maxPlayers || '10' },
           ...(state.invitedItems.length > 0
-            ? [{ label: 'Invites sent', value: String(state.invitedItems.length) }]
+            ? [
+                {
+                  label: 'Invites sent',
+                  value: String(state.invitedItems.length),
+                },
+              ]
             : []),
         ]}
         actions={[
@@ -80,7 +109,9 @@ function CreateTeamInner() {
             icon: 'arrow-forward',
             onPress: () => {
               if (state.createdRosterId) {
-                navigation.replace('TeamDetails', { teamId: state.createdRosterId });
+                navigation.replace('TeamDetails', {
+                  teamId: state.createdRosterId,
+                });
               } else {
                 navigation.replace('TeamsList');
               }
@@ -100,11 +131,13 @@ function CreateTeamInner() {
 
   return (
     <>
-      <RosterFlowContainer onSubmit={handleSubmit}>
-        <RosterStep1Sport />
-        <RosterStep2Details />
-        <RosterStep3Invite />
-      </RosterFlowContainer>
+      <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+        <RosterFlowContainer onSubmit={handleSubmit}>
+          <RosterStep1Sport />
+          <RosterStep2Details />
+          <RosterStep3Invite />
+        </RosterFlowContainer>
+      </View>
       <UpsellModal
         visible={showUpsell}
         onClose={() => setShowUpsell(false)}

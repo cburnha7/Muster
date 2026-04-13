@@ -14,7 +14,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { ALL_DAYS } from './types';
 import { computeSeriesDates, dateMatchesDays } from './seriesUtils';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 const FREQUENCY_OPTIONS: SelectOption[] = [
   { label: 'Weekly', value: 'weekly' },
@@ -27,6 +27,7 @@ function formatDateStr(d: Date): string {
 }
 
 export function Step3When() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
 
   const startDate = state.startDate ?? new Date();
@@ -126,7 +127,10 @@ export function Step3When() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>When's it happening?</Text>
 
       <Text style={styles.label}>Date</Text>

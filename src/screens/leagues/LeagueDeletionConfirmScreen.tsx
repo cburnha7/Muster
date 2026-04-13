@@ -8,11 +8,15 @@ import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 
-import { leagueService, DeletionImpactSummary } from '../../services/api/LeagueService';
+import {
+  leagueService,
+  DeletionImpactSummary,
+} from '../../services/api/LeagueService';
 import { selectUser } from '../../store/slices/authSlice';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 export const LeagueDeletionConfirmScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId } = (route.params as any) || {};
@@ -35,9 +39,13 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
       setPreview(data);
     } catch (err: any) {
       if (err?.status === 403) {
-        setError('This league cannot be deleted because matches have been played.');
+        setError(
+          'This league cannot be deleted because matches have been played.'
+        );
       } else {
-        setError(err instanceof Error ? err.message : 'Failed to load deletion preview');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load deletion preview'
+        );
       }
     } finally {
       setIsLoading(false);
@@ -71,18 +79,28 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
     try {
       setIsDeleting(true);
       await leagueService.deleteLeague(leagueId, user.id);
-      Alert.alert('League Deleted', 'The league and all associated data have been removed.', [
-        { text: 'OK', onPress: () => (navigation as any).navigate('LeaguesBrowser') },
-      ]);
+      Alert.alert(
+        'League Deleted',
+        'The league and all associated data have been removed.',
+        [
+          {
+            text: 'OK',
+            onPress: () => (navigation as any).navigate('LeaguesBrowser'),
+          },
+        ]
+      );
     } catch (err) {
       setIsDeleting(false);
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to delete league');
+      Alert.alert(
+        'Error',
+        err instanceof Error ? err.message : 'Failed to delete league'
+      );
     }
   };
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Delete League"
           leftIcon="arrow-back"
@@ -95,13 +113,16 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
 
   if (error || !preview) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Delete League"
           leftIcon="arrow-back"
           onLeftPress={() => navigation.goBack()}
         />
-        <ErrorDisplay message={error || 'Unable to load preview'} onRetry={loadPreview} />
+        <ErrorDisplay
+          message={error || 'Unable to load preview'}
+          onRetry={loadPreview}
+        />
       </View>
     );
   }
@@ -112,17 +133,21 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
   const hasRentals = preview.rentalCount > 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Delete League"
         leftIcon="arrow-back"
         onLeftPress={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <Text style={styles.leagueName}>{preview.leagueName}</Text>
         <Text style={styles.warningText}>
-          Deleting this league is permanent. Review the impact below before confirming.
+          Deleting this league is permanent. Review the impact below before
+          confirming.
         </Text>
 
         {/* Events */}
@@ -141,7 +166,9 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
         {/* Rentals */}
         <View style={styles.impactCard}>
           <View style={styles.impactRow}>
-            <Text style={styles.impactLabel}>Court reservations to release</Text>
+            <Text style={styles.impactLabel}>
+              Court reservations to release
+            </Text>
             <Text style={styles.impactValue}>{preview.rentalCount}</Text>
           </View>
           {hasRentals && (
@@ -155,7 +182,9 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
         <View style={styles.impactCard}>
           <View style={styles.impactRow}>
             <Text style={styles.impactLabel}>Player dues refunds</Text>
-            <Text style={styles.impactValue}>{preview.stripeRefunds.count}</Text>
+            <Text style={styles.impactValue}>
+              {preview.stripeRefunds.count}
+            </Text>
           </View>
           {hasStripeRefunds && (
             <View style={styles.impactRow}>
@@ -176,7 +205,9 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
         <View style={styles.impactCard}>
           <View style={styles.impactRow}>
             <Text style={styles.impactLabel}>Roster balance credits</Text>
-            <Text style={styles.impactValue}>{preview.rosterBalanceRefunds.count}</Text>
+            <Text style={styles.impactValue}>
+              {preview.rosterBalanceRefunds.count}
+            </Text>
           </View>
           {hasRosterRefunds && (
             <View style={styles.impactRow}>

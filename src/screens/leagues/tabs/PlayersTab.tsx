@@ -7,7 +7,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { leagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { PlayerRanking, Season } from '../../../types';
-import { colors } from '../../../theme';
+import { colors, useTheme } from '../../../theme';
 
 interface PlayersTabProps {
   leagueId: string;
@@ -19,9 +19,12 @@ export const PlayersTab: React.FC<PlayersTabProps> = ({ leagueId }) => {
 
 // ── Player rankings view ──
 const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
+  const { colors: themeColors } = useTheme();
   const [rankings, setRankings] = useState<PlayerRanking[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined
+  );
   const [sortBy, setSortBy] = useState<string>('performanceScore');
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -55,7 +58,10 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
     }
   };
 
-  const loadRankings = async (reset: boolean = false, forceRefresh: boolean = false) => {
+  const loadRankings = async (
+    reset: boolean = false,
+    forceRefresh: boolean = false
+  ) => {
     if (!hasMore && !reset && !forceRefresh) return;
 
     try {
@@ -76,12 +82,15 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
         50
       );
 
-      const newRankings = reset ? response.data : [...rankings, ...response.data];
+      const newRankings = reset
+        ? response.data
+        : [...rankings, ...response.data];
       setRankings(newRankings);
       setPage(currentPage + 1);
       setHasMore(response.pagination.page < response.pagination.totalPages);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load player rankings';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load player rankings';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -103,7 +112,9 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
   };
 
   const handleSeasonChange = (option: SelectOption) => {
-    setSelectedSeasonId(option.value === 'all' ? undefined : option.value as string);
+    setSelectedSeasonId(
+      option.value === 'all' ? undefined : (option.value as string)
+    );
   };
 
   const handleSortChange = (option: SelectOption) => {
@@ -134,7 +145,12 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
   }
 
   return (
-    <View style={rankingsStyles.container}>
+    <View
+      style={[
+        rankingsStyles.container,
+        { backgroundColor: themeColors.bgScreen },
+      ]}
+    >
       {/* Controls Section */}
       <View style={rankingsStyles.controls}>
         <View style={rankingsStyles.filtersRow}>

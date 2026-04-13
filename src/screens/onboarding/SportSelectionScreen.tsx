@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import type { OnboardingIntent } from '../../navigation/types';
 
@@ -19,6 +19,7 @@ const TOTAL_STEPS = 5;
 const HORIZONTAL_PAD = 24;
 
 export const SportSelectionScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -36,8 +37,8 @@ export const SportSelectionScreen: React.FC = () => {
   }, []);
 
   const toggleSport = (key: string) => {
-    setSelected((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    setSelected(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
 
@@ -53,7 +54,9 @@ export const SportSelectionScreen: React.FC = () => {
   const canContinue = selected.length > 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       <View style={styles.content}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -69,10 +72,7 @@ export const SportSelectionScreen: React.FC = () => {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[
-                  styles.progressDot,
-                  i <= 1 && styles.progressDotActive,
-                ]}
+                style={[styles.progressDot, i <= 1 && styles.progressDotActive]}
               />
             ))}
           </View>
@@ -87,7 +87,7 @@ export const SportSelectionScreen: React.FC = () => {
             contentContainerStyle={styles.scrollContent}
           >
             <Text style={styles.title}>
-              {isGuardian ? "Sports your kids play" : 'Sports you play'}
+              {isGuardian ? 'Sports your kids play' : 'Sports you play'}
             </Text>
             <Text style={styles.subtitle}>
               We'll personalize your feed and recommendations

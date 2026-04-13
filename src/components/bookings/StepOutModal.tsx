@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 
 interface StepOutModalProps {
   visible: boolean;
@@ -24,6 +24,7 @@ export function StepOutModal({
   onConfirm,
 }: StepOutModalProps): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { colors: themeColors } = useTheme();
 
   const handleConfirm = async () => {
     try {
@@ -47,25 +48,49 @@ export function StepOutModal({
           activeOpacity={1}
           onPress={onCancel}
         />
-        <View style={styles.modalContent}>
+        <View
+          style={[styles.modalContent, { backgroundColor: themeColors.bgCard }]}
+        >
           <View style={styles.header}>
-            <Ionicons name="exit-outline" size={32} color={colors.inkFaint} />
-            <Text style={styles.title}>Leave</Text>
+            <Ionicons
+              name="exit-outline"
+              size={32}
+              color={themeColors.textSecondary}
+            />
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              Leave
+            </Text>
           </View>
 
-          <Text style={styles.eventTitle}>{eventTitle}</Text>
+          <Text style={[styles.eventTitle, { color: themeColors.textPrimary }]}>
+            {eventTitle}
+          </Text>
 
-          <Text style={styles.description}>
-            Are you sure you want to leave this event? You will be removed as a participant.
+          <Text
+            style={[styles.description, { color: themeColors.textSecondary }]}
+          >
+            Are you sure you want to leave this event? You will be removed as a
+            participant.
           </Text>
 
           <View style={styles.actions}>
             <TouchableOpacity
-              style={[styles.button, styles.buttonSecondary]}
+              style={[
+                styles.button,
+                styles.buttonSecondary,
+                { borderColor: themeColors.border },
+              ]}
               onPress={onCancel}
               disabled={isSubmitting}
             >
-              <Text style={styles.buttonSecondaryText}>Cancel</Text>
+              <Text
+                style={[
+                  styles.buttonSecondaryText,
+                  { color: themeColors.textPrimary },
+                ]}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity

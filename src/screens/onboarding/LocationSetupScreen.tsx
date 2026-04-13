@@ -15,12 +15,13 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
 
 export const LocationSetupScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -106,7 +107,9 @@ export const LocationSetupScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -161,9 +164,7 @@ export const LocationSetupScreen: React.FC = () => {
                       />
                     </View>
                   </View>
-                  <Text style={styles.confirmedText}>
-                    Looks like you're in
-                  </Text>
+                  <Text style={styles.confirmedText}>Looks like you're in</Text>
                   <Text style={styles.confirmedLocation}>
                     {city}, {state}
                   </Text>

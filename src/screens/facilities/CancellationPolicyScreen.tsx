@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { CancellationPolicyForm } from '../../components/facilities/CancellationPolicyForm';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 
 type CancellationPolicyScreenNavigationProp = NativeStackNavigationProp<
@@ -18,12 +18,13 @@ type CancellationPolicyScreenRouteProp = RouteProp<
 >;
 
 export function CancellationPolicyScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<CancellationPolicyScreenNavigationProp>();
   const route = useRoute<CancellationPolicyScreenRouteProp>();
   const { facilityId } = route.params;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Cancellation Policy"
         leftIcon="arrow-back"

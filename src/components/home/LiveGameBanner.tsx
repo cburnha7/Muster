@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { colors, fonts } from '../../theme';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native';
+import { colors, fonts, useTheme } from '../../theme';
 import { getSportEmoji } from '../../constants/sports';
 import type { Booking } from '../../types';
 
@@ -14,14 +20,23 @@ function minutesAgo(startTime: Date): number {
 }
 
 export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
+  const { colors: themeColors } = useTheme();
   const pulseAnim = useRef(new Animated.Value(0.3)).current;
   const event = booking.event;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
       ])
     );
     loop.start();
@@ -34,17 +49,28 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
   const emoji = getSportEmoji(event.sportType);
 
   return (
-    <TouchableOpacity style={styles.container} onPress={() => onPress(booking)} activeOpacity={0.85}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onPress(booking)}
+      activeOpacity={0.85}
+    >
       <View style={styles.liveLabel}>
         <Animated.View style={[styles.liveDot, { opacity: pulseAnim }]} />
         <Text style={styles.liveText}>LIVE</Text>
       </View>
       <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text
+          style={[styles.title, { color: themeColors.textPrimary }]}
+          numberOfLines={1}
+        >
           {emoji} {event.title}
         </Text>
-        <Text style={styles.meta} numberOfLines={1}>
-          {event.facility?.name || event.locationName || 'Game'} · Started {mins}m ago
+        <Text
+          style={[styles.meta, { color: themeColors.textSecondary }]}
+          numberOfLines={1}
+        >
+          {event.facility?.name || event.locationName || 'Game'} · Started{' '}
+          {mins}m ago
         </Text>
       </View>
       <Text style={styles.arrow}>→</Text>

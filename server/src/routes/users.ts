@@ -332,31 +332,9 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
     // Get user ID — respects X-Active-User-Id for dependent context
     let userId = resolveUserId(req);
 
-    console.log('📋 GET /users/bookings');
-    console.log(
-      '📋 Auth header:',
-      req.headers.authorization
-        ? `Bearer ${req.headers.authorization.substring(7, 27)}...`
-        : 'none'
-    );
-    console.log('📋 X-User-Id header:', req.headers['x-user-id']);
-    console.log('📋 X-Active-User-Id header:', req.headers['x-active-user-id']);
-    console.log('📋 Resolved user ID:', userId);
-
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-
-    // Log which user we're fetching bookings for
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, firstName: true, lastName: true },
-    });
-    console.log(
-      '📋 Fetching bookings for user:',
-      user?.email,
-      `${user?.firstName} ${user?.lastName}`
-    );
 
     const { page = '1', limit = '20', status, includeFamily } = req.query;
     const pageNum = parseInt(page as string);
@@ -371,7 +349,6 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
         select: { id: true },
       });
       userIds = [userId, ...dependents.map(d => d.id)];
-      console.log('📋 Including family members:', userIds.length, 'users');
     }
 
     // Build where clause
@@ -444,12 +421,6 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
       }),
       prisma.booking.count({ where }),
     ]);
-
-    console.log('📋 Found bookings:', bookings.length, 'for user:', userId);
-    console.log('📋 Status filter:', status);
-    bookings.forEach(b => {
-      console.log(`  - ${b.event?.title}: ${b.event?.startTime}`);
-    });
 
     res.json({
       data: bookings,

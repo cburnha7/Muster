@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import {
   playerDuesService,
   DuesStatusResponse,
@@ -24,6 +24,7 @@ import { TeamsStackParamList } from '../../navigation/types';
 type PayPlayerDuesRouteProp = RouteProp<TeamsStackParamList, 'PayPlayerDues'>;
 
 export const PayPlayerDuesScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<PayPlayerDuesRouteProp>();
   const user = useSelector(selectUser);
@@ -88,7 +89,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Season Dues"
           leftIcon="""
@@ -104,7 +105,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Season Dues"
           leftIcon="""
@@ -113,7 +114,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadStatus}>
+          <TouchableOpacity style={styles.retryButton} onPress={loadStatus} activeOpacity={0.75}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -127,13 +128,13 @@ export const PayPlayerDuesScreen: React.FC = () => {
     : 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Season Dues"
         leftIcon="""
         
       />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Season Dues</Text>
 
@@ -170,6 +171,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
+            activeOpacity={0.75}
           >
             <Text style={styles.cancelButtonText}>Go Back</Text>
           </TouchableOpacity>
@@ -181,6 +183,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel={`Pay season dues ${formatCurrency(duesAmountCents)}`}
             accessibilityState={{ disabled: paying }}
+            activeOpacity={0.75}
           >
             {paying ? (
               <ActivityIndicator size="small" color="#FFFFFF" />

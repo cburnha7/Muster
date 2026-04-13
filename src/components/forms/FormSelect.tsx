@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 export interface SelectOption {
   label: string;
@@ -57,6 +57,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   footerOption,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const { colors: themeColors } = useTheme();
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -101,7 +102,9 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
-        <Text style={[styles.label, labelStyle]}>
+        <Text
+          style={[styles.label, { color: themeColors.textPrimary }, labelStyle]}
+        >
           {label}
           {required && <Text style={styles.required}> *</Text>}
         </Text>
@@ -110,6 +113,10 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       <TouchableOpacity
         style={[
           styles.select,
+          {
+            backgroundColor: themeColors.bgCard,
+            borderColor: themeColors.border,
+          },
           error && styles.selectError,
           disabled && styles.selectDisabled,
           selectStyle,
@@ -120,6 +127,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         <Text
           style={[
             styles.selectText,
+            { color: themeColors.textPrimary },
             !selectedOption && styles.placeholderText,
             disabled && styles.selectTextDisabled,
           ]}
@@ -129,13 +137,17 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         <Ionicons
           name="chevron-down"
           size={20}
-          color={disabled ? colors.outline : error ? colors.error : colors.onSurfaceVariant}
+          color={
+            disabled
+              ? colors.outline
+              : error
+                ? colors.error
+                : colors.onSurfaceVariant
+          }
         />
       </TouchableOpacity>
 
-      {error && (
-        <Text style={[styles.error, errorStyle]}>{error}</Text>
-      )}
+      {error && <Text style={[styles.error, errorStyle]}>{error}</Text>}
 
       <Modal
         visible={isModalVisible}
@@ -143,12 +155,24 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView
+          style={[
+            styles.modalContainer,
+            { backgroundColor: themeColors.bgScreen },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              { borderBottomColor: themeColors.border },
+            ]}
+          >
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>
+            <Text
+              style={[styles.modalTitle, { color: themeColors.textPrimary }]}
+            >
               {label || 'Select Option'}
             </Text>
             <View style={styles.placeholder} />
@@ -157,7 +181,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
           <FlatList
             data={options}
             renderItem={renderOption}
-            keyExtractor={(item) => item.value.toString()}
+            keyExtractor={item => item.value.toString()}
             style={styles.optionsList}
             showsVerticalScrollIndicator={false}
             ListFooterComponent={
@@ -170,10 +194,21 @@ export const FormSelect: React.FC<FormSelectProps> = ({
                   }}
                 >
                   {footerOption.icon && (
-                    <Ionicons name={footerOption.icon as any} size={20} color={colors.primary} style={{ marginRight: 10 }} />
+                    <Ionicons
+                      name={footerOption.icon as any}
+                      size={20}
+                      color={colors.primary}
+                      style={{ marginRight: 10 }}
+                    />
                   )}
-                  <Text style={styles.footerOptionText}>{footerOption.label}</Text>
-                  <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+                  <Text style={styles.footerOptionText}>
+                    {footerOption.label}
+                  </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
               ) : null
             }

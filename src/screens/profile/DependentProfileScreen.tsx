@@ -22,7 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { DependentProfile } from '../../types/dependent';
 
 function isAge18OrOlder(dateOfBirth: string): boolean {
@@ -46,6 +46,7 @@ function formatEventDate(iso: string): string {
 }
 
 export function DependentProfileScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { user: authUser } = useAuth();
@@ -147,7 +148,7 @@ export function DependentProfileScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={[
         styles.content,
         contentMaxWidth

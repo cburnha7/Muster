@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, RefreshControl, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  RefreshControl,
+  FlatList,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,7 +17,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { matchService } from '../../../services/api/MatchService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { Match, MatchStatus, Season } from '../../../types';
-import { colors } from '../../../theme';
+import { colors, useTheme } from '../../../theme';
 import { LeaguesStackParamList } from '../../../navigation/types';
 
 interface MatchesTabProps {
@@ -20,12 +27,18 @@ interface MatchesTabProps {
 
 type NavigationProp = NativeStackNavigationProp<LeaguesStackParamList>;
 
-export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) => {
+export const MatchesTab: React.FC<MatchesTabProps> = ({
+  leagueId,
+  isOperator,
+}) => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
-  
+
   const [matches, setMatches] = useState<Match[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined
+  );
   const [statusFilter, setStatusFilter] = useState<MatchStatus | 'all'>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +62,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
     try {
       const response = await seasonService.getLeagueSeasons(leagueId, 1, 100);
       setSeasons(response.data);
-      
+
       // Auto-select active season if available
       const activeSeason = response.data.find(s => s.isActive);
       if (activeSeason) {
@@ -61,7 +74,10 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
     }
   };
 
-  const loadMatches = async (reset: boolean = false, forceRefresh: boolean = false) => {
+  const loadMatches = async (
+    reset: boolean = false,
+    forceRefresh: boolean = false
+  ) => {
     if (!hasMore && !reset && !forceRefresh) return;
 
     try {
@@ -74,23 +90,24 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
 
       const currentPage = reset ? 1 : page;
       const filters: any = { leagueId };
-      
+
       if (selectedSeasonId) {
         filters.seasonId = selectedSeasonId;
       }
-      
+
       if (statusFilter !== 'all') {
         filters.status = statusFilter;
       }
 
       const response = await matchService.getMatches(filters, currentPage, 20);
-      
+
       const newMatches = reset ? response.data : [...matches, ...response.data];
       setMatches(newMatches);
       setPage(currentPage + 1);
       setHasMore(response.pagination.page < response.pagination.totalPages);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load matches';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load matches';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -112,7 +129,9 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
   };
 
   const handleSeasonChange = (option: SelectOption) => {
-    setSelectedSeasonId(option.value === 'all' ? undefined : option.value as string);
+    setSelectedSeasonId(
+      option.value === 'all' ? undefined : (option.value as string)
+    );
   };
 
   const handleStatusFilterChange = (option: SelectOption) => {
@@ -120,17 +139,20 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
   };
 
   const handleSortToggle = () => {
-    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   };
 
   const handleMatchPress = (match: Match) => {
-    (navigation as any).navigate('RecordMatchResult', { matchId: match.id, leagueId });
+    (navigation as any).navigate('RecordMatchResult', {
+      matchId: match.id,
+      leagueId,
+    });
   };
 
   const handleCreateMatch = () => {
-    navigation.navigate('CreateMatch', { 
+    navigation.navigate('CreateMatch', {
       leagueId,
-      seasonId: selectedSeasonId 
+      seasonId: selectedSeasonId,
     });
   };
 
@@ -156,21 +178,18 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
   });
 
   const renderMatch = ({ item }: { item: Match }) => (
-    <MatchCard
-      match={item}
-      onPress={handleMatchPress}
-    />
+    <MatchCard match={item} onPress={handleMatchPress} />
   );
 
   const renderEmpty = () => {
     if (isLoading) return null;
-    
+
     return (
       <View style={styles.emptyState}>
         <Ionicons name="calendar-outline" size={64} color="#CCC" />
         <Text style={styles.emptyText}>No matches found</Text>
         <Text style={styles.emptySubtext}>
-          {statusFilter !== 'all' 
+          {statusFilter !== 'all'
             ? `No ${statusFilter} matches available`
             : 'Matches will appear once they are scheduled'}
         </Text>
@@ -205,7 +224,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Controls Section */}
       <View style={styles.controls}>
         <View style={styles.filtersRow}>
@@ -220,7 +239,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
               />
             </View>
           )}
-          
+
           <View style={styles.filterItem}>
             <FormSelect
               placeholder="Status"
@@ -237,10 +256,10 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
             style={styles.sortButton}
             onPress={handleSortToggle}
           >
-            <Ionicons 
-              name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'} 
-              size={18} 
-              color={colors.cobalt} 
+            <Ionicons
+              name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
+              size={18}
+              color={colors.cobalt}
             />
             <Text style={styles.sortText}>
               {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
@@ -263,8 +282,9 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ leagueId, isOperator }) 
       <FlatList
         data={sortedMatches}
         renderItem={renderMatch}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
         onEndReached={handleLoadMore}

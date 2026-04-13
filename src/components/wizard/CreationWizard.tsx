@@ -62,7 +62,9 @@ export function CreationWizard({
         useNativeDriver: true,
       }).start(() => {
         callback();
-        slideAnim.setValue(direction === 'forward' ? SCREEN_WIDTH : -SCREEN_WIDTH);
+        slideAnim.setValue(
+          direction === 'forward' ? SCREEN_WIDTH : -SCREEN_WIDTH
+        );
         Animated.timing(slideAnim, {
           toValue: 0,
           duration: 200,
@@ -80,7 +82,7 @@ export function CreationWizard({
       return;
     }
     animateTransition('forward', () => {
-      setCurrentStep((prev) => prev + 1);
+      setCurrentStep(prev => prev + 1);
     });
   }, [canAdvance, isLastStep, onComplete, animateTransition]);
 
@@ -90,12 +92,14 @@ export function CreationWizard({
       return;
     }
     animateTransition('back', () => {
-      setCurrentStep((prev) => prev - 1);
+      setCurrentStep(prev => prev - 1);
     });
   }, [currentStep, onBack, animateTransition]);
 
   if (showSuccess && successScreen) {
-    return <SafeAreaView style={styles.container}>{successScreen}</SafeAreaView>;
+    return (
+      <SafeAreaView style={styles.container}>{successScreen}</SafeAreaView>
+    );
   }
 
   return (
@@ -110,6 +114,7 @@ export function CreationWizard({
             onPress={handleBack}
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.75}
           >
             <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
           </TouchableOpacity>
@@ -121,12 +126,17 @@ export function CreationWizard({
 
         {/* Step content */}
         <Animated.View
-          style={[styles.stepContainer, { transform: [{ translateX: slideAnim }] }]}
+          style={[
+            styles.stepContainer,
+            { transform: [{ translateX: slideAnim }] },
+          ]}
         >
           {step && (
             <>
               <Text style={styles.headline}>{step.headline}</Text>
-              {step.subtitle && <Text style={styles.subtitle}>{step.subtitle}</Text>}
+              {step.subtitle && (
+                <Text style={styles.subtitle}>{step.subtitle}</Text>
+              )}
               <View style={styles.stepContent}>{step.content}</View>
             </>
           )}

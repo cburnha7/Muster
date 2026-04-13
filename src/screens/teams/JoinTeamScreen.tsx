@@ -21,7 +21,7 @@ import { joinTeam } from '../../store/slices/teamsSlice';
 import { selectDependents } from '../../store/slices/contextSlice';
 import { useAuth } from '../../context/AuthContext';
 import { DependentSummary } from '../../types/dependent';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 
 interface JoinTeamScreenProps {
   route: {
@@ -32,6 +32,7 @@ interface JoinTeamScreenProps {
 }
 
 export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
+  const { colors: themeColors } = useTheme();
   const { inviteCode: initialInviteCode } = route.params || {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -183,15 +184,16 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenHeader title="Join Team" />
+      <ScreenHeader title="Join Roster" />
 
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.form}>
           <Text style={styles.title}>Enter Invite Code</Text>
@@ -348,6 +350,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
             <TouchableOpacity
               style={styles.cancelBtn}
               onPress={() => setShowDependentPicker(false)}
+              activeOpacity={0.75}
             >
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>

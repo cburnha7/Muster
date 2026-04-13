@@ -1,5 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Facility, SportType } from '../../types';
 
@@ -52,7 +59,9 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
   }
 
   const mapRef = useRef<MapView>(null);
-  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
+    null
+  );
 
   const defaultRegion: Region = {
     latitude: 37.78825,
@@ -64,7 +73,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
   useEffect(() => {
     if (facilities.length > 0 && mapRef.current) {
       // Fit map to show all facilities
-      const coordinates = facilities.map((f) => ({
+      const coordinates = facilities.map(f => ({
         latitude: f.latitude,
         longitude: f.longitude,
       }));
@@ -155,7 +164,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
         showsCompass={true}
         showsScale={true}
       >
-        {facilities.map((facility) => (
+        {facilities.map(facility => (
           <Marker
             key={facility.id}
             coordinate={{
@@ -181,7 +190,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
                   </Text>
                 </View>
                 <View style={styles.calloutSports}>
-                  {facility.sportTypes.slice(0, 3).map((sport) => (
+                  {facility.sportTypes.slice(0, 3).map(sport => (
                     <View key={sport} style={styles.calloutSportBadge}>
                       <Ionicons
                         name={getSportIcon(sport) as any}
@@ -208,12 +217,16 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
           <TouchableOpacity
             style={styles.cardContent}
             onPress={() => handleCalloutPress(selectedFacility)}
+            activeOpacity={0.75}
           >
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle} numberOfLines={1}>
                 {selectedFacility.name}
               </Text>
-              <TouchableOpacity onPress={() => setSelectedFacility(null)}>
+              <TouchableOpacity
+                onPress={() => setSelectedFacility(null)}
+                activeOpacity={0.75}
+              >
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
@@ -230,6 +243,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
               <TouchableOpacity
                 style={styles.directionsButton}
                 onPress={() => centerOnFacility(selectedFacility)}
+                activeOpacity={0.75}
               >
                 <Ionicons name="navigate" size={16} color="#007AFF" />
                 <Text style={styles.directionsText}>Center</Text>

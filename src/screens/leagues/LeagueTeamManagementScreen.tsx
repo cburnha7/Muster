@@ -27,7 +27,7 @@ import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
 import { isCoachRole } from '../../utils/teamRoles';
 import { LeagueMembership } from '../../types/league';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 interface TeamWithCoach {
   membership: LeagueMembership;
@@ -41,6 +41,7 @@ interface TeamWithCoach {
 }
 
 export const LeagueTeamManagementScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId } = (route.params as any) || {};
@@ -61,62 +62,73 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   // Assign coach modal
   const [showCoachModal, setShowCoachModal] = useState(false);
-  const [coachTargetTeam, setCoachTargetTeam] = useState<TeamWithCoach | null>(null);
+  const [coachTargetTeam, setCoachTargetTeam] = useState<TeamWithCoach | null>(
+    null
+  );
   const [coachSearchQuery, setCoachSearchQuery] = useState('');
   const [coachSearchResults, setCoachSearchResults] = useState<any[]>([]);
   const [isSearchingCoach, setIsSearchingCoach] = useState(false);
   const [coachEmail, setCoachEmail] = useState('');
   const [isAssigningCoach, setIsAssigningCoach] = useState(false);
 
-  const loadTeams = useCallback(async (showRefresh = false) => {
-    try {
-      if (showRefresh) setIsRefreshing(true);
-      else setIsLoading(true);
-      setError(null);
+  const loadTeams = useCallback(
+    async (showRefresh = false) => {
+      try {
+        if (showRefresh) setIsRefreshing(true);
+        else setIsLoading(true);
+        setError(null);
 
-      const league = await leagueService.getLeagueById(leagueId, true);
-      setLeagueName(league.name || '');
+        const league = await leagueService.getLeagueById(leagueId, true);
+        setLeagueName(league.name || '');
 
-      if (user?.id && league.organizerId !== user.id) {
-        setError('Only the league commissioner can manage teams');
-        return;
+        if (user?.id && league.organizerId !== user.id) {
+          setError('Only the league commissioner can manage rosters');
+          return;
+        }
+
+        const response = await leagueService.getMembers(leagueId, 1, 100, true);
+        const memberships = response.data || [];
+
+        const teamList: TeamWithCoach[] = memberships
+          .filter(
+            (m: any) => m.memberType === 'roster' && m.status === 'active'
+          )
+          .map((m: any) => {
+            const members = m.team?.members || [];
+            const coach = members.find(
+              (mem: any) => isCoachRole(mem.role) && mem.status === 'active'
+            );
+            const playerMembers = members.filter(
+              (mem: any) => !isCoachRole(mem.role) && mem.status === 'active'
+            );
+
+            return {
+              membership: m,
+              teamId: m.teamId || m.memberId,
+              teamName: m.team?.name || 'Unknown Roster',
+              playerCount: playerMembers.length,
+              coachName: coach
+                ? `${coach.user?.firstName || ''} ${coach.user?.lastName || ''}`.trim() ||
+                  'Coach'
+                : null,
+              coachId: coach?.user?.id || null,
+              wins: m.wins || 0,
+              losses: m.losses || 0,
+            };
+          });
+
+        setTeams(teamList);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to load rosters';
+        setError(message);
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
       }
-
-      const response = await leagueService.getMembers(leagueId, 1, 100, true);
-      const memberships = response.data || [];
-
-      const teamList: TeamWithCoach[] = memberships
-        .filter((m: any) => m.memberType === 'roster' && m.status === 'active')
-        .map((m: any) => {
-          const members = m.team?.members || [];
-          const coach = members.find((mem: any) => isCoachRole(mem.role) && mem.status === 'active');
-          const playerMembers = members.filter((mem: any) =>
-            !isCoachRole(mem.role) && mem.status === 'active'
-          );
-
-          return {
-            membership: m,
-            teamId: m.teamId || m.memberId,
-            teamName: m.team?.name || 'Unknown Team',
-            playerCount: playerMembers.length,
-            coachName: coach
-              ? `${coach.user?.firstName || ''} ${coach.user?.lastName || ''}`.trim() || 'Coach'
-              : null,
-            coachId: coach?.user?.id || null,
-            wins: m.wins || 0,
-            losses: m.losses || 0,
-          };
-        });
-
-      setTeams(teamList);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load teams';
-      setError(message);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [leagueId, user?.id]);
+    },
+    [leagueId, user?.id]
+  );
 
   useEffect(() => {
     if (leagueId) loadTeams();
@@ -124,13 +136,17 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) {
-      Alert.alert('Error', 'Team name is required');
+      Alert.alert('Error', 'Roster name is required');
       return;
     }
 
     setIsCreating(true);
     try {
-      const payload: { name: string; maxMembers?: number; coachEmail?: string } = {
+      const payload: {
+        name: string;
+        maxMembers?: number;
+        coachEmail?: string;
+      } = {
         name: newTeamName.trim(),
         maxMembers: parseInt(newTeamMaxMembers) || 15,
       };
@@ -144,10 +160,13 @@ export const LeagueTeamManagementScreen: React.FC = () => {
       setNewTeamMaxMembers('15');
       setNewCoachEmail('');
 
-      Alert.alert('Success', `${newTeamName.trim()} has been created and added to the league`);
+      Alert.alert(
+        'Success',
+        `${newTeamName.trim()} has been created and added to the league`
+      );
       loadTeams();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to create team');
+      Alert.alert('Error', err?.message || 'Failed to create roster');
     } finally {
       setIsCreating(false);
     }
@@ -218,7 +237,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   const handleRemoveTeam = (team: TeamWithCoach) => {
     Alert.alert(
-      'Remove Team',
+      'Remove Roster',
       `Are you sure you want to remove ${team.teamName} from this league?`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -229,10 +248,13 @@ export const LeagueTeamManagementScreen: React.FC = () => {
             try {
               if (!user?.id) return;
               await leagueService.leaveLeague(leagueId, team.teamId, user.id);
-              Alert.alert('Removed', `${team.teamName} has been removed from the league`);
+              Alert.alert(
+                'Removed',
+                `${team.teamName} has been removed from the league`
+              );
               loadTeams();
             } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to remove team');
+              Alert.alert('Error', err?.message || 'Failed to remove roster');
             }
           },
         },
@@ -257,7 +279,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
           <Ionicons name="people" size={20} color={colors.cobalt} />
         </View>
         <View style={styles.teamCardInfo}>
-          <Text style={styles.teamCardName} numberOfLines={1}>{item.teamName}</Text>
+          <Text style={styles.teamCardName} numberOfLines={1}>
+            {item.teamName}
+          </Text>
           {item.coachName ? (
             <View style={styles.coachRow}>
               <View style={[styles.statusDot, styles.statusDotGreen]} />
@@ -271,7 +295,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
           )}
           <Text style={styles.playerCountText}>
             {item.playerCount} {item.playerCount === 1 ? 'player' : 'players'}
-            {item.wins + item.losses > 0 ? ` · ${item.wins}-${item.losses}` : ''}
+            {item.wins + item.losses > 0
+              ? ` · ${item.wins}-${item.losses}`
+              : ''}
           </Text>
         </View>
 
@@ -291,8 +317,13 @@ export const LeagueTeamManagementScreen: React.FC = () => {
               { text: 'Cancel', style: 'cancel' },
             ]);
           }}
+          activeOpacity={0.75}
         >
-          <Ionicons name="ellipsis-horizontal" size={20} color={colors.inkFaint} />
+          <Ionicons
+            name="ellipsis-horizontal"
+            size={20}
+            color={colors.inkFaint}
+          />
         </TouchableOpacity>
       </View>
 
@@ -300,6 +331,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.assignCoachButton}
           onPress={() => openCoachModal(item)}
+          activeOpacity={0.75}
         >
           <Ionicons name="person-add-outline" size={16} color={colors.cobalt} />
           <Text style={styles.assignCoachButtonText}>Assign coach</Text>
@@ -310,8 +342,14 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <ScreenHeader title="Manage Teams" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
+        <ScreenHeader
+          title="Manage Rosters"
+          leftIcon="arrow-back"
+          onLeftPress={() => navigation.goBack()}
+        />
         <LoadingSpinner />
       </View>
     );
@@ -319,48 +357,65 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <ScreenHeader title="Manage Teams" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
+        <ScreenHeader
+          title="Manage Rosters"
+          leftIcon="arrow-back"
+          onLeftPress={() => navigation.goBack()}
+        />
         <ErrorDisplay message={error} onRetry={() => loadTeams()} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader title="Manage Teams" leftIcon="arrow-back" onLeftPress={() => navigation.goBack()} />
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <ScreenHeader
+        title="Manage Rosters"
+        leftIcon="arrow-back"
+        onLeftPress={() => navigation.goBack()}
+      />
 
       {/* Summary strip */}
       <View style={styles.summaryStrip}>
         <Text style={styles.summaryText}>
-          {teams.length} {teams.length === 1 ? 'team' : 'teams'}
+          {teams.length} {teams.length === 1 ? 'roster' : 'rosters'}
           {teamsNeedingCoaches > 0 && (
-            <Text style={styles.summaryWarning}> · {teamsNeedingCoaches} need coaches</Text>
+            <Text style={styles.summaryWarning}>
+              {' '}
+              · {teamsNeedingCoaches} need coaches
+            </Text>
           )}
         </Text>
       </View>
 
       <FlatList
         data={teams}
-        keyExtractor={(item) => item.teamId}
+        keyExtractor={item => item.teamId}
         renderItem={renderTeamCard}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={() => loadTeams(true)} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => loadTeams(true)}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={48} color={colors.inkFaint} />
-            <Text style={styles.emptyTitle}>No teams yet</Text>
+            <Text style={styles.emptyTitle}>No rosters yet</Text>
             <Text style={styles.emptySubtext}>
-              Create teams for your league and assign coaches
+              Create rosters for your league and assign coaches
             </Text>
           </View>
         }
         ListFooterComponent={
           <View style={styles.addButtonContainer}>
             <FormButton
-              title="Add team"
+              title="Add roster"
               onPress={() => setShowAddModal(true)}
               variant="primary"
               size="large"
@@ -378,13 +433,16 @@ export const LeagueTeamManagementScreen: React.FC = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add team to league</Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+              <Text style={styles.modalTitle}>Add roster to league</Text>
+              <TouchableOpacity
+                onPress={() => setShowAddModal(false)}
+                activeOpacity={0.75}
+              >
                 <Ionicons name="close" size={24} color={colors.ink} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.inputLabel}>Team name *</Text>
+            <Text style={styles.inputLabel}>Roster name *</Text>
             <TextInput
               style={styles.textInput}
               value={newTeamName}
@@ -419,7 +477,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
             </Text>
 
             <FormButton
-              title={isCreating ? 'Creating...' : 'Create team'}
+              title={isCreating ? 'Creating...' : 'Create roster'}
               onPress={handleCreateTeam}
               variant="primary"
               size="large"
@@ -439,9 +497,13 @@ export const LeagueTeamManagementScreen: React.FC = () => {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Assign coach{coachTargetTeam ? ` to ${coachTargetTeam.teamName}` : ''}
+                Assign coach
+                {coachTargetTeam ? ` to ${coachTargetTeam.teamName}` : ''}
               </Text>
-              <TouchableOpacity onPress={() => setShowCoachModal(false)}>
+              <TouchableOpacity
+                onPress={() => setShowCoachModal(false)}
+                activeOpacity={0.75}
+              >
                 <Ionicons name="close" size={24} color={colors.ink} />
               </TouchableOpacity>
             </View>
@@ -459,9 +521,14 @@ export const LeagueTeamManagementScreen: React.FC = () => {
                 onSubmitEditing={handleSearchCoach}
               />
               <TouchableOpacity
-                style={[styles.searchButton, (!coachSearchQuery.trim() || isSearchingCoach) && styles.searchButtonDisabled]}
+                style={[
+                  styles.searchButton,
+                  (!coachSearchQuery.trim() || isSearchingCoach) &&
+                    styles.searchButtonDisabled,
+                ]}
                 onPress={handleSearchCoach}
                 disabled={!coachSearchQuery.trim() || isSearchingCoach}
+                activeOpacity={0.75}
               >
                 {isSearchingCoach ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
@@ -480,6 +547,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
                     style={styles.searchResultItem}
                     onPress={() => handleAssignCoachByUser(u.id)}
                     disabled={isAssigningCoach}
+                    activeOpacity={0.75}
                   >
                     <View style={styles.searchResultInfo}>
                       <Text style={styles.searchResultName}>
@@ -490,16 +558,22 @@ export const LeagueTeamManagementScreen: React.FC = () => {
                     {isAssigningCoach ? (
                       <ActivityIndicator size="small" color={colors.cobalt} />
                     ) : (
-                      <Ionicons name="add-circle" size={24} color={colors.cobalt} />
+                      <Ionicons
+                        name="add-circle"
+                        size={24}
+                        color={colors.cobalt}
+                      />
                     )}
                   </TouchableOpacity>
                 ))}
               </View>
             )}
 
-            {coachSearchResults.length === 0 && coachSearchQuery.trim().length >= 2 && !isSearchingCoach && (
-              <Text style={styles.noResults}>No users found</Text>
-            )}
+            {coachSearchResults.length === 0 &&
+              coachSearchQuery.trim().length >= 2 &&
+              !isSearchingCoach && (
+                <Text style={styles.noResults}>No users found</Text>
+              )}
 
             {/* Divider */}
             <View style={styles.divider}>

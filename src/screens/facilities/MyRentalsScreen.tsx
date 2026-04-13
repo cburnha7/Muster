@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing, TextStyles } from '../../theme';
+import { colors, fonts, Spacing, TextStyles, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import { formatTime12 } from '../../utils/calendarUtils';
 import { API_BASE_URL } from '../../services/api/config';
@@ -55,6 +55,7 @@ interface Rental {
 }
 
 export function MyRentalsScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<MyRentalsScreenNavigationProp>();
 
   const [upcomingRentals, setUpcomingRentals] = useState<Rental[]>([]);
@@ -86,9 +87,11 @@ export function MyRentalsScreen() {
       const upcoming: Rental[] = [];
       const past: Rental[] = [];
 
-      data.forEach((rental) => {
+      data.forEach(rental => {
         const slotDateTime = new Date(rental.timeSlot.date);
-        const [hours, minutes] = rental.timeSlot.startTime.split(':').map(Number);
+        const [hours, minutes] = rental.timeSlot.startTime
+          .split(':')
+          .map(Number);
         slotDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
         if (slotDateTime > now && rental.status !== 'cancelled') {
@@ -137,19 +140,16 @@ export function MyRentalsScreen() {
       // TODO: Get userId from auth context
       const userId = 'temp-user-id';
 
-      const response = await fetch(
-        `${API_BASE_URL}/rentals/${rentalId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId,
-            cancellationReason: 'Cancelled by user',
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/rentals/${rentalId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          cancellationReason: 'Cancelled by user',
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -170,16 +170,23 @@ export function MyRentalsScreen() {
           ]
         );
       } else {
-        Alert.alert('Rental Cancelled', 'Your rental has been cancelled successfully.', [
-          {
-            text: 'OK',
-            onPress: () => loadRentals(),
-          },
-        ]);
+        Alert.alert(
+          'Rental Cancelled',
+          'Your rental has been cancelled successfully.',
+          [
+            {
+              text: 'OK',
+              onPress: () => loadRentals(),
+            },
+          ]
+        );
       }
     } catch (error: any) {
       console.error('Cancel rental error:', error);
-      Alert.alert('Cancellation Failed', error.message || 'Failed to cancel rental. Please try again.');
+      Alert.alert(
+        'Cancellation Failed',
+        error.message || 'Failed to cancel rental. Please try again.'
+      );
     }
   };
 
@@ -208,19 +215,19 @@ export function MyRentalsScreen() {
       rental.status === 'confirmed'
         ? colors.cobalt
         : rental.status === 'cancelled'
-        ? colors.heart
-        : rental.status === 'completed'
-        ? colors.ink
-        : colors.inkFaint;
+          ? colors.heart
+          : rental.status === 'completed'
+            ? colors.ink
+            : colors.inkFaint;
 
     const statusIcon =
       rental.status === 'confirmed'
         ? 'checkmark-circle'
         : rental.status === 'cancelled'
-        ? 'close-circle'
-        : rental.status === 'completed'
-        ? 'checkmark-done-circle'
-        : 'help-circle';
+          ? 'close-circle'
+          : rental.status === 'completed'
+            ? 'checkmark-done-circle'
+            : 'help-circle';
 
     return (
       <View key={rental.id} style={styles.rentalCard}>
@@ -234,8 +241,14 @@ export function MyRentalsScreen() {
           {/* Cancellation Pending Badge */}
           {rental.cancellationStatus === 'pending' && (
             <View style={[styles.statusBadge, styles.cancellationPendingBadge]}>
-              <Ionicons name="hourglass-outline" size={14} color={colors.surface} />
-              <Text style={styles.cancellationPendingText}>CANCELLATION PENDING</Text>
+              <Ionicons
+                name="hourglass-outline"
+                size={14}
+                color={colors.surface}
+              />
+              <Text style={styles.cancellationPendingText}>
+                CANCELLATION PENDING
+              </Text>
             </View>
           )}
         </View>
@@ -245,9 +258,12 @@ export function MyRentalsScreen() {
           onPress={() => handleViewFacility(rental.timeSlot.court.facility.id)}
           activeOpacity={0.7}
         >
-          <Text style={styles.facilityName}>{rental.timeSlot.court.facility.name}</Text>
+          <Text style={styles.facilityName}>
+            {rental.timeSlot.court.facility.name}
+          </Text>
           <Text style={styles.facilityAddress}>
-            {rental.timeSlot.court.facility.street}, {rental.timeSlot.court.facility.city},{' '}
+            {rental.timeSlot.court.facility.street},{' '}
+            {rental.timeSlot.court.facility.city},{' '}
             {rental.timeSlot.court.facility.state}
           </Text>
         </TouchableOpacity>
@@ -256,19 +272,26 @@ export function MyRentalsScreen() {
         <View style={styles.courtInfo}>
           <Ionicons name="basketball" size={20} color={colors.cobalt} />
           <Text style={styles.courtName}>{rental.timeSlot.court.name}</Text>
-          <Text style={styles.courtSportType}>• {rental.timeSlot.court.sportType}</Text>
+          <Text style={styles.courtSportType}>
+            • {rental.timeSlot.court.sportType}
+          </Text>
         </View>
 
         {/* Date and Time */}
         <View style={styles.dateTimeContainer}>
           <View style={styles.dateTimeRow}>
-            <Ionicons name="calendar-outline" size={18} color={colors.inkFaint} />
+            <Ionicons
+              name="calendar-outline"
+              size={18}
+              color={colors.inkFaint}
+            />
             <Text style={styles.dateTimeText}>{formattedDate}</Text>
           </View>
           <View style={styles.dateTimeRow}>
             <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
             <Text style={styles.dateTimeText}>
-              {formatTime12(rental.timeSlot.startTime)} - {formatTime12(rental.timeSlot.endTime)}
+              {formatTime12(rental.timeSlot.startTime)} -{' '}
+              {formatTime12(rental.timeSlot.endTime)}
             </Text>
           </View>
         </View>
@@ -286,14 +309,19 @@ export function MyRentalsScreen() {
               style={styles.createEventButton}
               onPress={() => handleCreateEvent(rental)}
             >
-              <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
+              <Ionicons
+                name="add-circle-outline"
+                size={20}
+                color={colors.cobalt}
+              />
               <Text style={styles.createEventButtonText}>Create Event</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.cancelButton,
-                rental.cancellationStatus === 'pending' && styles.cancelButtonDisabled,
+                rental.cancellationStatus === 'pending' &&
+                  styles.cancelButtonDisabled,
               ]}
               onPress={() => handleCancelRental(rental)}
               disabled={rental.cancellationStatus === 'pending'}
@@ -301,12 +329,17 @@ export function MyRentalsScreen() {
               <Ionicons
                 name="close-circle-outline"
                 size={20}
-                color={rental.cancellationStatus === 'pending' ? colors.inkFaint : colors.heart}
+                color={
+                  rental.cancellationStatus === 'pending'
+                    ? colors.inkFaint
+                    : colors.heart
+                }
               />
               <Text
                 style={[
                   styles.cancelButtonText,
-                  rental.cancellationStatus === 'pending' && styles.cancelButtonTextDisabled,
+                  rental.cancellationStatus === 'pending' &&
+                    styles.cancelButtonTextDisabled,
                 ]}
               >
                 Cancel
@@ -318,8 +351,14 @@ export function MyRentalsScreen() {
         {/* Cancellation Info */}
         {rental.status === 'cancelled' && rental.cancellationReason && (
           <View style={styles.cancellationInfo}>
-            <Ionicons name="information-circle" size={16} color={colors.inkFaint} />
-            <Text style={styles.cancellationText}>{rental.cancellationReason}</Text>
+            <Ionicons
+              name="information-circle"
+              size={16}
+              color={colors.inkFaint}
+            />
+            <Text style={styles.cancellationText}>
+              {rental.cancellationReason}
+            </Text>
           </View>
         )}
       </View>
@@ -328,7 +367,12 @@ export function MyRentalsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: themeColors.bgScreen },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading your rentals...</Text>
       </View>
@@ -336,7 +380,7 @@ export function MyRentalsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -352,7 +396,9 @@ export function MyRentalsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>My Rentals</Text>
-          <Text style={styles.headerSubtitle}>Manage your court and field bookings</Text>
+          <Text style={styles.headerSubtitle}>
+            Manage your court and field bookings
+          </Text>
         </View>
 
         {/* Upcoming Rentals Section */}
@@ -368,10 +414,14 @@ export function MyRentalsScreen() {
           </View>
 
           {upcomingRentals.length > 0 ? (
-            upcomingRentals.map((rental) => renderRentalCard(rental, true))
+            upcomingRentals.map(rental => renderRentalCard(rental, true))
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={64} color={colors.inkFaint} />
+              <Ionicons
+                name="calendar-outline"
+                size={64}
+                color={colors.inkFaint}
+              />
               <Text style={styles.emptyStateTitle}>No Upcoming Rentals</Text>
               <Text style={styles.emptyStateSubtitle}>
                 Book a court or field to get started
@@ -386,14 +436,19 @@ export function MyRentalsScreen() {
             <Ionicons name="time" size={24} color={colors.inkFaint} />
             <Text style={styles.sectionTitle}>Past Rentals</Text>
             {pastRentals.length > 0 && (
-              <View style={[styles.countBadge, { backgroundColor: colors.inkFaint }]}>
+              <View
+                style={[
+                  styles.countBadge,
+                  { backgroundColor: colors.inkFaint },
+                ]}
+              >
                 <Text style={styles.countText}>{pastRentals.length}</Text>
               </View>
             )}
           </View>
 
           {pastRentals.length > 0 ? (
-            pastRentals.map((rental) => renderRentalCard(rental, false))
+            pastRentals.map(rental => renderRentalCard(rental, false))
           ) : (
             <View style={styles.emptyState}>
               <Ionicons name="time-outline" size={64} color={colors.inkFaint} />

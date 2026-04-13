@@ -33,12 +33,23 @@ import {
   useGenerateScheduleMutation,
   useConfirmScheduleMutation,
 } from '../../store/api';
-import { RosterInfo, ConfirmableEvent, SchedulePreviewEvent } from '../../types/scheduling';
+import {
+  RosterInfo,
+  ConfirmableEvent,
+  SchedulePreviewEvent,
+} from '../../types/scheduling';
 import { LeagueService } from '../../services/api/LeagueService';
 import { MatchService } from '../../services/api/MatchService';
 import { League, LeagueMembership } from '../../types/league';
 import { mapMatchesToScheduleEvents } from './utils/mapMatchesToScheduleEvents';
-import { colors, fonts, Spacing, BorderRadius, Shadows } from '../../theme';
+import {
+  colors,
+  fonts,
+  Spacing,
+  BorderRadius,
+  Shadows,
+  useTheme,
+} from '../../theme';
 
 // Generate a simple client-side ID
 const generateClientId = (): string =>
@@ -46,9 +57,9 @@ const generateClientId = (): string =>
 
 // Map API preview events to Redux ScheduleEvent format
 const mapPreviewToScheduleEvents = (
-  previewEvents: SchedulePreviewEvent[],
+  previewEvents: SchedulePreviewEvent[]
 ): ScheduleEvent[] =>
-  previewEvents.map((pe) => ({
+  previewEvents.map(pe => ({
     id: generateClientId(),
     homeRosterId: pe.homeRoster.id,
     homeRosterName: pe.homeRoster.name,
@@ -62,7 +73,7 @@ const mapPreviewToScheduleEvents = (
 
 // Map Redux events to confirmable format
 const mapToConfirmableEvents = (events: ScheduleEvent[]): ConfirmableEvent[] =>
-  events.map((e) => ({
+  events.map(e => ({
     homeRosterId: e.homeRosterId,
     homeRosterName: e.homeRosterName,
     awayRosterId: e.awayRosterId,
@@ -78,7 +89,7 @@ const GAME_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
 /** Check if a new/edited event conflicts with existing events (same roster playing at overlapping time). */
 function findConflict(
   candidate: ScheduleEvent,
-  existingEvents: ScheduleEvent[],
+  existingEvents: ScheduleEvent[]
 ): string | null {
   const cStart = new Date(candidate.scheduledAt).getTime();
   const cEnd = cStart + GAME_DURATION_MS;
@@ -92,7 +103,7 @@ function findConflict(
     if (!overlaps) continue;
 
     const conflictingIds = candidateRosters.filter(
-      (id) => id === existing.homeRosterId || id === existing.awayRosterId,
+      id => id === existing.homeRosterId || id === existing.awayRosterId
     );
     if (conflictingIds.length > 0) {
       // Find the roster name for the message
@@ -110,7 +121,11 @@ function findConflict(
   return null;
 }
 
-export default function SchedulingScreen({ route, navigation }: any): React.ReactElement {
+export default function SchedulingScreen({
+  route,
+  navigation,
+}: any): React.ReactElement {
+  const { colors: themeColors } = useTheme();
   const { leagueId } = route.params || {};
   const dispatch = useDispatch();
 
@@ -126,7 +141,9 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [editorVisible, setEditorVisible] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<ScheduleEvent | undefined>(undefined);
+  const [editingEvent, setEditingEvent] = useState<ScheduleEvent | undefined>(
+    undefined
+  );
 
   // RTK Query mutations
   const [generateSchedule] = useGenerateScheduleMutation();
@@ -148,9 +165,11 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       // Extract active rosters from memberships
       const membersData: LeagueMembership[] =
         (membersResponse as any).data || (membersResponse as any) || [];
-      const activeRosters: RosterInfo[] = (Array.isArray(membersData) ? membersData : [])
-        .filter((m) => m.memberType === 'roster' && m.status === 'active')
-        .map((m) => ({
+      const activeRosters: RosterInfo[] = (
+        Array.isArray(membersData) ? membersData : []
+      )
+        .filter(m => m.memberType === 'roster' && m.status === 'active')
+        .map(m => ({
           id: m.team?.id || m.memberId,
           name: m.team?.name || m.memberId,
         }));
@@ -159,16 +178,26 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       // Fetch existing matches for this league
       try {
         const matchSvc = new MatchService();
-        const matchesResponse = await matchSvc.getLeagueMatches(leagueId, 1, 100);
+        const matchesResponse = await matchSvc.getLeagueMatches(
+          leagueId,
+          1,
+          100
+        );
         const mappedEvents = mapMatchesToScheduleEvents(matchesResponse.data);
         dispatch(setEvents({ leagueId, events: mappedEvents }));
       } catch (matchErr) {
         // Match fetch failure shows a dismissible banner but does not block the screen
         console.warn('Failed to fetch existing matches:', matchErr);
-        dispatch(setError('Failed to load existing games. Tap retry or try again later.'));
+        dispatch(
+          setError(
+            'Failed to load existing games. Tap retry or try again later.'
+          )
+        );
       }
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load league');
+      setLoadError(
+        err instanceof Error ? err.message : 'Failed to load league'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -274,7 +303,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       counts.set(e.homeRosterId, (counts.get(e.homeRosterId) ?? 0) + 1);
       counts.set(e.awayRosterId, (counts.get(e.awayRosterId) ?? 0) + 1);
     }
-    return rosters.map((r) => ({ ...r, games: counts.get(r.id) ?? 0 }));
+    return rosters.map(r => ({ ...r, games: counts.get(r.id) ?? 0 }));
   }, [rosters, events]);
 
   // Roster summary header
@@ -284,12 +313,23 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       <View style={styles.rosterSummary}>
         <Text style={styles.rosterSummaryTitle}>Rosters</Text>
         <View style={styles.rosterSummaryHeader}>
-          <Text style={[styles.rosterSummaryCell, styles.rosterSummaryNameHeader]}>Name</Text>
-          <Text style={[styles.rosterSummaryCell, styles.rosterSummaryCountHeader]}>Games</Text>
+          <Text
+            style={[styles.rosterSummaryCell, styles.rosterSummaryNameHeader]}
+          >
+            Name
+          </Text>
+          <Text
+            style={[styles.rosterSummaryCell, styles.rosterSummaryCountHeader]}
+          >
+            Games
+          </Text>
         </View>
-        {rosterGameCounts.map((r) => (
+        {rosterGameCounts.map(r => (
           <View key={r.id} style={styles.rosterSummaryRow}>
-            <Text style={[styles.rosterSummaryCell, styles.rosterSummaryName]} numberOfLines={1}>
+            <Text
+              style={[styles.rosterSummaryCell, styles.rosterSummaryName]}
+              numberOfLines={1}
+            >
               {r.name}
             </Text>
             <Text style={[styles.rosterSummaryCell, styles.rosterSummaryCount]}>
@@ -328,7 +368,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Schedule"
           leftIcon="arrow-back"
@@ -344,15 +384,21 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
   // Load error state
   if (loadError || !league) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Schedule"
           leftIcon="arrow-back"
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
-          <Text style={styles.errorTitle}>{loadError || 'League not found'}</Text>
+          <Ionicons
+            name="alert-circle-outline"
+            size={48}
+            color={colors.heart}
+          />
+          <Text style={styles.errorTitle}>
+            {loadError || 'League not found'}
+          </Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadLeagueData}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -364,7 +410,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
   const hasEvents = events.length > 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title={league.name}
         leftIcon="arrow-back"
@@ -401,7 +447,10 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       {/* Auto Generate button */}
       <View style={styles.generateSection}>
         <TouchableOpacity
-          style={[styles.generateButton, isGenerating && styles.generateButtonDisabled]}
+          style={[
+            styles.generateButton,
+            isGenerating && styles.generateButtonDisabled,
+          ]}
           onPress={handleAutoGenerate}
           disabled={isGenerating}
           accessibilityRole="button"
@@ -421,7 +470,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       {/* Event list */}
       <FlatList
         data={events}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={renderEventCard}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyState}
@@ -464,8 +513,8 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
       </View>
 
       {/* Event editor modal */}
-      {editorVisible && (
-        editingEvent ? (
+      {editorVisible &&
+        (editingEvent ? (
           <ScheduleEventEditor
             event={editingEvent}
             rosters={rosters}
@@ -478,8 +527,7 @@ export default function SchedulingScreen({ route, navigation }: any): React.Reac
             onSave={handleEditorSave}
             onCancel={handleEditorCancel}
           />
-        )
-      )}
+        ))}
     </SafeAreaView>
   );
 }

@@ -28,7 +28,7 @@ import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
 import { updateEvent } from '../../store/slices/eventsSlice';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -87,6 +87,7 @@ interface InvitedPlayer {
 }
 
 export function EditEventScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -569,7 +570,7 @@ export function EditEventScreen(): JSX.Element {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader

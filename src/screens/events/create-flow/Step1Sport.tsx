@@ -2,10 +2,11 @@ import React from 'react';
 import { ScrollView, Text, StyleSheet } from 'react-native';
 import { SportIconGrid } from '../../../components/wizard/SportIconGrid';
 import { useCreateEvent } from './CreateEventContext';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 import { SportType } from '../../../types';
 
 export function Step1Sport() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
 
   const handleSelect = (sport: string) => {
@@ -13,12 +14,12 @@ export function Step1Sport() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>What are you playing?</Text>
-      <SportIconGrid
-        selected={state.sport || ''}
-        onSelect={handleSelect}
-      />
+      <SportIconGrid selected={state.sport || ''} onSelect={handleSelect} />
     </ScrollView>
   );
 }

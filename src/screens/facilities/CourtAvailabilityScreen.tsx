@@ -20,6 +20,7 @@ import {
   Spacing,
   TextStyles,
   ComponentStyles,
+  useTheme,
 } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
@@ -85,6 +86,7 @@ function fmt12Time(t: string): string {
 }
 
 export function CourtAvailabilityScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<CourtAvailabilityScreenNavigationProp>();
   const route = useRoute<CourtAvailabilityScreenRouteProp>();
   const { user } = useAuth();
@@ -646,7 +648,7 @@ export function CourtAvailabilityScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ContextualReturnButton />
       <ScrollView
         style={styles.scrollView}

@@ -8,7 +8,10 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetBackdrop,
+} from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -26,7 +29,8 @@ const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
 
 function getAge(dateOfBirth: string): number {
   return Math.floor(
-    (Date.now() - new Date(dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+    (Date.now() - new Date(dateOfBirth).getTime()) /
+      (365.25 * 24 * 60 * 60 * 1000)
   );
 }
 
@@ -85,7 +89,12 @@ export function AvatarBottomSheet() {
 
   const renderBackdrop = useCallback(
     (props: any) => (
-      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.4}
+      />
     ),
     []
   );
@@ -93,9 +102,12 @@ export function AvatarBottomSheet() {
   if (!user) return null;
 
   const showPlayingAs =
-    dependents.length > 0 || (user.intents && user.intents.includes('GUARDIAN'));
+    dependents.length > 0 ||
+    (user.intents && user.intents.includes('GUARDIAN'));
   const tierName = (user as any).membershipTier || 'Free';
-  const isFreeTier = !(user as any).membershipTier || (user as any).membershipTier === 'standard';
+  const isFreeTier =
+    !(user as any).membershipTier ||
+    (user as any).membershipTier === 'standard';
   const initial = user.firstName?.charAt(0).toUpperCase() || '?';
 
   return (
@@ -116,7 +128,10 @@ export function AvatarBottomSheet() {
           activeOpacity={0.7}
         >
           {(user as any)?.profileImage ? (
-            <Image source={{ uri: (user as any).profileImage }} style={styles.avatar} />
+            <Image
+              source={{ uri: (user as any).profileImage }}
+              style={styles.avatar}
+            />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
               <Text style={styles.avatarInitial}>{initial}</Text>
@@ -128,7 +143,11 @@ export function AvatarBottomSheet() {
             </Text>
             <Text style={styles.userEmail}>{user.email}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.outlineVariant} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={colors.outlineVariant}
+          />
         </TouchableOpacity>
 
         {/* ── Playing As (conditional) ─────────── */}
@@ -139,15 +158,28 @@ export function AvatarBottomSheet() {
 
             {/* Guardian (self) */}
             <TouchableOpacity
-              style={[styles.personRow, !activeUserId && styles.personRowActive]}
+              style={[
+                styles.personRow,
+                !activeUserId && styles.personRowActive,
+              ]}
               onPress={() => handleSwitchUser(null)}
               activeOpacity={0.7}
             >
-              <View style={[styles.personAvatar, { backgroundColor: colors.primary }]}>
+              <View
+                style={[
+                  styles.personAvatar,
+                  { backgroundColor: colors.primary },
+                ]}
+              >
                 <Text style={styles.personInitial}>{initial}</Text>
               </View>
               <View style={styles.personInfo}>
-                <Text style={[styles.personName, !activeUserId && styles.personNameActive]}>
+                <Text
+                  style={[
+                    styles.personName,
+                    !activeUserId && styles.personNameActive,
+                  ]}
+                >
                   {user.firstName} <Text style={styles.meLabel}>(me)</Text>
                 </Text>
               </View>
@@ -159,7 +191,8 @@ export function AvatarBottomSheet() {
             {/* Dependents */}
             {dependents.map((dep: DependentSummary, index: number) => {
               const isActive = activeUserId === dep.id;
-              const depColor = DEPENDENT_COLORS[index % DEPENDENT_COLORS.length];
+              const depColor =
+                DEPENDENT_COLORS[index % DEPENDENT_COLORS.length];
               const depInitial = dep.firstName?.charAt(0).toUpperCase() || '?';
               const age = getAge(dep.dateOfBirth);
 
@@ -171,27 +204,50 @@ export function AvatarBottomSheet() {
                   activeOpacity={0.7}
                 >
                   {dep.profileImage ? (
-                    <Image source={{ uri: dep.profileImage }} style={styles.personAvatar} />
+                    <Image
+                      source={{ uri: dep.profileImage }}
+                      style={styles.personAvatar}
+                    />
                   ) : (
-                    <View style={[styles.personAvatar, { backgroundColor: depColor }]}>
+                    <View
+                      style={[
+                        styles.personAvatar,
+                        { backgroundColor: depColor },
+                      ]}
+                    >
                       <Text style={styles.personInitial}>{depInitial}</Text>
                     </View>
                   )}
                   <View style={styles.personInfo}>
-                    <Text style={[styles.personName, isActive && styles.personNameActive]}>
+                    <Text
+                      style={[
+                        styles.personName,
+                        isActive && styles.personNameActive,
+                      ]}
+                    >
                       {dep.firstName}
                     </Text>
                   </View>
                   <Text style={styles.ageText}>age {age}</Text>
                   {isActive && (
-                    <Ionicons name="checkmark" size={20} color={colors.secondary} />
+                    <Ionicons
+                      name="checkmark"
+                      size={20}
+                      color={colors.secondary}
+                    />
                   )}
                   <TouchableOpacity
-                    onPress={() => navigateTo('DependentProfile', { dependentId: dep.id })}
+                    onPress={() =>
+                      navigateTo('DependentProfile', { dependentId: dep.id })
+                    }
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.editDepBtn}
                   >
-                    <Ionicons name="create-outline" size={20} color={colors.onSurfaceVariant} />
+                    <Ionicons
+                      name="create-outline"
+                      size={20}
+                      color={colors.onSurfaceVariant}
+                    />
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -219,9 +275,17 @@ export function AvatarBottomSheet() {
           onPress={() => navigateTo('NotificationPreferences')}
           activeOpacity={0.7}
         >
-          <Ionicons name="notifications-outline" size={20} color={colors.onSurface} />
+          <Ionicons
+            name="notifications-outline"
+            size={20}
+            color={colors.onSurface}
+          />
           <Text style={styles.menuText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={colors.outlineVariant}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -229,9 +293,17 @@ export function AvatarBottomSheet() {
           onPress={() => navigateTo('Settings')}
           activeOpacity={0.7}
         >
-          <Ionicons name="settings-outline" size={20} color={colors.onSurface} />
+          <Ionicons
+            name="settings-outline"
+            size={20}
+            color={colors.onSurface}
+          />
           <Text style={styles.menuText}>Settings</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.outlineVariant} />
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={colors.outlineVariant}
+          />
         </TouchableOpacity>
 
         {/* ── Plan Section ────────────────────── */}
@@ -242,7 +314,17 @@ export function AvatarBottomSheet() {
               <Text style={styles.planText}>
                 Plan: <Text style={styles.planTier}>{tierName}</Text>
               </Text>
-              <TouchableOpacity style={styles.upgradeBtn} activeOpacity={0.7} onPress={() => { close(); (navigation as any).navigate('RedeemCode'); }}>
+              <TouchableOpacity
+                style={styles.upgradeBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  close();
+                  setTimeout(
+                    () => (navigation as any).navigate('RedeemCode'),
+                    300
+                  );
+                }}
+              >
                 <Text style={styles.upgradeBtnText}>Upgrade</Text>
               </TouchableOpacity>
             </View>

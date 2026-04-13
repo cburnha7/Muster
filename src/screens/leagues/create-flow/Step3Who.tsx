@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateLeague } from './CreateLeagueContext';
 import { LeagueRosterInvite } from './types';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 import { API_BASE_URL } from '../../../services/api/config';
 import { SkillLevel } from '../../../types';
 
@@ -46,6 +46,7 @@ function ageFromBirthYear(year: string): number | null {
 }
 
 export function Step3Who() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateLeague();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<LeagueRosterInvite[]>([]);
@@ -87,7 +88,7 @@ export function Step3Who() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >

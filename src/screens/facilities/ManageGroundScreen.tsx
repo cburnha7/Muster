@@ -17,13 +17,20 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { CourtListManager } from '../../components/facilities/CourtListManager';
 import { EditCourtModal } from '../../components/facilities/EditCourtModal';
 import { courtService, Court } from '../../services/api/CourtService';
-import { colors, Spacing } from '../../theme';
+import { colors, Spacing, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 
-type ManageGroundScreenNavigationProp = NativeStackNavigationProp<FacilitiesStackParamList, 'ManageGround'>;
-type ManageGroundScreenRouteProp = RouteProp<FacilitiesStackParamList, 'ManageGround'>;
+type ManageGroundScreenNavigationProp = NativeStackNavigationProp<
+  FacilitiesStackParamList,
+  'ManageGround'
+>;
+type ManageGroundScreenRouteProp = RouteProp<
+  FacilitiesStackParamList,
+  'ManageGround'
+>;
 
 export function ManageGroundScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<ManageGroundScreenNavigationProp>();
   const route = useRoute<ManageGroundScreenRouteProp>();
   const { facilityId, facilityName } = route.params;
@@ -81,9 +88,9 @@ export function ManageGroundScreen() {
   };
 
   const handleManageAvailability = () => {
-    navigation.navigate('GroundAvailability', { 
-      facilityId, 
-      facilityName 
+    navigation.navigate('GroundAvailability', {
+      facilityId,
+      facilityName,
     });
   };
 
@@ -93,8 +100,8 @@ export function ManageGroundScreen() {
   };
 
   const handleEditMap = () => {
-    navigation.navigate('FacilityMapEditor', { 
-      facilityId, 
+    navigation.navigate('FacilityMapEditor', {
+      facilityId,
       facilityName,
       // currentMapUrl will be undefined if not set
     });
@@ -106,15 +113,20 @@ export function ManageGroundScreen() {
 
   const handleViewEscrowLog = () => {
     // TODO: Navigate to rental selection then show EscrowTransactionLog
-    Alert.alert('Coming Soon', 'Escrow transaction logs will be available when rental management is implemented');
+    Alert.alert(
+      'Coming Soon',
+      'Escrow transaction logs will be available when rental management is implemented'
+    );
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ScreenHeader 
-          title="Manage Ground" 
-          leftIcon="arrow-back" 
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
+        <ScreenHeader
+          title="Manage Ground"
+          leftIcon="arrow-back"
           onLeftPress={() => navigation.goBack()}
         />
         <LoadingSpinner />
@@ -123,42 +135,66 @@ export function ManageGroundScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader 
-        title={facilityName} 
-        leftIcon="arrow-back" 
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <ScreenHeader
+        title={facilityName}
+        leftIcon="arrow-back"
         onLeftPress={() => navigation.goBack()}
       />
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
-          <TouchableOpacity style={styles.actionCard} onPress={handleManageAvailability}>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleManageAvailability}
+          >
             <View style={styles.actionIcon}>
-              <Ionicons name="calendar-outline" size={24} color={colors.cobalt} />
+              <Ionicons
+                name="calendar-outline"
+                size={24}
+                color={colors.cobalt}
+              />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Manage Availability</Text>
-              <Text style={styles.actionDescription}>Set availability and block time slots</Text>
+              <Text style={styles.actionDescription}>
+                Set availability and block time slots
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.inkFaint}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionCard} onPress={handleViewRentals}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleViewRentals}
+          >
             <View style={styles.actionIcon}>
               <Ionicons name="list-outline" size={24} color={colors.ink} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>View Rentals</Text>
-              <Text style={styles.actionDescription}>See all upcoming rentals</Text>
+              <Text style={styles.actionDescription}>
+                See all upcoming rentals
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.inkFaint}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard} onPress={handleEditMap}>
@@ -167,31 +203,59 @@ export function ManageGroundScreen() {
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Edit Facility Map</Text>
-              <Text style={styles.actionDescription}>Upload or update facility layout map</Text>
+              <Text style={styles.actionDescription}>
+                Upload or update facility layout map
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.inkFaint}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionCard} onPress={handleCancellationPolicy}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleCancellationPolicy}
+          >
             <View style={styles.actionIcon}>
-              <Ionicons name="shield-checkmark-outline" size={24} color={colors.heart} />
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={24}
+                color={colors.heart}
+              />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Cancellation Policy</Text>
-              <Text style={styles.actionDescription}>Required before your ground can accept bookings</Text>
+              <Text style={styles.actionDescription}>
+                Required before your ground can accept bookings
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.inkFaint}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionCard} onPress={handleViewEscrowLog}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleViewEscrowLog}
+          >
             <View style={styles.actionIcon}>
               <Ionicons name="cash-outline" size={24} color={colors.cobalt} />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Escrow Transactions</Text>
-              <Text style={styles.actionDescription}>View escrow transaction logs for rentals</Text>
+              <Text style={styles.actionDescription}>
+                View escrow transaction logs for rentals
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.inkFaint}
+            />
           </TouchableOpacity>
         </View>
 

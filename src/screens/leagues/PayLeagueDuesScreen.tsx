@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import {
   leagueDuesService,
   LeagueDuesStatusResponse,
@@ -24,6 +24,7 @@ import { LeaguesStackParamList } from '../../navigation/types';
 type PayLeagueDuesRouteProp = RouteProp<LeaguesStackParamList, 'PayLeagueDues'>;
 
 export const PayLeagueDuesScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<PayLeagueDuesRouteProp>();
   const user = useSelector(selectUser);
@@ -32,14 +33,20 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [duesStatus, setDuesStatus] = useState<LeagueDuesStatusResponse | null>(null);
+  const [duesStatus, setDuesStatus] = useState<LeagueDuesStatusResponse | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const status = await leagueDuesService.getStatus(rosterId, leagueId, seasonId);
+      const status = await leagueDuesService.getStatus(
+        rosterId,
+        leagueId,
+        seasonId
+      );
       setDuesStatus(status);
     } catch (err) {
       setError('Failed to load dues information');
@@ -81,7 +88,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
       Alert.alert(
         'Dues Paid',
         'Your roster has been admitted to the league season.',
-        [{ text: 'OK', onPress: () => navigation.goBack() }],
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (err: any) {
       const message = err?.message || 'Failed to process league dues payment';
@@ -93,7 +100,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="League Dues"
           leftIcon="arrow-back"
@@ -109,14 +116,18 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="League Dues"
           leftIcon="arrow-back"
           onLeftPress={() => navigation.goBack()}
         />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
+          <Ionicons
+            name="alert-circle-outline"
+            size={48}
+            color={colors.heart}
+          />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadStatus}>
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -132,13 +143,16 @@ export const PayLeagueDuesScreen: React.FC = () => {
     : 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="League Dues"
         leftIcon="arrow-back"
         onLeftPress={() => navigation.goBack()}
       />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Season Dues</Text>
 
@@ -152,14 +166,26 @@ export const PayLeagueDuesScreen: React.FC = () => {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>AMOUNT</Text>
             <Text style={styles.detailValue}>
-              {duesAmountCents > 0 ? formatCurrency(duesAmountCents) : 'Not set'}
+              {duesAmountCents > 0
+                ? formatCurrency(duesAmountCents)
+                : 'Not set'}
             </Text>
           </View>
 
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>STATUS</Text>
-            <View style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusUnpaid]}>
-              <Text style={[styles.statusText, isPaid ? styles.statusTextPaid : styles.statusTextUnpaid]}>
+            <View
+              style={[
+                styles.statusBadge,
+                isPaid ? styles.statusPaid : styles.statusUnpaid,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  isPaid ? styles.statusTextPaid : styles.statusTextUnpaid,
+                ]}
+              >
                 {isPaid ? 'Paid' : 'Unpaid'}
               </Text>
             </View>
@@ -170,14 +196,19 @@ export const PayLeagueDuesScreen: React.FC = () => {
           <View style={styles.successCard}>
             <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
             <Text style={styles.successText}>
-              Your roster has been admitted to the league season. You're all set.
+              Your roster has been admitted to the league season. You're all
+              set.
             </Text>
           </View>
         )}
 
         {!isPaid && duesAmountCents > 0 && (
           <View style={styles.infoCard}>
-            <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={colors.ink}
+            />
             <Text style={styles.infoText}>
               Paying season dues will admit your roster to the league. Funds are
               transferred directly to the league commissioner's account.
@@ -218,7 +249,11 @@ export const PayLeagueDuesScreen: React.FC = () => {
       {!isPaid && isDependent && (
         <View style={styles.bottomBar}>
           <View style={styles.dependentNotice}>
-            <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={colors.ink}
+            />
             <Text style={styles.dependentNoticeText}>
               Payments for {activeName} must be made from the parent account.
             </Text>

@@ -16,7 +16,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ProfileCard } from '../../components/profile/ProfileCard';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/api/UserService';
 import { getSportEmoji } from '../../constants/sports';
@@ -33,6 +33,7 @@ function formatEventDate(iso: string): string {
 // ── Screen ──
 
 export function ProfileScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const { user: authUser, logout } = useAuth();
   const { width } = useWindowDimensions();
@@ -132,7 +133,7 @@ export function ProfileScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={[
         styles.content,
         contentMaxWidth

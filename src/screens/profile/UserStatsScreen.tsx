@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { userService } from '../../services/api/UserService';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { formatSport } from '../../utils/sportUtils';
 
 interface UserStats {
@@ -34,6 +29,7 @@ interface Achievement {
 }
 
 export function UserStatsScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,11 +57,21 @@ export function UserStatsScreen(): JSX.Element {
   };
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorDisplay message={error} onRetry={loadStatsAndAchievements} />;
-  if (!stats) return <ErrorDisplay message="No statistics available" onRetry={loadStatsAndAchievements} />;
+  if (error)
+    return <ErrorDisplay message={error} onRetry={loadStatsAndAchievements} />;
+  if (!stats)
+    return (
+      <ErrorDisplay
+        message="No statistics available"
+        onRetry={loadStatsAndAchievements}
+      />
+    );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       {/* Overview Stats */}
       <Text style={styles.sectionHeader}>Overview</Text>
       <View style={styles.statsRow}>
@@ -93,8 +99,13 @@ export function UserStatsScreen(): JSX.Element {
           <View style={styles.card}>
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={20} color="#F59E0B" />
-              <Text style={styles.ratingValue}>{stats.averageRating.toFixed(1)}</Text>
-              <Text style={styles.ratingMeta}>from {stats.reviewCount} review{stats.reviewCount !== 1 ? 's' : ''}</Text>
+              <Text style={styles.ratingValue}>
+                {stats.averageRating.toFixed(1)}
+              </Text>
+              <Text style={styles.ratingMeta}>
+                from {stats.reviewCount} review
+                {stats.reviewCount !== 1 ? 's' : ''}
+              </Text>
             </View>
           </View>
         </>
@@ -141,25 +152,43 @@ export function UserStatsScreen(): JSX.Element {
       <View style={styles.card}>
         {achievements.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons name="medal-outline" size={40} color={colors.outlineVariant} />
+            <Ionicons
+              name="medal-outline"
+              size={40}
+              color={colors.outlineVariant}
+            />
             <Text style={styles.emptyText}>No achievements yet</Text>
-            <Text style={styles.emptySubtext}>Keep playing to unlock achievements!</Text>
+            <Text style={styles.emptySubtext}>
+              Keep playing to unlock achievements!
+            </Text>
           </View>
         ) : (
-          achievements.map((achievement) => (
+          achievements.map(achievement => (
             <View key={achievement.id} style={styles.achievementRow}>
               <View style={styles.achievementIcon}>
                 <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
               </View>
               <View style={styles.achievementInfo}>
                 <Text style={styles.achievementName}>{achievement.name}</Text>
-                <Text style={styles.achievementDesc}>{achievement.description}</Text>
+                <Text style={styles.achievementDesc}>
+                  {achievement.description}
+                </Text>
                 {achievement.progress != null && achievement.maxProgress && (
                   <View style={styles.progressRow}>
                     <View style={styles.progressTrack}>
-                      <View style={[styles.progressFill, { width: `${(achievement.progress / achievement.maxProgress) * 100}%` as any }]} />
+                      <View
+                        style={[
+                          styles.progressFill,
+                          {
+                            width:
+                              `${(achievement.progress / achievement.maxProgress) * 100}%` as any,
+                          },
+                        ]}
+                      />
                     </View>
-                    <Text style={styles.progressText}>{achievement.progress}/{achievement.maxProgress}</Text>
+                    <Text style={styles.progressText}>
+                      {achievement.progress}/{achievement.maxProgress}
+                    </Text>
                   </View>
                 )}
               </View>

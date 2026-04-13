@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Text, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,13 +15,14 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { LeagueMembership, Team } from '../../../types';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 interface TeamsTabProps {
   leagueId: string;
 }
 
 export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [memberships, setMemberships] = useState<LeagueMembership[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +35,10 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
     loadMembers(true);
   }, [leagueId]);
 
-  const loadMembers = async (reset: boolean = false, forceRefresh: boolean = false) => {
+  const loadMembers = async (
+    reset: boolean = false,
+    forceRefresh: boolean = false
+  ) => {
     if (!hasMore && !reset && !forceRefresh) return;
 
     try {
@@ -45,12 +57,15 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
         20
       );
 
-      const newMemberships = reset ? response.data : [...memberships, ...response.data];
+      const newMemberships = reset
+        ? response.data
+        : [...memberships, ...response.data];
       setMemberships(newMemberships);
       setPage(currentPage + 1);
       setHasMore(response.pagination.page < response.pagination.totalPages);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load league rosters';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load league rosters';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -84,7 +99,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
 
   // Only show active memberships (Requirement 7.3)
   const activeRosterMemberships = memberships.filter(
-    (m) => m.status === 'active' && m.memberType === 'roster'
+    m => m.status === 'active' && m.memberType === 'roster'
   );
 
   const renderRosterRow = ({ item }: { item: LeagueMembership }) => {
@@ -155,12 +170,13 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <FlatList
         data={activeRosterMemberships}
         renderItem={renderRosterRow}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}

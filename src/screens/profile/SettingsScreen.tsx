@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as StoreReview from 'expo-store-review';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { userService } from '../../services/api/UserService';
@@ -988,6 +988,7 @@ function AboutTab() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function SettingsScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user: authUser, token } = useAuth();
@@ -1076,7 +1077,7 @@ export function SettingsScreen(): JSX.Element {
   const userId = authUser?.id ?? '';
 
   return (
-    <View style={s.screen}>
+    <View style={[s.screen, { backgroundColor: themeColors.bgScreen }]}>
       <TabBar activeIndex={activeTab} onPress={handleTabPress} />
 
       <ScrollView

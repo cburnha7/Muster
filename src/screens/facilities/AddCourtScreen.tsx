@@ -16,9 +16,10 @@ import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
 import { courtService, CreateCourtData } from '../../services/api/CourtService';
 import { SportType } from '../../types';
-import { colors, Spacing } from '../../theme';
+import { colors, Spacing, useTheme } from '../../theme';
 
 export function AddCourtScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { facilityId } = route.params as { facilityId: string };
@@ -115,7 +116,7 @@ export function AddCourtScreen(): JSX.Element {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader title="Add Court" showBack />

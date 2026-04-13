@@ -387,9 +387,6 @@ router.get('/:id/salutes/status', async (req, res) => {
 // Create event
 router.post('/', requireNonDependent, async (req, res) => {
   try {
-    console.log('=== Create Event Request ===');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
-
     // TODO: Get organizer ID from auth token
     // For now, use the first user as default organizer
     const defaultOrganizer = await prisma.user.findFirst({
@@ -416,7 +413,6 @@ router.post('/', requireNonDependent, async (req, res) => {
     }
 
     const organizerId = eventData.organizerId;
-    console.log('Organizer ID:', organizerId);
 
     // Determine location mode: facility-based OR free-text OR none
     const hasFacility = !!eventData.facilityId;
@@ -435,8 +431,6 @@ router.post('/', requireNonDependent, async (req, res) => {
       }
 
       isOwner = facility.ownerId === organizerId;
-      console.log('Is owner:', isOwner);
-      console.log('Facility owner ID:', facility.ownerId);
 
       // If not owner, check if user has a rental at this facility
       if (!isOwner) {
@@ -452,10 +446,7 @@ router.post('/', requireNonDependent, async (req, res) => {
           },
         });
 
-        console.log('Has rental:', !!hasRental);
-
         if (!hasRental) {
-          console.log('Authorization failed: No rental found');
           return res.status(403).json({
             error:
               'Unauthorized: You must own this facility or have a rental to create events here',
@@ -475,7 +466,6 @@ router.post('/', requireNonDependent, async (req, res) => {
       eventData.timeSlotId = null;
       eventData.timeSlotIds = null;
       eventData.rentalIds = null;
-      console.log('Free-text location event:', eventData.locationName);
     } else {
       // ── No location (TBD): clear all location fields ──
       eventData.facilityId = null;
@@ -483,7 +473,6 @@ router.post('/', requireNonDependent, async (req, res) => {
       eventData.timeSlotId = null;
       eventData.timeSlotIds = null;
       eventData.rentalIds = null;
-      console.log('Event with no location (TBD)');
     }
 
     // Handle timeSlotId (direct slot selection for owners) - only if not using rental
@@ -561,22 +550,6 @@ router.post('/', requireNonDependent, async (req, res) => {
       // Override event times with the authoritative slot times
       eventData.startTime = slotStart;
       eventData.endTime = slotEnd;
-
-      console.log('Time slot override:');
-      console.log(
-        '  Slots:',
-        timeSlots.length,
-        '| First:',
-        firstSlot.startTime,
-        '| Last:',
-        lastSlot.endTime
-      );
-      console.log(
-        '  Event start:',
-        slotStart.toISOString(),
-        '| Event end:',
-        slotEnd.toISOString()
-      );
     }
 
     // Handle rentalId (rental-based event creation)
@@ -603,14 +576,6 @@ router.post('/', requireNonDependent, async (req, res) => {
           },
         },
       });
-
-      console.log(
-        'Found rentals:',
-        rentals.length,
-        'for',
-        slotIds.length,
-        'slots'
-      );
 
       // Verify user has rentals for all selected slots
       if (rentals.length !== slotIds.length) {
@@ -1090,9 +1055,6 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body; // Cancellation reason from request body
 
-    console.log('🗑️ Cancel/Delete event request for ID:', id);
-    console.log('📝 Cancellation reason:', reason);
-
     // Get event details and participant count
     const event = await prisma.event.findUnique({
       where: { id },
@@ -1106,11 +1068,8 @@ router.delete('/:id', async (req, res) => {
     });
 
     if (!event) {
-      console.log('❌ Event not found:', id);
       return res.status(404).json({ error: 'Event not found' });
     }
-
-    console.log('📋 Event details:', event);
 
     // Find all rentals that were used for this event (handles multiple rentals)
     const linkedRentals = await prisma.facilityRental.findMany({
@@ -1118,15 +1077,11 @@ router.delete('/:id', async (req, res) => {
       select: { id: true },
     });
 
-    console.log('🔗 Found linked rentals:', linkedRentals.length);
-
     // Check if event has participants
     const hasParticipants = event.currentParticipants > 0;
-    console.log('👥 Has participants:', hasParticipants);
 
     if (hasParticipants) {
       // Event has participants - mark as CANCELLED with reason
-      console.log('📌 Marking event as cancelled (has participants)');
 
       await prisma.$transaction(async tx => {
         // Update event status to cancelled with reason
@@ -1137,7 +1092,6 @@ router.delete('/:id', async (req, res) => {
             cancellationReason: reason || 'Event cancelled by organizer',
           },
         });
-        console.log('✅ Event marked as cancelled');
 
         // Cancel all bookings for this event
         const cancelledBookings = await tx.booking.updateMany({
@@ -1151,7 +1105,6 @@ router.delete('/:id', async (req, res) => {
             cancelledAt: new Date(),
           },
         });
-        console.log(`✅ Cancelled ${cancelledBookings.count} booking(s)`);
 
         // Unblock time slot if linked
         if (event.timeSlotId) {
@@ -1162,7 +1115,6 @@ router.delete('/:id', async (req, res) => {
               blockReason: null,
             },
           });
-          console.log('✅ Time slot unblocked:', event.timeSlotId);
         }
 
         // Clear usedForEventId for all linked rentals
@@ -1172,22 +1124,16 @@ router.delete('/:id', async (req, res) => {
             where: { id: { in: rentalIds } },
             data: { usedForEventId: null },
           });
-          console.log('✅ Cleared usedForEventId for rentals:', rentalIds);
         } else if (event.rentalId) {
           await tx.facilityRental.update({
             where: { id: event.rentalId },
             data: { usedForEventId: null },
           });
-          console.log(
-            '✅ Cleared usedForEventId for single rental:',
-            event.rentalId
-          );
         }
 
         // TODO: Send notifications to all participants about cancellation
       });
 
-      console.log('✅ Event cancelled successfully (kept in system)');
       res.json({
         message: 'Event cancelled successfully',
         deleted: false,
@@ -1195,12 +1141,10 @@ router.delete('/:id', async (req, res) => {
       });
     } else {
       // Event has NO participants - delete it entirely
-      console.log('🗑️ Deleting event (no participants)');
 
       await prisma.$transaction(async tx => {
         // Delete the event
         await tx.event.delete({ where: { id } });
-        console.log('✅ Event deleted');
 
         // Unblock time slot if linked
         if (event.timeSlotId) {
@@ -1211,7 +1155,6 @@ router.delete('/:id', async (req, res) => {
               blockReason: null,
             },
           });
-          console.log('✅ Time slot unblocked:', event.timeSlotId);
         }
 
         // Clear usedForEventId for all linked rentals
@@ -1221,20 +1164,14 @@ router.delete('/:id', async (req, res) => {
             where: { id: { in: rentalIds } },
             data: { usedForEventId: null },
           });
-          console.log('✅ Cleared usedForEventId for rentals:', rentalIds);
         } else if (event.rentalId) {
           await tx.facilityRental.update({
             where: { id: event.rentalId },
             data: { usedForEventId: null },
           });
-          console.log(
-            '✅ Cleared usedForEventId for single rental:',
-            event.rentalId
-          );
         }
       });
 
-      console.log('✅ Event deleted successfully (removed from system)');
       res.status(204).send();
     }
   } catch (error) {
@@ -1249,41 +1186,23 @@ router.post('/:id/book', async (req, res) => {
     const { id } = req.params;
     let { userId } = req.body;
 
-    console.log('📞 POST /events/:id/book called');
-    console.log('📋 Event ID:', id);
-    console.log('📋 Request body:', req.body);
-    console.log('👤 User ID from body:', userId);
-
     // TEMPORARY: If userId is "1" (mock user), use first real user from database
     if (userId === '1') {
-      console.log('⚠️ Mock user ID detected, finding first real user...');
       const firstUser = await prisma.user.findFirst();
       if (firstUser) {
         userId = firstUser.id;
-        console.log('✅ Using first user:', firstUser.id, firstUser.email);
       } else {
-        console.log('❌ No users found in database');
         return res.status(400).json({ error: 'No users found in database' });
       }
     }
 
     // Check if event exists and has space
-    console.log('🔍 Checking if event exists...');
     const event = await prisma.event.findUnique({ where: { id } });
     if (!event) {
-      console.log('❌ Event not found');
       return res.status(404).json({ error: 'Event not found' });
     }
-    console.log('✅ Event found:', event.title);
-    console.log(
-      '📊 Current participants:',
-      event.currentParticipants,
-      '/',
-      event.maxParticipants
-    );
 
     if (event.currentParticipants >= event.maxParticipants) {
-      console.log('❌ Event is full');
       return res.status(400).json({ error: 'Event is full' });
     }
 
@@ -1292,7 +1211,6 @@ router.post('/:id/book', async (req, res) => {
       const isOrganizer = event.organizerId === userId;
       const isInvited = event.invitedUserIds?.includes(userId);
       if (!isOrganizer && !isInvited) {
-        console.log('❌ User not invited to private event');
         return res
           .status(403)
           .json({ error: 'You are not invited to this private event' });
@@ -1300,7 +1218,6 @@ router.post('/:id/book', async (req, res) => {
     }
 
     // Check if user already booked
-    console.log('🔍 Checking for existing booking...');
     const existingBooking = await prisma.booking.findFirst({
       where: {
         userId,
@@ -1310,13 +1227,10 @@ router.post('/:id/book', async (req, res) => {
     });
 
     if (existingBooking) {
-      console.log('❌ User already booked this event');
       return res.status(400).json({ error: 'Already booked' });
     }
-    console.log('✅ No existing booking found');
 
     // Create booking and update event
-    console.log('💾 Creating booking and updating event...');
     const [booking] = await prisma.$transaction([
       prisma.booking.create({
         data: {
@@ -1350,10 +1264,6 @@ router.post('/:id/book', async (req, res) => {
         },
       }),
     ]);
-
-    console.log('✅ Booking created successfully!');
-    console.log('📦 Booking ID:', booking.id);
-    console.log('📊 Updated participants:', event.currentParticipants + 1);
 
     // Messaging hook: add to game thread
     try {
@@ -1395,10 +1305,6 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
   try {
     const { id, bookingId } = req.params;
 
-    console.log('🚶 DELETE /events/:id/book/:bookingId');
-    console.log('📋 Event ID:', id);
-    console.log('📋 Booking ID:', bookingId);
-
     // Fetch the booking to get userId before cancelling
     const bookingToCancel = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -1420,8 +1326,6 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
         },
       }),
     ]);
-
-    console.log('✅ Booking cancelled successfully');
 
     // Messaging hook: remove from game thread
     if (bookingToCancel) {

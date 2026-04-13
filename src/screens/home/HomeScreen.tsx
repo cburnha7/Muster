@@ -743,11 +743,13 @@ export function HomeScreen() {
           )}
 
           {/* ── My Crew ────────────────────────── */}
-          <MyCrewRow
-            members={crewMembers}
-            selectedId={selectedCrewId}
-            onSelect={setSelectedCrewId}
-          />
+          {dependents.length > 0 && (
+            <MyCrewRow
+              members={crewMembers}
+              selectedId={selectedCrewId}
+              onSelect={setSelectedCrewId}
+            />
+          )}
 
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
@@ -1036,7 +1038,7 @@ const styles = StyleSheet.create({
   joinBtnText: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.pine,
+    color: colors.cobalt,
   },
 
   // ── Discover empty ────────────────────
@@ -1077,14 +1079,14 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.38,
+    shadowRadius: 12,
+    elevation: 6,
   },
 
   // ── Inbox modal ─────────────────────────

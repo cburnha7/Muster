@@ -13,9 +13,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { SportIconGrid } from '../../../components/wizard/SportIconGrid';
 import { useCreateFacility } from './CreateFacilityContext';
 import { SportType } from '../../../types';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 export function Step1NameSports() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateFacility();
 
   const toggleSport = (sport: string) => {
@@ -60,7 +61,7 @@ export function Step1NameSports() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}

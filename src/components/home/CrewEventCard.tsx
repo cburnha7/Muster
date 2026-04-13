@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { Booking } from '../../types';
 
 interface CrewEventCardProps {
@@ -40,11 +40,12 @@ function tintColor(hex: string): string {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
 
-export function CrewEventCard({
+function CrewEventCardInner({
   booking,
   crewColor,
   onPress,
 }: CrewEventCardProps) {
+  const { colors: themeColors } = useTheme();
   const event = booking.event;
   if (!event) return null;
 
@@ -59,10 +60,13 @@ export function CrewEventCard({
     >
       <View style={styles.row}>
         <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text
+            style={[styles.title, { color: themeColors.textPrimary }]}
+            numberOfLines={1}
+          >
             {event.title}
           </Text>
-          <Text style={styles.meta}>
+          <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
             {formatDay(start)} · {formatTime(start)}
           </Text>
           {(event.facility?.name || event.locationName) && (
@@ -83,6 +87,8 @@ export function CrewEventCard({
     </TouchableOpacity>
   );
 }
+
+export const CrewEventCard = React.memo(CrewEventCardInner);
 
 const styles = StyleSheet.create({
   card: {

@@ -21,7 +21,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { loggingService } from '../../services/LoggingService';
 import { validateEmail, validatePhoneNumber } from '../../utils/validation';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { SportType } from '../../types';
 
 const SPORT_OPTIONS: SelectOption[] = [
@@ -45,6 +45,7 @@ const GENDER_OPTIONS: SelectOption[] = [
 ];
 
 export function EditProfileScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +119,13 @@ export function EditProfileScreen(): JSX.Element {
         setBirthDay(String(parseInt(dd)));
         setBirthYear(y);
       }
-      setAddress((profileData as any).address || '');
+      setAddress(
+        (profileData as any).locationCity && (profileData as any).locationState
+          ? `${(profileData as any).locationCity}, ${(profileData as any).locationState}`
+          : (profileData as any).locationCity ||
+              (profileData as any).address ||
+              ''
+      );
     } catch (err: any) {
       setError(err.message || 'Failed to load profile');
     } finally {
@@ -255,7 +262,18 @@ export function EditProfileScreen(): JSX.Element {
           birthYear && birthMonth && birthDay
             ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
             : undefined,
-      } as any;
+      };
+
+      // Parse address into city/state for the DB
+      if (address) {
+        const parts = address.split(',').map(s => s.trim());
+        if (parts.length >= 2) {
+          (updates as any).locationCity = parts[0];
+          (updates as any).locationState = parts[1];
+        } else {
+          (updates as any).locationCity = address.trim();
+        }
+      }
 
       await userService.updateProfile(updates);
       Alert.alert('Success', 'Profile updated successfully', [
@@ -278,10 +296,14 @@ export function EditProfileScreen(): JSX.Element {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: themeColors.bgScreen }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.content}>
           {/* Profile Image Section */}
           <View style={styles.imageSection}>
@@ -310,6 +332,7 @@ export function EditProfileScreen(): JSX.Element {
                 style={styles.imageButton}
                 onPress={handlePickImage}
                 disabled={uploadingImage}
+                activeOpacity={0.75}
               >
                 <Text style={styles.imageButtonText}>Change Photo</Text>
               </TouchableOpacity>
@@ -318,6 +341,7 @@ export function EditProfileScreen(): JSX.Element {
                   style={[styles.imageButton, styles.removeButton]}
                   onPress={handleRemoveImage}
                   disabled={uploadingImage}
+                  activeOpacity={0.75}
                 >
                   <Text
                     style={[styles.imageButtonText, styles.removeButtonText]}
@@ -492,6 +516,7 @@ export function EditProfileScreen(): JSX.Element {
                       setAddress(suggestion);
                       setAddressSuggestions([]);
                     }}
+                    activeOpacity={0.75}
                   >
                     <Text
                       style={{
@@ -546,20 +571,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
   },
   profileImagePlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileImagePlaceholderText: {
-    fontSize: 48,
+    fontSize: 64,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
@@ -570,7 +595,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 60,
+    borderRadius: 90,
     justifyContent: 'center',
     alignItems: 'center',
   },

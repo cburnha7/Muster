@@ -14,7 +14,7 @@ import * as Location from 'expo-location';
 import { EventCard } from '../ui/EventCard';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { EventsMapViewWrapper } from '../maps/EventsMapViewWrapper';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { Event, SportType, EventType, EventStatus } from '../../types';
 import { eventService } from '../../services/api/EventService';
 import { searchEventBus } from '../../utils/searchEventBus';
@@ -57,6 +57,7 @@ export function EventSearchPanel({
   onEventPress,
 }: EventSearchPanelProps) {
   const [query, setQuery] = useState('');
+  const { colors: themeColors } = useTheme();
   const [sportFilter, setSportFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
@@ -230,7 +231,7 @@ export function EventSearchPanel({
   if (!visible) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>

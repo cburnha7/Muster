@@ -15,7 +15,7 @@ interface TeamCardProps {
   currentUserId?: string | undefined;
 }
 
-export const TeamCard: React.FC<TeamCardProps> = ({
+const TeamCardInner: React.FC<TeamCardProps> = ({
   team,
   onPress,
   style,
@@ -79,6 +79,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     </PressableCard>
   );
 };
+
+export const TeamCard = React.memo(TeamCardInner);
 
 const styles = StyleSheet.create({
   card: {

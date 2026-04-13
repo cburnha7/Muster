@@ -14,13 +14,14 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { League, LeagueDocument } from '../../../types/league';
-import { colors, Spacing } from '../../../theme';
+import { colors, Spacing, useTheme } from '../../../theme';
 
 interface InfoTabProps {
   league: League;
 }
 
 export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [documents, setDocuments] = useState<LeagueDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +44,8 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       const docs = await leagueService.getDocuments(league.id);
       setDocuments(docs);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load documents';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load documents';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -89,7 +91,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
   return (
     <ScrollView
       testID="info-tab-scroll-view"
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
@@ -116,17 +118,27 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
             <View style={styles.pointsItem}>
               <Ionicons name="trophy" size={20} color={colors.cobalt} />
               <Text style={styles.pointsLabel}>Win</Text>
-              <Text style={styles.pointsValue}>{league.pointsConfig.win} pts</Text>
+              <Text style={styles.pointsValue}>
+                {league.pointsConfig.win} pts
+              </Text>
             </View>
             <View style={styles.pointsItem}>
-              <Ionicons name="remove-circle" size={20} color={colors.inkFaint} />
+              <Ionicons
+                name="remove-circle"
+                size={20}
+                color={colors.inkFaint}
+              />
               <Text style={styles.pointsLabel}>Draw</Text>
-              <Text style={styles.pointsValue}>{league.pointsConfig.draw} pts</Text>
+              <Text style={styles.pointsValue}>
+                {league.pointsConfig.draw} pts
+              </Text>
             </View>
             <View style={styles.pointsItem}>
               <Ionicons name="close-circle" size={20} color={colors.heart} />
               <Text style={styles.pointsLabel}>Loss</Text>
-              <Text style={styles.pointsValue}>{league.pointsConfig.loss} pts</Text>
+              <Text style={styles.pointsValue}>
+                {league.pointsConfig.loss} pts
+              </Text>
             </View>
           </View>
         </View>
@@ -136,39 +148,52 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       {documents.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>League Documents</Text>
-          {documents.map((doc) => {
-            const categoryLabel = doc.documentType === 'rules' ? 'League Rules'
-              : doc.documentType === 'insurance' ? 'Insurance Policy'
-              : 'Other';
+          {documents.map(doc => {
+            const categoryLabel =
+              doc.documentType === 'rules'
+                ? 'League Rules'
+                : doc.documentType === 'insurance'
+                  ? 'Insurance Policy'
+                  : 'Other';
             return (
-            <View key={doc.id} style={styles.documentCard}>
-              <View style={styles.documentInfo}>
-                <View style={styles.documentHeader}>
-                  <Ionicons name="document-text" size={24} color={colors.cobalt} />
-                  <View style={styles.documentDetails}>
-                    <Text style={styles.documentName}>{doc.fileName}</Text>
-                    <View style={styles.documentMeta}>
-                      <Text style={styles.documentCategoryLabel}>{categoryLabel}</Text>
-                      <Text style={styles.documentMetaText}> • </Text>
-                      <Text style={styles.documentMetaText}>
-                        {formatFileSize(doc.fileSize)}
-                      </Text>
-                      <Text style={styles.documentMetaText}> • </Text>
-                      <Text style={styles.documentMetaText}>
-                        {formatDate(doc.uploadedAt)}
-                      </Text>
+              <View key={doc.id} style={styles.documentCard}>
+                <View style={styles.documentInfo}>
+                  <View style={styles.documentHeader}>
+                    <Ionicons
+                      name="document-text"
+                      size={24}
+                      color={colors.cobalt}
+                    />
+                    <View style={styles.documentDetails}>
+                      <Text style={styles.documentName}>{doc.fileName}</Text>
+                      <View style={styles.documentMeta}>
+                        <Text style={styles.documentCategoryLabel}>
+                          {categoryLabel}
+                        </Text>
+                        <Text style={styles.documentMetaText}> • </Text>
+                        <Text style={styles.documentMetaText}>
+                          {formatFileSize(doc.fileSize)}
+                        </Text>
+                        <Text style={styles.documentMetaText}> • </Text>
+                        <Text style={styles.documentMetaText}>
+                          {formatDate(doc.uploadedAt)}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() => handleViewDocument(doc)}
+                >
+                  <Text style={styles.viewButtonText}>View</Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={16}
+                    color={colors.cobalt}
+                  />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.viewButton}
-                onPress={() => handleViewDocument(doc)}
-              >
-                <Text style={styles.viewButtonText}>View</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.cobalt} />
-              </TouchableOpacity>
-            </View>
             );
           })}
         </View>
@@ -178,7 +203,9 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       {!league.description && documents.length === 0 && (
         <View style={styles.emptyState}>
           <Ionicons name="information-circle-outline" size={64} color="#CCC" />
-          <Text style={styles.emptyText}>No additional information available</Text>
+          <Text style={styles.emptyText}>
+            No additional information available
+          </Text>
         </View>
       )}
     </ScrollView>

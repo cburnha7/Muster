@@ -17,14 +17,18 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 
 import { eventService } from '../../services/api/EventService';
-import { useGetEventsQuery, DEFAULT_EVENT_FILTERS } from '../../store/api/eventsApi';
+import {
+  useGetEventsQuery,
+  DEFAULT_EVENT_FILTERS,
+} from '../../store/api/eventsApi';
 import { Event, SportType, EventStatus } from '../../types';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
 export function EventsListScreen(): React.JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const { isDependent } = useDependentContext();
 
@@ -53,32 +57,41 @@ export function EventsListScreen(): React.JSX.Element {
     const raw = searchResults ?? eventsData?.data ?? [];
     const now = new Date();
     return raw
-      .filter((e) => new Date(e.startTime) >= now)
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .filter(e => new Date(e.startTime) >= now)
+      .sort(
+        (a, b) =>
+          new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      );
   }, [eventsData, searchResults]);
 
   const debouncedSearch = useMemo(
-    () => debounce(async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults(null);
-        return;
-      }
-      try {
-        const response = await eventService.searchEvents(
-          query, { status: EventStatus.ACTIVE }, { page: 1, limit: 100 },
-        );
-        setSearchResults(response.results);
-      } catch (err) {
-        console.error('Search error:', err);
-      }
-    }, 300),
-    [],
+    () =>
+      debounce(async (query: string) => {
+        if (!query.trim()) {
+          setSearchResults(null);
+          return;
+        }
+        try {
+          const response = await eventService.searchEvents(
+            query,
+            { status: EventStatus.ACTIVE },
+            { page: 1, limit: 100 }
+          );
+          setSearchResults(response.results);
+        } catch (err) {
+          console.error('Search error:', err);
+        }
+      }, 300),
+    []
   );
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    debouncedSearch(query);
-  }, [debouncedSearch]);
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      debouncedSearch(query);
+    },
+    [debouncedSearch]
+  );
 
   const handleEventPress = (event: Event) => {
     (navigation as any).navigate('EventDetails', { eventId: event.id });
@@ -96,11 +109,15 @@ export function EventsListScreen(): React.JSX.Element {
     setRefreshing(false);
   };
 
-  useFocusEffect(useCallback(() => { refetchEvents(); }, []));
+  useFocusEffect(
+    useCallback(() => {
+      refetchEvents();
+    }, [])
+  );
 
   const toggleSport = (sport: SportType) => {
-    setSelectedSports((prev) =>
-      prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport],
+    setSelectedSports(prev =>
+      prev.includes(sport) ? prev.filter(s => s !== sport) : [...prev, sport]
     );
   };
 
@@ -117,12 +134,18 @@ export function EventsListScreen(): React.JSX.Element {
 
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
     });
 
   const formatTime = (date: string) =>
     new Date(date).toLocaleTimeString('en-US', {
-      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'UTC',
     });
 
   const renderEventCard = (item: Event, index: number) => (
@@ -137,7 +160,9 @@ export function EventsListScreen(): React.JSX.Element {
           <View style={styles.numberBadge}>
             <Text style={styles.numberText}>{index + 1}</Text>
           </View>
-          <Text style={styles.eventName} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.eventName} numberOfLines={1}>
+            {item.title}
+          </Text>
         </View>
         {item.sportType && (
           <View style={styles.sportTag}>
@@ -175,12 +200,16 @@ export function EventsListScreen(): React.JSX.Element {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.cobalt} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.cobalt}
+          />
         }
       >
         <View style={styles.sectionHeader}>
@@ -199,7 +228,10 @@ export function EventsListScreen(): React.JSX.Element {
             style={styles.searchBar}
           />
           <ViewToggle viewMode={viewMode} onToggle={setViewMode} />
-          <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setShowFilters(true)}
+          >
             <Ionicons name="filter" size={24} color={colors.cobalt} />
             {selectedSports.length > 0 && <View style={styles.filterBadge} />}
           </TouchableOpacity>
@@ -217,10 +249,16 @@ export function EventsListScreen(): React.JSX.Element {
           </View>
         ) : events.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={64} color={colors.inkFaint} />
+            <Ionicons
+              name="calendar-outline"
+              size={64}
+              color={colors.inkFaint}
+            />
             <Text style={styles.emptyTitle}>No Upcoming Events</Text>
             <Text style={styles.emptySubtitle}>
-              {searchQuery ? 'Try adjusting your search or filters' : 'Check back soon for upcoming events'}
+              {searchQuery
+                ? 'Try adjusting your search or filters'
+                : 'Check back soon for upcoming events'}
             </Text>
           </View>
         ) : (
@@ -253,15 +291,23 @@ export function EventsListScreen(): React.JSX.Element {
             <ScrollView style={styles.filterContent}>
               <Text style={styles.filterLabel}>Sport Type</Text>
               <View style={styles.sportTypeContainer}>
-                {Object.values(SportType).map((sport) => {
+                {Object.values(SportType).map(sport => {
                   const isSelected = selectedSports.includes(sport);
                   return (
                     <TouchableOpacity
                       key={sport}
-                      style={[styles.sportChip, isSelected && styles.sportChipSelected]}
+                      style={[
+                        styles.sportChip,
+                        isSelected && styles.sportChipSelected,
+                      ]}
                       onPress={() => toggleSport(sport)}
                     >
-                      <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                      <Text
+                        style={[
+                          styles.sportChipText,
+                          isSelected && styles.sportChipTextSelected,
+                        ]}
+                      >
                         {sport.charAt(0).toUpperCase() + sport.slice(1)}
                       </Text>
                     </TouchableOpacity>
@@ -270,10 +316,16 @@ export function EventsListScreen(): React.JSX.Element {
               </View>
             </ScrollView>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={handleClearFilters}
+              >
                 <Text style={styles.clearButtonText}>Clear All</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={handleApplyFilters}
+              >
                 <Text style={styles.applyButtonText}>Apply Filters</Text>
               </TouchableOpacity>
             </View>
@@ -324,8 +376,10 @@ const styles = StyleSheet.create({
   filterButton: { padding: Spacing.sm, position: 'relative' as const },
   filterBadge: {
     position: 'absolute' as const,
-    top: 6, right: 6,
-    width: 8, height: 8,
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
     borderRadius: 4,
     backgroundColor: colors.heart,
   },
@@ -349,7 +403,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   numberBadge: {
-    width: 32, height: 32,
+    width: 32,
+    height: 32,
     borderRadius: 16,
     backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
@@ -372,8 +427,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   sportTagText: { fontFamily: fonts.label, fontSize: 13, color: colors.cobalt },
-  detailRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 },
-  detailText: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, flex: 1 },
+  detailRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  detailText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    flex: 1,
+  },
   emptyState: {
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -396,17 +460,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute' as const,
-    right: 20, bottom: 20,
-    width: 56, height: 56,
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
     borderRadius: 28,
     backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    shadowColor: colors.ink,
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+    shadowOpacity: 0.38,
+    shadowRadius: 12,
+    elevation: 6,
   },
   errorContainer: {
     flex: 1,
@@ -429,7 +495,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     borderRadius: 9999,
   },
-  retryButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
+  retryButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.surface,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -471,7 +541,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.inkFaint,
   },
-  sportChipSelected: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
+  sportChipSelected: {
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
+  },
   sportChipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
   sportChipTextSelected: { color: colors.surface },
   modalActions: {
@@ -497,5 +570,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     alignItems: 'center' as const,
   },
-  applyButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
+  applyButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: colors.surface,
+  },
 });

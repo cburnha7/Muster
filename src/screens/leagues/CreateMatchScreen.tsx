@@ -10,7 +10,7 @@ import { addMatch } from '../../store/slices/matchesSlice';
 import { selectUser } from '../../store/slices/authSlice';
 import { CreateMatchData, Match, Team, Event } from '../../types';
 import { League } from '../../types/league';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 
 type CreateMatchScreenRouteProp = RouteProp<
   { CreateMatch: { leagueId: string; seasonId?: string } },
@@ -18,13 +18,14 @@ type CreateMatchScreenRouteProp = RouteProp<
 >;
 
 export const CreateMatchScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<CreateMatchScreenRouteProp>();
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
-  
+
   const { leagueId, seasonId } = route.params;
-  
+
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -38,18 +39,18 @@ export const CreateMatchScreen: React.FC = () => {
   const loadData = async () => {
     try {
       setLoadingData(true);
-      
+
       // Load league details
       const leagueData = await leagueService.getLeagueById(leagueId);
       setLeague(leagueData);
-      
+
       // Load league members (teams)
       const membersResponse = await leagueService.getMembers(leagueId, 1, 100);
       const leagueTeams = membersResponse.data
         .map(member => member.team)
         .filter((team): team is Team => team !== undefined);
       setTeams(leagueTeams);
-      
+
       // TODO: Load events if needed (optional feature)
       // For now, we'll pass an empty array
       setEvents([]);
@@ -83,22 +84,19 @@ export const CreateMatchScreen: React.FC = () => {
       dispatch(addMatch(newMatch));
 
       // Show success message
-      Alert.alert(
-        'Success',
-        'Match created successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Navigate back to league details or manage league screen
-              navigation.goBack();
-            },
+      Alert.alert('Success', 'Match created successfully!', [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Navigate back to league details or manage league screen
+            navigation.goBack();
           },
-        ]
-      );
+        },
+      ]);
     } catch (error) {
       // Show error message
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create match';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create match';
       Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
@@ -111,7 +109,7 @@ export const CreateMatchScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Create Match"
           leftIcon="arrow-back"
@@ -126,7 +124,7 @@ export const CreateMatchScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Create Match"
         leftIcon="arrow-back"

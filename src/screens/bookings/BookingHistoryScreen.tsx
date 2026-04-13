@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { colors, useTheme } from '../../theme';
 
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -21,11 +21,14 @@ import { userService } from '../../services/api/UserService';
 import { Booking, Event } from '../../types';
 
 export function BookingHistoryScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
 
   // State
   const [bookings, setBookings] = useState<(Booking & { event: Event })[]>([]);
-  const [filteredBookings, setFilteredBookings] = useState<(Booking & { event: Event })[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<
+    (Booking & { event: Event })[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,62 +42,75 @@ export function BookingHistoryScreen(): JSX.Element {
   });
 
   // Load booking history
-  const loadBookingHistory = useCallback(async (isRefresh = false, isLoadMore = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else if (isLoadMore) {
-        setIsLoadingMore(true);
-      } else {
-        setIsLoading(true);
-      }
-      setError(null);
-
-      const currentPage = isLoadMore ? pagination.page + 1 : 1;
-      
-      // Get booking history with date range (last 2 years)
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setFullYear(endDate.getFullYear() - 2);
-
-      const response = await userService.getBookingHistory(
-        startDate,
-        endDate,
-        {
-          page: currentPage,
-          limit: pagination.limit,
-          sortBy: 'bookedAt',
-          sortOrder: 'desc',
+  const loadBookingHistory = useCallback(
+    async (isRefresh = false, isLoadMore = false) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else if (isLoadMore) {
+          setIsLoadingMore(true);
+        } else {
+          setIsLoading(true);
         }
-      );
+        setError(null);
 
-      if (isLoadMore) {
-        setBookings(prev => [...prev, ...response.data]);
-      } else {
-        setBookings(response.data);
+        const currentPage = isLoadMore ? pagination.page + 1 : 1;
+
+        // Get booking history with date range (last 2 years)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setFullYear(endDate.getFullYear() - 2);
+
+        const response = await userService.getBookingHistory(
+          startDate,
+          endDate,
+          {
+            page: currentPage,
+            limit: pagination.limit,
+            sortBy: 'bookedAt',
+            sortOrder: 'desc',
+          }
+        );
+
+        if (isLoadMore) {
+          setBookings(prev => [...prev, ...response.data]);
+        } else {
+          setBookings(response.data);
+        }
+
+        setPagination(response.pagination);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load booking history';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        setRefreshing(false);
       }
-      
-      setPagination(response.pagination);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load booking history';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
-      setRefreshing(false);
-    }
-  }, [pagination.page, pagination.limit]);
+    },
+    [pagination.page, pagination.limit]
+  );
 
   // Filter bookings based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredBookings(bookings);
     } else {
-      const filtered = bookings.filter(booking =>
-        booking.event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.event.facility?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.event.sportType.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = bookings.filter(
+        booking =>
+          booking.event.title
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          booking.event.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          booking.event.facility?.name
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          booking.event.sportType
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
       setFilteredBookings(filtered);
     }
@@ -102,12 +118,19 @@ export function BookingHistoryScreen(): JSX.Element {
 
   // Handle booking press
   const handleBookingPress = (booking: Booking & { event: Event }) => {
-    navigation.navigate('EventDetails' as never, { eventId: booking.event.id } as never);
+    navigation.navigate(
+      'EventDetails' as never,
+      { eventId: booking.event.id } as never
+    );
   };
 
   // Load more bookings (pagination)
   const loadMoreBookings = () => {
-    if (!isLoadingMore && pagination.page < pagination.totalPages && !searchQuery) {
+    if (
+      !isLoadingMore &&
+      pagination.page < pagination.totalPages &&
+      !searchQuery
+    ) {
       loadBookingHistory(false, true);
     }
   };
@@ -126,7 +149,11 @@ export function BookingHistoryScreen(): JSX.Element {
   );
 
   // Render booking item
-  const renderBookingItem = ({ item }: { item: Booking & { event: Event } }) => (
+  const renderBookingItem = ({
+    item,
+  }: {
+    item: Booking & { event: Event };
+  }) => (
     <BookingCard
       booking={item}
       onPress={handleBookingPress}
@@ -142,10 +169,9 @@ export function BookingHistoryScreen(): JSX.Element {
         {searchQuery ? 'No Matching Bookings' : 'No Booking History'}
       </Text>
       <Text style={styles.emptySubtitle}>
-        {searchQuery 
+        {searchQuery
           ? 'Try adjusting your search terms'
-          : 'Your booking history will appear here once you start booking events'
-        }
+          : 'Your booking history will appear here once you start booking events'}
       </Text>
     </View>
   );
@@ -183,22 +209,19 @@ export function BookingHistoryScreen(): JSX.Element {
 
   if (error && bookings.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Booking History"
           showBack={true}
           onBackPress={() => navigation.goBack()}
         />
-        <ErrorDisplay
-          message={error}
-          onRetry={() => loadBookingHistory()}
-        />
+        <ErrorDisplay message={error} onRetry={() => loadBookingHistory()} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Booking History"
         showBack={true}
@@ -213,8 +236,10 @@ export function BookingHistoryScreen(): JSX.Element {
         <FlatList
           data={filteredBookings}
           renderItem={renderBookingItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={filteredBookings.length === 0 ? styles.emptyContainer : undefined}
+          keyExtractor={item => item.id}
+          contentContainerStyle={
+            filteredBookings.length === 0 ? styles.emptyContainer : undefined
+          }
           ListEmptyComponent={renderEmptyState}
           ListFooterComponent={renderFooter}
           refreshControl={
@@ -251,7 +276,10 @@ export function BookingHistoryScreen(): JSX.Element {
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              ${bookings.reduce((sum, b) => sum + (b.event.price || 0), 0).toFixed(0)}
+              $
+              {bookings
+                .reduce((sum, b) => sum + (b.event.price || 0), 0)
+                .toFixed(0)}
             </Text>
             <Text style={styles.statLabel}>Total Spent</Text>
           </View>

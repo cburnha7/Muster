@@ -8,10 +8,14 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
@@ -40,6 +44,7 @@ interface BookingDetailsScreenProps {
 }
 
 export function BookingDetailsScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -53,34 +58,38 @@ export function BookingDetailsScreen(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
 
   // Load booking details
-  const loadBooking = useCallback(async (isRefresh = false) => {
-    if (!bookingId) return;
+  const loadBooking = useCallback(
+    async (isRefresh = false) => {
+      if (!bookingId) return;
 
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setIsLoading(true);
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+        setError(null);
+
+        // Get user bookings and find the specific booking
+        const response = await userService.getUserBookings();
+        const foundBooking = response.data.find(b => b.id === bookingId);
+
+        if (foundBooking) {
+          setBooking(foundBooking);
+        } else {
+          setError('Booking not found');
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load booking';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+        setRefreshing(false);
       }
-      setError(null);
-
-      // Get user bookings and find the specific booking
-      const response = await userService.getUserBookings();
-      const foundBooking = response.data.find(b => b.id === bookingId);
-
-      if (foundBooking) {
-        setBooking(foundBooking);
-      } else {
-        setError('Booking not found');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load booking';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  }, [bookingId]);
+    },
+    [bookingId]
+  );
 
   // Load booking on screen focus
   useFocusEffect(
@@ -107,7 +116,10 @@ export function BookingDetailsScreen(): JSX.Element {
     );
 
     if (!validationResult.canBook) {
-      Alert.alert('Cannot Leave', validationResult.reason || 'Cannot leave this event');
+      Alert.alert(
+        'Cannot Leave',
+        validationResult.reason || 'Cannot leave this event'
+      );
       return;
     }
 
@@ -119,27 +131,23 @@ export function BookingDetailsScreen(): JSX.Element {
 
     // Show cancellation confirmation with refund info
     let alertMessage = `Are you sure you want to leave "${booking.event.title}"?\n\nThis action cannot be undone.`;
-    
+
     if (validationResult.warnings && validationResult.warnings.length > 0) {
       alertMessage += '\n\n' + validationResult.warnings.join('\n');
     }
-    
+
     if (booking.event.price > 0) {
       alertMessage += `\n\nRefund amount: $${refundAmount.toFixed(2)}`;
     }
 
-    Alert.alert(
-      "Leave",
-      alertMessage,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: "Leave",
-          style: 'destructive',
-          onPress: confirmCancelBooking,
-        },
-      ]
-    );
+    Alert.alert('Leave', alertMessage, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: confirmCancelBooking,
+      },
+    ]);
   };
 
   const confirmCancelBooking = async () => {
@@ -147,15 +155,15 @@ export function BookingDetailsScreen(): JSX.Element {
 
     try {
       setIsCancelling(true);
-      
+
       await eventService.cancelBooking(booking.event.id, booking.id);
-      
+
       // Calculate refund amount for confirmation message
       const refundAmount = BookingValidationService.calculateRefundAmount(
         booking.event.price,
         booking.event.startTime
       );
-      
+
       // Update local state
       const updatedBooking = {
         ...booking,
@@ -165,26 +173,26 @@ export function BookingDetailsScreen(): JSX.Element {
         refundAmount,
       };
       setBooking(updatedBooking);
-      
+
       // Update Redux state
-      dispatch(cancelBookingAction({
-        bookingId: booking.id,
-        cancellationReason: 'Cancelled by user',
-      }));
+      dispatch(
+        cancelBookingAction({
+          bookingId: booking.id,
+          cancellationReason: 'Cancelled by user',
+        })
+      );
 
       // Show success message with refund info
-      const confirmationMessage = BookingValidationService.getCancellationConfirmationMessage(
-        booking.event,
-        refundAmount
-      );
+      const confirmationMessage =
+        BookingValidationService.getCancellationConfirmationMessage(
+          booking.event,
+          refundAmount
+        );
 
-      Alert.alert(
-        'Left Event',
-        confirmationMessage,
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Left Event', confirmationMessage, [{ text: 'OK' }]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel booking';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to cancel booking';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsCancelling(false);
@@ -194,7 +202,10 @@ export function BookingDetailsScreen(): JSX.Element {
   // Handle view event
   const handleViewEvent = () => {
     if (booking?.event) {
-      navigation.navigate('EventDetails' as never, { eventId: booking.event.id } as never);
+      navigation.navigate(
+        'EventDetails' as never,
+        { eventId: booking.event.id } as never
+      );
     }
   };
 
@@ -274,7 +285,7 @@ export function BookingDetailsScreen(): JSX.Element {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Booking Details"
           showBack={false}
@@ -287,7 +298,7 @@ export function BookingDetailsScreen(): JSX.Element {
 
   if (error || !booking) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Booking Details"
           showBack={false}
@@ -302,13 +313,14 @@ export function BookingDetailsScreen(): JSX.Element {
   }
 
   const event = booking.event;
-  const canCancel = booking.status === BookingStatus.CONFIRMED && 
-                   event && 
-                   event.status !== 'cancelled' &&
-                   new Date(event.startTime) > new Date();
+  const canCancel =
+    booking.status === BookingStatus.CONFIRMED &&
+    event &&
+    event.status !== 'cancelled' &&
+    new Date(event.startTime) > new Date();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Booking Details"
         showBack={false}
@@ -339,7 +351,9 @@ export function BookingDetailsScreen(): JSX.Element {
                 ]}
               >
                 <Text style={styles.statusText}>
-                  {booking.status ? booking.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
+                  {booking.status
+                    ? booking.status.replace('_', ' ').toUpperCase()
+                    : 'UNKNOWN'}
                 </Text>
               </View>
             )}
@@ -381,7 +395,9 @@ export function BookingDetailsScreen(): JSX.Element {
           {booking.cancellationReason && (
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Cancellation Reason</Text>
-              <Text style={styles.detailValue}>{booking.cancellationReason}</Text>
+              <Text style={styles.detailValue}>
+                {booking.cancellationReason}
+              </Text>
             </View>
           )}
         </View>
@@ -401,20 +417,29 @@ export function BookingDetailsScreen(): JSX.Element {
             <Text style={styles.eventDescription}>{event.description}</Text>
 
             <View style={styles.detailRow}>
-              <Ionicons name="calendar-outline" size={16} color={colors.onSurfaceVariant} />
+              <Ionicons
+                name="calendar-outline"
+                size={16}
+                color={colors.onSurfaceVariant}
+              />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Date & Time</Text>
                 <Text style={styles.detailValue}>
                   {formatDateTime(event.startTime).date}
                 </Text>
                 <Text style={styles.detailSubtext}>
-                  {formatDateTime(event.startTime).time} - {formatDateTime(event.endTime).time}
+                  {formatDateTime(event.startTime).time} -{' '}
+                  {formatDateTime(event.endTime).time}
                 </Text>
               </View>
             </View>
 
             <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
+              <Ionicons
+                name="location-outline"
+                size={16}
+                color={colors.onSurfaceVariant}
+              />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Location</Text>
                 <Text style={styles.detailValue}>
@@ -429,17 +454,27 @@ export function BookingDetailsScreen(): JSX.Element {
             </View>
 
             <View style={styles.detailRow}>
-              <Ionicons name="trophy-outline" size={16} color={colors.onSurfaceVariant} />
+              <Ionicons
+                name="trophy-outline"
+                size={16}
+                color={colors.onSurfaceVariant}
+              />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Skill Level</Text>
                 <Text style={styles.detailValue}>
-                  {event.skillLevel ? event.skillLevel.replace('_', ' ').toUpperCase() : 'N/A'}
+                  {event.skillLevel
+                    ? event.skillLevel.replace('_', ' ').toUpperCase()
+                    : 'N/A'}
                 </Text>
               </View>
             </View>
 
             <View style={styles.detailRow}>
-              <Ionicons name="people-outline" size={16} color={colors.onSurfaceVariant} />
+              <Ionicons
+                name="people-outline"
+                size={16}
+                color={colors.onSurfaceVariant}
+              />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Participants</Text>
                 <Text style={styles.detailValue}>
@@ -450,7 +485,11 @@ export function BookingDetailsScreen(): JSX.Element {
 
             {event.equipment && event.equipment.length > 0 && (
               <View style={styles.detailRow}>
-                <Ionicons name="construct-outline" size={16} color={colors.onSurfaceVariant} />
+                <Ionicons
+                  name="construct-outline"
+                  size={16}
+                  color={colors.onSurfaceVariant}
+                />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Equipment Needed</Text>
                   <Text style={styles.detailValue}>
@@ -478,11 +517,15 @@ export function BookingDetailsScreen(): JSX.Element {
             <View
               style={[
                 styles.paymentStatusBadge,
-                { backgroundColor: getPaymentStatusColor(booking.paymentStatus) },
+                {
+                  backgroundColor: getPaymentStatusColor(booking.paymentStatus),
+                },
               ]}
             >
               <Text style={styles.paymentStatusText}>
-                {booking.paymentStatus ? booking.paymentStatus.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
+                {booking.paymentStatus
+                  ? booking.paymentStatus.replace('_', ' ').toUpperCase()
+                  : 'UNKNOWN'}
               </Text>
             </View>
           </View>
@@ -506,7 +549,7 @@ export function BookingDetailsScreen(): JSX.Element {
         {booking.team && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Team Details</Text>
-            
+
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Team Name</Text>
               <Text style={styles.detailValue}>{booking.team.name}</Text>
@@ -515,7 +558,9 @@ export function BookingDetailsScreen(): JSX.Element {
             {booking.team.description && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Description</Text>
-                <Text style={styles.detailValue}>{booking.team.description}</Text>
+                <Text style={styles.detailValue}>
+                  {booking.team.description}
+                </Text>
               </View>
             )}
           </View>
@@ -532,7 +577,7 @@ export function BookingDetailsScreen(): JSX.Element {
             style={styles.actionButton}
           />
         )}
-        
+
         {canCancel && (
           <FormButton
             title="Leave"

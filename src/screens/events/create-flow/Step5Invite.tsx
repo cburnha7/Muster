@@ -14,12 +14,13 @@ import { useCreateEvent } from './CreateEventContext';
 import { AvailabilityIndicator } from '../../../components/ui/AvailabilityIndicator';
 import { useAvailabilityCheck } from '../../../hooks/useAvailabilityCheck';
 import { InviteToMusterModal } from '../../../components/invite/InviteToMusterModal';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 import { EventType } from '../../../types';
 import { InviteItem } from './types';
 import { API_BASE_URL } from '../../../services/api/config';
 
 export function Step5Invite() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,24 +32,53 @@ export function Step5Invite() {
 
   // Build date windows for availability check
   const dateWindows = useMemo(() => {
-    const fmt = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    const fmtDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    if (state.recurring && state.occurrenceLocations.length > 0 && state.startTime && state.endTime) {
-      return state.occurrenceLocations.map((occ) => ({
+    const fmt = (d: Date) =>
+      `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const fmtDate = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (
+      state.recurring &&
+      state.occurrenceLocations.length > 0 &&
+      state.startTime &&
+      state.endTime
+    ) {
+      return state.occurrenceLocations.map(occ => ({
         date: occ.date,
         startTime: fmt(state.startTime!),
         endTime: fmt(state.endTime!),
       }));
     }
     if (state.startDate && state.startTime && state.endTime) {
-      return [{ date: fmtDate(state.startDate), startTime: fmt(state.startTime), endTime: fmt(state.endTime) }];
+      return [
+        {
+          date: fmtDate(state.startDate),
+          startTime: fmt(state.startTime),
+          endTime: fmt(state.endTime),
+        },
+      ];
     }
     return [];
-  }, [state.startDate, state.startTime, state.endTime, state.recurring, state.occurrenceLocations]);
+  }, [
+    state.startDate,
+    state.startTime,
+    state.endTime,
+    state.recurring,
+    state.occurrenceLocations,
+  ]);
 
-  const playerIds = useMemo(() => state.invitedItems.filter((i) => i.type === 'player').map((i) => i.id), [state.invitedItems]);
-  const rosterInviteIds = useMemo(() => state.invitedItems.filter((i) => i.type === 'roster').map((i) => i.id), [state.invitedItems]);
-  const { availability } = useAvailabilityCheck(playerIds, rosterInviteIds, dateWindows);
+  const playerIds = useMemo(
+    () => state.invitedItems.filter(i => i.type === 'player').map(i => i.id),
+    [state.invitedItems]
+  );
+  const rosterInviteIds = useMemo(
+    () => state.invitedItems.filter(i => i.type === 'roster').map(i => i.id),
+    [state.invitedItems]
+  );
+  const { availability } = useAvailabilityCheck(
+    playerIds,
+    rosterInviteIds,
+    dateWindows
+  );
 
   const handleVisibility = (vis: 'private' | 'public') => {
     dispatch({ type: 'SET_VISIBILITY', visibility: vis });
@@ -79,7 +109,7 @@ export function Step5Invite() {
           // For practice/pickup, also search players
           try {
             const pRes = await fetch(
-              `${API_BASE_URL}/users/search?query=${encodeURIComponent(query)}`,
+              `${API_BASE_URL}/users/search?query=${encodeURIComponent(query)}`
             );
             const pData = await pRes.json();
             const players: InviteItem[] = (pData ?? []).map((u: any) => ({
@@ -99,7 +129,7 @@ export function Step5Invite() {
         setSearching(false);
       }
     },
-    [isGame],
+    [isGame]
   );
 
   const handleSearchChange = (text: string) => {
@@ -117,26 +147,32 @@ export function Step5Invite() {
     dispatch({ type: 'REMOVE_INVITE', id });
   };
 
-  const handleInviteToMuster = useCallback((name: string, email: string) => {
-    dispatch({
-      type: 'ADD_INVITE',
-      item: {
-        id: `pending-${Date.now()}`,
-        name: name,
-        type: 'player' as const,
-        pending: true,
-        email: email,
-      },
-    });
-    setShowInviteModal(false);
-    // TODO: Send invite email via server
-  }, [dispatch]);
+  const handleInviteToMuster = useCallback(
+    (name: string, email: string) => {
+      dispatch({
+        type: 'ADD_INVITE',
+        item: {
+          id: `pending-${Date.now()}`,
+          name: name,
+          type: 'player' as const,
+          pending: true,
+          email: email,
+        },
+      });
+      setShowInviteModal(false);
+      // TODO: Send invite email via server
+    },
+    [dispatch]
+  );
 
   const privateSelected = state.visibility === 'private';
   const publicSelected = state.visibility === 'public';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>Who's invited?</Text>
 
       <View style={styles.visibilityRow}>
@@ -150,7 +186,9 @@ export function Step5Invite() {
             size={18}
             color={privateSelected ? colors.white : colors.ink}
           />
-          <Text style={[styles.visText, privateSelected && styles.visTextActive]}>
+          <Text
+            style={[styles.visText, privateSelected && styles.visTextActive]}
+          >
             Private
           </Text>
         </TouchableOpacity>
@@ -164,7 +202,9 @@ export function Step5Invite() {
             size={18}
             color={publicSelected ? colors.white : colors.ink}
           />
-          <Text style={[styles.visText, publicSelected && styles.visTextActive]}>
+          <Text
+            style={[styles.visText, publicSelected && styles.visTextActive]}
+          >
             Public
           </Text>
         </TouchableOpacity>
@@ -177,20 +217,28 @@ export function Step5Invite() {
           </Text>
           <TextInput
             style={styles.searchInput}
-            placeholder={isGame ? 'Search rosters...' : 'Search rosters or players...'}
+            placeholder={
+              isGame ? 'Search rosters...' : 'Search rosters or players...'
+            }
             placeholderTextColor={colors.inkSoft}
             value={searchQuery}
             onChangeText={handleSearchChange}
           />
 
           {searching && (
-            <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
+            <ActivityIndicator
+              size="small"
+              color={colors.cobalt}
+              style={styles.loader}
+            />
           )}
 
           {searchResults.length > 0 && (
             <View style={styles.resultsList}>
-              {searchResults.map((item) => {
-                const alreadyAdded = state.invitedItems.some((i) => i.id === item.id);
+              {searchResults.map(item => {
+                const alreadyAdded = state.invitedItems.some(
+                  i => i.id === item.id
+                );
                 return (
                   <TouchableOpacity
                     key={item.id}
@@ -200,19 +248,37 @@ export function Step5Invite() {
                     activeOpacity={0.7}
                   >
                     {item.type === 'roster' ? (
-                      <Ionicons name="people-outline" size={20} color={colors.inkSoft} />
+                      <Ionicons
+                        name="people-outline"
+                        size={20}
+                        color={colors.inkSoft}
+                      />
                     ) : item.image ? (
-                      <Image source={{ uri: item.image }} style={styles.avatar} />
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.avatar}
+                      />
                     ) : (
-                      <Ionicons name="person-outline" size={20} color={colors.inkSoft} />
+                      <Ionicons
+                        name="person-outline"
+                        size={20}
+                        color={colors.inkSoft}
+                      />
                     )}
                     <Text
-                      style={[styles.resultName, alreadyAdded && styles.resultNameMuted]}
+                      style={[
+                        styles.resultName,
+                        alreadyAdded && styles.resultNameMuted,
+                      ]}
                     >
                       {item.name}
                     </Text>
                     {alreadyAdded && (
-                      <Ionicons name="checkmark" size={16} color={colors.cobalt} />
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={colors.cobalt}
+                      />
                     )}
                   </TouchableOpacity>
                 );
@@ -220,20 +286,36 @@ export function Step5Invite() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.inviteToMusterBtn} onPress={() => setShowInviteModal(true)} activeOpacity={0.7}>
-            <Ionicons name="person-add-outline" size={18} color={colors.cobalt} />
+          <TouchableOpacity
+            style={styles.inviteToMusterBtn}
+            onPress={() => setShowInviteModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="person-add-outline"
+              size={18}
+              color={colors.cobalt}
+            />
             <Text style={styles.inviteToMusterText}>Invite to Muster</Text>
           </TouchableOpacity>
 
           {state.invitedItems.length > 0 && (
             <View style={styles.chipsContainer}>
-              {state.invitedItems.map((item) => (
+              {state.invitedItems.map(item => (
                 <View key={item.id} style={styles.inviteeCard}>
                   <View style={styles.inviteeRow}>
                     {item.type === 'roster' ? (
-                      <Ionicons name="people-outline" size={14} color={colors.cobalt} />
+                      <Ionicons
+                        name="people-outline"
+                        size={14}
+                        color={colors.cobalt}
+                      />
                     ) : (
-                      <Ionicons name="person-outline" size={14} color={colors.cobalt} />
+                      <Ionicons
+                        name="person-outline"
+                        size={14}
+                        color={colors.cobalt}
+                      />
                     )}
                     <Text style={styles.chipText}>{item.name}</Text>
                     {(item as any).pending && (
@@ -241,8 +323,14 @@ export function Step5Invite() {
                         <Text style={styles.pendingBadgeText}>Pending</Text>
                       </View>
                     )}
-                    <TouchableOpacity onPress={() => handleRemoveInvite(item.id)}>
-                      <Ionicons name="close-circle" size={16} color={colors.inkSoft} />
+                    <TouchableOpacity
+                      onPress={() => handleRemoveInvite(item.id)}
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={16}
+                        color={colors.inkSoft}
+                      />
                     </TouchableOpacity>
                   </View>
                   {availability[item.id] && (
@@ -270,8 +358,12 @@ export function Step5Invite() {
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
             value={state.minPlayerRating}
-            onChangeText={(v) =>
-              dispatch({ type: 'SET_FIELD', field: 'minPlayerRating', value: v })
+            onChangeText={v =>
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'minPlayerRating',
+                value: v,
+              })
             }
           />
         </>

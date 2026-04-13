@@ -16,8 +16,11 @@ import { FacilityCard } from '../../components/ui/FacilityCard';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
-import { getOptimalBatchSize, getOptimalWindowSize } from '../../utils/performance';
-import { colors } from '../../theme';
+import {
+  getOptimalBatchSize,
+  getOptimalWindowSize,
+} from '../../utils/performance';
+import { colors, useTheme } from '../../theme';
 
 interface SearchResultsScreenProps {
   route: {
@@ -32,11 +35,21 @@ interface SearchResultsScreenProps {
 
 type TabType = 'all' | 'events' | 'facilities' | 'teams';
 
-export function SearchResultsScreen({ route, navigation }: SearchResultsScreenProps): JSX.Element {
-  const { query: initialQuery = '', filters: initialFilters, searchType = 'all' } = route.params;
+export function SearchResultsScreen({
+  route,
+  navigation,
+}: SearchResultsScreenProps): JSX.Element {
+  const {
+    query: initialQuery = '',
+    filters: initialFilters,
+    searchType = 'all',
+  } = route.params;
 
+  const { colors: themeColors } = useTheme();
   const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<UnifiedSearchFilters>(initialFilters || {});
+  const [filters, setFilters] = useState<UnifiedSearchFilters>(
+    initialFilters || {}
+  );
   const [activeTab, setActiveTab] = useState<TabType>(searchType);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,12 +67,15 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
     }
   }, [query, filters, activeTab]);
 
-  const keyExtractor = useCallback((item: any, index: number) => {
-    if (activeTab === 'all') {
-      return `${item.type}-${item.data.id}-${index}`;
-    }
-    return item.id;
-  }, [activeTab]);
+  const keyExtractor = useCallback(
+    (item: any, index: number) => {
+      if (activeTab === 'all') {
+        return `${item.type}-${item.data.id}-${index}`;
+      }
+      return item.id;
+    },
+    [activeTab]
+  );
 
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
@@ -130,6 +146,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
     <TouchableOpacity
       style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
       onPress={() => setActiveTab(tab)}
+      activeOpacity={0.75}
     >
       <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
         {label}
@@ -159,12 +176,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
     }
 
     if (error) {
-      return (
-        <ErrorDisplay
-          message={error}
-          onRetry={performSearch}
-        />
-      );
+      return <ErrorDisplay message={error} onRetry={performSearch} />;
     }
 
     if (activeTab === 'all') {
@@ -183,6 +195,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
           data={allResults}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             if (item.type === 'event') {
               return (
@@ -228,6 +241,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
           data={events}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <EventCard event={item} onPress={() => handleEventPress(item)} />
           )}
@@ -252,8 +266,12 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
           data={facilities}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <FacilityCard facility={item} onPress={() => handleFacilityPress(item)} />
+            <FacilityCard
+              facility={item}
+              onPress={() => handleFacilityPress(item)}
+            />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -276,6 +294,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
           data={teams}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <TeamCard team={item} onPress={() => handleTeamPress(item)} />
           )}
@@ -294,7 +313,7 @@ export function SearchResultsScreen({ route, navigation }: SearchResultsScreenPr
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <SearchBar
         value={query}
         onChangeText={setQuery}

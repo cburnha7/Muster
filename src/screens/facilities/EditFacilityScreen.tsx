@@ -39,7 +39,7 @@ import {
   Facility,
   FacilityPhoto,
 } from '../../types';
-import { colors, fonts, Spacing, TextStyles } from '../../theme';
+import { colors, fonts, Spacing, TextStyles, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import { getSurfaceName } from '../../utils/getSurfaceName';
 import { getSportLabel } from '../../constants/sports';
@@ -117,6 +117,7 @@ interface EditFacilityScreenProps {
 export function EditFacilityScreen({
   route,
 }: EditFacilityScreenProps): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const { facilityId } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -613,13 +614,13 @@ export function EditFacilityScreen({
 
   if (isLoading)
     return (
-      <View style={s.container}>
+      <View style={[s.container, { backgroundColor: themeColors.bgScreen }]}>
         <LoadingSpinner />
       </View>
     );
   if (error)
     return (
-      <View style={s.container}>
+      <View style={[s.container, { backgroundColor: themeColors.bgScreen }]}>
         <ErrorDisplay message={error} onRetry={loadFacilityData} />
       </View>
     );
@@ -631,7 +632,7 @@ export function EditFacilityScreen({
 
   return (
     <KeyboardAvoidingView
-      style={s.container}
+      style={[s.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <TabBar activeIndex={activeTab} onPress={handleTabPress} />

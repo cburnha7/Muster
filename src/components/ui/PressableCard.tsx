@@ -1,10 +1,6 @@
 import React, { useCallback, useRef } from 'react';
-import {
-  Pressable,
-  Animated,
-  ViewStyle,
-  StyleProp,
-} from 'react-native';
+import { Pressable, Animated, ViewStyle, StyleProp } from 'react-native';
+import { useTheme } from '../../theme';
 
 interface PressableCardProps {
   onPress?: () => void;
@@ -26,6 +22,7 @@ export function PressableCard({
   children,
   disabled,
 }: PressableCardProps) {
+  const { colors: themeColors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -60,10 +57,7 @@ export function PressableCard({
       disabled={disabled}
     >
       <Animated.View
-        style={[
-          style,
-          { transform: [{ scale: scaleAnim }], opacity },
-        ]}
+        style={[style, { transform: [{ scale: scaleAnim }], opacity }]}
       >
         {children}
       </Animated.View>

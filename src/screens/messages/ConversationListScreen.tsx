@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { SkeletonConversationRow } from '../../components/ui/SkeletonBox';
 import { ConversationRow } from '../../components/messages/ConversationRow';
 import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
@@ -95,6 +95,7 @@ const EMPTY_STATES: Record<
 type Nav = NativeStackNavigationProp<MessagesStackParamList>;
 
 export function ConversationListScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch();
   const conversations = useSelector(
@@ -225,7 +226,7 @@ export function ConversationListScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Search */}
       <View style={styles.searchRow}>
         <Ionicons
@@ -241,7 +242,10 @@ export function ConversationListScreen() {
           placeholderTextColor={colors.onSurfaceVariant}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
+          <TouchableOpacity
+            onPress={() => setSearchQuery('')}
+            activeOpacity={0.75}
+          >
             <Ionicons
               name="close-circle"
               size={18}
@@ -263,6 +267,7 @@ export function ConversationListScreen() {
             key={f.key}
             style={[styles.chip, activeFilter === f.key && styles.chipActive]}
             onPress={() => setActiveFilter(f.key)}
+            activeOpacity={0.75}
           >
             <Text
               style={[
@@ -281,6 +286,7 @@ export function ConversationListScreen() {
         style={styles.list}
         data={sorted}
         keyExtractor={item => item.id}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <ConversationRow
             conversation={item}

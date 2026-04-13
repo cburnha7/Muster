@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
@@ -62,6 +62,7 @@ const PERSONA_CONFIGS: Record<string, PersonaConfig> = {
 };
 
 export const PersonaSetupScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -90,7 +91,10 @@ export const PersonaSetupScreen: React.FC = () => {
     }).start();
   }, []);
 
-  const navigateToFinish = (routeFlag: string | null, _skill: string | null) => {
+  const navigateToFinish = (
+    routeFlag: string | null,
+    _skill: string | null
+  ) => {
     navigation.navigate('ProfileFinish', {
       intents,
       sports,
@@ -125,7 +129,9 @@ export const PersonaSetupScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       <View style={styles.content}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -141,10 +147,7 @@ export const PersonaSetupScreen: React.FC = () => {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[
-                  styles.progressDot,
-                  i <= 3 && styles.progressDotActive,
-                ]}
+                style={[styles.progressDot, i <= 3 && styles.progressDotActive]}
               />
             ))}
           </View>
@@ -167,7 +170,7 @@ export const PersonaSetupScreen: React.FC = () => {
                 </Text>
 
                 <View style={styles.skillChips}>
-                  {SKILL_LEVELS.map((level) => {
+                  {SKILL_LEVELS.map(level => {
                     const isSelected = selectedSkill === level;
                     return (
                       <TouchableOpacity

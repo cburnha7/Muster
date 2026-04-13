@@ -19,7 +19,7 @@ import { selectUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
 import { API_BASE_URL } from '../../services/api/config';
 import { authService } from '../../services/auth/AuthService';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 // ── Types ──
 
@@ -108,6 +108,7 @@ function parseTextContent(text: string): ImportedEvent[] {
 // ── Component ──
 
 export function AvailabilityCalendarScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { userId } = (route.params as { userId: string }) || {};
@@ -338,7 +339,9 @@ export function AvailabilityCalendarScreen() {
   const eventsForDay = events.filter(e => e.date === selectedDate);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: themeColors.bgScreen }]}
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Availability</Text>
       </View>
@@ -346,6 +349,7 @@ export function AvailabilityCalendarScreen() {
       <ScrollView
         style={styles.body}
         contentContainerStyle={styles.bodyContent}
+        showsVerticalScrollIndicator={false}
       >
         {/* Single Import Calendar button */}
         <TouchableOpacity

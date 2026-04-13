@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -22,8 +22,10 @@ import { SkillLevel } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
 import { getSportEmoji, getSportLabel } from '../../constants/sports';
 import { getSeasonFromDate } from './create-flow/types';
+import { useTheme } from '../../theme';
 
 function CreateLeagueInner() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateLeague();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
@@ -171,13 +173,15 @@ function CreateLeagueInner() {
 
   return (
     <>
-      <LeagueFlowContainer onSubmit={handleSubmit}>
-        <Step1Sport />
-        <Step2Config />
-        <Step3Who />
-        <Step4Preview />
-        <Step5Invite />
-      </LeagueFlowContainer>
+      <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+        <LeagueFlowContainer onSubmit={handleSubmit}>
+          <Step1Sport />
+          <Step2Config />
+          <Step3Who />
+          <Step4Preview />
+          <Step5Invite />
+        </LeagueFlowContainer>
+      </View>
       <UpsellModal
         visible={showUpsell}
         onClose={() => setShowUpsell(false)}

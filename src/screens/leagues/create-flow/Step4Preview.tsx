@@ -5,7 +5,7 @@ import CrossPlatformDateTimePicker from '../../../components/ui/CrossPlatformDat
 import { useCreateLeague } from './CreateLeagueContext';
 import { DayOfWeek, getSeasonFromDate } from './types';
 import { getSportLabel } from '../../../constants/sports';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 const DAY_TO_INDEX: Record<DayOfWeek, number> = {
   Sun: 0,
@@ -187,6 +187,7 @@ function fmtDate(d: Date): string {
 }
 
 export function Step4Preview() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateLeague();
 
   const sportLabel = state.sport ? getSportLabel(state.sport) : '';
@@ -264,7 +265,10 @@ export function Step4Preview() {
   ]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>Schedule Preview</Text>
       <Text style={styles.subtitle}>{leagueName}</Text>
 

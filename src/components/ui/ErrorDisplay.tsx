@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme';
 
 interface ErrorDisplayProps {
   title?: string;
@@ -17,13 +18,22 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   retryText = 'Try Again',
   style,
 }) => {
+  const { colors: themeColors } = useTheme();
   return (
     <View style={[styles.container, style]}>
       <Ionicons name="alert-circle-outline" size={48} color="#FF3B30" />
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+        {title}
+      </Text>
+      <Text style={[styles.message, { color: themeColors.textSecondary }]}>
+        {message}
+      </Text>
       {onRetry && (
-        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={onRetry}
+          activeOpacity={0.75}
+        >
           <Text style={styles.retryText}>{retryText}</Text>
         </TouchableOpacity>
       )}

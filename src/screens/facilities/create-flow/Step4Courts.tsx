@@ -12,7 +12,7 @@ import { FormInput } from '../../../components/forms/FormInput';
 import { HoursOfOperationSection } from '../../../components/facilities/HoursOfOperationSection';
 import { useCreateFacility } from './CreateFacilityContext';
 import { CourtFormData } from './types';
-import { colors, fonts, Spacing } from '../../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../../theme';
 
 const EMPTY_COURT: CourtFormData = {
   id: '',
@@ -24,6 +24,7 @@ const EMPTY_COURT: CourtFormData = {
 };
 
 export function Step4Courts() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateFacility();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,7 +53,10 @@ export function Step4Courts() {
     if (editingId) {
       dispatch({ type: 'UPDATE_COURT', court: draft });
     } else {
-      dispatch({ type: 'ADD_COURT', court: { ...draft, id: Date.now().toString() } });
+      dispatch({
+        type: 'ADD_COURT',
+        court: { ...draft, id: Date.now().toString() },
+      });
     }
     closeModal();
   };
@@ -62,7 +66,7 @@ export function Step4Courts() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -74,7 +78,12 @@ export function Step4Courts() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Courts / Fields</Text>
           <TouchableOpacity style={styles.addButton} onPress={openAdd}>
-            <Ionicons name="add-circle" size={24} color={colors.cobalt} style={{ marginRight: 4 }} />
+            <Ionicons
+              name="add-circle"
+              size={24}
+              color={colors.cobalt}
+              style={{ marginRight: 4 }}
+            />
             <Text style={styles.addButtonText}>Add Court</Text>
           </TouchableOpacity>
         </View>
@@ -84,29 +93,43 @@ export function Step4Courts() {
             No courts added yet. Add courts to set individual pricing.
           </Text>
         ) : (
-          state.courts.map((court) => (
+          state.courts.map(court => (
             <View key={court.id} style={styles.courtCard}>
               <View style={styles.courtInfo}>
                 <Text style={styles.courtName}>{court.name}</Text>
                 <Text style={styles.courtDetails}>
-                  {court.sportType.charAt(0).toUpperCase() + court.sportType.slice(1)} •{' '}
-                  {court.isIndoor ? 'Indoor' : 'Outdoor'} • Capacity: {court.capacity}
+                  {court.sportType.charAt(0).toUpperCase() +
+                    court.sportType.slice(1)}{' '}
+                  • {court.isIndoor ? 'Indoor' : 'Outdoor'} • Capacity:{' '}
+                  {court.capacity}
                 </Text>
-                <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
+                <Text style={styles.courtPrice}>
+                  ${court.pricePerHour}/hour
+                </Text>
               </View>
               <View style={styles.courtActions}>
                 <TouchableOpacity
                   style={styles.iconBtn}
-                  onPress={() => dispatch({ type: 'REMOVE_COURT', courtId: court.id })}
+                  onPress={() =>
+                    dispatch({ type: 'REMOVE_COURT', courtId: court.id })
+                  }
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="trash-outline" size={20} color={colors.heart} />
+                  <Ionicons
+                    name="trash-outline"
+                    size={20}
+                    color={colors.heart}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.iconBtn}
                   onPress={() => openEdit(court)}
                 >
-                  <Ionicons name="pencil-outline" size={20} color={colors.cobalt} />
+                  <Ionicons
+                    name="pencil-outline"
+                    size={20}
+                    color={colors.cobalt}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -117,7 +140,7 @@ export function Step4Courts() {
       {/* Hours of Operation */}
       <HoursOfOperationSection
         hours={state.hoursOfOperation}
-        onChange={(hours) => dispatch({ type: 'SET_HOURS', hours })}
+        onChange={hours => dispatch({ type: 'SET_HOURS', hours })}
       />
 
       <View style={{ height: 40 }} />
@@ -144,21 +167,29 @@ export function Step4Courts() {
               <FormInput
                 label="Court Name *"
                 value={draft.name}
-                onChangeText={(v) => setDraft({ ...draft, name: v })}
+                onChangeText={v => setDraft({ ...draft, name: v })}
                 placeholder="e.g., Court 1, Field A"
               />
 
               <Text style={styles.inputLabel}>Sport Type *</Text>
               <View style={styles.sportChipRow}>
-                {availableSports.map((sport) => {
+                {availableSports.map(sport => {
                   const isSelected = draft.sportType === sport;
                   return (
                     <TouchableOpacity
                       key={sport}
-                      style={[styles.sportChip, isSelected && styles.sportChipSelected]}
+                      style={[
+                        styles.sportChip,
+                        isSelected && styles.sportChipSelected,
+                      ]}
                       onPress={() => setDraft({ ...draft, sportType: sport })}
                     >
-                      <Text style={[styles.sportChipText, isSelected && styles.sportChipTextSelected]}>
+                      <Text
+                        style={[
+                          styles.sportChipText,
+                          isSelected && styles.sportChipTextSelected,
+                        ]}
+                      >
                         {sport.charAt(0).toUpperCase() + sport.slice(1)}
                       </Text>
                     </TouchableOpacity>
@@ -169,16 +200,25 @@ export function Step4Courts() {
               <FormInput
                 label="Capacity"
                 value={draft.capacity.toString()}
-                onChangeText={(v) => setDraft({ ...draft, capacity: parseInt(v) || 0 })}
+                onChangeText={v =>
+                  setDraft({ ...draft, capacity: parseInt(v) || 0 })
+                }
                 placeholder="10"
                 keyboardType="numeric"
               />
 
               <TouchableOpacity
                 style={styles.checkboxRow}
-                onPress={() => setDraft({ ...draft, isIndoor: !draft.isIndoor })}
+                onPress={() =>
+                  setDraft({ ...draft, isIndoor: !draft.isIndoor })
+                }
               >
-                <View style={[styles.checkbox, draft.isIndoor && styles.checkboxChecked]}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    draft.isIndoor && styles.checkboxChecked,
+                  ]}
+                >
                   {draft.isIndoor && (
                     <Ionicons name="checkmark" size={16} color={colors.white} />
                   )}
@@ -189,7 +229,9 @@ export function Step4Courts() {
               <FormInput
                 label="Price Per Hour ($)"
                 value={draft.pricePerHour.toString()}
-                onChangeText={(v) => setDraft({ ...draft, pricePerHour: parseFloat(v) || 0 })}
+                onChangeText={v =>
+                  setDraft({ ...draft, pricePerHour: parseFloat(v) || 0 })
+                }
                 placeholder="0.00"
                 keyboardType="decimal-pad"
               />
@@ -264,8 +306,18 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   courtInfo: { flex: 1 },
-  courtName: { fontFamily: fonts.label, fontSize: 15, color: colors.ink, marginBottom: 2 },
-  courtDetails: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginBottom: 2 },
+  courtName: {
+    fontFamily: fonts.label,
+    fontSize: 15,
+    color: colors.ink,
+    marginBottom: 2,
+  },
+  courtDetails: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkSoft,
+    marginBottom: 2,
+  },
   courtPrice: { fontFamily: fonts.label, fontSize: 14, color: colors.cobalt },
   courtActions: { flexDirection: 'row', alignItems: 'center' },
   iconBtn: { padding: 8 },
@@ -313,10 +365,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  sportChipSelected: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  sportChipText: { fontFamily: fonts.body, fontSize: 14, color: colors.inkSoft },
+  sportChipSelected: {
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
+  },
+  sportChipText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.inkSoft,
+  },
   sportChipTextSelected: { color: colors.white, fontFamily: fonts.ui },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.md },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.md,
+  },
   checkbox: {
     width: 24,
     height: 24,
@@ -327,7 +390,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
+  checkboxChecked: {
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
+  },
   checkboxLabel: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
   modalActions: {
     flexDirection: 'row',
@@ -343,7 +409,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   modalBtnCancel: { backgroundColor: colors.surface },
-  modalBtnCancelText: { fontFamily: fonts.ui, fontSize: 14, color: colors.inkSoft },
+  modalBtnCancelText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.inkSoft,
+  },
   modalBtnPrimary: { backgroundColor: colors.cobalt },
-  modalBtnPrimaryText: { fontFamily: fonts.ui, fontSize: 14, color: colors.white },
+  modalBtnPrimaryText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    color: colors.white,
+  },
 });

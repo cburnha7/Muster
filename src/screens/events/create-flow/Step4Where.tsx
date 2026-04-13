@@ -15,7 +15,7 @@ import { useCreateEvent } from './CreateEventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { facilityService } from '../../../services/api/FacilityService';
 import { API_BASE_URL } from '../../../services/api/config';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 interface SavedLocation {
   id: string;
@@ -24,6 +24,7 @@ interface SavedLocation {
 }
 
 export function Step4Where() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const { user } = useAuth();
   const navigation = useNavigation<any>();
@@ -257,7 +258,10 @@ export function Step4Where() {
       : '';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>Where's the game?</Text>
 
       <View style={styles.modeRow}>

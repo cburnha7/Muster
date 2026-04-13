@@ -12,13 +12,14 @@ import {
 import { useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { completeOnboarding } from '../../store/slices/authSlice';
 import type { OnboardingData } from '../../types/auth';
 
 const TOTAL_STEPS = 5;
 
 export const ProfileFinishScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const route = useRoute<any>();
   const dispatch = useDispatch();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -60,13 +61,18 @@ export const ProfileFinishScreen: React.FC = () => {
       // Navigation happens automatically: RootNavigator re-evaluates
       // user.onboardingComplete and switches to MainTabs
     } catch (err: any) {
-      setError(err?.message || err || 'Something went wrong. Please try again.');
+      setError(
+        err?.message || err || 'Something went wrong. Please try again.'
+      );
       setLoading(false);
     }
   };
 
   // Summary items for the recap
-  const summaryItems: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [];
+  const summaryItems: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+  }[] = [];
 
   if (intents.length > 0) {
     const intentLabel =
@@ -78,9 +84,7 @@ export const ProfileFinishScreen: React.FC = () => {
 
   if (sports.length > 0) {
     const sportLabel =
-      sports.length === 1
-        ? capitalize(sports[0])
-        : `${sports.length} sports`;
+      sports.length === 1 ? capitalize(sports[0]) : `${sports.length} sports`;
     summaryItems.push({ icon: 'basketball-outline', label: sportLabel });
   }
 
@@ -92,11 +96,16 @@ export const ProfileFinishScreen: React.FC = () => {
   }
 
   if (personaAction) {
-    summaryItems.push({ icon: 'rocket-outline', label: `Next: ${personaAction}` });
+    summaryItems.push({
+      icon: 'rocket-outline',
+      label: `Next: ${personaAction}`,
+    });
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       <View style={styles.content}>
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -118,7 +127,11 @@ export const ProfileFinishScreen: React.FC = () => {
         <Animated.View style={[styles.inner, { opacity: fadeAnim }]}>
           <View style={styles.heroSection}>
             <View style={styles.heroIcon}>
-              <Ionicons name="checkmark-circle" size={64} color={colors.secondary} />
+              <Ionicons
+                name="checkmark-circle"
+                size={64}
+                color={colors.secondary}
+              />
             </View>
             <Text style={styles.title}>You're all set!</Text>
             <Text style={styles.subtitle}>
@@ -131,7 +144,11 @@ export const ProfileFinishScreen: React.FC = () => {
               {summaryItems.map((item, index) => (
                 <View key={index} style={styles.summaryRow}>
                   <View style={styles.summaryIconCircle}>
-                    <Ionicons name={item.icon} size={18} color={colors.primary} />
+                    <Ionicons
+                      name={item.icon}
+                      size={18}
+                      color={colors.primary}
+                    />
                   </View>
                   <Text style={styles.summaryLabel}>{item.label}</Text>
                 </View>

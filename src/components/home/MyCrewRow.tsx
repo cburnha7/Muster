@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 export interface CrewMember {
   id: string;
@@ -25,11 +25,14 @@ interface MyCrewRowProps {
 }
 
 export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
+  const { colors: themeColors } = useTheme();
   const allActive = selectedId === null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>The Family</Text>
+      <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+        The Family
+      </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -59,7 +62,15 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
                 </View>
               </View>
               <Text
-                style={[styles.name, active && styles.nameActive]}
+                style={[
+                  styles.name,
+                  active && styles.nameActive,
+                  {
+                    color: active
+                      ? themeColors.textPrimary
+                      : themeColors.textSecondary,
+                  },
+                ]}
                 numberOfLines={1}
               >
                 {m.firstName}

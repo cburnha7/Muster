@@ -49,7 +49,7 @@ import {
 import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -89,6 +89,7 @@ function formatEventType(eventType: string): string {
 }
 
 export function EventDetailsScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -950,7 +951,7 @@ export function EventDetailsScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
       <ContextualReturnButton />
       <ScrollView
         style={{ flex: 1 }}

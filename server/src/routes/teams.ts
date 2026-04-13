@@ -438,10 +438,6 @@ router.post(
         Array.isArray(initialMemberIds) &&
         initialMemberIds.length > 0
       ) {
-        console.log(
-          `Adding ${initialMemberIds.length} initial members to team ${team.id}`
-        );
-
         // Filter out the creator if they're in the list (already added as captain)
         const memberIds = creatorId
           ? initialMemberIds.filter((id: string) => id !== creatorId)
@@ -458,10 +454,6 @@ router.post(
             })),
           });
         }
-
-        console.log(
-          `Successfully invited ${memberIds.length} players to team ${team.id}`
-        );
       }
 
       // Fetch the complete team with members

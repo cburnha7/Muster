@@ -2,7 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 const RETURN_LABELS: Record<string, string> = {
   CreateEvent: 'Return to Event',
@@ -15,6 +15,7 @@ const RETURN_LABELS: Record<string, string> = {
  * from another flow via a `returnTo` route param. Hidden during normal tab navigation.
  */
 export function ContextualReturnButton() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const returnTo = (route.params as any)?.returnTo as string | undefined;

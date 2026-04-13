@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, Spacing, TextStyles, useTheme } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { performanceMonitoringService } from '../../services/monitoring/PerformanceMonitoringService';
 
@@ -30,6 +30,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   route,
   navigation,
 }) => {
+  const { colors: themeColors } = useTheme();
   const { leagueId, documentId, documentName } = route.params;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +49,11 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
       const startTime = Date.now();
 
       // Get document URL from API
-      const response = await leagueService.downloadDocument(leagueId, documentId);
-      
+      const response = await leagueService.downloadDocument(
+        leagueId,
+        documentId
+      );
+
       setDocumentUrl(response.url);
       setFileName(response.fileName);
 
@@ -139,7 +143,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: themeColors.bgScreen }]}>
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading document...</Text>
       </View>
@@ -148,8 +152,12 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
 
   if (error || !documentUrl) {
     return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="document-text-outline" size={64} color={colors.inkFaint} />
+      <View style={[styles.centerContainer, { backgroundColor: themeColors.bgScreen }]}>
+        <Ionicons
+          name="document-text-outline"
+          size={64}
+          color={colors.inkFaint}
+        />
         <Text style={styles.errorTitle}>Failed to Load Document</Text>
         <Text style={styles.errorMessage}>
           {error || 'Document URL not available'}
@@ -157,7 +165,10 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
         <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.downloadFallbackButton} onPress={handleDownload}>
+        <TouchableOpacity
+          style={styles.downloadFallbackButton}
+          onPress={handleDownload}
+        >
           <Ionicons name="download-outline" size={20} color={colors.cobalt} />
           <Text style={styles.downloadFallbackText}>Try Download Instead</Text>
         </TouchableOpacity>
@@ -169,7 +180,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (Platform.OS === 'web') {
     // Web: Use iframe for native browser PDF viewer
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <iframe
           src={documentUrl}
           style={{
@@ -188,11 +199,11 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(documentUrl)}&embedded=true`;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <WebView
         source={{ uri: viewerUrl }}
         style={styles.webview}
-        onError={(syntheticEvent) => {
+        onError={syntheticEvent => {
           const { nativeEvent } = syntheticEvent;
           console.error('WebView error:', nativeEvent);
           setError('Failed to display document in viewer');
@@ -214,7 +225,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
         allowFileAccess={false}
         allowUniversalAccessFromFileURLs={false}
       />
-      
+
       {/* Floating download button for mobile */}
       <TouchableOpacity
         style={styles.floatingDownloadButton}

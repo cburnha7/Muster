@@ -879,10 +879,6 @@ router.post('/', requireNonDependent, async (req, res) => {
       });
     }
 
-    console.log(
-      `Created facility ${facility.id} with ${hoursOfOperation.length} hours of operation`
-    );
-
     res.status(201).json(facility);
   } catch (error) {
     console.error('Create facility error:', error);
@@ -1087,18 +1083,12 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 
     // Regenerate time slots if increment changed
     if (incrementChanged) {
-      console.log(
-        `🔄 Slot increment changed from ${oldIncrement} to ${slotIncrementMinutes} minutes for facility ${id}`
-      );
-
       try {
         const regenerateResult =
           await timeSlotGenerator.regenerateSlotsAfterIncrementChange(
             id,
             slotIncrementMinutes
           );
-
-        console.log('✅ Slot regeneration complete:', regenerateResult);
 
         res.json({
           ...facility,

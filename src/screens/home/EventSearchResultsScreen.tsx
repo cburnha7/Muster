@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { EventCard } from '../../components/ui/EventCard';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { useLazySearchEventsQuery } from '../../store/api/eventsApi';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
@@ -25,6 +25,7 @@ type NavProp = NativeStackNavigationProp<
 type RoutePropType = RouteProp<HomeStackParamList, 'EventSearchResults'>;
 
 export function EventSearchResultsScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<NavProp>();
   const route = useRoute<RoutePropType>();
   const user = useSelector(selectUser);
@@ -80,7 +81,7 @@ export function EventSearchResultsScreen() {
   }, [sportTypes, locationQuery, latitude, radiusMiles]);
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: themeColors.bgScreen }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
@@ -106,6 +107,7 @@ export function EventSearchResultsScreen() {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
+            activeOpacity={0.75}
           >
             <Text style={styles.backButtonText}>Adjust Search</Text>
           </TouchableOpacity>

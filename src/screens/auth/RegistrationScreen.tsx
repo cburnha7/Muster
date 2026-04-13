@@ -16,7 +16,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { registerUser, registerWithSSO } from '../../store/slices/authSlice';
@@ -25,6 +25,7 @@ import { loggingService } from '../../services/LoggingService';
 const TOTAL_STEPS = 3;
 
 export const RegistrationScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -38,13 +39,15 @@ export const RegistrationScreen: React.FC = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState<'apple' | 'google' | null>(null);
-  const [ssoProvider, setSsoProvider] = useState<'apple' | 'google' | null>(null);
+  const [ssoProvider, setSsoProvider] = useState<'apple' | 'google' | null>(
+    null
+  );
   const [ssoToken, setSsoToken] = useState<string | null>(null);
   const [ssoUserId, setSsoUserId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
   const updateError = (field: string, error: string | undefined) => {
-    setErrors((prev) => ({ ...prev, [field]: error }));
+    setErrors(prev => ({ ...prev, [field]: error }));
   };
 
   const clearErrors = () => setErrors({});
@@ -159,9 +162,15 @@ export const RegistrationScreen: React.FC = () => {
           transitionTo(1);
         }
       } else if (error.message === 'No internet connection') {
-        updateError('general', 'No internet connection. Check your network and try again.');
+        updateError(
+          'general',
+          'No internet connection. Check your network and try again.'
+        );
       } else {
-        updateError('general', error.message || 'Something went wrong. Please try again.');
+        updateError(
+          'general',
+          error.message || 'Something went wrong. Please try again.'
+        );
       }
     } finally {
       setIsLoading(false);
@@ -174,9 +183,10 @@ export const RegistrationScreen: React.FC = () => {
     clearErrors();
 
     try {
-      const userData = provider === 'apple'
-        ? await SSOService.signInWithApple()
-        : await SSOService.signInWithGoogle();
+      const userData =
+        provider === 'apple'
+          ? await SSOService.signInWithApple()
+          : await SSOService.signInWithGoogle();
 
       setFirstName(userData.firstName);
       setLastName(userData.lastName);
@@ -190,7 +200,10 @@ export const RegistrationScreen: React.FC = () => {
     } catch (error: any) {
       setSsoLoading(null);
       if (error.message !== 'User cancelled') {
-        updateError('general', `Sign in with ${provider === 'apple' ? 'Apple' : 'Google'} failed`);
+        updateError(
+          'general',
+          `Sign in with ${provider === 'apple' ? 'Apple' : 'Google'} failed`
+        );
       }
     }
   };
@@ -228,7 +241,7 @@ export const RegistrationScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
@@ -238,6 +251,7 @@ export const RegistrationScreen: React.FC = () => {
             onPress={handleBack}
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.75}
           >
             <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
           </TouchableOpacity>
@@ -299,7 +313,10 @@ export const RegistrationScreen: React.FC = () => {
 
               <FormInput
                 value={firstName}
-                onChangeText={(text) => { setFirstName(text); updateError('firstName', undefined); }}
+                onChangeText={text => {
+                  setFirstName(text);
+                  updateError('firstName', undefined);
+                }}
                 placeholder="First name"
                 error={errors.firstName}
                 autoCapitalize="words"
@@ -307,7 +324,10 @@ export const RegistrationScreen: React.FC = () => {
               />
               <FormInput
                 value={lastName}
-                onChangeText={(text) => { setLastName(text); updateError('lastName', undefined); }}
+                onChangeText={text => {
+                  setLastName(text);
+                  updateError('lastName', undefined);
+                }}
                 placeholder="Last name"
                 error={errors.lastName}
                 autoCapitalize="words"
@@ -320,7 +340,10 @@ export const RegistrationScreen: React.FC = () => {
             <View style={styles.fields}>
               <FormInput
                 value={email}
-                onChangeText={(text) => { setEmail(text); updateError('email', undefined); }}
+                onChangeText={text => {
+                  setEmail(text);
+                  updateError('email', undefined);
+                }}
                 placeholder="Email address"
                 error={errors.email}
                 keyboardType="email-address"
@@ -331,7 +354,10 @@ export const RegistrationScreen: React.FC = () => {
               />
               <FormInput
                 value={username}
-                onChangeText={(text) => { setUsername(text); updateError('username', undefined); }}
+                onChangeText={text => {
+                  setUsername(text);
+                  updateError('username', undefined);
+                }}
                 placeholder="Choose a username"
                 error={errors.username}
                 autoCapitalize="none"
@@ -347,7 +373,10 @@ export const RegistrationScreen: React.FC = () => {
               {!ssoProvider && (
                 <FormInput
                   value={password}
-                  onChangeText={(text) => { setPassword(text); updateError('password', undefined); }}
+                  onChangeText={text => {
+                    setPassword(text);
+                    updateError('password', undefined);
+                  }}
                   placeholder="Create a password"
                   error={errors.password}
                   secureTextEntry
@@ -364,15 +393,18 @@ export const RegistrationScreen: React.FC = () => {
                       I agree to the{' '}
                       <Text style={styles.link} onPress={handleOpenTerms}>
                         Terms of Service
-                      </Text>
-                      {' '}and{' '}
+                      </Text>{' '}
+                      and{' '}
                       <Text style={styles.link} onPress={handleOpenPrivacy}>
                         Privacy Policy
                       </Text>
                     </Text>
                   }
                   checked={agreedToTerms}
-                  onToggle={() => { setAgreedToTerms(!agreedToTerms); updateError('agreedToTerms', undefined); }}
+                  onToggle={() => {
+                    setAgreedToTerms(!agreedToTerms);
+                    updateError('agreedToTerms', undefined);
+                  }}
                   error={errors.agreedToTerms}
                 />
               </View>
@@ -394,10 +426,10 @@ export const RegistrationScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.loginLink}
               onPress={() => navigation.navigate('Login' as never)}
+              activeOpacity={0.75}
             >
               <Text style={styles.loginLinkText}>
-                Already have an account?{' '}
-                <Text style={styles.link}>Log In</Text>
+                Already have an account? <Text style={styles.link}>Log In</Text>
               </Text>
             </TouchableOpacity>
           )}

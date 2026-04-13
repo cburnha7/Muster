@@ -43,7 +43,7 @@ import {
   Event,
   User,
 } from '../../types';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import {
   DuesStatusBadge,
   DuesStatus,
@@ -84,6 +84,7 @@ const skillLevelOptions = [
 ];
 
 export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
+  const { colors: themeColors } = useTheme();
   const { teamId, readOnly } = route.params;
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -540,7 +541,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     setIsGeneratingLink(true);
     try {
       const result = await teamService.generateInviteLink(teamId);
-      const shareMessage = `Join ${team?.name ?? 'our team'} on Muster! Tap the link to sign up and join the team: ${result.link}`;
+      const shareMessage = `Join ${team?.name ?? 'our roster'} on Muster! Tap the link to sign up and join the roster: ${result.link}`;
 
       await Share.share(
         Platform.OS === 'ios'
@@ -627,10 +628,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -742,7 +744,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             >
               {activeMembers.length <= 1 && (
                 <Text style={styles.emptyMsg}>
-                  Your team needs more players — share the code to grow
+                  Your roster needs more players — share the code to grow
                 </Text>
               )}
               {activeMembers.map(m => {
@@ -805,6 +807,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                                   left: 10,
                                   right: 10,
                                 }}
+                                activeOpacity={0.75}
                               >
                                 <Ionicons
                                   name="chatbubble-outline"
@@ -843,7 +846,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                   style={styles.leaveLink}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.leaveLinkText}>Leave team</Text>
+                  <Text style={styles.leaveLinkText}>Leave roster</Text>
                 </TouchableOpacity>
               )}
             </DetailCard>
@@ -1001,6 +1004,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                             !formIsPublic && styles.editToggleActive,
                           ]}
                           onPress={() => setFormIsPublic(false)}
+                          activeOpacity={0.75}
                         >
                           <Ionicons
                             name="lock-closed-outline"
@@ -1022,6 +1026,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                             formIsPublic && styles.editToggleActive,
                           ]}
                           onPress={() => setFormIsPublic(true)}
+                          activeOpacity={0.75}
                         >
                           <Ionicons
                             name="globe-outline"
@@ -1097,7 +1102,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
         <>
           {!isMember && !isPendingInvite && (
             <FixedBottomCTA
-              label="Join this team"
+              label="Join this roster"
               onPress={handleJoinTeam}
               variant="primary"
             />

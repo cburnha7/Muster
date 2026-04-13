@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -14,18 +8,27 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { FormButton } from '../../components/forms/FormButton';
 import { MapImageUploader } from '../../components/facilities/MapImageUploader';
 import { facilityService } from '../../services/api/FacilityService';
-import { colors, Spacing, BorderRadius } from '../../theme';
+import { colors, Spacing, BorderRadius, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 
-type FacilityMapEditorScreenNavigationProp = NativeStackNavigationProp<FacilitiesStackParamList, 'FacilityMapEditor'>;
-type FacilityMapEditorScreenRouteProp = RouteProp<FacilitiesStackParamList, 'FacilityMapEditor'>;
+type FacilityMapEditorScreenNavigationProp = NativeStackNavigationProp<
+  FacilitiesStackParamList,
+  'FacilityMapEditor'
+>;
+type FacilityMapEditorScreenRouteProp = RouteProp<
+  FacilitiesStackParamList,
+  'FacilityMapEditor'
+>;
 
 export function FacilityMapEditorScreen(): JSX.Element {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<FacilityMapEditorScreenNavigationProp>();
   const route = useRoute<FacilityMapEditorScreenRouteProp>();
   const { facilityId, currentMapUrl } = route.params;
 
-  const [mapImageUri, setMapImageUri] = useState<string | undefined>(currentMapUrl);
+  const [mapImageUri, setMapImageUri] = useState<string | undefined>(
+    currentMapUrl
+  );
   const [uploading, setUploading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -52,11 +55,16 @@ export function FacilityMapEditorScreen(): JSX.Element {
         // Upload new map image
         const response = await fetch(mapImageUri);
         const blob = await response.blob();
-        const file = new File([blob], 'facility-map.jpg', { type: 'image/jpeg' });
+        const file = new File([blob], 'facility-map.jpg', {
+          type: 'image/jpeg',
+        });
 
         // Upload the map image
-        const imageUrls = await facilityService.uploadFacilityImages(facilityId, [file]);
-        
+        const imageUrls = await facilityService.uploadFacilityImages(
+          facilityId,
+          [file]
+        );
+
         // Update facility with the new map URL
         await facilityService.updateFacility(facilityId, {
           facilityMapUrl: imageUrls[0] || null,
@@ -91,7 +99,11 @@ export function FacilityMapEditorScreen(): JSX.Element {
         'You have unsaved changes. Are you sure you want to discard them?',
         [
           { text: 'Keep Editing', style: 'cancel' },
-          { text: 'Discard', style: 'destructive', onPress: () => navigation.goBack() },
+          {
+            text: 'Discard',
+            style: 'destructive',
+            onPress: () => navigation.goBack(),
+          },
         ]
       );
     } else {
@@ -100,14 +112,17 @@ export function FacilityMapEditorScreen(): JSX.Element {
   };
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader 
-        title="Facility Map" 
-        leftIcon="arrow-back" 
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <ScreenHeader
+        title="Facility Map"
+        leftIcon="arrow-back"
         onLeftPress={handleCancel}
       />
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Map Image Uploader */}
         <MapImageUploader
           imageUri={mapImageUri}
@@ -122,8 +137,8 @@ export function FacilityMapEditorScreen(): JSX.Element {
           <View style={styles.nextStepsCard}>
             <Text style={styles.nextStepsTitle}>Next Steps</Text>
             <Text style={styles.nextStepsText}>
-              After saving the map, you can define court boundaries to help users identify
-              specific courts and fields on your facility.
+              After saving the map, you can define court boundaries to help
+              users identify specific courts and fields on your facility.
             </Text>
           </View>
         )}

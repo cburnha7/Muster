@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -17,17 +16,17 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
-import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { loginUser, loginWithSSO } from '../../store/slices/authSlice';
 import { ErrorMessages, SuccessMessages } from '../../constants/errorMessages';
-import { colors, fonts } from '../../theme';
+import { useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
 export function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const { colors, type, spacing, radius, shadow, isDark } = useTheme();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -44,85 +43,37 @@ export function LoginScreen() {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const validateField = (field: string, value: string) => {
-    if (field === 'username' && !value.trim()) {
-      updateError('username', ErrorMessages.validation.credentials.required);
-    } else if (field === 'password' && !value) {
-      updateError(
-        'password',
-        ErrorMessages.validation.credentials.passwordRequired
-      );
-    } else {
-      updateError(field, undefined);
-    }
-  };
-
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
-
-    if (!username.trim()) {
+    if (!username.trim())
       newErrors.username = ErrorMessages.validation.credentials.required;
-      loggingService.logValidation(
-        'LoginScreen',
-        'username',
-        'required',
-        ErrorMessages.validation.credentials.required
-      );
-    }
-
-    if (!password) {
+    if (!password)
       newErrors.password =
         ErrorMessages.validation.credentials.passwordRequired;
-      loggingService.logValidation(
-        'LoginScreen',
-        'password',
-        'required',
-        ErrorMessages.validation.credentials.passwordRequired
-      );
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
     setErrors({});
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     loggingService.logButton('Sign In', 'LoginScreen');
-
     setIsLoading(true);
-
     try {
       await dispatch(
-        loginUser({
-          emailOrUsername: username.trim(),
-          password,
-          rememberMe,
-        })
+        loginUser({ emailOrUsername: username.trim(), password, rememberMe })
       ).unwrap();
-
       Alert.alert('Success', SuccessMessages.login.success);
     } catch (error: any) {
       if (error.status === 401) {
         setErrors({ general: ErrorMessages.auth.invalidCredentials });
         setPassword('');
-      } else if (error.status === 429) {
+      } else if (error.status === 429)
         setErrors({ general: ErrorMessages.rateLimit.login });
-      } else if (error.message === 'No internet connection') {
-        setErrors({ general: ErrorMessages.network.noConnection });
-      } else if (error.message === 'Request timed out') {
-        setErrors({ general: ErrorMessages.network.timeout });
-      } else if (error.message === 'Service temporarily unavailable') {
-        setErrors({ general: ErrorMessages.network.serverUnavailable });
-      } else {
+      else
         setErrors({
           general: error.message || ErrorMessages.network.unknownError,
         });
-      }
     } finally {
       setIsLoading(false);
     }
@@ -132,13 +83,11 @@ export function LoginScreen() {
     loggingService.logButton(`SSO Sign In (${provider})`, 'LoginScreen');
     setSsoLoading(provider);
     setErrors({});
-
     try {
       const userData =
         provider === 'apple'
           ? await SSOService.signInWithApple()
           : await SSOService.signInWithGoogle();
-
       await dispatch(
         loginWithSSO({
           provider,
@@ -149,7 +98,6 @@ export function LoginScreen() {
           lastName: userData.lastName,
         })
       ).unwrap();
-
       Alert.alert('Success', SuccessMessages.login.ssoSuccess);
     } catch (error: any) {
       if (error.message !== 'User cancelled' && error !== 'User cancelled') {
@@ -157,46 +105,68 @@ export function LoginScreen() {
           typeof error === 'string'
             ? error
             : error.message || JSON.stringify(error);
-        const errorMsg =
-          provider === 'apple'
-            ? `Apple Sign In failed: ${detail}`
-            : `Google Sign In failed: ${detail}`;
-        setErrors({ general: errorMsg });
+        setErrors({ general: `Sign in failed: ${detail}` });
       }
     } finally {
       setSsoLoading(null);
     }
   };
 
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword' as never);
-  };
-
-  const handleNavigateToSignUp = () => {
-    navigation.navigate('Registration' as never);
-  };
-
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1, backgroundColor: colors.bgScreen }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          paddingHorizontal: spacing.xxl,
+          paddingBottom: spacing.xxl,
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Brand mark */}
-        <View style={styles.logoContainer}>
-          <MusterIcon size={140} variant="light" />
-          <Text style={styles.appName}>Muster</Text>
-          <Text style={styles.tagline}>Find a game. Find your people.</Text>
+        <View style={{ alignItems: 'center', marginBottom: spacing.xxxl }}>
+          <View style={{ ...shadow.cta, borderRadius: 20 }}>
+            <MusterIcon size={100} variant="light" />
+          </View>
+          <Text
+            style={{
+              ...type.displayLg,
+              color: colors.textPrimary,
+              marginTop: spacing.base,
+              textAlign: 'center',
+            }}
+          >
+            Muster
+          </Text>
+          <Text
+            style={{
+              ...type.displayItalic,
+              color: colors.textSecondary,
+              fontSize: 18,
+              marginTop: spacing.xs,
+            }}
+          >
+            the Troops.
+          </Text>
         </View>
 
-        {/* Form card — sits on a subtly different surface */}
-        <View style={styles.formCard}>
-          {/* SSO Buttons - Only show on native platforms */}
+        {/* Form card */}
+        <View
+          style={{
+            backgroundColor: colors.bgCard,
+            borderRadius: radius.xxl,
+            padding: spacing.xl,
+            borderWidth: 1,
+            borderColor: colors.border,
+            ...shadow.card,
+          }}
+        >
+          {/* SSO Buttons */}
           {Platform.OS !== 'web' && (
             <>
               <SSOButton
@@ -211,50 +181,78 @@ export function LoginScreen() {
                 isLoading={ssoLoading === 'google'}
                 disabled={isLoading || ssoLoading !== null}
               />
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginVertical: spacing.lg,
+                }}
+              >
+                <View
+                  style={{ flex: 1, height: 1, backgroundColor: colors.border }}
+                />
+                <Text
+                  style={{
+                    ...type.bodySm,
+                    color: colors.textMuted,
+                    marginHorizontal: spacing.base,
+                  }}
+                >
+                  or
+                </Text>
+                <View
+                  style={{ flex: 1, height: 1, backgroundColor: colors.border }}
+                />
               </View>
             </>
           )}
 
-          {/* General Error */}
+          {/* Error banner */}
           {errors.general && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{errors.general}</Text>
+            <View
+              style={{
+                backgroundColor: colors.heartTint,
+                borderRadius: radius.md,
+                paddingVertical: spacing.md,
+                paddingHorizontal: spacing.base,
+                marginBottom: spacing.base,
+              }}
+            >
+              <Text
+                style={{
+                  ...type.bodySm,
+                  color: colors.heart,
+                  textAlign: 'center',
+                }}
+              >
+                {errors.general}
+              </Text>
             </View>
           )}
 
-          {/* Username/Email Input */}
           <FormInput
             label="Username or Email"
             value={username}
-            onChangeText={text => {
-              setUsername(text);
+            onChangeText={t => {
+              setUsername(t);
               updateError('username', undefined);
             }}
             placeholder="Enter username or email"
             error={errors.username}
-            onBlur={() => validateField('username', username)}
             leftIcon="person-outline"
             editable={!isLoading}
             autoCapitalize="none"
             autoCorrect={false}
           />
-
-          {/* Password Input */}
           <FormInput
             label="Password"
             value={password}
-            onChangeText={text => {
-              setPassword(text);
+            onChangeText={t => {
+              setPassword(t);
               updateError('password', undefined);
             }}
             placeholder="Enter password"
             error={errors.password}
-            onBlur={() => validateField('password', password)}
             leftIcon="lock-closed-outline"
             secureTextEntry
             editable={!isLoading}
@@ -262,22 +260,31 @@ export function LoginScreen() {
             autoCorrect={false}
           />
 
-          {/* Remember Me & Forgot Password */}
-          <View style={styles.optionsRow}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: spacing.xl,
+              marginTop: -spacing.xs,
+            }}
+          >
             <Checkbox
               label="Remember Me"
               checked={rememberMe}
               onToggle={() => setRememberMe(!rememberMe)}
             />
             <TouchableOpacity
-              onPress={handleForgotPassword}
+              onPress={() => navigation.navigate('ForgotPassword' as never)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.75}
             >
-              <Text style={styles.forgotPassword}>Forgot Password?</Text>
+              <Text style={{ ...type.uiSm, color: colors.cobalt }}>
+                Forgot Password?
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Login Button */}
           <FormButton
             title="Sign In"
             onPress={handleLogin}
@@ -288,132 +295,22 @@ export function LoginScreen() {
           />
         </View>
 
-        {/* Sign Up Link */}
+        {/* Sign Up link */}
         <TouchableOpacity
-          style={styles.signUpContainer}
-          onPress={handleNavigateToSignUp}
+          style={{
+            marginTop: spacing.xxl,
+            alignItems: 'center',
+            paddingVertical: spacing.md,
+          }}
+          onPress={() => navigation.navigate('Registration' as never)}
+          activeOpacity={0.75}
         >
-          <Text style={styles.signUpText}>
+          <Text style={{ ...type.body, color: colors.textSecondary }}>
             Don't have an account?{' '}
-            <Text style={styles.signUpLink}>Sign Up</Text>
+            <Text style={{ ...type.ui, color: colors.cobalt }}>Sign Up</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingBottom: 32,
-  },
-
-  // ── Brand mark ──────────────────────────
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  appName: {
-    fontSize: 30,
-    fontFamily: fonts.heading,
-    color: colors.primary,
-    marginTop: 12,
-    letterSpacing: -0.5,
-  },
-  tagline: {
-    fontSize: 15,
-    fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
-    marginTop: 4,
-  },
-
-  // ── Form card ───────────────────────────
-  formCard: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 24,
-    padding: 24,
-    // Ambient shadow
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 20,
-    elevation: 3,
-  },
-
-  // ── Divider ─────────────────────────────
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.outlineVariant,
-    opacity: 0.5,
-  },
-  dividerText: {
-    fontSize: 13,
-    fontFamily: fonts.body,
-    color: colors.outline,
-    marginHorizontal: 16,
-  },
-
-  // ── Error banner ────────────────────────
-  errorBanner: {
-    backgroundColor: colors.errorContainer,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 14,
-    fontFamily: fonts.body,
-    color: colors.onErrorContainer,
-    textAlign: 'center',
-  },
-
-  // ── Options row ─────────────────────────
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-    marginTop: -4,
-  },
-  forgotPassword: {
-    fontSize: 14,
-    fontFamily: fonts.headingSemi,
-    color: colors.primary,
-  },
-
-  // ── Sign Up ─────────────────────────────
-  signUpContainer: {
-    marginTop: 28,
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  signUpText: {
-    fontSize: 15,
-    fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
-  },
-  signUpLink: {
-    color: colors.primary,
-    fontFamily: fonts.headingSemi,
-  },
-});

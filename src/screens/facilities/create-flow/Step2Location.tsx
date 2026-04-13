@@ -1,9 +1,10 @@
 import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { useCreateFacility } from './CreateFacilityContext';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 export function Step2Location() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateFacility();
 
   const setField = (field: string, value: string) =>
@@ -11,7 +12,7 @@ export function Step2Location() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -21,7 +22,7 @@ export function Step2Location() {
       <TextInput
         style={styles.textInput}
         value={state.street}
-        onChangeText={(v) => setField('street', v)}
+        onChangeText={v => setField('street', v)}
         placeholder="Street address"
         placeholderTextColor={colors.inkSoft}
       />
@@ -29,7 +30,7 @@ export function Step2Location() {
       <TextInput
         style={styles.textInput}
         value={state.city}
-        onChangeText={(v) => setField('city', v)}
+        onChangeText={v => setField('city', v)}
         placeholder="City"
         placeholderTextColor={colors.inkSoft}
       />
@@ -38,14 +39,14 @@ export function Step2Location() {
         <TextInput
           style={[styles.textInput, styles.halfInput]}
           value={state.state}
-          onChangeText={(v) => setField('state', v)}
+          onChangeText={v => setField('state', v)}
           placeholder="State"
           placeholderTextColor={colors.inkSoft}
         />
         <TextInput
           style={[styles.textInput, styles.halfInput]}
           value={state.zipCode}
-          onChangeText={(v) => setField('zipCode', v)}
+          onChangeText={v => setField('zipCode', v)}
           placeholder="ZIP code"
           placeholderTextColor={colors.inkSoft}
           keyboardType="numeric"

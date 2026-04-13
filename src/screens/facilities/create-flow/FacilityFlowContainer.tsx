@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { WizardProgressDots } from '../../../components/wizard/WizardProgressDots';
 import { useCreateFacility } from './CreateFacilityContext';
 import { FacilityWizardState } from './types';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 interface FacilityFlowContainerProps {
   children: React.ReactNode;
@@ -46,6 +46,7 @@ export function FacilityFlowContainer({
   children,
   onSubmit,
 }: FacilityFlowContainerProps) {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateFacility();
   const navigation = useNavigation();
   const { currentStep } = state;
@@ -60,7 +61,9 @@ export function FacilityFlowContainer({
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView
+      style={[styles.root, { backgroundColor: themeColors.bgScreen }]}
+    >
       <View style={styles.headerRow}>
         <View style={styles.backBtn} />
         <View style={styles.dotsWrapper}>

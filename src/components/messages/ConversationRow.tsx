@@ -1,5 +1,11 @@
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
@@ -12,29 +18,43 @@ interface ConversationRowProps {
   onPin?: (conversation: Conversation) => void;
 }
 
-function getConversationIcon(type: Conversation['type']): keyof typeof Ionicons.glyphMap {
+function getConversationIcon(
+  type: Conversation['type']
+): keyof typeof Ionicons.glyphMap {
   switch (type) {
-    case 'TEAM_CHAT': return 'people';
-    case 'GAME_THREAD': return 'calendar';
-    case 'LEAGUE_CHANNEL': return 'trophy';
-    case 'DIRECT_MESSAGE': return 'person';
+    case 'TEAM_CHAT':
+      return 'people';
+    case 'GAME_THREAD':
+      return 'calendar';
+    case 'LEAGUE_CHANNEL':
+      return 'trophy';
+    case 'DIRECT_MESSAGE':
+      return 'person';
   }
 }
 
 function getConversationColor(type: Conversation['type']): string {
   switch (type) {
-    case 'TEAM_CHAT': return colors.primary;
-    case 'GAME_THREAD': return '#E86825';
-    case 'LEAGUE_CHANNEL': return '#C4A017';
-    case 'DIRECT_MESSAGE': return '#8B5CF6';
+    case 'TEAM_CHAT':
+      return colors.primary;
+    case 'GAME_THREAD':
+      return '#E86825';
+    case 'LEAGUE_CHANNEL':
+      return '#C4A017';
+    case 'DIRECT_MESSAGE':
+      return '#8B5CF6';
   }
 }
 
 function getDisplayName(conversation: Conversation): string {
   if (conversation.name) return conversation.name;
   if (conversation.type === 'DIRECT_MESSAGE') {
-    const other = conversation.participants.find((p) => p.userId !== conversation.myParticipant?.userId);
-    return other ? `${other.user.firstName} ${other.user.lastName}` : 'Direct Message';
+    const other = conversation.participants.find(
+      p => p.userId !== conversation.myParticipant?.userId
+    );
+    return other
+      ? `${other.user.firstName} ${other.user.lastName}`
+      : 'Direct Message';
   }
   return 'Conversation';
 }
@@ -44,46 +64,87 @@ function formatTimestamp(iso: string): string {
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffDays = Math.floor(diffMs / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  if (diffDays === 0)
+    return d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return d.toLocaleDateString('en-US', { weekday: 'short' });
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function ConversationRow({ conversation, onPress, onMute, onPin }: ConversationRowProps) {
+function ConversationRowInner({
+  conversation,
+  onPress,
+  onMute,
+  onPin,
+}: ConversationRowProps) {
   const lastMsg = conversation.messages[0];
-  const hasUnread = conversation.unreadCount > 0 && !conversation.myParticipant?.isMuted;
+  const hasUnread =
+    conversation.unreadCount > 0 && !conversation.myParticipant?.isMuted;
   const isMuted = conversation.myParticipant?.isMuted ?? false;
   const iconColor = getConversationColor(conversation.type);
   const displayName = getDisplayName(conversation);
   const isSystemPreview = lastMsg?.type === 'SYSTEM';
   const swipeableRef = useRef<Swipeable>(null);
 
-  const renderLeftActions = (_progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
-    const scale = dragX.interpolate({ inputRange: [0, 80], outputRange: [0.5, 1], extrapolate: 'clamp' });
+  const renderLeftActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [0, 80],
+      outputRange: [0.5, 1],
+      extrapolate: 'clamp',
+    });
     return (
       <TouchableOpacity
         style={styles.swipeActionLeft}
-        onPress={() => { swipeableRef.current?.close(); onMute?.(conversation); }}
+        onPress={() => {
+          swipeableRef.current?.close();
+          onMute?.(conversation);
+        }}
         activeOpacity={0.8}
       >
-        <Animated.View style={[styles.swipeActionContent, { transform: [{ scale }] }]}>
-          <Ionicons name={isMuted ? 'volume-high' : 'volume-mute'} size={22} color="#FFFFFF" />
-          <Text style={styles.swipeActionText}>{isMuted ? 'Unmute' : 'Mute'}</Text>
+        <Animated.View
+          style={[styles.swipeActionContent, { transform: [{ scale }] }]}
+        >
+          <Ionicons
+            name={isMuted ? 'volume-high' : 'volume-mute'}
+            size={22}
+            color="#FFFFFF"
+          />
+          <Text style={styles.swipeActionText}>
+            {isMuted ? 'Unmute' : 'Mute'}
+          </Text>
         </Animated.View>
       </TouchableOpacity>
     );
   };
 
-  const renderRightActions = (_progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
-    const scale = dragX.interpolate({ inputRange: [-80, 0], outputRange: [1, 0.5], extrapolate: 'clamp' });
+  const renderRightActions = (
+    _progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0.5],
+      extrapolate: 'clamp',
+    });
     return (
       <TouchableOpacity
         style={styles.swipeActionRight}
-        onPress={() => { swipeableRef.current?.close(); onPin?.(conversation); }}
+        onPress={() => {
+          swipeableRef.current?.close();
+          onPin?.(conversation);
+        }}
         activeOpacity={0.8}
       >
-        <Animated.View style={[styles.swipeActionContent, { transform: [{ scale }] }]}>
+        <Animated.View
+          style={[styles.swipeActionContent, { transform: [{ scale }] }]}
+        >
           <Ionicons name="pin" size={22} color="#FFFFFF" />
           <Text style={styles.swipeActionText}>Pin</Text>
         </Animated.View>
@@ -103,28 +164,46 @@ export function ConversationRow({ conversation, onPress, onMute, onPin }: Conver
     >
       {conversation.type === 'DIRECT_MESSAGE' ? (
         (() => {
-          const other = conversation.participants.find((p) => p.userId !== conversation.myParticipant?.userId);
-          const initial = other?.user?.firstName?.charAt(0)?.toUpperCase() ?? '?';
+          const other = conversation.participants.find(
+            p => p.userId !== conversation.myParticipant?.userId
+          );
+          const initial =
+            other?.user?.firstName?.charAt(0)?.toUpperCase() ?? '?';
           const profileImg = other?.user?.profileImage;
           return (
-            <View style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}>
-              <Text style={[styles.dmInitial, { color: iconColor }]}>{initial}</Text>
+            <View
+              style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}
+            >
+              <Text style={[styles.dmInitial, { color: iconColor }]}>
+                {initial}
+              </Text>
             </View>
           );
         })()
       ) : (
-        <View style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}>
-          <Ionicons name={getConversationIcon(conversation.type)} size={20} color={iconColor} />
+        <View
+          style={[styles.iconCircle, { backgroundColor: iconColor + '18' }]}
+        >
+          <Ionicons
+            name={getConversationIcon(conversation.type)}
+            size={20}
+            color={iconColor}
+          />
         </View>
       )}
 
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={[styles.name, hasUnread && styles.nameUnread]} numberOfLines={1}>
+          <Text
+            style={[styles.name, hasUnread && styles.nameUnread]}
+            numberOfLines={1}
+          >
             {displayName}
           </Text>
           {lastMsg && (
-            <Text style={[styles.timestamp, hasUnread && styles.timestampUnread]}>
+            <Text
+              style={[styles.timestamp, hasUnread && styles.timestampUnread]}
+            >
               {formatTimestamp(lastMsg.createdAt)}
             </Text>
           )}
@@ -147,12 +226,18 @@ export function ConversationRow({ conversation, onPress, onMute, onPin }: Conver
           {hasUnread && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
-                {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
+                {conversation.unreadCount > 99
+                  ? '99+'
+                  : conversation.unreadCount}
               </Text>
             </View>
           )}
           {isMuted && (
-            <Ionicons name="volume-mute-outline" size={14} color={colors.onSurfaceVariant} />
+            <Ionicons
+              name="volume-mute-outline"
+              size={14}
+              color={colors.onSurfaceVariant}
+            />
           )}
         </View>
       </View>
@@ -174,6 +259,8 @@ export function ConversationRow({ conversation, onPress, onMute, onPin }: Conver
     </Swipeable>
   );
 }
+
+export const ConversationRow = React.memo(ConversationRowInner);
 
 const styles = StyleSheet.create({
   row: {
@@ -211,7 +298,12 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   nameUnread: { fontFamily: fonts.headingSemi },
-  timestamp: { fontFamily: fonts.body, fontSize: 12, color: colors.onSurfaceVariant, flexShrink: 0 },
+  timestamp: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+    flexShrink: 0,
+  },
   timestampUnread: { fontFamily: fonts.label, color: colors.primary },
   bottomRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   preview: {

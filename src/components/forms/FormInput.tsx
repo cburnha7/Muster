@@ -1,4 +1,9 @@
-import React, { useState, forwardRef, useRef, useImperativeHandle } from 'react';
+import React, {
+  useState,
+  forwardRef,
+  useRef,
+  useImperativeHandle,
+} from 'react';
 import {
   View,
   Text,
@@ -9,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 interface FormInputProps extends TextInputProps {
   label?: string;
@@ -24,108 +29,140 @@ interface FormInputProps extends TextInputProps {
   errorStyle?: any;
 }
 
-export const FormInput = forwardRef<any, FormInputProps>(({
-  label,
-  error,
-  required = false,
-  leftIcon,
-  rightIcon,
-  onRightIconPress,
-  containerStyle,
-  inputStyle,
-  labelStyle,
-  errorStyle,
-  secureTextEntry,
-  ...textInputProps
-}, ref) => {
-  const inputRef = useRef<any>(null);
-  useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }));
-  const [isSecure, setIsSecure] = useState(secureTextEntry);
-  const [isFocused, setIsFocused] = useState(false);
+export const FormInput = forwardRef<any, FormInputProps>(
+  (
+    {
+      label,
+      error,
+      required = false,
+      leftIcon,
+      rightIcon,
+      onRightIconPress,
+      containerStyle,
+      inputStyle,
+      labelStyle,
+      errorStyle,
+      secureTextEntry,
+      ...textInputProps
+    },
+    ref
+  ) => {
+    const inputRef = useRef<any>(null);
+    useImperativeHandle(ref, () => ({
+      focus: () => inputRef.current?.focus(),
+    }));
+    const [isSecure, setIsSecure] = useState(secureTextEntry);
+    const { colors: themeColors } = useTheme();
+    const [isFocused, setIsFocused] = useState(false);
 
-  const handleToggleSecure = () => {
-    setIsSecure(!isSecure);
-  };
+    const handleToggleSecure = () => {
+      setIsSecure(!isSecure);
+    };
 
-  const showPasswordToggle = secureTextEntry && !rightIcon;
+    const showPasswordToggle = secureTextEntry && !rightIcon;
 
-  return (
-    <View style={[styles.container, containerStyle]}>
-      {label && (
-        <Text style={[styles.label, labelStyle]}>
-          {label}
-          {required && <Text style={styles.required}> *</Text>}
-        </Text>
-      )}
-
-      <View
-        style={[
-          styles.inputContainer,
-          isFocused && styles.inputContainerFocused,
-          error && styles.inputContainerError,
-        ]}
-      >
-        {leftIcon && (
-          <Ionicons
-            name={leftIcon as any}
-            size={20}
-            color={error ? colors.error : isFocused ? colors.primary : colors.outline}
-            style={styles.leftIcon}
-          />
+    return (
+      <View style={[styles.container, containerStyle]}>
+        {label && (
+          <Text
+            style={[
+              styles.label,
+              { color: themeColors.textPrimary },
+              labelStyle,
+            ]}
+          >
+            {label}
+            {required && <Text style={styles.required}> *</Text>}
+          </Text>
         )}
 
-        <TextInput
-          ref={inputRef}
+        <View
           style={[
-            styles.input,
-            leftIcon && styles.inputWithLeftIcon,
-            (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
-            Platform.OS === 'web' && { outlineStyle: 'none' as any },
-            inputStyle,
+            styles.inputContainer,
+            { backgroundColor: themeColors.bgInput },
+            isFocused && [
+              styles.inputContainerFocused,
+              { backgroundColor: themeColors.bgCard },
+            ],
+            error && styles.inputContainerError,
           ]}
-          secureTextEntry={isSecure}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => {
-            setIsFocused(false);
-            textInputProps.onBlur?.(undefined as any);
-          }}
-          placeholderTextColor={colors.outline}
-          {...textInputProps}
-        />
-
-        {showPasswordToggle && (
-          <TouchableOpacity
-            onPress={handleToggleSecure}
-            style={styles.rightIcon}
-          >
+        >
+          {leftIcon && (
             <Ionicons
-              name={isSecure ? 'eye-off-outline' : 'eye-outline'}
+              name={leftIcon as any}
               size={20}
-              color={colors.outline}
+              color={
+                error
+                  ? colors.error
+                  : isFocused
+                    ? colors.primary
+                    : colors.outline
+              }
+              style={styles.leftIcon}
             />
-          </TouchableOpacity>
-        )}
+          )}
 
-        {rightIcon && !showPasswordToggle && (
-          <TouchableOpacity
-            onPress={onRightIconPress}
-            style={styles.rightIcon}
-          >
-            <Ionicons
-              name={rightIcon as any}
-              size={20}
-              color={error ? colors.error : isFocused ? colors.primary : colors.outline}
-            />
-          </TouchableOpacity>
-        )}
+          <TextInput
+            ref={inputRef}
+            style={[
+              styles.input,
+              { color: themeColors.textPrimary },
+              leftIcon && styles.inputWithLeftIcon,
+              (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
+              Platform.OS === 'web' && { outlineStyle: 'none' as any },
+              inputStyle,
+            ]}
+            secureTextEntry={isSecure}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => {
+              setIsFocused(false);
+              textInputProps.onBlur?.(undefined as any);
+            }}
+            placeholderTextColor={themeColors.textMuted}
+            keyboardAppearance={
+              themeColors.bgScreen === '#0A0F1E' ? 'dark' : 'light'
+            }
+            {...textInputProps}
+          />
+
+          {showPasswordToggle && (
+            <TouchableOpacity
+              onPress={handleToggleSecure}
+              style={styles.rightIcon}
+            >
+              <Ionicons
+                name={isSecure ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.outline}
+              />
+            </TouchableOpacity>
+          )}
+
+          {rightIcon && !showPasswordToggle && (
+            <TouchableOpacity
+              onPress={onRightIconPress}
+              style={styles.rightIcon}
+            >
+              <Ionicons
+                name={rightIcon as any}
+                size={20}
+                color={
+                  error
+                    ? colors.error
+                    : isFocused
+                      ? colors.primary
+                      : colors.outline
+                }
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {error && <Text style={[styles.error, errorStyle]}>{error}</Text>}
       </View>
-
-      {error && (
-        <Text style={[styles.error, errorStyle]}>{error}</Text>
-      )}
-    </View>
-  );
-});
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {

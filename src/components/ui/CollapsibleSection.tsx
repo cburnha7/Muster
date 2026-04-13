@@ -10,10 +10,13 @@ import {
   UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 
 // Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -33,6 +36,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   children,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const { colors: themeColors } = useTheme();
   const rotation = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
 
   const toggle = useCallback(() => {
@@ -42,7 +46,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       duration: 200,
       useNativeDriver: true,
     }).start();
-    setExpanded((prev) => !prev);
+    setExpanded(prev => !prev);
   }, [expanded, rotation]);
 
   const rotateZ = rotation.interpolate({
@@ -63,7 +67,9 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         <Animated.View style={{ transform: [{ rotateZ }] }}>
           <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
         </Animated.View>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+          {title}
+        </Text>
         {count !== undefined && (
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{count}</Text>
@@ -83,7 +89,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.white,
     gap: 6,
   },
   title: {

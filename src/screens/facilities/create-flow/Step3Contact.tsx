@@ -1,9 +1,10 @@
 import React from 'react';
 import { ScrollView, Text, TextInput, StyleSheet } from 'react-native';
 import { useCreateFacility } from './CreateFacilityContext';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 export function Step3Contact() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateFacility();
 
   const setField = (field: string, value: string) =>
@@ -11,18 +12,20 @@ export function Step3Contact() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.heading}>Contact info</Text>
-      <Text style={styles.subtitle}>Optional details so players can reach you.</Text>
+      <Text style={styles.subtitle}>
+        Optional details so players can reach you.
+      </Text>
 
       <TextInput
         style={styles.textInput}
         value={state.contactName}
-        onChangeText={(v) => setField('contactName', v)}
+        onChangeText={v => setField('contactName', v)}
         placeholder="Contact name"
         placeholderTextColor={colors.inkSoft}
       />
@@ -30,7 +33,7 @@ export function Step3Contact() {
       <TextInput
         style={styles.textInput}
         value={state.contactPhone}
-        onChangeText={(v) => setField('contactPhone', v)}
+        onChangeText={v => setField('contactPhone', v)}
         placeholder="Phone number"
         placeholderTextColor={colors.inkSoft}
         keyboardType="phone-pad"
@@ -39,7 +42,7 @@ export function Step3Contact() {
       <TextInput
         style={styles.textInput}
         value={state.contactEmail}
-        onChangeText={(v) => setField('contactEmail', v)}
+        onChangeText={v => setField('contactEmail', v)}
         placeholder="Email address"
         placeholderTextColor={colors.inkSoft}
         keyboardType="email-address"
@@ -49,7 +52,7 @@ export function Step3Contact() {
       <TextInput
         style={styles.textInput}
         value={state.contactWebsite}
-        onChangeText={(v) => setField('contactWebsite', v)}
+        onChangeText={v => setField('contactWebsite', v)}
         placeholder="Website URL"
         placeholderTextColor={colors.inkSoft}
         keyboardType="url"

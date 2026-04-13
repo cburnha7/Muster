@@ -20,7 +20,7 @@ import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { useAuth } from '../../context/AuthContext';
 import { setDependents } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { SportType } from '../../types';
 import {
   CreateDependentInput,
@@ -95,6 +95,7 @@ function isValidDateString(value: string): boolean {
 }
 
 export function DependentFormScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -317,7 +318,7 @@ export function DependentFormScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: themeColors.bgScreen }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -326,6 +327,7 @@ export function DependentFormScreen() {
           style={styles.flex}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           {/* Name fields */}
           <FormInput

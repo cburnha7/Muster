@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import {
   useApproveReservationMutation,
   useDenyReservationMutation,
@@ -19,7 +19,10 @@ import {
 import { HomeStackParamList } from '../../navigation/types';
 import { API_BASE_URL } from '../../services/api/config';
 
-type ScreenRouteProp = RouteProp<HomeStackParamList, 'PendingReservationDetails'>;
+type ScreenRouteProp = RouteProp<
+  HomeStackParamList,
+  'PendingReservationDetails'
+>;
 
 function formatTime(time: string): string {
   const parts = time.split(':').map(Number);
@@ -27,24 +30,42 @@ function formatTime(time: string): string {
   const m = parts[1] ?? 0;
   const period = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 || 12;
-  return m === 0 ? `${hour12}:00 ${period}` : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+  return m === 0
+    ? `${hour12}:00 ${period}`
+    : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
 function formatDate(dateStr: string): string {
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const parts = dateStr.split('-').map(Number);
   return `${months[(parts[1] ?? 1) - 1]} ${parts[2]}, ${parts[0]}`;
 }
 
 export function PendingReservationDetailsScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<ScreenRouteProp>();
   const { rentalId } = route.params;
 
   const [rental, setRental] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [approveReservation, { isLoading: isApproving }] = useApproveReservationMutation();
-  const [denyReservation, { isLoading: isDenying }] = useDenyReservationMutation();
+  const [approveReservation, { isLoading: isApproving }] =
+    useApproveReservationMutation();
+  const [denyReservation, { isLoading: isDenying }] =
+    useDenyReservationMutation();
   const isBusy = isApproving || isDenying;
 
   const loadRental = useCallback(async () => {
@@ -62,48 +83,63 @@ export function PendingReservationDetailsScreen() {
     }
   }, [rentalId]);
 
-  useEffect(() => { loadRental(); }, [loadRental]);
+  useEffect(() => {
+    loadRental();
+  }, [loadRental]);
 
   const handleApprove = useCallback(() => {
-    Alert.alert('Approve Reservation', 'Are you sure you want to approve this reservation?', [
-      { text: 'Not Now', style: 'cancel' },
-      {
-        text: 'Approve',
-        onPress: async () => {
-          try {
-            await approveReservation({ rentalId }).unwrap();
-            Alert.alert('Approved', 'The reservation has been confirmed.');
-            navigation.goBack();
-          } catch {
-            Alert.alert('Error', 'Failed to approve reservation.');
-          }
+    Alert.alert(
+      'Approve Reservation',
+      'Are you sure you want to approve this reservation?',
+      [
+        { text: 'Not Now', style: 'cancel' },
+        {
+          text: 'Approve',
+          onPress: async () => {
+            try {
+              await approveReservation({ rentalId }).unwrap();
+              Alert.alert('Approved', 'The reservation has been confirmed.');
+              navigation.goBack();
+            } catch {
+              Alert.alert('Error', 'Failed to approve reservation.');
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   }, [rentalId, approveReservation, navigation]);
 
   const handleDeny = useCallback(() => {
-    Alert.alert('Deny Reservation', 'Are you sure you want to deny this reservation?', [
-      { text: 'Not Now', style: 'cancel' },
-      {
-        text: 'Deny',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await denyReservation({ rentalId }).unwrap();
-            Alert.alert('Denied', 'The reservation has been denied and the time slot released.');
-            navigation.goBack();
-          } catch {
-            Alert.alert('Error', 'Failed to deny reservation.');
-          }
+    Alert.alert(
+      'Deny Reservation',
+      'Are you sure you want to deny this reservation?',
+      [
+        { text: 'Not Now', style: 'cancel' },
+        {
+          text: 'Deny',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await denyReservation({ rentalId }).unwrap();
+              Alert.alert(
+                'Denied',
+                'The reservation has been denied and the time slot released.'
+              );
+              navigation.goBack();
+            } catch {
+              Alert.alert('Error', 'Failed to deny reservation.');
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   }, [rentalId, denyReservation, navigation]);
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View
+        style={[styles.centered, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ActivityIndicator size="large" color={colors.cobalt} />
       </View>
     );
@@ -118,22 +154,37 @@ export function PendingReservationDetailsScreen() {
   const insuranceDoc = rental.attachedInsuranceDocument;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Reservation Details</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+      >
         {/* Status badge */}
         <View style={styles.statusRow}>
-          <View style={[styles.statusBadge, rental.status === 'pending_approval' ? styles.pendingBadge : styles.confirmedBadge]}>
+          <View
+            style={[
+              styles.statusBadge,
+              rental.status === 'pending_approval'
+                ? styles.pendingBadge
+                : styles.confirmedBadge,
+            ]}
+          >
             <Text style={styles.statusText}>
-              {rental.status === 'pending_approval' ? 'Pending Approval' : rental.status}
+              {rental.status === 'pending_approval'
+                ? 'Pending Approval'
+                : rental.status}
             </Text>
           </View>
         </View>
@@ -159,7 +210,11 @@ export function PendingReservationDetailsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Ground</Text>
           <View style={styles.infoRow}>
-            <Ionicons name="location-outline" size={18} color={colors.inkFaint} />
+            <Ionicons
+              name="location-outline"
+              size={18}
+              color={colors.inkFaint}
+            />
             <Text style={styles.infoText}>{facility?.name || 'Unknown'}</Text>
           </View>
           <View style={styles.infoRow}>
@@ -173,7 +228,11 @@ export function PendingReservationDetailsScreen() {
           <Text style={styles.sectionLabel}>Date & Time</Text>
           {timeSlot?.date && (
             <View style={styles.infoRow}>
-              <Ionicons name="calendar-outline" size={18} color={colors.inkFaint} />
+              <Ionicons
+                name="calendar-outline"
+                size={18}
+                color={colors.inkFaint}
+              />
               <Text style={styles.infoText}>{formatDate(timeSlot.date)}</Text>
             </View>
           )}
@@ -181,7 +240,8 @@ export function PendingReservationDetailsScreen() {
             <View style={styles.infoRow}>
               <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
               <Text style={styles.infoText}>
-                {formatTime(timeSlot.startTime)} – {formatTime(timeSlot.endTime)}
+                {formatTime(timeSlot.startTime)} –{' '}
+                {formatTime(timeSlot.endTime)}
               </Text>
             </View>
           )}
@@ -207,20 +267,29 @@ export function PendingReservationDetailsScreen() {
               onPress={() => {
                 if (insuranceDoc.documentUrl) {
                   Linking.openURL(insuranceDoc.documentUrl).catch(() =>
-                    Alert.alert('Error', 'Unable to open the insurance document.')
+                    Alert.alert(
+                      'Error',
+                      'Unable to open the insurance document.'
+                    )
                   );
                 }
               }}
               accessibilityRole="link"
               accessibilityLabel={`View insurance document: ${insuranceDoc.policyName || 'Insurance'}`}
             >
-              <Ionicons name="document-text-outline" size={22} color={colors.cobalt} />
+              <Ionicons
+                name="document-text-outline"
+                size={22}
+                color={colors.cobalt}
+              />
               <View style={styles.documentInfo}>
                 <Text style={styles.documentName} numberOfLines={1}>
                   {insuranceDoc.policyName || 'Insurance Document'}
                 </Text>
                 {insuranceDoc.providerName && (
-                  <Text style={styles.documentProvider}>{insuranceDoc.providerName}</Text>
+                  <Text style={styles.documentProvider}>
+                    {insuranceDoc.providerName}
+                  </Text>
                 )}
               </View>
               <Ionicons name="open-outline" size={18} color={colors.inkFaint} />
@@ -262,7 +331,12 @@ export function PendingReservationDetailsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -294,9 +368,25 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 1,
   },
-  sectionLabel: { fontFamily: fonts.label, fontSize: 12, color: colors.inkFaint, textTransform: 'uppercase', marginBottom: 10 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  infoText: { fontFamily: fonts.body, fontSize: 15, color: colors.ink, flex: 1 },
+  sectionLabel: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.inkFaint,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  infoText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.ink,
+    flex: 1,
+  },
   documentCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -307,9 +397,20 @@ const styles = StyleSheet.create({
   },
   documentInfo: { flex: 1 },
   documentName: { fontFamily: fonts.label, fontSize: 14, color: colors.cobalt },
-  documentProvider: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint, marginTop: 2 },
+  documentProvider: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.inkFaint,
+    marginTop: 2,
+  },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  actionButton: { flex: 1, paddingVertical: 14, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   approveBtn: { backgroundColor: colors.cobalt },
   denyBtn: { backgroundColor: colors.heart },
   actionBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },

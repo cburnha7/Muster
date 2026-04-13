@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, RefreshControl, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  RefreshControl,
+  ScrollView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StandingsTable } from '../../../components/league/StandingsTable';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
@@ -9,16 +16,19 @@ import { LeagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { TeamStanding, Season } from '../../../types';
 import { useNavigation } from '@react-navigation/native';
-import { colors } from '../../../theme';
+import { colors, useTheme } from '../../../theme';
 
 interface StandingsTabProps {
   leagueId: string;
 }
 
 export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
+  const { colors: themeColors } = useTheme();
   const [standings, setStandings] = useState<TeamStanding[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
+    undefined
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +47,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
     try {
       const response = await seasonService.getLeagueSeasons(leagueId, 1, 100);
       setSeasons(response.data);
-      
+
       // Auto-select active season if available
       const activeSeason = response.data.find(s => s.isActive);
       if (activeSeason) {
@@ -62,7 +72,8 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
       const data = await leagueService.getStandings(leagueId, selectedSeasonId);
       setStandings(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load standings';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load standings';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -75,7 +86,9 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
   };
 
   const handleSeasonChange = (option: SelectOption) => {
-    setSelectedSeasonId(option.value === 'all' ? undefined : option.value as string);
+    setSelectedSeasonId(
+      option.value === 'all' ? undefined : (option.value as string)
+    );
   };
 
   const navigation = useNavigation();
@@ -102,10 +115,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
   const renderContent = () => {
     if (standings.length > 0) {
       return (
-        <StandingsTable
-          standings={standings}
-          onTeamPress={handleTeamPress}
-        />
+        <StandingsTable standings={standings} onTeamPress={handleTeamPress} />
       );
     }
 
@@ -121,7 +131,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Controls Section */}
       <View style={styles.controls}>
         {seasons.length > 0 && (
@@ -135,17 +145,13 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
             />
           </View>
         )}
-        
+
         <TouchableOpacity
           style={styles.refreshButton}
           onPress={handleRefresh}
           disabled={isRefreshing}
         >
-          <Ionicons 
-            name="refresh" 
-            size={20} 
-            color={colors.cobalt} 
-          />
+          <Ionicons name="refresh" size={20} color={colors.cobalt} />
           <Text style={styles.refreshText}>Refresh</Text>
         </TouchableOpacity>
       </View>

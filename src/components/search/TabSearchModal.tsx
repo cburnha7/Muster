@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { SportType } from '../../types';
 import { searchEventBus } from '../../utils/searchEventBus';
 
@@ -67,6 +67,7 @@ export function TabSearchModal({
   onCreatePress,
 }: TabSearchModalProps) {
   const [query, setQuery] = useState('');
+  const { colors: themeColors } = useTheme();
   const [selectedSport, setSelectedSport] = useState<SportType | null>(null);
   const [selectedGender, setSelectedGender] = useState('');
   const [minAgeFilter, setMinAgeFilter] = useState('');
@@ -122,7 +123,7 @@ export function TabSearchModal({
   if (!visible) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
@@ -183,7 +184,10 @@ export function TabSearchModal({
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.resultRow}
+              style={[
+                styles.resultRow,
+                { backgroundColor: themeColors.bgCard },
+              ]}
               onPress={() => {
                 onResultPress(item);
                 onClose();
@@ -191,11 +195,23 @@ export function TabSearchModal({
               activeOpacity={0.7}
             >
               <View style={styles.resultBody}>
-                <Text style={styles.resultName} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.resultName,
+                    { color: themeColors.textPrimary },
+                  ]}
+                  numberOfLines={1}
+                >
                   {item.name}
                 </Text>
                 {item.subtitle && (
-                  <Text style={styles.resultSub} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.resultSub,
+                      { color: themeColors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.subtitle}
                   </Text>
                 )}

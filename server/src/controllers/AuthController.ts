@@ -407,10 +407,19 @@ class AuthController {
       const { provider, providerUserId, email, firstName, lastName } = req.body;
 
       if (!provider || !providerUserId) {
+<<<<<<< HEAD
         res.status(400).json({
           error: 'Validation Error',
           message: 'provider and providerUserId are required',
         });
+=======
+        res
+          .status(400)
+          .json({
+            error: 'Validation Error',
+            message: 'provider and providerUserId are required',
+          });
+>>>>>>> charles-dev
         return;
       }
       if (provider !== 'apple' && provider !== 'google') {
@@ -426,11 +435,17 @@ class AuthController {
         providerUserId
       );
 
+<<<<<<< HEAD
       // 2. If not found and we have a valid email, try to find by email and link
       if (!user && email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
         const existingByEmail = await AuthService.findUserByEmail(
           email.trim().toLowerCase()
         );
+=======
+      // 2. If not found and we have an email, try to find by email and link
+      if (!user && email) {
+        const existingByEmail = await AuthService.findUserByEmail(email);
+>>>>>>> charles-dev
         if (existingByEmail) {
           await AuthService.linkSSOProvider(
             existingByEmail.id,
@@ -445,6 +460,7 @@ class AuthController {
 
       // 3. If still not found, create a new account
       if (!user) {
+<<<<<<< HEAD
         // Sanitize provider data — discard garbled or obviously bad values
         const cleanName = (val: string | undefined): string => {
           if (!val) return '';
@@ -469,13 +485,23 @@ class AuthController {
         const regEmail = safeEmail || `${providerUserId}@${provider}.sso`;
         const username =
           (safeEmail ? safeEmail.split('@')[0] : providerUserId.slice(0, 10)) +
+=======
+        const regEmail = email || `${providerUserId}@${provider}.sso`;
+        const username =
+          (email ? email.split('@')[0] : providerUserId.slice(0, 10)) +
+>>>>>>> charles-dev
           '_' +
           Date.now().toString(36);
         user = await AuthService.createSSOUser({
           email: regEmail,
           username,
+<<<<<<< HEAD
           firstName: safeFirst || regEmail.split('@')[0],
           lastName: safeLast,
+=======
+          firstName: firstName || regEmail.split('@')[0],
+          lastName: lastName || '',
+>>>>>>> charles-dev
           dateOfBirth: new Date('2000-01-01'),
           ssoProvider: provider,
           ssoProviderId: providerUserId,
@@ -488,6 +514,7 @@ class AuthController {
       if (exp)
         await TokenService.storeRefreshToken(user!.id, refreshToken, exp);
 
+<<<<<<< HEAD
       res.status(200).json({
         user: toUserResponse(user!),
         accessToken,
@@ -499,6 +526,23 @@ class AuthController {
         error: 'Internal Server Error',
         message: error.message || 'SSO authentication failed',
       });
+=======
+      res
+        .status(200)
+        .json({
+          user: toUserResponse(user!),
+          accessToken,
+          refreshToken,
+        } as AuthResponse);
+    } catch (error: any) {
+      console.error('SSO find-or-create error:', error);
+      res
+        .status(500)
+        .json({
+          error: 'Internal Server Error',
+          message: error.message || 'SSO authentication failed',
+        });
+>>>>>>> charles-dev
     }
   }
 

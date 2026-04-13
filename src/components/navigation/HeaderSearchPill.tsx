@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TouchableOpacity, Text, TextInput, StyleSheet, View } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  TextInput,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { searchEventBus } from '../../utils';
 
 const PLACEHOLDERS: Record<string, string> = {
@@ -16,7 +22,10 @@ interface HeaderSearchPillProps {
   routeName?: string;
 }
 
-export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) {
+export function HeaderSearchPill({
+  routeName = 'Home',
+}: HeaderSearchPillProps) {
+  const { colors: themeColors } = useTheme();
   const placeholder = PLACEHOLDERS[routeName] || 'Search...';
   const isHome = routeName === 'Home' || routeName === 'Profile';
   const [active, setActive] = useState(false);
@@ -54,20 +63,25 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
 
   if (active) {
     return (
-      <View style={styles.pillActive}>
-        <Ionicons name="search" size={17} color={colors.outline} />
+      <View
+        style={[styles.pillActive, { backgroundColor: themeColors.bgCard }]}
+      >
+        <Ionicons name="search" size={17} color={themeColors.textSecondary} />
         <TextInput
           ref={inputRef}
-          style={styles.activeInput}
+          style={[styles.activeInput, { color: themeColors.textPrimary }]}
           placeholder={placeholder}
-          placeholderTextColor={colors.outline}
+          placeholderTextColor={themeColors.textSecondary}
           value={query}
           onChangeText={handleChangeText}
           autoFocus
           returnKeyType="search"
         />
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => handleChangeText('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            onPress={() => handleChangeText('')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Ionicons name="close-circle" size={17} color={colors.outline} />
           </TouchableOpacity>
         )}
@@ -76,9 +90,20 @@ export function HeaderSearchPill({ routeName = 'Home' }: HeaderSearchPillProps) 
   }
 
   return (
-    <TouchableOpacity style={styles.pill} onPress={handlePress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={placeholder}>
-      <Ionicons name="search" size={17} color={colors.outline} />
-      <Text style={styles.text} numberOfLines={1}>{placeholder}</Text>
+    <TouchableOpacity
+      style={[styles.pill, { backgroundColor: themeColors.bgInput }]}
+      onPress={handlePress}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={placeholder}
+    >
+      <Ionicons name="search" size={17} color={themeColors.textSecondary} />
+      <Text
+        style={[styles.text, { color: themeColors.textSecondary }]}
+        numberOfLines={1}
+      >
+        {placeholder}
+      </Text>
     </TouchableOpacity>
   );
 }

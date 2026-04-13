@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { salute as saluteConstants } from '../../theme/brand';
 import {
   debriefService,
@@ -25,6 +25,7 @@ import { eventService } from '../../services/api/EventService';
 import { notificationsEventBus } from '../../utils/notificationsEventBus';
 
 export function DebriefScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { user } = useAuth();
@@ -168,7 +169,9 @@ export function DebriefScreen() {
     `${p.firstName?.[0] || ''}${p.lastName?.[0] || ''}`.toUpperCase();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       {/* Header — event name only */}
       <View style={styles.header}>
         <Text style={styles.title} numberOfLines={1}>

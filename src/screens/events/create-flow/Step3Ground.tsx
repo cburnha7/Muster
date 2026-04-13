@@ -13,9 +13,10 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { facilityService } from '../../../services/api/FacilityService';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, useTheme } from '../../../theme';
 
 export function Step3Ground() {
+  const { colors: themeColors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const { user } = useAuth();
   const navigation = useNavigation<any>();
@@ -38,7 +39,7 @@ export function Step3Ground() {
     try {
       const res = await facilityService.getAuthorizedFacilities(user.id);
       setFacilities(
-        res.data.map((f) => ({ id: f.id, name: f.name, isOwned: f.isOwned })),
+        res.data.map(f => ({ id: f.id, name: f.name, isOwned: f.isOwned }))
       );
     } catch {
       setFacilityError('Could not load grounds. Tap to retry.');
@@ -51,13 +52,13 @@ export function Step3Ground() {
     loadFacilities();
   }, [loadFacilities]);
 
-  const facilityOptions: SelectOption[] = facilities.map((f) => ({
+  const facilityOptions: SelectOption[] = facilities.map(f => ({
     label: f.name,
     value: f.id,
   }));
 
   const handleFacilitySelect = (value: string | number | boolean) => {
-    const fac = facilities.find((f) => f.id === value);
+    const fac = facilities.find(f => f.id === value);
     if (!fac) return;
     dispatch({
       type: 'SET_FACILITY',
@@ -79,12 +80,12 @@ export function Step3Ground() {
     setCourtError('');
     facilityService
       .getCourtsForEvent(state.facilityId, user.id, state.sport ?? undefined)
-      .then((res) => {
+      .then(res => {
         setCourts(
-          res.data.map((c) => ({
+          res.data.map(c => ({
             label: `${c.name} (${c.availableSlotCount} slots)`,
             value: c.id,
-          })),
+          }))
         );
       })
       .catch(() => {
@@ -95,7 +96,7 @@ export function Step3Ground() {
   }, [state.facilityId, user?.id, state.sport]);
 
   const handleCourtSelect = (value: string | number | boolean) => {
-    const court = courts.find((c) => c.value === value);
+    const court = courts.find(c => c.value === value);
     if (!court) return;
     dispatch({
       type: 'SET_COURT',
@@ -112,11 +113,18 @@ export function Step3Ground() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.heading}>Where's the game?</Text>
 
       {loadingFacilities ? (
-        <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
+        <ActivityIndicator
+          size="small"
+          color={colors.cobalt}
+          style={styles.loader}
+        />
       ) : facilityError ? (
         <TouchableOpacity onPress={loadFacilities}>
           <Text style={styles.errorText}>{facilityError}</Text>
@@ -134,7 +142,11 @@ export function Step3Ground() {
       {state.facilityId !== '' && (
         <>
           {loadingCourts ? (
-            <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
+            <ActivityIndicator
+              size="small"
+              color={colors.cobalt}
+              style={styles.loader}
+            />
           ) : courtError ? (
             <Text style={styles.errorText}>{courtError}</Text>
           ) : (
@@ -150,7 +162,11 @@ export function Step3Ground() {
         </>
       )}
 
-      <TouchableOpacity style={styles.bookButton} onPress={handleBookCourtTime} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={styles.bookButton}
+        onPress={handleBookCourtTime}
+        activeOpacity={0.8}
+      >
         <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
         <Text style={styles.bookButtonText}>Book Court Time</Text>
       </TouchableOpacity>

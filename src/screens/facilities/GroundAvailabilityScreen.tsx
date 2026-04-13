@@ -11,10 +11,17 @@ import {
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { colors, Spacing, TextStyles, useTheme } from '../../theme';
 import { courtService, TimeSlot, Court } from '../../services/api/CourtService';
-import { calendarTheme, formatDateForCalendar, formatTime12 } from '../../utils/calendarUtils';
-import { TimeSlotGrid, TimeSlot as GridTimeSlot } from '../../components/facilities/TimeSlotGrid';
+import {
+  calendarTheme,
+  formatDateForCalendar,
+  formatTime12,
+} from '../../utils/calendarUtils';
+import {
+  TimeSlotGrid,
+  TimeSlot as GridTimeSlot,
+} from '../../components/facilities/TimeSlotGrid';
 import { BlockTimeSlotModal } from '../../components/facilities/BlockTimeSlotModal';
 
 interface GroundAvailabilityScreenProps {
@@ -31,9 +38,12 @@ export function GroundAvailabilityScreen({
   route,
   navigation,
 }: GroundAvailabilityScreenProps) {
+  const { colors: themeColors } = useTheme();
   const { facilityId, facilityName } = route.params;
 
-  const [selectedDate, setSelectedDate] = useState<string>(formatDateForCalendar(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(
+    formatDateForCalendar(new Date())
+  );
   const [courts, setCourts] = useState<Court[]>([]);
   const [selectedCourtIds, setSelectedCourtIds] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -59,11 +69,11 @@ export function GroundAvailabilityScreen({
     try {
       setLoading(true);
       const courtsData = await courtService.getCourts(facilityId);
-      const activeCourts = courtsData.filter((c) => c.isActive);
+      const activeCourts = courtsData.filter(c => c.isActive);
       setCourts(activeCourts);
-      
+
       if (activeCourts.length > 0) {
-        setSelectedCourtIds(activeCourts.map((c) => c.id));
+        setSelectedCourtIds(activeCourts.map(c => c.id));
       }
     } catch (error) {
       console.error('Failed to load courts:', error);
@@ -106,9 +116,9 @@ export function GroundAvailabilityScreen({
   };
 
   const toggleCourtSelection = (courtId: string) => {
-    setSelectedCourtIds((prev) => {
+    setSelectedCourtIds(prev => {
       if (prev.includes(courtId)) {
-        return prev.filter((id) => id !== courtId);
+        return prev.filter(id => id !== courtId);
       } else {
         return [...prev, courtId];
       }
@@ -116,7 +126,7 @@ export function GroundAvailabilityScreen({
   };
 
   const handleAddBlockSlot = (courtId: string) => {
-    const court = courts.find((c) => c.id === courtId);
+    const court = courts.find(c => c.id === courtId);
     if (court) {
       setSelectedCourtForBlock({ courtId: court.id, courtName: court.name });
       setBlockModalVisible(true);
@@ -168,8 +178,8 @@ export function GroundAvailabilityScreen({
   };
 
   const convertToGridSlots = (): GridTimeSlot[] => {
-    return timeSlots.map((slot) => {
-      const court = courts.find((c) => c.id === slot.courtId);
+    return timeSlots.map(slot => {
+      const court = courts.find(c => c.id === slot.courtId);
       return {
         id: slot.id || '',
         startTime: slot.startTime,
@@ -185,7 +195,12 @@ export function GroundAvailabilityScreen({
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: themeColors.bgScreen },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading availability...</Text>
       </View>
@@ -193,7 +208,7 @@ export function GroundAvailabilityScreen({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -232,19 +247,21 @@ export function GroundAvailabilityScreen({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Select Courts</Text>
             <View style={styles.courtSelector}>
-              {courts.map((court) => (
+              {courts.map(court => (
                 <TouchableOpacity
                   key={court.id}
                   style={[
                     styles.courtChip,
-                    selectedCourtIds.includes(court.id) && styles.courtChipSelected,
+                    selectedCourtIds.includes(court.id) &&
+                      styles.courtChipSelected,
                   ]}
                   onPress={() => toggleCourtSelection(court.id)}
                 >
                   <Text
                     style={[
                       styles.courtChipText,
-                      selectedCourtIds.includes(court.id) && styles.courtChipTextSelected,
+                      selectedCourtIds.includes(court.id) &&
+                        styles.courtChipTextSelected,
                     ]}
                   >
                     {court.name}
@@ -259,7 +276,12 @@ export function GroundAvailabilityScreen({
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                Availability for {new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                Availability for{' '}
+                {new Date(selectedDate).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
               </Text>
               <TouchableOpacity
                 style={styles.addButton}
@@ -267,7 +289,10 @@ export function GroundAvailabilityScreen({
                   if (selectedCourtIds.length === 1) {
                     handleAddBlockSlot(selectedCourtIds[0]!);
                   } else {
-                    Alert.alert('Select One Court', 'Please select a single court to block a time slot.');
+                    Alert.alert(
+                      'Select One Court',
+                      'Please select a single court to block a time slot.'
+                    );
                   }
                 }}
               >
@@ -283,7 +308,11 @@ export function GroundAvailabilityScreen({
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={64} color={colors.inkFaint} />
+            <Ionicons
+              name="calendar-outline"
+              size={64}
+              color={colors.inkFaint}
+            />
             <Text style={styles.emptyStateText}>
               Select at least one court to view availability
             </Text>
@@ -294,15 +323,21 @@ export function GroundAvailabilityScreen({
           <Text style={styles.sectionTitle}>Legend</Text>
           <View style={styles.legend}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.cobalt }]} />
+              <View
+                style={[styles.legendColor, { backgroundColor: colors.cobalt }]}
+              />
               <Text style={styles.legendText}>Available</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.heart }]} />
+              <View
+                style={[styles.legendColor, { backgroundColor: colors.heart }]}
+              />
               <Text style={styles.legendText}>Blocked</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: colors.ink }]} />
+              <View
+                style={[styles.legendColor, { backgroundColor: colors.ink }]}
+              />
               <Text style={styles.legendText}>Rented</Text>
             </View>
           </View>

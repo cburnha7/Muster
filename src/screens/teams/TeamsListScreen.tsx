@@ -102,7 +102,7 @@ export function TeamsListScreen() {
         (allRes?.data ?? []).filter(t => t.isPublic && !myTeamIds.has(t.id))
       );
     } catch (err: any) {
-      setError(err.message || 'Failed to load teams');
+      setError(err.message || 'Failed to load rosters');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -244,7 +244,9 @@ export function TeamsListScreen() {
       />
 
       {/* My Teams section */}
-      {myTeams.length > 0 && <Text style={styles.sectionTitle}>My Teams</Text>}
+      {myTeams.length > 0 && (
+        <Text style={styles.sectionTitle}>My Rosters</Text>
+      )}
     </>
   );
 
@@ -272,7 +274,7 @@ export function TeamsListScreen() {
         activeOpacity={0.85}
       >
         <Ionicons name="key-outline" size={18} color={colors.primary} />
-        <Text style={styles.joinBtnText}>Join a Team with Code</Text>
+        <Text style={styles.joinBtnText}>Join a Roster with Code</Text>
         <Ionicons
           name="chevron-forward"
           size={16}
@@ -322,9 +324,9 @@ export function TeamsListScreen() {
                 size={36}
                 color={colors.outlineVariant}
               />
-              <Text style={styles.emptyTitle}>No teams yet</Text>
+              <Text style={styles.emptyTitle}>No rosters yet</Text>
               <Text style={styles.emptyText}>
-                Create a team or join one with a code
+                Create a roster or join one with a code
               </Text>
             </View>
           ) : null
@@ -345,11 +347,11 @@ export function TeamsListScreen() {
       <TabSearchModal
         visible={searchModalVisible}
         onClose={() => setSearchModalVisible(false)}
-        title="Search Teams"
-        placeholder="Search by team name..."
+        title="Search Rosters"
+        placeholder="Search by roster name..."
         onSearch={handleSearchRosters}
         onResultPress={handleSearchResultPress}
-        createLabel="Create Team"
+        createLabel="Create Roster"
         onCreatePress={handleCreateTeam}
       />
     </View>
@@ -448,13 +450,13 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.38,
+    shadowRadius: 12,
+    elevation: 6,
   },
 });

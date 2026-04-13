@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import { prisma } from './lib/prisma';
@@ -158,6 +159,9 @@ app.use(
 );
 
 app.use(express.json({ limit: '50mb' }));
+
+// Gzip compress all responses
+app.use(compression());
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

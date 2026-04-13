@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,11 +25,17 @@ import { leagueService } from '../../services/api/LeagueService';
 import { RosterStrikeData } from '../../services/api/LeagueService';
 import { teamService } from '../../services/api/TeamService';
 import { selectUser } from '../../store/slices/authSlice';
-import { League, UpdateLeagueData, DocumentType, LeagueMembership } from '../../types/league';
+import {
+  League,
+  UpdateLeagueData,
+  DocumentType,
+  LeagueMembership,
+} from '../../types/league';
 import { Team } from '../../types';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 export const ManageLeagueScreen: React.FC = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId } = (route.params as any) || {};
@@ -32,8 +47,6 @@ export const ManageLeagueScreen: React.FC = () => {
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-
-
 
   // Roster search and invitation state (private Team Leagues)
   const [rosterSearchQuery, setRosterSearchQuery] = useState('');
@@ -50,11 +63,13 @@ export const ManageLeagueScreen: React.FC = () => {
   const isPrivateLeague = false;
 
   // Get roster IDs already in the league (any status) to filter search results
-  const existingRosterIds = members.map((m) => m.memberId);
+  const existingRosterIds = members.map(m => m.memberId);
 
   const getInvitationStatus = useCallback(
     (rosterId: string): string | null => {
-      const membership = members.find((m) => m.memberId === rosterId && m.memberType === 'roster');
+      const membership = members.find(
+        m => m.memberId === rosterId && m.memberType === 'roster'
+      );
       if (!membership) return null;
       return membership.status;
     },
@@ -73,7 +88,8 @@ export const ManageLeagueScreen: React.FC = () => {
       const result = await teamService.searchTeams(query);
       setRosterSearchResults(result.results || []);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to search rosters';
+      const message =
+        err instanceof Error ? err.message : 'Failed to search rosters';
       setInviteError(message);
       setRosterSearchResults([]);
     } finally {
@@ -97,7 +113,8 @@ export const ManageLeagueScreen: React.FC = () => {
       if (err?.status === 409) {
         setInviteError(`${rosterName} is already in this league`);
       } else {
-        const message = err instanceof Error ? err.message : 'Failed to send invitation';
+        const message =
+          err instanceof Error ? err.message : 'Failed to send invitation';
         setInviteError(message);
       }
     } finally {
@@ -128,7 +145,8 @@ export const ManageLeagueScreen: React.FC = () => {
         loadStrikes(data);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load league';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load league';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -153,8 +171,10 @@ export const ManageLeagueScreen: React.FC = () => {
       if (!target) return;
 
       // Find the active season for this league
-      const seasons = (target as any).seasons as Array<{ id: string; isActive: boolean }> | undefined;
-      const activeSeason = seasons?.find((s) => s.isActive);
+      const seasons = (target as any).seasons as
+        | Array<{ id: string; isActive: boolean }>
+        | undefined;
+      const activeSeason = seasons?.find(s => s.isActive);
       if (!activeSeason) return;
 
       const strikes = await leagueService.getSeasonStrikes(
@@ -182,7 +202,11 @@ export const ManageLeagueScreen: React.FC = () => {
     try {
       setIsUpdating(true);
 
-      const updatedLeague = await leagueService.updateLeague(leagueId, data, user.id);
+      const updatedLeague = await leagueService.updateLeague(
+        leagueId,
+        data,
+        user.id
+      );
       setLeague(updatedLeague);
 
       (navigation as any).replace('LeaguesBrowser');
@@ -193,7 +217,10 @@ export const ManageLeagueScreen: React.FC = () => {
     }
   };
 
-  const handleUploadDocument = async (file: File, documentType: DocumentType) => {
+  const handleUploadDocument = async (
+    file: File,
+    documentType: DocumentType
+  ) => {
     if (!user?.id) {
       Alert.alert('Error', 'You must be logged in to upload documents');
       return;
@@ -225,7 +252,12 @@ export const ManageLeagueScreen: React.FC = () => {
               Alert.alert('Success', 'Roster removed from league');
               loadMembers();
             } catch (error) {
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to remove roster');
+              Alert.alert(
+                'Error',
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to remove roster'
+              );
             }
           },
         },
@@ -235,7 +267,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (isLoading && !league) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -248,7 +280,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (error && !league) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -261,7 +293,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (!league) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -275,29 +307,32 @@ export const ManageLeagueScreen: React.FC = () => {
   // Check if user is the operator
   if (user?.id && league.organizerId !== user.id) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
           onLeftPress={() => navigation.goBack()}
         />
-        <ErrorDisplay 
+        <ErrorDisplay
           title="Access Denied"
-          message="Only the league commissioner can manage this league" 
+          message="Only the league commissioner can manage this league"
         />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
       <ScreenHeader
         title="Update League"
         leftIcon="arrow-back"
         onLeftPress={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Edit League Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>League Information</Text>
@@ -307,20 +342,26 @@ export const ManageLeagueScreen: React.FC = () => {
             isEdit={true}
             loading={isUpdating}
             initialRosters={members
-              .filter((m) => m.memberType === 'roster' && m.status === 'active')
-              .map((m) => ({
+              .filter(m => m.memberType === 'roster' && m.status === 'active')
+              .map(m => ({
                 id: m.memberId,
                 name: (m as any).team?.name || 'Unknown Roster',
                 sportType: (m as any).team?.sportType,
-                memberCount: (m as any).team?.playerCount ?? (m as any).team?._count?.members ?? 0,
+                memberCount:
+                  (m as any).team?.playerCount ??
+                  (m as any).team?._count?.members ??
+                  0,
               }))}
             initialInvitedRosters={members
-              .filter((m) => m.memberType === 'roster' && m.status === 'pending')
-              .map((m) => ({
+              .filter(m => m.memberType === 'roster' && m.status === 'pending')
+              .map(m => ({
                 id: m.memberId,
                 name: (m as any).team?.name || 'Unknown Roster',
                 sportType: (m as any).team?.sportType,
-                memberCount: (m as any).team?.playerCount ?? (m as any).team?._count?.members ?? 0,
+                memberCount:
+                  (m as any).team?.playerCount ??
+                  (m as any).team?._count?.members ??
+                  0,
               }))}
           />
         </View>
@@ -328,22 +369,42 @@ export const ManageLeagueScreen: React.FC = () => {
         {/* Commissioner Team Management */}
         <TouchableOpacity
           style={styles.section}
-          onPress={() => (navigation as any).navigate('LeagueTeamManagement', { leagueId })}
+          onPress={() =>
+            (navigation as any).navigate('LeagueTeamManagement', { leagueId })
+          }
           activeOpacity={0.7}
         >
           <View style={[styles.sectionHeader, { borderBottomWidth: 0 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
+            >
               <Ionicons name="people" size={22} color={colors.cobalt} />
               <View>
-                <Text style={[styles.sectionTitle, { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }]}>
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 },
+                  ]}
+                >
                   Manage Teams
                 </Text>
-                <Text style={{ fontSize: 13, fontFamily: fonts.body, color: colors.inkFaint, marginTop: 2 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontFamily: fonts.body,
+                    color: colors.inkFaint,
+                    marginTop: 2,
+                  }}
+                >
                   Create teams and assign coaches
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.inkFaint}
+            />
           </View>
         </TouchableOpacity>
 
@@ -355,47 +416,64 @@ export const ManageLeagueScreen: React.FC = () => {
               {members.length} {members.length === 1 ? 'roster' : 'rosters'}
             </Text>
           </View>
-          
+
           {isLoadingMembers ? (
             <View style={styles.loadingContainer}>
               <LoadingSpinner size={24} />
             </View>
           ) : members.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="people-outline" size={48} color={colors.inkFaint} />
-              <Text style={styles.emptyStateText}>No rosters have joined yet</Text>
+              <Ionicons
+                name="people-outline"
+                size={48}
+                color={colors.inkFaint}
+              />
+              <Text style={styles.emptyStateText}>
+                No rosters have joined yet
+              </Text>
               <Text style={styles.emptyStateSubtext}>
                 Rosters can join from the league details page
               </Text>
             </View>
           ) : (
             <View style={styles.teamsList}>
-              {members.map((membership) => (
+              {members.map(membership => (
                 <View key={membership.id} style={styles.teamItem}>
                   <View style={styles.teamInfo}>
                     <Text style={styles.teamName}>
                       {(membership as any).team?.name || 'Unknown Roster'}
                     </Text>
                     <Text style={styles.teamStats}>
-                      {membership.matchesPlayed} matches • {membership.points} points
+                      {membership.matchesPlayed} matches • {membership.points}{' '}
+                      points
                     </Text>
                     <StrikeIndicator
                       strikeCount={strikeData.get(membership.memberId) ?? 0}
-                      rosterName={(membership as any).team?.name || 'Unknown Roster'}
-                      onRemoveRoster={() => handleRemoveTeam(
-                        membership.teamId,
-                        (membership as any).team?.name || 'this roster'
-                      )}
+                      rosterName={
+                        (membership as any).team?.name || 'Unknown Roster'
+                      }
+                      onRemoveRoster={() =>
+                        handleRemoveTeam(
+                          membership.teamId,
+                          (membership as any).team?.name || 'this roster'
+                        )
+                      }
                     />
                   </View>
                   <TouchableOpacity
                     style={styles.removeButton}
-                    onPress={() => handleRemoveTeam(
-                      membership.teamId,
-                      (membership as any).team?.name || 'this roster'
-                    )}
+                    onPress={() =>
+                      handleRemoveTeam(
+                        membership.teamId,
+                        (membership as any).team?.name || 'this roster'
+                      )
+                    }
                   >
-                    <Ionicons name="close-circle" size={24} color={colors.heart} />
+                    <Ionicons
+                      name="close-circle"
+                      size={24}
+                      color={colors.heart}
+                    />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -416,7 +494,7 @@ export const ManageLeagueScreen: React.FC = () => {
                 <TextInput
                   style={styles.searchInput}
                   value={rosterSearchQuery}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     setRosterSearchQuery(text);
                     setInviteError(null);
                     setInviteSuccess(null);
@@ -430,7 +508,8 @@ export const ManageLeagueScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[
                     styles.searchButton,
-                    (!rosterSearchQuery.trim() || isSearchingRosters) && styles.searchButtonDisabled,
+                    (!rosterSearchQuery.trim() || isSearchingRosters) &&
+                      styles.searchButtonDisabled,
                   ]}
                   onPress={handleSearchRosters}
                   disabled={!rosterSearchQuery.trim() || isSearchingRosters}
@@ -448,7 +527,11 @@ export const ManageLeagueScreen: React.FC = () => {
               {/* Success feedback */}
               {inviteSuccess && (
                 <View style={styles.inviteSuccessContainer}>
-                  <Ionicons name="checkmark-circle" size={18} color={colors.cobalt} />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={18}
+                    color={colors.cobalt}
+                  />
                   <Text style={styles.inviteSuccessText}>{inviteSuccess}</Text>
                 </View>
               )}
@@ -456,7 +539,11 @@ export const ManageLeagueScreen: React.FC = () => {
               {/* Error feedback */}
               {inviteError && (
                 <View style={styles.inviteErrorContainer}>
-                  <Ionicons name="alert-circle" size={18} color={colors.heart} />
+                  <Ionicons
+                    name="alert-circle"
+                    size={18}
+                    color={colors.heart}
+                  />
                   <Text style={styles.inviteErrorText}>{inviteError}</Text>
                 </View>
               )}
@@ -464,18 +551,23 @@ export const ManageLeagueScreen: React.FC = () => {
               {/* Search results */}
               {rosterSearchResults.length > 0 && (
                 <View style={styles.searchResults}>
-                  {rosterSearchResults.map((roster) => {
+                  {rosterSearchResults.map(roster => {
                     const status = getInvitationStatus(roster.id);
-                    const isAlreadyInLeague = existingRosterIds.includes(roster.id);
+                    const isAlreadyInLeague = existingRosterIds.includes(
+                      roster.id
+                    );
                     const isInviting = invitingRosterId === roster.id;
 
                     return (
                       <View key={roster.id} style={styles.searchResultItem}>
                         <View style={styles.searchResultInfo}>
-                          <Text style={styles.searchResultName}>{roster.name}</Text>
+                          <Text style={styles.searchResultName}>
+                            {roster.name}
+                          </Text>
                           {roster.sportType && (
                             <Text style={styles.searchResultMeta}>
-                              {roster.sportType} • {roster.members?.length ?? 0} players
+                              {roster.sportType} • {roster.members?.length ?? 0}{' '}
+                              players
                             </Text>
                           )}
                         </View>
@@ -486,7 +578,9 @@ export const ManageLeagueScreen: React.FC = () => {
                           </View>
                         ) : status === 'active' ? (
                           <View style={styles.statusBadgeActive}>
-                            <Text style={styles.statusBadgeTextActive}>Accepted</Text>
+                            <Text style={styles.statusBadgeTextActive}>
+                              Accepted
+                            </Text>
                           </View>
                         ) : status === 'withdrawn' ? (
                           <View style={styles.statusBadgeDeclined}>
@@ -498,7 +592,9 @@ export const ManageLeagueScreen: React.FC = () => {
                               styles.inviteButton,
                               isInviting && styles.inviteButtonDisabled,
                             ]}
-                            onPress={() => handleInviteRoster(roster.id, roster.name)}
+                            onPress={() =>
+                              handleInviteRoster(roster.id, roster.name)
+                            }
                             disabled={isInviting || isAlreadyInLeague}
                             accessibilityRole="button"
                             accessibilityLabel={`Invite ${roster.name}`}
@@ -506,7 +602,9 @@ export const ManageLeagueScreen: React.FC = () => {
                             {isInviting ? (
                               <ActivityIndicator size="small" color="#FFFFFF" />
                             ) : (
-                              <Text style={styles.inviteButtonText}>Invite</Text>
+                              <Text style={styles.inviteButtonText}>
+                                Invite
+                              </Text>
                             )}
                           </TouchableOpacity>
                         )}
@@ -517,22 +615,38 @@ export const ManageLeagueScreen: React.FC = () => {
               )}
 
               {/* Empty search state */}
-              {rosterSearchResults.length === 0 && rosterSearchQuery.trim() && !isSearchingRosters && !inviteError && (
-                <Text style={styles.noSearchResults}>
-                  No rosters found matching "{rosterSearchQuery.trim()}"
-                </Text>
-              )}
+              {rosterSearchResults.length === 0 &&
+                rosterSearchQuery.trim() &&
+                !isSearchingRosters &&
+                !inviteError && (
+                  <Text style={styles.noSearchResults}>
+                    No rosters found matching "{rosterSearchQuery.trim()}"
+                  </Text>
+                )}
             </View>
 
             {/* Pending invitations from members list */}
-            {members.filter((m) => m.status === 'pending' && m.memberType === 'roster').length > 0 && (
+            {members.filter(
+              m => m.status === 'pending' && m.memberType === 'roster'
+            ).length > 0 && (
               <View style={styles.pendingInvitations}>
-                <Text style={styles.pendingInvitationsTitle}>Pending Invitations</Text>
+                <Text style={styles.pendingInvitationsTitle}>
+                  Pending Invitations
+                </Text>
                 {members
-                  .filter((m) => m.status === 'pending' && m.memberType === 'roster')
-                  .map((membership) => (
-                    <View key={membership.id} style={styles.pendingInvitationItem}>
-                      <Ionicons name="time-outline" size={18} color={colors.gold} />
+                  .filter(
+                    m => m.status === 'pending' && m.memberType === 'roster'
+                  )
+                  .map(membership => (
+                    <View
+                      key={membership.id}
+                      style={styles.pendingInvitationItem}
+                    >
+                      <Ionicons
+                        name="time-outline"
+                        size={18}
+                        color={colors.gold}
+                      />
                       <Text style={styles.pendingInvitationName}>
                         {(membership as any).team?.name || 'Unknown Roster'}
                       </Text>
@@ -550,7 +664,8 @@ export const ManageLeagueScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Documents</Text>
           <Text style={styles.sectionDescription}>
-            Upload league rules, insurance policies, or other important documents
+            Upload league rules, insurance policies, or other important
+            documents
           </Text>
           <DocumentUploadForm
             onSubmit={handleUploadDocument}
@@ -563,13 +678,18 @@ export const ManageLeagueScreen: React.FC = () => {
           <View style={styles.deleteSection}>
             <FormButton
               title="Delete League"
-              onPress={() => (navigation as any).navigate('LeagueDeletionConfirm', { leagueId })}
+              onPress={() =>
+                (navigation as any).navigate('LeagueDeletionConfirm', {
+                  leagueId,
+                })
+              }
               variant="danger"
               size="large"
               leftIcon="trash-outline"
             />
             <Text style={styles.deleteHint}>
-              This will permanently remove the league and issue any applicable refunds.
+              This will permanently remove the league and issue any applicable
+              refunds.
             </Text>
           </View>
         )}

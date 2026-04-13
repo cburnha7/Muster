@@ -46,7 +46,8 @@ export function ConfirmModal({
     }
   };
 
-  const resolvedIconColor = iconColor || (variant === 'danger' ? colors.heart : colors.cobalt);
+  const resolvedIconColor =
+    iconColor || (variant === 'danger' ? colors.heart : colors.cobalt);
   const confirmBg = variant === 'danger' ? colors.heart : colors.cobalt;
 
   return (
@@ -75,6 +76,7 @@ export function ConfirmModal({
               style={[styles.button, styles.buttonSecondary]}
               onPress={onCancel}
               disabled={isSubmitting}
+              activeOpacity={0.75}
             >
               <Text style={styles.buttonSecondaryText}>{cancelText}</Text>
             </TouchableOpacity>
@@ -83,6 +85,7 @@ export function ConfirmModal({
               style={[styles.button, { backgroundColor: confirmBg }]}
               onPress={handleConfirm}
               disabled={isSubmitting}
+              activeOpacity={0.75}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#FFFFFF" />
