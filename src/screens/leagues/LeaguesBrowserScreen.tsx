@@ -28,6 +28,8 @@ import { selectActiveUserId } from '../../store/slices/contextSlice';
 import { SportType } from '../../types';
 import { searchEventBus } from '../../utils/searchEventBus';
 import { useDependentContext } from '../../hooks/useDependentContext';
+import { MyCrewRow } from '../../components/home/MyCrewRow';
+import { useCrewSelector } from '../../hooks/useCrewSelector';
 
 type LeagueItem = any;
 
@@ -50,6 +52,8 @@ export function LeaguesBrowserScreen() {
   const activeUserId = useSelector(selectActiveUserId);
   const { isDependent } = useDependentContext();
   const { width: screenWidth } = useWindowDimensions();
+  const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
+    useCrewSelector();
 
   const [myLeagues, setMyLeagues] = useState<LeagueItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,6 +194,15 @@ export function LeaguesBrowserScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Family crew selector */}
+      {hasDependents && (
+        <MyCrewRow
+          members={crewMembers}
+          selectedId={selectedCrewId}
+          onSelect={onSelectCrew}
+        />
+      )}
+
       {/* Sport filter chips */}
       <ScrollView
         horizontal

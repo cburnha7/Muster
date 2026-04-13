@@ -28,6 +28,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { useActiveUserId } from '../../hooks/useActiveUserId';
 import { searchEventBus } from '../../utils/searchEventBus';
+import { MyCrewRow } from '../../components/home/MyCrewRow';
+import { useCrewSelector } from '../../hooks/useCrewSelector';
 
 const SPORTS: { label: string; value: string; icon: string }[] = [
   { label: 'All', value: '', icon: 'apps-outline' },
@@ -66,6 +68,8 @@ export function TeamsListScreen() {
   const effectiveUserId = useActiveUserId();
   const { width: screenWidth } = useWindowDimensions();
   const isWide = screenWidth > 600;
+  const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
+    useCrewSelector();
 
   const [myRosters, setMyRosters] = useState<Team[]>([]);
   const [publicRosters, setPublicRosters] = useState<Team[]>([]);
@@ -217,6 +221,15 @@ export function TeamsListScreen() {
 
   const renderHeader = () => (
     <>
+      {/* Family crew selector */}
+      {hasDependents && (
+        <MyCrewRow
+          members={crewMembers}
+          selectedId={selectedCrewId}
+          onSelect={onSelectCrew}
+        />
+      )}
+
       {/* Sport filter chips */}
       <FlatList
         horizontal

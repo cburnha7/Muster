@@ -38,7 +38,7 @@ function isRootScreen(route: any): boolean {
 }
 
 const SECTION_TITLES: Partial<Record<string, string>> = {
-  Messages: 'Messages',
+  // All tabs now use the search pill header
 };
 
 function CustomHeader({ routeName }: { routeName: string }) {

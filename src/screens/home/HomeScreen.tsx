@@ -24,7 +24,8 @@ import { StepOutModal } from '../../components/bookings/StepOutModal';
 import { EventSearchPanel } from '../../components/home/EventSearchPanel';
 import { InboxSection } from '../../components/home/InboxSection';
 import { LiveGameBanner } from '../../components/home/LiveGameBanner';
-import { MyCrewRow, CrewMember } from '../../components/home/MyCrewRow';
+import { MyCrewRow } from '../../components/home/MyCrewRow';
+import { useCrewSelector } from '../../hooks/useCrewSelector';
 import { CrewEventCard } from '../../components/home/CrewEventCard';
 import { ProfileSelectorModal } from '../../components/ui/ProfileSelectorModal';
 import { MilestoneOverlay } from '../../components/ui/MilestoneOverlay';
@@ -106,8 +107,14 @@ export function HomeScreen() {
     formatDateForCalendar(new Date())
   );
 
-  // My Crew selection: null = "All"
-  const [selectedCrewId, setSelectedCrewId] = useState<string | null>(null);
+  // My Crew selection — shared across all tabs via Redux
+  const {
+    crewMembers,
+    selectedCrewId,
+    onSelectCrew,
+    hasDependents,
+    personColors,
+  } = useCrewSelector();
 
   // Search modal state
   const [searchModalVisible, setSearchModalVisible] = useState(false);
@@ -196,32 +203,7 @@ export function HomeScreen() {
     return { type: 'individual', userId: selectedCrewId };
   }, [selectedCrewId]);
 
-  // ── My Crew: color map + member list ──
-  const personColors = useMemo(
-    () => assignPersonColors(currentUser?.id || '', dependents),
-    [currentUser?.id, dependents]
-  );
-
-  const crewMembers: CrewMember[] = useMemo(() => {
-    const members: CrewMember[] = [];
-    if (currentUser) {
-      members.push({
-        id: currentUser.id,
-        firstName: currentUser.firstName || 'Me',
-        profileImage: currentUser.profileImage,
-        color: personColors.get(currentUser.id) || PERSON_COLORS[0],
-      });
-    }
-    for (const dep of dependents) {
-      members.push({
-        id: dep.id,
-        firstName: dep.firstName || '?',
-        profileImage: dep.profileImage,
-        color: personColors.get(dep.id) || PERSON_COLORS[1],
-      });
-    }
-    return members;
-  }, [currentUser, dependents, personColors]);
+  // personColors and crewMembers come from useCrewSelector hook above
 
   // All bookings sorted chronologically
   const allBookings = useMemo(() => {
@@ -743,11 +725,11 @@ export function HomeScreen() {
           )}
 
           {/* ── My Crew ────────────────────────── */}
-          {dependents.length > 0 && (
+          {hasDependents && (
             <MyCrewRow
               members={crewMembers}
               selectedId={selectedCrewId}
-              onSelect={setSelectedCrewId}
+              onSelect={onSelectCrew}
             />
           )}
 

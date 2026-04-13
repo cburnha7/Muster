@@ -44,6 +44,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Facility, SportType, FacilityFilters } from '../../types';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useDependentContext } from '../../hooks/useDependentContext';
+import { MyCrewRow } from '../../components/home/MyCrewRow';
+import { useCrewSelector } from '../../hooks/useCrewSelector';
 
 const SPORT_CHIP_OPTIONS = [
   { label: 'All Sports', value: '' },
@@ -72,6 +74,8 @@ export function FacilitiesListScreen() {
 
   const { user: currentUser } = useAuth();
   const { isDependent } = useDependentContext();
+  const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
+    useCrewSelector();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchModalVisible, setSearchModalVisible] = useState(false);
@@ -447,6 +451,14 @@ export function FacilitiesListScreen() {
     <View style={styles.container}>
       {/* Contextual return button when navigated from another flow */}
       <ContextualReturnButton />
+      {/* Family crew selector */}
+      {hasDependents && (
+        <MyCrewRow
+          members={crewMembers}
+          selectedId={selectedCrewId}
+          onSelect={onSelectCrew}
+        />
+      )}
       {/* Sport filter chips */}
       <FlatList
         horizontal

@@ -15,6 +15,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { MyCrewRow } from '../../components/home/MyCrewRow';
+import { useCrewSelector } from '../../hooks/useCrewSelector';
 import { SkeletonConversationRow } from '../../components/ui/SkeletonBox';
 import { ConversationRow } from '../../components/messages/ConversationRow';
 import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
@@ -108,6 +110,8 @@ export function ConversationListScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const { crewMembers, selectedCrewId, onSelectCrew, hasDependents } =
+    useCrewSelector();
 
   const loadConversations = useCallback(async () => {
     dispatch(setLoadingConversations(true));
@@ -227,33 +231,14 @@ export function ConversationListScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
-      {/* Search */}
-      <View style={styles.searchRow}>
-        <Ionicons
-          name="search-outline"
-          size={18}
-          color={colors.onSurfaceVariant}
+      {/* Family crew selector */}
+      {hasDependents && (
+        <MyCrewRow
+          members={crewMembers}
+          selectedId={selectedCrewId}
+          onSelect={onSelectCrew}
         />
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search conversations"
-          placeholderTextColor={colors.onSurfaceVariant}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setSearchQuery('')}
-            activeOpacity={0.75}
-          >
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color={colors.onSurfaceVariant}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
+      )}
 
       {/* Filter chips */}
       <ScrollView
