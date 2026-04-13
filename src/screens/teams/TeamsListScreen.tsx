@@ -150,10 +150,18 @@ export function TeamsListScreen() {
     () => new Set(myRosters.map(t => t.id)),
     [myRosters]
   );
-  const myTeams = useMemo(
-    () => allTeams.filter(t => myTeamIds.has(t.id)),
-    [allTeams, myTeamIds]
-  );
+  const myTeams = useMemo(() => {
+    let teams = allTeams.filter(t => myTeamIds.has(t.id));
+    // When a dependent is selected, only show teams they're a member of
+    if (selectedCrewId) {
+      teams = teams.filter(t =>
+        t.members?.some(
+          m => m.userId === selectedCrewId && m.status === 'active'
+        )
+      );
+    }
+    return teams;
+  }, [allTeams, myTeamIds, selectedCrewId]);
   const otherTeams = useMemo(
     () => allTeams.filter(t => !myTeamIds.has(t.id)),
     [allTeams, myTeamIds]

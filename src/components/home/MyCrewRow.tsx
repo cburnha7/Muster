@@ -36,7 +36,10 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          { flexGrow: 1, justifyContent: 'center' },
+        ]}
       >
         {members.map(m => {
           const active = selectedId === m.id;
@@ -114,14 +117,15 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginTop: 16 },
+  container: { paddingTop: 12, paddingBottom: 8 },
   title: {
     fontFamily: fonts.heading,
     fontSize: 18,
     color: colors.ink,
     marginBottom: 10,
+    textAlign: 'center',
   },
-  scroll: { gap: 14, paddingRight: 8 },
+  scroll: { gap: 14, paddingHorizontal: 16, justifyContent: 'center' },
   item: { alignItems: 'center', width: 60 },
   ring: {
     width: 52,
