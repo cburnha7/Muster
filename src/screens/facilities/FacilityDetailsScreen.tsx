@@ -204,6 +204,13 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     if (index !== activeTab) setActiveTab(index);
   };
 
+  // Compute tabs — must be before early returns to satisfy Rules of Hooks
+  const isOwner = currentUser?.id === selectedFacility?.ownerId;
+  const tabs = useMemo(
+    () => [...BASE_TABS, isOwner ? 'Schedule' : 'Reservations'],
+    [isOwner]
+  );
+
   if (isLoading) {
     return (
       <View style={s.container}>
@@ -224,11 +231,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   }
 
   const facility = selectedFacility;
-  const isOwner = currentUser?.id === facility.ownerId;
-  const tabs = useMemo(
-    () => [...BASE_TABS, isOwner ? 'Schedule' : 'Reservations'],
-    [isOwner]
-  );
 
   const fullAddressString = [
     facility.street,
