@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, View, Image, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
@@ -8,9 +8,9 @@ import {
   selectDependents,
 } from '../../store/slices/contextSlice';
 import { colors, fonts, useTheme } from '../../theme';
+import { PERSON_COLORS } from '../../types/eventsCalendar';
+import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import type { RootState } from '../../store/store';
-
-const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
 
 export function HeaderUserSelector() {
   const { colors: themeColors } = useTheme();
@@ -19,15 +19,17 @@ export function HeaderUserSelector() {
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
 
+  // Use the same color assignment as MyCrewRow and calendar
+  const personColors = useMemo(
+    () => assignPersonColors(guardian?.id || '', dependents),
+    [guardian?.id, dependents]
+  );
+
   if (!guardian) return null;
 
-  // Resolve the active display person
   const activeDep = activeUserId
     ? dependents.find(d => d.id === activeUserId)
     : null;
-  const depIndex = activeDep
-    ? dependents.findIndex(d => d.id === activeUserId)
-    : -1;
 
   const displayName = activeDep
     ? activeDep.firstName
@@ -35,22 +37,22 @@ export function HeaderUserSelector() {
   const profileImage =
     activeDep?.profileImage || (guardian as any)?.profileImage;
   const initial = displayName.charAt(0).toUpperCase();
-  const avatarColor = activeDep
-    ? DEPENDENT_COLORS[depIndex % DEPENDENT_COLORS.length]
-    : colors.primary;
+  const activeId = activeUserId || guardian.id;
+  const avatarColor = personColors.get(activeId) || PERSON_COLORS[0];
 
-  // Show unread dot when there are unread messages
   const unreadCount = useSelector(
     (state: RootState) => state.messaging?.unreadCount ?? 0
   );
-  const hasUnreadNotifications = unreadCount > 0;
 
   return (
     <View style={styles.avatarContainer}>
       <TouchableOpacity
-        style={styles.avatarBtn}
+        style={[
+          styles.avatarBtn,
+          { borderColor: avatarColor, borderWidth: 2.5 },
+        ]}
         onPress={open}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
         accessibilityRole="button"
         accessibilityLabel={`Account menu. Viewing as ${displayName}`}
       >
@@ -64,7 +66,7 @@ export function HeaderUserSelector() {
           </View>
         )}
       </TouchableOpacity>
-      {hasUnreadNotifications && (
+      {unreadCount > 0 && (
         <View
           style={[styles.notifDot, { borderColor: themeColors.bgScreen }]}
         />
@@ -74,33 +76,22 @@ export function HeaderUserSelector() {
 }
 
 const styles = StyleSheet.create({
+  avatarContainer: { width: 44, height: 44 },
   avatarBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
     overflow: 'hidden',
   },
-  avatarImg: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
+  avatarImg: { width: 39, height: 39, borderRadius: 20 },
   avatarFallback: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 39,
+    height: 39,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitial: {
-    fontFamily: fonts.ui,
-    fontSize: 18,
-    color: '#FFFFFF',
-  },
-  avatarContainer: {
-    width: 44,
-    height: 44,
-  },
+  avatarInitial: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
   notifDot: {
     position: 'absolute',
     top: 0,
@@ -108,8 +99,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.error,
+    backgroundColor: colors.heart,
     borderWidth: 2,
-    borderColor: colors.surfaceContainerLowest,
   },
 });

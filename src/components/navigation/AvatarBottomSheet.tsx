@@ -23,9 +23,9 @@ import {
   setActiveUser,
 } from '../../store/slices/contextSlice';
 import { colors, fonts } from '../../theme';
+import { PERSON_COLORS } from '../../types/eventsCalendar';
+import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import type { DependentSummary } from '../../types/dependent';
-
-const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
 
 function getAge(dateOfBirth: string): number {
   return Math.floor(
@@ -44,6 +44,12 @@ export function AvatarBottomSheet() {
   const dependents = useSelector(selectDependents);
 
   const snapPoints = useMemo(() => ['55%', '80%'], []);
+
+  // Use the same color assignment as MyCrewRow and HeaderUserSelector
+  const personColors = useMemo(
+    () => assignPersonColors(user?.id || '', dependents),
+    [user?.id, dependents]
+  );
 
   useEffect(() => {
     registerSheet({
@@ -121,151 +127,133 @@ export function AvatarBottomSheet() {
       handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
-        {/* ── Identity Header ──────────────────── */}
+        {/* ── Profiles ─────────────────────────── */}
+        <Text style={styles.sectionLabel}>PROFILES</Text>
+
+        {/* Current user */}
         <TouchableOpacity
-          style={styles.identityRow}
-          onPress={() => navigateTo('ProfileScreen')}
+          style={[styles.personRow, !activeUserId && styles.personRowActive]}
+          onPress={() => {
+            handleSwitchUser(null);
+            navigateTo('ProfileScreen');
+          }}
           activeOpacity={0.7}
         >
           {(user as any)?.profileImage ? (
-            <Image
-              source={{ uri: (user as any).profileImage }}
-              style={styles.avatar}
-            />
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                borderWidth: 2.5,
+                borderColor: personColors.get(user.id) || PERSON_COLORS[0],
+                overflow: 'hidden',
+              }}
+            >
+              <Image
+                source={{ uri: (user as any).profileImage }}
+                style={{ width: 31, height: 31, borderRadius: 16 }}
+              />
+            </View>
           ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarInitial}>{initial}</Text>
+            <View
+              style={[
+                styles.personAvatar,
+                {
+                  backgroundColor:
+                    personColors.get(user.id) || PERSON_COLORS[0],
+                },
+              ]}
+            >
+              <Text style={styles.personInitial}>{initial}</Text>
             </View>
           )}
-          <View style={styles.identityText}>
-            <Text style={styles.userName}>
+          <View style={styles.personInfo}>
+            <Text
+              style={[
+                styles.personName,
+                !activeUserId && styles.personNameActive,
+              ]}
+            >
               {user.firstName} {user.lastName}
             </Text>
-            <Text style={styles.userEmail}>{user.email}</Text>
           </View>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={colors.outlineVariant}
-          />
+          {!activeUserId && (
+            <Ionicons name="checkmark" size={20} color={colors.secondary} />
+          )}
         </TouchableOpacity>
 
-        {/* ── Playing As (conditional) ─────────── */}
-        {showPlayingAs && (
-          <>
-            <View style={styles.divider} />
-            <Text style={styles.sectionLabel}>PLAYING AS</Text>
+        {/* Dependents */}
+        {dependents.map((dep: DependentSummary, index: number) => {
+          const isActive = activeUserId === dep.id;
+          const depColor =
+            personColors.get(dep.id) ||
+            PERSON_COLORS[(index + 1) % PERSON_COLORS.length];
+          const depInitial = dep.firstName?.charAt(0).toUpperCase() || '?';
+          const age = getAge(dep.dateOfBirth);
 
-            {/* Guardian (self) */}
+          return (
             <TouchableOpacity
-              style={[
-                styles.personRow,
-                !activeUserId && styles.personRowActive,
-              ]}
-              onPress={() => handleSwitchUser(null)}
+              key={dep.id}
+              style={[styles.personRow, isActive && styles.personRowActive]}
+              onPress={() => {
+                handleSwitchUser(dep.id);
+                navigateTo('DependentProfile', { dependentId: dep.id });
+              }}
               activeOpacity={0.7}
             >
-              <View
-                style={[
-                  styles.personAvatar,
-                  { backgroundColor: colors.primary },
-                ]}
-              >
-                <Text style={styles.personInitial}>{initial}</Text>
-              </View>
+              {dep.profileImage ? (
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    borderWidth: 2.5,
+                    borderColor: depColor,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    source={{ uri: dep.profileImage }}
+                    style={{ width: 31, height: 31, borderRadius: 16 }}
+                  />
+                </View>
+              ) : (
+                <View
+                  style={[styles.personAvatar, { backgroundColor: depColor }]}
+                >
+                  <Text style={styles.personInitial}>{depInitial}</Text>
+                </View>
+              )}
               <View style={styles.personInfo}>
                 <Text
                   style={[
                     styles.personName,
-                    !activeUserId && styles.personNameActive,
+                    isActive && styles.personNameActive,
                   ]}
                 >
-                  {user.firstName} <Text style={styles.meLabel}>(me)</Text>
+                  {dep.firstName}
                 </Text>
               </View>
-              {!activeUserId && (
+              <Text style={styles.ageText}>age {age}</Text>
+              {isActive && (
                 <Ionicons name="checkmark" size={20} color={colors.secondary} />
               )}
             </TouchableOpacity>
+          );
+        })}
 
-            {/* Dependents */}
-            {dependents.map((dep: DependentSummary, index: number) => {
-              const isActive = activeUserId === dep.id;
-              const depColor =
-                DEPENDENT_COLORS[index % DEPENDENT_COLORS.length];
-              const depInitial = dep.firstName?.charAt(0).toUpperCase() || '?';
-              const age = getAge(dep.dateOfBirth);
-
-              return (
-                <TouchableOpacity
-                  key={dep.id}
-                  style={[styles.personRow, isActive && styles.personRowActive]}
-                  onPress={() => handleSwitchUser(dep.id)}
-                  activeOpacity={0.7}
-                >
-                  {dep.profileImage ? (
-                    <Image
-                      source={{ uri: dep.profileImage }}
-                      style={styles.personAvatar}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.personAvatar,
-                        { backgroundColor: depColor },
-                      ]}
-                    >
-                      <Text style={styles.personInitial}>{depInitial}</Text>
-                    </View>
-                  )}
-                  <View style={styles.personInfo}>
-                    <Text
-                      style={[
-                        styles.personName,
-                        isActive && styles.personNameActive,
-                      ]}
-                    >
-                      {dep.firstName}
-                    </Text>
-                  </View>
-                  <Text style={styles.ageText}>age {age}</Text>
-                  {isActive && (
-                    <Ionicons
-                      name="checkmark"
-                      size={20}
-                      color={colors.secondary}
-                    />
-                  )}
-                  <TouchableOpacity
-                    onPress={() =>
-                      navigateTo('DependentProfile', { dependentId: dep.id })
-                    }
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    style={styles.editDepBtn}
-                  >
-                    <Ionicons
-                      name="create-outline"
-                      size={20}
-                      color={colors.onSurfaceVariant}
-                    />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              );
-            })}
-
-            {/* Add a child */}
-            <TouchableOpacity
-              style={styles.personRow}
-              onPress={() => navigateTo('DependentForm', {})}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.personAvatar, styles.addChildAvatar]}>
-                <Ionicons name="add" size={20} color={colors.primary} />
-              </View>
-              <Text style={styles.addChildText}>Add a child</Text>
-            </TouchableOpacity>
-          </>
-        )}
+        {/* Add a child */}
+        <TouchableOpacity
+          style={styles.personRow}
+          onPress={() => navigateTo('DependentForm', {})}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.personAvatar, styles.addChildAvatar]}>
+            <Ionicons name="add" size={20} color={colors.primary} />
+          </View>
+          <Text style={styles.addChildText}>Add a child</Text>
+        </TouchableOpacity>
 
         {/* ── Quick Actions ────────────────────── */}
         <View style={styles.divider} />

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { userService } from '../../services/api/UserService';
 import { User, UpdateProfileData } from '../../types';
@@ -38,11 +39,7 @@ const SPORT_OPTIONS: SelectOption[] = [
   { label: 'Volleyball', value: SportType.VOLLEYBALL },
 ];
 
-const GENDER_OPTIONS: SelectOption[] = [
-  { label: 'Prefer not to say', value: '' },
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-];
+const GENDER_OPTIONS_UNUSED = null; // Gender now uses toggle buttons
 
 export function EditProfileScreen(): JSX.Element {
   const { colors: themeColors } = useTheme();
@@ -100,6 +97,10 @@ export function EditProfileScreen(): JSX.Element {
       setError(null);
       const profileData = await userService.getProfile();
       setUser(profileData);
+      // Set dynamic header title
+      navigation.setOptions({
+        headerTitle: `${profileData.firstName} ${profileData.lastName}`,
+      });
       setFirstName(profileData.firstName || '');
       setLastName(profileData.lastName || '');
       setEmail(profileData.email || '');
@@ -276,9 +277,7 @@ export function EditProfileScreen(): JSX.Element {
       }
 
       await userService.updateProfile(updates);
-      Alert.alert('Success', 'Profile updated successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      navigation.goBack();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update profile');
     } finally {
@@ -400,14 +399,67 @@ export function EditProfileScreen(): JSX.Element {
               returnKeyType="done"
             />
 
-            {/* Gender */}
-            <FormSelect
-              label="Gender"
-              options={GENDER_OPTIONS}
-              value={gender}
-              onSelect={o => setGender(String(o.value))}
-              placeholder="Prefer not to say"
-            />
+            {/* Gender toggle */}
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 16,
+                fontWeight: '500',
+                color: themeColors.textPrimary,
+                marginBottom: 8,
+                marginTop: 8,
+              }}
+            >
+              Gender
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {[
+                { label: 'Male', value: 'male' },
+                { label: 'Female', value: 'female' },
+              ].map(opt => {
+                const selected = gender === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      backgroundColor: selected
+                        ? colors.cobalt
+                        : colors.surface,
+                      borderWidth: 1.5,
+                      borderColor: selected ? colors.cobalt : colors.border,
+                      gap: 6,
+                    }}
+                    onPress={() =>
+                      setGender(gender === opt.value ? '' : opt.value)
+                    }
+                    activeOpacity={0.75}
+                  >
+                    {selected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="#FFFFFF"
+                      />
+                    )}
+                    <Text
+                      style={{
+                        fontFamily: fonts.ui,
+                        fontSize: 14,
+                        color: selected ? '#FFFFFF' : colors.ink,
+                      }}
+                    >
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             {/* Birthday — Month / Day / Year dropdowns */}
             <Text

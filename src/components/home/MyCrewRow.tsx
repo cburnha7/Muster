@@ -48,18 +48,29 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
               activeOpacity={0.7}
             >
               <View style={[styles.ring, active && { borderColor: m.color }]}>
-                <View style={[styles.circle, { backgroundColor: m.color }]}>
-                  {m.profileImage ? (
+                {m.profileImage ? (
+                  <View
+                    style={[
+                      styles.circle,
+                      {
+                        borderWidth: 2.5,
+                        borderColor: m.color,
+                        backgroundColor: 'transparent',
+                      },
+                    ]}
+                  >
                     <Image
                       source={{ uri: m.profileImage }}
                       style={styles.img}
                     />
-                  ) : (
+                  </View>
+                ) : (
+                  <View style={[styles.circle, { backgroundColor: m.color }]}>
                     <Text style={styles.initial}>
                       {m.firstName?.charAt(0)?.toUpperCase() ?? '?'}
                     </Text>
-                  )}
-                </View>
+                  </View>
+                )}
               </View>
               <Text
                 style={[

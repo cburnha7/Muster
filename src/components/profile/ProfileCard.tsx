@@ -83,15 +83,12 @@ export function ProfileCard({
           <Image source={{ uri: profileImage }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Ionicons name="person" size={40} color={colors.outline} />
+            <Ionicons name="person" size={56} color={colors.outline} />
           </View>
         )}
       </View>
 
-      {/* Name */}
-      <Text style={styles.name}>
-        {firstName} {lastName}
-      </Text>
+      {/* Name — removed, shown in header */}
 
       {/* Info Rows */}
       <View style={styles.infoSection}>
@@ -154,9 +151,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
   },
   avatarPlaceholder: {
     backgroundColor: colors.surfaceContainerHigh,

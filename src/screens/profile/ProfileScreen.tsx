@@ -10,7 +10,7 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PressableCard } from '../../components/ui/PressableCard';
@@ -95,6 +95,13 @@ export function ProfileScreen() {
   useEffect(() => {
     loadProfileData();
   }, [loadProfileData]);
+
+  // Refresh when screen comes into focus (e.g., after editing profile)
+  useFocusEffect(
+    useCallback(() => {
+      loadProfileData();
+    }, [loadProfileData])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
