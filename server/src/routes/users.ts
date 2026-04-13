@@ -79,19 +79,13 @@ router.get('/search', optionalAuthMiddleware, async (req, res) => {
 // Get current user profile
 router.get('/profile', optionalAuthMiddleware, async (req, res) => {
   try {
-    // Get user ID from authenticated request or fall back to first user
     let userId = req.user?.userId;
-
     if (!userId) {
-      // Fallback: use first user for development
-      const user = await prisma.user.findFirst({
-        select: { id: true },
-      });
-      userId = user?.id;
+      const headerUserId = req.headers['x-user-id'] as string | undefined;
+      if (headerUserId) userId = headerUserId;
     }
-
     if (!userId) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     const user = await prisma.user.findUnique({
@@ -103,7 +97,14 @@ router.get('/profile', optionalAuthMiddleware, async (req, res) => {
         lastName: true,
         phoneNumber: true,
         dateOfBirth: true,
+        gender: true,
         profileImage: true,
+        sportPreferences: true,
+        locationCity: true,
+        locationState: true,
+        membershipTier: true,
+        onboardingComplete: true,
+        intents: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -177,19 +178,13 @@ router.delete('/profile/image', optionalAuthMiddleware, async (req, res) => {
 // Get current user stats
 router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
   try {
-    // Get user ID from authenticated request or fall back to first user
     let userId = req.user?.userId;
-
     if (!userId) {
-      // Fallback: use first user for development
-      const user = await prisma.user.findFirst({
-        select: { id: true },
-      });
-      userId = user?.id;
+      const headerUserId = req.headers['x-user-id'] as string | undefined;
+      if (headerUserId) userId = headerUserId;
     }
-
     if (!userId) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     // Get event statistics

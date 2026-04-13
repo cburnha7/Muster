@@ -18,6 +18,8 @@ import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ProfileCard } from '../../components/profile/ProfileCard';
 import { colors, fonts, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { setUser as setReduxUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
@@ -35,6 +37,7 @@ function formatEventDate(iso: string): string {
 export function ProfileScreen() {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const { user: authUser, logout } = useAuth();
   const { width } = useWindowDimensions();
 
@@ -59,6 +62,14 @@ export function ProfileScreen() {
 
   const loadProfileData = useCallback(async () => {
     try {
+      // Fetch fresh profile data and update Redux
+      try {
+        const freshProfile = await userService.getProfile();
+        dispatch(setReduxUser(freshProfile as any));
+      } catch {
+        // Non-critical — use cached data
+      }
+
       const [statsData, teamsData, eventsData] = await Promise.all([
         userService.getUserStats().catch(e => {
           console.warn('Stats fetch failed:', e);

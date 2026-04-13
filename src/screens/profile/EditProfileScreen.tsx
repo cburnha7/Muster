@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { userService } from '../../services/api/UserService';
 import { User, UpdateProfileData } from '../../types';
+import { setUser as setReduxUser } from '../../store/slices/authSlice';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { FormSelect, SelectOption } from '../../components/forms/FormSelect';
@@ -44,6 +46,7 @@ const GENDER_OPTIONS_UNUSED = null; // Gender now uses toggle buttons
 export function EditProfileScreen(): JSX.Element {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -277,6 +280,15 @@ export function EditProfileScreen(): JSX.Element {
       }
 
       await userService.updateProfile(updates);
+
+      // Refresh the profile and update Redux so all screens get the new data
+      try {
+        const freshProfile = await userService.getProfile();
+        dispatch(setReduxUser(freshProfile as any));
+      } catch {
+        // Non-critical — profile screen will refresh on focus anyway
+      }
+
       navigation.goBack();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update profile');
