@@ -107,6 +107,12 @@ const EventCardInner: React.FC<EventCardProps> = ({
       )}
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
+        {event.scheduledStatus === 'unscheduled' && (
+          <View style={styles.pendingBadge}>
+            <Ionicons name="time-outline" size={10} color={colors.gold} />
+            <Text style={styles.pendingBadgeText}>Pending</Text>
+          </View>
+        )}
         {isHost && (
           <View style={styles.hostBadge}>
             <Ionicons name="star" size={10} color="#FFFFFF" />
@@ -470,6 +476,22 @@ const styles = StyleSheet.create({
   },
   hostBadgeText: {
     color: '#FFFFFF',
+    fontFamily: fonts.label,
+    fontSize: 10,
+  },
+  pendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.goldTint,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    gap: 4,
+  },
+  pendingBadgeText: {
+    color: colors.gold,
     fontFamily: fonts.label,
     fontSize: 10,
   },

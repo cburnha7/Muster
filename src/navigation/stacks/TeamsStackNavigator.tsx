@@ -6,6 +6,7 @@ import { TeamDetailsScreen } from '../../screens/teams/TeamDetailsScreen';
 import { CreateTeamScreen } from '../../screens/teams/CreateTeamScreen';
 import { JoinTeamScreen } from '../../screens/teams/JoinTeamScreen';
 import { EventDetailsScreen } from '../../screens/events/EventDetailsScreen';
+import { ScheduleReviewScreen } from '../../screens/teams/ScheduleReviewScreen';
 import { colors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<TeamsStackParamList>();
@@ -48,6 +49,11 @@ export function TeamsStackNavigator(): JSX.Element {
         name="EventDetails"
         component={EventDetailsScreen}
         options={{ ...detailHeader, headerTitle: '' }}
+      />
+      <Stack.Screen
+        name="ScheduleReview"
+        component={ScheduleReviewScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

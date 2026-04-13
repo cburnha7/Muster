@@ -57,6 +57,9 @@ import {
   FixedBottomCTA,
 } from '../../components/detail';
 import { getSportColor } from '../../constants/sportColors';
+import * as DocumentPicker from 'expo-document-picker';
+import { scheduleParserService } from '../../services/ScheduleParserService';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface TeamDetailsScreenProps {
   route: { params: { teamId: string; readOnly?: boolean } };
@@ -158,13 +161,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     team?.members?.filter(m => m.status === MemberStatus.PENDING) || [];
   const allMemberIds = team?.members?.map(m => m.userId) || [];
 
-  // Upcoming events (future only, sorted ascending)
+  // Upcoming events (future only, sorted: unscheduled first, then chronological)
   const upcomingEvents = events
     .filter(e => new Date(e.startTime) >= new Date())
-    .sort(
-      (a, b) =>
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-    );
+    .sort((a, b) => {
+      // Unscheduled (pending) events sort before scheduled
+      const aUnscheduled = (a as any).scheduledStatus === 'unscheduled' ? 0 : 1;
+      const bUnscheduled = (b as any).scheduledStatus === 'unscheduled' ? 0 : 1;
+      if (aUnscheduled !== bUnscheduled) return aUnscheduled - bUnscheduled;
+      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+    });
 
   // Set header "Edit" button for managers
   useEffect(() => {
@@ -557,6 +563,95 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
     }
   };
 
+  // ── Import Schedule ──
+  const handleImportSchedule = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          'text/csv',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/pdf',
+        ],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const file = result.assets[0];
+      const ext = file.name?.toLowerCase().split('.').pop() || '';
+
+      if (!['csv', 'xlsx', 'xls', 'pdf'].includes(ext)) {
+        Alert.alert(
+          'Unsupported File',
+          'Please select a CSV, Excel (.xlsx, .xls), or PDF file.'
+        );
+        return;
+      }
+
+      if (ext === 'pdf') {
+        // Upload to server for PDF parsing
+        const formData = new FormData();
+        formData.append('file', {
+          uri: file.uri,
+          name: file.name,
+          type: 'application/pdf',
+        } as any);
+        const response = await fetch(`${API_BASE_URL}/schedule/parse-pdf`, {
+          method: 'POST',
+          body: formData,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        const data = await response.json();
+        if (!data.success || data.gameRows.length === 0) {
+          Alert.alert(
+            'Parse Error',
+            data.errors?.[0] || 'Could not extract games from this PDF.'
+          );
+          return;
+        }
+        (navigation as any).navigate('ScheduleReview', {
+          gameRows: data.gameRows,
+          team,
+        });
+      } else {
+        // CSV or Excel — parse on frontend
+        const fileResponse = await fetch(file.uri);
+        if (ext === 'csv') {
+          const text = await fileResponse.text();
+          const parsed = scheduleParserService.parseCSV(text);
+          if (!parsed.success || parsed.gameRows.length === 0) {
+            Alert.alert(
+              'Parse Error',
+              parsed.errors?.[0] || 'Could not extract games from this file.'
+            );
+            return;
+          }
+          (navigation as any).navigate('ScheduleReview', {
+            gameRows: parsed.gameRows,
+            team,
+          });
+        } else {
+          const buffer = await fileResponse.arrayBuffer();
+          const parsed = scheduleParserService.parseExcel(buffer);
+          if (!parsed.success || parsed.gameRows.length === 0) {
+            Alert.alert(
+              'Parse Error',
+              parsed.errors?.[0] || 'Could not extract games from this file.'
+            );
+            return;
+          }
+          (navigation as any).navigate('ScheduleReview', {
+            gameRows: parsed.gameRows,
+            team,
+          });
+        }
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to import schedule');
+    }
+  };
+
   // ── Open player card ──
   const openPlayerCard = (member: TeamMember) => {
     const user = member.user;
@@ -932,6 +1027,42 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 ))
               )}
             </DetailCard>
+
+            {/* ── Import Schedule for managers ── */}
+            {!readOnly && isManagerRole && (
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginHorizontal: 16,
+                  marginTop: 12,
+                  marginBottom: 4,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  backgroundColor: colors.cobalt + '12',
+                }}
+                onPress={handleImportSchedule}
+                activeOpacity={0.75}
+              >
+                <Ionicons
+                  name="document-text-outline"
+                  size={18}
+                  color={colors.cobalt}
+                />
+                <Text
+                  style={{
+                    fontFamily: fonts.label,
+                    fontSize: 14,
+                    color: colors.cobalt,
+                  }}
+                >
+                  Import Schedule
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* ── Edit / Delete for captain ── */}
             {!readOnly && isCaptain && (

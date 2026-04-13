@@ -17,6 +17,14 @@ export type { FontKey, TypeKey, TypeScaleKey } from './typography';
 export { spacing, radius, makeShadow, Spacing } from './spacing';
 export type { SpacingKey } from './spacing';
 
+export { BorderRadius, getBorderRadius } from './borderRadius';
+export type { BorderRadiusKey } from './borderRadius';
+
+export { Shadows, getShadow } from './shadows';
+export type { ShadowKey } from './shadows';
+
+export { ComponentStyles } from './componentStyles';
+
 export { ThemeProvider, useTheme, t } from './ThemeContext';
 export type { Theme } from './ThemeContext';
 

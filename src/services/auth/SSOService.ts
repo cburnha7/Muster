@@ -2,11 +2,16 @@
  * SSOService — Apple Sign In + Google Sign In
  *
  * Apple: uses expo-apple-authentication (native iOS).
- * Google: uses expo-auth-session with Expo proxy redirect.
+ * Google: uses expo-auth-session with Google discovery document.
  */
 
 import { Platform } from 'react-native';
-import * as AuthSession from 'expo-auth-session';
+import {
+  makeRedirectUri,
+  AuthRequest,
+  ResponseType,
+  fetchDiscoveryAsync,
+} from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { SSOUserData } from '../../types/auth';
 
@@ -22,8 +27,8 @@ if (Platform.OS === 'ios') {
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
 class SSOService {
   // ── Apple ──────────────────────────────────────────
@@ -80,33 +85,40 @@ class SSOService {
 
   async signInWithGoogle(): Promise<SSOUserData> {
     try {
-      // Use the web client ID for the OAuth flow — it works on all platforms
-      // via the Expo auth proxy and doesn't have the PKCE / redirect issues
-      const clientId = GOOGLE_WEB_CLIENT_ID;
+      // On iOS use the iOS client ID, on other platforms use web client ID
+      const clientId =
+        Platform.OS === 'ios' ? GOOGLE_IOS_CLIENT_ID : GOOGLE_WEB_CLIENT_ID;
       if (!clientId) throw new Error('Google Sign In is not configured');
 
-      // Use Expo auth proxy — handles redirect correctly for dev/preview builds
-      const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+      // Generate the redirect URI for the current platform
+      // For iOS with an iOS client ID, use the reversed client ID scheme
+      let redirectUri: string;
+      if (Platform.OS === 'ios' && GOOGLE_IOS_CLIENT_ID) {
+        const reversed = GOOGLE_IOS_CLIENT_ID.split('.').reverse().join('.');
+        redirectUri = `${reversed}:/oauthredirect`;
+      } else {
+        redirectUri = makeRedirectUri();
+      }
 
-      const discovery = await AuthSession.fetchDiscoveryAsync(
+      const discovery = await fetchDiscoveryAsync(
         'https://accounts.google.com'
       );
 
-      const request = new AuthSession.AuthRequest({
+      const request = new AuthRequest({
         clientId,
         redirectUri,
         scopes: ['openid', 'profile', 'email'],
-        responseType: AuthSession.ResponseType.Token,
+        responseType: ResponseType.Token,
         usePKCE: false,
       });
 
-      const result = await request.promptAsync(discovery, { useProxy: true });
+      const result = await request.promptAsync(discovery);
 
       if (result.type === 'cancel' || result.type === 'dismiss') {
         throw new Error('User cancelled');
       }
       if (result.type !== 'success' || !result.authentication?.accessToken) {
-        throw new Error('Google Sign In failed');
+        throw new Error(`Google Sign In failed: ${result.type}`);
       }
 
       const accessToken = result.authentication.accessToken;

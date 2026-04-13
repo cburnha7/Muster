@@ -295,6 +295,8 @@ export interface Event {
   locationAddress?: string;
   locationLat?: number;
   locationLng?: number;
+  // Schedule status
+  scheduledStatus?: 'scheduled' | 'unscheduled';
   // Group fee coverage
   isGroupFeeCovered?: boolean; // Event cost covered by roster balance
   coveringTeamId?: string; // Which roster is covering the cost
