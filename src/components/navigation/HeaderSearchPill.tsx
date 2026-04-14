@@ -66,7 +66,7 @@ export function HeaderSearchPill({
       <View
         style={[styles.pillActive, { backgroundColor: themeColors.bgCard }]}
       >
-        <Ionicons name="search" size={17} color={themeColors.textSecondary} />
+        <Ionicons name="search" size={20} color={themeColors.textSecondary} />
         <TextInput
           ref={inputRef}
           style={[styles.activeInput, { color: themeColors.textPrimary }]}
@@ -82,7 +82,7 @@ export function HeaderSearchPill({
             onPress={() => handleChangeText('')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close-circle" size={17} color={colors.outline} />
+            <Ionicons name="close-circle" size={20} color={colors.outline} />
           </TouchableOpacity>
         )}
       </View>
@@ -97,7 +97,7 @@ export function HeaderSearchPill({
       accessibilityRole="button"
       accessibilityLabel={placeholder}
     >
-      <Ionicons name="search" size={17} color={themeColors.textSecondary} />
+      <Ionicons name="search" size={20} color={themeColors.textSecondary} />
       <Text
         style={[styles.text, { color: themeColors.textSecondary }]}
         numberOfLines={1}
@@ -114,33 +114,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceContainer,
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 9999,
-    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: colors.outlineVariant,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   pillActive: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surfaceContainerLowest,
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 9999,
-    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 10,
     borderWidth: 2,
-    borderColor: 'rgba(0, 82, 255, 0.25)',
+    borderColor: colors.cobalt,
+    shadowColor: colors.cobalt,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   activeInput: {
     flex: 1,
     fontFamily: fonts.body,
-    fontSize: 15,
+    fontSize: 17,
     color: colors.onSurface,
     padding: 0,
   },
   text: {
     fontFamily: fonts.body,
-    fontSize: 15,
+    fontSize: 17,
     color: colors.outline,
     flex: 1,
   },

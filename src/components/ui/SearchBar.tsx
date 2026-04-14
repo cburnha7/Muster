@@ -1,4 +1,9 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, {
+  useState,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import {
   View,
   TextInput,
@@ -39,183 +44,208 @@ export interface SearchFilters {
   };
 }
 
-export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(({
-  placeholder = 'Search...',
-  value,
-  onChangeText,
-  onSearch,
-  showFilters = false,
-  filters,
-  onFiltersChange,
-  style,
-}, ref) => {
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [localFilters, setLocalFilters] = useState<SearchFilters>(filters || {});
-  const inputRef = useRef<TextInput>(null);
+export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
+  (
+    {
+      placeholder = 'Search...',
+      value,
+      onChangeText,
+      onSearch,
+      showFilters = false,
+      filters,
+      onFiltersChange,
+      style,
+    },
+    ref
+  ) => {
+    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [localFilters, setLocalFilters] = useState<SearchFilters>(
+      filters || {}
+    );
+    const inputRef = useRef<TextInput>(null);
 
-  useImperativeHandle(ref, () => ({
-    focus: () => inputRef.current?.focus(),
-  }));
+    useImperativeHandle(ref, () => ({
+      focus: () => inputRef.current?.focus(),
+    }));
 
-  const handleSearch = () => {
-    onSearch?.(value);
-  };
+    const handleSearch = () => {
+      onSearch?.(value);
+    };
 
-  const handleFilterApply = () => {
-    onFiltersChange?.(localFilters);
-    setShowFilterModal(false);
-  };
+    const handleFilterApply = () => {
+      onFiltersChange?.(localFilters);
+      setShowFilterModal(false);
+    };
 
-  const handleFilterReset = () => {
-    const resetFilters: SearchFilters = {};
-    setLocalFilters(resetFilters);
-    onFiltersChange?.(resetFilters);
-    setShowFilterModal(false);
-  };
+    const handleFilterReset = () => {
+      const resetFilters: SearchFilters = {};
+      setLocalFilters(resetFilters);
+      onFiltersChange?.(resetFilters);
+      setShowFilterModal(false);
+    };
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (filters?.sportType) count++;
-    if (filters?.skillLevel) count++;
-    if (filters?.priceRange) count++;
-    if (filters?.dateRange) count++;
-    return count;
-  };
+    const getActiveFiltersCount = () => {
+      let count = 0;
+      if (filters?.sportType) count++;
+      if (filters?.skillLevel) count++;
+      if (filters?.priceRange) count++;
+      if (filters?.dateRange) count++;
+      return count;
+    };
 
-  const activeFiltersCount = getActiveFiltersCount();
+    const activeFiltersCount = getActiveFiltersCount();
 
-  return (
-    <View style={[styles.container, style]}>
-      <View style={styles.searchContainer}>
-        <View style={styles.inputContainer}>
-          <Ionicons name="search-outline" size={20} color="#666" />
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            placeholder={placeholder}
-            value={value}
-            onChangeText={onChangeText}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-          {value.length > 0 && (
+    return (
+      <View style={[styles.container, style]}>
+        <View style={styles.searchContainer}>
+          <View style={styles.inputContainer}>
+            <Ionicons name="search-outline" size={20} color="#666" />
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              placeholder={placeholder}
+              value={value}
+              onChangeText={onChangeText}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+            />
+            {value.length > 0 && (
+              <TouchableOpacity
+                onPress={() => onChangeText('')}
+                style={styles.clearButton}
+              >
+                <Ionicons name="close-circle" size={20} color="#666" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {showFilters && (
             <TouchableOpacity
-              onPress={() => onChangeText('')}
-              style={styles.clearButton}
+              style={[
+                styles.filterButton,
+                activeFiltersCount > 0 && styles.filterButtonActive,
+              ]}
+              onPress={() => setShowFilterModal(true)}
             >
-              <Ionicons name="close-circle" size={20} color="#666" />
+              <Ionicons
+                name="filter-outline"
+                size={20}
+                color={activeFiltersCount > 0 ? '#FFFFFF' : '#666'}
+              />
+              {activeFiltersCount > 0 && (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>
+                    {activeFiltersCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
         </View>
 
-        {showFilters && (
-          <TouchableOpacity
-            style={[styles.filterButton, activeFiltersCount > 0 && styles.filterButtonActive]}
-            onPress={() => setShowFilterModal(true)}
-          >
-            <Ionicons
-              name="filter-outline"
-              size={20}
-              color={activeFiltersCount > 0 ? '#FFFFFF' : '#666'}
-            />
-            {activeFiltersCount > 0 && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
+        <Modal
+          visible={showFilterModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowFilterModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Filters</Text>
+              <TouchableOpacity onPress={handleFilterReset}>
+                <Text style={styles.resetText}>Reset</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sport Type</Text>
+                <View style={styles.optionsContainer}>
+                  {Object.values(SportType).map(sport => (
+                    <TouchableOpacity
+                      key={sport}
+                      style={[
+                        styles.optionButton,
+                        localFilters.sportType === sport &&
+                          styles.optionButtonActive,
+                      ]}
+                      onPress={() =>
+                        setLocalFilters({
+                          ...localFilters,
+                          sportType:
+                            localFilters.sportType === sport
+                              ? undefined
+                              : sport,
+                        })
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          localFilters.sportType === sport &&
+                            styles.optionTextActive,
+                        ]}
+                      >
+                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-            )}
-          </TouchableOpacity>
-        )}
+
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Skill Level</Text>
+                <View style={styles.optionsContainer}>
+                  {Object.values(SkillLevel).map(level => (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.optionButton,
+                        localFilters.skillLevel === level &&
+                          styles.optionButtonActive,
+                      ]}
+                      onPress={() =>
+                        setLocalFilters({
+                          ...localFilters,
+                          skillLevel:
+                            localFilters.skillLevel === level
+                              ? undefined
+                              : level,
+                        })
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          localFilters.skillLevel === level &&
+                            styles.optionTextActive,
+                        ]}
+                      >
+                        {level.replace('_', ' ').toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={handleFilterApply}
+              >
+                <Text style={styles.applyText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
-
-      <Modal
-        visible={showFilterModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowFilterModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setShowFilterModal(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Filters</Text>
-            <TouchableOpacity onPress={handleFilterReset}>
-              <Text style={styles.resetText}>Reset</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>Sport Type</Text>
-              <View style={styles.optionsContainer}>
-                {Object.values(SportType).map((sport) => (
-                  <TouchableOpacity
-                    key={sport}
-                    style={[
-                      styles.optionButton,
-                      localFilters.sportType === sport && styles.optionButtonActive,
-                    ]}
-                    onPress={() =>
-                      setLocalFilters({
-                        ...localFilters,
-                        sportType: localFilters.sportType === sport ? undefined : sport,
-                      })
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        localFilters.sportType === sport && styles.optionTextActive,
-                      ]}
-                    >
-                      {sport.charAt(0).toUpperCase() + sport.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.filterSection}>
-              <Text style={styles.sectionTitle}>Skill Level</Text>
-              <View style={styles.optionsContainer}>
-                {Object.values(SkillLevel).map((level) => (
-                  <TouchableOpacity
-                    key={level}
-                    style={[
-                      styles.optionButton,
-                      localFilters.skillLevel === level && styles.optionButtonActive,
-                    ]}
-                    onPress={() =>
-                      setLocalFilters({
-                        ...localFilters,
-                        skillLevel: localFilters.skillLevel === level ? undefined : level,
-                      })
-                    }
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        localFilters.skillLevel === level && styles.optionTextActive,
-                      ]}
-                    >
-                      {level.replace('_', ' ').toUpperCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.applyButton} onPress={handleFilterApply}>
-              <Text style={styles.applyText}>Apply Filters</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
-});
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -231,16 +261,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     marginRight: 8,
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 17,
     color: '#333',
-    marginLeft: 8,
+    marginLeft: 10,
   },
   clearButton: {
     padding: 4,

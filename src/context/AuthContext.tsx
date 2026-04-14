@@ -3,6 +3,7 @@ import React, {
   useState,
   useContext,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -16,6 +17,7 @@ import {
   selectIsAuthenticated,
   loadCachedUser,
   clearAuth,
+  setUser,
 } from '../store/slices/authSlice';
 import {
   fetchSubscription,
@@ -23,6 +25,7 @@ import {
 } from '../store/slices/subscriptionSlice';
 import { setDependents, resetContext } from '../store/slices/contextSlice';
 import { loggingService } from '../services/LoggingService';
+import { userService } from '../services/api/UserService';
 
 interface AuthContextType {
   user: User | null;
@@ -48,6 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const reduxIsAuthenticated = useSelector(selectIsAuthenticated);
 
   const [isLoading, setIsLoading] = useState(true);
+  const lastRefreshedUserId = useRef<string | null>(null);
 
   // Load cached user on mount
   useEffect(() => {
@@ -112,6 +116,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (reduxUser?.id) {
       dispatch(fetchSubscription(reduxUser.id) as any);
 
+      // Fetch fresh profile from server to ensure avatar and other data are current
+      // Only do this once per user ID to avoid redundant fetches
+      if (lastRefreshedUserId.current !== reduxUser.id) {
+        lastRefreshedUserId.current = reduxUser.id;
+
+        userService
+          .getProfile()
+          .then(async freshProfile => {
+            dispatch(setUser(freshProfile as any));
+            await TokenStorage.storeUser(freshProfile as any);
+          })
+          .catch(err => console.warn('Failed to refresh profile:', err));
+      }
+
       // Hydrate dependents into context slice for the ContextIndicator pill
       import('../services/api/config')
         .then(({ API_BASE_URL }) =>
@@ -155,6 +173,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch(clearAuth());
       dispatch(clearSubscription());
       dispatch(resetContext());
+      lastRefreshedUserId.current = null;
 
       console.log('AuthContext: Logout complete');
     } catch (error) {

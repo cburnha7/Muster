@@ -34,8 +34,9 @@ export function HeaderUserSelector() {
   const displayName = activeDep
     ? activeDep.firstName
     : guardian.firstName || 'Me';
-  const profileImage =
-    activeDep?.profileImage || (guardian as any)?.profileImage;
+  const profileImage = activeDep
+    ? activeDep.profileImage
+    : (guardian as any)?.profileImage;
   const initial = displayName.charAt(0).toUpperCase();
   const activeId = activeUserId || guardian.id;
   const avatarColor = personColors.get(activeId) || PERSON_COLORS[0];
