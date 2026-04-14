@@ -26,7 +26,7 @@ import {
 } from '../../components/search/TabSearchModal';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService, Rental } from '../../services/api/CourtService';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { searchEventBus } from '../../utils/searchEventBus';
 import {
   setFacilities,
@@ -61,6 +61,7 @@ const SPORT_CHIP_OPTIONS = [
 ];
 
 export function FacilitiesListScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const route = useRoute();
@@ -307,7 +308,7 @@ export function FacilitiesListScreen() {
     return (
       <TouchableOpacity
         key={item.id}
-        style={styles.facilityCard}
+        style={[styles.facilityCard, { backgroundColor: themeColors.bgCard }]}
         onPress={() => handleFacilityPress(item)}
         activeOpacity={0.7}
       >
@@ -324,7 +325,13 @@ export function FacilitiesListScreen() {
               <Text style={styles.numberText}>{index + 1}</Text>
             </View>
             <View style={styles.facilityTitleContainer}>
-              <Text style={styles.facilityName} numberOfLines={1}>
+              <Text
+                style={[
+                  styles.facilityName,
+                  { color: themeColors.textPrimary },
+                ]}
+                numberOfLines={1}
+              >
                 {item.name}
               </Text>
             </View>
@@ -525,8 +532,17 @@ export function FacilitiesListScreen() {
               size={48}
               color={colors.outlineVariant}
             />
-            <Text style={styles.emptyTitle}>No grounds found</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text
+              style={[styles.emptyTitle, { color: themeColors.textPrimary }]}
+            >
+              No grounds found
+            </Text>
+            <Text
+              style={[
+                styles.emptySubtitle,
+                { color: themeColors.textSecondary },
+              ]}
+            >
               Try adjusting your filters or search
             </Text>
           </View>

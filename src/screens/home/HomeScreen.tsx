@@ -63,7 +63,7 @@ import {
 } from '../../store/api/cancelRequestsApi';
 
 // Theme
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 
 // Types
 import { Booking, Event, Team, EventStatus } from '../../types';
@@ -89,6 +89,7 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 export function HomeScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { isLoading: authLoading, user: currentUser } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
@@ -735,7 +736,12 @@ export function HomeScreen() {
 
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
-            <View style={styles.calendarCard}>
+            <View
+              style={[
+                styles.calendarCard,
+                { backgroundColor: themeColors.bgCard },
+              ]}
+            >
               <Calendar
                 current={selectedDate}
                 markedDates={calendarMarkedDates}
@@ -758,7 +764,11 @@ export function HomeScreen() {
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Games near you</Text>
+            <Text
+              style={[styles.sectionTitle, { color: themeColors.textPrimary }]}
+            >
+              Games near you
+            </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Events' as any)}
             >
@@ -776,22 +786,42 @@ export function HomeScreen() {
             discoverEvents.map(event => (
               <TouchableOpacity
                 key={event.id}
-                style={styles.discoverCard}
+                style={[
+                  styles.discoverCard,
+                  { backgroundColor: themeColors.bgCard },
+                ]}
                 onPress={() =>
                   navigation.navigate('EventDetails', { eventId: event.id })
                 }
                 activeOpacity={0.8}
               >
-                <View style={styles.discoverIcon}>
+                <View
+                  style={[
+                    styles.discoverIcon,
+                    { backgroundColor: themeColors.bgSubtle },
+                  ]}
+                >
                   <Text style={{ fontSize: 20 }}>
                     {getSportEmoji(event.sportType)}
                   </Text>
                 </View>
                 <View style={styles.discoverInfo}>
-                  <Text style={styles.discoverTitle} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.discoverTitle,
+                      { color: themeColors.textPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {event.title}
                   </Text>
-                  <Text style={styles.discoverMeta} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.discoverMeta,
+                      { color: themeColors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {formatEventTime(event.startTime)} {'\u00B7'}{' '}
                     {event.facility?.name ||
                       event.locationName ||
@@ -804,12 +834,24 @@ export function HomeScreen() {
                   style={styles.joinBtn}
                   onPress={() => handleJoinEvent(event.id)}
                 >
-                  <Text style={styles.joinBtnText}>Join</Text>
+                  <Text
+                    style={[
+                      styles.joinBtnText,
+                      { color: themeColors.textSecondary },
+                    ]}
+                  >
+                    Join
+                  </Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
           ) : (
-            <View style={styles.discoverEmpty}>
+            <View
+              style={[
+                styles.discoverEmpty,
+                { backgroundColor: themeColors.bgCard },
+              ]}
+            >
               <Text style={styles.discoverEmptyText}>
                 No games near you yet
               </Text>

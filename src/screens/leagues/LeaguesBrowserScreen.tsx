@@ -20,7 +20,7 @@ import {
   TabSearchModal,
   TabSearchResult,
 } from '../../components/search/TabSearchModal';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
@@ -47,6 +47,7 @@ const SPORTS = [
 ];
 
 export function LeaguesBrowserScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const currentUser = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
@@ -281,7 +282,14 @@ export function LeaguesBrowserScreen() {
                   : undefined
               }
             >
-              <Text style={styles.sectionTitle}>Active</Text>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: themeColors.textPrimary },
+                ]}
+              >
+                Active
+              </Text>
             </View>
           ) : null
         }
@@ -292,8 +300,17 @@ export function LeaguesBrowserScreen() {
               size={40}
               color={colors.outlineVariant}
             />
-            <Text style={styles.emptyTitle}>No active leagues</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text
+              style={[styles.emptyTitle, { color: themeColors.textPrimary }]}
+            >
+              No active leagues
+            </Text>
+            <Text
+              style={[
+                styles.emptySubtitle,
+                { color: themeColors.textSecondary },
+              ]}
+            >
               Join or create a league to get started
             </Text>
           </View>
@@ -316,7 +333,14 @@ export function LeaguesBrowserScreen() {
                 onPress={() => setPastExpanded(v => !v)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.sectionTitle}>Past Seasons</Text>
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    { color: themeColors.textPrimary },
+                  ]}
+                >
+                  Past Seasons
+                </Text>
                 <Ionicons
                   name={pastExpanded ? 'chevron-up' : 'chevron-down'}
                   size={18}

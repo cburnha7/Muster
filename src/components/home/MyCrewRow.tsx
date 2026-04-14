@@ -99,13 +99,30 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
           onPress={() => onSelect(null)}
           activeOpacity={0.7}
         >
-          <View style={[styles.ring, allActive && { borderColor: colors.ink }]}>
-            <View style={[styles.circle, { backgroundColor: colors.ink }]}>
+          <View
+            style={[
+              styles.ring,
+              allActive && { borderColor: themeColors.textPrimary },
+            ]}
+          >
+            <View
+              style={[
+                styles.circle,
+                { backgroundColor: themeColors.textPrimary },
+              ]}
+            >
               <Ionicons name="people" size={20} color="#FFFFFF" />
             </View>
           </View>
           <Text
-            style={[styles.name, allActive && styles.nameActive]}
+            style={[
+              styles.name,
+              { color: themeColors.textSecondary },
+              allActive && {
+                fontFamily: fonts.label,
+                color: themeColors.textPrimary,
+              },
+            ]}
             numberOfLines={1}
           >
             All

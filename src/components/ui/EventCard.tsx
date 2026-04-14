@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Event, SportType, SkillLevel } from '../../types';
 import { EventEligibilityService } from '../../services/events/EventEligibilityService';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 
 interface EventCardProps {
   event: Event;
@@ -23,6 +23,7 @@ const EventCardInner: React.FC<EventCardProps> = ({
   isHost,
   colorIndicator,
 }) => {
+  const { colors: themeColors } = useTheme();
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -92,6 +93,7 @@ const EventCardInner: React.FC<EventCardProps> = ({
     <PressableCard
       style={[
         styles.container,
+        { backgroundColor: themeColors.bgCard },
         colorIndicator ? styles.containerWithIndicator : undefined,
         style,
       ]}
@@ -144,9 +146,12 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name={getSportIcon(event.sportType) as any}
             size={24}
-            color={colors.inkSoft}
+            color={themeColors.textSecondary}
           />
-          <Text style={styles.title} numberOfLines={1}>
+          <Text
+            style={[styles.title, { color: themeColors.textPrimary }]}
+            numberOfLines={1}
+          >
             {event.title}
           </Text>
         </View>
@@ -176,7 +181,10 @@ const EventCardInner: React.FC<EventCardProps> = ({
         </Text>
       </View>
 
-      <Text style={styles.description} numberOfLines={2}>
+      <Text
+        style={[styles.description, { color: themeColors.textSecondary }]}
+        numberOfLines={2}
+      >
         {event.description}
       </Text>
 
@@ -185,9 +193,11 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name="calendar-outline"
             size={16}
-            color={colors.onSurfaceVariant}
+            color={themeColors.textSecondary}
           />
-          <Text style={styles.detailText}>
+          <Text
+            style={[styles.detailText, { color: themeColors.textSecondary }]}
+          >
             {formatDate(event.startTime)} at {formatTime(event.startTime)}
           </Text>
         </View>
@@ -196,9 +206,11 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name="hourglass-outline"
             size={16}
-            color={colors.onSurfaceVariant}
+            color={themeColors.textSecondary}
           />
-          <Text style={styles.detailText}>
+          <Text
+            style={[styles.detailText, { color: themeColors.textSecondary }]}
+          >
             {(() => {
               const ms =
                 new Date(event.endTime).getTime() -
@@ -217,9 +229,12 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name="location-outline"
             size={16}
-            color={colors.onSurfaceVariant}
+            color={themeColors.textSecondary}
           />
-          <Text style={styles.detailText} numberOfLines={1}>
+          <Text
+            style={[styles.detailText, { color: themeColors.textSecondary }]}
+            numberOfLines={1}
+          >
             {event.facility?.name || event.locationName || 'Location TBD'}
           </Text>
         </View>
@@ -264,13 +279,20 @@ const EventCardInner: React.FC<EventCardProps> = ({
       </View>
 
       {wasAutoOpened && (
-        <View style={styles.autoOpenedBanner}>
+        <View
+          style={[
+            styles.autoOpenedBanner,
+            { backgroundColor: themeColors.bgSubtle },
+          ]}
+        >
           <Ionicons
             name="megaphone-outline"
             size={14}
-            color={colors.onSurface}
+            color={themeColors.textPrimary}
           />
-          <Text style={styles.autoOpenedText}>
+          <Text
+            style={[styles.autoOpenedText, { color: themeColors.textPrimary }]}
+          >
             Now open to public - was invite-only
           </Text>
         </View>

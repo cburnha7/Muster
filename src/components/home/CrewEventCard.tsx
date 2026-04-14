@@ -74,9 +74,12 @@ function CrewEventCardInner({
               <Ionicons
                 name="location-outline"
                 size={12}
-                color={colors.inkSoft}
+                color={themeColors.textSecondary}
               />
-              <Text style={styles.locText} numberOfLines={1}>
+              <Text
+                style={[styles.locText, { color: themeColors.textSecondary }]}
+                numberOfLines={1}
+              >
                 {event.facility?.name || event.locationName}
               </Text>
             </View>

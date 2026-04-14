@@ -65,7 +65,11 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         accessibilityLabel={`${title} section, ${expanded ? 'expanded' : 'collapsed'}`}
       >
         <Animated.View style={{ transform: [{ rotateZ }] }}>
-          <Ionicons name="chevron-forward" size={20} color={colors.inkFaint} />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={themeColors.textMuted}
+          />
         </Animated.View>
         <Text style={[styles.title, { color: themeColors.textPrimary }]}>
           {title}

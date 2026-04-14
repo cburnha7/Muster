@@ -78,6 +78,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
     <TouchableOpacity
       style={[
         styles.option,
+        { borderBottomColor: themeColors.border },
         item.disabled && styles.optionDisabled,
         item.value === value && styles.optionSelected,
       ]}
@@ -87,6 +88,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       <Text
         style={[
           styles.optionText,
+          { color: themeColors.textPrimary },
           item.disabled && styles.optionTextDisabled,
           item.value === value && styles.optionTextSelected,
         ]}
@@ -142,7 +144,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
               ? colors.outline
               : error
                 ? colors.error
-                : colors.onSurfaceVariant
+                : themeColors.textSecondary
           }
         />
       </TouchableOpacity>

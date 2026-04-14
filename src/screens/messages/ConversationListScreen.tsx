@@ -204,8 +204,14 @@ export function ConversationListScreen() {
           size={56}
           color={colors.outlineVariant}
         />
-        <Text style={styles.emptyTitle}>{emptyState.title}</Text>
-        <Text style={styles.emptySubtitle}>{emptyState.subtitle}</Text>
+        <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
+          {emptyState.title}
+        </Text>
+        <Text
+          style={[styles.emptySubtitle, { color: themeColors.textSecondary }]}
+        >
+          {emptyState.subtitle}
+        </Text>
         {emptyState.actionLabel && (
           <TouchableOpacity
             style={styles.emptyAction}
@@ -250,7 +256,11 @@ export function ConversationListScreen() {
         {FILTERS.map(f => (
           <TouchableOpacity
             key={f.key}
-            style={[styles.chip, activeFilter === f.key && styles.chipActive]}
+            style={[
+              styles.chip,
+              activeFilter === f.key && styles.chipActive,
+              activeFilter !== f.key && { backgroundColor: themeColors.bgCard },
+            ]}
             onPress={() => setActiveFilter(f.key)}
             activeOpacity={0.75}
           >

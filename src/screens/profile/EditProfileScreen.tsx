@@ -10,11 +10,13 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { userService } from '../../services/api/UserService';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../services/api/config';
 import { User, UpdateProfileData } from '../../types';
 import { setUser as setReduxUser } from '../../store/slices/authSlice';
 import { FormInput } from '../../components/forms/FormInput';
@@ -46,7 +48,14 @@ const GENDER_OPTIONS_UNUSED = null; // Gender now uses toggle buttons
 export function EditProfileScreen(): JSX.Element {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
   const dispatch = useDispatch();
+  const { user: authUser } = useAuth();
+
+  // If dependentId is passed, we're editing a dependent
+  const dependentId = (route.params as any)?.dependentId as string | undefined;
+  const isDependent = !!dependentId;
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -98,38 +107,70 @@ export function EditProfileScreen(): JSX.Element {
     try {
       setLoading(true);
       setError(null);
-      const profileData = await userService.getProfile();
-      setUser(profileData);
-      // Set dynamic header title
-      navigation.setOptions({
-        headerTitle: `${profileData.firstName} ${profileData.lastName}`,
-      });
-      setFirstName(profileData.firstName || '');
-      setLastName(profileData.lastName || '');
-      setEmail(profileData.email || '');
-      setPhoneNumber(profileData.phoneNumber || '');
-      setProfileImage(profileData.profileImage);
-      setSelectedSports(profileData.preferredSports || []);
-      setGender((profileData as any).gender || '');
-      setDateOfBirth(
-        profileData.dateOfBirth
-          ? String(profileData.dateOfBirth).split('T')[0]
-          : ''
-      );
-      if (profileData.dateOfBirth) {
-        const dateStr = String(profileData.dateOfBirth).split('T')[0];
-        const [y, m, dd] = dateStr.split('-');
-        setBirthMonth(String(parseInt(m)));
-        setBirthDay(String(parseInt(dd)));
-        setBirthYear(y);
+
+      if (isDependent && authUser?.id) {
+        // Load dependent profile
+        const response = await fetch(
+          `${API_BASE_URL}/dependents/${dependentId}`,
+          {
+            headers: { 'X-User-Id': authUser.id },
+          }
+        );
+        if (!response.ok) throw new Error('Failed to load dependent profile');
+        const depData = await response.json();
+        navigation.setOptions({
+          headerTitle: `${depData.firstName} ${depData.lastName}`,
+        });
+        setFirstName(depData.firstName || '');
+        setLastName(depData.lastName || '');
+        setEmail('');
+        setPhoneNumber('');
+        setProfileImage(depData.profileImage || undefined);
+        setSelectedSports(depData.sportPreferences || []);
+        setGender(depData.gender || '');
+        if (depData.dateOfBirth) {
+          const dateStr = String(depData.dateOfBirth).split('T')[0];
+          const [y, m, dd] = dateStr.split('-');
+          setBirthMonth(String(parseInt(m)));
+          setBirthDay(String(parseInt(dd)));
+          setBirthYear(y);
+        }
+        setAddress('');
+      } else {
+        // Load current user profile
+        const profileData = await userService.getProfile();
+        setUser(profileData);
+        navigation.setOptions({
+          headerTitle: `${profileData.firstName} ${profileData.lastName}`,
+        });
+        setFirstName(profileData.firstName || '');
+        setLastName(profileData.lastName || '');
+        setEmail(profileData.email || '');
+        setPhoneNumber(profileData.phoneNumber || '');
+        setProfileImage(profileData.profileImage);
+        setSelectedSports(profileData.preferredSports || []);
+        setGender((profileData as any).gender || '');
+        setDateOfBirth(
+          profileData.dateOfBirth
+            ? String(profileData.dateOfBirth).split('T')[0]
+            : ''
+        );
+        if (profileData.dateOfBirth) {
+          const dateStr = String(profileData.dateOfBirth).split('T')[0];
+          const [y, m, dd] = dateStr.split('-');
+          setBirthMonth(String(parseInt(m)));
+          setBirthDay(String(parseInt(dd)));
+          setBirthYear(y);
+        }
+        setAddress(
+          (profileData as any).locationCity &&
+            (profileData as any).locationState
+            ? `${(profileData as any).locationCity}, ${(profileData as any).locationState}`
+            : (profileData as any).locationCity ||
+                (profileData as any).address ||
+                ''
+        );
       }
-      setAddress(
-        (profileData as any).locationCity && (profileData as any).locationState
-          ? `${(profileData as any).locationCity}, ${(profileData as any).locationState}`
-          : (profileData as any).locationCity ||
-              (profileData as any).address ||
-              ''
-      );
     } catch (err: any) {
       setError(err.message || 'Failed to load profile');
     } finally {
@@ -148,13 +189,13 @@ export function EditProfileScreen(): JSX.Element {
       newErrors.lastName = 'Last name is required';
     }
 
-    if (!email.trim()) {
+    if (!isDependent && !email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!validateEmail(email)) {
+    } else if (!isDependent && email && !validateEmail(email)) {
       newErrors.email = 'Invalid email format';
     }
 
-    if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
+    if (!isDependent && phoneNumber && !validatePhoneNumber(phoneNumber)) {
       newErrors.phoneNumber = 'Invalid phone number format';
     }
 
@@ -256,37 +297,81 @@ export function EditProfileScreen(): JSX.Element {
     loggingService.logButton('Save Changes', 'EditProfileScreen');
     try {
       setSaving(true);
-      const updates: UpdateProfileData = {
-        firstName,
-        lastName,
-        email,
-        phoneNumber: phoneNumber || undefined,
-        gender: gender || undefined,
-        dateOfBirth:
-          birthYear && birthMonth && birthDay
-            ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
-            : undefined,
-      };
 
-      // Parse address into city/state for the DB
-      if (address) {
-        const parts = address.split(',').map(s => s.trim());
-        if (parts.length >= 2) {
-          (updates as any).locationCity = parts[0];
-          (updates as any).locationState = parts[1];
-        } else {
-          (updates as any).locationCity = address.trim();
+      if (isDependent && authUser?.id) {
+        // Save dependent profile
+        const depUpdates: any = {
+          firstName,
+          lastName,
+          dateOfBirth:
+            birthYear && birthMonth && birthDay
+              ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
+              : undefined,
+          sportPreferences: selectedSports,
+          ...(gender ? { gender } : {}),
+          ...(profileImage ? { profileImage } : {}),
+        };
+        const response = await fetch(
+          `${API_BASE_URL}/dependents/${dependentId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': authUser.id,
+            },
+            body: JSON.stringify(depUpdates),
+          }
+        );
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(
+            errData.error || errData.message || 'Failed to update dependent'
+          );
         }
-      }
-
-      await userService.updateProfile(updates);
-
-      // Refresh the profile and update Redux so all screens get the new data
-      try {
-        const freshProfile = await userService.getProfile();
-        dispatch(setReduxUser(freshProfile as any));
-      } catch {
-        // Non-critical — profile screen will refresh on focus anyway
+        // Refresh dependents in Redux
+        try {
+          const depRes = await fetch(`${API_BASE_URL}/dependents`, {
+            headers: { 'X-User-Id': authUser.id },
+          });
+          if (depRes.ok) {
+            const {
+              setDependents,
+            } = require('../../store/slices/contextSlice');
+            dispatch(setDependents(await depRes.json()));
+          }
+        } catch {
+          /* non-critical */
+        }
+      } else {
+        // Save current user profile
+        const updates: UpdateProfileData = {
+          firstName,
+          lastName,
+          email,
+          phoneNumber: phoneNumber || undefined,
+          gender: gender || undefined,
+          dateOfBirth:
+            birthYear && birthMonth && birthDay
+              ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
+              : undefined,
+          sportPreferences: selectedSports,
+        } as any;
+        if (address) {
+          const parts = address.split(',').map(s => s.trim());
+          if (parts.length >= 2) {
+            (updates as any).locationCity = parts[0];
+            (updates as any).locationState = parts[1];
+          } else {
+            (updates as any).locationCity = address.trim();
+          }
+        }
+        await userService.updateProfile(updates);
+        try {
+          const freshProfile = await userService.getProfile();
+          dispatch(setReduxUser(freshProfile as any));
+        } catch {
+          /* non-critical */
+        }
       }
 
       navigation.goBack();
@@ -387,29 +472,33 @@ export function EditProfileScreen(): JSX.Element {
               onSubmitEditing={() => emailRef.current?.focus()}
             />
 
-            <FormInput
-              ref={emailRef}
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={errors.email}
-              returnKeyType="next"
-              onSubmitEditing={() => phoneRef.current?.focus()}
-            />
+            {!isDependent && (
+              <FormInput
+                ref={emailRef}
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={errors.email}
+                returnKeyType="next"
+                onSubmitEditing={() => phoneRef.current?.focus()}
+              />
+            )}
 
-            <FormInput
-              ref={phoneRef}
-              label="Phone Number (Optional)"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              placeholder="Enter your phone number"
-              keyboardType="phone-pad"
-              error={errors.phoneNumber}
-              returnKeyType="done"
-            />
+            {!isDependent && (
+              <FormInput
+                ref={phoneRef}
+                label="Phone Number (Optional)"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                placeholder="Enter your phone number"
+                keyboardType="phone-pad"
+                error={errors.phoneNumber}
+                returnKeyType="done"
+              />
+            )}
 
             {/* Gender toggle */}
             <Text
@@ -479,12 +568,12 @@ export function EditProfileScreen(): JSX.Element {
                 fontFamily: fonts.body,
                 fontSize: 16,
                 fontWeight: '500',
-                color: '#333',
+                color: themeColors.textPrimary,
                 marginBottom: 8,
                 marginTop: 8,
               }}
             >
-              Birthday
+              {isDependent ? 'Date of Birth' : 'Birthday'}
             </Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <View style={{ flex: 1 }}>
@@ -527,85 +616,137 @@ export function EditProfileScreen(): JSX.Element {
               </View>
             </View>
 
-            {/* Home Address — autocomplete */}
-            <FormInput
-              label="Home Address"
-              value={address}
-              onChangeText={text => {
-                setAddress(text);
-                // Google Places autocomplete
-                if (text.length >= 3) {
-                  const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-                  if (apiKey) {
-                    fetch(
-                      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
-                    )
-                      .then(r => r.json())
-                      .then(data =>
-                        setAddressSuggestions(
-                          (data.predictions || []).map(
-                            (p: any) => p.description
-                          )
+            {/* Home Address — autocomplete (current user only) */}
+            {!isDependent && (
+              <>
+                <FormInput
+                  label="Home Address"
+                  value={address}
+                  onChangeText={text => {
+                    setAddress(text);
+                    if (text.length >= 3) {
+                      const apiKey =
+                        process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
+                      if (apiKey) {
+                        fetch(
+                          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
                         )
-                      )
-                      .catch(() => setAddressSuggestions([]));
-                  }
-                } else {
-                  setAddressSuggestions([]);
-                }
-              }}
-              placeholder="Start typing your address..."
-            />
-            {addressSuggestions.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: colors.outlineVariant,
-                  marginTop: -8,
-                  marginBottom: 8,
-                }}
-              >
-                {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      borderBottomWidth: idx < 4 ? 1 : 0,
-                      borderBottomColor: colors.outlineVariant,
-                    }}
-                    onPress={() => {
-                      setAddress(suggestion);
+                          .then(r => r.json())
+                          .then(data =>
+                            setAddressSuggestions(
+                              (data.predictions || []).map(
+                                (p: any) => p.description
+                              )
+                            )
+                          )
+                          .catch(() => setAddressSuggestions([]));
+                      }
+                    } else {
                       setAddressSuggestions([]);
+                    }
+                  }}
+                  placeholder="Start typing your address..."
+                />
+                {addressSuggestions.length > 0 && (
+                  <View
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: colors.outlineVariant,
+                      marginTop: -8,
+                      marginBottom: 8,
                     }}
+                  >
+                    {addressSuggestions.slice(0, 5).map((suggestion, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        style={{
+                          paddingHorizontal: 14,
+                          paddingVertical: 10,
+                          borderBottomWidth: idx < 4 ? 1 : 0,
+                          borderBottomColor: colors.outlineVariant,
+                        }}
+                        onPress={() => {
+                          setAddress(suggestion);
+                          setAddressSuggestions([]);
+                        }}
+                        activeOpacity={0.75}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: fonts.body,
+                            fontSize: 14,
+                            color: colors.onSurface,
+                          }}
+                        >
+                          {suggestion}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+
+            {/* Preferred Sports */}
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 16,
+                fontWeight: '500',
+                color: themeColors.textPrimary,
+                marginBottom: 8,
+                marginTop: 16,
+              }}
+            >
+              {isDependent ? 'Sport Preferences' : 'Preferred Sports'}
+            </Text>
+            <View style={styles.sportsList}>
+              {SPORT_OPTIONS.map(sport => {
+                const selected = selectedSports.includes(sport.value);
+                return (
+                  <TouchableOpacity
+                    key={sport.value}
+                    style={[
+                      styles.sportTag,
+                      selected && styles.sportTagSelected,
+                    ]}
+                    onPress={() => toggleSport(sport.value)}
                     activeOpacity={0.75}
                   >
                     <Text
-                      style={{
-                        fontFamily: fonts.body,
-                        fontSize: 14,
-                        color: colors.onSurface,
-                      }}
+                      style={[
+                        styles.sportTagText,
+                        selected && styles.sportTagTextSelected,
+                      ]}
                     >
-                      {suggestion}
+                      {sport.label}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {/* Save Button */}
-            <FormButton
-              title={saving ? 'Saving...' : 'Save Changes'}
-              onPress={handleSave}
-              disabled={saving}
-              style={styles.saveButton}
-            />
+                );
+              })}
+            </View>
           </View>
         </View>
       </ScrollView>
+
+      {/* Save Button pinned at bottom */}
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          backgroundColor: themeColors.bgScreen,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.outlineVariant,
+        }}
+      >
+        <FormButton
+          title={saving ? 'Saving...' : 'Save Changes'}
+          onPress={handleSave}
+          disabled={saving}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }

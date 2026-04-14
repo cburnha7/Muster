@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import type { Conversation } from '../../types/messaging';
 
 interface ConversationRowProps {
@@ -81,6 +81,7 @@ function ConversationRowInner({
   onMute,
   onPin,
 }: ConversationRowProps) {
+  const { colors: themeColors } = useTheme();
   const lastMsg = conversation.messages[0];
   const hasUnread =
     conversation.unreadCount > 0 && !conversation.myParticipant?.isMuted;
@@ -156,6 +157,7 @@ function ConversationRowInner({
     <TouchableOpacity
       style={[
         styles.row,
+        { backgroundColor: themeColors.bgCard },
         hasUnread && styles.rowUnread,
         isMuted && styles.rowMuted,
       ]}
@@ -195,14 +197,22 @@ function ConversationRowInner({
       <View style={styles.body}>
         <View style={styles.topRow}>
           <Text
-            style={[styles.name, hasUnread && styles.nameUnread]}
+            style={[
+              styles.name,
+              { color: themeColors.textPrimary },
+              hasUnread && styles.nameUnread,
+            ]}
             numberOfLines={1}
           >
             {displayName}
           </Text>
           {lastMsg && (
             <Text
-              style={[styles.timestamp, hasUnread && styles.timestampUnread]}
+              style={[
+                styles.timestamp,
+                { color: themeColors.textSecondary },
+                hasUnread && styles.timestampUnread,
+              ]}
             >
               {formatTimestamp(lastMsg.createdAt)}
             </Text>
@@ -212,6 +222,7 @@ function ConversationRowInner({
           <Text
             style={[
               styles.preview,
+              { color: themeColors.textSecondary },
               hasUnread && styles.previewUnread,
               isSystemPreview && styles.previewSystem,
             ]}
@@ -236,7 +247,7 @@ function ConversationRowInner({
             <Ionicons
               name="volume-mute-outline"
               size={14}
-              color={colors.onSurfaceVariant}
+              color={themeColors.textSecondary}
             />
           )}
         </View>

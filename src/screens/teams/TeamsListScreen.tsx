@@ -11,7 +11,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
+import { colors, fonts, Spacing, useTheme } from '../../theme';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
@@ -61,6 +61,7 @@ const SPORTS: { label: string; value: string; icon: string }[] = [
 ];
 
 export function TeamsListScreen() {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
@@ -266,7 +267,9 @@ export function TeamsListScreen() {
 
       {/* My Teams section */}
       {myTeams.length > 0 && (
-        <Text style={styles.sectionTitle}>My Rosters</Text>
+        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+          My Rosters
+        </Text>
       )}
     </>
   );
@@ -276,7 +279,14 @@ export function TeamsListScreen() {
       {/* Other teams section */}
       {otherTeams.length > 0 && (
         <>
-          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Discover</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { marginTop: 24, color: themeColors.textPrimary },
+            ]}
+          >
+            Discover
+          </Text>
           {otherTeams.map(team => (
             <TeamCard
               key={team.id}
@@ -290,7 +300,7 @@ export function TeamsListScreen() {
 
       {/* Join with code */}
       <TouchableOpacity
-        style={styles.joinBtn}
+        style={[styles.joinBtn, { backgroundColor: themeColors.cobaltTint }]}
         onPress={handleJoinTeam}
         activeOpacity={0.85}
       >
@@ -345,8 +355,14 @@ export function TeamsListScreen() {
                 size={36}
                 color={colors.outlineVariant}
               />
-              <Text style={styles.emptyTitle}>No rosters yet</Text>
-              <Text style={styles.emptyText}>
+              <Text
+                style={[styles.emptyTitle, { color: themeColors.textPrimary }]}
+              >
+                No rosters yet
+              </Text>
+              <Text
+                style={[styles.emptyText, { color: themeColors.textSecondary }]}
+              >
                 Create a roster or join one with a code
               </Text>
             </View>

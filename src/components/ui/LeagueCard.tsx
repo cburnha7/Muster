@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 // Types imported as needed by consuming components
-import { colors, fonts } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { getSportIcon, formatSport } from '../../utils/sportUtils';
 import { getSportColor } from '../../constants/sportColors';
 
@@ -20,12 +20,13 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
   isOwner,
   style,
 }) => {
+  const { colors: themeColors } = useTheme();
   const seasonName = league.seasonName || league.name;
   const sportColor = getSportColor(league.sportType);
 
   return (
     <PressableCard
-      style={[styles.card, style]}
+      style={[styles.card, { backgroundColor: themeColors.bgCard }, style]}
       onPress={() => onPress?.(league)}
     >
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
@@ -38,7 +39,10 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
 
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text
+            style={[styles.name, { color: themeColors.textPrimary }]}
+            numberOfLines={1}
+          >
             {seasonName}
           </Text>
           {isOwner && (
@@ -47,14 +51,12 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
             </View>
           )}
         </View>
-        <Text style={styles.meta}>{formatSport(league.sportType)}</Text>
+        <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
+          {formatSport(league.sportType)}
+        </Text>
       </View>
 
-      <Ionicons
-        name="chevron-forward"
-        size={16}
-        color={colors.outlineVariant}
-      />
+      <Ionicons name="chevron-forward" size={16} color={themeColors.border} />
     </PressableCard>
   );
 };

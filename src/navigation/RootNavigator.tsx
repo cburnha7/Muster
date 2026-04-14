@@ -33,7 +33,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const profileScreenOptions = {
   headerShown: true,
-  headerBackVisible: true,
+  headerBackVisible: false,
   headerTitleAlign: 'center' as const,
   headerStyle: { backgroundColor: colors.surfaceContainerLowest },
   headerShadowVisible: false,

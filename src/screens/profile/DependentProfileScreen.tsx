@@ -183,7 +183,7 @@ export function DependentProfileScreen() {
         <TouchableOpacity
           style={styles.actionBtn}
           onPress={() =>
-            (navigation as any).navigate('DependentForm', { dependentId })
+            (navigation as any).navigate('EditProfile', { dependentId })
           }
           activeOpacity={0.7}
         >
