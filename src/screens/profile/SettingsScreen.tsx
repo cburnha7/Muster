@@ -344,7 +344,6 @@ function EntityRow({
 
 interface AccountGroupProps {
   label: string;
-  dotColor: string;
   entities: ConnectAccount[];
   onboardingId: string | null;
   onOnboard: (
@@ -356,7 +355,6 @@ interface AccountGroupProps {
 
 function AccountGroup({
   label,
-  dotColor,
   entities,
   onboardingId,
   onOnboard,
@@ -364,29 +362,28 @@ function AccountGroup({
 }: AccountGroupProps) {
   return (
     <View>
-      <View style={s.groupHeader}>
-        <View style={[s.groupDot, { backgroundColor: dotColor }]} />
-        <Text style={s.groupHeaderText}>{label}</Text>
+      <Text style={s.sectionLabel}>{label}</Text>
+      <View style={s.card}>
+        {loading ? (
+          <View style={s.groupLoadingRow}>
+            <ActivityIndicator size="small" color={colors.cobalt} />
+          </View>
+        ) : entities.length === 0 ? (
+          <View style={[s.row, s.rowLast]}>
+            <Text style={s.emptyText}>No {label.toLowerCase()} yet</Text>
+          </View>
+        ) : (
+          entities.map((account, idx) => (
+            <EntityRow
+              key={`${account.entityType}-${account.entityId}`}
+              account={account}
+              isLast={idx === entities.length - 1}
+              onboardingId={onboardingId}
+              onOnboard={onOnboard}
+            />
+          ))
+        )}
       </View>
-      {loading ? (
-        <View style={s.groupLoadingRow}>
-          <ActivityIndicator size="small" color={colors.cobalt} />
-        </View>
-      ) : entities.length === 0 ? (
-        <View style={[s.row, s.rowLast]}>
-          <Text style={s.emptyText}>No {label} yet</Text>
-        </View>
-      ) : (
-        entities.map((account, idx) => (
-          <EntityRow
-            key={`${account.entityType}-${account.entityId}`}
-            account={account}
-            isLast={idx === entities.length - 1}
-            onboardingId={onboardingId}
-            onOnboard={onOnboard}
-          />
-        ))
-      )}
     </View>
   );
 }
@@ -689,35 +686,27 @@ function AccountsTab({
         )}
       </View>
 
-      <Text style={s.sectionLabel}>Accounts</Text>
-      <View style={s.card}>
-        <AccountGroup
-          label="Grounds"
-          dotColor={colors.cobalt}
-          entities={grounds}
-          onboardingId={onboardingId}
-          onOnboard={handleOnboard}
-          loading={loading}
-        />
-        <View style={s.groupDivider} />
-        <AccountGroup
-          label="Leagues"
-          dotColor={colors.pine}
-          entities={leagues}
-          onboardingId={onboardingId}
-          onOnboard={handleOnboard}
-          loading={loading}
-        />
-        <View style={s.groupDivider} />
-        <AccountGroup
-          label="Rosters"
-          dotColor={colors.gold}
-          entities={rosters}
-          onboardingId={onboardingId}
-          onOnboard={handleOnboard}
-          loading={loading}
-        />
-      </View>
+      <AccountGroup
+        label="Grounds"
+        entities={grounds}
+        onboardingId={onboardingId}
+        onOnboard={handleOnboard}
+        loading={loading}
+      />
+      <AccountGroup
+        label="Leagues"
+        entities={leagues}
+        onboardingId={onboardingId}
+        onOnboard={handleOnboard}
+        loading={loading}
+      />
+      <AccountGroup
+        label="Rosters"
+        entities={rosters}
+        onboardingId={onboardingId}
+        onOnboard={handleOnboard}
+        loading={loading}
+      />
 
       <Text style={s.sectionLabel}>Account</Text>
       <View style={s.card}>

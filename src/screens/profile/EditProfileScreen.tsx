@@ -529,11 +529,9 @@ export function EditProfileScreen(): JSX.Element {
                       justifyContent: 'center',
                       paddingVertical: 12,
                       borderRadius: 12,
-                      backgroundColor: selected
-                        ? colors.cobalt
-                        : colors.surface,
+                      backgroundColor: selected ? colors.pine : colors.surface,
                       borderWidth: 1.5,
-                      borderColor: selected ? colors.cobalt : colors.border,
+                      borderColor: selected ? colors.pine : colors.border,
                       gap: 6,
                     }}
                     onPress={() =>
@@ -811,7 +809,7 @@ const styles = StyleSheet.create({
   imageButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.pine,
     borderRadius: 8,
   },
   imageButtonText: {

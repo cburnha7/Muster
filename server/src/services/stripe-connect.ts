@@ -37,7 +37,9 @@ export const stripe = new Proxy({} as Stripe, {
   get(_target, prop) {
     const instance = getStripe();
     if (!instance) {
-      throw new Error('Stripe is not configured — set STRIPE_SECRET_KEY env var');
+      throw new Error(
+        'Stripe is not configured — set STRIPE_SECRET_KEY env var'
+      );
     }
     return (instance as any)[prop];
   },
@@ -75,13 +77,18 @@ export function calculatePlatformFee(amountCents: number): number {
  * Create a new Stripe Connect Express account.
  */
 export async function createConnectAccount(
-  email: string,
-  businessType?: string,
+  email?: string,
+  businessType?: string
 ): Promise<Stripe.Account> {
   return stripe.accounts.create({
     type: 'express',
-    email,
-    ...(businessType ? { business_type: businessType as Stripe.AccountCreateParams.BusinessType } : {}),
+    ...(email ? { email } : {}),
+    ...(businessType
+      ? {
+          business_type:
+            businessType as Stripe.AccountCreateParams.BusinessType,
+        }
+      : {}),
     capabilities: {
       card_payments: { requested: true },
       transfers: { requested: true },
@@ -95,7 +102,7 @@ export async function createConnectAccount(
 export async function createConnectAccountLink(
   accountId: string,
   refreshUrl: string,
-  returnUrl: string,
+  returnUrl: string
 ): Promise<Stripe.AccountLink> {
   return stripe.accountLinks.create({
     account: accountId,
@@ -119,7 +126,7 @@ export interface ConnectAccountStatus {
  * Retrieve a Connect account and return its onboarding status flags.
  */
 export async function getConnectAccountStatus(
-  accountId: string,
+  accountId: string
 ): Promise<ConnectAccountStatus> {
   const account = await stripe.accounts.retrieve(accountId);
   return {
@@ -138,18 +145,18 @@ export interface ConnectAccountBalance {
  * Retrieve the balance for a Connect account. Returns amounts in cents (USD).
  */
 export async function getConnectAccountBalance(
-  accountId: string,
+  accountId: string
 ): Promise<ConnectAccountBalance> {
   const balance = await stripe.balance.retrieve({
     stripeAccount: accountId,
   });
 
   const available = balance.available
-    .filter((b) => b.currency === 'usd')
+    .filter(b => b.currency === 'usd')
     .reduce((sum, b) => sum + b.amount, 0);
 
   const pending = balance.pending
-    .filter((b) => b.currency === 'usd')
+    .filter(b => b.currency === 'usd')
     .reduce((sum, b) => sum + b.amount, 0);
 
   return { available, pending };

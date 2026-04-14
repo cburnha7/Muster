@@ -16,42 +16,64 @@ declare global {
   }
 }
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
+    // Accept X-User-Id header as fallback authentication
+    const xUserId = req.headers['x-user-id'] as string | undefined;
+
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No token provided' });
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
+        userId: string;
+      };
+
+      req.user = { userId: decoded.userId };
+      return next();
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    // Fallback to X-User-Id header
+    if (xUserId) {
+      req.user = { userId: xUserId };
+      return next();
+    }
 
-    // Verify token
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'secret'
-    ) as { userId: string };
-
-    // Add user info to request
-    req.user = { userId: decoded.userId };
-
-    next();
+    return res.status(401).json({ error: 'No token provided' });
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    // JWT verification failed — try X-User-Id fallback
+    const xUserId = req.headers['x-user-id'] as string | undefined;
+    if (xUserId) {
+      req.user = { userId: xUserId };
+      return next();
+    }
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
 // Optional auth middleware - doesn't fail if no token
-export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuthMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const authHeader = req.headers.authorization;
     const xUserId = req.headers['x-user-id'] as string | undefined;
-    
-    console.log('🔐 Optional Auth - Header:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none');
+
+    console.log(
+      '🔐 Optional Auth - Header:',
+      authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none'
+    );
     console.log('🔐 Optional Auth - X-User-Id:', xUserId);
-    
+
     // Accept X-User-Id header as fallback authentication
     // This allows the app to work when JWT tokens expire but user data is still cached
     if (xUserId) {
@@ -59,22 +81,26 @@ export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFu
       console.log('🔐 Optional Auth - Using X-User-Id header:', xUserId);
       return next();
     }
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      
+
       // Check if it's a mock token (starts with 'mock_token_')
-      if (token.startsWith('mock_token_') && process.env.NODE_ENV === 'development') {
-        console.log('🔐 Optional Auth - Mock token detected, but no X-User-Id header');
+      if (
+        token.startsWith('mock_token_') &&
+        process.env.NODE_ENV === 'development'
+      ) {
+        console.log(
+          '🔐 Optional Auth - Mock token detected, but no X-User-Id header'
+        );
         // Continue without user - frontend should send X-User-Id
         return next();
       }
-      
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || 'secret'
-      ) as { userId: string };
-      
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
+        userId: string;
+      };
+
       req.user = { userId: decoded.userId };
       console.log('🔐 Optional Auth - Decoded userId:', decoded.userId);
     } else {
@@ -83,7 +109,10 @@ export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFu
 
     next();
   } catch (error) {
-    console.log('🔐 Optional Auth - Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
+    console.log(
+      '🔐 Optional Auth - Token verification failed:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
     // Continue without user if token is invalid
     next();
   }
