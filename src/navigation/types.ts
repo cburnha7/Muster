@@ -5,27 +5,38 @@ export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
-  // Profile screens (accessible from avatar bottom sheet on any tab)
-  ProfileScreen: undefined;
-  EditProfile: undefined;
-  Settings: undefined;
-  NotificationPreferences: undefined;
-  DependentForm: { dependentId?: string };
-  DependentProfile: { dependentId: string };
-  TransferAccount: { dependentId: string };
-  RedeemCode: undefined;
-  AvailabilityCalendar: { userId: string };
 };
 
 // Onboarding Stack Types
-export type OnboardingIntent = 'PLAYER' | 'CAPTAIN' | 'COACH' | 'GUARDIAN' | 'COMMISSIONER' | 'FACILITY_OWNER';
+export type OnboardingIntent =
+  | 'PLAYER'
+  | 'CAPTAIN'
+  | 'COACH'
+  | 'GUARDIAN'
+  | 'COMMISSIONER'
+  | 'FACILITY_OWNER';
 
 export type OnboardingStackParamList = {
   IntentSelection: undefined;
   SportSelection: { intents: string[] };
   LocationSetup: { intents: string[]; sports: string[] };
-  PersonaSetup: { intents: string[]; sports: string[]; locationCity?: string; locationState?: string; locationLat?: number; locationLng?: number };
-  ProfileFinish: { intents: string[]; sports: string[]; locationCity?: string; locationState?: string; locationLat?: number; locationLng?: number; personaAction?: string };
+  PersonaSetup: {
+    intents: string[];
+    sports: string[];
+    locationCity?: string;
+    locationState?: string;
+    locationLat?: number;
+    locationLng?: number;
+  };
+  ProfileFinish: {
+    intents: string[];
+    sports: string[];
+    locationCity?: string;
+    locationState?: string;
+    locationLat?: number;
+    locationLng?: number;
+    personaAction?: string;
+  };
 };
 
 // Auth Stack Types
@@ -34,7 +45,12 @@ export type AuthStackParamList = {
   Registration: undefined;
   ForgotPassword: undefined;
   ResetPassword: { token: string };
-  InviteRegistration: { inviteCode: string; teamId: string; teamName: string; teamSport: string };
+  InviteRegistration: {
+    inviteCode: string;
+    teamId: string;
+    teamName: string;
+    teamSport: string;
+  };
 };
 
 // Main Tab Navigator Types
@@ -86,6 +102,16 @@ export type HomeStackParamList = {
   Debrief: { eventId: string; readonly?: boolean };
   PendingReservationDetails: { rentalId: string };
   AttendanceMarking: { eventId: string };
+  // Profile screens (accessible from avatar bottom sheet)
+  ProfileScreen: undefined;
+  EditProfile: { dependentId?: string };
+  DependentProfile: { dependentId: string };
+  DependentForm: { dependentId?: string };
+  Settings: undefined;
+  NotificationPreferences: undefined;
+  TransferAccount: { dependentId: string };
+  RedeemCode: undefined;
+  AvailabilityCalendar: { userId: string };
 };
 
 export type EventsStackParamList = {
@@ -120,12 +146,14 @@ export type EventsStackParamList = {
 };
 
 export type FacilitiesStackParamList = {
-  FacilitiesList: {
-    eventDate?: string;
-    eventStartTime?: string;
-    returnTo?: 'CreateEvent' | 'EditEvent';
-    returnParams?: Record<string, any>;
-  } | undefined;
+  FacilitiesList:
+    | {
+        eventDate?: string;
+        eventStartTime?: string;
+        returnTo?: 'CreateEvent' | 'EditEvent';
+        returnParams?: Record<string, any>;
+      }
+    | undefined;
   FacilityDetails: {
     facilityId: string;
     eventDate?: string;
@@ -137,7 +165,11 @@ export type FacilitiesStackParamList = {
   EditFacility: { facilityId: string };
   ManageGround: { facilityId: string; facilityName: string };
   AddCourt: { facilityId: string };
-  FacilityMapEditor: { facilityId: string; facilityName: string; currentMapUrl?: string };
+  FacilityMapEditor: {
+    facilityId: string;
+    facilityName: string;
+    currentMapUrl?: string;
+  };
   GroundAvailability: { facilityId: string; facilityName: string };
   CourtAvailability: {
     facilityId: string;
@@ -177,7 +209,11 @@ export type LeaguesStackParamList = {
   CreateMatch: { leagueId: string; seasonId?: string };
   RecordMatchResult: { matchId: string };
   AssignFacility: { matchId: string };
-  DocumentViewer: { leagueId: string; documentId: string; documentName?: string };
+  DocumentViewer: {
+    leagueId: string;
+    documentId: string;
+    documentName?: string;
+  };
   PayLeagueDues: { rosterId: string; leagueId: string; seasonId: string };
   LeagueScheduling: { leagueId: string };
   ScheduleWizard: { leagueId: string };
@@ -211,7 +247,9 @@ export type RootStackScreenProps<T extends keyof RootStackParamList> = {
   route: { params: RootStackParamList[T] };
 };
 
-export type OnboardingStackScreenProps<T extends keyof OnboardingStackParamList> = {
+export type OnboardingStackScreenProps<
+  T extends keyof OnboardingStackParamList,
+> = {
   navigation: any;
   route: { params: OnboardingStackParamList[T] };
 };

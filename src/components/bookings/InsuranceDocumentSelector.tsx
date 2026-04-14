@@ -72,12 +72,18 @@ export function InsuranceDocumentSelector({
           </Text>
           <TouchableOpacity
             style={styles.profileLink}
-            onPress={() => navigation.navigate('ProfileScreen')}
+            onPress={() =>
+              navigation.navigate('Home', { screen: 'ProfileScreen' })
+            }
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Go to Profile to add insurance document"
           >
-            <Ionicons name="arrow-forward-circle-outline" size={18} color={colors.cobalt} />
+            <Ionicons
+              name="arrow-forward-circle-outline"
+              size={18}
+              color={colors.cobalt}
+            />
             <Text style={styles.profileLinkText}>Add in Profile</Text>
           </TouchableOpacity>
         </View>
@@ -93,7 +99,10 @@ export function InsuranceDocumentSelector({
         return (
           <TouchableOpacity
             key={doc.id}
-            style={[styles.documentCard, isSelected && styles.documentCardSelected]}
+            style={[
+              styles.documentCard,
+              isSelected && styles.documentCardSelected,
+            ]}
             onPress={() => onSelect(doc.id)}
             activeOpacity={0.7}
             accessibilityRole="radio"
@@ -104,7 +113,13 @@ export function InsuranceDocumentSelector({
               {isSelected && <View style={styles.radioInner} />}
             </View>
             <View style={styles.documentInfo}>
-              <Text style={[styles.policyName, isSelected && styles.policyNameSelected]} numberOfLines={1}>
+              <Text
+                style={[
+                  styles.policyName,
+                  isSelected && styles.policyNameSelected,
+                ]}
+                numberOfLines={1}
+              >
                 {doc.policyName}
               </Text>
               <Text style={styles.expiryDate}>

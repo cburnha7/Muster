@@ -10,6 +10,15 @@ import { EventSearchResultsScreen } from '../../screens/home/EventSearchResultsS
 import { DebriefScreen } from '../../screens/debrief/DebriefScreen';
 import { PendingReservationDetailsScreen } from '../../screens/facilities/PendingReservationDetailsScreen';
 import { CreateEventScreen } from '../../screens/events/CreateEventScreen';
+import { ProfileScreen } from '../../screens/profile/ProfileScreen';
+import { EditProfileScreen } from '../../screens/profile/EditProfileScreen';
+import { DependentProfileScreen } from '../../screens/profile/DependentProfileScreen';
+import { DependentFormScreen } from '../../screens/profile/DependentFormScreen';
+import { SettingsScreen } from '../../screens/profile/SettingsScreen';
+import { NotificationPreferencesScreen } from '../../screens/profile/NotificationPreferencesScreen';
+import { TransferAccountScreen } from '../../screens/profile/TransferAccountScreen';
+import { RedeemCodeScreen } from '../../screens/profile/RedeemCodeScreen';
+import { AvailabilityCalendarScreen } from '../../screens/profile/AvailabilityCalendarScreen';
 import { colors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -75,6 +84,52 @@ export function HomeStackNavigator(): JSX.Element {
       <Stack.Screen
         name="CreateEvent"
         component={CreateEventScreen}
+        options={{ headerShown: false }}
+      />
+      {/* Profile screens — inside tab stack so tab bar stays visible */}
+      <Stack.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={{ ...detailHeader, headerTitle: 'Profile' }}
+      />
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ ...detailHeader, headerTitle: 'Edit Profile' }}
+      />
+      <Stack.Screen
+        name="DependentProfile"
+        component={DependentProfileScreen}
+        options={{ ...detailHeader, headerTitle: 'Dependent' }}
+      />
+      <Stack.Screen
+        name="DependentForm"
+        component={DependentFormScreen}
+        options={{ ...detailHeader, headerTitle: 'Dependent' }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ ...detailHeader, headerTitle: 'Settings' }}
+      />
+      <Stack.Screen
+        name="NotificationPreferences"
+        component={NotificationPreferencesScreen}
+        options={{ ...detailHeader, headerTitle: 'Notifications' }}
+      />
+      <Stack.Screen
+        name="TransferAccount"
+        component={TransferAccountScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RedeemCode"
+        component={RedeemCodeScreen}
+        options={{ ...detailHeader, headerTitle: 'Redeem Code' }}
+      />
+      <Stack.Screen
+        name="AvailabilityCalendar"
+        component={AvailabilityCalendarScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

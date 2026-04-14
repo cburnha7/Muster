@@ -66,7 +66,11 @@ export function AvatarBottomSheet() {
     (screen: string, params?: Record<string, any>) => {
       handleClose();
       setTimeout(() => {
-        (navigation as any).navigate(screen, params);
+        // Navigate within the Home tab stack so the tab bar stays visible
+        (navigation as any).navigate('Home', {
+          screen,
+          params,
+        });
       }, 100);
     },
     [navigation, handleClose]
@@ -308,7 +312,10 @@ export function AvatarBottomSheet() {
                 onPress={() => {
                   close();
                   setTimeout(
-                    () => (navigation as any).navigate('RedeemCode'),
+                    () =>
+                      (navigation as any).navigate('Home', {
+                        screen: 'RedeemCode',
+                      }),
                     300
                   );
                 }}
