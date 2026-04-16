@@ -101,11 +101,10 @@ export function LoginScreen() {
       Alert.alert('Success', SuccessMessages.login.ssoSuccess);
     } catch (error: any) {
       if (error.message !== 'User cancelled' && error !== 'User cancelled') {
-        const detail =
-          typeof error === 'string'
-            ? error
-            : error.message || JSON.stringify(error);
-        setErrors({ general: `Sign in failed: ${detail}` });
+        const providerName = provider === 'apple' ? 'Apple' : 'Google';
+        setErrors({
+          general: `${providerName} sign in failed. Please try again.`,
+        });
       }
     } finally {
       setSsoLoading(null);

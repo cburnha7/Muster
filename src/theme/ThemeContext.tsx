@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
 import {
   brand,
   statusTokens,
@@ -27,8 +26,8 @@ export interface Theme {
 const ThemeContext = createContext<Theme | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  // Muster is a light-mode-only app — always use light tokens
+  const isDark = false;
 
   const theme = useMemo<Theme>(() => {
     const semantic = isDark ? darkTokens : lightTokens;

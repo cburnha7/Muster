@@ -4,6 +4,7 @@ import TokenService from '../services/TokenService';
 import EmailService from '../services/EmailService';
 import { prisma } from '../lib/prisma';
 import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import {
   RegisterRequest,
   SSORegisterRequest,
@@ -407,19 +408,10 @@ class AuthController {
       const { provider, providerUserId, email, firstName, lastName } = req.body;
 
       if (!provider || !providerUserId) {
-<<<<<<< HEAD
         res.status(400).json({
           error: 'Validation Error',
           message: 'provider and providerUserId are required',
         });
-=======
-        res
-          .status(400)
-          .json({
-            error: 'Validation Error',
-            message: 'provider and providerUserId are required',
-          });
->>>>>>> charles-dev
         return;
       }
       if (provider !== 'apple' && provider !== 'google') {
@@ -435,22 +427,59 @@ class AuthController {
         providerUserId
       );
 
-<<<<<<< HEAD
+      // For Google: verify the token if provided
+      let verifiedEmail = email;
+      let verifiedFirstName = firstName;
+      let verifiedLastName = lastName;
+      let verifiedProviderId = providerUserId;
+
+      if (provider === 'google') {
+        const { providerToken } = req.body;
+        if (providerToken) {
+          try {
+            const googleClientId = process.env.GOOGLE_CLIENT_ID;
+            if (googleClientId) {
+              const client = new OAuth2Client(googleClientId);
+              const ticket = await client.verifyIdToken({
+                idToken: providerToken,
+                audience: googleClientId,
+              });
+              const payload = ticket.getPayload();
+              if (payload) {
+                verifiedProviderId = payload.sub;
+                verifiedEmail = payload.email || email;
+                verifiedFirstName = payload.given_name || firstName;
+                verifiedLastName = payload.family_name || lastName;
+                // Re-lookup with verified provider ID if different
+                if (verifiedProviderId !== providerUserId) {
+                  user = await AuthService.findUserBySSOProvider(
+                    provider,
+                    verifiedProviderId
+                  );
+                }
+              }
+            }
+          } catch (verifyErr) {
+            // Token verification failed — fall back to provided data
+            console.warn('Google token verification failed:', verifyErr);
+          }
+        }
+      }
+
       // 2. If not found and we have a valid email, try to find by email and link
-      if (!user && email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      if (
+        !user &&
+        verifiedEmail &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(verifiedEmail.trim())
+      ) {
         const existingByEmail = await AuthService.findUserByEmail(
-          email.trim().toLowerCase()
+          verifiedEmail.trim().toLowerCase()
         );
-=======
-      // 2. If not found and we have an email, try to find by email and link
-      if (!user && email) {
-        const existingByEmail = await AuthService.findUserByEmail(email);
->>>>>>> charles-dev
         if (existingByEmail) {
           await AuthService.linkSSOProvider(
             existingByEmail.id,
             provider,
-            providerUserId
+            verifiedProviderId
           );
           user = await prisma.user.findUnique({
             where: { id: existingByEmail.id },
@@ -460,12 +489,10 @@ class AuthController {
 
       // 3. If still not found, create a new account
       if (!user) {
-<<<<<<< HEAD
         // Sanitize provider data — discard garbled or obviously bad values
         const cleanName = (val: string | undefined): string => {
           if (!val) return '';
           const trimmed = val.trim();
-          // Reject if it looks encoded, has special chars, or is too long
           if (trimmed.length > 100) return '';
           if (/[<>{}\\\/\x00-\x1f]/.test(trimmed)) return '';
           if (/^[=+\-@]/.test(trimmed)) return '';
@@ -479,32 +506,24 @@ class AuthController {
           return trimmed;
         };
 
-        const safeEmail = cleanEmail(email);
-        const safeFirst = cleanName(firstName);
-        const safeLast = cleanName(lastName);
-        const regEmail = safeEmail || `${providerUserId}@${provider}.sso`;
+        const safeEmail = cleanEmail(verifiedEmail);
+        const safeFirst = cleanName(verifiedFirstName);
+        const safeLast = cleanName(verifiedLastName);
+        const regEmail = safeEmail || `${verifiedProviderId}@${provider}.sso`;
         const username =
-          (safeEmail ? safeEmail.split('@')[0] : providerUserId.slice(0, 10)) +
-=======
-        const regEmail = email || `${providerUserId}@${provider}.sso`;
-        const username =
-          (email ? email.split('@')[0] : providerUserId.slice(0, 10)) +
->>>>>>> charles-dev
+          (safeEmail
+            ? safeEmail.split('@')[0]
+            : verifiedProviderId.slice(0, 10)) +
           '_' +
           Date.now().toString(36);
         user = await AuthService.createSSOUser({
           email: regEmail,
           username,
-<<<<<<< HEAD
           firstName: safeFirst || regEmail.split('@')[0],
           lastName: safeLast,
-=======
-          firstName: firstName || regEmail.split('@')[0],
-          lastName: lastName || '',
->>>>>>> charles-dev
           dateOfBirth: new Date('2000-01-01'),
           ssoProvider: provider,
-          ssoProviderId: providerUserId,
+          ssoProviderId: verifiedProviderId,
         });
       }
 
@@ -514,7 +533,6 @@ class AuthController {
       if (exp)
         await TokenService.storeRefreshToken(user!.id, refreshToken, exp);
 
-<<<<<<< HEAD
       res.status(200).json({
         user: toUserResponse(user!),
         accessToken,
@@ -526,23 +544,6 @@ class AuthController {
         error: 'Internal Server Error',
         message: error.message || 'SSO authentication failed',
       });
-=======
-      res
-        .status(200)
-        .json({
-          user: toUserResponse(user!),
-          accessToken,
-          refreshToken,
-        } as AuthResponse);
-    } catch (error: any) {
-      console.error('SSO find-or-create error:', error);
-      res
-        .status(500)
-        .json({
-          error: 'Internal Server Error',
-          message: error.message || 'SSO authentication failed',
-        });
->>>>>>> charles-dev
     }
   }
 

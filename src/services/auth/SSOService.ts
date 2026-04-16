@@ -27,8 +27,10 @@ if (Platform.OS === 'ios') {
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const GOOGLE_WEB_CLIENT_ID =
+  '297265818886-cn0vu6f658teborvhfdpsjqs0t1q48dl.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID =
+  '297265818886-fcm56mh33g7uubur983mgfhbav1jbtpc.apps.googleusercontent.com';
 
 class SSOService {
   // ── Apple ──────────────────────────────────────────
@@ -80,7 +82,7 @@ class SSOService {
   // ── Google ─────────────────────────────────────────
 
   async isGoogleSignInAvailable(): Promise<boolean> {
-    return !!(GOOGLE_IOS_CLIENT_ID || GOOGLE_WEB_CLIENT_ID);
+    return true;
   }
 
   async signInWithGoogle(): Promise<SSOUserData> {
@@ -88,10 +90,8 @@ class SSOService {
       // On iOS use the iOS client ID, on other platforms use web client ID
       const clientId =
         Platform.OS === 'ios' ? GOOGLE_IOS_CLIENT_ID : GOOGLE_WEB_CLIENT_ID;
-      if (!clientId) throw new Error('Google Sign In is not configured');
 
       // Generate the redirect URI for the current platform
-      // For iOS with an iOS client ID, use the reversed client ID scheme
       let redirectUri: string;
       if (Platform.OS === 'ios' && GOOGLE_IOS_CLIENT_ID) {
         const reversed = GOOGLE_IOS_CLIENT_ID.split('.').reverse().join('.');
@@ -104,12 +104,17 @@ class SSOService {
         'https://accounts.google.com'
       );
 
+      // Request both access token and id token
       const request = new AuthRequest({
         clientId,
         redirectUri,
         scopes: ['openid', 'profile', 'email'],
         responseType: ResponseType.Token,
         usePKCE: false,
+        extraParams: {
+          // Request id_token alongside access_token
+          nonce: Math.random().toString(36).substring(2),
+        },
       });
 
       const result = await request.promptAsync(discovery);
@@ -118,25 +123,26 @@ class SSOService {
         throw new Error('User cancelled');
       }
       if (result.type !== 'success' || !result.authentication?.accessToken) {
-        throw new Error(`Google Sign In failed: ${result.type}`);
+        throw new Error('Google Sign In failed');
       }
 
       const accessToken = result.authentication.accessToken;
+      const idToken = result.authentication.idToken || '';
 
-      // Fetch profile from Google
+      // Fetch profile from Google userinfo endpoint
       const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!res.ok) throw new Error('Failed to fetch Google user info');
       const info = await res.json();
 
-      if (!info.email) throw new Error('No email from Google');
+      if (!info.id) throw new Error('No user ID from Google');
 
       return {
         provider: 'google',
         providerId: info.id,
-        providerToken: accessToken,
-        email: info.email,
+        providerToken: idToken || accessToken,
+        email: info.email || '',
         firstName: info.given_name || '',
         lastName: info.family_name || '',
       };

@@ -245,6 +245,7 @@ class AuthService {
   async ssoAuth(data: {
     provider: 'apple' | 'google';
     providerUserId: string;
+    providerToken?: string;
     email?: string;
     firstName?: string;
     lastName?: string;

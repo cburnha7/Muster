@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -13,7 +13,7 @@ import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
 import { ThemeProvider } from './src/theme';
-import { MusterLightTheme, MusterDarkTheme } from './src/navigation/themes';
+import { MusterLightTheme } from './src/navigation/themes';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -36,7 +36,6 @@ const linking = {
 
 export default function App() {
   const [ready, setReady] = useState(false);
-  const scheme = useColorScheme();
 
   useEffect(() => {
     async function prepare() {
@@ -90,11 +89,11 @@ export default function App() {
               <GestureHandlerRootView style={styles.root}>
                 <NavigationContainer
                   linking={linking as any}
-                  theme={scheme === 'dark' ? MusterDarkTheme : MusterLightTheme}
+                  theme={MusterLightTheme}
                 >
                   <RootNavigator />
                 </NavigationContainer>
-                <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+                <StatusBar style="dark" />
               </GestureHandlerRootView>
             </NotificationProvider>
           </AuthProvider>

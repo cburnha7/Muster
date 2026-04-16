@@ -122,6 +122,7 @@ export const loginWithSSO = createAsyncThunk(
       const response = await authService.ssoAuth({
         provider,
         providerUserId: userId,
+        providerToken: token || undefined,
         email: email || undefined,
         firstName: firstName || undefined,
         lastName: lastName || undefined,
