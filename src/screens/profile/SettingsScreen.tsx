@@ -457,11 +457,19 @@ function AccountsTab({
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshUrl: returnUrl, returnUrl }),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const msg = body.error || 'Failed to start payment setup';
+        Alert.alert('Payment Setup', msg);
+        return;
+      }
       const data = await res.json();
       if (data.url) await Linking.openURL(data.url);
     } catch (err) {
-      console.error('handlePaymentOnboard error', err);
+      Alert.alert(
+        'Payment Setup',
+        'Could not connect to payment service. Please try again later.'
+      );
     } finally {
       setPaymentOnboarding(false);
     }
@@ -577,11 +585,22 @@ function AccountsTab({
             returnUrl,
           }),
         });
-        if (!res.ok) throw new Error('Failed to start onboarding');
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          Alert.alert(
+            'Payment Setup',
+            body.error || 'Failed to start payment setup'
+          );
+          pendingOnboardRef.current = null;
+          return;
+        }
         const data = await res.json();
         if (data.url) await Linking.openURL(data.url);
       } catch (err) {
-        console.error('handleOnboard error', err);
+        Alert.alert(
+          'Payment Setup',
+          'Could not connect to payment service. Please try again later.'
+        );
         pendingOnboardRef.current = null;
       } finally {
         setOnboardingId(null);

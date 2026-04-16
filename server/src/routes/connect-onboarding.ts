@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { optionalAuthMiddleware } from '../middleware/auth';
+import { getStripe } from '../services/stripe-connect';
 import {
   EntityType,
   startOnboarding,
@@ -24,6 +25,12 @@ router.use(optionalAuthMiddleware);
 
 router.post('/onboard', async (req: Request, res: Response) => {
   try {
+    if (!getStripe()) {
+      return res.status(503).json({
+        error: 'Payments are not configured yet. Please contact support.',
+      });
+    }
+
     const userId = req.user?.userId;
     if (!userId)
       return res.status(401).json({ error: 'Authentication required' });

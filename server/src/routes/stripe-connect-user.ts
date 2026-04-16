@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import {
+  getStripe,
   createConnectAccount,
   createConnectAccountLink,
   getConnectAccountStatus,
@@ -17,6 +18,12 @@ router.use(optionalAuthMiddleware);
 
 router.post('/onboard', async (req: Request, res: Response) => {
   try {
+    if (!getStripe()) {
+      return res.status(503).json({
+        error: 'Payments are not configured yet. Please contact support.',
+      });
+    }
+
     const userId = req.user?.userId;
     if (!userId)
       return res.status(401).json({ error: 'Authentication required' });
@@ -72,6 +79,15 @@ router.get('/status', async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     if (!userId)
       return res.status(401).json({ error: 'Authentication required' });
+
+    if (!getStripe()) {
+      return res.json({
+        onboarded: false,
+        chargesEnabled: false,
+        payoutsEnabled: false,
+        detailsSubmitted: false,
+      });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
