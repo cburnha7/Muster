@@ -272,7 +272,10 @@ export function AvatarBottomSheet() {
 
         <TouchableOpacity
           style={styles.menuRow}
-          onPress={() => navigateTo('NotificationPreferences')}
+          onPress={() => {
+            handleSwitchUser(null); // Always switch to primary user
+            navigateTo('NotificationPreferences');
+          }}
           activeOpacity={0.7}
         >
           <Ionicons
@@ -290,7 +293,10 @@ export function AvatarBottomSheet() {
 
         <TouchableOpacity
           style={styles.menuRow}
-          onPress={() => navigateTo('Settings')}
+          onPress={() => {
+            handleSwitchUser(null); // Always switch to primary user
+            navigateTo('Settings');
+          }}
           activeOpacity={0.7}
         >
           <Ionicons

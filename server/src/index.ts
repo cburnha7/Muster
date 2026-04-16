@@ -86,6 +86,17 @@ function validateStripeEnv(): void {
   } else {
     console.log('✅ Stripe environment variables configured');
   }
+
+  // Test Stripe client initialization
+  const { getStripe } = require('./services/stripe-connect');
+  const stripeClient = getStripe();
+  if (stripeClient) {
+    console.log('✅ Stripe client initialized successfully');
+  } else {
+    console.warn(
+      '⚠️  Stripe client failed to initialize — STRIPE_SECRET_KEY may be invalid'
+    );
+  }
 }
 
 validateStripeEnv();
