@@ -14,7 +14,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useAvatarSheet } from '../../context/AvatarSheetContext';
 import {
@@ -66,12 +66,20 @@ export function AvatarBottomSheet() {
     (screen: string, params?: Record<string, any>) => {
       handleClose();
       setTimeout(() => {
-        // Navigate within the Home tab stack so the tab bar stays visible
-        (navigation as any).navigate('Home', {
-          screen,
-          params,
-        });
-      }, 100);
+        // Root stack has "Main" (tab navigator) → "Home" tab → screen
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: 'Main',
+            params: {
+              screen: 'Home',
+              params: {
+                screen,
+                params,
+              },
+            },
+          })
+        );
+      }, 300);
     },
     [navigation, handleClose]
   );
@@ -313,9 +321,15 @@ export function AvatarBottomSheet() {
                   close();
                   setTimeout(
                     () =>
-                      (navigation as any).navigate('Home', {
-                        screen: 'RedeemCode',
-                      }),
+                      navigation.dispatch(
+                        CommonActions.navigate({
+                          name: 'Main',
+                          params: {
+                            screen: 'Home',
+                            params: { screen: 'RedeemCode' },
+                          },
+                        })
+                      ),
                     300
                   );
                 }}
