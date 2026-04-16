@@ -63,11 +63,13 @@ router.post('/onboard', async (req: Request, res: Response) => {
     }
 
     return res.json({ url: result.url });
-  } catch (err) {
-    console.error('Connect onboarding error:', err);
-    return res
-      .status(500)
-      .json({ error: 'Failed to start Connect onboarding' });
+  } catch (err: any) {
+    console.error('Connect onboarding error:', err?.message || err);
+    const msg =
+      err?.type === 'StripeInvalidRequestError'
+        ? err.message
+        : 'Failed to start Connect onboarding';
+    return res.status(500).json({ error: msg });
   }
 });
 
