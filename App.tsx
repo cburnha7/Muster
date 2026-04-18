@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Linking from 'expo-linking';
@@ -82,23 +83,25 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <ReduxProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <GestureHandlerRootView style={styles.root}>
-                <NavigationContainer
-                  linking={linking as any}
-                  theme={MusterLightTheme}
-                >
-                  <RootNavigator />
-                </NavigationContainer>
-                <StatusBar style="dark" />
-              </GestureHandlerRootView>
-            </NotificationProvider>
-          </AuthProvider>
-        </ReduxProvider>
-      </ThemeProvider>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <ReduxProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <GestureHandlerRootView style={styles.root}>
+                  <NavigationContainer
+                    linking={linking as any}
+                    theme={MusterLightTheme}
+                  >
+                    <RootNavigator />
+                  </NavigationContainer>
+                  <StatusBar style="dark" />
+                </GestureHandlerRootView>
+              </NotificationProvider>
+            </AuthProvider>
+          </ReduxProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </ErrorBoundary>
   );
 }

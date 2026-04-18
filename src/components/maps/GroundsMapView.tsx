@@ -42,9 +42,12 @@ export function GroundsMapView({
     }
   };
 
-  // Filter grounds that have location data
+  // Filter grounds that have valid location data (not null/undefined, but 0 is valid)
   const groundsWithLocation = grounds.filter(
-    ground => ground.latitude && ground.longitude
+    ground =>
+      ground.latitude != null &&
+      ground.longitude != null &&
+      (ground.latitude !== 0 || ground.longitude !== 0)
   );
 
   if (loading || !userLocation) {
@@ -55,6 +58,39 @@ export function GroundsMapView({
     );
   }
 
+  // Calculate region that fits user location and all grounds
+  const allPoints = [
+    ...(userLocation ? [userLocation] : []),
+    ...groundsWithLocation.map(g => ({
+      latitude: g.latitude!,
+      longitude: g.longitude!,
+    })),
+  ];
+
+  let region = {
+    latitude: userLocation.latitude,
+    longitude: userLocation.longitude,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
+  };
+
+  if (allPoints.length > 1) {
+    const lats = allPoints.map(p => p.latitude);
+    const lngs = allPoints.map(p => p.longitude);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const latDelta = Math.max((maxLat - minLat) * 1.4, 0.05);
+    const lngDelta = Math.max((maxLng - minLng) * 1.4, 0.05);
+    region = {
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: latDelta,
+      longitudeDelta: lngDelta,
+    };
+  }
+
   return (
     <View style={styles.container}>
       <MapView
@@ -62,12 +98,7 @@ export function GroundsMapView({
         provider={
           Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT
         }
-        initialRegion={{
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        initialRegion={region}
         showsUserLocation={true}
         showsMyLocationButton={true}
       >

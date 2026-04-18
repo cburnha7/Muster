@@ -4,6 +4,7 @@ import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
 import { useTheme } from '../theme';
@@ -43,6 +44,7 @@ const SECTION_TITLES: Partial<Record<string, string>> = {
 
 function CustomHeader({ routeName }: { routeName: string }) {
   const { colors, type, spacing } = useTheme();
+  const insets = useSafeAreaInsets();
   const sectionTitle = SECTION_TITLES[routeName];
   return (
     <View
@@ -50,7 +52,7 @@ function CustomHeader({ routeName }: { routeName: string }) {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingTop: 52,
+        paddingTop: insets.top + spacing.sm,
         paddingBottom: spacing.md,
         backgroundColor: colors.header,
         borderBottomWidth: 1,
@@ -64,7 +66,7 @@ function CustomHeader({ routeName }: { routeName: string }) {
           {sectionTitle}
         </Text>
       ) : (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginHorizontal: 4 }}>
           <HeaderSearchPill routeName={routeName} />
         </View>
       )}

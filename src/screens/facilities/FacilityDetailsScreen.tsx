@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -107,6 +108,7 @@ function TabBar({
 
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const { colors: themeColors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { facilityId, ...restParams } = route.params as any;
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -277,7 +279,12 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   ];
 
   return (
-    <View style={[s.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View
+      style={[
+        s.container,
+        { backgroundColor: themeColors.bgScreen, paddingTop: insets.top },
+      ]}
+    >
       <ContextualReturnButton />
       <TabBar tabs={tabs} activeIndex={activeTab} onPress={handleTabPress} />
 
