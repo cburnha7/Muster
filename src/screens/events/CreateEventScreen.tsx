@@ -170,9 +170,8 @@ function CreateEventInner() {
             label: 'View Event',
             icon: 'eye-outline',
             onPress: () => {
-              navigation.navigate('Events', {
-                screen: 'EventDetails',
-                params: { eventId: state.createdEventId },
+              (navigation as any).replace('EventDetails', {
+                eventId: state.createdEventId,
               });
             },
             variant: 'primary',

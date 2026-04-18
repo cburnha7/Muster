@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../theme';
 
 export interface ScheduleBlock {
@@ -16,7 +16,7 @@ interface VisualDayScheduleProps {
   slotIncrementMinutes: number;
 }
 
-const HOUR_HEIGHT = 64;
+const HOUR_HEIGHT = 36;
 
 function toMin(t: string): number {
   const p = t.split(':').map(Number);
@@ -53,7 +53,7 @@ export function VisualDaySchedule({
   const lastHour = Math.ceil(lastMin / 60);
 
   return (
-    <ScrollView style={styles.scroll} nestedScrollEnabled>
+    <View style={styles.container}>
       <View style={[styles.timeline, { height: totalHeight + 20 }]}>
         {/* Hour lines + labels */}
         {Array.from(
@@ -127,27 +127,27 @@ export function VisualDaySchedule({
             </View>
           )}
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { maxHeight: 420 },
-  timeline: { marginLeft: 70, marginRight: 12, position: 'relative' },
+  container: { marginVertical: 8 },
+  timeline: { marginLeft: 56, marginRight: 12, position: 'relative' },
   hourRow: {
     position: 'absolute',
-    left: -70,
+    left: -56,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
   },
   hourLabel: {
-    width: 62,
+    width: 48,
     fontFamily: fonts.label,
-    fontSize: 13,
+    fontSize: 11,
     color: colors.inkSoft,
     textAlign: 'right',
-    paddingRight: 8,
+    paddingRight: 6,
   },
   hourLine: { flex: 1, height: 1, backgroundColor: colors.border },
   bookedBlock: {
