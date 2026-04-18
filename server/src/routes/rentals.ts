@@ -317,11 +317,9 @@ router.post('/rentals/:rentalId/request-cancellation', async (req, res) => {
     // TODO: Get userId from auth token
 
     if (!cancellationReason || cancellationReason.trim().length < 10) {
-      return res
-        .status(400)
-        .json({
-          error: 'Cancellation reason is required (minimum 10 characters)',
-        });
+      return res.status(400).json({
+        error: 'Cancellation reason is required (minimum 10 characters)',
+      });
     }
 
     // Verify rental exists
@@ -361,11 +359,9 @@ router.post('/rentals/:rentalId/request-cancellation', async (req, res) => {
 
     // Check if rental has been used for an event
     if (rental.usedForEventId) {
-      return res
-        .status(400)
-        .json({
-          error: 'Cannot cancel rental that has been used for an event',
-        });
+      return res.status(400).json({
+        error: 'Cannot cancel rental that has been used for an event',
+      });
     }
 
     // Update rental with cancellation request
@@ -1204,6 +1200,128 @@ router.get('/rentals/recurring/:groupId', async (req, res) => {
   } catch (error) {
     console.error('Get recurring series error:', error);
     res.status(500).json({ error: 'Failed to fetch recurring series' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /rentals/book-range — Book a court by time range (creates slots + rental)
+// ---------------------------------------------------------------------------
+router.post('/rentals/book-range', requireNonDependent, async (req, res) => {
+  try {
+    const {
+      userId,
+      facilityId,
+      courtId,
+      date,
+      startTime,
+      endTime,
+      insuranceDocumentId,
+    } = req.body;
+
+    if (!userId || !facilityId || !courtId || !date || !startTime || !endTime) {
+      return res.status(400).json({
+        error:
+          'Missing required fields: userId, facilityId, courtId, date, startTime, endTime',
+      });
+    }
+
+    // Validate court exists and belongs to facility
+    const court = await prisma.facilityCourt.findFirst({
+      where: { id: courtId, facilityId, isActive: true },
+      include: { facility: true },
+    });
+    if (!court) {
+      return res.status(404).json({ error: 'Court not found' });
+    }
+
+    const pricePerHour = court.pricePerHour ?? court.facility.pricePerHour ?? 0;
+    const slotIncrement = court.facility.slotIncrementMinutes || 60;
+
+    // Parse time range into slot boundaries
+    const toMin = (t: string) => {
+      const [h, m] = t.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const startMin = toMin(startTime);
+    const endMin = toMin(endTime);
+    if (endMin <= startMin) {
+      return res
+        .status(400)
+        .json({ error: 'End time must be after start time' });
+    }
+
+    // Check for overlapping rentals
+    const targetDate = new Date(date + 'T00:00:00Z');
+    const existingRentals = await prisma.facilityRental.findMany({
+      where: {
+        status: { in: ['confirmed', 'pending_approval'] },
+        timeSlot: { courtId, date: targetDate },
+      },
+      include: { timeSlot: { select: { startTime: true, endTime: true } } },
+    });
+
+    for (const r of existingRentals) {
+      const rStart = toMin(r.timeSlot.startTime);
+      const rEnd = toMin(r.timeSlot.endTime);
+      if (startMin < rEnd && endMin > rStart) {
+        return res.status(409).json({
+          error: 'Selected time overlaps with an existing reservation',
+        });
+      }
+    }
+
+    // Determine status based on facility requirements
+    const facility = court.facility as any;
+    let rentalStatus = 'confirmed';
+    if (facility.requiresInsurance || facility.requiresBookingConfirmation) {
+      rentalStatus = 'pending_approval';
+    }
+
+    // Calculate total price
+    const durationMinutes = endMin - startMin;
+    const totalPrice =
+      Math.round((pricePerHour / 60) * durationMinutes * 100) / 100;
+
+    // Create time slot + rental in a transaction
+    const result = await prisma.$transaction(async tx => {
+      const timeSlot = await tx.facilityTimeSlot.create({
+        data: {
+          courtId,
+          date: targetDate,
+          startTime,
+          endTime,
+          price: totalPrice,
+          status: 'rented',
+        },
+      });
+
+      const rental = await tx.facilityRental.create({
+        data: {
+          userId,
+          timeSlotId: timeSlot.id,
+          totalPrice,
+          status: rentalStatus,
+          paymentStatus: totalPrice > 0 ? 'pending' : 'paid',
+          ...(insuranceDocumentId
+            ? { attachedInsuranceDocumentId: insuranceDocumentId }
+            : {}),
+        },
+        include: {
+          timeSlot: {
+            include: {
+              court: { include: { facility: true } },
+            },
+          },
+        },
+      });
+
+      return rental;
+    });
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Book range error:', error);
+    res.status(500).json({ error: 'Failed to create reservation' });
   }
 });
 

@@ -85,6 +85,11 @@ function fmt12Time(t: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 }
 
+function toMinHelper(t: string): number {
+  const p = t.split(':').map(Number);
+  return (p[0] || 0) * 60 + (p[1] || 0);
+}
+
 export function CourtAvailabilityScreen() {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation<CourtAvailabilityScreenNavigationProp>();
@@ -503,6 +508,53 @@ export function CourtAvailabilityScreen() {
     }
   };
 
+  // Book by time range (when user selects start/end time instead of individual slots)
+  const handleBookTimeRange = async () => {
+    if (!bookingStart || !bookingEnd || !selectedCourt || !user) return;
+    if (overlapError) {
+      Alert.alert('Overlap', overlapError);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const body: any = {
+        userId: user.id,
+        facilityId,
+        courtId: selectedCourt.id,
+        date: selectedDate,
+        startTime: bookingStart,
+        endTime: bookingEnd,
+      };
+      if (requiresInsurance && selectedInsuranceDocumentId) {
+        body.insuranceDocumentId = selectedInsuranceDocumentId;
+      }
+      const response = await fetch(`${API_BASE_URL}/rentals/book-range`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': user.id },
+        body: JSON.stringify(body),
+      });
+      if (response.status === 201) {
+        const rental = await response.json();
+        Alert.alert('Reserved', 'Your court has been reserved.', [
+          { text: 'OK', onPress: () => navigateAfterBooking(rental) },
+        ]);
+      } else if (response.status === 409) {
+        const data = await response.json();
+        Alert.alert(
+          'Conflict',
+          data.error || 'Time overlaps with an existing reservation.'
+        );
+      } else {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Booking failed');
+      }
+    } catch (error: any) {
+      Alert.alert('Booking Failed', error.message || 'Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleConfirmBulkBooking = async () => {
     if (cartSlots.length === 0 || !user) return;
     setSubmitting(true);
@@ -908,8 +960,48 @@ export function CourtAvailabilityScreen() {
         )}
 
         {/* Spacer for footer */}
-        {cartSlots.length > 0 && <View style={{ height: 120 }} />}
+        {(cartSlots.length > 0 || (bookingStart && bookingEnd)) && (
+          <View style={{ height: 120 }} />
+        )}
       </ScrollView>
+
+      {/* Time-range booking footer — shown when start/end are selected and cart is empty */}
+      {bookingStart && bookingEnd && cartSlots.length === 0 && (
+        <View style={styles.footer}>
+          <View style={styles.footerSummary}>
+            <View style={styles.footerStats}>
+              <Ionicons name="time-outline" size={18} color={colors.cobalt} />
+              <Text style={styles.footerStatsText}>
+                {fmt12Time(bookingStart)} – {fmt12Time(bookingEnd)} ·{' '}
+                {selectedCourt?.name || 'Court'}
+              </Text>
+            </View>
+            {selectedCourt && (
+              <Text style={styles.footerPrice}>
+                $
+                {(
+                  ((selectedCourt.pricePerHour || 0) / 60) *
+                  (toMinHelper(bookingEnd) - toMinHelper(bookingStart))
+                ).toFixed(2)}
+              </Text>
+            )}
+          </View>
+          <TouchableOpacity
+            style={[styles.bookButton, submitting && { opacity: 0.6 }]}
+            onPress={handleBookTimeRange}
+            disabled={submitting || !!overlapError}
+          >
+            <Text style={styles.bookButtonText}>
+              {submitting ? 'Booking...' : 'Confirm Reservation'}
+            </Text>
+            <Ionicons
+              name="checkmark-circle"
+              size={20}
+              color={colors.surface}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Selection Summary Footer */}
       {cartSlots.length > 0 && (
