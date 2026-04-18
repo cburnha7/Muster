@@ -207,6 +207,95 @@ router.get('/:id/events', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// GET /facilities/for-event — All facilities matching a sport type, with user context
+// Returns all active facilities that have courts for the given sport.
+// Marks which ones the user owns or has reservations at.
+// ---------------------------------------------------------------------------
+router.get('/for-event', async (req, res) => {
+  try {
+    const { sportType, userId } = req.query;
+
+    if (!sportType) {
+      return res.status(400).json({ error: 'sportType is required' });
+    }
+
+    // Find all active facilities that have at least one court matching the sport
+    const facilities = await prisma.facility.findMany({
+      where: {
+        isActive: true,
+        courts: {
+          some: {
+            sportType: sportType as string,
+            isActive: true,
+          },
+        },
+      },
+      include: {
+        owner: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+        courts: {
+          where: { sportType: sportType as string, isActive: true },
+          select: { id: true, name: true, sportType: true },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    // If userId provided, check ownership and reservations
+    let ownedIds = new Set<string>();
+    let reservedIds = new Set<string>();
+
+    if (userId) {
+      // Owned facilities
+      const owned = await prisma.facility.findMany({
+        where: { ownerId: userId as string, isActive: true },
+        select: { id: true },
+      });
+      ownedIds = new Set(owned.map(f => f.id));
+
+      // Facilities with confirmed future rentals
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const rentals = await prisma.facilityRental.findMany({
+        where: {
+          userId: userId as string,
+          status: 'confirmed',
+          usedForEventId: null,
+          timeSlot: { date: { gte: today } },
+        },
+        select: {
+          timeSlot: {
+            select: { court: { select: { facilityId: true } } },
+          },
+        },
+      });
+      for (const r of rentals) {
+        if (r.timeSlot?.court?.facilityId) {
+          reservedIds.add(r.timeSlot.court.facilityId);
+        }
+      }
+    }
+
+    const data = facilities.map(f => ({
+      id: f.id,
+      name: f.name,
+      city: f.city,
+      state: f.state,
+      sportTypes: [...new Set(f.courts.map(c => c.sportType))],
+      courtCount: f.courts.length,
+      isOwned: ownedIds.has(f.id),
+      hasRentals: reservedIds.has(f.id),
+    }));
+
+    res.json({ data, total: data.length });
+  } catch (error) {
+    console.error('Facilities for-event error:', error);
+    res.status(500).json({ error: 'Failed to load facilities' });
+  }
+});
+
 // Get authorized facilities for event creation
 // Returns facilities where user is owner OR has confirmed rentals
 router.get('/authorized/for-events', async (req, res) => {

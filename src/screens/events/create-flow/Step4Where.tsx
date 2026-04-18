@@ -35,7 +35,14 @@ export function Step4Where() {
   const isOpen = state.locationMode === 'open';
 
   const [facilities, setFacilities] = useState<
-    { id: string; name: string; isOwned: boolean }[]
+    {
+      id: string;
+      name: string;
+      city?: string;
+      state?: string;
+      isOwned: boolean;
+      hasRentals: boolean;
+    }[]
   >([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [courts, setCourts] = useState<SelectOption[]>([]);
@@ -70,20 +77,42 @@ export function Step4Where() {
     if (!user?.id) return;
     setLoadingFacilities(true);
     try {
-      const res = await facilityService.getAuthorizedFacilities(user.id);
-      setFacilities(
-        res.data.map((f: any) => ({
-          id: f.id,
-          name: f.name,
-          isOwned: f.isOwned,
-        }))
-      );
+      // Load all facilities matching the event's sport type
+      if (state.sport) {
+        const res = await facilityService.getFacilitiesForEvent(
+          state.sport,
+          user.id
+        );
+        setFacilities(
+          res.data.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            city: f.city,
+            state: f.state,
+            isOwned: f.isOwned,
+            hasRentals: f.hasRentals,
+          }))
+        );
+      } else {
+        // Fallback: load authorized facilities only
+        const res = await facilityService.getAuthorizedFacilities(user.id);
+        setFacilities(
+          res.data.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            city: (f as any).city,
+            state: (f as any).state,
+            isOwned: f.isOwned,
+            hasRentals: f.hasRentals ?? false,
+          }))
+        );
+      }
     } catch {
       setFacilities([]);
     } finally {
       setLoadingFacilities(false);
     }
-  }, [user?.id]);
+  }, [user?.id, state.sport]);
 
   useEffect(() => {
     if (isMuster) loadFacilities();
@@ -198,10 +227,18 @@ export function Step4Where() {
     }
   }, [routeParams.fromReservation, routeParams.facilityId, facilities]);
 
-  const facilityOptions: SelectOption[] = facilities.map(f => ({
-    label: f.name,
-    value: f.id,
-  }));
+  const facilityOptions: SelectOption[] = facilities.map(f => {
+    const location = [f.city, f.state].filter(Boolean).join(', ');
+    const badge = f.isOwned
+      ? ' (Your Ground)'
+      : f.hasRentals
+        ? ' (Reserved)'
+        : '';
+    return {
+      label: `${f.name}${location ? ` · ${location}` : ''}${badge}`,
+      value: f.id,
+    };
+  });
 
   const handleFacilitySelect = (value: string | number | boolean) => {
     const fac = facilities.find(f => f.id === value);
@@ -229,20 +266,39 @@ export function Step4Where() {
   };
 
   const handleBookCourtTime = () => {
-    const dateStr = state.startDate
-      ? `${state.startDate.getFullYear()}-${String(state.startDate.getMonth() + 1).padStart(2, '0')}-${String(state.startDate.getDate()).padStart(2, '0')}`
-      : undefined;
-    navigation.navigate('Facilities', {
-      screen: 'CourtAvailability',
-      params: {
-        facilityId: state.facilityId,
-        facilityName: state.facilityName,
-        courtId: state.courtId,
-        eventDate: dateStr,
-        eventStartTime: state.startTime ? fmtTime(state.startTime) : undefined,
-        returnTo: 'CreateEvent',
-      },
-    });
+    if (state.facilityId) {
+      // Navigate directly to court availability for the selected facility
+      const dateStr = state.startDate
+        ? `${state.startDate.getFullYear()}-${String(state.startDate.getMonth() + 1).padStart(2, '0')}-${String(state.startDate.getDate()).padStart(2, '0')}`
+        : undefined;
+      navigation.navigate('Facilities', {
+        screen: 'CourtAvailability',
+        params: {
+          facilityId: state.facilityId,
+          facilityName: state.facilityName,
+          courtId: state.courtId,
+          eventDate: dateStr,
+          eventStartTime: state.startTime
+            ? fmtTime(state.startTime)
+            : undefined,
+          returnTo: 'CreateEvent',
+        },
+      });
+    } else {
+      // Navigate to Grounds list with sport filter pre-populated
+      navigation.navigate('Facilities', {
+        screen: 'FacilitiesList',
+        params: {
+          eventDate: state.startDate
+            ? `${state.startDate.getFullYear()}-${String(state.startDate.getMonth() + 1).padStart(2, '0')}-${String(state.startDate.getDate()).padStart(2, '0')}`
+            : undefined,
+          eventStartTime: state.startTime
+            ? fmtTime(state.startTime)
+            : undefined,
+          returnTo: 'CreateEvent',
+        },
+      });
+    }
   };
 
   const eventDateLabel = state.startDate

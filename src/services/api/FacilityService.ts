@@ -388,6 +388,31 @@ export class FacilityService extends BaseApiService {
   }
 
   /**
+   * Get all facilities matching a sport type for event creation.
+   * Marks which ones the user owns or has reservations at.
+   */
+  async getFacilitiesForEvent(
+    sportType: string,
+    userId: string
+  ): Promise<{
+    data: {
+      id: string;
+      name: string;
+      city: string;
+      state: string;
+      sportTypes: string[];
+      courtCount: number;
+      isOwned: boolean;
+      hasRentals: boolean;
+    }[];
+    total: number;
+  }> {
+    return this.get(`${API_ENDPOINTS.FACILITIES.BASE}/for-event`, {
+      params: { sportType, userId },
+    });
+  }
+
+  /**
    * Get available time slots for event creation at a facility
    * Returns slots based on ownership (all available) or rentals (only user's rentals)
    */
