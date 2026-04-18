@@ -29,7 +29,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
   const route = useRoute<PayLeagueDuesRouteProp>();
   const user = useSelector(selectUser);
   const { isDependent, activeName } = useDependentContext();
-  const { rosterId, leagueId, seasonId } = route.params;
+  const { rosterId, leagueId, seasonId } = route.params ?? {};
 
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
@@ -100,7 +100,9 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="League Dues"
           leftIcon="arrow-back"
@@ -116,7 +118,9 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="League Dues"
           leftIcon="arrow-back"

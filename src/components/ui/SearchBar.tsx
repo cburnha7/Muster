@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../theme';
 import { SportType, SkillLevel } from '../../types';
 
 interface SearchBarProps {
@@ -99,7 +100,7 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
       <View style={[styles.container, style]}>
         <View style={styles.searchContainer}>
           <View style={styles.inputContainer}>
-            <Ionicons name="search-outline" size={20} color="#666" />
+            <Ionicons name="search-outline" size={20} color={colors.inkSoft} />
             <TextInput
               ref={inputRef}
               style={styles.input}
@@ -114,7 +115,11 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                 onPress={() => onChangeText('')}
                 style={styles.clearButton}
               >
-                <Ionicons name="close-circle" size={20} color="#666" />
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={colors.inkSoft}
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -130,7 +135,7 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
               <Ionicons
                 name="filter-outline"
                 size={20}
-                color={activeFiltersCount > 0 ? '#FFFFFF' : '#666'}
+                color={activeFiltersCount > 0 ? colors.white : colors.inkSoft}
               />
               {activeFiltersCount > 0 && (
                 <View style={styles.filterBadge}>
@@ -260,13 +265,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 14,
     marginRight: 8,
     borderWidth: 1.5,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -276,26 +281,26 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 17,
-    color: '#333',
+    color: colors.ink,
     marginLeft: 10,
   },
   clearButton: {
     padding: 4,
   },
   filterButton: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     position: 'relative',
   },
   filterButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.cobalt,
   },
   filterBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.heart,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -303,13 +308,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterBadgeText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 12,
     fontWeight: '600',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -318,20 +323,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.surface,
   },
   cancelText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: colors.cobalt,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: colors.ink,
   },
   resetText: {
     fontSize: 16,
-    color: '#FF3B30',
+    color: colors.heart,
   },
   modalContent: {
     flex: 1,
@@ -343,7 +348,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.ink,
     marginBottom: 12,
   },
   optionsContainer: {
@@ -352,39 +357,39 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   optionButton: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
   },
   optionButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: colors.cobalt,
+    borderColor: colors.cobalt,
   },
   optionText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.inkSoft,
   },
   optionTextActive: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontWeight: '500',
   },
   modalFooter: {
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: colors.surface,
   },
   applyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   applyText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },

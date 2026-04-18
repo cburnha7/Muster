@@ -33,7 +33,7 @@ export function ManageGroundScreen() {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation<ManageGroundScreenNavigationProp>();
   const route = useRoute<ManageGroundScreenRouteProp>();
-  const { facilityId, facilityName } = route.params;
+  const { facilityId, facilityName } = route.params ?? {};
 
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);

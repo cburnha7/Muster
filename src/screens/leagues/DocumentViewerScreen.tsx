@@ -31,7 +31,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   navigation,
 }) => {
   const { colors: themeColors } = useTheme();
-  const { leagueId, documentId, documentName } = route.params;
+  const { leagueId, documentId, documentName } = route.params ?? {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
@@ -143,7 +143,12 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[
+          styles.centerContainer,
+          { backgroundColor: themeColors.bgScreen },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading document...</Text>
       </View>
@@ -152,7 +157,12 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
 
   if (error || !documentUrl) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[
+          styles.centerContainer,
+          { backgroundColor: themeColors.bgScreen },
+        ]}
+      >
         <Ionicons
           name="document-text-outline"
           size={64}
@@ -180,7 +190,9 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (Platform.OS === 'web') {
     // Web: Use iframe for native browser PDF viewer
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <iframe
           src={documentUrl}
           style={{

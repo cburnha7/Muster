@@ -235,24 +235,8 @@ export function EventDetailsScreen() {
     participant => participant.userId === currentUser?.id
   );
 
-  console.log('≡ƒöì EventDetails - isUserBooked check:', {
-    isUserBooked,
-    participantsCount: participants.length,
-    currentUserId: currentUser?.id,
-    participantUserIds: participants.map(p => p.userId),
-    participantsLoaded,
-  });
-
   // Check if user is the organizer
   const isOrganizer = event?.organizerId === currentUser?.id;
-
-  // Debug logging
-  console.log('≡ƒöì EventDetails - isOrganizer check:', {
-    isOrganizer,
-    eventOrganizerId: event?.organizerId,
-    currentUserId: currentUser?.id,
-    eventTitle: event?.title,
-  });
 
   // Check if event is bookable
   const canBook =
@@ -266,29 +250,18 @@ export function EventDetailsScreen() {
     loggingService.logButton('Join', 'EventDetailsScreen', {
       eventId: event?.id,
     });
-    console.log('≡ƒÄ» handleBookEvent called');
-    console.log('≡ƒôï Event:', event?.id, event?.title);
-    console.log('≡ƒæñ Current user:', currentUser?.id, currentUser?.email);
 
     if (!event || !currentUser) {
-      console.log('Γ¥î Missing event or currentUser', {
-        hasEvent: !!event,
-        hasCurrentUser: !!currentUser,
-      });
-      Alert.alert('Authentication Required', 'Please log in to book events');
       return;
     }
 
-    console.log('≡ƒöì Validating booking...');
     // Validate booking before attempting
     const validationResult = BookingValidationService.validateBooking(
       event,
       currentUser
     );
-    console.log('Γ£à Validation result:', validationResult);
 
     if (!validationResult.canBook) {
-      console.log('Γ¥î Cannot book:', validationResult.reason);
       Alert.alert(
         'Cannot Join',
         validationResult.reason || 'Booking not allowed'
@@ -296,15 +269,6 @@ export function EventDetailsScreen() {
       return;
     }
 
-    // Log warnings but proceed anyway (no alert dialog)
-    if (validationResult.warnings && validationResult.warnings.length > 0) {
-      console.log(
-        'ΓÜá∩╕Å Warnings (proceeding anyway):',
-        validationResult.warnings
-      );
-    }
-
-    console.log('✅ Proceeding with booking...');
     // If user has dependents, show profile selector
     if (dependents.length > 0) {
       setProfileSelectorFamilyOnly(false);
@@ -323,35 +287,16 @@ export function EventDetailsScreen() {
   const proceedWithBooking = async (profileId?: string) => {
     const bookingUserId = profileId || currentUser?.id;
     if (!event || !bookingUserId) {
-      console.log('Γ¥î proceedWithBooking: Missing event or currentUser');
       return;
     }
-
-    console.log('≡ƒÜÇ Starting booking process...', {
-      eventId: event.id,
-      eventTitle: event.title,
-      userId: currentUser.id,
-      userEmail: currentUser.email,
-    });
 
     try {
       setIsBooking(true);
 
-      console.log('≡ƒô₧ Calling eventService.bookEvent API...');
-      console.log('≡ƒôï Request params:', {
-        eventId: event.id,
-        userId: currentUser.id,
-      });
-
       const booking = await eventService.bookEvent(event.id, bookingUserId);
 
-      console.log('Γ£à Booking API call successful!');
-      console.log('≡ƒôª Booking response:', JSON.stringify(booking, null, 2));
-
       // Add booking to Redux store
-      console.log('≡ƒÆ╛ Adding booking to Redux store...');
       dispatch(addBooking(booking));
-      console.log('Γ£à Booking added to Redux');
 
       // Update local state
       const updatedParticipants = event.currentParticipants + 1;
@@ -359,10 +304,6 @@ export function EventDetailsScreen() {
         ...event,
         currentParticipants: updatedParticipants,
       };
-      console.log('≡ƒôè Updating event participants count:', {
-        old: event.currentParticipants,
-        new: updatedParticipants,
-      });
       setEvent(updatedEvent);
       dispatch(
         updateEventParticipants({
@@ -372,23 +313,9 @@ export function EventDetailsScreen() {
       );
 
       // Reload participants (skip cache to get fresh data)
-      console.log('≡ƒöä Reloading participants list...');
       const newParticipantsData = await eventService.getEventParticipants(
         event.id,
         true
-      );
-      console.log('Γ£à Participants reloaded successfully!');
-      console.log(
-        '≡ƒôè Participants count:',
-        newParticipantsData.participants.length
-      );
-      console.log(
-        '≡ƒæÑ Participant user IDs:',
-        newParticipantsData.participants.map(p => p.userId)
-      );
-      console.log(
-        '≡ƒöì Current user in participants?',
-        newParticipantsData.participants.some(p => p.userId === currentUser.id)
       );
       setParticipants(newParticipantsData.participants);
       setRosters(newParticipantsData.rosters ?? []);
@@ -401,9 +328,6 @@ export function EventDetailsScreen() {
           {
             text: 'OK',
             onPress: () => {
-              console.log(
-                'Γ£à User dismissed success alert, navigating to Home'
-              );
               // Navigate to Home tab after user dismisses alert
               (navigation as any).navigate('Home', { screen: 'HomeScreen' });
             },
@@ -424,7 +348,6 @@ export function EventDetailsScreen() {
         error instanceof Error ? error.message : 'Failed to book event';
       Alert.alert('Booking Failed', errorMessage);
     } finally {
-      console.log('≡ƒÅü Booking process finished, setting isBooking to false');
       setIsBooking(false);
     }
   };
@@ -478,18 +401,11 @@ export function EventDetailsScreen() {
     }
 
     try {
-      console.log('≡ƒÜ╢ Canceling booking with RTK Query mutation:', {
-        eventId: event.id,
-        bookingId: userBooking.bookingId,
-      });
-
       // Use RTK Query mutation - this will automatically invalidate cache
       await cancelBookingMutation({
         eventId: event.id,
         bookingId: userBooking.bookingId,
       }).unwrap();
-
-      console.log('Γ£à Booking cancelled successfully');
 
       // Remove booking from Redux store
       dispatch(removeBooking(userBooking.bookingId));
@@ -503,8 +419,6 @@ export function EventDetailsScreen() {
 
       // Force a complete reload with cache bypass
       await loadEvent(false, true);
-
-      console.log('Γ£à Event reloaded after step out');
     } catch (error) {
       console.error('Γ¥î Step out error:', error);
       Alert.alert('Error', 'Failed to leave. Please try again.');
@@ -523,9 +437,7 @@ export function EventDetailsScreen() {
     if (!event) return;
 
     try {
-      console.log('≡ƒùæ∩╕Å Cancelling event:', event.id, 'Reason:', reason);
       await eventService.deleteEvent(event.id, reason);
-      console.log('Γ£à Event cancelled successfully');
 
       // Remove event from Redux store
       dispatch(removeEvent(event.id));

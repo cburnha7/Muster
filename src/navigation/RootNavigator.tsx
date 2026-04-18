@@ -44,15 +44,6 @@ export function RootNavigator() {
   useNetworkState();
   const pendingInviteHandled = useRef(false);
 
-  // Log user state changes
-  useEffect(() => {
-    console.log(
-      'RootNavigator: User state changed:',
-      user ? `Logged in as ${user.firstName} ${user.lastName}` : 'Not logged in'
-    );
-    console.log('RootNavigator: Auth loading:', authLoading);
-  }, [user, authLoading]);
-
   // ── Capture invite code from deep link when not authenticated ──
   useEffect(() => {
     const handleURL = ({ url }: { url: string }) => {
@@ -60,7 +51,6 @@ export function RootNavigator() {
       if (code && !user) {
         // Stash the invite code for after authentication
         AsyncStorage.setItem(PENDING_INVITE_KEY, code).catch(() => {});
-        console.log('RootNavigator: Stashed pending invite code:', code);
       }
     };
 
@@ -81,10 +71,6 @@ export function RootNavigator() {
       AsyncStorage.getItem(PENDING_INVITE_KEY).then(code => {
         if (code) {
           AsyncStorage.removeItem(PENDING_INVITE_KEY).catch(() => {});
-          console.log(
-            'RootNavigator: Redirecting to JoinTeam with pending invite:',
-            code
-          );
           // The TabNavigatorWithInviteRedirect component below handles the redirect
         }
       });
@@ -112,7 +98,6 @@ export function RootNavigator() {
                 {...props}
                 onAuthSuccess={() => {
                   // Navigation will happen automatically via AuthContext
-                  console.log('Authentication successful');
                 }}
               />
             )}

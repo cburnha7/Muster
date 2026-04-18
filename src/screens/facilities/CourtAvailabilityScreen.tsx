@@ -104,7 +104,7 @@ export function CourtAvailabilityScreen() {
     eventStartTime,
     returnTo,
     returnParams,
-  } = route.params;
+  } = route.params ?? {};
 
   // Facility data (for requiresInsurance and requiresBookingConfirmation check)
   const [facilityData, setFacilityData] = useState<{

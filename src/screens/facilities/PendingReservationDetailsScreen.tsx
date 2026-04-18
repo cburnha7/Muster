@@ -58,7 +58,7 @@ export function PendingReservationDetailsScreen() {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<ScreenRouteProp>();
-  const { rentalId } = route.params;
+  const { rentalId } = route.params ?? {};
 
   const [rental, setRental] = useState<any>(null);
   const [loading, setLoading] = useState(true);

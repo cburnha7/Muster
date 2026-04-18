@@ -43,7 +43,7 @@ export function SearchResultsScreen({
     query: initialQuery = '',
     filters: initialFilters,
     searchType = 'all',
-  } = route.params;
+  } = route.params ?? {};
 
   const { colors: themeColors } = useTheme();
   const [query, setQuery] = useState(initialQuery);
@@ -157,7 +157,7 @@ export function SearchResultsScreen({
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="search-outline" size={64} color="#D1D5DB" />
+      <Ionicons name="search-outline" size={64} color={colors.inkFaint} />
       <Text style={styles.emptyTitle}>No results found</Text>
       <Text style={styles.emptySubtitle}>
         Try adjusting your search or filters
@@ -169,7 +169,7 @@ export function SearchResultsScreen({
     if (loading && !refreshing) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={colors.cobalt} />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
       );
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   resultCount: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.inkSoft,
     fontWeight: '500',
   },
   tabContainer: {
@@ -361,26 +361,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
   },
   tabButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surface,
   },
   tabButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.cobalt,
   },
   tabText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.inkSoft,
     fontWeight: '500',
   },
   tabTextActive: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   listContent: {
     padding: 16,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.inkSoft,
   },
   emptyContainer: {
     flex: 1,
@@ -405,13 +405,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.inkSoft,
     textAlign: 'center',
   },
 });

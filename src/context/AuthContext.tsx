@@ -63,9 +63,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (Platform.OS !== 'web') return;
 
     const handleSessionExpired = () => {
-      console.log(
-        'AuthContext: Session expired event received, clearing auth state'
-      );
       dispatch(clearAuth());
       Alert.alert(
         'Session Expired',
@@ -163,7 +160,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      console.log('AuthContext: Starting logout...');
       await authService.logout();
 
       // Ensure TokenStorage is fully cleared (covers both old and new key sets)
@@ -174,8 +170,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       dispatch(clearSubscription());
       dispatch(resetContext());
       lastRefreshedUserId.current = null;
-
-      console.log('AuthContext: Logout complete');
     } catch (error) {
       console.error('Logout error:', error);
       throw error;

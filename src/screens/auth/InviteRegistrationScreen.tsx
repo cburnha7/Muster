@@ -35,7 +35,11 @@ import { SSOButton } from '../../components/auth/SSOButton';
 import { colors } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
-import { registerUser, registerWithSSO, completeOnboarding } from '../../store/slices/authSlice';
+import {
+  registerUser,
+  registerWithSSO,
+  completeOnboarding,
+} from '../../store/slices/authSlice';
 import { setDependents } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
 import { UserIntent } from '../../types/auth';
@@ -53,8 +57,10 @@ interface InviteRegistrationScreenProps {
   };
 }
 
-export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProps) {
-  const { inviteCode, teamName, teamSport } = route.params;
+export function InviteRegistrationScreen({
+  route,
+}: InviteRegistrationScreenProps) {
+  const { inviteCode, teamName, teamSport } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -120,22 +126,27 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
     setIsLoading(true);
     try {
       // Generate a username from email (before the @)
-      const username = (email.split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_]/g, '') + Math.floor(Math.random() * 100);
+      const username =
+        (email.split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_]/g, '') +
+        Math.floor(Math.random() * 100);
 
-      const result = await (dispatch as any)(registerUser({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-        username,
-        password,
-        confirmPassword: password,
-        agreedToTerms: true,
-      })).unwrap();
+      const result = await (dispatch as any)(
+        registerUser({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim().toLowerCase(),
+          username,
+          password,
+          confirmPassword: password,
+          agreedToTerms: true,
+        })
+      ).unwrap();
 
       setRegisteredUser(result);
       setStep(1);
     } catch (err: any) {
-      const msg = typeof err === 'string' ? err : err?.message || 'Registration failed';
+      const msg =
+        typeof err === 'string' ? err : err?.message || 'Registration failed';
       if (msg.toLowerCase().includes('email')) {
         updateError('email', msg);
       } else {
@@ -150,24 +161,31 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
   const handleSSO = async (provider: 'apple' | 'google') => {
     setSsoLoading(provider);
     try {
-      const ssoResult = provider === 'apple'
-        ? await SSOService.signInWithApple()
-        : await SSOService.signInWithGoogle();
+      const ssoResult =
+        provider === 'apple'
+          ? await SSOService.signInWithApple()
+          : await SSOService.signInWithGoogle();
 
       if (!ssoResult) {
         setSsoLoading(null);
         return;
       }
 
-      const result = await (dispatch as any)(registerWithSSO({
-        provider,
-        providerToken: ssoResult.providerToken,
-        providerUserId: ssoResult.providerId,
-        email: ssoResult.email || email,
-        firstName: ssoResult.firstName || firstName,
-        lastName: ssoResult.lastName || lastName,
-        username: ((ssoResult.email || email).split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_]/g, '') + Math.floor(Math.random() * 100),
-      })).unwrap();
+      const result = await (dispatch as any)(
+        registerWithSSO({
+          provider,
+          providerToken: ssoResult.providerToken,
+          providerUserId: ssoResult.providerId,
+          email: ssoResult.email || email,
+          firstName: ssoResult.firstName || firstName,
+          lastName: ssoResult.lastName || lastName,
+          username:
+            ((ssoResult.email || email).split('@')[0] ?? 'user').replace(
+              /[^a-zA-Z0-9_]/g,
+              ''
+            ) + Math.floor(Math.random() * 100),
+        })
+      ).unwrap();
 
       setRegisteredUser(result);
       if (ssoResult.firstName) setFirstName(ssoResult.firstName);
@@ -205,10 +223,12 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
 
       // 1. Complete onboarding with pre-filled data
       const intents: UserIntent[] = isForChild ? ['GUARDIAN'] : ['PLAYER'];
-      await (dispatch as any)(completeOnboarding({
-        intents,
-        sportPreferences: [teamSport],
-      })).unwrap();
+      await (dispatch as any)(
+        completeOnboarding({
+          intents,
+          sportPreferences: [teamSport],
+        })
+      ).unwrap();
 
       // 2. Create dependent if needed
       if (isForChild && userId && token) {
@@ -217,7 +237,7 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
               'X-User-Id': userId,
             },
             body: JSON.stringify({
@@ -231,13 +251,17 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
           if (depRes.ok) {
             const dependent = await depRes.json();
             // Update context with the new dependent
-            dispatch(setDependents([{
-              id: dependent.id,
-              firstName: dependent.firstName,
-              lastName: dependent.lastName,
-              profileImage: null,
-              dateOfBirth: dependent.dateOfBirth,
-            }]));
+            dispatch(
+              setDependents([
+                {
+                  id: dependent.id,
+                  firstName: dependent.firstName,
+                  lastName: dependent.lastName,
+                  profileImage: null,
+                  dateOfBirth: dependent.dateOfBirth,
+                },
+              ])
+            );
           }
         } catch (depErr) {
           console.error('Failed to create dependent:', depErr);
@@ -251,9 +275,11 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
 
       // The RootNavigator will pick up the pending invite code and redirect to JoinTeam
       // after the Main navigator mounts.
-
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Something went wrong. Please try again.');
+      Alert.alert(
+        'Error',
+        err?.message || 'Something went wrong. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -265,7 +291,8 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
       <View style={styles.teamBanner}>
         <Ionicons name="people" size={20} color={colors.gold} />
         <Text style={styles.teamBannerText}>
-          You've been invited to join <Text style={styles.teamBannerName}>{teamName}</Text>
+          You've been invited to join{' '}
+          <Text style={styles.teamBannerName}>{teamName}</Text>
         </Text>
       </View>
 
@@ -279,7 +306,10 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
           <FormInput
             label="First Name"
             value={firstName}
-            onChangeText={(t) => { setFirstName(t); clearError('firstName'); }}
+            onChangeText={t => {
+              setFirstName(t);
+              clearError('firstName');
+            }}
             error={errors.firstName}
             autoCapitalize="words"
           />
@@ -288,7 +318,10 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
           <FormInput
             label="Last Name"
             value={lastName}
-            onChangeText={(t) => { setLastName(t); clearError('lastName'); }}
+            onChangeText={t => {
+              setLastName(t);
+              clearError('lastName');
+            }}
             error={errors.lastName}
             autoCapitalize="words"
           />
@@ -298,7 +331,10 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
       <FormInput
         label="Email"
         value={email}
-        onChangeText={(t) => { setEmail(t); clearError('email'); }}
+        onChangeText={t => {
+          setEmail(t);
+          clearError('email');
+        }}
         error={errors.email}
         keyboardType="email-address"
         autoCapitalize="none"
@@ -307,7 +343,10 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
       <FormInput
         label="Password"
         value={password}
-        onChangeText={(t) => { setPassword(t); clearError('password'); }}
+        onChangeText={t => {
+          setPassword(t);
+          clearError('password');
+        }}
         error={errors.password}
         secureTextEntry
       />
@@ -343,7 +382,8 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
         onPress={() => (navigation as any).navigate('Login')}
       >
         <Text style={styles.loginLinkText}>
-          Already have an account? <Text style={styles.loginLinkBold}>Sign in</Text>
+          Already have an account?{' '}
+          <Text style={styles.loginLinkBold}>Sign in</Text>
         </Text>
       </TouchableOpacity>
     </>
@@ -358,14 +398,22 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
       </Text>
 
       <View style={styles.toggleRow}>
-        <Text style={[styles.toggleLabel, !isForChild && styles.toggleLabelActive]}>This is for me</Text>
+        <Text
+          style={[styles.toggleLabel, !isForChild && styles.toggleLabelActive]}
+        >
+          This is for me
+        </Text>
         <Switch
           value={isForChild}
           onValueChange={setIsForChild}
           trackColor={{ false: colors.cobalt + '40', true: colors.gold + '40' }}
           thumbColor={isForChild ? colors.gold : colors.cobalt}
         />
-        <Text style={[styles.toggleLabel, isForChild && styles.toggleLabelActive]}>For my child</Text>
+        <Text
+          style={[styles.toggleLabel, isForChild && styles.toggleLabelActive]}
+        >
+          For my child
+        </Text>
       </View>
 
       {isForChild && (
@@ -373,14 +421,20 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
           <FormInput
             label="Child's First Name"
             value={childFirstName}
-            onChangeText={(t) => { setChildFirstName(t); clearError('childFirstName'); }}
+            onChangeText={t => {
+              setChildFirstName(t);
+              clearError('childFirstName');
+            }}
             error={errors.childFirstName}
             autoCapitalize="words"
           />
           <FormInput
             label="Date of Birth"
             value={childDob}
-            onChangeText={(t) => { setChildDob(t); clearError('childDob'); }}
+            onChangeText={t => {
+              setChildDob(t);
+              clearError('childDob');
+            }}
             error={errors.childDob}
             placeholder="YYYY-MM-DD"
             keyboardType="numbers-and-punctuation"
@@ -390,7 +444,11 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
 
       {!isForChild && (
         <View style={styles.selfNote}>
-          <Ionicons name="information-circle-outline" size={18} color={colors.cobalt} />
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.cobalt}
+          />
           <Text style={styles.selfNoteText}>
             You'll be added as a player on {teamName}.
           </Text>
@@ -426,8 +484,12 @@ export function InviteRegistrationScreen({ route }: InviteRegistrationScreenProp
       >
         {/* Progress indicator */}
         <View style={styles.progressRow}>
-          <View style={[styles.progressDot, step === 0 && styles.progressDotActive]} />
-          <View style={[styles.progressDot, step === 1 && styles.progressDotActive]} />
+          <View
+            style={[styles.progressDot, step === 0 && styles.progressDotActive]}
+          />
+          <View
+            style={[styles.progressDot, step === 1 && styles.progressDotActive]}
+          />
         </View>
 
         {step === 0 ? renderAccountStep() : renderChildStep()}

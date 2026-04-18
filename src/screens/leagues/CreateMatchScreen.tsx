@@ -24,7 +24,7 @@ export const CreateMatchScreen: React.FC = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
-  const { leagueId, seasonId } = route.params;
+  const { leagueId, seasonId } = route.params ?? {};
 
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -109,7 +109,9 @@ export const CreateMatchScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Create Match"
           leftIcon="arrow-back"

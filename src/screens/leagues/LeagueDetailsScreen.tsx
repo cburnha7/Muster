@@ -407,20 +407,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
     if (!currentUser?.id) return;
     try {
       setIsActionLoading(true);
-      console.log('[ConfirmInvitation] Sending:', {
-        leagueId,
-        membershipId: membership.id,
-        memberType: membership.memberType,
-        memberId: membership.memberId,
-        userId: currentUser.id,
-      });
       const result = await leagueService.respondToInvitation(
         leagueId,
         membership.id,
         true,
         currentUser.id
       );
-      console.log('[ConfirmInvitation] Response:', JSON.stringify(result));
       // Invalidate both users and leagues cache so home screen invitations and league data refetch fresh
       cacheService.clearBySubstring('users');
       cacheService.clearBySubstring('leagues');

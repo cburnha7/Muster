@@ -2,7 +2,10 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from './store';
 import { API_BASE_URL } from '../services/api/config';
 import TokenStorage from '../services/auth/TokenStorage';
-import { acquireRefresh, performTokenRefresh } from '../services/auth/tokenRefreshLock';
+import {
+  acquireRefresh,
+  performTokenRefresh,
+} from '../services/auth/tokenRefreshLock';
 import { clearAuth, setTokens } from './slices/authSlice';
 import { SchedulePreviewEvent, ConfirmableEvent } from '../types/scheduling';
 
@@ -14,12 +17,12 @@ const baseQuery = fetchBaseQuery({
 
     // Get token from auth state (note: field is 'accessToken' not 'token')
     const token = state.auth.accessToken;
-    
+
     // If we have a token, include it in the Authorization header
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
-    
+
     // DEVELOPMENT: Send X-User-Id header for mock authentication
     if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
       // Import authService to get current user
@@ -39,7 +42,7 @@ const baseQuery = fetchBaseQuery({
     if (activeUserId && activeUserId !== authUserId) {
       headers.set('X-Active-User-Id', activeUserId);
     }
-    
+
     headers.set('content-type', 'application/json');
     return headers;
   },
@@ -51,14 +54,11 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
   // If we get a 401, try to refresh the token via the shared lock
   if (result.error && result.error.status === 401) {
-    console.log('🔄 RTK Query: 401 error detected, attempting token refresh...');
-
     try {
       // Get refresh token from Redux state first, then fallback to TokenStorage
       let refreshToken = (api.getState() as RootState).auth.refreshToken;
 
       if (!refreshToken) {
-        console.log('⚠️ No refresh token in Redux, checking TokenStorage...');
         refreshToken = await TokenStorage.getRefreshToken();
       }
 
@@ -69,19 +69,19 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         return result;
       }
 
-      console.log('🔑 Refresh token found, acquiring shared refresh lock...');
-
       // Use the shared lock — if BaseApiService (Axios) is already refreshing,
       // this will wait for that same promise instead of firing a second request.
-      const tokenData = await acquireRefresh(() => performTokenRefresh(refreshToken!));
-
-      console.log('✅ Token refresh successful');
+      const tokenData = await acquireRefresh(() =>
+        performTokenRefresh(refreshToken!)
+      );
 
       // Update Redux state with new tokens
-      api.dispatch(setTokens({
-        accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
-      }));
+      api.dispatch(
+        setTokens({
+          accessToken: tokenData.accessToken,
+          refreshToken: tokenData.refreshToken,
+        })
+      );
 
       // Retry the original query with new token
       result = await baseQuery(args, api, extraOptions);
@@ -101,49 +101,49 @@ export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
   tagTypes: ['User', 'Event', 'Facility', 'Team', 'Booking', 'League'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     // Authentication endpoints
     login: builder.mutation({
-      query: (credentials) => ({
+      query: credentials => ({
         url: '/auth/login',
         method: 'POST',
         body: credentials,
       }),
       invalidatesTags: ['User'],
     }),
-    
+
     register: builder.mutation({
-      query: (userData) => ({
+      query: userData => ({
         url: '/auth/register',
         method: 'POST',
         body: userData,
       }),
       invalidatesTags: ['User'],
     }),
-    
+
     refreshToken: builder.mutation({
-      query: (refreshToken) => ({
+      query: refreshToken => ({
         url: '/auth/refresh',
         method: 'POST',
         body: { refreshToken },
       }),
     }),
-    
+
     // User endpoints
     getProfile: builder.query({
       query: () => '/users/profile',
       providesTags: ['User'],
     }),
-    
+
     updateProfile: builder.mutation({
-      query: (updates) => ({
+      query: updates => ({
         url: '/users/profile',
         method: 'PUT',
         body: updates,
       }),
       invalidatesTags: ['User'],
     }),
-    
+
     // Event endpoints
     getEvents: builder.query({
       query: (filters = {}) => ({
@@ -152,21 +152,21 @@ export const api = createApi({
       }),
       providesTags: ['Event'],
     }),
-    
+
     getEvent: builder.query({
-      query: (id) => `/events/${id}`,
+      query: id => `/events/${id}`,
       providesTags: (result, error, id) => [{ type: 'Event', id }],
     }),
-    
+
     createEvent: builder.mutation({
-      query: (eventData) => ({
+      query: eventData => ({
         url: '/events',
         method: 'POST',
         body: eventData,
       }),
       invalidatesTags: ['Event'],
     }),
-    
+
     updateEvent: builder.mutation({
       query: ({ id, ...updates }) => ({
         url: `/events/${id}`,
@@ -175,15 +175,15 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Event', id }],
     }),
-    
+
     deleteEvent: builder.mutation({
-      query: (id) => ({
+      query: id => ({
         url: `/events/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Event'],
     }),
-    
+
     bookEvent: builder.mutation({
       query: ({ eventId, teamId }) => ({
         url: `/events/${eventId}/book`,
@@ -192,7 +192,7 @@ export const api = createApi({
       }),
       invalidatesTags: ['Event', 'Booking'],
     }),
-    
+
     // Facility endpoints
     getFacilities: builder.query({
       query: (filters = {}) => ({
@@ -201,21 +201,21 @@ export const api = createApi({
       }),
       providesTags: ['Facility'],
     }),
-    
+
     getFacility: builder.query({
-      query: (id) => `/facilities/${id}`,
+      query: id => `/facilities/${id}`,
       providesTags: (result, error, id) => [{ type: 'Facility', id }],
     }),
-    
+
     createFacility: builder.mutation({
-      query: (facilityData) => ({
+      query: facilityData => ({
         url: '/facilities',
         method: 'POST',
         body: facilityData,
       }),
       invalidatesTags: ['Facility'],
     }),
-    
+
     updateFacility: builder.mutation({
       query: ({ id, ...updates }) => ({
         url: `/facilities/${id}`,
@@ -224,15 +224,15 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Facility', id }],
     }),
-    
+
     deleteFacility: builder.mutation({
-      query: (id) => ({
+      query: id => ({
         url: `/facilities/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Facility'],
     }),
-    
+
     // Team endpoints
     getTeams: builder.query({
       query: (filters = {}) => ({
@@ -241,21 +241,21 @@ export const api = createApi({
       }),
       providesTags: ['Team'],
     }),
-    
+
     getTeam: builder.query({
-      query: (id) => `/teams/${id}`,
+      query: id => `/teams/${id}`,
       providesTags: (result, error, id) => [{ type: 'Team', id }],
     }),
-    
+
     createTeam: builder.mutation({
-      query: (teamData) => ({
+      query: teamData => ({
         url: '/teams',
         method: 'POST',
         body: teamData,
       }),
       invalidatesTags: ['Team'],
     }),
-    
+
     updateTeam: builder.mutation({
       query: ({ id, ...updates }) => ({
         url: `/teams/${id}`,
@@ -264,15 +264,15 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Team', id }],
     }),
-    
+
     deleteTeam: builder.mutation({
-      query: (id) => ({
+      query: id => ({
         url: `/teams/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Team'],
     }),
-    
+
     joinTeam: builder.mutation({
       query: ({ teamId, inviteCode }) => ({
         url: `/teams/${teamId}/join`,
@@ -281,23 +281,23 @@ export const api = createApi({
       }),
       invalidatesTags: ['Team'],
     }),
-    
+
     leaveTeam: builder.mutation({
-      query: (teamId) => ({
+      query: teamId => ({
         url: `/teams/${teamId}/leave`,
         method: 'POST',
       }),
       invalidatesTags: ['Team'],
     }),
-    
+
     // Booking endpoints
     getUserBookings: builder.query({
       query: () => '/users/bookings',
       providesTags: ['Booking'],
     }),
-    
+
     cancelBooking: builder.mutation({
-      query: (bookingId) => ({
+      query: bookingId => ({
         url: `/bookings/${bookingId}`,
         method: 'DELETE',
       }),
@@ -305,14 +305,20 @@ export const api = createApi({
     }),
 
     // League scheduling endpoints
-    generateSchedule: builder.mutation<{ events: SchedulePreviewEvent[] }, { leagueId: string }>({
+    generateSchedule: builder.mutation<
+      { events: SchedulePreviewEvent[] },
+      { leagueId: string }
+    >({
       query: ({ leagueId }) => ({
         url: `/leagues/${leagueId}/generate-schedule`,
         method: 'POST',
       }),
     }),
 
-    confirmSchedule: builder.mutation<{ eventsCreated: number }, { leagueId: string; events: ConfirmableEvent[] }>({
+    confirmSchedule: builder.mutation<
+      { eventsCreated: number },
+      { leagueId: string; events: ConfirmableEvent[] }
+    >({
       query: ({ leagueId, events }) => ({
         url: `/leagues/${leagueId}/confirm-schedule`,
         method: 'POST',
@@ -322,16 +328,22 @@ export const api = createApi({
     }),
 
     // Promo code endpoints
-    validatePromoCode: builder.mutation<{ valid: boolean; trialDurationDays?: number; error?: string }, { code: string }>({
-      query: (body) => ({
+    validatePromoCode: builder.mutation<
+      { valid: boolean; trialDurationDays?: number; error?: string },
+      { code: string }
+    >({
+      query: body => ({
         url: '/promo-codes/validate',
         method: 'POST',
         body,
       }),
     }),
 
-    redeemPromoCode: builder.mutation<any, { code: string; selectedTier: string }>({
-      query: (body) => ({
+    redeemPromoCode: builder.mutation<
+      any,
+      { code: string; selectedTier: string }
+    >({
+      query: body => ({
         url: '/promo-codes/redeem',
         method: 'POST',
         body,
@@ -347,11 +359,11 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useRefreshTokenMutation,
-  
+
   // User hooks
   useGetProfileQuery,
   useUpdateProfileMutation,
-  
+
   // Event hooks
   useGetEventsQuery,
   useGetEventQuery,
@@ -359,14 +371,14 @@ export const {
   useUpdateEventMutation,
   useDeleteEventMutation,
   useBookEventMutation,
-  
+
   // Facility hooks
   useGetFacilitiesQuery,
   useGetFacilityQuery,
   useCreateFacilityMutation,
   useUpdateFacilityMutation,
   useDeleteFacilityMutation,
-  
+
   // Team hooks
   useGetTeamsQuery,
   useGetTeamQuery,
@@ -375,7 +387,7 @@ export const {
   useDeleteTeamMutation,
   useJoinTeamMutation,
   useLeaveTeamMutation,
-  
+
   // Booking hooks
   useGetUserBookingsQuery,
   useCancelBookingMutation,

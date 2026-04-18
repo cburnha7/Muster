@@ -22,7 +22,7 @@ export function AddCourtScreen(): JSX.Element {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { facilityId } = route.params as { facilityId: string };
+  const { facilityId } = (route.params as { facilityId: string }) ?? {};
 
   const [formData, setFormData] = useState({
     name: '',

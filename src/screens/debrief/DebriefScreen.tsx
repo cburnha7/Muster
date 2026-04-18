@@ -29,10 +29,11 @@ export function DebriefScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { user } = useAuth();
-  const { eventId, readonly: readonlyParam } = route.params as {
-    eventId: string;
-    readonly?: boolean;
-  };
+  const { eventId, readonly: readonlyParam } =
+    (route.params as {
+      eventId: string;
+      readonly?: boolean;
+    }) ?? {};
 
   const [details, setDetails] = useState<DebriefDetails | null>(null);
   const [loading, setLoading] = useState(true);

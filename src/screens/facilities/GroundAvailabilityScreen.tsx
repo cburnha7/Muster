@@ -39,7 +39,7 @@ export function GroundAvailabilityScreen({
   navigation,
 }: GroundAvailabilityScreenProps) {
   const { colors: themeColors } = useTheme();
-  const { facilityId, facilityName } = route.params;
+  const { facilityId, facilityName } = route.params ?? {};
 
   const [selectedDate, setSelectedDate] = useState<string>(
     formatDateForCalendar(new Date())

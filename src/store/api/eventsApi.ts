@@ -56,8 +56,6 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
   // If we get a 401, try to refresh the token
   if (result.error && result.error.status === 401) {
-    console.log('🔄 [eventsApi] 401 error, attempting token refresh...');
-
     // Get refresh token from Redux state first, then fallback to TokenStorage
     let refreshToken = (api.getState() as RootState).auth.refreshToken;
     if (!refreshToken) {
@@ -86,7 +84,6 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         accessToken: string;
         refreshToken: string;
       };
-      console.log('✅ [eventsApi] Token refresh successful');
 
       await TokenStorage.storeTokens(
         tokenData.accessToken,
@@ -276,10 +273,6 @@ export const eventsApi = createApi({
       }),
       // Invalidate both Events and Bookings to trigger refetch
       invalidatesTags: (_result, _error, { eventId }) => {
-        console.log(
-          '[RTK Query] cancelBooking - Invalidating tags for eventId:',
-          eventId
-        );
         return [
           { type: 'Events', id: eventId },
           { type: 'Events', id: 'LIST' },
@@ -288,12 +281,8 @@ export const eventsApi = createApi({
       },
       // Add logging in development
       onQueryStarted: async (arg, { queryFulfilled }) => {
-        console.log('[RTK Query] cancelBooking started:', arg);
         try {
           await queryFulfilled;
-          console.log(
-            '[RTK Query] cancelBooking succeeded - cache should be invalidated now'
-          );
         } catch (error) {
           console.error('[RTK Query] cancelBooking failed:', error);
         }

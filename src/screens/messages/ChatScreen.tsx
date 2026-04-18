@@ -66,7 +66,7 @@ export function ChatScreen() {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { conversationId, title, type } = route.params;
+  const { conversationId, title, type } = route.params ?? {};
   const dispatch = useDispatch();
 
   const currentUserId = useSelector((state: RootState) => state.auth?.user?.id);

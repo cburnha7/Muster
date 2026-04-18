@@ -15,7 +15,7 @@ interface PressableCardProps {
  * Scales to 0.98 on press with subtle opacity change, springs back on release.
  * Drop-in replacement for TouchableOpacity on cards.
  */
-export function PressableCard({
+function PressableCardInner({
   onPress,
   onLongPress,
   style,
@@ -64,3 +64,5 @@ export function PressableCard({
     </Pressable>
   );
 }
+
+export const PressableCard = React.memo(PressableCardInner);

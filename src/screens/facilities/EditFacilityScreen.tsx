@@ -118,7 +118,7 @@ export function EditFacilityScreen({
   route,
 }: EditFacilityScreenProps): JSX.Element {
   const { colors: themeColors } = useTheme();
-  const { facilityId } = route.params;
+  const { facilityId } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
@@ -193,9 +193,6 @@ export function EditFacilityScreen({
 
   useFocusEffect(
     useCallback(() => {
-      console.log(
-        '📍 EditFacilityScreen focused, reloading data with skipCache'
-      );
       loadFacilityData(true);
     }, [facilityId])
   );

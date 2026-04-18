@@ -109,7 +109,7 @@ function TabBar({
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { facilityId, ...restParams } = route.params as any;
+  const { facilityId, ...restParams } = (route.params as any) ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { width: screenWidth } = useWindowDimensions();

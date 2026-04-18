@@ -21,7 +21,7 @@ export function CancellationPolicyScreen() {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation<CancellationPolicyScreenNavigationProp>();
   const route = useRoute<CancellationPolicyScreenRouteProp>();
-  const { facilityId } = route.params;
+  const { facilityId } = route.params ?? {};
 
   return (
     <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>

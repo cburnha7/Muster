@@ -53,7 +53,7 @@ export const AssignFacilityScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<AssignFacilityRouteProp>();
   const user = useSelector(selectUser);
-  const { matchId } = route.params;
+  const { matchId } = route.params ?? {};
 
   const [match, setMatch] = useState<Match | null>(null);
   const [rentals, setRentals] = useState<RentalItem[]>([]);
@@ -140,7 +140,9 @@ export const AssignFacilityScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Assign Facility"
           leftIcon="arrow-back"
@@ -156,7 +158,9 @@ export const AssignFacilityScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Assign Facility"
           leftIcon="arrow-back"

@@ -88,7 +88,7 @@ const skillLevelOptions = [
 
 export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   const { colors: themeColors } = useTheme();
-  const { teamId, readOnly } = route.params;
+  const { teamId, readOnly } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const currentUser = useSelector(selectUser);

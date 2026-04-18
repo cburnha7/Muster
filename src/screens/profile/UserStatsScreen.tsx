@@ -98,7 +98,7 @@ export function UserStatsScreen(): JSX.Element {
           <Text style={styles.sectionHeader}>Rating</Text>
           <View style={styles.card}>
             <View style={styles.ratingRow}>
-              <Ionicons name="star" size={20} color="#F59E0B" />
+              <Ionicons name="star" size={20} color={colors.gold} />
               <Text style={styles.ratingValue}>
                 {stats.averageRating.toFixed(1)}
               </Text>
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#191C1E',
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 8,

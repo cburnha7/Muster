@@ -379,12 +379,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: colors.ink,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.inkSoft,
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -393,62 +393,62 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   successBanner: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.pineTint,
     borderRadius: 8,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
+    borderLeftColor: colors.pine,
   },
   successText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#065F46',
+    color: colors.pine,
     marginBottom: 4,
   },
   expiresText: {
     fontSize: 14,
-    color: '#047857',
+    color: colors.pine,
   },
   teamPreviewTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.ink,
     marginTop: 8,
   },
   teamNameText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.ink,
     marginBottom: 4,
   },
   teamInfo: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 8,
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   infoItem: {
     fontSize: 14,
-    color: '#4B5563',
+    color: colors.inkSoft,
     lineHeight: 20,
   },
   helpSection: {
     marginTop: 32,
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 8,
     gap: 12,
   },
   helpTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.ink,
   },
   helpText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.inkSoft,
     lineHeight: 20,
   },
 
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -469,12 +469,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.ink,
     textAlign: 'center',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.inkSoft,
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.surface,
     gap: 12,
   },
   pickerOptionText: {
@@ -493,11 +493,11 @@ const styles = StyleSheet.create({
   pickerOptionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.ink,
   },
   pickerOptionHint: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: colors.inkFaint,
     marginTop: 2,
   },
   cancelBtn: {
@@ -508,6 +508,6 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.inkSoft,
   },
 });

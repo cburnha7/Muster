@@ -31,7 +31,7 @@ export const RecordMatchResultScreen: React.FC = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
-  const { matchId } = route.params;
+  const { matchId } = route.params ?? {};
 
   const [loading, setLoading] = useState(false);
   const [match, setMatch] = useState<Match | null>(null);
@@ -151,12 +151,13 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   const handleTeamPress = (teamId: string) => {
     // TODO: Navigate to team details if needed
-    console.log('Roster pressed:', teamId);
   };
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -172,7 +173,9 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (!match) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"

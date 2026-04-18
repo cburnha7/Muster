@@ -24,7 +24,7 @@ export function FacilityMapEditorScreen(): JSX.Element {
   const { colors: themeColors } = useTheme();
   const navigation = useNavigation<FacilityMapEditorScreenNavigationProp>();
   const route = useRoute<FacilityMapEditorScreenRouteProp>();
-  const { facilityId, currentMapUrl } = route.params;
+  const { facilityId, currentMapUrl } = route.params ?? {};
 
   const [mapImageUri, setMapImageUri] = useState<string | undefined>(
     currentMapUrl

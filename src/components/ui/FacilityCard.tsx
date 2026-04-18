@@ -12,7 +12,7 @@ interface FacilityCardProps {
   compact?: boolean;
 }
 
-export const FacilityCard: React.FC<FacilityCardProps> = ({
+const FacilityCardInner: React.FC<FacilityCardProps> = ({
   facility,
   onPress,
   style,
@@ -155,6 +155,8 @@ export const FacilityCard: React.FC<FacilityCardProps> = ({
     </PressableCard>
   );
 };
+
+export const FacilityCard = React.memo(FacilityCardInner);
 
 const styles = StyleSheet.create({
   container: {

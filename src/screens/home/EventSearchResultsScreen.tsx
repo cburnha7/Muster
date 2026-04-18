@@ -36,7 +36,7 @@ export function EventSearchResultsScreen() {
     latitude,
     longitude,
     radiusMiles = 25,
-  } = route.params;
+  } = route.params ?? {};
 
   const [trigger, { data, isLoading, isFetching }] = useLazySearchEventsQuery();
 
