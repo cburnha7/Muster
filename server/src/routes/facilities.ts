@@ -7,6 +7,7 @@ import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
 import {
   uploadMap,
   uploadPhoto,
+  uploadCover,
   validateImageFile,
   validatePhotoFile,
   generateImageUrl,
@@ -1979,6 +1980,187 @@ router.delete('/:id/map', async (req, res) => {
     console.error('Delete facility map error:', error);
     res.status(500).json({
       error: error.message || 'Failed to delete facility map',
+    });
+  }
+});
+
+// ============================================================================
+// COVER IMAGE ROUTES
+// ============================================================================
+
+// Upload facility cover image
+router.post(
+  '/:id/cover',
+  uploadCover.single('image'),
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const file = req.file;
+      const userId =
+        (req as any).user?.userId || (req.headers['x-user-id'] as string);
+
+      // Validate file
+      const validation = validateImageFile(file as Express.Multer.File);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      if (!file) {
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+
+      // Check if facility exists
+      const facility = await prisma.facility.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          ownerId: true,
+          coverImageUrl: true,
+          coverImageThumbnailUrl: true,
+        },
+      });
+
+      if (!facility) {
+        // Clean up uploaded file
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res.status(404).json({ error: 'Facility not found' });
+      }
+
+      // Authorization: only the facility owner
+      if (facility.ownerId !== userId) {
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can upload a cover image' });
+      }
+
+      // Process and optimize image
+      const { optimizedPath, thumbnailPath } = await processMapImage(
+        file.path,
+        {
+          maxWidth: 1600,
+          maxHeight: 600,
+          quality: 85,
+        }
+      );
+
+      // Generate URLs
+      const coverImageUrl = generateImageUrl(optimizedPath);
+      const coverImageThumbnailUrl = generateImageUrl(thumbnailPath);
+
+      // Delete old images if they exist
+      if (facility.coverImageUrl) {
+        try {
+          await deleteImageFiles(
+            facility.coverImageUrl,
+            facility.coverImageThumbnailUrl || undefined
+          );
+        } catch (error) {
+          console.error('Error deleting old cover images:', error);
+          // Continue even if deletion fails
+        }
+      }
+
+      // Update facility with new cover URLs
+      const updatedFacility = await prisma.facility.update({
+        where: { id },
+        data: {
+          coverImageUrl,
+          coverImageThumbnailUrl,
+        },
+        select: {
+          id: true,
+          coverImageUrl: true,
+          coverImageThumbnailUrl: true,
+        },
+      });
+
+      res.status(200).json({
+        coverImageUrl: updatedFacility.coverImageUrl,
+        coverImageThumbnailUrl: updatedFacility.coverImageThumbnailUrl,
+      });
+    } catch (error: any) {
+      console.error('Upload facility cover image error:', error);
+
+      // Clean up uploaded file on error
+      if (req.file?.path) {
+        try {
+          const fs = require('fs');
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up file:', cleanupError);
+        }
+      }
+
+      res.status(500).json({
+        error: error.message || 'Failed to upload cover image',
+      });
+    }
+  }
+);
+
+// Delete facility cover image
+router.delete('/:id/cover', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId =
+      (req as any).user?.userId || (req.headers['x-user-id'] as string);
+
+    // Check if facility exists
+    const facility = await prisma.facility.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        ownerId: true,
+        coverImageUrl: true,
+        coverImageThumbnailUrl: true,
+      },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    // Authorization: only the facility owner
+    if (facility.ownerId !== userId) {
+      return res
+        .status(403)
+        .json({ error: 'Only the facility owner can delete the cover image' });
+    }
+
+    if (!facility.coverImageUrl) {
+      return res.status(404).json({ error: 'No cover image to delete' });
+    }
+
+    // Delete image files
+    await deleteImageFiles(
+      facility.coverImageUrl,
+      facility.coverImageThumbnailUrl || undefined
+    );
+
+    // Update facility to remove cover URLs
+    await prisma.facility.update({
+      where: { id },
+      data: {
+        coverImageUrl: null,
+        coverImageThumbnailUrl: null,
+      },
+    });
+
+    res.status(200).json({ message: 'Cover image deleted' });
+  } catch (error: any) {
+    console.error('Delete facility cover image error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to delete cover image',
     });
   }
 });

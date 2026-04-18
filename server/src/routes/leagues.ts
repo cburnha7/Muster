@@ -1,12 +1,22 @@
 import express, { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { NotificationService } from '../services/NotificationService';
-import { ScheduleGeneratorService, LeagueWithRosters } from '../services/ScheduleGeneratorService';
+import {
+  ScheduleGeneratorService,
+  LeagueWithRosters,
+} from '../services/ScheduleGeneratorService';
 import { checkLeagueReady } from '../jobs/league-ready-check';
 import { optionalAuthMiddleware } from '../middleware/auth';
 import { requirePlan } from '../middleware/subscription';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 import { LeagueDeletionService } from '../services/LeagueDeletionService';
+import {
+  uploadCover,
+  validateImageFile,
+  generateImageUrl,
+  processMapImage,
+  deleteImageFiles,
+} from '../services/ImageUploadService';
 
 const router = express.Router();
 const leagueDeletionService = new LeagueDeletionService();
@@ -20,7 +30,7 @@ router.get('/', async (req: Request, res: Response) => {
       isActive,
       search,
       page = '1',
-      limit = '20'
+      limit = '20',
     } = req.query;
 
     const pageNum = parseInt(page as string);
@@ -29,23 +39,23 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Build where clause
     const where: any = {};
-    
+
     if (sportType) {
       where.sportType = sportType;
     }
-    
+
     if (isCertified !== undefined) {
       where.isCertified = isCertified === 'true';
     }
-    
+
     if (isActive !== undefined) {
       where.isActive = isActive === 'true';
     }
-    
+
     if (search) {
       where.name = {
         contains: search as string,
-        mode: 'insensitive'
+        mode: 'insensitive',
       };
     }
 
@@ -64,21 +74,18 @@ router.get('/', async (req: Request, res: Response) => {
             firstName: true,
             lastName: true,
             email: true,
-            profileImage: true
-          }
+            profileImage: true,
+          },
         },
         memberships: {
           where: { status: 'active', memberType: 'roster' },
-          select: { id: true }
+          select: { id: true },
         },
         matches: {
-          select: { id: true }
-        }
+          select: { id: true },
+        },
       },
-      orderBy: [
-        { isActive: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
     });
 
     // Add counts
@@ -87,7 +94,7 @@ router.get('/', async (req: Request, res: Response) => {
       memberCount: league.memberships.length,
       matchCount: league.matches.length,
       memberships: undefined,
-      matches: undefined
+      matches: undefined,
     }));
 
     res.json({
@@ -96,8 +103,8 @@ router.get('/', async (req: Request, res: Response) => {
         page: pageNum,
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
-      }
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     console.error('Error fetching leagues:', error);
@@ -109,7 +116,8 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id/deletion-preview', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = (req.query.userId as string) || (req.headers['x-user-id'] as string);
+    const userId =
+      (req.query.userId as string) || (req.headers['x-user-id'] as string);
 
     const league = await prisma.league.findUnique({ where: { id } });
 
@@ -118,11 +126,15 @@ router.get('/:id/deletion-preview', async (req: Request, res: Response) => {
     }
 
     if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can access this' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league commissioner can access this' });
     }
 
     if (league.lockedFromDeletion) {
-      return res.status(403).json({ error: 'This league cannot be deleted because matches have been played' });
+      return res.status(403).json({
+        error: 'This league cannot be deleted because matches have been played',
+      });
     }
 
     const preview = await leagueDeletionService.getDeletionPreview(id);
@@ -147,8 +159,8 @@ router.get('/:id', async (req: Request, res: Response) => {
             firstName: true,
             lastName: true,
             email: true,
-            profileImage: true
-          }
+            profileImage: true,
+          },
         },
         memberships: {
           where: { status: { in: ['active', 'pending'] } },
@@ -161,9 +173,9 @@ router.get('/:id', async (req: Request, res: Response) => {
                 sportType: true,
                 isPrivate: true,
                 _count: {
-                  select: { members: true }
-                }
-              }
+                  select: { members: true },
+                },
+              },
             },
             user: {
               select: {
@@ -171,10 +183,10 @@ router.get('/:id', async (req: Request, res: Response) => {
                 firstName: true,
                 lastName: true,
                 email: true,
-                profileImage: true
-              }
-            }
-          }
+                profileImage: true,
+              },
+            },
+          },
         },
         matches: {
           take: 10,
@@ -184,22 +196,22 @@ router.get('/:id', async (req: Request, res: Response) => {
               select: {
                 id: true,
                 name: true,
-                imageUrl: true
-              }
+                imageUrl: true,
+              },
             },
             awayTeam: {
               select: {
                 id: true,
                 name: true,
-                imageUrl: true
-              }
-            }
-          }
+                imageUrl: true,
+              },
+            },
+          },
         },
         seasons: {
-          orderBy: { startDate: 'desc' }
-        }
-      }
+          orderBy: { startDate: 'desc' },
+        },
+      },
     });
 
     if (!league) {
@@ -214,7 +226,10 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     if (activeMemberIds.length > 0) {
       const stalePending = league.memberships.filter(
-        (m: any) => m.status === 'pending' && m.memberType === 'roster' && activeMemberIds.includes(m.memberId)
+        (m: any) =>
+          m.status === 'pending' &&
+          m.memberType === 'roster' &&
+          activeMemberIds.includes(m.memberId)
       );
       if (stalePending.length > 0) {
         await prisma.leagueMembership.deleteMany({
@@ -257,187 +272,209 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/leagues - Create new league
-router.post('/', optionalAuthMiddleware, requireNonDependent, requirePlan('league'), async (req: Request, res: Response) => {
-  try {
-    const {
-      name,
-      description,
-      sportType,
-      skillLevel,
-      minPlayerRating,
-      seasonName,
-      startDate,
-      endDate,
-      pointsConfig,
-      imageUrl,
-      organizerId,
-      leagueType,
-      visibility,
-      membershipFee,
-      suggestedRosterSize,
-      registrationCloseDate,
-      preferredGameDays,
-      preferredTimeWindowStart,
-      preferredTimeWindowEnd,
-      seasonGameCount,
-      rosterIds,
-      trackStandings,
-      leagueFormat,
-      playoffTeamCount,
-      eliminationFormat,
-      gameFrequency,
-      scheduleFrequency,
-      seasonLength,
-      genderRestriction,
-      invitedRosterIds,
-    } = req.body;
-
-    // Validate required fields
-    if (!name || !sportType || !skillLevel || !organizerId) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: name, sportType, skillLevel, organizerId',
-        received: { name: !!name, sportType: !!sportType, skillLevel: !!skillLevel, organizerId: !!organizerId },
-      });
-    }
-
-    // All leagues are now roster-based (no more pickup/team distinction)
-    const finalLeagueType = 'team';
-    const finalVisibility = visibility === 'public' || visibility === 'private' ? visibility : 'public';
-
-    // Validate name uniqueness within sport and season
-    if (startDate && endDate) {
-      const existingLeague = await prisma.league.findFirst({
-        where: {
-          name,
-          sportType,
-          OR: [
-            {
-              AND: [
-                { startDate: { lte: new Date(endDate) } },
-                { endDate: { gte: new Date(startDate) } }
-              ]
-            }
-          ]
-        }
-      });
-
-      if (existingLeague) {
-        return res.status(409).json({ 
-          error: 'A league with this name already exists for this sport and season timeframe' 
-        });
-      }
-    }
-
-    // Validate HH:MM format for time windows
-    const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
-    if (preferredTimeWindowStart && !hhmmRegex.test(preferredTimeWindowStart)) {
-      return res.status(400).json({ error: 'preferredTimeWindowStart must be in HH:MM 24-hour format' });
-    }
-    if (preferredTimeWindowEnd && !hhmmRegex.test(preferredTimeWindowEnd)) {
-      return res.status(400).json({ error: 'preferredTimeWindowEnd must be in HH:MM 24-hour format' });
-    }
-    if (preferredTimeWindowStart && preferredTimeWindowEnd && preferredTimeWindowStart >= preferredTimeWindowEnd) {
-      return res.status(400).json({ error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd' });
-    }
-
-    // Validate suggestedRosterSize
-    if (suggestedRosterSize !== undefined && suggestedRosterSize !== null && (typeof suggestedRosterSize !== 'number' || suggestedRosterSize < 1)) {
-      return res.status(400).json({ error: 'suggestedRosterSize must be a positive integer' });
-    }
-
-    // Validate registrationCloseDate is in the future
-    if (registrationCloseDate) {
-      const closeDate = new Date(registrationCloseDate);
-      if (closeDate <= new Date()) {
-        return res.status(400).json({ error: 'registrationCloseDate must be in the future' });
-      }
-    }
-
-    // Validate preferredGameDays values (0-6)
-    if (preferredGameDays && Array.isArray(preferredGameDays)) {
-      if (preferredGameDays.some((d: number) => d < 0 || d > 6)) {
-        return res.status(400).json({ error: 'preferredGameDays values must be between 0 (Sunday) and 6 (Saturday)' });
-      }
-    }
-
-    // Create league
-    const league = await prisma.league.create({
-      data: {
+router.post(
+  '/',
+  optionalAuthMiddleware,
+  requireNonDependent,
+  requirePlan('league'),
+  async (req: Request, res: Response) => {
+    try {
+      const {
         name,
         description,
         sportType,
         skillLevel,
-        ...(minPlayerRating != null && { minPlayerRating }),
+        minPlayerRating,
         seasonName,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
-        pointsConfig: pointsConfig || { win: 3, draw: 1, loss: 0 },
+        startDate,
+        endDate,
+        pointsConfig,
         imageUrl,
         organizerId,
-        leagueType: finalLeagueType,
-        visibility: finalVisibility,
-        ...(membershipFee !== undefined && { membershipFee }),
-        ...(suggestedRosterSize !== undefined && { suggestedRosterSize }),
-        ...(registrationCloseDate && { registrationCloseDate: new Date(registrationCloseDate) }),
-        ...(preferredGameDays && { preferredGameDays }),
-        ...(preferredTimeWindowStart && { preferredTimeWindowStart }),
-        ...(preferredTimeWindowEnd && { preferredTimeWindowEnd }),
-        ...(seasonGameCount !== undefined && seasonGameCount !== null && { seasonGameCount }),
-        ...(trackStandings !== undefined && { trackStandings }),
-        ...(leagueFormat && { leagueFormat }),
-        ...(playoffTeamCount !== undefined && playoffTeamCount !== null && { playoffTeamCount }),
-        ...(eliminationFormat && { eliminationFormat }),
-        ...(gameFrequency && { gameFrequency }),
-        ...(scheduleFrequency && { scheduleFrequency }),
-        ...(seasonLength !== undefined && seasonLength !== null && { seasonLength }),
-        ...(genderRestriction && { genderRestriction }),
-        autoGenerateMatchups: false,
-      },
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            profileImage: true
-          }
+        leagueType,
+        visibility,
+        membershipFee,
+        suggestedRosterSize,
+        registrationCloseDate,
+        preferredGameDays,
+        preferredTimeWindowStart,
+        preferredTimeWindowEnd,
+        seasonGameCount,
+        rosterIds,
+        trackStandings,
+        leagueFormat,
+        playoffTeamCount,
+        eliminationFormat,
+        gameFrequency,
+        scheduleFrequency,
+        seasonLength,
+        genderRestriction,
+        invitedRosterIds,
+      } = req.body;
+
+      // Validate required fields
+      if (!name || !sportType || !skillLevel || !organizerId) {
+        return res.status(400).json({
+          error:
+            'Missing required fields: name, sportType, skillLevel, organizerId',
+          received: {
+            name: !!name,
+            sportType: !!sportType,
+            skillLevel: !!skillLevel,
+            organizerId: !!organizerId,
+          },
+        });
+      }
+
+      // All leagues are now roster-based (no more pickup/team distinction)
+      const finalLeagueType = 'team';
+      const finalVisibility =
+        visibility === 'public' || visibility === 'private'
+          ? visibility
+          : 'public';
+
+      // Validate name uniqueness within sport and season
+      if (startDate && endDate) {
+        const existingLeague = await prisma.league.findFirst({
+          where: {
+            name,
+            sportType,
+            OR: [
+              {
+                AND: [
+                  { startDate: { lte: new Date(endDate) } },
+                  { endDate: { gte: new Date(startDate) } },
+                ],
+              },
+            ],
+          },
+        });
+
+        if (existingLeague) {
+          return res.status(409).json({
+            error:
+              'A league with this name already exists for this sport and season timeframe',
+          });
         }
       }
-    });
 
-    // Create roster memberships if rosterIds provided
-    if (Array.isArray(rosterIds) && rosterIds.length > 0) {
-      await prisma.leagueMembership.createMany({
-        data: rosterIds.map((rid: string) => ({
-          leagueId: league.id,
-          memberId: rid,
-          teamId: rid,
-          memberType: 'roster',
-          status: 'active',
-          matchesPlayed: 0,
-          wins: 0,
-          losses: 0,
-          draws: 0,
-          points: 0,
-        })),
-        skipDuplicates: true,
+      // Validate HH:MM format for time windows
+      const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+      if (
+        preferredTimeWindowStart &&
+        !hhmmRegex.test(preferredTimeWindowStart)
+      ) {
+        return res.status(400).json({
+          error: 'preferredTimeWindowStart must be in HH:MM 24-hour format',
+        });
+      }
+      if (preferredTimeWindowEnd && !hhmmRegex.test(preferredTimeWindowEnd)) {
+        return res.status(400).json({
+          error: 'preferredTimeWindowEnd must be in HH:MM 24-hour format',
+        });
+      }
+      if (
+        preferredTimeWindowStart &&
+        preferredTimeWindowEnd &&
+        preferredTimeWindowStart >= preferredTimeWindowEnd
+      ) {
+        return res.status(400).json({
+          error:
+            'preferredTimeWindowStart must be before preferredTimeWindowEnd',
+        });
+      }
+
+      // Validate suggestedRosterSize
+      if (
+        suggestedRosterSize !== undefined &&
+        suggestedRosterSize !== null &&
+        (typeof suggestedRosterSize !== 'number' || suggestedRosterSize < 1)
+      ) {
+        return res
+          .status(400)
+          .json({ error: 'suggestedRosterSize must be a positive integer' });
+      }
+
+      // Validate registrationCloseDate is in the future
+      if (registrationCloseDate) {
+        const closeDate = new Date(registrationCloseDate);
+        if (closeDate <= new Date()) {
+          return res
+            .status(400)
+            .json({ error: 'registrationCloseDate must be in the future' });
+        }
+      }
+
+      // Validate preferredGameDays values (0-6)
+      if (preferredGameDays && Array.isArray(preferredGameDays)) {
+        if (preferredGameDays.some((d: number) => d < 0 || d > 6)) {
+          return res.status(400).json({
+            error:
+              'preferredGameDays values must be between 0 (Sunday) and 6 (Saturday)',
+          });
+        }
+      }
+
+      // Create league
+      const league = await prisma.league.create({
+        data: {
+          name,
+          description,
+          sportType,
+          skillLevel,
+          ...(minPlayerRating != null && { minPlayerRating }),
+          seasonName,
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
+          pointsConfig: pointsConfig || { win: 3, draw: 1, loss: 0 },
+          imageUrl,
+          organizerId,
+          leagueType: finalLeagueType,
+          visibility: finalVisibility,
+          ...(membershipFee !== undefined && { membershipFee }),
+          ...(suggestedRosterSize !== undefined && { suggestedRosterSize }),
+          ...(registrationCloseDate && {
+            registrationCloseDate: new Date(registrationCloseDate),
+          }),
+          ...(preferredGameDays && { preferredGameDays }),
+          ...(preferredTimeWindowStart && { preferredTimeWindowStart }),
+          ...(preferredTimeWindowEnd && { preferredTimeWindowEnd }),
+          ...(seasonGameCount !== undefined &&
+            seasonGameCount !== null && { seasonGameCount }),
+          ...(trackStandings !== undefined && { trackStandings }),
+          ...(leagueFormat && { leagueFormat }),
+          ...(playoffTeamCount !== undefined &&
+            playoffTeamCount !== null && { playoffTeamCount }),
+          ...(eliminationFormat && { eliminationFormat }),
+          ...(gameFrequency && { gameFrequency }),
+          ...(scheduleFrequency && { scheduleFrequency }),
+          ...(seasonLength !== undefined &&
+            seasonLength !== null && { seasonLength }),
+          ...(genderRestriction && { genderRestriction }),
+          autoGenerateMatchups: false,
+        },
+        include: {
+          organizer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              profileImage: true,
+            },
+          },
+        },
       });
-    }
 
-    // Create pending memberships for invited rosters
-    if (Array.isArray(invitedRosterIds) && invitedRosterIds.length > 0) {
-      // Filter out any that were already added as active
-      const activeIds = new Set(Array.isArray(rosterIds) ? rosterIds : []);
-      const toInvite = invitedRosterIds.filter((rid: string) => !activeIds.has(rid));
-      if (toInvite.length > 0) {
+      // Create roster memberships if rosterIds provided
+      if (Array.isArray(rosterIds) && rosterIds.length > 0) {
         await prisma.leagueMembership.createMany({
-          data: toInvite.map((rid: string) => ({
+          data: rosterIds.map((rid: string) => ({
             leagueId: league.id,
             memberId: rid,
             teamId: rid,
             memberType: 'roster',
-            status: 'pending',
+            status: 'active',
             matchesPlayed: 0,
             wins: 0,
             losses: 0,
@@ -447,22 +484,53 @@ router.post('/', optionalAuthMiddleware, requireNonDependent, requirePlan('leagu
           skipDuplicates: true,
         });
       }
-    }
 
-    // Messaging hook: create league channels
-    try {
-      const { MessagingService } = await import('../services/MessagingService');
-      await MessagingService.createLeagueChannels(league.id, organizerId, league.name || 'League');
-    } catch (msgErr) {
-      console.error('Failed to create league channels:', msgErr);
-    }
+      // Create pending memberships for invited rosters
+      if (Array.isArray(invitedRosterIds) && invitedRosterIds.length > 0) {
+        // Filter out any that were already added as active
+        const activeIds = new Set(Array.isArray(rosterIds) ? rosterIds : []);
+        const toInvite = invitedRosterIds.filter(
+          (rid: string) => !activeIds.has(rid)
+        );
+        if (toInvite.length > 0) {
+          await prisma.leagueMembership.createMany({
+            data: toInvite.map((rid: string) => ({
+              leagueId: league.id,
+              memberId: rid,
+              teamId: rid,
+              memberType: 'roster',
+              status: 'pending',
+              matchesPlayed: 0,
+              wins: 0,
+              losses: 0,
+              draws: 0,
+              points: 0,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
 
-    res.status(201).json(league);
-  } catch (error) {
-    console.error('Error creating league:', error);
-    res.status(500).json({ error: 'Failed to create league' });
+      // Messaging hook: create league channels
+      try {
+        const { MessagingService } =
+          await import('../services/MessagingService');
+        await MessagingService.createLeagueChannels(
+          league.id,
+          organizerId,
+          league.name || 'League'
+        );
+      } catch (msgErr) {
+        console.error('Failed to create league channels:', msgErr);
+      }
+
+      res.status(201).json(league);
+    } catch (error) {
+      console.error('Error creating league:', error);
+      res.status(500).json({ error: 'Failed to create league' });
+    }
   }
-});
+);
 
 // PUT /api/leagues/:id - Update league
 router.put('/:id', async (req: Request, res: Response) => {
@@ -501,7 +569,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     // Check if league exists and user is operator
     const existingLeague = await prisma.league.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingLeague) {
@@ -509,7 +577,9 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
 
     if (existingLeague.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can update this league' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can update this league' });
     }
 
     // leagueType is always 'team' now — no modification needed
@@ -517,20 +587,39 @@ router.put('/:id', async (req: Request, res: Response) => {
     // Validate schedule management fields
     const hhmmRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
     if (preferredTimeWindowStart && !hhmmRegex.test(preferredTimeWindowStart)) {
-      return res.status(400).json({ error: 'preferredTimeWindowStart must be in HH:MM 24-hour format' });
+      return res.status(400).json({
+        error: 'preferredTimeWindowStart must be in HH:MM 24-hour format',
+      });
     }
     if (preferredTimeWindowEnd && !hhmmRegex.test(preferredTimeWindowEnd)) {
-      return res.status(400).json({ error: 'preferredTimeWindowEnd must be in HH:MM 24-hour format' });
+      return res.status(400).json({
+        error: 'preferredTimeWindowEnd must be in HH:MM 24-hour format',
+      });
     }
-    if (preferredTimeWindowStart && preferredTimeWindowEnd && preferredTimeWindowStart >= preferredTimeWindowEnd) {
-      return res.status(400).json({ error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd' });
+    if (
+      preferredTimeWindowStart &&
+      preferredTimeWindowEnd &&
+      preferredTimeWindowStart >= preferredTimeWindowEnd
+    ) {
+      return res.status(400).json({
+        error: 'preferredTimeWindowStart must be before preferredTimeWindowEnd',
+      });
     }
-    if (suggestedRosterSize !== undefined && suggestedRosterSize !== null && (typeof suggestedRosterSize !== 'number' || suggestedRosterSize < 1)) {
-      return res.status(400).json({ error: 'suggestedRosterSize must be a positive integer' });
+    if (
+      suggestedRosterSize !== undefined &&
+      suggestedRosterSize !== null &&
+      (typeof suggestedRosterSize !== 'number' || suggestedRosterSize < 1)
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'suggestedRosterSize must be a positive integer' });
     }
     if (preferredGameDays && Array.isArray(preferredGameDays)) {
       if (preferredGameDays.some((d: number) => d < 0 || d > 6)) {
-        return res.status(400).json({ error: 'preferredGameDays values must be between 0 (Sunday) and 6 (Saturday)' });
+        return res.status(400).json({
+          error:
+            'preferredGameDays values must be between 0 (Sunday) and 6 (Saturday)',
+        });
       }
     }
 
@@ -541,7 +630,9 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(skillLevel && { skillLevel }),
-        ...(minPlayerRating !== undefined && { minPlayerRating: minPlayerRating }),
+        ...(minPlayerRating !== undefined && {
+          minPlayerRating: minPlayerRating,
+        }),
         ...(seasonName !== undefined && { seasonName }),
         ...(startDate && { startDate: new Date(startDate) }),
         ...(endDate && { endDate: new Date(endDate) }),
@@ -550,9 +641,15 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(isActive !== undefined && { isActive }),
         ...(visibility !== undefined && { visibility }),
         ...(suggestedRosterSize !== undefined && { suggestedRosterSize }),
-        ...(registrationCloseDate !== undefined && { registrationCloseDate: registrationCloseDate ? new Date(registrationCloseDate) : null }),
+        ...(registrationCloseDate !== undefined && {
+          registrationCloseDate: registrationCloseDate
+            ? new Date(registrationCloseDate)
+            : null,
+        }),
         ...(preferredGameDays !== undefined && { preferredGameDays }),
-        ...(preferredTimeWindowStart !== undefined && { preferredTimeWindowStart }),
+        ...(preferredTimeWindowStart !== undefined && {
+          preferredTimeWindowStart,
+        }),
         ...(preferredTimeWindowEnd !== undefined && { preferredTimeWindowEnd }),
         ...(seasonGameCount !== undefined && { seasonGameCount }),
         ...(trackStandings !== undefined && { trackStandings }),
@@ -570,10 +667,10 @@ router.put('/:id', async (req: Request, res: Response) => {
             firstName: true,
             lastName: true,
             email: true,
-            profileImage: true
-          }
-        }
-      }
+            profileImage: true,
+          },
+        },
+      },
     });
 
     // Sync roster memberships if rosterIds provided
@@ -583,12 +680,18 @@ router.put('/:id', async (req: Request, res: Response) => {
         where: { leagueId: id, memberType: 'roster', status: 'active' },
         select: { id: true, memberId: true },
       });
-      const currentActiveRosterIds = currentActiveMemberships.map((m: any) => m.memberId);
+      const currentActiveRosterIds = currentActiveMemberships.map(
+        (m: any) => m.memberId
+      );
 
       // Rosters to add as active (not already active in league)
-      const toAddActive = rosterIds.filter((rid: string) => !currentActiveRosterIds.includes(rid));
+      const toAddActive = rosterIds.filter(
+        (rid: string) => !currentActiveRosterIds.includes(rid)
+      );
       // Active rosters to remove (in league but not in submitted list)
-      const toRemoveActive = currentActiveMemberships.filter((m: any) => !rosterIds.includes(m.memberId));
+      const toRemoveActive = currentActiveMemberships.filter(
+        (m: any) => !rosterIds.includes(m.memberId)
+      );
 
       if (toAddActive.length > 0) {
         // Check if any of these rosters already have a pending membership — promote them
@@ -601,7 +704,9 @@ router.put('/:id', async (req: Request, res: Response) => {
           },
           select: { id: true, memberId: true },
         });
-        const pendingRosterIds = new Set(existingPending.map((m: any) => m.memberId));
+        const pendingRosterIds = new Set(
+          existingPending.map((m: any) => m.memberId)
+        );
 
         // Promote pending → active
         if (existingPending.length > 0) {
@@ -612,7 +717,9 @@ router.put('/:id', async (req: Request, res: Response) => {
         }
 
         // Create new memberships only for rosters that don't already have any membership
-        const trulyNew = toAddActive.filter((rid: string) => !pendingRosterIds.has(rid));
+        const trulyNew = toAddActive.filter(
+          (rid: string) => !pendingRosterIds.has(rid)
+        );
         if (trulyNew.length > 0) {
           await prisma.leagueMembership.createMany({
             data: trulyNew.map((rid: string) => ({
@@ -645,12 +752,18 @@ router.put('/:id', async (req: Request, res: Response) => {
         where: { leagueId: id, memberType: 'roster', status: 'pending' },
         select: { id: true, memberId: true },
       });
-      const currentPendingRosterIds = currentPendingMemberships.map((m: any) => m.memberId);
+      const currentPendingRosterIds = currentPendingMemberships.map(
+        (m: any) => m.memberId
+      );
 
       // Rosters to invite (not already pending)
-      const toInvite = invitedRosterIds.filter((rid: string) => !currentPendingRosterIds.includes(rid));
+      const toInvite = invitedRosterIds.filter(
+        (rid: string) => !currentPendingRosterIds.includes(rid)
+      );
       // Pending rosters to remove (no longer in invited list)
-      const toRemovePending = currentPendingMemberships.filter((m: any) => !invitedRosterIds.includes(m.memberId));
+      const toRemovePending = currentPendingMemberships.filter(
+        (m: any) => !invitedRosterIds.includes(m.memberId)
+      );
 
       if (toInvite.length > 0) {
         await prisma.leagueMembership.createMany({
@@ -685,374 +798,468 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/leagues/:id - Delete league with full cascade
-router.delete('/:id', requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
+router.delete(
+  '/:id',
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { userId } = req.body;
 
-    const existingLeague = await prisma.league.findUnique({ where: { id } });
+      const existingLeague = await prisma.league.findUnique({ where: { id } });
 
-    if (!existingLeague) {
-      return res.status(404).json({ error: 'League not found' });
+      if (!existingLeague) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      if (existingLeague.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league operator can delete this league' });
+      }
+
+      if (existingLeague.lockedFromDeletion) {
+        return res.status(403).json({
+          error:
+            'This league cannot be deleted because matches have been played',
+        });
+      }
+
+      const result = await leagueDeletionService.executeLeagueDeletion(id);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error deleting league:', error);
+      res.status(500).json({ error: 'Deletion failed: ' + error.message });
     }
-
-    if (existingLeague.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can delete this league' });
-    }
-
-    if (existingLeague.lockedFromDeletion) {
-      return res.status(403).json({ error: 'This league cannot be deleted because matches have been played' });
-    }
-
-    const result = await leagueDeletionService.executeLeagueDeletion(id);
-    res.json(result);
-  } catch (error: any) {
-    console.error('Error deleting league:', error);
-    res.status(500).json({ error: 'Deletion failed: ' + error.message });
   }
-});
+);
 
 // ─── Commissioner Team Management ───
 
 // POST /api/leagues/:id/teams - Commissioner creates a team for their league
-router.post('/:id/teams', optionalAuthMiddleware, requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { id: leagueId } = req.params;
-    const userId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // Verify league exists and user is the commissioner
-    const league = await prisma.league.findUnique({
-      where: { id: leagueId },
-      select: { id: true, organizerId: true, sportType: true, suggestedRosterSize: true, name: true },
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can create teams' });
-    }
-
-    const {
-      name,
-      sportType,
-      maxMembers,
-      skillLevel,
-      genderRestriction,
-      coachEmail,
-      coachUserId,
-    } = req.body;
-
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Team name is required' });
-    }
-
-    // Create the team
-    const team = await prisma.team.create({
-      data: {
-        name: name.trim(),
-        description: '',
-        sportType: sportType || league.sportType || '',
-        sportTypes: sportType ? [sportType] : (league.sportType ? [league.sportType] : []),
-        skillLevel: skillLevel || '',
-        maxMembers: maxMembers || league.suggestedRosterSize || 15,
-        isPrivate: true,
-        genderRestriction: genderRestriction || null,
-      },
-    });
-
-    // Create LeagueMembership linking team to league
-    await prisma.leagueMembership.create({
-      data: {
-        leagueId,
-        memberId: team.id,
-        teamId: team.id,
-        memberType: 'roster',
-        status: 'active',
-        matchesPlayed: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        points: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-        goalDifference: 0,
-      },
-    });
-
-    // Create team chat
+router.post(
+  '/:id/teams',
+  optionalAuthMiddleware,
+  requireNonDependent,
+  async (req: Request, res: Response) => {
     try {
-      const { MessagingService } = await import('../services/MessagingService');
-      await MessagingService.createTeamChat(team.id, userId, team.name);
-    } catch (msgErr) {
-      console.error('Failed to create team chat:', msgErr);
-    }
+      const { id: leagueId } = req.params;
+      const userId =
+        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
-    // Assign coach if provided
-    let coachAssignment: { assigned: boolean; method: string; userId?: string } = { assigned: false, method: 'none' };
-
-    const targetCoachId = coachUserId || null;
-    const targetCoachEmail = coachEmail?.trim() || null;
-
-    if (targetCoachId) {
-      // Direct user ID assignment
-      const coachUser = await prisma.user.findUnique({ where: { id: targetCoachId }, select: { id: true } });
-      if (coachUser) {
-        await prisma.teamMember.create({
-          data: {
-            teamId: team.id,
-            userId: targetCoachId,
-            role: 'coach',
-            status: 'active',
-            joinedAt: new Date(),
-          },
-        });
-        coachAssignment = { assigned: true, method: 'direct', userId: targetCoachId };
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
       }
-    } else if (targetCoachEmail) {
-      // Look up by email
-      const coachUser = await prisma.user.findUnique({
-        where: { email: targetCoachEmail.toLowerCase() },
-        select: { id: true, firstName: true, lastName: true },
+
+      // Verify league exists and user is the commissioner
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: {
+          id: true,
+          organizerId: true,
+          sportType: true,
+          suggestedRosterSize: true,
+          name: true,
+        },
       });
 
-      if (coachUser) {
-        await prisma.teamMember.create({
-          data: {
-            teamId: team.id,
-            userId: coachUser.id,
-            role: 'coach',
-            status: 'active',
-            joinedAt: new Date(),
-          },
-        });
-        coachAssignment = { assigned: true, method: 'email_found', userId: coachUser.id };
-      } else {
-        // User not found — they'll need to sign up first
-        coachAssignment = { assigned: false, method: 'user_not_found' };
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
       }
-    }
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league commissioner can create teams' });
+      }
 
-    // Fetch complete team
-    const completeTeam = await prisma.team.findUnique({
-      where: { id: team.id },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: { id: true, email: true, firstName: true, lastName: true, profileImage: true },
+      const {
+        name,
+        sportType,
+        maxMembers,
+        skillLevel,
+        genderRestriction,
+        coachEmail,
+        coachUserId,
+      } = req.body;
+
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'Team name is required' });
+      }
+
+      // Create the team
+      const team = await prisma.team.create({
+        data: {
+          name: name.trim(),
+          description: '',
+          sportType: sportType || league.sportType || '',
+          sportTypes: sportType
+            ? [sportType]
+            : league.sportType
+              ? [league.sportType]
+              : [],
+          skillLevel: skillLevel || '',
+          maxMembers: maxMembers || league.suggestedRosterSize || 15,
+          isPrivate: true,
+          genderRestriction: genderRestriction || null,
+        },
+      });
+
+      // Create LeagueMembership linking team to league
+      await prisma.leagueMembership.create({
+        data: {
+          leagueId,
+          memberId: team.id,
+          teamId: team.id,
+          memberType: 'roster',
+          status: 'active',
+          matchesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          points: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          goalDifference: 0,
+        },
+      });
+
+      // Create team chat
+      try {
+        const { MessagingService } =
+          await import('../services/MessagingService');
+        await MessagingService.createTeamChat(team.id, userId, team.name);
+      } catch (msgErr) {
+        console.error('Failed to create team chat:', msgErr);
+      }
+
+      // Assign coach if provided
+      let coachAssignment: {
+        assigned: boolean;
+        method: string;
+        userId?: string;
+      } = { assigned: false, method: 'none' };
+
+      const targetCoachId = coachUserId || null;
+      const targetCoachEmail = coachEmail?.trim() || null;
+
+      if (targetCoachId) {
+        // Direct user ID assignment
+        const coachUser = await prisma.user.findUnique({
+          where: { id: targetCoachId },
+          select: { id: true },
+        });
+        if (coachUser) {
+          await prisma.teamMember.create({
+            data: {
+              teamId: team.id,
+              userId: targetCoachId,
+              role: 'coach',
+              status: 'active',
+              joinedAt: new Date(),
+            },
+          });
+          coachAssignment = {
+            assigned: true,
+            method: 'direct',
+            userId: targetCoachId,
+          };
+        }
+      } else if (targetCoachEmail) {
+        // Look up by email
+        const coachUser = await prisma.user.findUnique({
+          where: { email: targetCoachEmail.toLowerCase() },
+          select: { id: true, firstName: true, lastName: true },
+        });
+
+        if (coachUser) {
+          await prisma.teamMember.create({
+            data: {
+              teamId: team.id,
+              userId: coachUser.id,
+              role: 'coach',
+              status: 'active',
+              joinedAt: new Date(),
+            },
+          });
+          coachAssignment = {
+            assigned: true,
+            method: 'email_found',
+            userId: coachUser.id,
+          };
+        } else {
+          // User not found — they'll need to sign up first
+          coachAssignment = { assigned: false, method: 'user_not_found' };
+        }
+      }
+
+      // Fetch complete team
+      const completeTeam = await prisma.team.findUnique({
+        where: { id: team.id },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    res.status(201).json({
-      team: completeTeam,
-      coachAssignment,
-      leagueMembership: { leagueId, teamId: team.id, status: 'active' },
-    });
-  } catch (error: any) {
-    console.error('Commissioner create team error:', error);
-    res.status(500).json({ error: 'Failed to create team', details: error?.message });
+      res.status(201).json({
+        team: completeTeam,
+        coachAssignment,
+        leagueMembership: { leagueId, teamId: team.id, status: 'active' },
+      });
+    } catch (error: any) {
+      console.error('Commissioner create team error:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to create team', details: error?.message });
+    }
   }
-});
+);
 
 // POST /api/leagues/:id/teams/:teamId/assign-coach
-router.post('/:id/teams/:teamId/assign-coach', optionalAuthMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { id: leagueId, teamId } = req.params;
-    const userId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
+router.post(
+  '/:id/teams/:teamId/assign-coach',
+  optionalAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id: leagueId, teamId } = req.params;
+      const userId =
+        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
 
-    // Verify league + commissioner
-    const league = await prisma.league.findUnique({
-      where: { id: leagueId },
-      select: { id: true, organizerId: true, name: true },
-    });
-    if (!league) return res.status(404).json({ error: 'League not found' });
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can assign coaches' });
-    }
-
-    // Verify team is in this league
-    const membership = await prisma.leagueMembership.findFirst({
-      where: { leagueId, teamId, memberType: 'roster' },
-    });
-    if (!membership) {
-      return res.status(404).json({ error: 'Team is not in this league' });
-    }
-
-    const team = await prisma.team.findUnique({ where: { id: teamId }, select: { id: true, name: true } });
-    if (!team) return res.status(404).json({ error: 'Team not found' });
-
-    const { coachUserId: targetUserId, email } = req.body;
-
-    if (!targetUserId && !email) {
-      return res.status(400).json({ error: 'Provide either coachUserId or email' });
-    }
-
-    let coachId: string | null = targetUserId || null;
-
-    // Look up by email if no userId
-    if (!coachId && email) {
-      const foundUser = await prisma.user.findUnique({
-        where: { email: email.trim().toLowerCase() },
-        select: { id: true },
+      // Verify league + commissioner
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { id: true, organizerId: true, name: true },
       });
-      if (foundUser) {
-        coachId = foundUser.id;
+      if (!league) return res.status(404).json({ error: 'League not found' });
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league commissioner can assign coaches' });
+      }
+
+      // Verify team is in this league
+      const membership = await prisma.leagueMembership.findFirst({
+        where: { leagueId, teamId, memberType: 'roster' },
+      });
+      if (!membership) {
+        return res.status(404).json({ error: 'Team is not in this league' });
+      }
+
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        select: { id: true, name: true },
+      });
+      if (!team) return res.status(404).json({ error: 'Team not found' });
+
+      const { coachUserId: targetUserId, email } = req.body;
+
+      if (!targetUserId && !email) {
+        return res
+          .status(400)
+          .json({ error: 'Provide either coachUserId or email' });
+      }
+
+      let coachId: string | null = targetUserId || null;
+
+      // Look up by email if no userId
+      if (!coachId && email) {
+        const foundUser = await prisma.user.findUnique({
+          where: { email: email.trim().toLowerCase() },
+          select: { id: true },
+        });
+        if (foundUser) {
+          coachId = foundUser.id;
+        } else {
+          return res.status(404).json({
+            error:
+              'No user found with that email. They need to create a Muster account first.',
+          });
+        }
+      }
+
+      if (!coachId) {
+        return res.status(400).json({ error: 'Could not resolve coach user' });
+      }
+
+      // Check if they're already on the team
+      const existing = await prisma.teamMember.findFirst({
+        where: { teamId, userId: coachId },
+      });
+
+      if (existing) {
+        // Update their role to coach
+        await prisma.teamMember.update({
+          where: { id: existing.id },
+          data: { role: 'coach', status: 'active' },
+        });
       } else {
-        return res.status(404).json({
-          error: 'No user found with that email. They need to create a Muster account first.',
+        await prisma.teamMember.create({
+          data: {
+            teamId,
+            userId: coachId,
+            role: 'coach',
+            status: 'active',
+            joinedAt: new Date(),
+          },
         });
       }
-    }
 
-    if (!coachId) {
-      return res.status(400).json({ error: 'Could not resolve coach user' });
-    }
-
-    // Check if they're already on the team
-    const existing = await prisma.teamMember.findFirst({
-      where: { teamId, userId: coachId },
-    });
-
-    if (existing) {
-      // Update their role to coach
-      await prisma.teamMember.update({
-        where: { id: existing.id },
-        data: { role: 'coach', status: 'active' },
-      });
-    } else {
-      await prisma.teamMember.create({
-        data: {
-          teamId,
-          userId: coachId,
-          role: 'coach',
-          status: 'active',
-          joinedAt: new Date(),
-        },
-      });
-    }
-
-    // Fetch updated team
-    const updatedTeam = await prisma.team.findUnique({
-      where: { id: teamId },
-      include: {
-        members: {
-          where: { status: 'active' },
-          include: {
-            user: {
-              select: { id: true, email: true, firstName: true, lastName: true, profileImage: true },
+      // Fetch updated team
+      const updatedTeam = await prisma.team.findUnique({
+        where: { id: teamId },
+        include: {
+          members: {
+            where: { status: 'active' },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    res.json({ success: true, team: updatedTeam });
-  } catch (error: any) {
-    console.error('Assign coach error:', error);
-    res.status(500).json({ error: 'Failed to assign coach', details: error?.message });
+      res.json({ success: true, team: updatedTeam });
+    } catch (error: any) {
+      console.error('Assign coach error:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to assign coach', details: error?.message });
+    }
   }
-});
+);
 
 // POST /api/leagues/:id/teams/bulk - Commissioner bulk-creates teams
-router.post('/:id/teams/bulk', optionalAuthMiddleware, requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { id: leagueId } = req.params;
-    const userId = req.user?.userId || req.headers['x-user-id'] as string | undefined;
+router.post(
+  '/:id/teams/bulk',
+  optionalAuthMiddleware,
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const { id: leagueId } = req.params;
+      const userId =
+        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const league = await prisma.league.findUnique({
-      where: { id: leagueId },
-      select: { id: true, organizerId: true, sportType: true, suggestedRosterSize: true, name: true },
-    });
-    if (!league) return res.status(404).json({ error: 'League not found' });
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can create teams' });
-    }
-
-    const { teams } = req.body;
-    if (!Array.isArray(teams) || teams.length === 0) {
-      return res.status(400).json({ error: 'Provide an array of teams' });
-    }
-    if (teams.length > 20) {
-      return res.status(400).json({ error: 'Maximum 20 teams per bulk create' });
-    }
-
-    const results: any[] = [];
-
-    for (const teamInput of teams) {
-      if (!teamInput.name?.trim()) {
-        results.push({ name: teamInput.name, error: 'Name is required' });
-        continue;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
       }
 
-      try {
-        const team = await prisma.team.create({
-          data: {
-            name: teamInput.name.trim(),
-            description: '',
-            sportType: league.sportType || '',
-            sportTypes: league.sportType ? [league.sportType] : [],
-            skillLevel: '',
-            maxMembers: teamInput.maxMembers || league.suggestedRosterSize || 15,
-            isPrivate: true,
-          },
-        });
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: {
+          id: true,
+          organizerId: true,
+          sportType: true,
+          suggestedRosterSize: true,
+          name: true,
+        },
+      });
+      if (!league) return res.status(404).json({ error: 'League not found' });
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league commissioner can create teams' });
+      }
 
-        await prisma.leagueMembership.create({
-          data: {
-            leagueId,
-            memberId: team.id,
-            teamId: team.id,
-            memberType: 'roster',
-            status: 'active',
-            matchesPlayed: 0,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            points: 0,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            goalDifference: 0,
-          },
-        });
+      const { teams } = req.body;
+      if (!Array.isArray(teams) || teams.length === 0) {
+        return res.status(400).json({ error: 'Provide an array of teams' });
+      }
+      if (teams.length > 20) {
+        return res
+          .status(400)
+          .json({ error: 'Maximum 20 teams per bulk create' });
+      }
 
-        // Create team chat
+      const results: any[] = [];
+
+      for (const teamInput of teams) {
+        if (!teamInput.name?.trim()) {
+          results.push({ name: teamInput.name, error: 'Name is required' });
+          continue;
+        }
+
         try {
-          const { MessagingService } = await import('../services/MessagingService');
-          await MessagingService.createTeamChat(team.id, userId, team.name);
-        } catch (e) { /* non-critical */ }
+          const team = await prisma.team.create({
+            data: {
+              name: teamInput.name.trim(),
+              description: '',
+              sportType: league.sportType || '',
+              sportTypes: league.sportType ? [league.sportType] : [],
+              skillLevel: '',
+              maxMembers:
+                teamInput.maxMembers || league.suggestedRosterSize || 15,
+              isPrivate: true,
+            },
+          });
 
-        results.push({ name: team.name, teamId: team.id, status: 'created' });
-      } catch (e: any) {
-        results.push({ name: teamInput.name, error: e?.message || 'Failed' });
+          await prisma.leagueMembership.create({
+            data: {
+              leagueId,
+              memberId: team.id,
+              teamId: team.id,
+              memberType: 'roster',
+              status: 'active',
+              matchesPlayed: 0,
+              wins: 0,
+              losses: 0,
+              draws: 0,
+              points: 0,
+              goalsFor: 0,
+              goalsAgainst: 0,
+              goalDifference: 0,
+            },
+          });
+
+          // Create team chat
+          try {
+            const { MessagingService } =
+              await import('../services/MessagingService');
+            await MessagingService.createTeamChat(team.id, userId, team.name);
+          } catch (e) {
+            /* non-critical */
+          }
+
+          results.push({ name: team.name, teamId: team.id, status: 'created' });
+        } catch (e: any) {
+          results.push({ name: teamInput.name, error: e?.message || 'Failed' });
+        }
       }
-    }
 
-    res.status(201).json({
-      created: results.filter(r => r.status === 'created').length,
-      failed: results.filter(r => r.error).length,
-      results,
-    });
-  } catch (error: any) {
-    console.error('Bulk create teams error:', error);
-    res.status(500).json({ error: 'Failed to create teams', details: error?.message });
+      res.status(201).json({
+        created: results.filter(r => r.status === 'created').length,
+        failed: results.filter(r => r.error).length,
+        results,
+      });
+    } catch (error: any) {
+      console.error('Bulk create teams error:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to create teams', details: error?.message });
+    }
   }
-});
+);
 
 export default router;
 
@@ -1065,7 +1272,7 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
     // Fetch league to get points config
     const league = await prisma.league.findUnique({
       where: { id },
-      select: { id: true, pointsConfig: true }
+      select: { id: true, pointsConfig: true },
     });
 
     if (!league) {
@@ -1085,33 +1292,39 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
-        }
-      }
+            imageUrl: true,
+          },
+        },
+      },
     });
 
     // Parse pointsConfig from league
-    const pointsConfig = (league.pointsConfig as { win: number; draw: number; loss: number }) || { win: 3, draw: 1, loss: 0 };
+    const pointsConfig = (league.pointsConfig as {
+      win: number;
+      draw: number;
+      loss: number;
+    }) || { win: 3, draw: 1, loss: 0 };
 
     // Calculate points using pointsConfig and sort with tiebreakers
     const ranked = memberships
       .map(m => {
         const calculatedPoints =
-          (m.wins * pointsConfig.win) +
-          (m.draws * pointsConfig.draw) +
-          (m.losses * pointsConfig.loss);
+          m.wins * pointsConfig.win +
+          m.draws * pointsConfig.draw +
+          m.losses * pointsConfig.loss;
 
         return {
           membership: m,
-          calculatedPoints
+          calculatedPoints,
         };
       })
       .sort((a, b) => {
         // Primary: points DESC
-        if (b.calculatedPoints !== a.calculatedPoints) return b.calculatedPoints - a.calculatedPoints;
+        if (b.calculatedPoints !== a.calculatedPoints)
+          return b.calculatedPoints - a.calculatedPoints;
         // First tiebreaker: goalDifference DESC
-        if (b.membership.goalDifference !== a.membership.goalDifference) return b.membership.goalDifference - a.membership.goalDifference;
+        if (b.membership.goalDifference !== a.membership.goalDifference)
+          return b.membership.goalDifference - a.membership.goalDifference;
         // Second tiebreaker: goalsFor DESC
         return b.membership.goalsFor - a.membership.goalsFor;
       });
@@ -1127,8 +1340,8 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
         points: entry.calculatedPoints,
         goalsFor: entry.membership.goalsFor,
         goalsAgainst: entry.membership.goalsAgainst,
-        goalDifference: entry.membership.goalDifference
-      }
+        goalDifference: entry.membership.goalDifference,
+      },
     }));
 
     return res.json(standings);
@@ -1142,7 +1355,12 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
 router.get('/:id/player-rankings', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { seasonId, sortBy = 'performanceScore', page = '1', limit = '50' } = req.query;
+    const {
+      seasonId,
+      sortBy = 'performanceScore',
+      page = '1',
+      limit = '50',
+    } = req.query;
 
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
@@ -1156,7 +1374,7 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
 
     const matches = await prisma.match.findMany({
       where: matchWhere,
-      select: { eventId: true }
+      select: { eventId: true },
     });
 
     const eventIds = matches
@@ -1166,14 +1384,14 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
     if (eventIds.length === 0) {
       return res.json({
         data: [],
-        pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 }
+        pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 },
       });
     }
 
     // Get game participations for these events
     const participations = await prisma.gameParticipation.findMany({
       where: {
-        eventId: { in: eventIds }
+        eventId: { in: eventIds },
       },
       include: {
         user: {
@@ -1182,15 +1400,15 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
             firstName: true,
             lastName: true,
             profileImage: true,
-            currentRating: true
-          }
-        }
-      }
+            currentRating: true,
+          },
+        },
+      },
     });
 
     // Aggregate by player
     const playerStats = new Map();
-    
+
     participations.forEach(p => {
       const playerId = p.userId;
       if (!playerStats.has(playerId)) {
@@ -1198,10 +1416,10 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
           player: p.user,
           matchesPlayed: 0,
           totalGameScore: 0,
-          totalVotes: 0
+          totalVotes: 0,
         });
       }
-      
+
       const stats = playerStats.get(playerId);
       stats.matchesPlayed++;
       stats.totalGameScore += p.gameScore;
@@ -1213,16 +1431,22 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
       player: stats.player,
       stats: {
         matchesPlayed: stats.matchesPlayed,
-        averageRating: stats.matchesPlayed > 0 ? stats.totalGameScore / stats.matchesPlayed : 0,
+        averageRating:
+          stats.matchesPlayed > 0
+            ? stats.totalGameScore / stats.matchesPlayed
+            : 0,
         totalVotes: stats.totalVotes,
-        performanceScore: stats.matchesPlayed > 0 
-          ? (stats.totalGameScore / stats.matchesPlayed) * 0.6 + (stats.totalVotes / stats.matchesPlayed) * 0.4
-          : 0
-      }
+        performanceScore:
+          stats.matchesPlayed > 0
+            ? (stats.totalGameScore / stats.matchesPlayed) * 0.6 +
+              (stats.totalVotes / stats.matchesPlayed) * 0.4
+            : 0,
+      },
     }));
 
     // Sort
-    const sortField = sortBy === 'averageRating' ? 'averageRating' : 'performanceScore';
+    const sortField =
+      sortBy === 'averageRating' ? 'averageRating' : 'performanceScore';
     rankings.sort((a, b) => b.stats[sortField] - a.stats[sortField]);
 
     // Paginate
@@ -1232,7 +1456,7 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
     // Add rank
     const rankedData = paginatedRankings.map((r, index) => ({
       rank: skip + index + 1,
-      ...r
+      ...r,
     }));
 
     res.json({
@@ -1241,8 +1465,8 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
         page: pageNum,
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
-      }
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     console.error('Error fetching player rankings:', error);
@@ -1258,7 +1482,7 @@ router.post('/:id/join', async (req: Request, res: Response) => {
 
     // Fetch the league
     const league = await prisma.league.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!league) {
@@ -1266,14 +1490,21 @@ router.post('/:id/join', async (req: Request, res: Response) => {
     }
 
     // Check registration close date
-    if (league.registrationCloseDate && new Date() > new Date(league.registrationCloseDate)) {
-      return res.status(400).json({ error: 'Registration has closed for this league' });
+    if (
+      league.registrationCloseDate &&
+      new Date() > new Date(league.registrationCloseDate)
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'Registration has closed for this league' });
     }
 
     const effectiveRosterId = rosterId || teamId;
 
     if (!effectiveRosterId) {
-      return res.status(400).json({ error: 'Missing required field: rosterId' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required field: rosterId' });
     }
 
     // suggestedRosterSize is informational only — no longer blocks joining
@@ -1284,12 +1515,14 @@ router.post('/:id/join', async (req: Request, res: Response) => {
         leagueId: id,
         memberType: 'roster',
         memberId: effectiveRosterId,
-        status: { in: ['active', 'pending'] }
-      }
+        status: { in: ['active', 'pending'] },
+      },
     });
 
     if (existingMembership) {
-      return res.status(409).json({ error: 'Roster is already a member of this league' });
+      return res
+        .status(409)
+        .json({ error: 'Roster is already a member of this league' });
     }
 
     // Create membership with pending status (needs approval)
@@ -1299,7 +1532,7 @@ router.post('/:id/join', async (req: Request, res: Response) => {
         teamId: effectiveRosterId,
         memberType: 'roster',
         memberId: effectiveRosterId,
-        status: 'pending'
+        status: 'pending',
       },
       include: {
         team: {
@@ -1307,17 +1540,17 @@ router.post('/:id/join', async (req: Request, res: Response) => {
             id: true,
             name: true,
             imageUrl: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         league: {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
-        }
-      }
+            sportType: true,
+          },
+        },
+      },
     });
 
     // Notify league owner about the new join request
@@ -1337,12 +1570,14 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
     const { userId } = req.query;
 
     if (!userId) {
-      return res.status(400).json({ error: 'Missing required query parameter: userId' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required query parameter: userId' });
     }
 
     // Fetch league and verify it exists
     const league = await prisma.league.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!league) {
@@ -1351,7 +1586,9 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
 
     // Verify the requesting user is the league owner
     if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league owner or admins can perform this action' });
+      return res.status(403).json({
+        error: 'Only the league owner or admins can perform this action',
+      });
     }
 
     // Return all pending roster memberships with team relation data
@@ -1359,7 +1596,7 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
       where: {
         leagueId: id,
         status: 'pending',
-        memberType: 'roster'
+        memberType: 'roster',
       },
       include: {
         team: {
@@ -1367,11 +1604,11 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
             id: true,
             name: true,
             imageUrl: true,
-            sportType: true
-          }
-        }
+            sportType: true,
+          },
+        },
       },
-      orderBy: { joinedAt: 'asc' }
+      orderBy: { joinedAt: 'asc' },
     });
 
     res.json(joinRequests);
@@ -1382,195 +1619,226 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
 });
 
 // PUT /api/leagues/:id/join-requests/:requestId - Approve or decline a join request
-router.put('/:id/join-requests/:requestId', async (req: Request, res: Response) => {
-  try {
-    const { id, requestId } = req.params;
-    const { action, userId } = req.body;
+router.put(
+  '/:id/join-requests/:requestId',
+  async (req: Request, res: Response) => {
+    try {
+      const { id, requestId } = req.params;
+      const { action, userId } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
-    }
-
-    if (!action || (action !== 'approve' && action !== 'decline')) {
-      return res.status(400).json({ error: "action must be 'approve' or 'decline'" });
-    }
-
-    // Fetch league
-    const league = await prisma.league.findUnique({
-      where: { id }
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    // Verify the requesting user is the league owner
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league owner or admins can perform this action' });
-    }
-
-    // Find the join request
-    const membership = await prisma.leagueMembership.findFirst({
-      where: {
-        id: requestId,
-        leagueId: id,
-        status: 'pending',
-        memberType: 'roster'
-      },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            sportType: true,
-            balance: true
-          }
-        }
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: userId' });
       }
-    });
 
-    if (!membership) {
-      return res.status(404).json({ error: 'Join request not found' });
-    }
+      if (!action || (action !== 'approve' && action !== 'decline')) {
+        return res
+          .status(400)
+          .json({ error: "action must be 'approve' or 'decline'" });
+      }
 
-    if (action === 'approve') {
-      // Check if league has a membership fee configured
-      if (league.membershipFee != null && league.membershipFee > 0) {
-        const rosterBalance = membership.team?.balance ?? 0;
+      // Fetch league
+      const league = await prisma.league.findUnique({
+        where: { id },
+      });
 
-        if (rosterBalance < league.membershipFee) {
-          return res.status(400).json({
-            error: 'Insufficient roster balance',
-            required: league.membershipFee,
-            available: rosterBalance
-          });
-        }
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
 
-        // Use a transaction to deduct fee and activate membership atomically
-        const result = await prisma.$transaction(async (tx) => {
-          // Deduct fee from roster balance
-          await tx.team.update({
-            where: { id: membership.team!.id },
-            data: {
-              balance: { decrement: league.membershipFee! }
-            }
-          });
-
-          // Update membership status to active
-          const updatedMembership = await tx.leagueMembership.update({
-            where: { id: requestId },
-            data: { status: 'active' },
-            include: {
-              team: {
-                select: {
-                  id: true,
-                  name: true,
-                  imageUrl: true,
-                  sportType: true
-                }
-              }
-            }
-          });
-
-          return updatedMembership;
+      // Verify the requesting user is the league owner
+      if (league.organizerId !== userId) {
+        return res.status(403).json({
+          error: 'Only the league owner or admins can perform this action',
         });
-
-        // Notify roster owner about approval
-        NotificationService.notifyJoinRequestDecision(id, membership.memberId, 'approve');
-
-        // Event-driven: check if league is now ready to schedule (Req 2.2)
-        checkLeagueReady(id).catch(() => {});
-
-        // Messaging hook: add team members to league General channel
-        try {
-          const { MessagingService } = await import('../services/MessagingService');
-          const convs = await MessagingService.getConversationsForLeague(id);
-          const general = convs.find((c) => c.name?.includes('General'));
-          if (general && membership.team) {
-            const members = await prisma.teamMember.findMany({
-              where: { teamId: membership.team.id, status: 'active' },
-              select: { userId: true },
-            });
-            for (const member of members) {
-              await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
-            }
-          }
-        } catch (msgErr) {
-          console.error('Failed to add team to league channel:', msgErr);
-        }
-
-        return res.json(result);
       }
 
-      // No fee — just activate
-      const updatedMembership = await prisma.leagueMembership.update({
-        where: { id: requestId },
-        data: { status: 'active' },
+      // Find the join request
+      const membership = await prisma.leagueMembership.findFirst({
+        where: {
+          id: requestId,
+          leagueId: id,
+          status: 'pending',
+          memberType: 'roster',
+        },
         include: {
           team: {
             select: {
               id: true,
               name: true,
               imageUrl: true,
-              sportType: true
-            }
-          }
-        }
+              sportType: true,
+              balance: true,
+            },
+          },
+        },
       });
 
-      // Notify roster owner about approval
-      NotificationService.notifyJoinRequestDecision(id, membership.memberId, 'approve');
-
-      // Event-driven: check if league is now ready to schedule (Req 2.2)
-      checkLeagueReady(id).catch(() => {});
-
-      // Messaging hook: add team members to league General channel
-      try {
-        const { MessagingService } = await import('../services/MessagingService');
-        const convs = await MessagingService.getConversationsForLeague(id);
-        const general = convs.find((c) => c.name?.includes('General'));
-        if (general && membership.team) {
-          const members = await prisma.teamMember.findMany({
-            where: { teamId: membership.team.id, status: 'active' },
-            select: { userId: true },
-          });
-          for (const member of members) {
-            await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
-          }
-        }
-      } catch (msgErr) {
-        console.error('Failed to add team to league channel:', msgErr);
+      if (!membership) {
+        return res.status(404).json({ error: 'Join request not found' });
       }
+
+      if (action === 'approve') {
+        // Check if league has a membership fee configured
+        if (league.membershipFee != null && league.membershipFee > 0) {
+          const rosterBalance = membership.team?.balance ?? 0;
+
+          if (rosterBalance < league.membershipFee) {
+            return res.status(400).json({
+              error: 'Insufficient roster balance',
+              required: league.membershipFee,
+              available: rosterBalance,
+            });
+          }
+
+          // Use a transaction to deduct fee and activate membership atomically
+          const result = await prisma.$transaction(async tx => {
+            // Deduct fee from roster balance
+            await tx.team.update({
+              where: { id: membership.team!.id },
+              data: {
+                balance: { decrement: league.membershipFee! },
+              },
+            });
+
+            // Update membership status to active
+            const updatedMembership = await tx.leagueMembership.update({
+              where: { id: requestId },
+              data: { status: 'active' },
+              include: {
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
+                    sportType: true,
+                  },
+                },
+              },
+            });
+
+            return updatedMembership;
+          });
+
+          // Notify roster owner about approval
+          NotificationService.notifyJoinRequestDecision(
+            id,
+            membership.memberId,
+            'approve'
+          );
+
+          // Event-driven: check if league is now ready to schedule (Req 2.2)
+          checkLeagueReady(id).catch(() => {});
+
+          // Messaging hook: add team members to league General channel
+          try {
+            const { MessagingService } =
+              await import('../services/MessagingService');
+            const convs = await MessagingService.getConversationsForLeague(id);
+            const general = convs.find(c => c.name?.includes('General'));
+            if (general && membership.team) {
+              const members = await prisma.teamMember.findMany({
+                where: { teamId: membership.team.id, status: 'active' },
+                select: { userId: true },
+              });
+              for (const member of members) {
+                await MessagingService.addParticipant(
+                  general.id,
+                  member.userId,
+                  'MEMBER'
+                );
+              }
+            }
+          } catch (msgErr) {
+            console.error('Failed to add team to league channel:', msgErr);
+          }
+
+          return res.json(result);
+        }
+
+        // No fee — just activate
+        const updatedMembership = await prisma.leagueMembership.update({
+          where: { id: requestId },
+          data: { status: 'active' },
+          include: {
+            team: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+                sportType: true,
+              },
+            },
+          },
+        });
+
+        // Notify roster owner about approval
+        NotificationService.notifyJoinRequestDecision(
+          id,
+          membership.memberId,
+          'approve'
+        );
+
+        // Event-driven: check if league is now ready to schedule (Req 2.2)
+        checkLeagueReady(id).catch(() => {});
+
+        // Messaging hook: add team members to league General channel
+        try {
+          const { MessagingService } =
+            await import('../services/MessagingService');
+          const convs = await MessagingService.getConversationsForLeague(id);
+          const general = convs.find(c => c.name?.includes('General'));
+          if (general && membership.team) {
+            const members = await prisma.teamMember.findMany({
+              where: { teamId: membership.team.id, status: 'active' },
+              select: { userId: true },
+            });
+            for (const member of members) {
+              await MessagingService.addParticipant(
+                general.id,
+                member.userId,
+                'MEMBER'
+              );
+            }
+          }
+        } catch (msgErr) {
+          console.error('Failed to add team to league channel:', msgErr);
+        }
+
+        return res.json(updatedMembership);
+      }
+
+      // action === 'decline'
+      const updatedMembership = await prisma.leagueMembership.update({
+        where: { id: requestId },
+        data: { status: 'withdrawn' },
+        include: {
+          team: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+              sportType: true,
+            },
+          },
+        },
+      });
+
+      // Notify roster owner about decline
+      NotificationService.notifyJoinRequestDecision(
+        id,
+        membership.memberId,
+        'decline'
+      );
 
       return res.json(updatedMembership);
+    } catch (error) {
+      console.error('Error processing join request:', error);
+      res.status(500).json({ error: 'Failed to process join request' });
     }
-
-    // action === 'decline'
-    const updatedMembership = await prisma.leagueMembership.update({
-      where: { id: requestId },
-      data: { status: 'withdrawn' },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            sportType: true
-          }
-        }
-      }
-    });
-
-    // Notify roster owner about decline
-    NotificationService.notifyJoinRequestDecision(id, membership.memberId, 'decline');
-
-    return res.json(updatedMembership);
-  } catch (error) {
-    console.error('Error processing join request:', error);
-    res.status(500).json({ error: 'Failed to process join request' });
   }
-});
+);
 
 // POST /api/leagues/:id/invite-roster - Invite a roster to a private Team League
 router.post('/:id/invite-roster', async (req: Request, res: Response) => {
@@ -1579,12 +1847,14 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
     const { rosterId, userId } = req.body;
 
     if (!rosterId || !userId) {
-      return res.status(400).json({ error: 'Missing required fields: rosterId, userId' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required fields: rosterId, userId' });
     }
 
     // Fetch league
     const league = await prisma.league.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!league) {
@@ -1593,12 +1863,14 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
 
     // Verify the requesting user is the league owner
     if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league owner or admins can perform this action' });
+      return res.status(403).json({
+        error: 'Only the league owner or admins can perform this action',
+      });
     }
 
     // Check roster exists
     const roster = await prisma.team.findUnique({
-      where: { id: rosterId }
+      where: { id: rosterId },
     });
 
     if (!roster) {
@@ -1611,12 +1883,14 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
         leagueId: id,
         memberType: 'roster',
         memberId: rosterId,
-        status: { in: ['active', 'pending'] }
-      }
+        status: { in: ['active', 'pending'] },
+      },
     });
 
     if (existingMembership) {
-      return res.status(409).json({ error: 'Roster is already a member of this league' });
+      return res
+        .status(409)
+        .json({ error: 'Roster is already a member of this league' });
     }
 
     // Create pending membership as invitation
@@ -1626,7 +1900,7 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
         teamId: rosterId,
         memberType: 'roster',
         memberId: rosterId,
-        status: 'pending'
+        status: 'pending',
       },
       include: {
         team: {
@@ -1634,10 +1908,10 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
             id: true,
             name: true,
             imageUrl: true,
-            sportType: true
-          }
-        }
-      }
+            sportType: true,
+          },
+        },
+      },
     });
 
     // Notify roster owner about the league invitation
@@ -1651,106 +1925,176 @@ router.post('/:id/invite-roster', async (req: Request, res: Response) => {
 });
 
 // PUT /api/leagues/:id/invitations/:invitationId - Accept or decline a roster invitation
-router.put('/:id/invitations/:invitationId', async (req: Request, res: Response) => {
-  try {
-    const { id, invitationId } = req.params;
-    const { accept, userId } = req.body;
+router.put(
+  '/:id/invitations/:invitationId',
+  async (req: Request, res: Response) => {
+    try {
+      const { id, invitationId } = req.params;
+      const { accept, userId } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
-    }
-
-    if (typeof accept !== 'boolean') {
-      return res.status(400).json({ error: 'accept must be a boolean' });
-    }
-
-    // Fetch league
-    const league = await prisma.league.findUnique({
-      where: { id }
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    // Find the pending invitation
-    const membership = await prisma.leagueMembership.findFirst({
-      where: {
-        id: invitationId,
-        leagueId: id,
-        status: 'pending',
-        memberType: 'roster'
-      },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            sportType: true,
-            balance: true,
-            members: {
-              where: { role: { in: ['captain', 'co_captain', 'coach', 'assistant_coach'] }, status: 'active' },
-              select: { userId: true }
-            }
-          }
-        }
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: userId' });
       }
-    });
 
-    if (!membership) {
-      return res.status(404).json({ error: 'Invitation not found' });
-    }
+      if (typeof accept !== 'boolean') {
+        return res.status(400).json({ error: 'accept must be a boolean' });
+      }
 
-    // Verify the user is the roster owner (captain)
-    const isCaptain = membership.team?.members?.some(m => m.userId === userId);
-    if (!isCaptain) {
-      return res.status(403).json({ error: 'Only the roster owner can respond to invitations' });
-    }
+      // Fetch league
+      const league = await prisma.league.findUnique({
+        where: { id },
+      });
 
-    if (accept) {
-      // Check if league has a membership fee configured
-      if (league.membershipFee != null && league.membershipFee > 0) {
-        const rosterBalance = membership.team?.balance ?? 0;
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
 
-        if (rosterBalance < league.membershipFee) {
-          return res.status(400).json({
-            error: 'Insufficient roster balance',
-            required: league.membershipFee,
-            available: rosterBalance
+      // Find the pending invitation
+      const membership = await prisma.leagueMembership.findFirst({
+        where: {
+          id: invitationId,
+          leagueId: id,
+          status: 'pending',
+          memberType: 'roster',
+        },
+        include: {
+          team: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+              sportType: true,
+              balance: true,
+              members: {
+                where: {
+                  role: {
+                    in: ['captain', 'co_captain', 'coach', 'assistant_coach'],
+                  },
+                  status: 'active',
+                },
+                select: { userId: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!membership) {
+        return res.status(404).json({ error: 'Invitation not found' });
+      }
+
+      // Verify the user is the roster owner (captain)
+      const isCaptain = membership.team?.members?.some(
+        m => m.userId === userId
+      );
+      if (!isCaptain) {
+        return res
+          .status(403)
+          .json({ error: 'Only the roster owner can respond to invitations' });
+      }
+
+      if (accept) {
+        // Check if league has a membership fee configured
+        if (league.membershipFee != null && league.membershipFee > 0) {
+          const rosterBalance = membership.team?.balance ?? 0;
+
+          if (rosterBalance < league.membershipFee) {
+            return res.status(400).json({
+              error: 'Insufficient roster balance',
+              required: league.membershipFee,
+              available: rosterBalance,
+            });
+          }
+
+          // Use a transaction to deduct fee and activate membership atomically
+          const result = await prisma.$transaction(async tx => {
+            // Deduct fee from roster balance
+            await tx.team.update({
+              where: { id: membership.team!.id },
+              data: {
+                balance: { decrement: league.membershipFee! },
+              },
+            });
+
+            // Update membership status to active
+            const updatedMembership = await tx.leagueMembership.update({
+              where: { id: invitationId },
+              data: { status: 'active' },
+              include: {
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
+                    sportType: true,
+                  },
+                },
+              },
+            });
+
+            return updatedMembership;
           });
-        }
 
-        // Use a transaction to deduct fee and activate membership atomically
-        const result = await prisma.$transaction(async (tx) => {
-          // Deduct fee from roster balance
-          await tx.team.update({
-            where: { id: membership.team!.id },
-            data: {
-              balance: { decrement: league.membershipFee! }
-            }
+          // Clean up any other pending duplicates for the same roster+league
+          await prisma.leagueMembership.deleteMany({
+            where: {
+              leagueId: id,
+              memberType: 'roster',
+              memberId: membership.memberId,
+              status: 'pending',
+              id: { not: invitationId },
+            },
           });
 
-          // Update membership status to active
-          const updatedMembership = await tx.leagueMembership.update({
-            where: { id: invitationId },
-            data: { status: 'active' },
-            include: {
-              team: {
-                select: {
-                  id: true,
-                  name: true,
-                  imageUrl: true,
-                  sportType: true
-                }
+          // Event-driven: check if league is now ready to schedule (Req 2.2)
+          checkLeagueReady(id).catch(() => {});
+
+          // Messaging hook: add team members to league General channel
+          try {
+            const { MessagingService } =
+              await import('../services/MessagingService');
+            const convs = await MessagingService.getConversationsForLeague(id);
+            const general = convs.find(c => c.name?.includes('General'));
+            if (general && membership.team) {
+              const members = await prisma.teamMember.findMany({
+                where: { teamId: membership.team.id, status: 'active' },
+                select: { userId: true },
+              });
+              for (const member of members) {
+                await MessagingService.addParticipant(
+                  general.id,
+                  member.userId,
+                  'MEMBER'
+                );
               }
             }
-          });
+          } catch (msgErr) {
+            console.error('Failed to add team to league channel:', msgErr);
+          }
 
-          return updatedMembership;
+          return res.json(result);
+        }
+
+        // No fee — just activate
+        const updatedMembership = await prisma.leagueMembership.update({
+          where: { id: invitationId },
+          data: { status: 'active' },
+          include: {
+            team: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+                sportType: true,
+              },
+            },
+          },
         });
 
         // Clean up any other pending duplicates for the same roster+league
+        // (handles NULL seasonId duplicates from the unique constraint)
         await prisma.leagueMembership.deleteMany({
           where: {
             leagueId: id,
@@ -1766,99 +2110,53 @@ router.put('/:id/invitations/:invitationId', async (req: Request, res: Response)
 
         // Messaging hook: add team members to league General channel
         try {
-          const { MessagingService } = await import('../services/MessagingService');
+          const { MessagingService } =
+            await import('../services/MessagingService');
           const convs = await MessagingService.getConversationsForLeague(id);
-          const general = convs.find((c) => c.name?.includes('General'));
+          const general = convs.find(c => c.name?.includes('General'));
           if (general && membership.team) {
             const members = await prisma.teamMember.findMany({
               where: { teamId: membership.team.id, status: 'active' },
               select: { userId: true },
             });
             for (const member of members) {
-              await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
+              await MessagingService.addParticipant(
+                general.id,
+                member.userId,
+                'MEMBER'
+              );
             }
           }
         } catch (msgErr) {
           console.error('Failed to add team to league channel:', msgErr);
         }
 
-        return res.json(result);
+        return res.json(updatedMembership);
       }
 
-      // No fee — just activate
+      // accept === false — decline invitation
       const updatedMembership = await prisma.leagueMembership.update({
         where: { id: invitationId },
-        data: { status: 'active' },
+        data: { status: 'withdrawn' },
         include: {
           team: {
             select: {
               id: true,
               name: true,
               imageUrl: true,
-              sportType: true
-            }
-          }
-        }
-      });
-
-      // Clean up any other pending duplicates for the same roster+league
-      // (handles NULL seasonId duplicates from the unique constraint)
-      await prisma.leagueMembership.deleteMany({
-        where: {
-          leagueId: id,
-          memberType: 'roster',
-          memberId: membership.memberId,
-          status: 'pending',
-          id: { not: invitationId },
+              sportType: true,
+            },
+          },
         },
       });
 
-      // Event-driven: check if league is now ready to schedule (Req 2.2)
-      checkLeagueReady(id).catch(() => {});
-
-      // Messaging hook: add team members to league General channel
-      try {
-        const { MessagingService } = await import('../services/MessagingService');
-        const convs = await MessagingService.getConversationsForLeague(id);
-        const general = convs.find((c) => c.name?.includes('General'));
-        if (general && membership.team) {
-          const members = await prisma.teamMember.findMany({
-            where: { teamId: membership.team.id, status: 'active' },
-            select: { userId: true },
-          });
-          for (const member of members) {
-            await MessagingService.addParticipant(general.id, member.userId, 'MEMBER');
-          }
-        }
-      } catch (msgErr) {
-        console.error('Failed to add team to league channel:', msgErr);
-      }
-
       return res.json(updatedMembership);
+    } catch (error) {
+      console.error('Error processing invitation:', error);
+      res.status(500).json({ error: 'Failed to process invitation' });
     }
-
-    // accept === false — decline invitation
-    const updatedMembership = await prisma.leagueMembership.update({
-      where: { id: invitationId },
-      data: { status: 'withdrawn' },
-      include: {
-        team: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            sportType: true
-          }
-        }
-      }
-    });
-
-    return res.json(updatedMembership);
-  } catch (error) {
-    console.error('Error processing invitation:', error);
-    res.status(500).json({ error: 'Failed to process invitation' });
   }
-});
+);
 
 // POST /api/leagues/:id/leave - Leave league (Step Out) — always roster-based
 router.post('/:id/leave', async (req: Request, res: Response) => {
@@ -1867,7 +2165,7 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
     const { teamId, userId } = req.body;
 
     const league = await prisma.league.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!league) {
@@ -1875,7 +2173,9 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
     }
 
     if (!teamId || !userId) {
-      return res.status(400).json({ error: 'Missing required fields: teamId, userId' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required fields: teamId, userId' });
     }
 
     // Check if user is roster captain/admin
@@ -1883,13 +2183,20 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
       where: {
         userId_teamId: {
           userId,
-          teamId
-        }
-      }
+          teamId,
+        },
+      },
     });
 
-    if (!teamMember || !['captain', 'co_captain', 'coach', 'assistant_coach', 'admin'].includes(teamMember.role)) {
-      return res.status(403).json({ error: 'Only team managers can withdraw from leagues' });
+    if (
+      !teamMember ||
+      !['captain', 'co_captain', 'coach', 'assistant_coach', 'admin'].includes(
+        teamMember.role
+      )
+    ) {
+      return res
+        .status(403)
+        .json({ error: 'Only team managers can withdraw from leagues' });
     }
 
     // Find membership
@@ -1897,12 +2204,14 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
       where: {
         leagueId: id,
         teamId,
-        status: 'active'
-      }
+        status: 'active',
+      },
     });
 
     if (!membership) {
-      return res.status(404).json({ error: 'Roster is not a member of this league' });
+      return res
+        .status(404)
+        .json({ error: 'Roster is not a member of this league' });
     }
 
     // Update membership status
@@ -1910,8 +2219,8 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
       where: { id: membership.id },
       data: {
         status: 'withdrawn',
-        leftAt: new Date()
-      }
+        leftAt: new Date(),
+      },
     });
 
     res.status(204).send();
@@ -1930,7 +2239,7 @@ router.get('/:id/members', async (req: Request, res: Response) => {
     // Verify league exists
     const league = await prisma.league.findUnique({
       where: { id },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!league) {
@@ -1942,11 +2251,16 @@ router.get('/:id/members', async (req: Request, res: Response) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Allow fetching pending members alongside active ones (for commissioner view)
-    const statusFilter = includePending === 'true'
-      ? { status: { in: ['active', 'pending'] as string[] } }
-      : { status: 'active' as const };
+    const statusFilter =
+      includePending === 'true'
+        ? { status: { in: ['active', 'pending'] as string[] } }
+        : { status: 'active' as const };
 
-    const baseWhere = { leagueId: id, memberType: 'roster' as const, ...statusFilter };
+    const baseWhere = {
+      leagueId: id,
+      memberType: 'roster' as const,
+      ...statusFilter,
+    };
 
     const total = await prisma.leagueMembership.count({ where: baseWhere });
 
@@ -1963,12 +2277,12 @@ router.get('/:id/members', async (req: Request, res: Response) => {
             sportType: true,
             isPrivate: true,
             _count: {
-              select: { members: true }
-            }
-          }
-        }
+              select: { members: true },
+            },
+          },
+        },
       },
-      orderBy: { joinedAt: 'asc' }
+      orderBy: { joinedAt: 'asc' },
     });
 
     const data = memberships.map(m => ({
@@ -1977,14 +2291,16 @@ router.get('/:id/members', async (req: Request, res: Response) => {
       memberId: m.memberId,
       status: m.status,
       joinedAt: m.joinedAt,
-      team: m.team ? {
-        id: m.team.id,
-        name: m.team.name,
-        imageUrl: m.team.imageUrl,
-        sportType: m.team.sportType,
-        isPrivate: m.team.isPrivate,
-        playerCount: m.team._count.members
-      } : null,
+      team: m.team
+        ? {
+            id: m.team.id,
+            name: m.team.name,
+            imageUrl: m.team.imageUrl,
+            sportType: m.team.sportType,
+            isPrivate: m.team.isPrivate,
+            playerCount: m.team._count.members,
+          }
+        : null,
       stats: {
         matchesPlayed: m.matchesPlayed,
         wins: m.wins,
@@ -1993,8 +2309,8 @@ router.get('/:id/members', async (req: Request, res: Response) => {
         points: m.points,
         goalsFor: m.goalsFor,
         goalsAgainst: m.goalsAgainst,
-        goalDifference: m.goalDifference
-      }
+        goalDifference: m.goalDifference,
+      },
     }));
 
     return res.json({
@@ -2003,8 +2319,8 @@ router.get('/:id/members', async (req: Request, res: Response) => {
         page: pageNum,
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
-      }
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     console.error('Error fetching league members:', error);
@@ -2020,7 +2336,7 @@ router.get('/:id/events', async (req: Request, res: Response) => {
     // Fetch league to verify it exists
     const league = await prisma.league.findUnique({
       where: { id },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!league) {
@@ -2034,7 +2350,7 @@ router.get('/:id/events', async (req: Request, res: Response) => {
       where: {
         eligibilityRestrictedToLeagues: { has: id },
         startTime: { gt: now },
-        status: 'active'
+        status: 'active',
       },
       include: {
         facility: {
@@ -2043,18 +2359,18 @@ router.get('/:id/events', async (req: Request, res: Response) => {
             name: true,
             street: true,
             city: true,
-            state: true
-          }
+            state: true,
+          },
         },
         organizer: {
           select: {
             id: true,
             firstName: true,
-            lastName: true
-          }
-        }
+            lastName: true,
+          },
+        },
       },
-      orderBy: { startTime: 'asc' }
+      orderBy: { startTime: 'asc' },
     });
 
     // Resolve roster names from eligibilityRestrictedToTeams
@@ -2063,12 +2379,13 @@ router.get('/:id/events', async (req: Request, res: Response) => {
       event.eligibilityRestrictedToTeams.forEach(rid => allRosterIds.add(rid));
     });
 
-    const rosters = allRosterIds.size > 0
-      ? await prisma.team.findMany({
-          where: { id: { in: Array.from(allRosterIds) } },
-          select: { id: true, name: true }
-        })
-      : [];
+    const rosters =
+      allRosterIds.size > 0
+        ? await prisma.team.findMany({
+            where: { id: { in: Array.from(allRosterIds) } },
+            select: { id: true, name: true },
+          })
+        : [];
 
     const rosterMap = new Map(rosters.map(r => [r.id, r.name]));
 
@@ -2085,8 +2402,8 @@ router.get('/:id/events', async (req: Request, res: Response) => {
       organizer: event.organizer,
       assignedRosters: event.eligibilityRestrictedToTeams.map(rid => ({
         id: rid,
-        name: rosterMap.get(rid) || 'Unknown Roster'
-      }))
+        name: rosterMap.get(rid) || 'Unknown Roster',
+      })),
     }));
 
     return res.json(eventsWithRosters);
@@ -2100,19 +2417,27 @@ router.get('/:id/events', async (req: Request, res: Response) => {
 router.post('/:id/events', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, startTime, endTime, facilityId, rosterIds, userId } = req.body;
+    const {
+      title,
+      description,
+      startTime,
+      endTime,
+      facilityId,
+      rosterIds,
+      userId,
+    } = req.body;
 
     // Validate required fields
     if (!title || !startTime || !endTime || !userId) {
       return res.status(400).json({
-        error: 'Missing required fields: title, startTime, endTime, userId'
+        error: 'Missing required fields: title, startTime, endTime, userId',
       });
     }
 
     // Fetch league and verify it exists
     const league = await prisma.league.findUnique({
       where: { id },
-      select: { id: true, sportType: true, organizerId: true }
+      select: { id: true, sportType: true, organizerId: true },
     });
 
     if (!league) {
@@ -2121,7 +2446,9 @@ router.post('/:id/events', async (req: Request, res: Response) => {
 
     // Verify user is league owner
     if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league owner or admins can perform this action' });
+      return res.status(403).json({
+        error: 'Only the league owner or admins can perform this action',
+      });
     }
 
     const eventStartTime = new Date(startTime);
@@ -2132,7 +2459,9 @@ router.post('/:id/events', async (req: Request, res: Response) => {
 
       // Validate minimum 2 rosters
       if (rosterIds.length < 2) {
-        return res.status(400).json({ error: 'League events require at least 2 rosters' });
+        return res
+          .status(400)
+          .json({ error: 'League events require at least 2 rosters' });
       }
 
       // Check scheduling conflicts for each roster
@@ -2143,15 +2472,15 @@ router.post('/:id/events', async (req: Request, res: Response) => {
           status: 'active',
           // Time overlap: event1.startTime < event2.endTime AND event2.startTime < event1.endTime
           startTime: { lt: eventEndTime },
-          endTime: { gt: eventStartTime }
+          endTime: { gt: eventStartTime },
         },
         select: {
           id: true,
           title: true,
           startTime: true,
           endTime: true,
-          eligibilityRestrictedToTeams: true
-        }
+          eligibilityRestrictedToTeams: true,
+        },
       });
 
       // Check if any of the requested rosters are already assigned to overlapping events
@@ -2167,7 +2496,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
       // Fetch roster names for conflict reporting
       const rosters = await prisma.team.findMany({
         where: { id: { in: rosterIds } },
-        select: { id: true, name: true }
+        select: { id: true, name: true },
       });
       const rosterNameMap = new Map(rosters.map(r => [r.id, r.name]));
 
@@ -2180,7 +2509,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
               conflictingEventId: event.id,
               conflictingEventTitle: event.title,
               startTime: event.startTime,
-              endTime: event.endTime
+              endTime: event.endTime,
             });
           }
         }
@@ -2189,7 +2518,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
       if (conflicts.length > 0) {
         return res.status(409).json({
           error: 'Scheduling conflict',
-          conflicts
+          conflicts,
         });
       }
 
@@ -2207,7 +2536,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
           organizerId: userId,
           ...(facilityId && { facilityId }),
           eligibilityRestrictedToLeagues: [id],
-          eligibilityRestrictedToTeams: rosterIds
+          eligibilityRestrictedToTeams: rosterIds,
         },
         include: {
           facility: {
@@ -2216,17 +2545,17 @@ router.post('/:id/events', async (req: Request, res: Response) => {
               name: true,
               street: true,
               city: true,
-              state: true
-            }
+              state: true,
+            },
           },
           organizer: {
             select: {
               id: true,
               firstName: true,
-              lastName: true
-            }
-          }
-        }
+              lastName: true,
+            },
+          },
+        },
       });
 
       // Return with resolved roster names
@@ -2243,8 +2572,8 @@ router.post('/:id/events', async (req: Request, res: Response) => {
         organizer: event.organizer,
         assignedRosters: rosterIds.map((rid: string) => ({
           id: rid,
-          name: rosterNameMap.get(rid) || 'Unknown Roster'
-        }))
+          name: rosterNameMap.get(rid) || 'Unknown Roster',
+        })),
       };
 
       // Notify all players of assigned rosters about the event
@@ -2267,7 +2596,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
         organizerId: userId,
         ...(facilityId && { facilityId }),
         eligibilityRestrictedToLeagues: [id],
-        eligibilityRestrictedToTeams: []
+        eligibilityRestrictedToTeams: [],
       },
       include: {
         facility: {
@@ -2276,17 +2605,17 @@ router.post('/:id/events', async (req: Request, res: Response) => {
             name: true,
             street: true,
             city: true,
-            state: true
-          }
+            state: true,
+          },
         },
         organizer: {
           select: {
             id: true,
             firstName: true,
-            lastName: true
-          }
-        }
-      }
+            lastName: true,
+          },
+        },
+      },
     });
 
     const responseEvent = {
@@ -2300,7 +2629,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
       currentParticipants: event.currentParticipants,
       facility: event.facility,
       organizer: event.organizer,
-      assignedRosters: []
+      assignedRosters: [],
     };
 
     return res.status(201).json(responseEvent);
@@ -2311,7 +2640,12 @@ router.post('/:id/events', async (req: Request, res: Response) => {
 });
 
 // Document management endpoints
-import { upload, generateFileUrl, deleteFile, validateFile } from '../services/DocumentService';
+import {
+  upload,
+  generateFileUrl,
+  deleteFile,
+  validateFile,
+} from '../services/DocumentService';
 
 // GET /api/leagues/:id/documents - Get league documents
 router.get('/:id/documents', async (req: Request, res: Response) => {
@@ -2325,11 +2659,11 @@ router.get('/:id/documents', async (req: Request, res: Response) => {
           select: {
             id: true,
             firstName: true,
-            lastName: true
-          }
-        }
+            lastName: true,
+          },
+        },
       },
-      orderBy: { uploadedAt: 'desc' }
+      orderBy: { uploadedAt: 'desc' },
     });
 
     res.json(documents);
@@ -2340,578 +2674,668 @@ router.get('/:id/documents', async (req: Request, res: Response) => {
 });
 
 // POST /api/leagues/:id/documents - Upload document
-router.post('/:id/documents', upload.single('file'), async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { documentType, userId } = req.body;
-    const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({ error: 'No file provided' });
-    }
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing userId' });
-    }
-
-    // Validate file
-    const validation = validateFile(file);
-    if (!validation.valid) {
-      return res.status(400).json({ error: validation.error });
-    }
-
-    // Check if league exists and user is operator
-    const league = await prisma.league.findUnique({
-      where: { id }
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can upload documents' });
-    }
-
-    // Create document record
-    const document = await prisma.leagueDocument.create({
-      data: {
-        leagueId: id,
-        fileName: file.originalname,
-        fileUrl: generateFileUrl(file.path),
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        documentType: documentType || 'other',
-        uploadedBy: userId
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true
-          }
-        }
-      }
-    });
-
-    res.status(201).json(document);
-  } catch (error) {
-    console.error('Error uploading document:', error);
-    res.status(500).json({ error: 'Failed to upload document' });
-  }
-});
-
-// DELETE /api/leagues/:id/documents/:documentId - Delete document
-router.delete('/:id/documents/:documentId', async (req: Request, res: Response) => {
-  try {
-    const { id, documentId } = req.params;
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing userId' });
-    }
-
-    // Check if league exists and user is operator
-    const league = await prisma.league.findUnique({
-      where: { id }
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can delete documents' });
-    }
-
-    // Get document
-    const document = await prisma.leagueDocument.findUnique({
-      where: { id: documentId }
-    });
-
-    if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
-    }
-
-    // Delete file
-    await deleteFile(document.fileUrl);
-
-    // Delete database record
-    await prisma.leagueDocument.delete({
-      where: { id: documentId }
-    });
-
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting document:', error);
-    res.status(500).json({ error: 'Failed to delete document' });
-  }
-});
-
-// GET /api/leagues/:id/documents/:documentId/download - Download document
-router.get('/:id/documents/:documentId/download', async (req: Request, res: Response) => {
-  try {
-    const { documentId } = req.params;
-
-    const document = await prisma.leagueDocument.findUnique({
-      where: { id: documentId }
-    });
-
-    if (!document) {
-      return res.status(404).json({ error: 'Document not found' });
-    }
-
-    // Track access (for analytics)
-    // Could add a DocumentAccess model to track this
-
-    // Return file URL for download
-    res.json({ 
-      url: document.fileUrl,
-      fileName: document.fileName,
-      mimeType: document.mimeType
-    });
-  } catch (error) {
-    console.error('Error downloading document:', error);
-    res.status(500).json({ error: 'Failed to download document' });
-  }
-});
-
-// POST /api/leagues/:id/certify - Certify league
-router.post('/:id/certify', upload.single('bylaws'), async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { boardMembers, userId } = req.body;
-    const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({ error: 'Bylaws PDF is required' });
-    }
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing userId' });
-    }
-
-    if (!boardMembers) {
-      return res.status(400).json({ error: 'Board members are required' });
-    }
-
-    // Parse board members
-    let parsedBoardMembers;
+router.post(
+  '/:id/documents',
+  upload.single('file'),
+  async (req: Request, res: Response) => {
     try {
-      parsedBoardMembers = JSON.parse(boardMembers);
-    } catch (e) {
-      return res.status(400).json({ error: 'Invalid board members format' });
-    }
+      const { id } = req.params;
+      const { documentType, userId } = req.body;
+      const file = req.file;
 
-    // Validate board members count
-    if (!Array.isArray(parsedBoardMembers) || parsedBoardMembers.length < 3) {
-      return res.status(400).json({ error: 'At least 3 board members are required' });
-    }
-
-    // Validate file
-    const validation = validateFile(file);
-    if (!validation.valid) {
-      return res.status(400).json({ error: validation.error });
-    }
-
-    // Check if league exists and user is operator
-    const league = await prisma.league.findUnique({
-      where: { id }
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can certify the league' });
-    }
-
-    // Create certification documents
-    await prisma.certificationDocument.create({
-      data: {
-        leagueId: id,
-        documentType: 'bylaws',
-        fileName: file.originalname,
-        fileUrl: generateFileUrl(file.path),
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        uploadedBy: userId,
-        approvedAt: new Date()
-      }
-    });
-
-    await prisma.certificationDocument.create({
-      data: {
-        leagueId: id,
-        documentType: 'board_of_directors',
-        fileName: 'board_of_directors.json',
-        fileUrl: '', // Not a file, just JSON data
-        fileSize: 0,
-        mimeType: 'application/json',
-        boardMembers: parsedBoardMembers,
-        uploadedBy: userId,
-        approvedAt: new Date()
-      }
-    });
-
-    // Update league certification status
-    const updatedLeague = await prisma.league.update({
-      where: { id },
-      data: {
-        isCertified: true,
-        certifiedAt: new Date()
-      },
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            profileImage: true
-          }
-        }
-      }
-    });
-
-    // TODO: Send notifications to all league members
-
-    res.json(updatedLeague);
-  } catch (error) {
-    console.error('Error certifying league:', error);
-    res.status(500).json({ error: 'Failed to certify league' });
-  }
-});
-
-// POST /api/leagues/:id/generate-schedule - Generate schedule preview for Commissioner review
-router.post('/:id/generate-schedule', optionalAuthMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user?.userId || req.body.userId;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
-    }
-
-    // Fetch league with active roster memberships
-    const league = await prisma.league.findUnique({
-      where: { id },
-      include: {
-        memberships: {
-          where: { status: 'active', memberType: 'roster' },
-          include: {
-            team: { select: { id: true, name: true } }
-          }
-        }
-      }
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    // Only the Commissioner (organizer) can generate the schedule
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league Commissioner can manage the schedule' });
-    }
-
-    // Build rosters list from active memberships
-    const rosters = league.memberships
-      .filter((m: any) => m.team)
-      .map((m: any) => ({ id: m.team!.id, name: m.team!.name }));
-
-    if (rosters.length < 2) {
-      return res.status(400).json({ error: 'At least 2 registered rosters are required to generate a schedule' });
-    }
-
-    // Build LeagueWithRosters object for the service
-    const leagueWithRosters: LeagueWithRosters = {
-      id: league.id,
-      leagueFormat: league.leagueFormat || 'season',
-      gameFrequency: league.gameFrequency,
-      preferredGameDays: league.preferredGameDays,
-      preferredTimeWindowStart: league.preferredTimeWindowStart,
-      preferredTimeWindowEnd: league.preferredTimeWindowEnd,
-      seasonGameCount: league.seasonGameCount,
-      startDate: league.startDate,
-      endDate: league.endDate,
-      playoffTeamCount: league.playoffTeamCount,
-      eliminationFormat: league.eliminationFormat,
-      rosters,
-    };
-
-    const format = league.leagueFormat || 'season';
-
-    // generateSchedulePreview now handles all formats (season, season_with_playoffs, tournament)
-    // via the FairScheduler engine
-    const preview = ScheduleGeneratorService.generateSchedulePreview(leagueWithRosters);
-
-    return res.json({
-      events: preview.events,
-    });
-  } catch (error: any) {
-    console.error('Error generating schedule preview:', error);
-
-    // Service throws errors with statusCode for validation failures
-    if (error.statusCode) {
-      return res.status(error.statusCode).json({ error: error.message });
-    }
-
-    const msg = error instanceof Error ? error.message : 'Failed to generate schedule';
-    res.status(500).json({ error: msg });
-  }
-});
-
-// POST /api/leagues/:id/confirm-schedule - Persist reviewed schedule as shell events
-router.post('/:id/confirm-schedule', optionalAuthMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user?.userId || req.body.userId;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
-    }
-
-    // Fetch league to validate existence and ownership
-    const league = await prisma.league.findUnique({
-      where: { id },
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    // Only the Commissioner (organizer) can confirm the schedule
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league Commissioner can manage the schedule' });
-    }
-
-    // Prevent duplicate schedule confirmation
-    if (league.scheduleGenerated) {
-      return res.status(409).json({ error: 'Schedule has already been generated for this league' });
-    }
-
-    // Validate events payload
-    const { events } = req.body;
-    if (!Array.isArray(events) || events.length === 0) {
-      return res.status(400).json({ error: 'No events provided' });
-    }
-
-    // Persist events and notify players
-    const result = await ScheduleGeneratorService.confirmSchedule(id, userId, events);
-
-    return res.json({ eventsCreated: result.eventsCreated });
-  } catch (error: any) {
-    console.error('Error confirming schedule:', error?.message, error?.stack);
-    const statusCode = error?.statusCode || 500;
-    const message = error?.message || 'Failed to save schedule. Please try again.';
-    res.status(statusCode).json({ error: message, detail: error?.meta || undefined });
-  }
-});
-
-// POST /api/leagues/:id/check-ready - Check if league is ready to schedule and notify Commissioner
-router.post('/:id/check-ready', optionalAuthMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    // Fetch league with roster memberships
-    const league = await prisma.league.findUnique({
-      where: { id },
-      include: {
-        memberships: {
-          where: { memberType: 'roster' },
-        },
-      },
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    // If schedule already generated, no notification needed
-    if (league.scheduleGenerated) {
-      return res.json({ ready: false, reason: 'Schedule already generated' });
-    }
-
-    // Ensure at most one notification per league
-    if (league.readyNotificationSent) {
-      return res.json({ ready: true, notified: false, reason: 'Notification already sent' });
-    }
-
-    // Count active (confirmed) roster memberships
-    const activeRosters = league.memberships.filter((m: any) => m.status === 'active');
-    const activeRosterCount = activeRosters.length;
-
-    // Skip notification if zero registered rosters
-    if (activeRosterCount === 0) {
-      return res.json({ ready: false, reason: 'No registered rosters' });
-    }
-
-    // Condition 1: registrationCloseDate has passed
-    const now = new Date();
-    const registrationClosed = league.registrationCloseDate
-      ? new Date(league.registrationCloseDate) <= now
-      : false;
-
-    // Condition 2: All roster memberships are active (no pending ones)
-    const pendingRosters = league.memberships.filter((m: any) => m.status === 'pending');
-    const allRostersConfirmed = pendingRosters.length === 0;
-
-    if (registrationClosed || allRostersConfirmed) {
-      // Send "ready to schedule" notification to the Commissioner
-      const notification = {
-        title: 'League Ready',
-        body: `${league.name} is ready to schedule.`,
-        data: {
-          type: 'league_ready_to_schedule',
-          leagueId: league.id,
-        },
-      };
-
-      // Send via NotificationService — failure is non-blocking
-      try {
-        NotificationService.sendNotification(league.organizerId, notification);
-      } catch {
-        // Non-critical: continue if notification fails
+      if (!file) {
+        return res.status(400).json({ error: 'No file provided' });
       }
 
-      // Mark league so we don't send duplicate notifications
-      await prisma.league.update({
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing userId' });
+      }
+
+      // Validate file
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      // Check if league exists and user is operator
+      const league = await prisma.league.findUnique({
         where: { id },
-        data: { readyNotificationSent: true },
       });
 
-      return res.json({ ready: true, notified: true });
-    }
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
 
-    return res.json({ ready: false });
-  } catch (error) {
-    console.error('Error checking league readiness:', error);
-    res.status(500).json({ error: 'Failed to check league readiness' });
-  }
-});
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league operator can upload documents' });
+      }
 
-// GET /api/leagues/:leagueId/seasons/:seasonId/strikes — Strike counts per roster for a season
-router.get('/:leagueId/seasons/:seasonId/strikes', async (req: Request, res: Response) => {
-  try {
-    const { leagueId, seasonId } = req.params;
-    const { userId } = req.query;
-
-    // Verify league exists and caller is the commissioner
-    const league = await prisma.league.findUnique({
-      where: { id: leagueId },
-      select: { id: true, organizerId: true },
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    if (userId && league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can view strike data' });
-    }
-
-    // Verify season belongs to this league
-    const season = await prisma.season.findFirst({
-      where: { id: seasonId, leagueId },
-    });
-
-    if (!season) {
-      return res.status(404).json({ error: 'Season not found for this league' });
-    }
-
-    // Get the latest strike record per roster (highest count = current total)
-    const strikes = await prisma.rosterStrike.findMany({
-      where: { seasonId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        roster: {
-          select: { id: true, name: true, imageUrl: true },
+      // Create document record
+      const document = await prisma.leagueDocument.create({
+        data: {
+          leagueId: id,
+          fileName: file.originalname,
+          fileUrl: generateFileUrl(file.path),
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          documentType: documentType || 'other',
+          uploadedBy: userId,
         },
-      },
-    });
+        include: {
+          uploader: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      });
 
-    // Aggregate: take the max count per roster
-    const rosterStrikeMap = new Map<string, { rosterId: string; rosterName: string; rosterImageUrl: string | null; strikeCount: number; strikes: typeof strikes }>();
+      res.status(201).json(document);
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      res.status(500).json({ error: 'Failed to upload document' });
+    }
+  }
+);
 
-    for (const strike of strikes) {
-      const existing = rosterStrikeMap.get(strike.rosterId);
-      if (!existing || strike.count > existing.strikeCount) {
-        rosterStrikeMap.set(strike.rosterId, {
-          rosterId: strike.rosterId,
-          rosterName: strike.roster.name,
-          rosterImageUrl: strike.roster.imageUrl,
-          strikeCount: strike.count,
-          strikes: [],
+// DELETE /api/leagues/:id/documents/:documentId - Delete document
+router.delete(
+  '/:id/documents/:documentId',
+  async (req: Request, res: Response) => {
+    try {
+      const { id, documentId } = req.params;
+      const { userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing userId' });
+      }
+
+      // Check if league exists and user is operator
+      const league = await prisma.league.findUnique({
+        where: { id },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league operator can delete documents' });
+      }
+
+      // Get document
+      const document = await prisma.leagueDocument.findUnique({
+        where: { id: documentId },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+
+      // Delete file
+      await deleteFile(document.fileUrl);
+
+      // Delete database record
+      await prisma.leagueDocument.delete({
+        where: { id: documentId },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      res.status(500).json({ error: 'Failed to delete document' });
+    }
+  }
+);
+
+// GET /api/leagues/:id/documents/:documentId/download - Download document
+router.get(
+  '/:id/documents/:documentId/download',
+  async (req: Request, res: Response) => {
+    try {
+      const { documentId } = req.params;
+
+      const document = await prisma.leagueDocument.findUnique({
+        where: { id: documentId },
+      });
+
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+
+      // Track access (for analytics)
+      // Could add a DocumentAccess model to track this
+
+      // Return file URL for download
+      res.json({
+        url: document.fileUrl,
+        fileName: document.fileName,
+        mimeType: document.mimeType,
+      });
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      res.status(500).json({ error: 'Failed to download document' });
+    }
+  }
+);
+
+// POST /api/leagues/:id/certify - Certify league
+router.post(
+  '/:id/certify',
+  upload.single('bylaws'),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { boardMembers, userId } = req.body;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ error: 'Bylaws PDF is required' });
+      }
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing userId' });
+      }
+
+      if (!boardMembers) {
+        return res.status(400).json({ error: 'Board members are required' });
+      }
+
+      // Parse board members
+      let parsedBoardMembers;
+      try {
+        parsedBoardMembers = JSON.parse(boardMembers);
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid board members format' });
+      }
+
+      // Validate board members count
+      if (!Array.isArray(parsedBoardMembers) || parsedBoardMembers.length < 3) {
+        return res
+          .status(400)
+          .json({ error: 'At least 3 board members are required' });
+      }
+
+      // Validate file
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      // Check if league exists and user is operator
+      const league = await prisma.league.findUnique({
+        where: { id },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league operator can certify the league' });
+      }
+
+      // Create certification documents
+      await prisma.certificationDocument.create({
+        data: {
+          leagueId: id,
+          documentType: 'bylaws',
+          fileName: file.originalname,
+          fileUrl: generateFileUrl(file.path),
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          uploadedBy: userId,
+          approvedAt: new Date(),
+        },
+      });
+
+      await prisma.certificationDocument.create({
+        data: {
+          leagueId: id,
+          documentType: 'board_of_directors',
+          fileName: 'board_of_directors.json',
+          fileUrl: '', // Not a file, just JSON data
+          fileSize: 0,
+          mimeType: 'application/json',
+          boardMembers: parsedBoardMembers,
+          uploadedBy: userId,
+          approvedAt: new Date(),
+        },
+      });
+
+      // Update league certification status
+      const updatedLeague = await prisma.league.update({
+        where: { id },
+        data: {
+          isCertified: true,
+          certifiedAt: new Date(),
+        },
+        include: {
+          organizer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              profileImage: true,
+            },
+          },
+        },
+      });
+
+      // TODO: Send notifications to all league members
+
+      res.json(updatedLeague);
+    } catch (error) {
+      console.error('Error certifying league:', error);
+      res.status(500).json({ error: 'Failed to certify league' });
+    }
+  }
+);
+
+// POST /api/leagues/:id/generate-schedule - Generate schedule preview for Commissioner review
+router.post(
+  '/:id/generate-schedule',
+  optionalAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId || req.body.userId;
+
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: userId' });
+      }
+
+      // Fetch league with active roster memberships
+      const league = await prisma.league.findUnique({
+        where: { id },
+        include: {
+          memberships: {
+            where: { status: 'active', memberType: 'roster' },
+            include: {
+              team: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      // Only the Commissioner (organizer) can generate the schedule
+      if (league.organizerId !== userId) {
+        return res.status(403).json({
+          error: 'Only the league Commissioner can manage the schedule',
         });
       }
-      rosterStrikeMap.get(strike.rosterId)!.strikes.push(strike);
+
+      // Build rosters list from active memberships
+      const rosters = league.memberships
+        .filter((m: any) => m.team)
+        .map((m: any) => ({ id: m.team!.id, name: m.team!.name }));
+
+      if (rosters.length < 2) {
+        return res.status(400).json({
+          error:
+            'At least 2 registered rosters are required to generate a schedule',
+        });
+      }
+
+      // Build LeagueWithRosters object for the service
+      const leagueWithRosters: LeagueWithRosters = {
+        id: league.id,
+        leagueFormat: league.leagueFormat || 'season',
+        gameFrequency: league.gameFrequency,
+        preferredGameDays: league.preferredGameDays,
+        preferredTimeWindowStart: league.preferredTimeWindowStart,
+        preferredTimeWindowEnd: league.preferredTimeWindowEnd,
+        seasonGameCount: league.seasonGameCount,
+        startDate: league.startDate,
+        endDate: league.endDate,
+        playoffTeamCount: league.playoffTeamCount,
+        eliminationFormat: league.eliminationFormat,
+        rosters,
+      };
+
+      const format = league.leagueFormat || 'season';
+
+      // generateSchedulePreview now handles all formats (season, season_with_playoffs, tournament)
+      // via the FairScheduler engine
+      const preview =
+        ScheduleGeneratorService.generateSchedulePreview(leagueWithRosters);
+
+      return res.json({
+        events: preview.events,
+      });
+    } catch (error: any) {
+      console.error('Error generating schedule preview:', error);
+
+      // Service throws errors with statusCode for validation failures
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
+
+      const msg =
+        error instanceof Error ? error.message : 'Failed to generate schedule';
+      res.status(500).json({ error: msg });
     }
-
-    const result = Array.from(rosterStrikeMap.values()).sort(
-      (a, b) => b.strikeCount - a.strikeCount,
-    );
-
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching strikes:', error);
-    res.status(500).json({ error: 'Failed to fetch strike data' });
   }
-});
+);
+
+// POST /api/leagues/:id/confirm-schedule - Persist reviewed schedule as shell events
+router.post(
+  '/:id/confirm-schedule',
+  optionalAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId || req.body.userId;
+
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: userId' });
+      }
+
+      // Fetch league to validate existence and ownership
+      const league = await prisma.league.findUnique({
+        where: { id },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      // Only the Commissioner (organizer) can confirm the schedule
+      if (league.organizerId !== userId) {
+        return res.status(403).json({
+          error: 'Only the league Commissioner can manage the schedule',
+        });
+      }
+
+      // Prevent duplicate schedule confirmation
+      if (league.scheduleGenerated) {
+        return res.status(409).json({
+          error: 'Schedule has already been generated for this league',
+        });
+      }
+
+      // Validate events payload
+      const { events } = req.body;
+      if (!Array.isArray(events) || events.length === 0) {
+        return res.status(400).json({ error: 'No events provided' });
+      }
+
+      // Persist events and notify players
+      const result = await ScheduleGeneratorService.confirmSchedule(
+        id,
+        userId,
+        events
+      );
+
+      return res.json({ eventsCreated: result.eventsCreated });
+    } catch (error: any) {
+      console.error('Error confirming schedule:', error?.message, error?.stack);
+      const statusCode = error?.statusCode || 500;
+      const message =
+        error?.message || 'Failed to save schedule. Please try again.';
+      res
+        .status(statusCode)
+        .json({ error: message, detail: error?.meta || undefined });
+    }
+  }
+);
+
+// POST /api/leagues/:id/check-ready - Check if league is ready to schedule and notify Commissioner
+router.post(
+  '/:id/check-ready',
+  optionalAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      // Fetch league with roster memberships
+      const league = await prisma.league.findUnique({
+        where: { id },
+        include: {
+          memberships: {
+            where: { memberType: 'roster' },
+          },
+        },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      // If schedule already generated, no notification needed
+      if (league.scheduleGenerated) {
+        return res.json({ ready: false, reason: 'Schedule already generated' });
+      }
+
+      // Ensure at most one notification per league
+      if (league.readyNotificationSent) {
+        return res.json({
+          ready: true,
+          notified: false,
+          reason: 'Notification already sent',
+        });
+      }
+
+      // Count active (confirmed) roster memberships
+      const activeRosters = league.memberships.filter(
+        (m: any) => m.status === 'active'
+      );
+      const activeRosterCount = activeRosters.length;
+
+      // Skip notification if zero registered rosters
+      if (activeRosterCount === 0) {
+        return res.json({ ready: false, reason: 'No registered rosters' });
+      }
+
+      // Condition 1: registrationCloseDate has passed
+      const now = new Date();
+      const registrationClosed = league.registrationCloseDate
+        ? new Date(league.registrationCloseDate) <= now
+        : false;
+
+      // Condition 2: All roster memberships are active (no pending ones)
+      const pendingRosters = league.memberships.filter(
+        (m: any) => m.status === 'pending'
+      );
+      const allRostersConfirmed = pendingRosters.length === 0;
+
+      if (registrationClosed || allRostersConfirmed) {
+        // Send "ready to schedule" notification to the Commissioner
+        const notification = {
+          title: 'League Ready',
+          body: `${league.name} is ready to schedule.`,
+          data: {
+            type: 'league_ready_to_schedule',
+            leagueId: league.id,
+          },
+        };
+
+        // Send via NotificationService — failure is non-blocking
+        try {
+          NotificationService.sendNotification(
+            league.organizerId,
+            notification
+          );
+        } catch {
+          // Non-critical: continue if notification fails
+        }
+
+        // Mark league so we don't send duplicate notifications
+        await prisma.league.update({
+          where: { id },
+          data: { readyNotificationSent: true },
+        });
+
+        return res.json({ ready: true, notified: true });
+      }
+
+      return res.json({ ready: false });
+    } catch (error) {
+      console.error('Error checking league readiness:', error);
+      res.status(500).json({ error: 'Failed to check league readiness' });
+    }
+  }
+);
+
+// GET /api/leagues/:leagueId/seasons/:seasonId/strikes — Strike counts per roster for a season
+router.get(
+  '/:leagueId/seasons/:seasonId/strikes',
+  async (req: Request, res: Response) => {
+    try {
+      const { leagueId, seasonId } = req.params;
+      const { userId } = req.query;
+
+      // Verify league exists and caller is the commissioner
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { id: true, organizerId: true },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      if (userId && league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league commissioner can view strike data' });
+      }
+
+      // Verify season belongs to this league
+      const season = await prisma.season.findFirst({
+        where: { id: seasonId, leagueId },
+      });
+
+      if (!season) {
+        return res
+          .status(404)
+          .json({ error: 'Season not found for this league' });
+      }
+
+      // Get the latest strike record per roster (highest count = current total)
+      const strikes = await prisma.rosterStrike.findMany({
+        where: { seasonId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          roster: {
+            select: { id: true, name: true, imageUrl: true },
+          },
+        },
+      });
+
+      // Aggregate: take the max count per roster
+      const rosterStrikeMap = new Map<
+        string,
+        {
+          rosterId: string;
+          rosterName: string;
+          rosterImageUrl: string | null;
+          strikeCount: number;
+          strikes: typeof strikes;
+        }
+      >();
+
+      for (const strike of strikes) {
+        const existing = rosterStrikeMap.get(strike.rosterId);
+        if (!existing || strike.count > existing.strikeCount) {
+          rosterStrikeMap.set(strike.rosterId, {
+            rosterId: strike.rosterId,
+            rosterName: strike.roster.name,
+            rosterImageUrl: strike.roster.imageUrl,
+            strikeCount: strike.count,
+            strikes: [],
+          });
+        }
+        rosterStrikeMap.get(strike.rosterId)!.strikes.push(strike);
+      }
+
+      const result = Array.from(rosterStrikeMap.values()).sort(
+        (a, b) => b.strikeCount - a.strikeCount
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching strikes:', error);
+      res.status(500).json({ error: 'Failed to fetch strike data' });
+    }
+  }
+);
 
 // DELETE /api/leagues/:leagueId/memberships/:membershipId — Remove a roster from a league (commissioner only)
-router.delete('/:leagueId/memberships/:membershipId', async (req: Request, res: Response) => {
-  try {
-    const { leagueId, membershipId } = req.params;
-    const { userId } = req.body;
+router.delete(
+  '/:leagueId/memberships/:membershipId',
+  async (req: Request, res: Response) => {
+    try {
+      const { leagueId, membershipId } = req.params;
+      const { userId } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
+      if (!userId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: userId' });
+      }
+
+      // Verify league exists and caller is the commissioner
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        select: { id: true, organizerId: true, name: true },
+      });
+
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      if (league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league commissioner can remove rosters' });
+      }
+
+      // Find the membership
+      const membership = await prisma.leagueMembership.findFirst({
+        where: { id: membershipId, leagueId },
+        include: {
+          team: { select: { id: true, name: true } },
+        },
+      });
+
+      if (!membership) {
+        return res.status(404).json({ error: 'Membership not found' });
+      }
+
+      // Remove the membership
+      await prisma.leagueMembership.delete({
+        where: { id: membershipId },
+      });
+
+      res.json({
+        message: `${membership.team?.name ?? 'Roster'} has been removed from ${league.name}`,
+        removedMembershipId: membershipId,
+        rosterId: membership.memberId,
+      });
+    } catch (error) {
+      console.error('Error removing roster from league:', error);
+      res.status(500).json({ error: 'Failed to remove roster from league' });
     }
-
-    // Verify league exists and caller is the commissioner
-    const league = await prisma.league.findUnique({
-      where: { id: leagueId },
-      select: { id: true, organizerId: true, name: true },
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    if (league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league commissioner can remove rosters' });
-    }
-
-    // Find the membership
-    const membership = await prisma.leagueMembership.findFirst({
-      where: { id: membershipId, leagueId },
-      include: {
-        team: { select: { id: true, name: true } },
-      },
-    });
-
-    if (!membership) {
-      return res.status(404).json({ error: 'Membership not found' });
-    }
-
-    // Remove the membership
-    await prisma.leagueMembership.delete({
-      where: { id: membershipId },
-    });
-
-    res.json({
-      message: `${membership.team?.name ?? 'Roster'} has been removed from ${league.name}`,
-      removedMembershipId: membershipId,
-      rosterId: membership.memberId,
-    });
-  } catch (error) {
-    console.error('Error removing roster from league:', error);
-    res.status(500).json({ error: 'Failed to remove roster from league' });
   }
-});
+);
 
 // GET /api/leagues/:id/ledger - Get league financial ledger for a season
 router.get('/:id/ledger', async (req: Request, res: Response) => {
@@ -2920,7 +3344,9 @@ router.get('/:id/ledger', async (req: Request, res: Response) => {
     const { seasonId } = req.query;
 
     if (!seasonId || typeof seasonId !== 'string') {
-      return res.status(400).json({ error: 'Missing required query parameter: seasonId' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required query parameter: seasonId' });
     }
 
     // Verify league exists
@@ -2940,7 +3366,9 @@ router.get('/:id/ledger', async (req: Request, res: Response) => {
     });
 
     if (!season) {
-      return res.status(404).json({ error: 'Season not found for this league' });
+      return res
+        .status(404)
+        .json({ error: 'Season not found for this league' });
     }
 
     // Fetch all transactions ordered by date ascending via service
@@ -2951,5 +3379,174 @@ router.get('/:id/ledger', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching league ledger:', error);
     res.status(500).json({ error: 'Failed to fetch league ledger' });
+  }
+});
+
+// ============================================================================
+// COVER IMAGE ROUTES
+// ============================================================================
+
+// Upload league cover image
+router.post(
+  '/:id/cover',
+  uploadCover.single('image'),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const file = req.file;
+      const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+
+      if (!userId) {
+        if (file?.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Validate file
+      const validation = validateImageFile(file as Express.Multer.File);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      if (!file) {
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+
+      // Check if league exists
+      const league = await prisma.league.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          organizerId: true,
+          imageUrl: true,
+        },
+      });
+
+      if (!league) {
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res.status(404).json({ error: 'League not found' });
+      }
+
+      // Authorization: only the league organizer
+      if (league.organizerId !== userId) {
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res
+          .status(403)
+          .json({
+            error: 'Only the league organizer can upload a cover image',
+          });
+      }
+
+      // Process and optimize image
+      const { optimizedPath } = await processMapImage(file.path, {
+        maxWidth: 1600,
+        maxHeight: 600,
+        quality: 85,
+      });
+
+      // Generate URL
+      const imageUrl = generateImageUrl(optimizedPath);
+
+      // Delete old image if it exists
+      if (league.imageUrl) {
+        try {
+          await deleteImageFiles(league.imageUrl);
+        } catch (error) {
+          console.error('Error deleting old league cover image:', error);
+        }
+      }
+
+      // Update league with new cover URL
+      const updatedLeague = await prisma.league.update({
+        where: { id },
+        data: { imageUrl },
+        select: { id: true, imageUrl: true },
+      });
+
+      res.status(200).json({
+        imageUrl: updatedLeague.imageUrl,
+      });
+    } catch (error: any) {
+      console.error('Upload league cover image error:', error);
+
+      // Clean up uploaded file on error
+      if (req.file?.path) {
+        try {
+          const fs = require('fs');
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up file:', cleanupError);
+        }
+      }
+
+      res.status(500).json({
+        error: error.message || 'Failed to upload cover image',
+      });
+    }
+  }
+);
+
+// Delete league cover image
+router.delete('/:id/cover', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Check if league exists
+    const league = await prisma.league.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        organizerId: true,
+        imageUrl: true,
+      },
+    });
+
+    if (!league) {
+      return res.status(404).json({ error: 'League not found' });
+    }
+
+    // Authorization: only the league organizer
+    if (league.organizerId !== userId) {
+      return res
+        .status(403)
+        .json({
+          error: 'Only the league organizer can delete the cover image',
+        });
+    }
+
+    if (!league.imageUrl) {
+      return res.status(404).json({ error: 'No cover image to delete' });
+    }
+
+    // Delete image file
+    await deleteImageFiles(league.imageUrl);
+
+    // Update league to remove cover URL
+    await prisma.league.update({
+      where: { id },
+      data: { imageUrl: null },
+    });
+
+    res.status(200).json({ message: 'Cover image deleted' });
+  } catch (error: any) {
+    console.error('Delete league cover image error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to delete cover image',
+    });
   }
 });

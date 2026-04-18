@@ -101,6 +101,37 @@ export const uploadPhoto = multer({
   },
 });
 
+// Configure storage for cover images (facilities, teams, leagues)
+const coverStorage = multer.diskStorage({
+  destination: (req: Request, file: Express.Multer.File, cb) => {
+    const { id } = req.params;
+    const entityId = Array.isArray(id) ? id[0] : id;
+    const uploadPath = path.join(
+      __dirname,
+      '../../uploads/cover-images',
+      entityId || 'temp'
+    );
+
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req: Request, file: Express.Multer.File, cb) => {
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname);
+    cb(null, `cover-${timestamp}${ext}`);
+  },
+});
+
+// Configure multer for cover image uploads
+export const uploadCover = multer({
+  storage: coverStorage,
+  fileFilter: photoFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});
+
 // Validate map/image file (JPEG, PNG, PDF; ≤ 20 MB)
 export function validateImageFile(file: Express.Multer.File): {
   valid: boolean;

@@ -24,6 +24,10 @@ import { facilityService } from '../../services/api/FacilityService';
 import { OwnerScheduleTab } from '../../components/facilities/OwnerScheduleTab';
 import { UserReservationsTab } from '../../components/facilities/UserReservationsTab';
 import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
+import { EntityHeader } from '../../components/ui/EntityHeader';
+import { getSportColor } from '../../constants/sportColors';
+import { API_BASE_URL } from '../../services/api/config';
+import * as ImagePicker from 'expo-image-picker';
 import {
   setSelectedFacility,
   selectSelectedFacility,
@@ -127,6 +131,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const [facilityMapThumbnailUrl, setFacilityMapThumbnailUrl] = useState<
     string | null
   >(null);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState(0);
   const pagerRef = useRef<ScrollView>(null);
@@ -138,6 +143,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
       setFacilityMapThumbnailUrl(
         selectedFacility.facilityMapThumbnailUrl ?? null
       );
+      setCoverImageUrl((selectedFacility as any).coverImageUrl ?? null);
     }
   }, [selectedFacility]);
 
@@ -198,6 +204,42 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
   const handleTabPress = (index: number) => {
     setActiveTab(index);
     pagerRef.current?.scrollTo({ x: index * screenWidth, animated: true });
+  };
+
+  const handleCoverImagePress = async () => {
+    if (!selectedFacility) return;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'] as ImagePicker.MediaType[],
+        allowsEditing: true,
+        aspect: [8, 3],
+        quality: 0.85,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      const formData = new FormData();
+      formData.append('image', {
+        uri: asset.uri,
+        name: asset.fileName || 'cover.jpg',
+        type: asset.mimeType || 'image/jpeg',
+      } as any);
+      const res = await fetch(
+        `${API_BASE_URL}/facilities/${selectedFacility.id}/cover`,
+        {
+          method: 'POST',
+          headers: { 'X-User-Id': currentUser?.id || '' },
+          body: formData,
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setCoverImageUrl(data.coverImageUrl);
+      } else {
+        Alert.alert('Error', 'Failed to upload cover image');
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to upload cover image');
+    }
   };
 
   const handlePagerScroll = (e: any) => {
@@ -286,6 +328,19 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
       ]}
     >
       <ContextualReturnButton />
+      <EntityHeader
+        title={facility.name}
+        coverImageUrl={coverImageUrl}
+        tintColor={getSportColor(facility.sportTypes?.[0] ?? 'other')}
+        tags={[
+          ...(facility.sportTypes || []).map((s: string) => ({
+            label: s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' '),
+          })),
+          { label: 'Grounds' },
+        ]}
+        subtitle={`${facility.city}, ${facility.state}`}
+        onCameraPress={isOwner ? handleCoverImagePress : undefined}
+      />
       <TabBar tabs={tabs} activeIndex={activeTab} onPress={handleTabPress} />
 
       <ScrollView

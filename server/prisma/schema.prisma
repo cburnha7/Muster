@@ -222,6 +222,10 @@ model Facility {
   facilityMapUrl          String?
   facilityMapThumbnailUrl String?
 
+  // Cover image (header/banner photo for the Grounds detail screen)
+  coverImageUrl          String?
+  coverImageThumbnailUrl String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
