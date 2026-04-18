@@ -137,6 +137,15 @@ export function CourtAvailabilityScreen() {
   const [scheduleEnd, setScheduleEnd] = useState<string | null>(null);
   const [minimumBookingMinutes, setMinimumBookingMinutes] = useState(60);
 
+  // Booking time selection (optional — pre-filled from event creation flow)
+  const [bookingStart, setBookingStart] = useState<string | null>(
+    eventStartTime || null
+  );
+  const [bookingEnd, setBookingEnd] = useState<string | null>(null);
+  const [scheduleData, setScheduleData] = useState<ScheduleBlock[]>([]);
+  const [slotIncrement, setSlotIncrement] = useState(30);
+  const [overlapError, setOverlapError] = useState<string | null>(null);
+
   // Modals
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showConflict, setShowConflict] = useState(false);
