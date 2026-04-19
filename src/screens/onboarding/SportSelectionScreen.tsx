@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: colors.white,
     letterSpacing: -0.1,
   },
 });

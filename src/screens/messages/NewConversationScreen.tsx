@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 2,
     paddingHorizontal: 16,

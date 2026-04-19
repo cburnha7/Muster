@@ -173,7 +173,7 @@ export const ProfileFinishScreen: React.FC = () => {
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <Text style={styles.finishButtonText}>Let's go</Text>
             )}
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   finishButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: colors.white,
     letterSpacing: -0.1,
   },
 });

@@ -218,36 +218,36 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'League not found' });
     }
 
-    // Cast to any to allow mutation of memberships array for cleanup
-    const leagueData = league as any;
+    // Mutable copy for cleanup of stale/duplicate memberships
+    let cleanedMemberships = [...league.memberships];
 
     // Cleanup: remove stale pending memberships where an active one already exists
     // This handles duplicate data from previous roster sync bugs
-    const activeMemberIds = leagueData.memberships
-      .filter((m: any) => m.status === 'active' && m.memberType === 'roster')
-      .map((m: any) => m.memberId);
+    const activeMemberIds = cleanedMemberships
+      .filter(m => m.status === 'active' && m.memberType === 'roster')
+      .map(m => m.memberId);
 
     if (activeMemberIds.length > 0) {
-      const stalePending = leagueData.memberships.filter(
-        (m: any) =>
+      const stalePending = cleanedMemberships.filter(
+        m =>
           m.status === 'pending' &&
           m.memberType === 'roster' &&
           activeMemberIds.includes(m.memberId)
       );
       if (stalePending.length > 0) {
         await prisma.leagueMembership.deleteMany({
-          where: { id: { in: stalePending.map((m: any) => m.id) } },
+          where: { id: { in: stalePending.map(m => m.id) } },
         });
         // Remove from response too
-        leagueData.memberships = leagueData.memberships.filter(
-          (m: any) => !stalePending.some((s: any) => s.id === m.id)
+        cleanedMemberships = cleanedMemberships.filter(
+          m => !stalePending.some(s => s.id === m.id)
         );
       }
     }
 
     // Also cleanup duplicate pending memberships for the same roster (NULL seasonId duplicates)
-    const pendingRosterMemberships = leagueData.memberships.filter(
-      (m: any) => m.status === 'pending' && m.memberType === 'roster'
+    const pendingRosterMemberships = cleanedMemberships.filter(
+      m => m.status === 'pending' && m.memberType === 'roster'
     );
     const seenPendingRosterIds = new Set<string>();
     const duplicatePendingIds: string[] = [];
@@ -262,12 +262,12 @@ router.get('/:id', async (req: Request, res: Response) => {
       await prisma.leagueMembership.deleteMany({
         where: { id: { in: duplicatePendingIds } },
       });
-      leagueData.memberships = leagueData.memberships.filter(
-        (m: any) => !duplicatePendingIds.includes(m.id)
+      cleanedMemberships = cleanedMemberships.filter(
+        m => !duplicatePendingIds.includes(m.id)
       );
     }
 
-    res.json(leagueData);
+    res.json({ ...league, memberships: cleanedMemberships });
   } catch (error) {
     console.error('Error fetching league:', error);
     res.status(500).json({ error: 'Failed to fetch league' });
@@ -3187,7 +3187,10 @@ router.post(
 
         // Send via NotificationService — failure is non-blocking
         try {
-          (NotificationService as any).sendNotification(
+          // NotificationService doesn't have a generic sendNotification method;
+          // log the intent until a dedicated notifyLeagueReady method is added.
+          console.log(
+            'League ready notification for organizer',
             league.organizerId,
             notification
           );

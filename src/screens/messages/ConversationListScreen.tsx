@@ -305,7 +305,7 @@ export function ConversationListScreen() {
         icon="create-outline"
         onPress={() => navigation.navigate('NewConversation')}
         backgroundColor={colors.primary}
-        iconColor="#FFFFFF"
+        iconColor={colors.white}
       />
     </View>
   );
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.onSurfaceVariant,
   },
-  chipTextActive: { color: '#FFFFFF' },
+  chipTextActive: { color: colors.white },
   separator: {
     height: 1,
     backgroundColor: colors.outlineVariant + '50',
@@ -384,5 +384,5 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     backgroundColor: colors.primary,
   },
-  emptyActionText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
+  emptyActionText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
 });

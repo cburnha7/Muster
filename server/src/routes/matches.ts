@@ -15,7 +15,7 @@ router.get('/', async (req: Request, res: Response) => {
       teamId,
       status,
       page = '1',
-      limit = '20'
+      limit = '20',
     } = req.query;
 
     const pageNum = parseInt(page as string);
@@ -24,22 +24,19 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Build where clause
     const where: any = {};
-    
+
     if (leagueId) {
       where.leagueId = leagueId;
     }
-    
+
     if (seasonId) {
       where.seasonId = seasonId;
     }
-    
+
     if (teamId) {
-      where.OR = [
-        { homeTeamId: teamId },
-        { awayTeamId: teamId }
-      ];
+      where.OR = [{ homeTeamId: teamId }, { awayTeamId: teamId }];
     }
-    
+
     if (status) {
       where.status = status;
     }
@@ -57,28 +54,28 @@ router.get('/', async (req: Request, res: Response) => {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         season: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         homeTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         awayTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         event: {
           select: {
@@ -91,13 +88,13 @@ router.get('/', async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 street: true,
-                city: true
-              }
-            }
-          }
-        }
+                city: true,
+              },
+            },
+          },
+        },
       },
-      orderBy: { scheduledAt: 'desc' }
+      orderBy: { scheduledAt: 'desc' },
     });
 
     res.json({
@@ -106,8 +103,8 @@ router.get('/', async (req: Request, res: Response) => {
         page: pageNum,
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
-      }
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     console.error('Error fetching matches:', error);
@@ -128,30 +125,30 @@ router.get('/:id', async (req: Request, res: Response) => {
             id: true,
             name: true,
             sportType: true,
-            organizerId: true
-          }
+            organizerId: true,
+          },
         },
         season: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         homeTeam: {
           select: {
             id: true,
             name: true,
             imageUrl: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         awayTeam: {
           select: {
             id: true,
             name: true,
             imageUrl: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         event: {
           select: {
@@ -168,12 +165,12 @@ router.get('/:id', async (req: Request, res: Response) => {
                 city: true,
                 state: true,
                 latitude: true,
-                longitude: true
-              }
-            }
-          }
-        }
-      }
+                longitude: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!match) {
@@ -199,19 +196,20 @@ router.post('/', async (req: Request, res: Response) => {
       eventId,
       notes,
       userId,
-      courtCost
+      courtCost,
     } = req.body;
 
     // Validate required fields
     if (!leagueId || !homeTeamId || !awayTeamId || !scheduledAt) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: leagueId, homeTeamId, awayTeamId, scheduledAt' 
+      return res.status(400).json({
+        error:
+          'Missing required fields: leagueId, homeTeamId, awayTeamId, scheduledAt',
       });
     }
 
     // Check if league exists and user is operator
     const league = await prisma.league.findUnique({
-      where: { id: leagueId }
+      where: { id: leagueId },
     });
 
     if (!league) {
@@ -219,12 +217,16 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (userId && league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can create matches' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can create matches' });
     }
 
     // Validate teams are different
     if (homeTeamId === awayTeamId) {
-      return res.status(400).json({ error: 'Home and away teams must be different' });
+      return res
+        .status(400)
+        .json({ error: 'Home and away teams must be different' });
     }
 
     // Validate both teams are league members
@@ -232,30 +234,34 @@ router.post('/', async (req: Request, res: Response) => {
       where: {
         leagueId,
         teamId: homeTeamId,
-        status: 'active'
-      }
+        status: 'active',
+      },
     });
 
     const awayMembership = await prisma.leagueMembership.findFirst({
       where: {
         leagueId,
         teamId: awayTeamId,
-        status: 'active'
-      }
+        status: 'active',
+      },
     });
 
     if (!homeMembership) {
-      return res.status(400).json({ error: 'Home team is not a member of this league' });
+      return res
+        .status(400)
+        .json({ error: 'Home team is not a member of this league' });
     }
 
     if (!awayMembership) {
-      return res.status(400).json({ error: 'Away team is not a member of this league' });
+      return res
+        .status(400)
+        .json({ error: 'Away team is not a member of this league' });
     }
 
     // If event linked, validate it exists
     if (eventId) {
       const event = await prisma.event.findUnique({
-        where: { id: eventId }
+        where: { id: eventId },
       });
 
       if (!event) {
@@ -266,7 +272,9 @@ router.post('/', async (req: Request, res: Response) => {
     // Paid league: require courtCost and verify league balance covers it
     if (league.pricingType === 'paid') {
       if (courtCost === undefined || courtCost === null) {
-        return res.status(400).json({ error: 'courtCost is required for paid league games' });
+        return res
+          .status(400)
+          .json({ error: 'courtCost is required for paid league games' });
       }
 
       const balanceResult = await checkBalance(leagueId, courtCost);
@@ -287,7 +295,7 @@ router.post('/', async (req: Request, res: Response) => {
         awayTeamId,
         scheduledAt: new Date(scheduledAt),
         eventId,
-        notes
+        notes,
       },
       include: {
         league: {
@@ -295,24 +303,24 @@ router.post('/', async (req: Request, res: Response) => {
             id: true,
             name: true,
             sportType: true,
-            pricingType: true
-          }
+            pricingType: true,
+          },
         },
         homeTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         awayTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
-        }
-      }
+            imageUrl: true,
+          },
+        },
+      },
     });
 
     // In a free league, the home roster manager is the booking host.
@@ -334,19 +342,14 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const {
-      scheduledAt,
-      status,
-      notes,
-      userId
-    } = req.body;
+    const { scheduledAt, status, notes, userId } = req.body;
 
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
       where: { id },
       include: {
-        league: true
-      }
+        league: true,
+      },
     });
 
     if (!existingMatch) {
@@ -355,7 +358,9 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     // Check if user is league operator
     if (userId && existingMatch.league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can update matches' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can update matches' });
     }
 
     // Update match
@@ -364,31 +369,31 @@ router.put('/:id', async (req: Request, res: Response) => {
       data: {
         ...(scheduledAt && { scheduledAt: new Date(scheduledAt) }),
         ...(status && { status }),
-        ...(notes !== undefined && { notes })
+        ...(notes !== undefined && { notes }),
       },
       include: {
         league: {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         homeTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         awayTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
-        }
-      }
+            imageUrl: true,
+          },
+        },
+      },
     });
 
     res.json(match);
@@ -408,8 +413,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
     const existingMatch = await prisma.match.findUnique({
       where: { id },
       include: {
-        league: true
-      }
+        league: true,
+      },
     });
 
     if (!existingMatch) {
@@ -418,12 +423,14 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
     // Check if user is league operator
     if (userId && existingMatch.league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can delete matches' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can delete matches' });
     }
 
     // Delete match
     await prisma.match.delete({
-      where: { id }
+      where: { id },
     });
 
     res.status(204).send();
@@ -441,7 +448,9 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
     const { rentalId, userId } = req.body;
 
     if (!rentalId) {
-      return res.status(400).json({ error: 'Missing required field: rentalId' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required field: rentalId' });
     }
 
     // Fetch match with league info
@@ -453,18 +462,18 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
             id: true,
             pricingType: true,
             organizerId: true,
-          }
+          },
         },
         homeTeam: {
           select: {
             id: true,
             members: {
               where: { role: 'captain', status: 'active' },
-              select: { userId: true }
-            }
-          }
-        }
-      }
+              select: { userId: true },
+            },
+          },
+        },
+      },
     });
 
     if (!existingMatch) {
@@ -474,10 +483,16 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
     // Only the home roster manager can assign a rental in a free league
     const homeManagerIds = existingMatch.homeTeam.members.map(m => m.userId);
     const isHomeManager = userId && homeManagerIds.includes(userId);
-    const isCommissioner = userId && existingMatch.league.organizerId === userId;
+    const isCommissioner =
+      userId && existingMatch.league.organizerId === userId;
 
     if (!isHomeManager && !isCommissioner) {
-      return res.status(403).json({ error: 'Only the home roster manager or league commissioner can assign a rental to this game' });
+      return res
+        .status(403)
+        .json({
+          error:
+            'Only the home roster manager or league commissioner can assign a rental to this game',
+        });
     }
 
     // Verify the rental exists and belongs to the requesting user
@@ -493,13 +508,13 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
             court: {
               select: {
                 facility: {
-                  select: { id: true }
-                }
-              }
-            }
-          }
-        }
-      }
+                  select: { id: true },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!rental) {
@@ -507,7 +522,9 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
     }
 
     if (rental.status !== 'confirmed') {
-      return res.status(400).json({ error: 'Only confirmed rentals can be assigned to a game' });
+      return res
+        .status(400)
+        .json({ error: 'Only confirmed rentals can be assigned to a game' });
     }
 
     // Branch on league pricing type:
@@ -532,13 +549,13 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
       data: updateData,
       include: {
         league: {
-          select: { id: true, name: true, sportType: true }
+          select: { id: true, name: true, sportType: true },
         },
         homeTeam: {
-          select: { id: true, name: true, imageUrl: true }
+          select: { id: true, name: true, imageUrl: true },
         },
         awayTeam: {
-          select: { id: true, name: true, imageUrl: true }
+          select: { id: true, name: true, imageUrl: true },
         },
         rental: {
           select: {
@@ -554,15 +571,20 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
                   select: {
                     name: true,
                     facility: {
-                      select: { id: true, name: true, street: true, city: true }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      select: {
+                        id: true,
+                        name: true,
+                        street: true,
+                        city: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     // Record court cost in the league ledger for paid leagues
@@ -591,16 +613,28 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
         facilityName: court.facility.name,
         courtName: court.name,
         facilityAddress: `${court.facility.street}, ${court.facility.city}`,
-        date: match.rental.timeSlot.date instanceof Date
-          ? match.rental.timeSlot.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-          : String(match.rental.timeSlot.date),
+        date:
+          match.rental.timeSlot.date instanceof Date
+            ? match.rental.timeSlot.date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })
+            : String(match.rental.timeSlot.date),
         startTime: match.rental.timeSlot.startTime,
         endTime: match.rental.timeSlot.endTime,
       };
 
       const confirmationDeadline = updateData.confirmationDeadline;
-      NotificationService.notifyAwayManagerConfirmation(match.id, venueDetails, confirmationDeadline).catch(err =>
-        console.error('Failed to send away manager confirmation notification:', err)
+      NotificationService.notifyAwayManagerConfirmation(
+        match.id,
+        venueDetails,
+        confirmationDeadline
+      ).catch(err =>
+        console.error(
+          'Failed to send away manager confirmation notification:',
+          err
+        )
       );
     }
 
@@ -630,11 +664,11 @@ router.patch('/:id/confirm', async (req: Request, res: Response) => {
             id: true,
             members: {
               where: { role: 'captain', status: 'active' },
-              select: { userId: true }
-            }
-          }
-        }
-      }
+              select: { userId: true },
+            },
+          },
+        },
+      },
     });
 
     if (!existingMatch) {
@@ -643,18 +677,29 @@ router.patch('/:id/confirm', async (req: Request, res: Response) => {
 
     // Match must be in pending_away_confirm status
     if (existingMatch.status !== 'pending_away_confirm') {
-      return res.status(400).json({ error: 'Match is not awaiting away roster confirmation' });
+      return res
+        .status(400)
+        .json({ error: 'Match is not awaiting away roster confirmation' });
     }
 
     // Verify the requesting user is the away roster manager (captain)
-    const awayManagerIds = existingMatch.awayTeam.members.map((m: { userId: string }) => m.userId);
+    const awayManagerIds = existingMatch.awayTeam.members.map(
+      (m: { userId: string }) => m.userId
+    );
     if (!awayManagerIds.includes(userId)) {
-      return res.status(403).json({ error: 'Only the away roster manager can confirm this game' });
+      return res
+        .status(403)
+        .json({ error: 'Only the away roster manager can confirm this game' });
     }
 
     // Verify the confirmation deadline hasn't passed
-    if (existingMatch.confirmationDeadline && new Date() > existingMatch.confirmationDeadline) {
-      return res.status(400).json({ error: 'Confirmation deadline has passed' });
+    if (
+      existingMatch.confirmationDeadline &&
+      new Date() > existingMatch.confirmationDeadline
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'Confirmation deadline has passed' });
     }
 
     // Update match status to confirmed
@@ -665,15 +710,15 @@ router.patch('/:id/confirm', async (req: Request, res: Response) => {
       },
       include: {
         league: {
-          select: { id: true, name: true, sportType: true }
+          select: { id: true, name: true, sportType: true },
         },
         homeTeam: {
-          select: { id: true, name: true, imageUrl: true }
+          select: { id: true, name: true, imageUrl: true },
         },
         awayTeam: {
-          select: { id: true, name: true, imageUrl: true }
-        }
-      }
+          select: { id: true, name: true, imageUrl: true },
+        },
+      },
     });
 
     res.json(match);
@@ -693,7 +738,9 @@ router.post('/:id/result', async (req: Request, res: Response) => {
 
     // Validate required fields
     if (homeScore === undefined || awayScore === undefined) {
-      return res.status(400).json({ error: 'Missing required fields: homeScore, awayScore' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required fields: homeScore, awayScore' });
     }
 
     // Validate scores are non-negative
@@ -705,8 +752,8 @@ router.post('/:id/result', async (req: Request, res: Response) => {
     const existingMatch = await prisma.match.findUnique({
       where: { id },
       include: {
-        league: true
-      }
+        league: true,
+      },
     });
 
     if (!existingMatch) {
@@ -715,7 +762,9 @@ router.post('/:id/result', async (req: Request, res: Response) => {
 
     // Check if user is league operator
     if (userId && existingMatch.league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can record match results' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can record match results' });
     }
 
     // Calculate outcome
@@ -729,7 +778,10 @@ router.post('/:id/result', async (req: Request, res: Response) => {
     }
 
     // Get points config from league
-    const pointsConfig = existingMatch.league.pointsConfig as any;
+    const pointsConfig = (existingMatch.league.pointsConfig ?? {}) as Record<
+      string,
+      number
+    >;
     const winPoints = pointsConfig.win || 3;
     const drawPoints = pointsConfig.draw || 1;
     const lossPoints = pointsConfig.loss || 0;
@@ -742,14 +794,19 @@ router.post('/:id/result', async (req: Request, res: Response) => {
         awayScore,
         outcome,
         status: 'completed',
-        playedAt: new Date()
-      }
+        playedAt: new Date(),
+      },
     });
 
     // Lock league from deletion once a match is completed
     if (existingMatch.leagueId) {
-      const { lockLeagueIfMatchPlayed } = await import('../middleware/league-lock');
-      await lockLeagueIfMatchPlayed(prisma, existingMatch.leagueId, 'completed');
+      const { lockLeagueIfMatchPlayed } =
+        await import('../middleware/league-lock');
+      await lockLeagueIfMatchPlayed(
+        prisma,
+        existingMatch.leagueId,
+        'completed'
+      );
     }
 
     // Update home team membership stats
@@ -757,8 +814,8 @@ router.post('/:id/result', async (req: Request, res: Response) => {
       where: {
         leagueId: existingMatch.leagueId,
         teamId: existingMatch.homeTeamId,
-        status: 'active'
-      }
+        status: 'active',
+      },
     });
 
     if (homeMembership) {
@@ -767,15 +824,21 @@ router.post('/:id/result', async (req: Request, res: Response) => {
         data: {
           matchesPlayed: { increment: 1 },
           wins: outcome === 'home_win' ? { increment: 1 } : homeMembership.wins,
-          losses: outcome === 'away_win' ? { increment: 1 } : homeMembership.losses,
+          losses:
+            outcome === 'away_win' ? { increment: 1 } : homeMembership.losses,
           draws: outcome === 'draw' ? { increment: 1 } : homeMembership.draws,
           points: {
-            increment: outcome === 'home_win' ? winPoints : outcome === 'draw' ? drawPoints : lossPoints
+            increment:
+              outcome === 'home_win'
+                ? winPoints
+                : outcome === 'draw'
+                  ? drawPoints
+                  : lossPoints,
           },
           goalsFor: { increment: homeScore },
           goalsAgainst: { increment: awayScore },
-          goalDifference: { increment: homeScore - awayScore }
-        }
+          goalDifference: { increment: homeScore - awayScore },
+        },
       });
     }
 
@@ -784,8 +847,8 @@ router.post('/:id/result', async (req: Request, res: Response) => {
       where: {
         leagueId: existingMatch.leagueId,
         teamId: existingMatch.awayTeamId,
-        status: 'active'
-      }
+        status: 'active',
+      },
     });
 
     if (awayMembership) {
@@ -794,15 +857,21 @@ router.post('/:id/result', async (req: Request, res: Response) => {
         data: {
           matchesPlayed: { increment: 1 },
           wins: outcome === 'away_win' ? { increment: 1 } : awayMembership.wins,
-          losses: outcome === 'home_win' ? { increment: 1 } : awayMembership.losses,
+          losses:
+            outcome === 'home_win' ? { increment: 1 } : awayMembership.losses,
           draws: outcome === 'draw' ? { increment: 1 } : awayMembership.draws,
           points: {
-            increment: outcome === 'away_win' ? winPoints : outcome === 'draw' ? drawPoints : lossPoints
+            increment:
+              outcome === 'away_win'
+                ? winPoints
+                : outcome === 'draw'
+                  ? drawPoints
+                  : lossPoints,
           },
           goalsFor: { increment: awayScore },
           goalsAgainst: { increment: homeScore },
-          goalDifference: { increment: awayScore - homeScore }
-        }
+          goalDifference: { increment: awayScore - homeScore },
+        },
       });
     }
 
@@ -810,17 +879,33 @@ router.post('/:id/result', async (req: Request, res: Response) => {
 
     // ── Bracket advancement: resolve placeholder in next bracket game ──
     if (existingMatch.bracketFlag && existingMatch.gameNumber) {
-      const winnerId = outcome === 'home_win' ? existingMatch.homeTeamId
-        : outcome === 'away_win' ? existingMatch.awayTeamId
-        : null;
-      const loserId = outcome === 'home_win' ? existingMatch.awayTeamId
-        : outcome === 'away_win' ? existingMatch.homeTeamId
-        : null;
+      const winnerId =
+        outcome === 'home_win'
+          ? existingMatch.homeTeamId
+          : outcome === 'away_win'
+            ? existingMatch.awayTeamId
+            : null;
+      const loserId =
+        outcome === 'home_win'
+          ? existingMatch.awayTeamId
+          : outcome === 'away_win'
+            ? existingMatch.homeTeamId
+            : null;
 
       if (winnerId || loserId) {
         // Find the winning and losing team names
-        const winnerTeam = winnerId ? await prisma.team.findUnique({ where: { id: winnerId }, select: { id: true, name: true } }) : null;
-        const loserTeam = loserId ? await prisma.team.findUnique({ where: { id: loserId }, select: { id: true, name: true } }) : null;
+        const winnerTeam = winnerId
+          ? await prisma.team.findUnique({
+              where: { id: winnerId },
+              select: { id: true, name: true },
+            })
+          : null;
+        const loserTeam = loserId
+          ? await prisma.team.findUnique({
+              where: { id: loserId },
+              select: { id: true, name: true },
+            })
+          : null;
 
         const winnerLabel = `Winner of Game ${existingMatch.gameNumber}`;
         const loserLabel = `Loser of Game ${existingMatch.gameNumber}`;
@@ -832,8 +917,16 @@ router.post('/:id/result', async (req: Request, res: Response) => {
             bracketFlag: { not: null },
             status: 'pending_bracket',
             OR: [
-              { placeholderHome: { contains: `Game ${existingMatch.gameNumber}` } },
-              { placeholderAway: { contains: `Game ${existingMatch.gameNumber}` } },
+              {
+                placeholderHome: {
+                  contains: `Game ${existingMatch.gameNumber}`,
+                },
+              },
+              {
+                placeholderAway: {
+                  contains: `Game ${existingMatch.gameNumber}`,
+                },
+              },
             ],
           },
           include: { event: true },
@@ -845,22 +938,38 @@ router.post('/:id/result', async (req: Request, res: Response) => {
           let newTitle = bm.event?.title || '';
 
           // Resolve home placeholder
-          if (bm.placeholderHome && bm.placeholderHome === winnerLabel && winnerTeam) {
+          if (
+            bm.placeholderHome &&
+            bm.placeholderHome === winnerLabel &&
+            winnerTeam
+          ) {
             updates.homeTeamId = winnerTeam.id;
             updates.placeholderHome = null;
             newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
-          } else if (bm.placeholderHome && bm.placeholderHome === loserLabel && loserTeam) {
+          } else if (
+            bm.placeholderHome &&
+            bm.placeholderHome === loserLabel &&
+            loserTeam
+          ) {
             updates.homeTeamId = loserTeam.id;
             updates.placeholderHome = null;
             newTitle = newTitle.replace(loserLabel, loserTeam.name);
           }
 
           // Resolve away placeholder
-          if (bm.placeholderAway && bm.placeholderAway === winnerLabel && winnerTeam) {
+          if (
+            bm.placeholderAway &&
+            bm.placeholderAway === winnerLabel &&
+            winnerTeam
+          ) {
             updates.awayTeamId = winnerTeam.id;
             updates.placeholderAway = null;
             newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
-          } else if (bm.placeholderAway && bm.placeholderAway === loserLabel && loserTeam) {
+          } else if (
+            bm.placeholderAway &&
+            bm.placeholderAway === loserLabel &&
+            loserTeam
+          ) {
             updates.awayTeamId = loserTeam.id;
             updates.placeholderAway = null;
             newTitle = newTitle.replace(loserLabel, loserTeam.name);
@@ -900,24 +1009,24 @@ router.post('/:id/result', async (req: Request, res: Response) => {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         homeTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
+            imageUrl: true,
+          },
         },
         awayTeam: {
           select: {
             id: true,
             name: true,
-            imageUrl: true
-          }
-        }
-      }
+            imageUrl: true,
+          },
+        },
+      },
     });
 
     res.json(updatedMatch);

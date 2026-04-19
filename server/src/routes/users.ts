@@ -122,7 +122,7 @@ router.get('/profile', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Upload profile image
-router.post('/profile/image', optionalAuthMiddleware, async (req, res) => {
+router.post('/profile/image', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId)
@@ -157,7 +157,7 @@ router.post('/profile/image', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Delete profile image
-router.delete('/profile/image', optionalAuthMiddleware, async (req, res) => {
+router.delete('/profile/image', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.userId || (req.headers['x-user-id'] as string);
     if (!userId)
@@ -1040,7 +1040,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update current user profile
-router.put('/profile', optionalAuthMiddleware, async (req, res) => {
+router.put('/profile', authMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
 

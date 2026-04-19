@@ -151,7 +151,7 @@ export function RedeemCodeScreen() {
                   activeOpacity={0.7}
                 >
                   {isValidating ? (
-                    <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator color={colors.white} size="small" />
                   ) : (
                     <Text style={styles.validateBtnText}>Apply</Text>
                   )}
@@ -210,7 +210,7 @@ export function RedeemCodeScreen() {
                   activeOpacity={0.7}
                 >
                   {isRedeeming ? (
-                    <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator color={colors.white} size="small" />
                   ) : (
                     <Text style={styles.primaryBtnText}>Redeem</Text>
                   )}
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  validateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#fff' },
+  validateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
   error: {
     fontFamily: fonts.body,
     fontSize: 13,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   tierCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 14,
     marginBottom: 10,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   primaryBtnDisabled: { opacity: 0.5 },
-  primaryBtnText: { fontFamily: fonts.ui, fontSize: 16, color: '#fff' },
+  primaryBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.white },
   successCard: { alignItems: 'center', marginTop: 40, gap: 16 },
   successText: {
     fontFamily: fonts.body,

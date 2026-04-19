@@ -1107,13 +1107,15 @@ router.delete('/:id', async (req, res) => {
         });
 
         // Cancel all bookings for this event
-        const cancelledBookings = await tx.booking.updateMany({
+        await tx.booking.updateMany({
           where: {
             eventId: id,
             status: { not: 'cancelled' },
           },
           data: {
             status: 'cancelled',
+            cancellationReason: reason || 'Event cancelled by organizer',
+            cancelledAt: new Date(),
           },
         });
 
@@ -1567,7 +1569,7 @@ router.post('/send-reminders', async (req, res) => {
     const { MessagingService } = await import('../services/MessagingService');
 
     // 24-hour reminders
-    const upcoming24h = await (prisma.event.findMany as any)({
+    const upcoming24h = await prisma.event.findMany({
       where: {
         startTime: { gte: now, lte: in24h },
         status: 'UPCOMING',
@@ -1600,20 +1602,23 @@ router.post('/send-reminders', async (req, res) => {
           'URGENT'
         );
       }
-      await (prisma.event.update as any)({
+      await prisma.event.update({
         where: { id: event.id },
         data: { reminderSent24h: true },
       });
     }
 
     // 1-hour reminders
-    const upcoming1h = await (prisma.event.findMany as any)({
+    const upcoming1h = await prisma.event.findMany({
       where: {
         startTime: { gte: now, lte: in1h },
         status: 'UPCOMING',
         reminderSent1h: { not: true },
       },
-      include: { facility: { select: { name: true } } },
+      include: {
+        facility: { select: { name: true } },
+        _count: { select: { gameParticipations: true } },
+      },
     });
 
     for (const event of upcoming1h) {
@@ -1626,17 +1631,21 @@ router.post('/send-reminders', async (req, res) => {
           'URGENT'
         );
       }
-      await (prisma.event.update as any)({
+      await prisma.event.update({
         where: { id: event.id },
         data: { reminderSent1h: true },
       });
     }
 
     // Post-game messages for completed events
-    const completed = await (prisma.event.findMany as any)({
+    const completed = await prisma.event.findMany({
       where: {
         status: 'COMPLETED',
         postGameMessageSent: { not: true },
+      },
+      include: {
+        facility: { select: { name: true } },
+        _count: { select: { gameParticipations: true } },
       },
     });
 
@@ -1648,7 +1657,7 @@ router.post('/send-reminders', async (req, res) => {
           'Good game! How did everyone play?'
         );
       }
-      await (prisma.event.update as any)({
+      await prisma.event.update({
         where: { id: event.id },
         data: { postGameMessageSent: true },
       });

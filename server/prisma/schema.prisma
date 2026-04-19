@@ -162,6 +162,11 @@ model Event {
   locationLat     Float?   // For map display and distance calculations
   locationLng     Float?   // For map display and distance calculations
 
+  // Notification tracking (for cron-based reminders)
+  reminderSent24h     Boolean @default(false)
+  reminderSent1h      Boolean @default(false)
+  postGameMessageSent Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -290,7 +295,7 @@ model Team {
   id          String   @id @default(uuid())
   name        String
   description String
-  sportType   String
+  sportType   String   // @deprecated — use sportTypes[0] instead. Kept for backward compat.
   sportTypes  String[]   @default([])
   skillLevel  String
   maxMembers  Int
@@ -448,6 +453,10 @@ model Booking {
   // Public event fields
   perPersonPrice       Float?    // Per-person price for public events
   minAttendeeCount     Int?      // Minimum attendees required for public event to proceed
+
+  // Cancellation tracking
+  cancellationReason   String?   // Reason for cancellation
+  cancelledAt          DateTime? // When the booking was cancelled
 
   // Foreign Keys
   userId     String
