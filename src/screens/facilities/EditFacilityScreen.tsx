@@ -1530,7 +1530,7 @@ export function EditFacilityScreen({
                 Sport Type *
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {Object.values(SportType).map(sport => {
+                {(formData.sportTypes || []).map(sport => {
                   const isSelected = newCourt.sportType === sport;
                   return (
                     <TouchableOpacity

@@ -252,18 +252,30 @@ export function DependentFormScreen() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        const message =
-          errorData?.error ??
-          errorData?.message ??
-          'Something went wrong. Please try again.';
+        console.error(
+          'Dependent API error:',
+          response.status,
+          JSON.stringify(errorData)
+        );
 
-        // Surface known validation errors inline instead of a generic alert
-        if (message.toLowerCase().includes('under 18')) {
-          setErrors(prev => ({ ...prev, dateOfBirth: message }));
-        } else if (message.includes('Missing required fields')) {
-          setErrors(prev => ({ ...prev, general: message }));
+        const rawMessage = errorData?.error ?? errorData?.message ?? '';
+
+        // Surface known validation errors inline with user-friendly messages
+        if (rawMessage.toLowerCase().includes('under 18')) {
+          setErrors(prev => ({
+            ...prev,
+            dateOfBirth: 'Dependent must be under 18 years old.',
+          }));
+        } else if (rawMessage.includes('Missing required fields')) {
+          setErrors(prev => ({
+            ...prev,
+            general: 'Please fill in all required fields and try again.',
+          }));
         } else {
-          setErrors(prev => ({ ...prev, general: message }));
+          setErrors(prev => ({
+            ...prev,
+            general: 'Something went wrong. Please try again.',
+          }));
         }
         return;
       }
@@ -294,6 +306,17 @@ export function DependentFormScreen() {
       );
     } catch (err: any) {
       console.error('Dependent submit error:', err);
+      console.error(
+        'Error details:',
+        JSON.stringify(err, Object.getOwnPropertyNames(err))
+      );
+      if (err?.response) {
+        console.error('Error response status:', err.response.status);
+        console.error(
+          'Error response data:',
+          JSON.stringify(err.response.data)
+        );
+      }
       setErrors({
         general:
           'Could not reach the server. Check your connection and try again.',

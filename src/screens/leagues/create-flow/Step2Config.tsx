@@ -69,6 +69,12 @@ export function Step2Config() {
     }
   };
 
+  const formatTime = (date: Date): string => {
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
   const parseTimeToDate = (timeStr: string): Date => {
     const d = new Date();
     if (timeStr) {
@@ -133,23 +139,49 @@ export function Step2Config() {
 
       {/* Time Window */}
       <Text style={styles.label}>Time Window</Text>
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <Text style={styles.sublabelCenter}>Start</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          width: '100%',
+        }}
+      >
+        <View style={{ alignItems: 'center' }}>
+          <Text
+            style={{
+              fontFamily: fonts.label,
+              fontSize: 12,
+              color: colors.inkSoft,
+              marginBottom: 8,
+            }}
+          >
+            Start
+          </Text>
           <CrossPlatformDateTimePicker
             value={parseTimeToDate(state.timeStart)}
             mode="time"
+            onChange={(_: any, d?: Date) =>
+              d && set('timeStart')(formatTime(d))
+            }
             minuteInterval={15}
-            onChange={handleTimeStart}
           />
         </View>
-        <View style={styles.half}>
-          <Text style={styles.sublabelCenter}>End</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Text
+            style={{
+              fontFamily: fonts.label,
+              fontSize: 12,
+              color: colors.inkSoft,
+              marginBottom: 8,
+            }}
+          >
+            End
+          </Text>
           <CrossPlatformDateTimePicker
             value={parseTimeToDate(state.timeEnd)}
             mode="time"
+            onChange={(_: any, d?: Date) => d && set('timeEnd')(formatTime(d))}
             minuteInterval={15}
-            onChange={handleTimeEnd}
           />
         </View>
       </View>
