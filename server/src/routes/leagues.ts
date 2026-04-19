@@ -290,7 +290,7 @@ router.post(
         endDate,
         pointsConfig,
         imageUrl,
-        organizerId,
+        organizerId: _clientOrganizerId,
         leagueType,
         visibility,
         membershipFee,
@@ -311,6 +311,12 @@ router.post(
         genderRestriction,
         invitedRosterIds,
       } = req.body;
+
+      // Override organizerId with authenticated user — never trust client-supplied value
+      const organizerId =
+        req.user?.userId ||
+        (req.headers['x-user-id'] as string | undefined) ||
+        _clientOrganizerId;
 
       // Validate required fields
       if (!name || !sportType || !skillLevel || !organizerId) {
@@ -3438,11 +3444,9 @@ router.post(
           const fs = require('fs');
           fs.unlinkSync(file.path);
         }
-        return res
-          .status(403)
-          .json({
-            error: 'Only the league organizer can upload a cover image',
-          });
+        return res.status(403).json({
+          error: 'Only the league organizer can upload a cover image',
+        });
       }
 
       // Process and optimize image
@@ -3522,11 +3526,9 @@ router.delete('/:id/cover', async (req: Request, res: Response) => {
 
     // Authorization: only the league organizer
     if (league.organizerId !== userId) {
-      return res
-        .status(403)
-        .json({
-          error: 'Only the league organizer can delete the cover image',
-        });
+      return res.status(403).json({
+        error: 'Only the league organizer can delete the cover image',
+      });
     }
 
     if (!league.imageUrl) {

@@ -387,19 +387,31 @@ router.get('/:id/salutes/status', async (req, res) => {
 // Create event
 router.post('/', requireNonDependent, async (req, res) => {
   try {
-    // TODO: Get organizer ID from auth token
-    // For now, use the first user as default organizer
-    const defaultOrganizer = await prisma.user.findFirst({
-      select: { id: true },
-    });
+    // Get organizer ID from auth token or header — never trust req.body
+    const authenticatedUserId =
+      (req as any).user?.userId ||
+      (req.headers['x-user-id'] as string | undefined);
 
-    if (!defaultOrganizer) {
-      return res.status(400).json({ error: 'No users found in database' });
+    if (!authenticatedUserId) {
+      // Fallback for development: use the first user as default organizer
+      const defaultOrganizer = await prisma.user.findFirst({
+        select: { id: true },
+      });
+
+      if (!defaultOrganizer) {
+        return res.status(400).json({ error: 'No users found in database' });
+      }
+
+      // Use default organizer only when no auth is available
+      var resolvedOrganizerId = defaultOrganizer.id;
+    } else {
+      var resolvedOrganizerId = authenticatedUserId;
     }
 
     const eventData = {
       ...req.body,
-      organizerId: req.body.organizerId || defaultOrganizer.id,
+      // Override organizerId with authenticated user — ignore any client-supplied value
+      organizerId: resolvedOrganizerId,
     };
 
     // Validate game events have at most 2 rosters

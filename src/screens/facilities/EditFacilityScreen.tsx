@@ -491,26 +491,28 @@ export function EditFacilityScreen({
     try {
       setIsSubmitting(true);
       const facilityData = {
-        name: formData.name || '',
-        description: formData.description || '',
+        name: (formData.name || '').trim(),
+        description: (formData.description || '').trim(),
         sportTypes: formData.sportTypes || [],
         amenities: formData.amenities || [],
-        street: formData.address?.street || '',
-        city: formData.address?.city || '',
-        state: formData.address?.state || '',
-        zipCode: formData.address?.zipCode || '',
-        contactName: formData.contactInfo?.name || '',
-        contactPhone: formData.contactInfo?.phone || '',
-        contactEmail: formData.contactInfo?.email || '',
-        contactWebsite: formData.contactInfo?.website || '',
-        pricePerHour: formData.pricing?.wholeFacilityRate || 0,
+        street: (formData.address?.street || '').trim(),
+        city: (formData.address?.city || '').trim(),
+        state: (formData.address?.state || '').trim(),
+        zipCode: (formData.address?.zipCode || '').trim(),
+        contactName: (formData.contactInfo?.name || '').trim() || undefined,
+        contactPhone: (formData.contactInfo?.phone || '').trim() || undefined,
+        contactEmail: (formData.contactInfo?.email || '').trim() || undefined,
+        contactWebsite:
+          (formData.contactInfo?.website || '').trim() || undefined,
+        pricePerHour:
+          parseFloat(String(formData.pricing?.wholeFacilityRate)) || 0,
         hoursOfOperation:
           hoursOfOperation.length > 0 ? hoursOfOperation : undefined,
         cancellationPolicyHours: formData.cancellationPolicyHours ?? null,
         requiresInsurance,
         requiresBookingConfirmation,
         waiverRequired,
-        waiverText: waiverRequired ? waiverText : null,
+        waiverText: waiverRequired ? waiverText.trim() : null,
       };
 
       const updatedFacility = await facilityService.updateFacility(
@@ -1623,7 +1625,9 @@ export function EditFacilityScreen({
                   borderRadius: 8,
                   alignItems: 'center',
                   marginHorizontal: Spacing.xs,
-                  backgroundColor: colors.white,
+                  backgroundColor: 'transparent',
+                  borderWidth: 1,
+                  borderColor: colors.border,
                 }}
                 onPress={() => {
                   setShowAddCourtModal(false);

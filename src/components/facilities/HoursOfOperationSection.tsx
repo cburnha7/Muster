@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { TimePickerInput } from '../forms/TimePickerInput';
 
 interface DayHours {
   dayOfWeek: number; // 0=Sunday, 1=Monday, etc.
@@ -22,30 +16,34 @@ interface HoursOfOperationSectionProps {
   onChange: (hours: DayHours[]) => void;
 }
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-const TIME_OPTIONS = [
-  '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-  '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
+const DAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
 ];
 
-export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSectionProps): JSX.Element {
+export function HoursOfOperationSection({
+  hours,
+  onChange,
+}: HoursOfOperationSectionProps): JSX.Element {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingDay, setEditingDay] = useState<number | null>(null);
-  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   // Initialize with default hours if empty
   const getHoursForDay = (dayOfWeek: number): DayHours => {
     const existing = hours.find(h => h.dayOfWeek === dayOfWeek);
-    return existing || {
-      dayOfWeek,
-      startTime: '06:00',
-      endTime: '22:00',
-      isClosed: false,
-    };
+    return (
+      existing || {
+        dayOfWeek,
+        startTime: '06:00',
+        endTime: '22:00',
+        isClosed: false,
+      }
+    );
   };
 
   const handleEditDay = (dayOfWeek: number) => {
@@ -55,7 +53,7 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
 
   const handleToggleClosed = () => {
     if (editingDay === null) return;
-    
+
     const dayHours = getHoursForDay(editingDay);
     const updatedHours = hours.filter(h => h.dayOfWeek !== editingDay);
     updatedHours.push({
@@ -67,7 +65,7 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
 
   const handleTimeChange = (field: 'startTime' | 'endTime', value: string) => {
     if (editingDay === null) return;
-    
+
     const dayHours = getHoursForDay(editingDay);
     const updatedHours = hours.filter(h => h.dayOfWeek !== editingDay);
     updatedHours.push({
@@ -79,7 +77,7 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
 
   const handleApplyToAll = () => {
     if (editingDay === null) return;
-    
+
     const templateHours = getHoursForDay(editingDay);
     const newHours = DAYS.map((_, index) => ({
       dayOfWeek: index,
@@ -100,7 +98,8 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const currentDayHours = editingDay !== null ? getHoursForDay(editingDay) : null;
+  const currentDayHours =
+    editingDay !== null ? getHoursForDay(editingDay) : null;
 
   return (
     <View style={styles.section}>
@@ -125,10 +124,15 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
               <Text style={styles.closedText}>Closed</Text>
             ) : (
               <Text style={styles.hoursText}>
-                {formatTimeDisplay(dayHours.startTime)} - {formatTimeDisplay(dayHours.endTime)}
+                {formatTimeDisplay(dayHours.startTime)} -{' '}
+                {formatTimeDisplay(dayHours.endTime)}
               </Text>
             )}
-            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.textTertiary}
+            />
           </TouchableOpacity>
         );
       })}
@@ -167,53 +171,47 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
                 activeOpacity={0.7}
               >
                 <Text style={styles.closedToggleLabel}>Closed</Text>
-                <View style={[
-                  styles.toggle,
-                  currentDayHours?.isClosed && styles.toggleActive
-                ]}>
-                  <View style={[
-                    styles.toggleThumb,
-                    currentDayHours?.isClosed && styles.toggleThumbActive
-                  ]} />
+                <View
+                  style={[
+                    styles.toggle,
+                    currentDayHours?.isClosed && styles.toggleActive,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.toggleThumb,
+                      currentDayHours?.isClosed && styles.toggleThumbActive,
+                    ]}
+                  />
                 </View>
               </TouchableOpacity>
 
               {!currentDayHours?.isClosed && (
                 <>
-                  {/* Start Time */}
-                  <View style={styles.timeRow}>
-                    <Text style={styles.timeLabel}>Opens</Text>
-                    <TouchableOpacity
-                      style={styles.timePicker}
-                      onPress={() => setShowStartTimePicker(true)}
-                    >
-                      <Text style={styles.timeValue}>
-                        {currentDayHours ? formatTimeDisplay(currentDayHours.startTime) : ''}
-                      </Text>
-                      <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
+                  {/* Opens Time Picker */}
+                  <TimePickerInput
+                    label="Opens"
+                    value={currentDayHours?.startTime || '08:00'}
+                    onChange={time => handleTimeChange('startTime', time)}
+                  />
 
-                  {/* End Time */}
-                  <View style={styles.timeRow}>
-                    <Text style={styles.timeLabel}>Closes</Text>
-                    <TouchableOpacity
-                      style={styles.timePicker}
-                      onPress={() => setShowEndTimePicker(true)}
-                    >
-                      <Text style={styles.timeValue}>
-                        {currentDayHours ? formatTimeDisplay(currentDayHours.endTime) : ''}
-                      </Text>
-                      <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
+                  {/* Closes Time Picker */}
+                  <TimePickerInput
+                    label="Closes"
+                    value={currentDayHours?.endTime || '22:00'}
+                    onChange={time => handleTimeChange('endTime', time)}
+                  />
 
                   {/* Apply to All Days */}
                   <TouchableOpacity
                     style={styles.applyAllButton}
                     onPress={handleApplyToAll}
                   >
-                    <Ionicons name="copy-outline" size={20} color={colors.cobalt} />
+                    <Ionicons
+                      name="copy-outline"
+                      size={20}
+                      color={colors.cobalt}
+                    />
                     <Text style={styles.applyAllText}>Apply to all days</Text>
                   </TouchableOpacity>
                 </>
@@ -231,94 +229,6 @@ export function HoursOfOperationSection({ hours, onChange }: HoursOfOperationSec
                 <Text style={styles.doneButtonText}>Done</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Start Time Picker Modal */}
-      <Modal
-        visible={showStartTimePicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowStartTimePicker(false)}
-      >
-        <View style={styles.pickerModalOverlay}>
-          <View style={styles.pickerModal}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Select Opening Time</Text>
-              <TouchableOpacity onPress={() => setShowStartTimePicker(false)}>
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.pickerList}>
-              {TIME_OPTIONS.map((time) => (
-                <TouchableOpacity
-                  key={time}
-                  style={[
-                    styles.pickerOption,
-                    currentDayHours?.startTime === time && styles.pickerOptionSelected
-                  ]}
-                  onPress={() => {
-                    handleTimeChange('startTime', time);
-                    setShowStartTimePicker(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.pickerOptionText,
-                    currentDayHours?.startTime === time && styles.pickerOptionTextSelected
-                  ]}>
-                    {formatTimeDisplay(time)}
-                  </Text>
-                  {currentDayHours?.startTime === time && (
-                    <Ionicons name="checkmark" size={20} color={colors.cobalt} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* End Time Picker Modal */}
-      <Modal
-        visible={showEndTimePicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowEndTimePicker(false)}
-      >
-        <View style={styles.pickerModalOverlay}>
-          <View style={styles.pickerModal}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Select Closing Time</Text>
-              <TouchableOpacity onPress={() => setShowEndTimePicker(false)}>
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.pickerList}>
-              {TIME_OPTIONS.map((time) => (
-                <TouchableOpacity
-                  key={time}
-                  style={[
-                    styles.pickerOption,
-                    currentDayHours?.endTime === time && styles.pickerOptionSelected
-                  ]}
-                  onPress={() => {
-                    handleTimeChange('endTime', time);
-                    setShowEndTimePicker(false);
-                  }}
-                >
-                  <Text style={[
-                    styles.pickerOptionText,
-                    currentDayHours?.endTime === time && styles.pickerOptionTextSelected
-                  ]}>
-                    {formatTimeDisplay(time)}
-                  </Text>
-                  {currentDayHours?.endTime === time && (
-                    <Ionicons name="checkmark" size={20} color={colors.cobalt} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -435,42 +345,23 @@ const styles = StyleSheet.create({
   toggleThumbActive: {
     alignSelf: 'flex-end',
   },
-  timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  timeLabel: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
-  timePicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: 8,
-  },
-  timeValue: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
-    marginRight: Spacing.sm,
-  },
   applyAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.md,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     marginTop: Spacing.md,
   },
   applyAllText: {
     ...TextStyles.body,
     color: colors.cobalt,
     fontWeight: '600',
-    marginLeft: Spacing.sm,
   },
   modalActions: {
     padding: Spacing.lg,
@@ -486,55 +377,6 @@ const styles = StyleSheet.create({
   doneButtonText: {
     ...TextStyles.body,
     color: colors.textInverse,
-    fontWeight: '600',
-  },
-  pickerModalOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  pickerModal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '70%',
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  pickerTitle: {
-    ...TextStyles.h4,
-    color: colors.textPrimary,
-  },
-  pickerList: {
-    maxHeight: 400,
-  },
-  pickerOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  pickerOptionSelected: {
-    backgroundColor: '#F7F4EE',
-  },
-  pickerOptionText: {
-    ...TextStyles.body,
-    color: colors.textPrimary,
-  },
-  pickerOptionTextSelected: {
-    color: colors.cobalt,
     fontWeight: '600',
   },
 });

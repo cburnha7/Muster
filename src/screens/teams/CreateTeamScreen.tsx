@@ -57,7 +57,7 @@ function CreateTeamInner() {
         skillLevel: SkillLevel.ALL_LEVELS,
         maxMembers: parseInt(state.maxPlayers) || 10,
         isPublic: state.visibility === 'public',
-        genderRestriction: state.gender || undefined,
+        genderRestriction: state.gender ? state.gender : undefined,
         initialMemberIds: playerIds,
       } as any);
       reduxDispatch(addTeam(newTeam));

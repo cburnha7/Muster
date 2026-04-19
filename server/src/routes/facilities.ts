@@ -858,8 +858,11 @@ router.post('/', requireNonDependent, async (req, res) => {
       });
     }
 
-    // Get ownerId from request or use first user as default (for testing)
-    let facilityOwnerId = ownerId;
+    // Get ownerId from auth token/header — never trust client-supplied value
+    const authenticatedUserId =
+      (req as any).user?.userId ||
+      (req.headers['x-user-id'] as string | undefined);
+    let facilityOwnerId = authenticatedUserId || ownerId;
     if (!facilityOwnerId) {
       // For testing: use the first user in the database
       const firstUser = await prisma.user.findFirst();

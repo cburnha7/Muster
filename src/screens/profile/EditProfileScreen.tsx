@@ -301,8 +301,8 @@ export function EditProfileScreen(): JSX.Element {
       if (isDependent && authUser?.id) {
         // Save dependent profile
         const depUpdates: any = {
-          firstName,
-          lastName,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           dateOfBirth:
             birthYear && birthMonth && birthDay
               ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
@@ -345,10 +345,10 @@ export function EditProfileScreen(): JSX.Element {
       } else {
         // Save current user profile
         const updates: UpdateProfileData = {
-          firstName,
-          lastName,
-          email,
-          phoneNumber: phoneNumber || undefined,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: email.trim(),
+          phoneNumber: phoneNumber.trim() || undefined,
           gender: gender || undefined,
           dateOfBirth:
             birthYear && birthMonth && birthDay
@@ -356,7 +356,7 @@ export function EditProfileScreen(): JSX.Element {
               : undefined,
           sportPreferences: selectedSports,
         } as any;
-        if (address) {
+        if (address.trim()) {
           const parts = address.split(',').map(s => s.trim());
           if (parts.length >= 2) {
             (updates as any).locationCity = parts[0];
