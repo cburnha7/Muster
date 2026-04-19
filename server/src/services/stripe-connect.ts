@@ -24,7 +24,7 @@ export function getStripe(): Stripe | null {
     console.warn('⚠️  Stripe client unavailable — STRIPE_SECRET_KEY not set');
     return null;
   }
-  _stripe = new Stripe(key, { apiVersion: '2024-12-18.acacia' });
+  _stripe = new Stripe(key, { apiVersion: '2026-02-25.clover' });
   return _stripe;
 }
 

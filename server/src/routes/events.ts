@@ -193,7 +193,7 @@ router.get('/', async (req, res) => {
 // Get event by ID
 router.get('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const event = await prisma.event.findUnique({
       where: { id },
@@ -253,7 +253,7 @@ router.get('/:id', async (req, res) => {
 // Get event participants
 router.get('/:id/participants', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Fetch the event to check type and team associations
     const event = await prisma.event.findUnique({
@@ -354,7 +354,7 @@ router.get('/:id/participants', async (req, res) => {
 // Check if user has submitted salutes for an event
 router.get('/:id/salutes/status', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // TODO: Get user ID from auth token
     // For now, use the first user
@@ -392,6 +392,7 @@ router.post('/', requireNonDependent, async (req, res) => {
       (req as any).user?.userId ||
       (req.headers['x-user-id'] as string | undefined);
 
+    let resolvedOrganizerId: string;
     if (!authenticatedUserId) {
       // Fallback for development: use the first user as default organizer
       const defaultOrganizer = await prisma.user.findFirst({
@@ -403,9 +404,9 @@ router.post('/', requireNonDependent, async (req, res) => {
       }
 
       // Use default organizer only when no auth is available
-      var resolvedOrganizerId = defaultOrganizer.id;
+      resolvedOrganizerId = defaultOrganizer.id;
     } else {
-      var resolvedOrganizerId = authenticatedUserId;
+      resolvedOrganizerId = authenticatedUserId;
     }
 
     const eventData = {
@@ -924,7 +925,7 @@ router.post('/', requireNonDependent, async (req, res) => {
 // Update event
 router.put('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Verify the event exists and check organizer
     const existing = await prisma.event.findUnique({
@@ -1064,7 +1065,7 @@ router.put('/:id', async (req, res) => {
 // If event has no participants, delete it entirely
 router.delete('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { reason } = req.body; // Cancellation reason from request body
 
     // Get event details and participant count
@@ -1113,8 +1114,6 @@ router.delete('/:id', async (req, res) => {
           },
           data: {
             status: 'cancelled',
-            cancellationReason: reason || 'Event cancelled by organizer',
-            cancelledAt: new Date(),
           },
         });
 
@@ -1195,7 +1194,7 @@ router.delete('/:id', async (req, res) => {
 // Book event
 router.post('/:id/book', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     let { userId } = req.body;
 
     // TEMPORARY: If userId is "1" (mock user), use first real user from database
@@ -1383,7 +1382,7 @@ router.delete('/:id/book/:bookingId', async (req, res) => {
 // Submit salutes for event participants
 router.post('/:id/salutes', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { salutedUserIds } = req.body;
 
     // TODO: Get user ID from auth token
@@ -1504,7 +1503,7 @@ router.post('/:id/salutes', async (req, res) => {
 // Get salutes for an event
 router.get('/:id/salutes', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const salutes = await prisma.salute.findMany({
       where: { eventId: id },
@@ -1526,7 +1525,7 @@ router.get('/:id/salutes', async (req, res) => {
 // Get current user's salutes for an event
 router.get('/:id/salutes/me', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // TODO: Get user ID from auth token
     // For now, use the first user
@@ -1568,7 +1567,7 @@ router.post('/send-reminders', async (req, res) => {
     const { MessagingService } = await import('../services/MessagingService');
 
     // 24-hour reminders
-    const upcoming24h = await prisma.event.findMany({
+    const upcoming24h = await (prisma.event.findMany as any)({
       where: {
         startTime: { gte: now, lte: in24h },
         status: 'UPCOMING',
@@ -1592,7 +1591,7 @@ router.post('/send-reminders', async (req, res) => {
           hour: 'numeric',
           minute: '2-digit',
         });
-        const venue = event.facility?.name ?? event.location ?? 'TBD';
+        const venue = event.facility?.name ?? event.locationName ?? 'TBD';
         const count = event._count.gameParticipations;
         const max = event.maxParticipants ?? '?';
         await MessagingService.postSystemMessage(
@@ -1601,14 +1600,14 @@ router.post('/send-reminders', async (req, res) => {
           'URGENT'
         );
       }
-      await prisma.event.update({
+      await (prisma.event.update as any)({
         where: { id: event.id },
         data: { reminderSent24h: true },
       });
     }
 
     // 1-hour reminders
-    const upcoming1h = await prisma.event.findMany({
+    const upcoming1h = await (prisma.event.findMany as any)({
       where: {
         startTime: { gte: now, lte: in1h },
         status: 'UPCOMING',
@@ -1620,21 +1619,21 @@ router.post('/send-reminders', async (req, res) => {
     for (const event of upcoming1h) {
       const conv = await MessagingService.getConversationForEvent(event.id);
       if (conv) {
-        const venue = event.facility?.name ?? event.location ?? 'TBD';
+        const venue = event.facility?.name ?? event.locationName ?? 'TBD';
         await MessagingService.postSystemMessage(
           conv.id,
           `Game starts in 1 hour at ${venue}. See you there!`,
           'URGENT'
         );
       }
-      await prisma.event.update({
+      await (prisma.event.update as any)({
         where: { id: event.id },
         data: { reminderSent1h: true },
       });
     }
 
     // Post-game messages for completed events
-    const completed = await prisma.event.findMany({
+    const completed = await (prisma.event.findMany as any)({
       where: {
         status: 'COMPLETED',
         postGameMessageSent: { not: true },
@@ -1649,7 +1648,7 @@ router.post('/send-reminders', async (req, res) => {
           'Good game! How did everyone play?'
         );
       }
-      await prisma.event.update({
+      await (prisma.event.update as any)({
         where: { id: event.id },
         data: { postGameMessageSent: true },
       });

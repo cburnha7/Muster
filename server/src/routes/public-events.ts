@@ -224,7 +224,7 @@ router.post('/', async (req: Request, res: Response) => {
  */
 router.get('/:bookingId', async (req: Request, res: Response) => {
   try {
-    const { bookingId } = req.params;
+    const { bookingId } = req.params as { bookingId: string };
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -335,7 +335,7 @@ router.get('/', async (req: Request, res: Response) => {
  */
 router.post('/:bookingId/register', async (req: Request, res: Response) => {
   try {
-    const { bookingId } = req.params;
+    const { bookingId } = req.params as { bookingId: string };
     const { userId } = req.body;
 
     // --- Validate required fields ---
@@ -491,7 +491,7 @@ router.post('/:bookingId/register', async (req: Request, res: Response) => {
  */
 router.post('/:bookingId/facility-cancel', async (req: Request, res: Response) => {
   try {
-    const { bookingId } = req.params;
+    const { bookingId } = req.params as { bookingId: string };
     const { facilityId } = req.body;
 
     if (!facilityId) {

@@ -120,7 +120,7 @@ router.get('/suggested-dues', async (req: Request, res: Response) => {
 // GET /api/seasons/:id - Get season by ID with standings
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const season = await prisma.season.findUnique({
       where: { id },
@@ -272,7 +272,7 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT /api/seasons/:id - Update season
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       name,
       startDate,
@@ -328,7 +328,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 // POST /api/seasons/:id/complete - Complete season and archive standings
 router.post('/:id/complete', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId } = req.body;
 
     // Check if season exists
@@ -379,7 +379,7 @@ router.post('/:id/complete', async (req: Request, res: Response) => {
 // GET /api/seasons/:id/standings - Get season standings
 router.get('/:id/standings', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const memberships = await prisma.leagueMembership.findMany({
       where: {

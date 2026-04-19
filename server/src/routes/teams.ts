@@ -144,7 +144,7 @@ router.get('/validate-invite', async (req, res) => {
 // Get team by ID
 router.get('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const team = await prisma.team.findUnique({
       where: { id },
@@ -190,7 +190,7 @@ router.get('/:id', async (req, res) => {
 // Update team
 router.put('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       name,
       description,
@@ -254,7 +254,7 @@ router.put('/:id', async (req, res) => {
 // Get leagues for a team
 router.get('/:id/leagues', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Check if team exists
     const team = await prisma.team.findUnique({
@@ -317,7 +317,7 @@ router.get('/:id/leagues', async (req, res) => {
 // Get upcoming events for a team
 router.get('/:id/events', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const team = await prisma.team.findUnique({ where: { id } });
     if (!team) {
@@ -520,7 +520,7 @@ router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
 // Delete team
 router.delete('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const team = await prisma.team.findUnique({ where: { id } });
     if (!team) {
@@ -555,7 +555,7 @@ router.delete('/:id', async (req, res) => {
     await prisma.$transaction(async tx => {
       // Delete conversations linked to this roster
       const conversations = await tx.conversation.findMany({
-        where: { entityId: id, type: 'TEAM' },
+        where: { entityId: id, type: 'TEAM_CHAT' },
         select: { id: true },
       });
       const convIds = conversations.map(c => c.id);
@@ -659,7 +659,7 @@ router.delete('/:id/members/:userId', async (req, res) => {
 // Join team
 router.post('/:id/join', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId = req.headers['x-user-id'] as string | undefined;
     const { inviteCode } = req.body;
 
@@ -778,7 +778,7 @@ router.post('/:id/join', async (req, res) => {
 // Leave team
 router.post('/:id/leave', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId = req.headers['x-user-id'] as string | undefined;
 
     if (!userId) {
@@ -834,7 +834,7 @@ router.post('/:id/leave', async (req, res) => {
 // Add member directly (for private rosters)
 router.post('/:id/add-member', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId } = req.body;
 
     if (!userId) {
@@ -902,7 +902,7 @@ router.post('/:id/add-member', async (req, res) => {
 // Generate invite link for a team (captain/co-captain only)
 router.post('/:id/invite-link', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId = req.headers['x-user-id'] as string | undefined;
     const { maxUses } = req.body;
 
@@ -986,7 +986,7 @@ router.post('/:id/invite-link', async (req, res) => {
 // Upload team cover image
 router.post('/:id/cover', uploadCover.single('image'), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const file = req.file;
     const userId =
       (req as any).user?.userId || (req.headers['x-user-id'] as string);
@@ -1099,7 +1099,7 @@ router.post('/:id/cover', uploadCover.single('image'), async (req, res) => {
 // Delete team cover image
 router.delete('/:id/cover', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId =
       (req as any).user?.userId || (req.headers['x-user-id'] as string);
 

@@ -91,7 +91,10 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const profile = await getDependentProfile(guardianId, req.params.id);
+    const profile = await getDependentProfile(
+      guardianId,
+      (req.params as { id: string }).id
+    );
     res.json(profile);
   } catch (error: any) {
     if (error.message === 'Dependent not found') {
@@ -119,7 +122,11 @@ router.put('/:id', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const updated = await updateDependent(guardianId, req.params.id, req.body);
+    const updated = await updateDependent(
+      guardianId,
+      (req.params as { id: string }).id,
+      req.body
+    );
     res.json(updated);
   } catch (error: any) {
     if (error.message === 'Dependent not found') {
@@ -164,10 +171,14 @@ router.post('/:id/transfer', async (req: Request, res: Response) => {
       });
     }
 
-    const transferred = await transferAccount(guardianId, req.params.id, {
-      email,
-      password,
-    });
+    const transferred = await transferAccount(
+      guardianId,
+      (req.params as { id: string }).id,
+      {
+        email,
+        password,
+      }
+    );
     res.json(transferred);
   } catch (error: any) {
     if (error.message === 'Dependent not found') {

@@ -18,7 +18,9 @@ const stripe = new Proxy({} as Stripe, {
   get(_target, prop) {
     const instance = getStripe();
     if (!instance) {
-      throw new Error('Stripe is not configured — set STRIPE_SECRET_KEY env var');
+      throw new Error(
+        'Stripe is not configured — set STRIPE_SECRET_KEY env var'
+      );
     }
     return (instance as any)[prop];
   },
@@ -77,14 +79,22 @@ router.post('/', async (req: Request, res: Response) => {
               status,
               stripePriceId: priceId,
               stripeSubscriptionId: sub.id,
-              currentPeriodStart: new Date(sub.current_period_start * 1000),
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              currentPeriodStart: new Date(
+                (sub as any).current_period_start * 1000
+              ),
+              currentPeriodEnd: new Date(
+                (sub as any).current_period_end * 1000
+              ),
               cancelAtPeriodEnd: sub.cancel_at_period_end,
             },
           });
-          console.log(`[Stripe] Updated subscription for customer ${customerId} → ${plan} (${status})`);
+          console.log(
+            `[Stripe] Updated subscription for customer ${customerId} → ${plan} (${status})`
+          );
         } else {
-          console.warn(`[Stripe] No subscription found for customer ${customerId}`);
+          console.warn(
+            `[Stripe] No subscription found for customer ${customerId}`
+          );
         }
         break;
       }
@@ -101,7 +111,9 @@ router.post('/', async (req: Request, res: Response) => {
             cancelAtPeriodEnd: false,
           },
         });
-        console.log(`[Stripe] Subscription cancelled for customer ${customerId}`);
+        console.log(
+          `[Stripe] Subscription cancelled for customer ${customerId}`
+        );
         break;
       }
 

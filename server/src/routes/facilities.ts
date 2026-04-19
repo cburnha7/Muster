@@ -80,7 +80,7 @@ router.get('/', async (req, res) => {
 // Get facility by ID
 router.get('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const facility = await prisma.facility.findUnique({
       where: { id },
@@ -134,7 +134,7 @@ router.get('/:id', async (req, res) => {
 // Get events at a facility
 router.get('/:id/events', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { page = '1', limit = '10' } = req.query;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
@@ -428,7 +428,7 @@ router.get('/authorized/for-events', async (req, res) => {
 // Returns slots based on ownership (all available) or rentals (only user's rentals)
 router.get('/:id/available-slots', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId } = req.query;
 
     if (!userId) {
@@ -543,7 +543,7 @@ router.get('/:id/available-slots', async (req, res) => {
 // Returns all active courts filtered by sport type only — availability is checked on-demand
 router.get('/:facilityId/courts-for-event', async (req, res) => {
   try {
-    const { facilityId } = req.params;
+    const { facilityId } = req.params as { facilityId: string };
     const { userId, sportType } = req.query;
 
     if (!userId) {
@@ -586,7 +586,7 @@ router.get('/:facilityId/courts-for-event', async (req, res) => {
 // Returns dates filtered by ownership (all future dates with available slots) or rentals (only user's rental dates)
 router.get('/:facilityId/courts/:courtId/dates', async (req, res) => {
   try {
-    const { facilityId, courtId } = req.params;
+    const { facilityId, courtId } = req.params as { facilityId: string; courtId: string };
     const { userId } = req.query;
 
     if (!userId) {
@@ -676,7 +676,7 @@ router.get('/:facilityId/courts/:courtId/dates', async (req, res) => {
 // Returns slots filtered by ownership (all available slots) or rentals (only user's rental slots)
 router.get('/:facilityId/courts/:courtId/slots', async (req, res) => {
   try {
-    const { facilityId, courtId } = req.params;
+    const { facilityId, courtId } = req.params as { facilityId: string; courtId: string };
     const { userId, date } = req.query;
 
     if (!userId) {
@@ -982,7 +982,7 @@ router.post('/', requireNonDependent, async (req, res) => {
 // Update facility
 router.put('/:id', requireNonDependent, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       hoursOfOperation,
       slotIncrementMinutes,
@@ -1216,7 +1216,7 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 // Delete facility
 router.delete('/:id', requireNonDependent, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Authorization check - only owner can delete
     const userId =
@@ -1405,7 +1405,7 @@ export default router;
 // Submit verification request
 router.post('/:id/verification', requireNonDependent, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { documents } = req.body;
 
     if (!documents || documents.length === 0) {
@@ -1434,7 +1434,7 @@ router.post('/:id/verification', requireNonDependent, async (req, res) => {
 // Get verification status
 router.get('/:id/verification', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const verification = await verificationService.getVerification(id);
 
     if (!verification) {
@@ -1455,7 +1455,7 @@ router.get('/:id/verification', async (req, res) => {
 // Create rate schedule
 router.post('/:id/rates', requireNonDependent, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const rateData = req.body;
 
     // Validate rate
@@ -1482,7 +1482,7 @@ router.post('/:id/rates', requireNonDependent, async (req, res) => {
 // List rate schedules
 router.get('/:id/rates', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const rates = await prisma.facilityRateSchedule.findMany({
       where: { facilityId: id },
@@ -1499,7 +1499,7 @@ router.get('/:id/rates', async (req, res) => {
 // Update rate schedule
 router.put('/:id/rates/:rateId', async (req, res) => {
   try {
-    const { rateId } = req.params;
+    const { rateId } = req.params as { rateId: string };
     const rateData = req.body;
 
     const rate = await prisma.facilityRateSchedule.update({
@@ -1517,7 +1517,7 @@ router.put('/:id/rates/:rateId', async (req, res) => {
 // Delete rate schedule
 router.delete('/:id/rates/:rateId', async (req, res) => {
   try {
-    const { rateId } = req.params;
+    const { rateId } = req.params as { rateId: string };
 
     await prisma.facilityRateSchedule.delete({
       where: { id: rateId },
@@ -1533,7 +1533,7 @@ router.delete('/:id/rates/:rateId', async (req, res) => {
 // Calculate price for booking
 router.post('/:id/calculate-price', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { startTime, endTime } = req.body;
 
     if (!startTime || !endTime) {
@@ -1566,7 +1566,7 @@ router.post('/:id/calculate-price', async (req, res) => {
 // Create availability slot
 router.post('/:id/availability', requireNonDependent, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const availabilityData = req.body;
 
     const slot = await prisma.facilityAvailability.create({
@@ -1586,7 +1586,7 @@ router.post('/:id/availability', requireNonDependent, async (req, res) => {
 // List availability slots
 router.get('/:id/availability', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { startDate, endDate } = req.query;
 
     const where: any = { facilityId: id };
@@ -1619,7 +1619,7 @@ router.get('/:id/availability', async (req, res) => {
 // Update availability slot
 router.put('/:id/availability/:slotId', async (req, res) => {
   try {
-    const { slotId } = req.params;
+    const { slotId } = req.params as { slotId: string };
     const availabilityData = req.body;
 
     const slot = await prisma.facilityAvailability.update({
@@ -1637,7 +1637,7 @@ router.put('/:id/availability/:slotId', async (req, res) => {
 // Delete availability slot
 router.delete('/:id/availability/:slotId', async (req, res) => {
   try {
-    const { slotId } = req.params;
+    const { slotId } = req.params as { slotId: string };
 
     await prisma.facilityAvailability.delete({
       where: { id: slotId },
@@ -1653,7 +1653,7 @@ router.delete('/:id/availability/:slotId', async (req, res) => {
 // Check if time slot is available
 router.get('/:id/availability/check', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { startTime, endTime } = req.query;
 
     if (!startTime || !endTime) {
@@ -1689,7 +1689,7 @@ router.post(
   uploadPhoto.array('photos', 20),
   async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const userId = req.headers['x-user-id'] as string;
 
       if (!userId) {
@@ -1775,7 +1775,7 @@ router.post(
 // Delete a facility photo
 router.delete('/:id/photos/:photoId', async (req, res) => {
   try {
-    const { id, photoId } = req.params;
+    const { id, photoId } = req.params as { id: string; photoId: string };
     const userId = req.headers['x-user-id'] as string;
 
     if (!userId) {
@@ -1840,7 +1840,7 @@ router.post(
   requireNonDependent,
   async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const file = req.file;
 
       // Validate file
@@ -1943,7 +1943,7 @@ router.post(
 // Delete facility map image
 router.delete('/:id/map', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Check if facility exists
     const facility = await prisma.facility.findUnique({
@@ -1998,7 +1998,7 @@ router.post(
   requireNonDependent,
   async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const file = req.file;
       const userId =
         (req as any).user?.userId || (req.headers['x-user-id'] as string);
@@ -2114,7 +2114,7 @@ router.post(
 // Delete facility cover image
 router.delete('/:id/cover', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId =
       (req as any).user?.userId || (req.headers['x-user-id'] as string);
 
@@ -2177,7 +2177,7 @@ const VALID_PENALTY_DESTINATIONS = ['facility', 'opposing_team', 'split'];
 // Get cancellation policy for a facility
 router.get('/:id/cancellation-policy', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const facility = await prisma.facility.findUnique({
       where: { id },
@@ -2218,7 +2218,7 @@ router.put(
   requireNonDependent,
   async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const { noticeWindowHours, teamPenaltyPct, penaltyDestination } =
         req.body;
 

@@ -303,7 +303,6 @@ export async function processCompletedGame(eventId: string): Promise<void> {
       sportType: true,
       eventType: true,
       ageRestricted: true,
-      leagueId: true,
       bookings: {
         where: { status: 'confirmed' },
         select: { userId: true },

@@ -80,7 +80,7 @@ router.get('/', async (req: Request, res: Response) => {
  */
 router.post('/:rentalId/approve', async (req: Request, res: Response) => {
   try {
-    const { rentalId } = req.params;
+    const { rentalId } = req.params as { rentalId: string };
 
     const rental = await prisma.facilityRental.findUnique({
       where: { id: rentalId },
@@ -149,7 +149,7 @@ router.post('/:rentalId/approve', async (req: Request, res: Response) => {
  */
 router.post('/:rentalId/deny', async (req: Request, res: Response) => {
   try {
-    const { rentalId } = req.params;
+    const { rentalId } = req.params as { rentalId: string };
 
     const rental = await prisma.facilityRental.findUnique({
       where: { id: rentalId },

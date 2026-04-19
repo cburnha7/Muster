@@ -118,7 +118,7 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/matches/:id - Get match by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const match = await prisma.match.findUnique({
       where: { id },
@@ -333,7 +333,7 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT /api/matches/:id - Update match
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       scheduledAt,
       status,
@@ -401,7 +401,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 // DELETE /api/matches/:id - Delete match
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId } = req.body;
 
     // Check if match exists
@@ -437,7 +437,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 // Used by the home roster manager to link their confirmed rental to a free league game
 router.patch('/:id/rental', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { rentalId, userId } = req.body;
 
     if (!rentalId) {
@@ -614,7 +614,7 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
 // PATCH /api/matches/:id/confirm - Away roster manager confirms a free league game
 router.patch('/:id/confirm', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId } = req.body;
 
     if (!userId) {
@@ -688,7 +688,7 @@ export default router;
 // POST /api/matches/:id/result - Record match result
 router.post('/:id/result', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { homeScore, awayScore, userId } = req.body;
 
     // Validate required fields

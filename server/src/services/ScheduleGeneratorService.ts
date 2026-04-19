@@ -44,7 +44,6 @@ interface DistributeConfig {
   gameFrequency: string;
 }
 
-
 export interface SchedulePreviewEvent {
   homeRoster: RosterInfo;
   awayRoster: RosterInfo;
@@ -76,7 +75,9 @@ export class ScheduleGeneratorService {
    * Generate round-robin shell events for a league.
    * Creates Event + Match records in a transaction.
    */
-  static async generateRoundRobin(leagueId: string): Promise<{ eventsCreated: number }> {
+  static async generateRoundRobin(
+    leagueId: string
+  ): Promise<{ eventsCreated: number }> {
     const league = await prisma.league.findUnique({
       where: { id: leagueId },
       include: {
@@ -92,32 +93,42 @@ export class ScheduleGeneratorService {
                   select: { userId: true },
                 },
               },
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     });
 
     if (!league) throw new Error('League not found');
-    if (league.scheduleGenerated) throw new Error('Schedule already generated for this league');
+    if (league.scheduleGenerated)
+      throw new Error('Schedule already generated for this league');
 
     const rosters: RosterInfo[] = league.memberships
       .filter(m => m.team)
       .map(m => ({ id: m.team!.id, name: m.team!.name }));
 
     if (rosters.length < 2) {
-      throw new Error('At least 2 active rosters required to generate a schedule');
+      throw new Error(
+        'At least 2 active rosters required to generate a schedule'
+      );
     }
 
     if (!league.preferredGameDays?.length || !league.seasonGameCount) {
-      throw new Error('Schedule configuration incomplete: preferredGameDays and seasonGameCount are required');
+      throw new Error(
+        'Schedule configuration incomplete: preferredGameDays and seasonGameCount are required'
+      );
     }
 
     const matchupsResult = fairGenerateSchedule({
       scheduleType: 'season',
-      frequency: (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') || 'weekly',
+      frequency:
+        (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') ||
+        'weekly',
       startDate: league.registrationCloseDate
-        ? new Date(new Date(league.registrationCloseDate).getTime() + 7 * 24 * 60 * 60 * 1000)
+        ? new Date(
+            new Date(league.registrationCloseDate).getTime() +
+              7 * 24 * 60 * 60 * 1000
+          )
         : league.startDate
           ? new Date(league.startDate)
           : new Date(),
@@ -133,12 +144,14 @@ export class ScheduleGeneratorService {
       throw new Error(matchupsResult.warnings.join(' '));
     }
 
-    const shellEvents: ShellEvent[] = matchupsResult.regularSeasonGames.map(g => ({
-      homeRoster: g.homeTeam,
-      awayRoster: g.awayTeam,
-      scheduledAt: g.scheduledAt,
-      round: g.round,
-    }));
+    const shellEvents: ShellEvent[] = matchupsResult.regularSeasonGames.map(
+      g => ({
+        homeRoster: g.homeTeam,
+        awayRoster: g.awayTeam,
+        scheduledAt: g.scheduledAt,
+        round: g.round,
+      })
+    );
 
     // Build roster → player IDs map for populating invitedUserIds
     const rosterPlayerMap = new Map<string, string[]>();
@@ -146,20 +159,22 @@ export class ScheduleGeneratorService {
       if (membership.team) {
         rosterPlayerMap.set(
           membership.team.id,
-          membership.team.members.map((m) => m.userId)
+          membership.team.members.map(m => m.userId)
         );
       }
     }
 
     // Create all events and matches in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       const createdEvents: string[] = [];
 
       for (const shell of shellEvents) {
         // Collect player IDs from both rosters for invitations
         const homePlayerIds = rosterPlayerMap.get(shell.homeRoster.id) || [];
         const awayPlayerIds = rosterPlayerMap.get(shell.awayRoster.id) || [];
-        const invitedUserIds = [...new Set([...homePlayerIds, ...awayPlayerIds])];
+        const invitedUserIds = [
+          ...new Set([...homePlayerIds, ...awayPlayerIds]),
+        ];
 
         const event = await tx.event.create({
           data: {
@@ -177,9 +192,12 @@ export class ScheduleGeneratorService {
             facilityId: null,
             scheduledStatus: 'unscheduled',
             eligibilityRestrictedToLeagues: [leagueId],
-            eligibilityRestrictedToTeams: [shell.homeRoster.id, shell.awayRoster.id],
+            eligibilityRestrictedToTeams: [
+              shell.homeRoster.id,
+              shell.awayRoster.id,
+            ],
             invitedUserIds,
-          }
+          },
         });
 
         await tx.match.create({
@@ -191,7 +209,7 @@ export class ScheduleGeneratorService {
             status: 'scheduled',
             eventId: event.id,
             seasonId: league.seasonId || undefined,
-          }
+          },
         });
 
         createdEvents.push(event.id);
@@ -200,7 +218,7 @@ export class ScheduleGeneratorService {
       // Mark schedule as generated
       await tx.league.update({
         where: { id: leagueId },
-        data: { scheduleGenerated: true }
+        data: { scheduleGenerated: true },
       });
 
       return createdEvents;
@@ -219,31 +237,45 @@ export class ScheduleGeneratorService {
     const rosters = league.rosters;
 
     if (rosters.length < 2) {
-      const error: any = new Error('At least 2 registered rosters are required to generate a schedule');
+      const error: any = new Error(
+        'At least 2 registered rosters are required to generate a schedule'
+      );
       error.statusCode = 400;
       throw error;
     }
 
-    if (!league.preferredGameDays?.length && league.gameFrequency !== 'all_at_once') {
-      const error: any = new Error('Schedule configuration incomplete: preferredGameDays are required');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (format !== 'tournament' && !league.seasonGameCount) {
-      const error: any = new Error('Schedule configuration incomplete: seasonGameCount is required');
+    if (
+      !league.preferredGameDays?.length &&
+      league.gameFrequency !== 'all_at_once'
+    ) {
+      const error: any = new Error(
+        'Schedule configuration incomplete: preferredGameDays are required'
+      );
       error.statusCode = 400;
       throw error;
     }
 
     const format = league.leagueFormat || 'season';
 
+    if (format !== 'tournament' && !league.seasonGameCount) {
+      const error: any = new Error(
+        'Schedule configuration incomplete: seasonGameCount is required'
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
     // Map league config to FairScheduler input
     const schedulerInput: SchedulerInput = {
-      scheduleType: format === 'season_with_playoffs' ? 'season_playoffs'
-        : format === 'tournament' ? 'tournament'
-        : 'season',
-      frequency: (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') || 'weekly',
+      scheduleType:
+        format === 'season_with_playoffs'
+          ? 'season_playoffs'
+          : format === 'tournament'
+            ? 'tournament'
+            : 'season',
+      frequency:
+        (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') ||
+        'weekly',
       startDate: league.startDate ? new Date(league.startDate) : new Date(),
       endDate: league.endDate ? new Date(league.endDate) : null,
       teams: rosters.map(r => ({ id: r.id, name: r.name })),
@@ -252,9 +284,12 @@ export class ScheduleGeneratorService {
       gameTimeWindowStart: league.preferredTimeWindowStart || '09:00',
       gameTimeWindowEnd: league.preferredTimeWindowEnd || '17:00',
       playoffTeamCount: league.playoffTeamCount ?? undefined,
-      eliminationType: league.eliminationFormat === 'double_elimination' ? 'double'
-        : league.eliminationFormat === 'single_elimination' ? 'single'
-        : undefined,
+      eliminationType:
+        league.eliminationFormat === 'double_elimination'
+          ? 'double'
+          : league.eliminationFormat === 'single_elimination'
+            ? 'single'
+            : undefined,
     };
 
     const result = fairGenerateSchedule(schedulerInput);
@@ -266,31 +301,38 @@ export class ScheduleGeneratorService {
     }
 
     // Map regular season games to SchedulePreviewEvent format
-    const seasonEvents: SchedulePreviewEvent[] = result.regularSeasonGames.map(g => ({
-      homeRoster: g.homeTeam,
-      awayRoster: g.awayTeam,
-      scheduledAt: g.scheduledAt.toISOString(),
-      round: g.round,
-    }));
+    const seasonEvents: SchedulePreviewEvent[] = result.regularSeasonGames.map(
+      g => ({
+        homeRoster: g.homeTeam,
+        awayRoster: g.awayTeam,
+        scheduledAt: g.scheduledAt.toISOString(),
+        round: g.round,
+      })
+    );
 
     // Map playoff/tournament games — include gameNumber for bracket cross-referencing
-    const bracketEvents: SchedulePreviewEvent[] = result.playoffGames.map(g => ({
-      homeRoster: g.homeTeam,
-      awayRoster: g.awayTeam,
-      scheduledAt: g.scheduledAt.toISOString(),
-      round: g.round,
-      flag: g.flag,
-      gameNumber: g.gameNumber,
-    }));
+    const bracketEvents: SchedulePreviewEvent[] = result.playoffGames.map(
+      g => ({
+        homeRoster: g.homeTeam,
+        awayRoster: g.awayTeam,
+        scheduledAt: g.scheduledAt.toISOString(),
+        round: g.round,
+        flag: g.flag,
+        gameNumber: g.gameNumber,
+      })
+    );
 
     const events = [...seasonEvents, ...bracketEvents];
 
     return {
       events,
       totalGames: events.length,
-      format: format === 'season_with_playoffs' ? 'season_with_playoffs'
-        : format === 'tournament' ? 'tournament'
-        : 'season',
+      format:
+        format === 'season_with_playoffs'
+          ? 'season_with_playoffs'
+          : format === 'tournament'
+            ? 'tournament'
+            : 'season',
     };
   }
 
@@ -333,7 +375,10 @@ export class ScheduleGeneratorService {
    * Generate round-robin matchups for the given rosters.
    * Repeats rounds as needed to reach seasonGameCount total matches.
    */
-  private static generateMatchups(rosters: RosterInfo[], seasonGameCount: number): Array<{ home: RosterInfo; away: RosterInfo; round: number }> {
+  private static generateMatchups(
+    rosters: RosterInfo[],
+    seasonGameCount: number
+  ): Array<{ home: RosterInfo; away: RosterInfo; round: number }> {
     const n = rosters.length;
     // For odd number of rosters, add a "bye" placeholder
     const rosterList = [...rosters];
@@ -343,21 +388,31 @@ export class ScheduleGeneratorService {
 
     const totalRosters = rosterList.length;
     const roundsPerCycle = totalRosters - 1;
-    const matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number }> = [];
+    const matchups: Array<{
+      home: RosterInfo;
+      away: RosterInfo;
+      round: number;
+    }> = [];
 
     let roundNum = 1;
     let cycle = 0;
 
     while (matchups.length < seasonGameCount) {
       // Standard round-robin rotation
-      for (let round = 0; round < roundsPerCycle && matchups.length < seasonGameCount; round++) {
+      for (
+        let round = 0;
+        round < roundsPerCycle && matchups.length < seasonGameCount;
+        round++
+      ) {
         const roundMatchups: Array<{ home: RosterInfo; away: RosterInfo }> = [];
 
         for (let i = 0; i < totalRosters / 2; i++) {
-          const homeIdx = i === 0 ? 0 : ((round + i - 1) % (totalRosters - 1)) + 1;
-          const awayIdx = i === 0
-            ? ((round + totalRosters / 2 - 1) % (totalRosters - 1)) + 1
-            : ((round + totalRosters - 1 - i - 1) % (totalRosters - 1)) + 1;
+          const homeIdx =
+            i === 0 ? 0 : ((round + i - 1) % (totalRosters - 1)) + 1;
+          const awayIdx =
+            i === 0
+              ? ((round + totalRosters / 2 - 1) % (totalRosters - 1)) + 1
+              : ((round + totalRosters - 1 - i - 1) % (totalRosters - 1)) + 1;
 
           const home = rosterList[homeIdx];
           const away = rosterList[awayIdx];
@@ -389,139 +444,25 @@ export class ScheduleGeneratorService {
    * Distribute matchups across preferred game days with times within the window.
    */
   private static distributeMatchups(
-      matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number }>,
-      config: DistributeConfig
-    ): ShellEvent[] {
-      const {
-        preferredGameDays,
-        timeWindowStart,
-        timeWindowEnd,
+    matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number }>,
+    config: DistributeConfig
+  ): ShellEvent[] {
+    const {
+      preferredGameDays,
+      timeWindowStart,
+      timeWindowEnd,
+      startDate,
+      endDate,
+      gameFrequency,
+    } = config;
+
+    const frequency = gameFrequency ?? 'weekly';
+
+    if (frequency === 'all_at_once') {
+      // All-at-once: collect all consecutive day slots, assign in order
+      const slots = ScheduleGeneratorService.collectAllAtOnceSlots(
         startDate,
         endDate,
-        gameFrequency,
-      } = config;
-
-      const frequency = gameFrequency ?? 'weekly';
-
-      if (frequency === 'all_at_once') {
-        // All-at-once: collect all consecutive day slots, assign in order
-        const slots = ScheduleGeneratorService.collectAllAtOnceSlots(
-          startDate,
-          endDate,
-          timeWindowStart,
-          timeWindowEnd
-        );
-
-        if (matchups.length > slots.length) {
-          throw new Error(
-            'Insufficient dates to schedule all games within the configured window'
-          );
-        }
-
-        return matchups.map((matchup, i) => ({
-          homeRoster: matchup.home,
-          awayRoster: matchup.away,
-          scheduledAt: slots[i],
-          round: matchup.round,
-        }));
-      }
-
-      if (frequency === 'monthly') {
-        // Monthly: collect slots grouped by month, distribute evenly
-        const monthlySlots = ScheduleGeneratorService.collectMonthlySlots(
-          startDate,
-          endDate,
-          preferredGameDays,
-          timeWindowStart,
-          timeWindowEnd
-        );
-
-        // Filter out months with zero slots and redistribute
-        const activeMonths = monthlySlots.filter((m) => m.slots.length > 0);
-
-        const totalSlots = activeMonths.reduce(
-          (sum, m) => sum + m.slots.length,
-          0
-        );
-
-        if (matchups.length > totalSlots) {
-          throw new Error(
-            'Insufficient dates to schedule all games within the configured window'
-          );
-        }
-
-        const totalGames = matchups.length;
-        const totalMonths = activeMonths.length;
-
-        if (totalMonths === 0) {
-          throw new Error(
-            'Insufficient dates to schedule all games within the configured window'
-          );
-        }
-
-        const gamesPerMonth = Math.floor(totalGames / totalMonths);
-        const remainder = totalGames % totalMonths;
-
-        // Build allocation: first `remainder` months get gamesPerMonth + 1
-        const allocation: number[] = activeMonths.map((_, i) =>
-          i < remainder ? gamesPerMonth + 1 : gamesPerMonth
-        );
-
-        // Redistribute if a month doesn't have enough slots
-        for (let i = 0; i < allocation.length; i++) {
-          const available = activeMonths[i].slots.length;
-          if (allocation[i] > available) {
-            let overflow = allocation[i] - available;
-            allocation[i] = available;
-            // Push overflow to adjacent months (forward first, then backward)
-            for (let j = i + 1; j < allocation.length && overflow > 0; j++) {
-              const canTake = activeMonths[j].slots.length - allocation[j];
-              if (canTake > 0) {
-                const take = Math.min(canTake, overflow);
-                allocation[j] += take;
-                overflow -= take;
-              }
-            }
-            // If still overflow, try earlier months
-            for (let j = i - 1; j >= 0 && overflow > 0; j--) {
-              const canTake = activeMonths[j].slots.length - allocation[j];
-              if (canTake > 0) {
-                const take = Math.min(canTake, overflow);
-                allocation[j] += take;
-                overflow -= take;
-              }
-            }
-          }
-        }
-
-        // Assign matchups to slots within each month
-        const events: ShellEvent[] = [];
-        let matchIdx = 0;
-
-        for (let m = 0; m < activeMonths.length; m++) {
-          const monthSlots = activeMonths[m].slots;
-          const count = allocation[m];
-
-          for (let s = 0; s < count && matchIdx < matchups.length; s++) {
-            const matchup = matchups[matchIdx];
-            events.push({
-              homeRoster: matchup.home,
-              awayRoster: matchup.away,
-              scheduledAt: monthSlots[s],
-              round: matchup.round,
-            });
-            matchIdx++;
-          }
-        }
-
-        return events;
-      }
-
-      // Default: 'weekly' (also handles null/undefined gameFrequency)
-      const slots = ScheduleGeneratorService.collectWeeklySlots(
-        startDate,
-        endDate,
-        preferredGameDays,
         timeWindowStart,
         timeWindowEnd
       );
@@ -540,7 +481,119 @@ export class ScheduleGeneratorService {
       }));
     }
 
+    if (frequency === 'monthly') {
+      // Monthly: collect slots grouped by month, distribute evenly
+      const monthlySlots = ScheduleGeneratorService.collectMonthlySlots(
+        startDate,
+        endDate,
+        preferredGameDays,
+        timeWindowStart,
+        timeWindowEnd
+      );
 
+      // Filter out months with zero slots and redistribute
+      const activeMonths = monthlySlots.filter(m => m.slots.length > 0);
+
+      const totalSlots = activeMonths.reduce(
+        (sum, m) => sum + m.slots.length,
+        0
+      );
+
+      if (matchups.length > totalSlots) {
+        throw new Error(
+          'Insufficient dates to schedule all games within the configured window'
+        );
+      }
+
+      const totalGames = matchups.length;
+      const totalMonths = activeMonths.length;
+
+      if (totalMonths === 0) {
+        throw new Error(
+          'Insufficient dates to schedule all games within the configured window'
+        );
+      }
+
+      const gamesPerMonth = Math.floor(totalGames / totalMonths);
+      const remainder = totalGames % totalMonths;
+
+      // Build allocation: first `remainder` months get gamesPerMonth + 1
+      const allocation: number[] = activeMonths.map((_, i) =>
+        i < remainder ? gamesPerMonth + 1 : gamesPerMonth
+      );
+
+      // Redistribute if a month doesn't have enough slots
+      for (let i = 0; i < allocation.length; i++) {
+        const available = activeMonths[i].slots.length;
+        if (allocation[i] > available) {
+          let overflow = allocation[i] - available;
+          allocation[i] = available;
+          // Push overflow to adjacent months (forward first, then backward)
+          for (let j = i + 1; j < allocation.length && overflow > 0; j++) {
+            const canTake = activeMonths[j].slots.length - allocation[j];
+            if (canTake > 0) {
+              const take = Math.min(canTake, overflow);
+              allocation[j] += take;
+              overflow -= take;
+            }
+          }
+          // If still overflow, try earlier months
+          for (let j = i - 1; j >= 0 && overflow > 0; j--) {
+            const canTake = activeMonths[j].slots.length - allocation[j];
+            if (canTake > 0) {
+              const take = Math.min(canTake, overflow);
+              allocation[j] += take;
+              overflow -= take;
+            }
+          }
+        }
+      }
+
+      // Assign matchups to slots within each month
+      const events: ShellEvent[] = [];
+      let matchIdx = 0;
+
+      for (let m = 0; m < activeMonths.length; m++) {
+        const monthSlots = activeMonths[m].slots;
+        const count = allocation[m];
+
+        for (let s = 0; s < count && matchIdx < matchups.length; s++) {
+          const matchup = matchups[matchIdx];
+          events.push({
+            homeRoster: matchup.home,
+            awayRoster: matchup.away,
+            scheduledAt: monthSlots[s],
+            round: matchup.round,
+          });
+          matchIdx++;
+        }
+      }
+
+      return events;
+    }
+
+    // Default: 'weekly' (also handles null/undefined gameFrequency)
+    const slots = ScheduleGeneratorService.collectWeeklySlots(
+      startDate,
+      endDate,
+      preferredGameDays,
+      timeWindowStart,
+      timeWindowEnd
+    );
+
+    if (matchups.length > slots.length) {
+      throw new Error(
+        'Insufficient dates to schedule all games within the configured window'
+      );
+    }
+
+    return matchups.map((matchup, i) => ({
+      homeRoster: matchup.home,
+      awayRoster: matchup.away,
+      scheduledAt: slots[i],
+      round: matchup.round,
+    }));
+  }
 
   /**
    * Collect all available time slots for "all at once" (tournament) distribution.
@@ -609,7 +662,12 @@ export class ScheduleGeneratorService {
         let slotMinutes = windowStartMinutes;
         while (slotMinutes + 120 <= windowEndMinutes) {
           const slot = new Date(current);
-          slot.setUTCHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+          slot.setUTCHours(
+            Math.floor(slotMinutes / 60),
+            slotMinutes % 60,
+            0,
+            0
+          );
           slots.push(slot);
           slotMinutes += 120;
         }
@@ -660,7 +718,12 @@ export class ScheduleGeneratorService {
         let slotMinutes = windowStartMinutes;
         while (slotMinutes + 120 <= windowEndMinutes) {
           const slot = new Date(current);
-          slot.setUTCHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+          slot.setUTCHours(
+            Math.floor(slotMinutes / 60),
+            slotMinutes % 60,
+            0,
+            0
+          );
           monthMap.get(monthKey)!.push(slot);
           slotMinutes += 120;
         }
@@ -679,9 +742,6 @@ export class ScheduleGeneratorService {
     return result;
   }
 
-
-
-
   /**
    * Generate playoff rounds using a single-elimination bracket.
    * All roster assignments are TBD — actual rosters are determined by standings.
@@ -699,7 +759,12 @@ export class ScheduleGeneratorService {
     const tbdRoster: RosterInfo = { id: 'TBD', name: 'TBD' };
 
     // Build single-elimination bracket: playoffSlots/2 games in round 1, halving each round
-    const matchups: Array<{ home: RosterInfo; away: RosterInfo; round: number; playoffRound: number }> = [];
+    const matchups: Array<{
+      home: RosterInfo;
+      away: RosterInfo;
+      round: number;
+      playoffRound: number;
+    }> = [];
     let gamesInRound = Math.floor(playoffSlots / 2);
     let playoffRound = 1;
 
@@ -749,22 +814,32 @@ export class ScheduleGeneratorService {
         matches: {
           include: {
             homeTeam: {
-              include: { members: { where: { status: 'active' }, select: { userId: true } } }
+              include: {
+                members: {
+                  where: { status: 'active' },
+                  select: { userId: true },
+                },
+              },
             },
             awayTeam: {
-              include: { members: { where: { status: 'active' }, select: { userId: true } } }
-            }
-          }
+              include: {
+                members: {
+                  where: { status: 'active' },
+                  select: { userId: true },
+                },
+              },
+            },
+          },
         },
-        facility: { select: { name: true, street: true, city: true } }
-      }
+        facility: { select: { name: true, street: true, city: true } },
+      },
     });
 
     if (!event || event.scheduledStatus !== 'unscheduled') return;
 
     await prisma.event.update({
       where: { id: eventId },
-      data: { scheduledStatus: 'scheduled' }
+      data: { scheduledStatus: 'scheduled' },
     });
 
     // Notify all players on both rosters
@@ -777,10 +852,10 @@ export class ScheduleGeneratorService {
 
       for (const playerId of playerIds) {
         try {
-          NotificationService.sendNotification(playerId, {
+          (NotificationService as any).sendNotification(playerId, {
             title: 'Game Scheduled',
             body: `${event.title} — ${event.facility.name}, ${event.facility.city}`,
-            data: { eventId: event.id, type: 'event_scheduled' }
+            data: { eventId: event.id, type: 'event_scheduled' },
           });
         } catch {
           // Non-critical: continue if notification fails
@@ -796,35 +871,48 @@ export class ScheduleGeneratorService {
    * Non-power-of-2 roster counts are padded with byes.
    */
   static generateTournamentBracket(
-      rosters: RosterInfo[],
-      eliminationFormat: 'single_elimination' | 'double_elimination',
-      startDate: Date,
-      preferredDays: number[],
-      timeWindow: { start: string; end: string },
-      endDate?: Date | null
-    ): TournamentEvent[] {
-      if (rosters.length < 2) return [];
+    rosters: RosterInfo[],
+    eliminationFormat: 'single_elimination' | 'double_elimination',
+    startDate: Date,
+    preferredDays: number[],
+    timeWindow: { start: string; end: string },
+    endDate?: Date | null
+  ): TournamentEvent[] {
+    if (rosters.length < 2) return [];
 
-      // Round up to next power of 2
-      const n = rosters.length;
-      let bracketSize = 1;
-      while (bracketSize < n) bracketSize *= 2;
+    // Round up to next power of 2
+    const n = rosters.length;
+    let bracketSize = 1;
+    while (bracketSize < n) bracketSize *= 2;
 
-      const byeRoster: RosterInfo = { id: 'BYE', name: 'BYE' };
+    const byeRoster: RosterInfo = { id: 'BYE', name: 'BYE' };
 
-      // Seed rosters into bracket slots, padding with byes
-      const seeded: RosterInfo[] = [...rosters];
-      while (seeded.length < bracketSize) {
-        seeded.push(byeRoster);
-      }
-
-      if (eliminationFormat === 'single_elimination') {
-        return this.generateSingleElimination(seeded, bracketSize, startDate, preferredDays, timeWindow, endDate);
-      } else {
-        return this.generateDoubleElimination(seeded, bracketSize, startDate, preferredDays, timeWindow, endDate);
-      }
+    // Seed rosters into bracket slots, padding with byes
+    const seeded: RosterInfo[] = [...rosters];
+    while (seeded.length < bracketSize) {
+      seeded.push(byeRoster);
     }
 
+    if (eliminationFormat === 'single_elimination') {
+      return this.generateSingleElimination(
+        seeded,
+        bracketSize,
+        startDate,
+        preferredDays,
+        timeWindow,
+        endDate
+      );
+    } else {
+      return this.generateDoubleElimination(
+        seeded,
+        bracketSize,
+        startDate,
+        preferredDays,
+        timeWindow,
+        endDate
+      );
+    }
+  }
 
   /**
    * Persist a confirmed schedule as Event + Match records.
@@ -873,18 +961,23 @@ export class ScheduleGeneratorService {
       if (membership.team) {
         rosterPlayerMap.set(
           membership.team.id,
-          membership.team.members.map((m) => m.userId)
+          membership.team.members.map(m => m.userId)
         );
       }
     }
 
     // Separate concrete events (real roster IDs) from bracket shells (placeholder IDs)
-    const placeholderPattern = /^(seed-|winner-|loser-|wb-winner|lb-winner|BYE)/;
+    const placeholderPattern =
+      /^(seed-|winner-|loser-|wb-winner|lb-winner|BYE)/;
     const concreteEvents = events.filter(
-      (ev) => !placeholderPattern.test(ev.homeRosterId) && !placeholderPattern.test(ev.awayRosterId)
+      ev =>
+        !placeholderPattern.test(ev.homeRosterId) &&
+        !placeholderPattern.test(ev.awayRosterId)
     );
     const bracketEvents = events.filter(
-      (ev) => placeholderPattern.test(ev.homeRosterId) || placeholderPattern.test(ev.awayRosterId)
+      ev =>
+        placeholderPattern.test(ev.homeRosterId) ||
+        placeholderPattern.test(ev.awayRosterId)
     );
 
     if (concreteEvents.length === 0 && bracketEvents.length === 0) {
@@ -893,15 +986,19 @@ export class ScheduleGeneratorService {
 
     // Validate concrete roster IDs
     const allRosterIds = [
-      ...new Set(concreteEvents.flatMap((ev) => [ev.homeRosterId, ev.awayRosterId])),
+      ...new Set(
+        concreteEvents.flatMap(ev => [ev.homeRosterId, ev.awayRosterId])
+      ),
     ];
     if (allRosterIds.length > 0) {
       const existingTeams = await prisma.team.findMany({
         where: { id: { in: allRosterIds } },
         select: { id: true },
       });
-      const existingTeamIds = new Set(existingTeams.map((t) => t.id));
-      const missingRosterIds = allRosterIds.filter((id) => !existingTeamIds.has(id));
+      const existingTeamIds = new Set(existingTeams.map(t => t.id));
+      const missingRosterIds = allRosterIds.filter(
+        id => !existingTeamIds.has(id)
+      );
       if (missingRosterIds.length > 0) {
         throw new Error(`Roster IDs not found: ${missingRosterIds.join(', ')}`);
       }
@@ -917,7 +1014,7 @@ export class ScheduleGeneratorService {
       validSeasonId = season ? season.id : undefined;
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       const createdEventIds: string[] = [];
 
       // ── Concrete games (real rosters on both sides) ──
@@ -926,7 +1023,9 @@ export class ScheduleGeneratorService {
 
         const homePlayerIds = rosterPlayerMap.get(ev.homeRosterId) || [];
         const awayPlayerIds = rosterPlayerMap.get(ev.awayRosterId) || [];
-        const invitedUserIds = [...new Set([...homePlayerIds, ...awayPlayerIds])];
+        const invitedUserIds = [
+          ...new Set([...homePlayerIds, ...awayPlayerIds]),
+        ];
 
         const isBracket = !!ev.flag;
 
@@ -962,10 +1061,12 @@ export class ScheduleGeneratorService {
             status: 'scheduled',
             eventId: event.id,
             ...(ev.gameNumber ? { gameNumber: ev.gameNumber } : {}),
-            ...(isBracket ? {
-              bracketRound: ev.round > 200 ? ev.round - 200 : ev.round,
-              bracketFlag: ev.flag,
-            } : {}),
+            ...(isBracket
+              ? {
+                  bracketRound: ev.round > 200 ? ev.round - 200 : ev.round,
+                  bracketFlag: ev.flag,
+                }
+              : {}),
             ...(validSeasonId ? { seasonId: validSeasonId } : {}),
           },
         });
@@ -1052,7 +1153,7 @@ export class ScheduleGeneratorService {
     // Send notifications — failures are non-blocking
     for (const playerId of playerIds) {
       try {
-        await NotificationService.sendNotification(playerId, {
+        await (NotificationService as any).sendNotification(playerId, {
           title: 'Schedule Published',
           body: `${league.name} schedule has been published.`,
           data: { leagueId, type: 'schedule_published' },
@@ -1064,8 +1165,6 @@ export class ScheduleGeneratorService {
 
     return { eventsCreated: result.length };
   }
-
-
 
   /**
    * Generate a single-elimination bracket.
@@ -1169,58 +1268,145 @@ export class ScheduleGeneratorService {
    * We generate 2*(bracketSize-1) games (grand final without reset).
    */
   private static generateDoubleElimination(
-      seeded: RosterInfo[],
-      bracketSize: number,
-      startDate: Date,
-      preferredDays: number[],
-      timeWindow: { start: string; end: string },
-      endDate?: Date | null
-    ): TournamentEvent[] {
-      const allMatchups: Array<{
-        home: RosterInfo;
-        away: RosterInfo;
-        round: number;
-        bracketRound: number;
-        bracketPosition: number;
-        placeholderLabel?: string;
-        gameNumber: number;
-      }> = [];
+    seeded: RosterInfo[],
+    bracketSize: number,
+    startDate: Date,
+    preferredDays: number[],
+    timeWindow: { start: string; end: string },
+    endDate?: Date | null
+  ): TournamentEvent[] {
+    const allMatchups: Array<{
+      home: RosterInfo;
+      away: RosterInfo;
+      round: number;
+      bracketRound: number;
+      bracketPosition: number;
+      placeholderLabel?: string;
+      gameNumber: number;
+    }> = [];
 
-      let gameNumber = 1;
-      const winnersRounds = Math.log2(bracketSize);
-      let bracketRoundCounter = 1;
+    let gameNumber = 1;
+    const winnersRounds = Math.log2(bracketSize);
+    let bracketRoundCounter = 1;
 
-      // === Winners Bracket ===
-      // Round 1: actual rosters
-      const wbRound1Games = bracketSize / 2;
-      const wbGamesByRound: number[][] = []; // track game numbers per WB round
+    // === Winners Bracket ===
+    // Round 1: actual rosters
+    const wbRound1Games = bracketSize / 2;
+    const wbGamesByRound: number[][] = []; // track game numbers per WB round
 
-      const wbRound1GameNums: number[] = [];
-      for (let i = 0; i < wbRound1Games; i++) {
-        const home = seeded[i * 2];
-        const away = seeded[i * 2 + 1];
+    const wbRound1GameNums: number[] = [];
+    for (let i = 0; i < wbRound1Games; i++) {
+      const home = seeded[i * 2];
+      const away = seeded[i * 2 + 1];
+      allMatchups.push({
+        home,
+        away,
+        round: 200 + bracketRoundCounter,
+        bracketRound: bracketRoundCounter,
+        bracketPosition: i + 1,
+        gameNumber,
+      });
+      wbRound1GameNums.push(gameNumber);
+      gameNumber++;
+    }
+    wbGamesByRound.push(wbRound1GameNums);
+    bracketRoundCounter++;
+
+    // Winners bracket subsequent rounds
+    let wbPrevGameNums = wbRound1GameNums;
+    for (let wr = 1; wr < winnersRounds; wr++) {
+      const gamesInRound = wbPrevGameNums.length / 2;
+      const roundGameNums: number[] = [];
+      for (let i = 0; i < gamesInRound; i++) {
+        const homeGameNum = wbPrevGameNums[i * 2];
+        const awayGameNum = wbPrevGameNums[i * 2 + 1];
+        const homeLabel = `Winner of Game ${homeGameNum}`;
+        const awayLabel = `Winner of Game ${awayGameNum}`;
         allMatchups.push({
-          home,
-          away,
+          home: { id: `winner-${homeGameNum}`, name: homeLabel },
+          away: { id: `winner-${awayGameNum}`, name: awayLabel },
           round: 200 + bracketRoundCounter,
           bracketRound: bracketRoundCounter,
           bracketPosition: i + 1,
+          placeholderLabel: `${homeLabel} vs ${awayLabel}`,
           gameNumber,
         });
-        wbRound1GameNums.push(gameNumber);
+        roundGameNums.push(gameNumber);
         gameNumber++;
       }
-      wbGamesByRound.push(wbRound1GameNums);
+      wbGamesByRound.push(roundGameNums);
+      wbPrevGameNums = roundGameNums;
       bracketRoundCounter++;
+    }
 
-      // Winners bracket subsequent rounds
-      let wbPrevGameNums = wbRound1GameNums;
-      for (let wr = 1; wr < winnersRounds; wr++) {
-        const gamesInRound = wbPrevGameNums.length / 2;
-        const roundGameNums: number[] = [];
+    // === Losers Bracket ===
+    // Standard double elimination losers bracket has 2*(winnersRounds-1) rounds.
+    // Pattern alternates:
+    //   - Odd LB rounds: LB survivors vs losers dropping from WB (cross-bracket)
+    //   - Even LB rounds: LB survivors play each other (within LB)
+    // First LB round is special: losers from WB round 1 play each other.
+
+    const totalLbRounds = 2 * (winnersRounds - 1);
+
+    // LB Round 1: losers from WB round 1 play each other
+    const wbR1Losers = wbGamesByRound[0]; // game numbers from WB round 1
+    let lbPrevGameNums: number[] = [];
+    const lbR1Games = wbR1Losers.length / 2;
+    for (let i = 0; i < lbR1Games; i++) {
+      const homeLabel = `Loser of Game ${wbR1Losers[i * 2]}`;
+      const awayLabel = `Loser of Game ${wbR1Losers[i * 2 + 1]}`;
+      allMatchups.push({
+        home: { id: `loser-${wbR1Losers[i * 2]}`, name: homeLabel },
+        away: { id: `loser-${wbR1Losers[i * 2 + 1]}`, name: awayLabel },
+        round: 200 + bracketRoundCounter,
+        bracketRound: bracketRoundCounter,
+        bracketPosition: i + 1,
+        placeholderLabel: `${homeLabel} vs ${awayLabel}`,
+        gameNumber,
+      });
+      lbPrevGameNums.push(gameNumber);
+      gameNumber++;
+    }
+    bracketRoundCounter++;
+
+    // Remaining LB rounds (lbRound 2 through totalLbRounds)
+    // wbRoundIdx tracks which WB round's losers drop into the next cross-bracket LB round
+    let wbDropRoundIdx = 1; // start from WB round 2 losers
+
+    for (let lbRound = 2; lbRound <= totalLbRounds; lbRound++) {
+      const roundGameNums: number[] = [];
+
+      if (lbRound % 2 === 0) {
+        // Even LB round: cross-bracket — LB survivors vs losers from WB
+        const wbLosers = wbGamesByRound[wbDropRoundIdx];
+        const gamesInRound = lbPrevGameNums.length;
         for (let i = 0; i < gamesInRound; i++) {
-          const homeGameNum = wbPrevGameNums[i * 2];
-          const awayGameNum = wbPrevGameNums[i * 2 + 1];
+          const homeLabel = `Winner of Game ${lbPrevGameNums[i]}`;
+          const loserGameNum =
+            wbLosers && wbLosers[i] ? wbLosers[i] : lbPrevGameNums[i];
+          const awayLabel =
+            wbLosers && wbLosers[i]
+              ? `Loser of Game ${wbLosers[i]}`
+              : `Winner of Game ${lbPrevGameNums[i]}`;
+          allMatchups.push({
+            home: { id: `winner-${lbPrevGameNums[i]}`, name: homeLabel },
+            away: { id: `loser-${loserGameNum}`, name: awayLabel },
+            round: 200 + bracketRoundCounter,
+            bracketRound: bracketRoundCounter,
+            bracketPosition: i + 1,
+            placeholderLabel: `${homeLabel} vs ${awayLabel}`,
+            gameNumber,
+          });
+          roundGameNums.push(gameNumber);
+          gameNumber++;
+        }
+        wbDropRoundIdx++;
+      } else {
+        // Odd LB round: within LB — survivors play each other, halving the count
+        const gamesInRound = lbPrevGameNums.length / 2;
+        for (let i = 0; i < gamesInRound; i++) {
+          const homeGameNum = lbPrevGameNums[i * 2];
+          const awayGameNum = lbPrevGameNums[i * 2 + 1];
           const homeLabel = `Winner of Game ${homeGameNum}`;
           const awayLabel = `Winner of Game ${awayGameNum}`;
           allMatchups.push({
@@ -1235,138 +1421,51 @@ export class ScheduleGeneratorService {
           roundGameNums.push(gameNumber);
           gameNumber++;
         }
-        wbGamesByRound.push(roundGameNums);
-        wbPrevGameNums = roundGameNums;
-        bracketRoundCounter++;
       }
 
-      // === Losers Bracket ===
-      // Standard double elimination losers bracket has 2*(winnersRounds-1) rounds.
-      // Pattern alternates:
-      //   - Odd LB rounds: LB survivors vs losers dropping from WB (cross-bracket)
-      //   - Even LB rounds: LB survivors play each other (within LB)
-      // First LB round is special: losers from WB round 1 play each other.
-
-      const totalLbRounds = 2 * (winnersRounds - 1);
-
-      // LB Round 1: losers from WB round 1 play each other
-      const wbR1Losers = wbGamesByRound[0]; // game numbers from WB round 1
-      let lbPrevGameNums: number[] = [];
-      const lbR1Games = wbR1Losers.length / 2;
-      for (let i = 0; i < lbR1Games; i++) {
-        const homeLabel = `Loser of Game ${wbR1Losers[i * 2]}`;
-        const awayLabel = `Loser of Game ${wbR1Losers[i * 2 + 1]}`;
-        allMatchups.push({
-          home: { id: `loser-${wbR1Losers[i * 2]}`, name: homeLabel },
-          away: { id: `loser-${wbR1Losers[i * 2 + 1]}`, name: awayLabel },
-          round: 200 + bracketRoundCounter,
-          bracketRound: bracketRoundCounter,
-          bracketPosition: i + 1,
-          placeholderLabel: `${homeLabel} vs ${awayLabel}`,
-          gameNumber,
-        });
-        lbPrevGameNums.push(gameNumber);
-        gameNumber++;
-      }
+      lbPrevGameNums = roundGameNums;
       bracketRoundCounter++;
-
-      // Remaining LB rounds (lbRound 2 through totalLbRounds)
-      // wbRoundIdx tracks which WB round's losers drop into the next cross-bracket LB round
-      let wbDropRoundIdx = 1; // start from WB round 2 losers
-
-      for (let lbRound = 2; lbRound <= totalLbRounds; lbRound++) {
-        const roundGameNums: number[] = [];
-
-        if (lbRound % 2 === 0) {
-          // Even LB round: cross-bracket — LB survivors vs losers from WB
-          const wbLosers = wbGamesByRound[wbDropRoundIdx];
-          const gamesInRound = lbPrevGameNums.length;
-          for (let i = 0; i < gamesInRound; i++) {
-            const homeLabel = `Winner of Game ${lbPrevGameNums[i]}`;
-            const loserGameNum = wbLosers && wbLosers[i] ? wbLosers[i] : lbPrevGameNums[i];
-            const awayLabel = wbLosers && wbLosers[i]
-              ? `Loser of Game ${wbLosers[i]}`
-              : `Winner of Game ${lbPrevGameNums[i]}`;
-            allMatchups.push({
-              home: { id: `winner-${lbPrevGameNums[i]}`, name: homeLabel },
-              away: { id: `loser-${loserGameNum}`, name: awayLabel },
-              round: 200 + bracketRoundCounter,
-              bracketRound: bracketRoundCounter,
-              bracketPosition: i + 1,
-              placeholderLabel: `${homeLabel} vs ${awayLabel}`,
-              gameNumber,
-            });
-            roundGameNums.push(gameNumber);
-            gameNumber++;
-          }
-          wbDropRoundIdx++;
-        } else {
-          // Odd LB round: within LB — survivors play each other, halving the count
-          const gamesInRound = lbPrevGameNums.length / 2;
-          for (let i = 0; i < gamesInRound; i++) {
-            const homeGameNum = lbPrevGameNums[i * 2];
-            const awayGameNum = lbPrevGameNums[i * 2 + 1];
-            const homeLabel = `Winner of Game ${homeGameNum}`;
-            const awayLabel = `Winner of Game ${awayGameNum}`;
-            allMatchups.push({
-              home: { id: `winner-${homeGameNum}`, name: homeLabel },
-              away: { id: `winner-${awayGameNum}`, name: awayLabel },
-              round: 200 + bracketRoundCounter,
-              bracketRound: bracketRoundCounter,
-              bracketPosition: i + 1,
-              placeholderLabel: `${homeLabel} vs ${awayLabel}`,
-              gameNumber,
-            });
-            roundGameNums.push(gameNumber);
-            gameNumber++;
-          }
-        }
-
-        lbPrevGameNums = roundGameNums;
-        bracketRoundCounter++;
-      }
-
-      // === Grand Final ===
-      const wbFinalGameNum = wbGamesByRound[wbGamesByRound.length - 1][0];
-      const lbFinalGameNum = lbPrevGameNums[0];
-      const homeLabel = `Winner of Game ${wbFinalGameNum}`;
-      const awayLabel = `Winner of Game ${lbFinalGameNum}`;
-      allMatchups.push({
-        home: { id: `wb-winner`, name: homeLabel },
-        away: { id: `lb-winner`, name: awayLabel },
-        round: 200 + bracketRoundCounter,
-        bracketRound: bracketRoundCounter,
-        bracketPosition: 1,
-        placeholderLabel: `${homeLabel} vs ${awayLabel}`,
-        gameNumber,
-      });
-
-      // Distribute across preferred days — tournament brackets always use 'all_at_once'
-      const config: DistributeConfig = {
-        preferredGameDays: preferredDays,
-        timeWindowStart: timeWindow.start,
-        timeWindowEnd: timeWindow.end,
-        startDate,
-        endDate: endDate ?? null,
-        gameFrequency: 'all_at_once',
-      };
-
-      const distributed = this.distributeMatchups(
-        allMatchups.map(m => ({ home: m.home, away: m.away, round: m.round })),
-        config
-      );
-
-      return distributed.map((e, idx) => ({
-        homeRoster: e.homeRoster,
-        awayRoster: e.awayRoster,
-        scheduledAt: e.scheduledAt.toISOString(),
-        round: allMatchups[idx].round,
-        flag: 'tournament' as const,
-        bracketRound: allMatchups[idx].bracketRound,
-        bracketPosition: allMatchups[idx].bracketPosition,
-        placeholderLabel: allMatchups[idx].placeholderLabel,
-      }));
     }
 
+    // === Grand Final ===
+    const wbFinalGameNum = wbGamesByRound[wbGamesByRound.length - 1][0];
+    const lbFinalGameNum = lbPrevGameNums[0];
+    const homeLabel = `Winner of Game ${wbFinalGameNum}`;
+    const awayLabel = `Winner of Game ${lbFinalGameNum}`;
+    allMatchups.push({
+      home: { id: `wb-winner`, name: homeLabel },
+      away: { id: `lb-winner`, name: awayLabel },
+      round: 200 + bracketRoundCounter,
+      bracketRound: bracketRoundCounter,
+      bracketPosition: 1,
+      placeholderLabel: `${homeLabel} vs ${awayLabel}`,
+      gameNumber,
+    });
 
+    // Distribute across preferred days — tournament brackets always use 'all_at_once'
+    const config: DistributeConfig = {
+      preferredGameDays: preferredDays,
+      timeWindowStart: timeWindow.start,
+      timeWindowEnd: timeWindow.end,
+      startDate,
+      endDate: endDate ?? null,
+      gameFrequency: 'all_at_once',
+    };
+
+    const distributed = this.distributeMatchups(
+      allMatchups.map(m => ({ home: m.home, away: m.away, round: m.round })),
+      config
+    );
+
+    return distributed.map((e, idx) => ({
+      homeRoster: e.homeRoster,
+      awayRoster: e.awayRoster,
+      scheduledAt: e.scheduledAt.toISOString(),
+      round: allMatchups[idx].round,
+      flag: 'tournament' as const,
+      bracketRound: allMatchups[idx].bracketRound,
+      bracketPosition: allMatchups[idx].bracketPosition,
+      placeholderLabel: allMatchups[idx].placeholderLabel,
+    }));
+  }
 }

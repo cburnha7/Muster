@@ -19,7 +19,11 @@ router.post(
   requireNonDependent,
   async (req, res) => {
     try {
-      const { facilityId, courtId, slotId } = req.params;
+      const { facilityId, courtId, slotId } = req.params as {
+        facilityId: string;
+        courtId: string;
+        slotId: string;
+      };
       const { userId } = req.body;
 
       // TODO: Get userId from auth token instead of request body
@@ -177,7 +181,7 @@ router.post(
 // Cancel rental
 router.delete('/rentals/:rentalId', async (req, res) => {
   try {
-    const { rentalId } = req.params;
+    const { rentalId } = req.params as { rentalId: string };
     const { userId, cancellationReason } = req.body;
 
     // TODO: Get userId from auth token
@@ -311,7 +315,7 @@ router.delete('/rentals/:rentalId', async (req, res) => {
 // Request rental cancellation (user requests, owner approves)
 router.post('/rentals/:rentalId/request-cancellation', async (req, res) => {
   try {
-    const { rentalId } = req.params;
+    const { rentalId } = req.params as { rentalId: string };
     const { userId, cancellationReason } = req.body;
 
     // TODO: Get userId from auth token
@@ -687,7 +691,7 @@ router.get('/rentals/my-rentals', async (req, res) => {
 // Get single rental by ID
 router.get('/rentals/:rentalId', async (req, res) => {
   try {
-    const { rentalId } = req.params;
+    const { rentalId } = req.params as { rentalId: string };
 
     const rental = await prisma.facilityRental.findUnique({
       where: { id: rentalId },
@@ -729,7 +733,7 @@ router.get('/rentals/:rentalId', async (req, res) => {
 // Get all rentals for a facility (operator view)
 router.get('/rentals/facilities/:facilityId/rentals', async (req, res) => {
   try {
-    const { facilityId } = req.params;
+    const { facilityId } = req.params as { facilityId: string };
     const { status, startDate, endDate } = req.query;
 
     // TODO: Add authorization check - only facility owner can view
@@ -1087,7 +1091,7 @@ router.post('/rentals/recurring', requireNonDependent, async (req, res) => {
  */
 router.delete('/rentals/recurring/:groupId', async (req, res) => {
   try {
-    const { groupId } = req.params;
+    const { groupId } = req.params as { groupId: string };
     const { userId } = req.body;
 
     if (!userId) {
@@ -1171,7 +1175,7 @@ router.delete('/rentals/recurring/:groupId', async (req, res) => {
  */
 router.get('/rentals/recurring/:groupId', async (req, res) => {
   try {
-    const { groupId } = req.params;
+    const { groupId } = req.params as { groupId: string };
 
     const recurringBooking = await prisma.recurringBooking.findUnique({
       where: { groupId },

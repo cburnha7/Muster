@@ -84,7 +84,10 @@ router.get(
       const userId = req.user?.userId;
       if (!userId)
         return res.status(401).json({ error: 'Authentication required' });
-      const { entityType, entityId } = req.params;
+      const { entityType, entityId } = req.params as {
+        entityType: string;
+        entityId: string;
+      };
 
       if (!['roster', 'facility', 'league'].includes(entityType)) {
         return res.status(400).json({

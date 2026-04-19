@@ -16,7 +16,7 @@ const PLAN_HIERARCHY = [
 /** Get subscription for a user */
 router.get('/:userId', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     const subscription = await prisma.subscription.findUnique({
       where: { userId },

@@ -115,7 +115,7 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/leagues/:id/deletion-preview - Preview deletion impact
 router.get('/:id/deletion-preview', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId =
       (req.query.userId as string) || (req.headers['x-user-id'] as string);
 
@@ -148,7 +148,7 @@ router.get('/:id/deletion-preview', async (req: Request, res: Response) => {
 // GET /api/leagues/:id - Get league by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const league = await prisma.league.findUnique({
       where: { id },
@@ -218,14 +218,17 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'League not found' });
     }
 
+    // Cast to any to allow mutation of memberships array for cleanup
+    const leagueData = league as any;
+
     // Cleanup: remove stale pending memberships where an active one already exists
     // This handles duplicate data from previous roster sync bugs
-    const activeMemberIds = league.memberships
+    const activeMemberIds = leagueData.memberships
       .filter((m: any) => m.status === 'active' && m.memberType === 'roster')
       .map((m: any) => m.memberId);
 
     if (activeMemberIds.length > 0) {
-      const stalePending = league.memberships.filter(
+      const stalePending = leagueData.memberships.filter(
         (m: any) =>
           m.status === 'pending' &&
           m.memberType === 'roster' &&
@@ -236,14 +239,14 @@ router.get('/:id', async (req: Request, res: Response) => {
           where: { id: { in: stalePending.map((m: any) => m.id) } },
         });
         // Remove from response too
-        league.memberships = league.memberships.filter(
+        leagueData.memberships = leagueData.memberships.filter(
           (m: any) => !stalePending.some((s: any) => s.id === m.id)
         );
       }
     }
 
     // Also cleanup duplicate pending memberships for the same roster (NULL seasonId duplicates)
-    const pendingRosterMemberships = league.memberships.filter(
+    const pendingRosterMemberships = leagueData.memberships.filter(
       (m: any) => m.status === 'pending' && m.memberType === 'roster'
     );
     const seenPendingRosterIds = new Set<string>();
@@ -259,12 +262,12 @@ router.get('/:id', async (req: Request, res: Response) => {
       await prisma.leagueMembership.deleteMany({
         where: { id: { in: duplicatePendingIds } },
       });
-      league.memberships = league.memberships.filter(
+      leagueData.memberships = leagueData.memberships.filter(
         (m: any) => !duplicatePendingIds.includes(m.id)
       );
     }
 
-    res.json(league);
+    res.json(leagueData);
   } catch (error) {
     console.error('Error fetching league:', error);
     res.status(500).json({ error: 'Failed to fetch league' });
@@ -541,7 +544,7 @@ router.post(
 // PUT /api/leagues/:id - Update league
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       name,
       description,
@@ -809,7 +812,7 @@ router.delete(
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const { userId } = req.body;
 
       const existingLeague = await prisma.league.findUnique({ where: { id } });
@@ -849,7 +852,7 @@ router.post(
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {
-      const { id: leagueId } = req.params;
+      const { id: leagueId } = req.params as { id: string };
       const userId =
         req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
@@ -1038,7 +1041,10 @@ router.post(
   authMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const { id: leagueId, teamId } = req.params;
+      const { id: leagueId, teamId } = req.params as {
+        id: string;
+        teamId: string;
+      };
       const userId =
         req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
@@ -1163,7 +1169,7 @@ router.post(
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {
-      const { id: leagueId } = req.params;
+      const { id: leagueId } = req.params as { id: string };
       const userId =
         req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
@@ -1272,7 +1278,7 @@ export default router;
 // GET /api/leagues/:id/standings - Get league standings (roster-based)
 router.get('/:id/standings', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { seasonId } = req.query;
 
     // Fetch league to get points config
@@ -1360,7 +1366,7 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
 // GET /api/leagues/:id/player-rankings - Get player rankings
 router.get('/:id/player-rankings', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       seasonId,
       sortBy = 'performanceScore',
@@ -1483,7 +1489,7 @@ router.get('/:id/player-rankings', async (req: Request, res: Response) => {
 // POST /api/leagues/:id/join - Join league with a roster
 router.post('/:id/join', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { rosterId, teamId } = req.body;
 
     // Fetch the league
@@ -1572,7 +1578,7 @@ router.post('/:id/join', async (req: Request, res: Response) => {
 // GET /api/leagues/:id/join-requests - Get pending join requests (owner/admin only)
 router.get('/:id/join-requests', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { userId } = req.query;
 
     if (!userId) {
@@ -1629,7 +1635,7 @@ router.put(
   '/:id/join-requests/:requestId',
   async (req: Request, res: Response) => {
     try {
-      const { id, requestId } = req.params;
+      const { id, requestId } = req.params as { id: string; requestId: string };
       const { action, userId } = req.body;
 
       if (!userId) {
@@ -1849,7 +1855,7 @@ router.put(
 // POST /api/leagues/:id/invite-roster - Invite a roster to a private Team League
 router.post('/:id/invite-roster', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { rosterId, userId } = req.body;
 
     if (!rosterId || !userId) {
@@ -1935,7 +1941,10 @@ router.put(
   '/:id/invitations/:invitationId',
   async (req: Request, res: Response) => {
     try {
-      const { id, invitationId } = req.params;
+      const { id, invitationId } = req.params as {
+        id: string;
+        invitationId: string;
+      };
       const { accept, userId } = req.body;
 
       if (!userId) {
@@ -2167,7 +2176,7 @@ router.put(
 // POST /api/leagues/:id/leave - Leave league (Step Out) — always roster-based
 router.post('/:id/leave', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { teamId, userId } = req.body;
 
     const league = await prisma.league.findUnique({
@@ -2239,7 +2248,7 @@ router.post('/:id/leave', async (req: Request, res: Response) => {
 // GET /api/leagues/:id/members - Get league members (always returns roster memberships)
 router.get('/:id/members', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { page = '1', limit = '50', includePending } = req.query;
 
     // Verify league exists
@@ -2337,7 +2346,7 @@ router.get('/:id/members', async (req: Request, res: Response) => {
 // GET /api/leagues/:id/events - Get upcoming league events
 router.get('/:id/events', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     // Fetch league to verify it exists
     const league = await prisma.league.findUnique({
@@ -2422,7 +2431,7 @@ router.get('/:id/events', async (req: Request, res: Response) => {
 // POST /api/leagues/:id/events - Create a league event with optional roster assignment
 router.post('/:id/events', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const {
       title,
       description,
@@ -2656,7 +2665,7 @@ import {
 // GET /api/leagues/:id/documents - Get league documents
 router.get('/:id/documents', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const documents = await prisma.leagueDocument.findMany({
       where: { leagueId: id },
@@ -2685,7 +2694,7 @@ router.post(
   upload.single('file'),
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const { documentType, userId } = req.body;
       const file = req.file;
 
@@ -2753,7 +2762,10 @@ router.delete(
   '/:id/documents/:documentId',
   async (req: Request, res: Response) => {
     try {
-      const { id, documentId } = req.params;
+      const { id, documentId } = req.params as {
+        id: string;
+        documentId: string;
+      };
       const { userId } = req.body;
 
       if (!userId) {
@@ -2805,7 +2817,7 @@ router.get(
   '/:id/documents/:documentId/download',
   async (req: Request, res: Response) => {
     try {
-      const { documentId } = req.params;
+      const { documentId } = req.params as { documentId: string };
 
       const document = await prisma.leagueDocument.findUnique({
         where: { id: documentId },
@@ -2837,7 +2849,7 @@ router.post(
   upload.single('bylaws'),
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const { boardMembers, userId } = req.body;
       const file = req.file;
 
@@ -2953,7 +2965,7 @@ router.post(
   authMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const userId = req.user?.userId || req.body.userId;
 
       if (!userId) {
@@ -3045,7 +3057,7 @@ router.post(
   authMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const userId = req.user?.userId || req.body.userId;
 
       if (!userId) {
@@ -3109,7 +3121,7 @@ router.post(
   optionalAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
 
       // Fetch league with roster memberships
       const league = await prisma.league.findUnique({
@@ -3175,7 +3187,7 @@ router.post(
 
         // Send via NotificationService — failure is non-blocking
         try {
-          NotificationService.sendNotification(
+          (NotificationService as any).sendNotification(
             league.organizerId,
             notification
           );
@@ -3205,7 +3217,10 @@ router.get(
   '/:leagueId/seasons/:seasonId/strikes',
   async (req: Request, res: Response) => {
     try {
-      const { leagueId, seasonId } = req.params;
+      const { leagueId, seasonId } = req.params as {
+        leagueId: string;
+        seasonId: string;
+      };
       const { userId } = req.query;
 
       // Verify league exists and caller is the commissioner
@@ -3289,7 +3304,10 @@ router.delete(
   '/:leagueId/memberships/:membershipId',
   async (req: Request, res: Response) => {
     try {
-      const { leagueId, membershipId } = req.params;
+      const { leagueId, membershipId } = req.params as {
+        leagueId: string;
+        membershipId: string;
+      };
       const { userId } = req.body;
 
       if (!userId) {
@@ -3346,7 +3364,7 @@ router.delete(
 // GET /api/leagues/:id/ledger - Get league financial ledger for a season
 router.get('/:id/ledger', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { seasonId } = req.query;
 
     if (!seasonId || typeof seasonId !== 'string') {
@@ -3398,7 +3416,7 @@ router.post(
   uploadCover.single('image'),
   async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
       const file = req.file;
       const userId = req.user?.userId || (req.headers['x-user-id'] as string);
 
@@ -3503,7 +3521,7 @@ router.post(
 // Delete league cover image
 router.delete('/:id/cover', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId = req.user?.userId || (req.headers['x-user-id'] as string);
 
     if (!userId) {

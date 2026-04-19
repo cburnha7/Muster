@@ -55,7 +55,8 @@ router.post('/', requireNonDependent, async (req: Request, res: Response) => {
     }
     if (
       error.message === 'No dues amount set for this season' ||
-      error.message === 'Roster manager has not completed Stripe Connect onboarding' ||
+      error.message ===
+        'Roster manager has not completed Stripe Connect onboarding' ||
       error.message === 'Player is not an active member of this roster' ||
       error.message === 'Dues already paid for this season'
     ) {
@@ -74,36 +75,44 @@ router.post('/', requireNonDependent, async (req: Request, res: Response) => {
  * Body:
  *   - paymentIntentId: string — The Stripe PaymentIntent ID
  */
-router.post('/:paymentId/confirm', requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { paymentId } = req.params;
-    const { paymentIntentId } = req.body;
+router.post(
+  '/:paymentId/confirm',
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const { paymentId } = req.params as { paymentId: string };
+      const { paymentIntentId } = req.body;
 
-    if (!paymentIntentId) {
-      return res.status(400).json({ error: 'Missing required field: paymentIntentId' });
+      if (!paymentIntentId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: paymentIntentId' });
+      }
+
+      // Verify the payment record exists and matches
+      const payment = await prisma.playerDuesPayment.findUnique({
+        where: { id: paymentId },
+      });
+
+      if (!payment) {
+        return res.status(404).json({ error: 'Dues payment not found' });
+      }
+
+      if (payment.stripePaymentIntentId !== paymentIntentId) {
+        return res
+          .status(400)
+          .json({ error: 'PaymentIntent ID does not match' });
+      }
+
+      await confirmPlayerDuesPayment(paymentIntentId);
+
+      res.json({ status: 'succeeded' });
+    } catch (error: any) {
+      console.error('Error confirming player dues payment:', error);
+      res.status(500).json({ error: 'Failed to confirm dues payment' });
     }
-
-    // Verify the payment record exists and matches
-    const payment = await prisma.playerDuesPayment.findUnique({
-      where: { id: paymentId },
-    });
-
-    if (!payment) {
-      return res.status(404).json({ error: 'Dues payment not found' });
-    }
-
-    if (payment.stripePaymentIntentId !== paymentIntentId) {
-      return res.status(400).json({ error: 'PaymentIntent ID does not match' });
-    }
-
-    await confirmPlayerDuesPayment(paymentIntentId);
-
-    res.json({ status: 'succeeded' });
-  } catch (error: any) {
-    console.error('Error confirming player dues payment:', error);
-    res.status(500).json({ error: 'Failed to confirm dues payment' });
   }
-});
+);
 
 /**
  * GET /api/player-dues/status
@@ -121,7 +130,8 @@ router.get('/status', async (req: Request, res: Response) => {
 
     if (!playerId || !rosterId || !seasonId) {
       return res.status(400).json({
-        error: 'Missing required query parameters: playerId, rosterId, seasonId',
+        error:
+          'Missing required query parameters: playerId, rosterId, seasonId',
       });
     }
 
@@ -206,7 +216,7 @@ router.get('/roster-status', async (req: Request, res: Response) => {
 
     // Build a map of playerId -> payment status
     const paymentMap = new Map(
-      payments.map((p: any) => [p.playerId, p.paymentStatus]),
+      payments.map((p: any) => [p.playerId, p.paymentStatus])
     );
 
     const playerStatuses = members.map((m: any) => ({

@@ -1,6 +1,9 @@
 import { prisma } from '../lib/prisma';
 import { stripe } from '../services/stripe-connect';
-import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
+import {
+  generateIdempotencyKey,
+  IdempotencyAction,
+} from '../utils/idempotency';
 
 export interface DeletionImpactSummary {
   leagueId: string;
@@ -41,7 +44,7 @@ export class LeagueDeletionService {
       where: { leagueId },
       select: { id: true },
     });
-    const seasonIds = seasons.map((s) => s.id);
+    const seasonIds = seasons.map(s => s.id);
 
     // 3. Find all matches for the league, collecting distinct eventIds and rentalIds
     const matches = await prisma.match.findMany({
@@ -51,13 +54,13 @@ export class LeagueDeletionService {
 
     // 4. Count distinct events linked via Match.eventId (filter out nulls)
     const distinctEventIds = new Set(
-      matches.map((m) => m.eventId).filter((id): id is string => id !== null)
+      matches.map(m => m.eventId).filter((id): id is string => id !== null)
     );
     const eventCount = distinctEventIds.size;
 
     // 5. Count distinct rentals linked via Match.rentalId (filter out nulls)
     const distinctRentalIds = new Set(
-      matches.map((m) => m.rentalId).filter((id): id is string => id !== null)
+      matches.map(m => m.rentalId).filter((id): id is string => id !== null)
     );
     const rentalCount = distinctRentalIds.size;
 
@@ -77,7 +80,10 @@ export class LeagueDeletionService {
       });
 
       stripeRefundCount = succeededPayments.length;
-      stripeRefundTotal = succeededPayments.reduce((sum, p) => sum + p.amount, 0);
+      stripeRefundTotal = succeededPayments.reduce(
+        (sum, p) => sum + p.amount,
+        0
+      );
     }
 
     // 7. If league.membershipFee > 0, count active LeagueMemberships with memberType='roster'
@@ -120,7 +126,7 @@ export class LeagueDeletionService {
    * interactive transaction.
    */
   async executeLeagueDeletion(leagueId: string): Promise<DeletionResult> {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async tx => {
       // 1. Find the league — throw if not found or locked
       const league = await tx.league.findUnique({
         where: { id: leagueId },
@@ -131,7 +137,9 @@ export class LeagueDeletionService {
       }
 
       if (league.lockedFromDeletion) {
-        throw new Error('This league cannot be deleted because matches have been played');
+        throw new Error(
+          'This league cannot be deleted because matches have been played'
+        );
       }
 
       const leagueName = league.name;
@@ -142,7 +150,7 @@ export class LeagueDeletionService {
         where: { leagueId },
         select: { id: true },
       });
-      const seasonIds = seasons.map((s) => s.id);
+      const seasonIds = seasons.map(s => s.id);
 
       // 3. Find all succeeded PlayerDuesPayments with stripePaymentIntentId
       let stripeRefundCount = 0;
@@ -162,12 +170,12 @@ export class LeagueDeletionService {
           const idempotencyKey = generateIdempotencyKey(
             payment.id,
             payment.playerId,
-            IdempotencyAction.REFUND,
+            IdempotencyAction.REFUND
           );
 
           await stripe.refunds.create(
             { payment_intent: payment.stripePaymentIntentId! },
-            { idempotencyKey },
+            { idempotencyKey }
           );
 
           stripeRefundTotal += payment.amount;
@@ -179,7 +187,7 @@ export class LeagueDeletionService {
         if (succeededPayments.length > 0) {
           await tx.playerDuesPayment.updateMany({
             where: {
-              id: { in: succeededPayments.map((p) => p.id) },
+              id: { in: succeededPayments.map(p => p.id) },
             },
             data: { paymentStatus: 'refunded' },
           });
@@ -240,12 +248,12 @@ export class LeagueDeletionService {
       // Collect distinct eventIds
       const eventIds = [
         ...new Set(
-          matches.map((m) => m.eventId).filter((id): id is string => id !== null),
+          matches.map(m => m.eventId).filter((id): id is string => id !== null)
         ),
       ];
 
       const rentalCount = new Set(
-        matches.map((m) => m.rentalId).filter((id): id is string => id !== null),
+        matches.map(m => m.rentalId).filter((id): id is string => id !== null)
       ).size;
 
       // 10. Nullify Match.rentalId and Match.eventId for all league matches
@@ -274,16 +282,20 @@ export class LeagueDeletionService {
 
       // 15. Delete conversations linked to this league
       const conversations = await tx.conversation.findMany({
-        where: { entityId: leagueId, type: 'LEAGUE' },
+        where: { entityId: leagueId, type: 'LEAGUE_CHANNEL' },
         select: { id: true },
       });
-      const convIds = conversations.map((c) => c.id);
+      const convIds = conversations.map(c => c.id);
       if (convIds.length > 0) {
         await tx.messageReaction.deleteMany({
           where: { message: { conversationId: { in: convIds } } },
         });
-        await tx.message.deleteMany({ where: { conversationId: { in: convIds } } });
-        await tx.conversationParticipant.deleteMany({ where: { conversationId: { in: convIds } } });
+        await tx.message.deleteMany({
+          where: { conversationId: { in: convIds } },
+        });
+        await tx.conversationParticipant.deleteMany({
+          where: { conversationId: { in: convIds } },
+        });
         await tx.conversation.deleteMany({ where: { id: { in: convIds } } });
       }
 
@@ -296,7 +308,10 @@ export class LeagueDeletionService {
         await tx.event.update({
           where: { id: evt.id },
           data: {
-            eligibilityRestrictedToLeagues: evt.eligibilityRestrictedToLeagues.filter((lid) => lid !== leagueId),
+            eligibilityRestrictedToLeagues:
+              evt.eligibilityRestrictedToLeagues.filter(
+                lid => lid !== leagueId
+              ),
           },
         });
       }

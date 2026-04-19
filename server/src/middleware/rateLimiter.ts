@@ -2,14 +2,14 @@ import rateLimit from 'express-rate-limit';
 
 /**
  * Rate Limiter Middleware
- * 
+ *
  * Protects authentication endpoints from brute force attacks by limiting
  * the number of requests per IP address within a time window.
- * 
+ *
  * Configuration:
  * - Development: More lenient limits for testing
  * - Production: Strict limits for security
- * 
+ *
  * Returns 429 status code when rate limit is exceeded.
  * Uses memory store for development (consider Redis for production).
  */
@@ -20,7 +20,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
  * Rate limiter for login endpoint
  * Development: 100 requests per 15 minutes
  * Production: 5 requests per 15 minutes
- * 
+ *
  * Validates: Requirements 15.1, 15.4
  */
 export const loginRateLimiter = rateLimit({
@@ -32,7 +32,7 @@ export const loginRateLimiter = rateLimit({
   handler: (req, res) => {
     res.status(429).json({
       error: 'Too many login attempts. Please try again in 15 minutes',
-      retryAfter: Math.ceil(req.rateLimit.resetTime! / 1000), // Time in seconds
+      retryAfter: Math.ceil(Number(req.rateLimit.resetTime!) / 1000), // Time in seconds
     });
   },
 });
@@ -41,7 +41,7 @@ export const loginRateLimiter = rateLimit({
  * Rate limiter for registration endpoint
  * Development: 50 requests per 15 minutes
  * Production: 3 requests per 15 minutes
- * 
+ *
  * Validates: Requirements 15.2, 15.6
  */
 export const registrationRateLimiter = rateLimit({
@@ -53,7 +53,7 @@ export const registrationRateLimiter = rateLimit({
   handler: (req, res) => {
     res.status(429).json({
       error: 'Too many registration attempts. Please try again in 15 minutes',
-      retryAfter: Math.ceil(req.rateLimit.resetTime! / 1000),
+      retryAfter: Math.ceil(Number(req.rateLimit.resetTime!) / 1000),
     });
   },
 });
@@ -62,7 +62,7 @@ export const registrationRateLimiter = rateLimit({
  * Rate limiter for password reset endpoint
  * Development: 50 requests per 15 minutes
  * Production: 3 requests per 15 minutes
- * 
+ *
  * Validates: Requirements 15.3, 15.8
  */
 export const passwordResetRateLimiter = rateLimit({
@@ -74,7 +74,7 @@ export const passwordResetRateLimiter = rateLimit({
   handler: (req, res) => {
     res.status(429).json({
       error: 'Too many password reset requests. Please try again in 15 minutes',
-      retryAfter: Math.ceil(req.rateLimit.resetTime! / 1000),
+      retryAfter: Math.ceil(Number(req.rateLimit.resetTime!) / 1000),
     });
   },
 });
