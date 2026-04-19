@@ -1,7 +1,15 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Linking, Platform } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Linking,
+  Platform,
+  ActionSheetIOS,
+  Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { colors, fonts } from '../../theme';
 
 interface GetDirectionsButtonProps {
   latitude?: number | null;
@@ -11,6 +19,19 @@ interface GetDirectionsButtonProps {
   variant?: 'button' | 'link';
 }
 
+function buildUrls(
+  lat?: number | null,
+  lng?: number | null,
+  address?: string | null
+) {
+  const dest = lat && lng ? `${lat},${lng}` : encodeURIComponent(address || '');
+  return {
+    apple: `maps:?daddr=${dest}`,
+    google: `https://www.google.com/maps/dir/?api=1&destination=${dest}`,
+    googleApp: `comgooglemaps://?daddr=${dest}&directionsmode=driving`,
+  };
+}
+
 function openDirections(
   lat?: number | null,
   lng?: number | null,
@@ -18,22 +39,39 @@ function openDirections(
 ) {
   if (!lat && !lng && !address) return;
 
-  const destination =
-    lat && lng ? `${lat},${lng}` : encodeURIComponent(address || '');
+  const urls = buildUrls(lat, lng, address);
 
-  const url = Platform.select({
-    ios: `maps:?daddr=${destination}`,
-    android: `google.navigation:q=${destination}`,
-    default: `https://www.google.com/maps/dir/?api=1&destination=${destination}`,
-  });
-
-  if (url) {
-    Linking.openURL(url).catch(() => {
-      // Fallback to Google Maps web if native maps app fails
-      Linking.openURL(
-        `https://www.google.com/maps/dir/?api=1&destination=${destination}`
-      );
-    });
+  if (Platform.OS === 'ios') {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Apple Maps', 'Google Maps', 'Cancel'],
+        cancelButtonIndex: 2,
+        title: 'Get Directions',
+      },
+      buttonIndex => {
+        if (buttonIndex === 0) {
+          Linking.openURL(urls.apple).catch(() => Linking.openURL(urls.google));
+        } else if (buttonIndex === 1) {
+          Linking.openURL(urls.googleApp).catch(() =>
+            Linking.openURL(urls.google)
+          );
+        }
+      }
+    );
+  } else if (Platform.OS === 'android') {
+    Alert.alert('Get Directions', 'Open with:', [
+      {
+        text: 'Google Maps',
+        onPress: () =>
+          Linking.openURL(
+            `google.navigation:q=${lat && lng ? `${lat},${lng}` : encodeURIComponent(address || '')}`
+          ).catch(() => Linking.openURL(urls.google)),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  } else {
+    // Web — open Google Maps directly
+    Linking.openURL(urls.google);
   }
 }
 
@@ -41,10 +79,9 @@ export function GetDirectionsButton({
   latitude,
   longitude,
   address,
-  label = 'Get directions',
+  label = 'Get Directions',
   variant = 'button',
 }: GetDirectionsButtonProps) {
-  // Don't render if there's nothing to navigate to
   if (!latitude && !longitude && !address) return null;
 
   const handlePress = () => openDirections(latitude, longitude, address);
@@ -73,7 +110,7 @@ export function GetDirectionsButton({
       <Ionicons
         name="open-outline"
         size={14}
-        color={colors.onSurfaceVariant}
+        color={colors.inkSoft}
         style={styles.externalIcon}
       />
     </TouchableOpacity>
@@ -87,13 +124,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: (colors.cobalt || '#2D5F3F') + '10',
+    backgroundColor: colors.cobalt + '10',
     gap: 8,
   },
   buttonText: {
     flex: 1,
+    fontFamily: fonts.ui,
     fontSize: 14,
-    fontWeight: '600',
     color: colors.cobalt,
   },
   externalIcon: {
@@ -106,8 +143,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   linkText: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: colors.cobalt,
-    fontWeight: '500',
   },
 });
