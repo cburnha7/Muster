@@ -489,7 +489,7 @@ export function ChatScreen() {
               onPress={scrollToBottom}
               activeOpacity={0.85}
             >
-              <Ionicons name="arrow-down" size={14} color="#FFFFFF" />
+              <Ionicons name="arrow-down" size={14} color={colors.white} />
               <Text style={styles.newMessagesPillText}>New messages</Text>
             </TouchableOpacity>
           )}
@@ -561,6 +561,6 @@ const styles = StyleSheet.create({
   newMessagesPillText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

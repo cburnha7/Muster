@@ -143,13 +143,13 @@ export function FacilitiesListScreen() {
   }, [filters]);
 
   useEffect(() => {
-    const params = route.params as any;
+    const params = (route.params as any) ?? {};
     const refreshTimestamp = params?.refresh;
     if (refreshTimestamp) {
       lastLoadTimeRef.current = 0;
       loadFacilities(true);
     }
-  }, [(route.params as any)?.refresh]);
+  }, [((route.params as any) ?? {})?.refresh]);
 
   useFocusEffect(
     useCallback(() => {
@@ -249,7 +249,7 @@ export function FacilitiesListScreen() {
   );
 
   const handleFacilityPress = (facility: Facility) => {
-    const params = route.params as any;
+    const params = (route.params as any) ?? {};
     const returnTo = params?.returnTo;
     (navigation as any).navigate('FacilityDetails', {
       facilityId: facility.id,

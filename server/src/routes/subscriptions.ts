@@ -1,11 +1,17 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 
 const router = Router();
 
-const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
+const PLAN_HIERARCHY = [
+  'free',
+  'roster',
+  'league',
+  'facility_basic',
+  'facility_pro',
+];
 
 /** Get subscription for a user */
 router.get('/:userId', async (req: Request, res: Response) => {
@@ -39,45 +45,60 @@ router.get('/:userId', async (req: Request, res: Response) => {
 });
 
 /** Create or update subscription (called after Stripe checkout success) */
-router.post('/', optionalAuthMiddleware, requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+router.post(
+  '/',
+  authMiddleware,
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
 
-    const { plan, stripeCustomerId, stripeSubscriptionId, stripePriceId, currentPeriodEnd } = req.body;
-
-    if (!PLAN_HIERARCHY.includes(plan)) {
-      return res.status(400).json({ error: 'Invalid plan' });
-    }
-
-    const subscription = await prisma.subscription.upsert({
-      where: { userId },
-      create: {
-        userId,
+      const {
         plan,
-        status: 'active',
         stripeCustomerId,
         stripeSubscriptionId,
         stripePriceId,
-        currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd) : null,
-      },
-      update: {
-        plan,
-        status: 'active',
-        stripeCustomerId,
-        stripeSubscriptionId,
-        stripePriceId,
-        currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd) : null,
-      },
-    });
+        currentPeriodEnd,
+      } = req.body;
 
-    res.json(subscription);
-  } catch (error) {
-    console.error('Create/update subscription error:', error);
-    res.status(500).json({ error: 'Failed to update subscription' });
+      if (!PLAN_HIERARCHY.includes(plan)) {
+        return res.status(400).json({ error: 'Invalid plan' });
+      }
+
+      const subscription = await prisma.subscription.upsert({
+        where: { userId },
+        create: {
+          userId,
+          plan,
+          status: 'active',
+          stripeCustomerId,
+          stripeSubscriptionId,
+          stripePriceId,
+          currentPeriodEnd: currentPeriodEnd
+            ? new Date(currentPeriodEnd)
+            : null,
+        },
+        update: {
+          plan,
+          status: 'active',
+          stripeCustomerId,
+          stripeSubscriptionId,
+          stripePriceId,
+          currentPeriodEnd: currentPeriodEnd
+            ? new Date(currentPeriodEnd)
+            : null,
+        },
+      });
+
+      res.json(subscription);
+    } catch (error) {
+      console.error('Create/update subscription error:', error);
+      res.status(500).json({ error: 'Failed to update subscription' });
+    }
   }
-});
+);
 
 export default router;

@@ -409,7 +409,7 @@ export function DependentFormScreen() {
                       <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color="#FFFFFF"
+                        color={colors.white}
                         style={styles.chipIcon}
                       />
                     )}
@@ -447,7 +447,7 @@ export function DependentFormScreen() {
                       <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color="#FFFFFF"
+                        color={colors.white}
                         style={styles.chipIcon}
                       />
                     )}
@@ -601,9 +601,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
   },
   chipSelected: {
     backgroundColor: colors.primary,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   errorText: {
     fontSize: 14,

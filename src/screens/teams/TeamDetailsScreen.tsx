@@ -1137,7 +1137,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           <Ionicons
                             name="lock-closed-outline"
                             size={16}
-                            color={!formIsPublic ? '#FFF' : colors.ink}
+                            color={!formIsPublic ? colors.white : colors.ink}
                           />
                           <Text
                             style={[
@@ -1159,7 +1159,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           <Ionicons
                             name="globe-outline"
                             size={16}
-                            color={formIsPublic ? '#FFF' : colors.ink}
+                            color={formIsPublic ? colors.white : colors.ink}
                           />
                           <Text
                             style={[
@@ -1493,7 +1493,7 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.white,
   },
   ownerDeleteBtn: {
     borderWidth: 2,
@@ -1526,7 +1526,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   editInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1547,7 +1547,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: colors.white,
     gap: 6,
@@ -1562,7 +1562,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   editToggleTextActive: {
-    color: '#FFFFFF',
+    color: colors.white,
   },
   // Legacy retained for badge rendering compatibility
   pendingBadge: {

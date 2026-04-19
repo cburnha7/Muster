@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
-import { optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 import {
   uploadCover,
@@ -359,170 +359,163 @@ router.get('/:id/events', async (req, res) => {
 });
 
 // Create team
-router.post(
-  '/',
-  optionalAuthMiddleware,
-  requireNonDependent,
-  async (req, res) => {
-    try {
-      const { initialMemberIds, isPublic, ...rest } = req.body;
-      const creatorId =
-        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
+router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
+  try {
+    const { initialMemberIds, isPublic, ...rest } = req.body;
+    const creatorId =
+      req.user?.userId || (req.headers['x-user-id'] as string | undefined);
 
-      // Plan gate: 2nd+ roster requires 'roster' plan
-      if (creatorId) {
-        const { userBypassesPlanGate } = require('../middleware/subscription');
-        const bypassed = await userBypassesPlanGate(creatorId, 'roster');
-        if (!bypassed) {
-          const PLAN_HIERARCHY = [
-            'free',
-            'roster',
-            'league',
-            'facility_basic',
-            'facility_pro',
-          ];
-          const existingRosterCount = await prisma.teamMember.count({
-            where: { userId: creatorId, role: 'captain', status: 'active' },
+    // Plan gate: 2nd+ roster requires 'roster' plan
+    if (creatorId) {
+      const { userBypassesPlanGate } = require('../middleware/subscription');
+      const bypassed = await userBypassesPlanGate(creatorId, 'roster');
+      if (!bypassed) {
+        const PLAN_HIERARCHY = [
+          'free',
+          'roster',
+          'league',
+          'facility_basic',
+          'facility_pro',
+        ];
+        const existingRosterCount = await prisma.teamMember.count({
+          where: { userId: creatorId, role: 'captain', status: 'active' },
+        });
+        if (existingRosterCount >= 1) {
+          const sub = await prisma.subscription.findUnique({
+            where: { userId: creatorId },
+            select: { plan: true, status: true },
           });
-          if (existingRosterCount >= 1) {
-            const sub = await prisma.subscription.findUnique({
-              where: { userId: creatorId },
-              select: { plan: true, status: true },
+          const userPlan = sub?.plan || 'free';
+          const isActive =
+            !sub || sub.status === 'active' || sub.status === 'trialing';
+          if (
+            !isActive ||
+            PLAN_HIERARCHY.indexOf(userPlan) < PLAN_HIERARCHY.indexOf('roster')
+          ) {
+            return res.status(403).json({
+              error: 'Plan upgrade required',
+              requiredPlan: 'roster',
+              currentPlan: userPlan,
             });
-            const userPlan = sub?.plan || 'free';
-            const isActive =
-              !sub || sub.status === 'active' || sub.status === 'trialing';
-            if (
-              !isActive ||
-              PLAN_HIERARCHY.indexOf(userPlan) <
-                PLAN_HIERARCHY.indexOf('roster')
-            ) {
-              return res.status(403).json({
-                error: 'Plan upgrade required',
-                requiredPlan: 'roster',
-                currentPlan: userPlan,
-              });
-            }
           }
         }
       }
+    }
 
-      // Map frontend isPublic to DB isPrivate, and ensure description has a value
-      const teamData = {
-        ...rest,
-        isPrivate: isPublic === undefined ? false : !isPublic,
-        description: rest.description || '',
-        // Ensure sportTypes array is populated from sportType if not provided
-        sportTypes:
-          rest.sportTypes && rest.sportTypes.length > 0
-            ? rest.sportTypes
-            : rest.sportType
-              ? [rest.sportType]
-              : [],
-      };
+    // Map frontend isPublic to DB isPrivate, and ensure description has a value
+    const teamData = {
+      ...rest,
+      isPrivate: isPublic === undefined ? false : !isPublic,
+      description: rest.description || '',
+      // Ensure sportTypes array is populated from sportType if not provided
+      sportTypes:
+        rest.sportTypes && rest.sportTypes.length > 0
+          ? rest.sportTypes
+          : rest.sportType
+            ? [rest.sportType]
+            : [],
+    };
 
-      // Create the team
-      const team = await prisma.team.create({
-        data: teamData,
+    // Create the team
+    const team = await prisma.team.create({
+      data: teamData,
+    });
+
+    // Add the creator as captain
+    if (creatorId) {
+      await prisma.teamMember.create({
+        data: {
+          teamId: team.id,
+          userId: creatorId,
+          role: 'captain',
+          status: 'active',
+          joinedAt: new Date(),
+        },
       });
+    }
 
-      // Add the creator as captain
-      if (creatorId) {
-        await prisma.teamMember.create({
-          data: {
+    // Add initial members if provided
+    if (
+      initialMemberIds &&
+      Array.isArray(initialMemberIds) &&
+      initialMemberIds.length > 0
+    ) {
+      // Filter out the creator if they're in the list (already added as captain)
+      const memberIds = creatorId
+        ? initialMemberIds.filter((id: string) => id !== creatorId)
+        : initialMemberIds;
+
+      if (memberIds.length > 0) {
+        await prisma.teamMember.createMany({
+          data: memberIds.map((userId: string) => ({
             teamId: team.id,
-            userId: creatorId,
-            role: 'captain',
-            status: 'active',
+            userId,
+            role: 'member',
+            status: 'pending',
             joinedAt: new Date(),
-          },
+          })),
         });
       }
+    }
 
-      // Add initial members if provided
-      if (
-        initialMemberIds &&
-        Array.isArray(initialMemberIds) &&
-        initialMemberIds.length > 0
-      ) {
-        // Filter out the creator if they're in the list (already added as captain)
-        const memberIds = creatorId
-          ? initialMemberIds.filter((id: string) => id !== creatorId)
-          : initialMemberIds;
-
-        if (memberIds.length > 0) {
-          await prisma.teamMember.createMany({
-            data: memberIds.map((userId: string) => ({
-              teamId: team.id,
-              userId,
-              role: 'member',
-              status: 'pending',
-              joinedAt: new Date(),
-            })),
-          });
-        }
-      }
-
-      // Fetch the complete team with members
-      const completeTeam = await prisma.team.findUnique({
-        where: { id: team.id },
-        include: {
-          members: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  profileImage: true,
-                },
+    // Fetch the complete team with members
+    const completeTeam = await prisma.team.findUnique({
+      where: { id: team.id },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
               },
             },
           },
         },
-      });
+      },
+    });
 
-      // Messaging hook: create team chat
-      try {
-        const { MessagingService } =
-          await import('../services/MessagingService');
-        if (creatorId) {
-          await MessagingService.createTeamChat(team.id, creatorId, team.name);
-        }
-      } catch (msgErr) {
-        console.error('Failed to create team chat:', msgErr);
+    // Messaging hook: create team chat
+    try {
+      const { MessagingService } = await import('../services/MessagingService');
+      if (creatorId) {
+        await MessagingService.createTeamChat(team.id, creatorId, team.name);
       }
-
-      // Map isPrivate to isPublic for frontend
-      if (completeTeam) {
-        const { isPrivate: priv, ...restTeam } = completeTeam;
-        res.status(201).json({
-          ...restTeam,
-          isPublic: !priv,
-          sportTypes:
-            restTeam.sportTypes && restTeam.sportTypes.length > 0
-              ? restTeam.sportTypes
-              : restTeam.sportType
-                ? [restTeam.sportType]
-                : [],
-        });
-      } else {
-        res.status(201).json(completeTeam);
-      }
-    } catch (error: any) {
-      console.error('Create team error:', error?.message || error);
-      console.error(
-        'Create team error details:',
-        JSON.stringify(error?.meta || error?.code || '')
-      );
-      res.status(500).json({
-        error: 'Failed to create team',
-        details: error?.message || 'Unknown error',
-      });
+    } catch (msgErr) {
+      console.error('Failed to create team chat:', msgErr);
     }
+
+    // Map isPrivate to isPublic for frontend
+    if (completeTeam) {
+      const { isPrivate: priv, ...restTeam } = completeTeam;
+      res.status(201).json({
+        ...restTeam,
+        isPublic: !priv,
+        sportTypes:
+          restTeam.sportTypes && restTeam.sportTypes.length > 0
+            ? restTeam.sportTypes
+            : restTeam.sportType
+              ? [restTeam.sportType]
+              : [],
+      });
+    } else {
+      res.status(201).json(completeTeam);
+    }
+  } catch (error: any) {
+    console.error('Create team error:', error?.message || error);
+    console.error(
+      'Create team error details:',
+      JSON.stringify(error?.meta || error?.code || '')
+    );
+    res.status(500).json({
+      error: 'Failed to create team',
+      details: error?.message || 'Unknown error',
+    });
   }
-);
+});
 
 // Delete team
 router.delete('/:id', async (req, res) => {
@@ -1138,11 +1131,9 @@ router.delete('/:id/cover', async (req, res) => {
     });
 
     if (!membership) {
-      return res
-        .status(403)
-        .json({
-          error: 'Only captains and managers can delete the cover image',
-        });
+      return res.status(403).json({
+        error: 'Only captains and managers can delete the cover image',
+      });
     }
 
     if (!team.imageUrl) {

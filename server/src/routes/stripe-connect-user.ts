@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import {
   getStripe,
   createConnectAccount,
@@ -10,7 +10,7 @@ import {
 
 const router = Router();
 
-router.use(optionalAuthMiddleware);
+router.use(authMiddleware);
 
 // ---------------------------------------------------------------------------
 // POST /onboard — Start or resume Connect onboarding for the current user

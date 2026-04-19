@@ -38,7 +38,7 @@ export const ResetPasswordScreen: React.FC = () => {
   const dispatch = useDispatch();
 
   // Extract token from route params or URL
-  const resetToken = (route.params as any)?.token || '';
+  const { token: resetToken = '' } = (route.params as any) ?? {};
 
   const [state, setState] = useState<ResetPasswordState>({
     resetToken,

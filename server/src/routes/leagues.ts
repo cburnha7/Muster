@@ -6,7 +6,7 @@ import {
   LeagueWithRosters,
 } from '../services/ScheduleGeneratorService';
 import { checkLeagueReady } from '../jobs/league-ready-check';
-import { optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 import { requirePlan } from '../middleware/subscription';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 import { LeagueDeletionService } from '../services/LeagueDeletionService';
@@ -274,7 +274,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 // POST /api/leagues - Create new league
 router.post(
   '/',
-  optionalAuthMiddleware,
+  authMiddleware,
   requireNonDependent,
   requirePlan('league'),
   async (req: Request, res: Response) => {
@@ -845,7 +845,7 @@ router.delete(
 // POST /api/leagues/:id/teams - Commissioner creates a team for their league
 router.post(
   '/:id/teams',
-  optionalAuthMiddleware,
+  authMiddleware,
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {
@@ -1035,7 +1035,7 @@ router.post(
 // POST /api/leagues/:id/teams/:teamId/assign-coach
 router.post(
   '/:id/teams/:teamId/assign-coach',
-  optionalAuthMiddleware,
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { id: leagueId, teamId } = req.params;
@@ -1159,7 +1159,7 @@ router.post(
 // POST /api/leagues/:id/teams/bulk - Commissioner bulk-creates teams
 router.post(
   '/:id/teams/bulk',
-  optionalAuthMiddleware,
+  authMiddleware,
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {
@@ -2950,7 +2950,7 @@ router.post(
 // POST /api/leagues/:id/generate-schedule - Generate schedule preview for Commissioner review
 router.post(
   '/:id/generate-schedule',
-  optionalAuthMiddleware,
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -3042,7 +3042,7 @@ router.post(
 // POST /api/leagues/:id/confirm-schedule - Persist reviewed schedule as shell events
 router.post(
   '/:id/confirm-schedule',
-  optionalAuthMiddleware,
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
