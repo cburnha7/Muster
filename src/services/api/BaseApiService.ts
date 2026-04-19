@@ -77,7 +77,7 @@ export class BaseApiService {
     // Request interceptor for authentication and logging
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        if (__DEV__) {
+        if (process.env.NODE_ENV === 'development') {
           console.log('🚀 BaseApiService interceptor running');
         }
 
@@ -85,14 +85,14 @@ export class BaseApiService {
         let token = await TokenStorage.getAccessToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          if (__DEV__) {
+          if (process.env.NODE_ENV === 'development') {
             console.log(
               '🔐 API Request - Token attached:',
               token.substring(0, 20) + '...'
             );
           }
         } else {
-          if (__DEV__) {
+          if (process.env.NODE_ENV === 'development') {
             console.log('⚠️ API Request - No token available');
           }
         }
@@ -100,7 +100,7 @@ export class BaseApiService {
         // DEVELOPMENT: Add x-user-id header for mock auth
         // Read user from TokenStorage instead of authService
         const currentUser = await TokenStorage.getUser();
-        if (__DEV__) {
+        if (process.env.NODE_ENV === 'development') {
           console.log(
             '👤 Current user from TokenStorage:',
             currentUser?.email,
@@ -109,7 +109,7 @@ export class BaseApiService {
         }
         if (currentUser && currentUser.id) {
           config.headers['X-User-Id'] = currentUser.id;
-          if (__DEV__) {
+          if (process.env.NODE_ENV === 'development') {
             console.log(
               '🔐 API Request - User ID attached:',
               currentUser.id,
@@ -117,7 +117,7 @@ export class BaseApiService {
             );
           }
         } else {
-          if (__DEV__) {
+          if (process.env.NODE_ENV === 'development') {
             console.log('⚠️ API Request - No current user');
           }
         }
@@ -564,6 +564,6 @@ export const defaultApiConfig: ApiServiceConfig = {
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second
-  enableLogging: __DEV__, // Enable logging in development mode
+  enableLogging: process.env.NODE_ENV === 'development', // Enable logging in development mode
   enableCaching: true, // Enable caching by default
 };

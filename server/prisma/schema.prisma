@@ -907,6 +907,7 @@ model FacilityRental {
   cancelRequests   CancelRequest[]
 
   @@index([userId])
+  @@index([userId, status])
   @@index([status])
   @@index([usedForEventId])
   @@index([bookingSessionId])

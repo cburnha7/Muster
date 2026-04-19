@@ -1,6 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error(
+    'FATAL: JWT_SECRET environment variable is required in production'
+  );
+}
+const SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
+
 // Extend Express Request type to include user
 declare global {
   namespace Express {
@@ -16,49 +24,37 @@ declare global {
   }
 }
 
+/**
+ * Strict auth middleware — requires a valid JWT Bearer token.
+ * No fallbacks. Used on all mutating endpoints.
+ */
 export const authMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Accept X-User-Id header as fallback authentication
-    const xUserId = req.headers['x-user-id'] as string | undefined;
-
-    // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
-        userId: string;
-      };
-
-      req.user = { userId: decoded.userId };
-      return next();
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Fallback to X-User-Id header
-    if (xUserId) {
-      req.user = { userId: xUserId };
-      return next();
-    }
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, SECRET) as { userId: string };
 
-    return res.status(401).json({ error: 'No token provided' });
+    req.user = { userId: decoded.userId };
+    next();
   } catch (error) {
-    // JWT verification failed — try X-User-Id fallback
-    const xUserId = req.headers['x-user-id'] as string | undefined;
-    if (xUserId) {
-      req.user = { userId: xUserId };
-      return next();
-    }
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
-// Optional auth middleware - doesn't fail if no token
+/**
+ * Optional auth middleware — tries JWT first, falls back to X-User-Id header.
+ * Used on read endpoints where auth is helpful but not required,
+ * and on endpoints that need backward compatibility during token refresh.
+ */
 export const optionalAuthMiddleware = (
   req: Request,
   res: Response,
@@ -68,52 +64,37 @@ export const optionalAuthMiddleware = (
     const authHeader = req.headers.authorization;
     const xUserId = req.headers['x-user-id'] as string | undefined;
 
-    console.log(
-      '🔐 Optional Auth - Header:',
-      authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none'
-    );
-    console.log('🔐 Optional Auth - X-User-Id:', xUserId);
-
-    // Accept X-User-Id header as fallback authentication
-    // This allows the app to work when JWT tokens expire but user data is still cached
-    if (xUserId) {
-      req.user = { userId: xUserId };
-      console.log('🔐 Optional Auth - Using X-User-Id header:', xUserId);
-      return next();
-    }
-
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
 
-      // Check if it's a mock token (starts with 'mock_token_')
+      // Skip mock tokens in development
       if (
         token.startsWith('mock_token_') &&
         process.env.NODE_ENV === 'development'
       ) {
-        console.log(
-          '🔐 Optional Auth - Mock token detected, but no X-User-Id header'
-        );
-        // Continue without user - frontend should send X-User-Id
+        if (xUserId) {
+          req.user = { userId: xUserId };
+        }
         return next();
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
-        userId: string;
-      };
-
+      const decoded = jwt.verify(token, SECRET) as { userId: string };
       req.user = { userId: decoded.userId };
-      console.log('🔐 Optional Auth - Decoded userId:', decoded.userId);
-    } else {
-      console.log('🔐 Optional Auth - No valid token, continuing without auth');
+      return next();
+    }
+
+    // Fallback to X-User-Id header (for backward compat during token refresh)
+    if (xUserId) {
+      req.user = { userId: xUserId };
     }
 
     next();
   } catch (error) {
-    console.log(
-      '🔐 Optional Auth - Token verification failed:',
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-    // Continue without user if token is invalid
+    // JWT verification failed — try X-User-Id as last resort
+    const xUserId = req.headers['x-user-id'] as string | undefined;
+    if (xUserId) {
+      req.user = { userId: xUserId };
+    }
     next();
   }
 };
