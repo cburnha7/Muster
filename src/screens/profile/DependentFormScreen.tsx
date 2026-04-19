@@ -9,10 +9,12 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
+import * as ImagePicker from 'expo-image-picker';
 
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
@@ -443,16 +445,66 @@ export function DependentFormScreen() {
             )}
           </View>
 
-          {/* Profile image URL (simple text input) */}
-          <FormInput
-            label="Profile Image URL"
-            placeholder="https://example.com/photo.jpg (optional)"
-            value={profileImage}
-            onChangeText={setProfileImage}
-            leftIcon="image-outline"
-            autoCapitalize="none"
-            keyboardType="url"
-          />
+          {/* Profile Photo — tap to pick from library */}
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 14,
+              fontWeight: '500',
+              color: colors.ink,
+              marginBottom: 8,
+            }}
+          >
+            Photo (Optional)
+          </Text>
+          <TouchableOpacity
+            style={{
+              alignSelf: 'center',
+              marginBottom: 16,
+            }}
+            onPress={async () => {
+              try {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ['images'] as ImagePicker.MediaType[],
+                  allowsEditing: true,
+                  aspect: [1, 1],
+                  quality: 0.8,
+                });
+                if (!result.canceled && result.assets[0]) {
+                  setProfileImage(result.assets[0].uri);
+                }
+              } catch {
+                Alert.alert('Error', 'Failed to pick image');
+              }
+            }}
+            activeOpacity={0.7}
+          >
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={{ width: 100, height: 100, borderRadius: 50 }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
+                  backgroundColor: colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons
+                  name="camera-outline"
+                  size={32}
+                  color={colors.inkFaint}
+                />
+              </View>
+            )}
+          </TouchableOpacity>
 
           {/* General error */}
           {errors.general && (

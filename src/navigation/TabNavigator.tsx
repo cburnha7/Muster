@@ -58,6 +58,7 @@ function CustomHeader({ routeName }: { routeName: string }) {
         borderBottomWidth: 1,
         borderBottomColor: colors.headerBorder,
         gap: spacing.md,
+        zIndex: 10,
       }}
     >
       <NotificationBell />
@@ -66,7 +67,7 @@ function CustomHeader({ routeName }: { routeName: string }) {
           {sectionTitle}
         </Text>
       ) : (
-        <View style={{ flex: 1, marginHorizontal: 4 }}>
+        <View style={{ flex: 1, marginHorizontal: 4, overflow: 'visible' }}>
           <HeaderSearchPill routeName={routeName} />
         </View>
       )}

@@ -10,14 +10,21 @@
 
 import { useSelector } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
-import { selectPlan, selectIsSubscriptionActive } from '../store/slices/subscriptionSlice';
-import { selectActiveUserId, selectDependents } from '../store/slices/contextSlice';
+import {
+  selectPlan,
+  selectIsSubscriptionActive,
+} from '../store/slices/subscriptionSlice';
+import {
+  selectActiveUserId,
+  selectDependents,
+} from '../store/slices/contextSlice';
 import {
   GatedFeature,
   SubscriptionPlan,
   FEATURE_PLAN_MAP,
   PLAN_HIERARCHY,
 } from '../types/subscription';
+import { MEMBERSHIPS_ENABLED } from '../config/features';
 
 /** Maps membershipTier values to equivalent subscription plans */
 const TIER_TO_PLAN: Record<string, SubscriptionPlan> = {
@@ -39,6 +46,11 @@ export function useFeatureGate(feature: GatedFeature): FeatureGateResult {
 
   const requiredPlan = FEATURE_PLAN_MAP[feature];
 
+  // When memberships are disabled, allow everything
+  if (!MEMBERSHIPS_ENABLED) {
+    return { allowed: true, requiredPlan };
+  }
+
   // Admins bypass all gates
   if (user?.role === 'admin') {
     return { allowed: true, requiredPlan };
@@ -50,7 +62,7 @@ export function useFeatureGate(feature: GatedFeature): FeatureGateResult {
   const isDependent =
     !!activeUserId &&
     activeUserId !== user?.id &&
-    dependents.some((d) => d.id === activeUserId);
+    dependents.some(d => d.id === activeUserId);
 
   if (isDependent) {
     return { allowed: requiredPlan === 'free', requiredPlan };
