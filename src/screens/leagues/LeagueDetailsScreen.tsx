@@ -40,6 +40,7 @@ import {
   FixedBottomCTA,
 } from '../../components/detail';
 import { getSportColor } from '../../constants/sportColors';
+import { formatSportType } from '../../utils/formatters';
 
 // Import tab components
 import { StandingsTab } from './tabs/StandingsTab';
@@ -662,10 +663,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   );
 
   // Labels for HeroSection badges
-  const sportLabel = league.sportType
-    ? league.sportType.charAt(0).toUpperCase() +
-      league.sportType.slice(1).replace(/_/g, ' ')
-    : '';
+  const sportLabel = league.sportType ? formatSportType(league.sportType) : '';
   const skillLabel = formatSkillLevel(league.skillLevel);
   const formatLabel =
     (league as any).leagueFormat === 'season'

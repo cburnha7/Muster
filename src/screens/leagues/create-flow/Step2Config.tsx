@@ -92,7 +92,7 @@ export function Step2Config() {
       <Text style={styles.label}>Host Name</Text>
       <TextInput
         style={styles.input}
-        placeholder="e.g. Burnham Bros"
+        placeholder="League or host name"
         placeholderTextColor={colors.inkSoft}
         value={state.hostName}
         onChangeText={set('hostName')}

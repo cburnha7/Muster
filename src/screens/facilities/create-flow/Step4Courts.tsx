@@ -13,6 +13,7 @@ import { HoursOfOperationSection } from '../../../components/facilities/HoursOfO
 import { useCreateFacility } from './CreateFacilityContext';
 import { CourtFormData } from './types';
 import { colors, fonts, Spacing, useTheme } from '../../../theme';
+import { formatSportType } from '../../../utils/formatters';
 
 const EMPTY_COURT: CourtFormData = {
   id: '',
@@ -190,7 +191,7 @@ export function Step4Courts() {
                           isSelected && styles.sportChipTextSelected,
                         ]}
                       >
-                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                        {formatSportType(sport)}
                       </Text>
                     </TouchableOpacity>
                   );

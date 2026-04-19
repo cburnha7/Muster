@@ -39,6 +39,7 @@ import { GetDirectionsButton } from '../../components/ui/GetDirectionsButton';
 import { getSportColor } from '../../constants/sportColors';
 import { getSportLabel, getSportEmoji } from '../../constants/sports';
 import { getSurfaceName } from '../../utils/getSurfaceName';
+import { formatSportType } from '../../utils/formatters';
 
 // Only import MapView on native platforms
 let MapView: any = null;
@@ -333,7 +334,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         tintColor={getSportColor(facility.sportTypes?.[0] ?? 'other')}
         tags={[
           ...(facility.sportTypes || []).map((s: string) => ({
-            label: s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' '),
+            label: formatSportType(s),
           })),
           { label: 'Grounds' },
         ]}

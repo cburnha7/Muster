@@ -13,6 +13,7 @@ import { useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { formatSportType } from '../../utils/formatters';
 import { completeOnboarding } from '../../store/slices/authSlice';
 import type { OnboardingData } from '../../types/auth';
 
@@ -195,7 +196,7 @@ function intentDisplayName(intent: string): string {
 }
 
 function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
+  return formatSportType(str);
 }
 
 const styles = StyleSheet.create({

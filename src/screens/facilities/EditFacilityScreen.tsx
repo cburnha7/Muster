@@ -28,6 +28,7 @@ import { HoursOfOperationSection } from '../../components/facilities/HoursOfOper
 import { CancellationPolicyPicker } from '../../components/facilities/CancellationPolicyPicker';
 import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import { facilityService } from '../../services/api/FacilityService';
+import { formatSportType } from '../../utils/formatters';
 import { courtService } from '../../services/api/CourtService';
 import {
   updateFacility,
@@ -1543,7 +1544,7 @@ export function EditFacilityScreen({
                           isSelected && s.sportChipTextSelected,
                         ]}
                       >
-                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                        {formatSportType(sport)}
                       </Text>
                     </TouchableOpacity>
                   );

@@ -18,6 +18,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { formatSportType } from '../../utils/formatters';
 
 import { eventService } from '../../services/api/EventService';
 import {
@@ -167,7 +168,7 @@ export function EventsListScreen(): React.JSX.Element {
         {item.sportType && (
           <View style={styles.sportTag}>
             <Text style={styles.sportTagText}>
-              {item.sportType.charAt(0).toUpperCase() + item.sportType.slice(1)}
+              {formatSportType(item.sportType)}
             </Text>
           </View>
         )}
@@ -308,7 +309,7 @@ export function EventsListScreen(): React.JSX.Element {
                           isSelected && styles.sportChipTextSelected,
                         ]}
                       >
-                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                        {formatSportType(sport)}
                       </Text>
                     </TouchableOpacity>
                   );

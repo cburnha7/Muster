@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Facility, SportType } from '../../types';
 import { colors, fonts } from '../../theme';
+import { formatSportType } from '../../utils/formatters';
 
 interface FacilityCardProps {
   facility: Facility;
@@ -125,9 +126,7 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
                   size={14}
                   color={colors.primary}
                 />
-                <Text style={styles.sportText}>
-                  {sport.charAt(0).toUpperCase() + sport.slice(1)}
-                </Text>
+                <Text style={styles.sportText}>{formatSportType(sport)}</Text>
               </View>
             ))}
             {facility.sportTypes.length > 3 && (

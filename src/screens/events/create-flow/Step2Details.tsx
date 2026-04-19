@@ -3,6 +3,7 @@ import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { colors, fonts, useTheme } from '../../../theme';
+import { formatSportType } from '../../../utils/formatters';
 import { EventType, SkillLevel } from '../../../types';
 
 const EVENT_TYPE_OPTIONS: SelectOption[] = [
@@ -33,12 +34,7 @@ export function buildEventName(
   const parts: string[] = [];
   if (host.trim()) parts.push(host.trim());
   if (sport) {
-    parts.push(
-      sport
-        .split('_')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .join(' ')
-    );
+    parts.push(formatSportType(sport));
   }
   if (eventType) {
     parts.push(

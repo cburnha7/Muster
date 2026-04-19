@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
+import { formatSportType } from '../../utils/formatters';
 import { SportType, SkillLevel } from '../../types';
 
 interface SearchBarProps {
@@ -194,7 +195,7 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                             styles.optionTextActive,
                         ]}
                       >
-                        {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                        {formatSportType(sport)}
                       </Text>
                     </TouchableOpacity>
                   ))}

@@ -23,6 +23,7 @@ import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
 import { colors, fonts, useTheme } from '../../theme';
+import { formatSportType } from '../../utils/formatters';
 import { DependentProfile } from '../../types/dependent';
 
 function isAge18OrOlder(dateOfBirth: string): boolean {
@@ -396,9 +397,7 @@ export function DependentProfileScreen() {
                     {league.name ?? `League ${idx + 1}`}
                   </Text>
                   <Text style={styles.gameMeta}>
-                    {sport
-                      ? sport.charAt(0).toUpperCase() + sport.slice(1)
-                      : ''}
+                    {sport ? formatSportType(sport) : ''}
                   </Text>
                 </View>
                 <Ionicons

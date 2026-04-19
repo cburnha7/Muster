@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
+import { formatSportType } from '../../utils/formatters';
 
 interface SportRating {
   sportType: string;
@@ -53,11 +54,7 @@ interface PlayerCardProps {
   } | null;
 }
 
-const formatSport = (s: string) =>
-  s
-    .split('_')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
+const formatSport = (s: string) => formatSportType(s);
 
 export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
   const [ratings, setRatings] = useState<SportRating[]>([]);

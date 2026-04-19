@@ -42,6 +42,7 @@ import {
 } from '../../store/slices/facilitiesSlice';
 import { useAuth } from '../../context/AuthContext';
 import { Facility, SportType, FacilityFilters } from '../../types';
+import { formatSportType } from '../../utils/formatters';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
@@ -347,7 +348,7 @@ export function FacilitiesListScreen() {
               {item.sportTypes.slice(0, 3).map((sport, idx) => (
                 <View key={idx} style={styles.sportTag}>
                   <Text style={styles.sportTagText}>
-                    {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                    {formatSportType(sport)}
                   </Text>
                 </View>
               ))}
@@ -416,7 +417,7 @@ export function FacilitiesListScreen() {
                         isSelected && styles.sportChipTextSelected,
                       ]}
                     >
-                      {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                      {formatSportType(sport)}
                     </Text>
                   </TouchableOpacity>
                 );

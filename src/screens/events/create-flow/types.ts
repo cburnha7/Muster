@@ -184,14 +184,12 @@ export function createInitialState(): WizardState {
     startDate: new Date(),
     startTime: (() => {
       const d = new Date();
-      d.setMinutes(0, 0, 0);
-      d.setHours(d.getHours() + 1);
+      d.setHours(9, 0, 0, 0);
       return d;
     })(),
     endTime: (() => {
       const d = new Date();
-      d.setMinutes(0, 0, 0);
-      d.setHours(d.getHours() + 2);
+      d.setHours(10, 0, 0, 0);
       return d;
     })(),
     recurring: false,

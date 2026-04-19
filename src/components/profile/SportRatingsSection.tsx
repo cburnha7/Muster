@@ -9,6 +9,7 @@ import {
 import { colors, fonts } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
+import { formatSportType } from '../../utils/formatters';
 
 interface SportRating {
   sportType: string;
@@ -32,10 +33,7 @@ interface SportRatingsSectionProps {
 }
 
 const formatSportName = (sportType: string): string =>
-  sportType
-    .split('_')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
+  formatSportType(sportType);
 
 export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
   const [ratings, setRatings] = useState<SportRating[]>([]);

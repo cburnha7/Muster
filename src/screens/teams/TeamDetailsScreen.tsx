@@ -57,6 +57,7 @@ import {
   FixedBottomCTA,
 } from '../../components/detail';
 import { getSportColor } from '../../constants/sportColors';
+import { formatSportType } from '../../utils/formatters';
 import * as DocumentPicker from 'expo-document-picker';
 import { scheduleParserService } from '../../services/ScheduleParserService';
 import { API_BASE_URL } from '../../services/api/config';
@@ -680,11 +681,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
         : team?.sportType
           ? [team.sportType]
           : [];
-    return (
-      sports
-        .map(s => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' '))
-        .join(', ') || 'Sport'
-    );
+    return sports.map(s => formatSportType(s)).join(', ') || 'Sport';
   })();
 
   const skillLabel = (team?.skillLevel || 'all_levels')
