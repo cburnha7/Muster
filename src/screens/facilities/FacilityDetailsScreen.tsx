@@ -394,21 +394,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </ScrollView>
             )}
 
-            <Text style={s.sectionLabel}>GROUND NAME</Text>
-            <View style={s.card}>
-              <View style={{ padding: 16 }}>
-                <Text
-                  style={{
-                    fontFamily: fonts.heading,
-                    fontSize: 24,
-                    color: colors.ink,
-                  }}
-                >
-                  {facility.name}
-                </Text>
-              </View>
-            </View>
-
             {facility.description ? (
               <>
                 <Text style={s.sectionLabel}>DESCRIPTION</Text>
