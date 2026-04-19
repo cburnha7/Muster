@@ -25,7 +25,6 @@ import { OwnerScheduleTab } from '../../components/facilities/OwnerScheduleTab';
 import { UserReservationsTab } from '../../components/facilities/UserReservationsTab';
 import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 import { EntityHeader } from '../../components/ui/EntityHeader';
-import { getSportColor } from '../../constants/sportColors';
 import { API_BASE_URL } from '../../services/api/config';
 import * as ImagePicker from 'expo-image-picker';
 import {
