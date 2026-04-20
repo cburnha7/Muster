@@ -107,13 +107,13 @@ export function InboxSection({
       {items.map(item => (
         <TouchableOpacity
           key={item.id}
-          style={styles.card}
+          style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink }]}
           onPress={item.onPress}
           activeOpacity={0.7}
         >
           <View style={styles.cardBody}>
-            <Text style={styles.task}>{item.task}</Text>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={[styles.task, { color: colors.inkFaint }]}>{item.task}</Text>
+            <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
               {item.name}
             </Text>
           </View>
@@ -132,11 +132,9 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -148,14 +146,12 @@ const styles = StyleSheet.create({
   task: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   name: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     marginTop: 1,
   },
 });

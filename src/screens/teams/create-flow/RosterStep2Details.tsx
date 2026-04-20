@@ -18,15 +18,15 @@ export function RosterStep2Details() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.heading}>How's it set up?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>How's it set up?</Text>
 
-      <Text style={styles.label}>Roster Name</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Roster Name</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="e.g. Sunday Ballers"
         placeholderTextColor={colors.inkSoft}
         value={state.name}
@@ -44,11 +44,11 @@ export function RosterStep2Details() {
         }
       />
 
-      <Text style={styles.label}>Age Limit</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Age Limit</Text>
       <View style={styles.row}>
         <View style={styles.half}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Min Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -58,7 +58,7 @@ export function RosterStep2Details() {
         </View>
         <View style={styles.half}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Max Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -68,9 +68,9 @@ export function RosterStep2Details() {
         </View>
       </View>
 
-      <Text style={styles.label}>Max Players</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Max Players</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="e.g. 10"
         placeholderTextColor={colors.inkSoft}
         keyboardType="numeric"
@@ -78,11 +78,11 @@ export function RosterStep2Details() {
         onChangeText={set('maxPlayers')}
       />
 
-      <Text style={styles.label}>Price</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Price</Text>
       <View style={styles.priceRow}>
-        <Text style={styles.dollar}>$</Text>
+        <Text style={[styles.dollar, { color: colors.ink }]}>$</Text>
         <TextInput
-          style={[styles.input, styles.priceInput]}
+          style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }, styles.priceInput]}
           placeholder="0"
           placeholderTextColor={colors.inkSoft}
           keyboardType="decimal-pad"
@@ -95,31 +95,26 @@ export function RosterStep2Details() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
     marginTop: 16,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   row: { flexDirection: 'row', gap: 12 },
@@ -128,7 +123,6 @@ const styles = StyleSheet.create({
   dollar: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: colors.ink,
     marginRight: 8,
     marginBottom: 8,
   },

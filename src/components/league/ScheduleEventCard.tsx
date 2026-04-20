@@ -39,7 +39,7 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
   const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.surface }]}
       onPress={() => onEdit(event)}
       activeOpacity={0.7}
       accessibilityRole="button"
@@ -47,8 +47,8 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
     >
       {/* Flag badge */}
       {event.flag && (
-        <View style={styles.flagBadge}>
-          <Text style={styles.flagText}>
+        <View style={[styles.flagBadge, { backgroundColor: colors.gold }]}>
+          <Text style={[styles.flagText, { color: colors.white }]}>
             {event.flag === 'playoffs' ? 'Playoffs' : 'Tournament'}
           </Text>
         </View>
@@ -56,11 +56,11 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
 
       {/* Roster matchup */}
       <View style={styles.matchup}>
-        <Text style={styles.rosterName} numberOfLines={1}>
+        <Text style={[styles.rosterName, { color: colors.ink }]} numberOfLines={1}>
           {event.homeRosterName}
         </Text>
-        <Text style={styles.vs}>vs</Text>
-        <Text style={styles.rosterName} numberOfLines={1}>
+        <Text style={[styles.vs, { color: colors.inkFaint }]}>vs</Text>
+        <Text style={[styles.rosterName, { color: colors.ink }]} numberOfLines={1}>
           {event.awayRosterName}
         </Text>
       </View>
@@ -69,13 +69,13 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
       <View style={styles.dateTimeRow}>
         <View style={styles.dateTimeItem}>
           <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
-          <Text style={styles.dateTimeText}>
+          <Text style={[styles.dateTimeText, { color: colors.inkFaint }]}>
             {formatDate(event.scheduledAt)}
           </Text>
         </View>
         <View style={styles.dateTimeItem}>
           <Ionicons name="time-outline" size={14} color={colors.inkFaint} />
-          <Text style={styles.dateTimeText}>
+          <Text style={[styles.dateTimeText, { color: colors.inkFaint }]}>
             {formatTime(event.scheduledAt)}
           </Text>
         </View>
@@ -83,7 +83,7 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
 
       {/* Remove button */}
       <TouchableOpacity
-        style={styles.removeButton}
+        style={[styles.removeButton, { backgroundColor: colors.heart + '12' }]}
         onPress={() => onRemove(event.id)}
         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         accessibilityRole="button"
@@ -97,7 +97,6 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginVertical: Spacing.sm,
@@ -106,7 +105,6 @@ const styles = StyleSheet.create({
   },
   flagBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.gold,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 12,
@@ -115,7 +113,6 @@ const styles = StyleSheet.create({
   flagText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.white,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -128,13 +125,11 @@ const styles = StyleSheet.create({
   rosterName: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.ink,
     flex: 1,
   },
   vs: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
   },
   dateTimeRow: {
     flexDirection: 'row',
@@ -148,13 +143,11 @@ const styles = StyleSheet.create({
   dateTimeText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
   },
   removeButton: {
     position: 'absolute',
     top: Spacing.md,
     right: Spacing.md,
-    backgroundColor: colors.heart + '12',
     borderRadius: 20,
     width: 40,
     height: 40,

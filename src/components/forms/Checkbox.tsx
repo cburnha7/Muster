@@ -41,10 +41,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       >
         <View
           style={[
-            styles.checkbox,
-            checked && styles.checkboxChecked,
-            error && styles.checkboxError,
-          ]}
+            styles.checkbox, { borderColor: colors.outlineVariant, backgroundColor: colors.surfaceContainerLowest },
+            checked && styles.checkboxChecked, checked && { backgroundColor: colors.primary, borderColor: colors.primary },
+            error && styles.checkboxError, error && { borderColor: colors.error }]}
         >
           {checked && (
             <Ionicons name="checkmark" size={14} color={colors.white} />
@@ -52,7 +51,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         </View>
         <View style={styles.labelContainer}>
           {typeof label === 'string' ? (
-            <Text style={styles.label}>{label}</Text>
+            <Text style={[styles.label, { color: colors.onSurfaceVariant }]}>{label}</Text>
           ) : (
             label
           )}
@@ -60,7 +59,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       </TouchableOpacity>
       {error && (
         <Text
-          style={styles.errorText}
+          style={[styles.errorText, { color: colors.error }]}
           accessibilityLiveRegion="polite"
           accessibilityRole="alert"
         >
@@ -85,32 +84,23 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLowest,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.sm,
   },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  checkboxError: {
-    borderColor: colors.error,
-  },
+  checkboxChecked: {},
+  checkboxError: {},
   labelContainer: {
     flex: 1,
   },
   label: {
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
     flexWrap: 'wrap',
   },
   errorText: {
     fontSize: 12,
     fontFamily: fonts.body,
-    color: colors.error,
     marginTop: Spacing.xs,
     marginLeft: 30,
   },

@@ -28,7 +28,7 @@ export function CancellationPolicyPicker({
   const { colors } = useTheme();
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>CANCELLATION POLICY</Text>
+      <Text style={[styles.sectionLabel, { color: colors.ink }]}>CANCELLATION POLICY</Text>
 
       <View style={styles.optionsRow}>
         {POLICY_OPTIONS.map(option => {
@@ -36,7 +36,7 @@ export function CancellationPolicyPicker({
           return (
             <TouchableOpacity
               key={String(option.value)}
-              style={[styles.chip, isSelected && styles.chipSelected]}
+              style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }, isSelected && styles.chipSelected, isSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
               onPress={() => onChange(option.value)}
               accessibilityRole="radio"
               accessibilityState={{ selected: isSelected }}
@@ -44,7 +44,7 @@ export function CancellationPolicyPicker({
               activeOpacity={0.7}
             >
               <Text
-                style={[styles.chipText, isSelected && styles.chipTextSelected]}
+                style={[styles.chipText, { color: colors.ink }, isSelected && styles.chipTextSelected, isSelected && { color: colors.white }]}
               >
                 {option.label}
               </Text>
@@ -53,7 +53,7 @@ export function CancellationPolicyPicker({
         })}
       </View>
 
-      <Text style={styles.helperText}>
+      <Text style={[styles.helperText, { color: colors.inkFaint }]}>
         How far before the booking start time should cancellations require your
         approval?
       </Text>
@@ -69,7 +69,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 11,
     letterSpacing: 1.6,
-    color: colors.ink,
     textTransform: 'uppercase',
     marginBottom: Spacing.sm,
   },
@@ -82,27 +81,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.lg,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  chipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  chipSelected: {},
   chipText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
   },
   chipTextSelected: {
     fontFamily: fonts.ui,
-    color: colors.white,
   },
   helperText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: Spacing.sm,
     lineHeight: 18,
   },

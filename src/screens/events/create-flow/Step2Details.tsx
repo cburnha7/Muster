@@ -55,15 +55,15 @@ export function Step2Details(): React.JSX.Element {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>How's it set up?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>How's it set up?</Text>
 
       {/* Host */}
-      <Text style={styles.label}>Host</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Host</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="e.g. Burnham Bros"
         placeholderTextColor={colors.inkFaint}
         value={state.host}
@@ -75,9 +75,9 @@ export function Step2Details(): React.JSX.Element {
       />
 
       {/* Event name preview */}
-      <View style={styles.namePreview}>
-        <Text style={styles.namePreviewLabel}>Event name</Text>
-        <Text style={styles.namePreviewValue} numberOfLines={2}>
+      <View style={[styles.namePreview, { backgroundColor: colors.cobaltTint, borderColor: colors.cobalt + '30' }]}>
+        <Text style={[styles.namePreviewLabel, { color: colors.cobalt }]}>Event name</Text>
+        <Text style={[styles.namePreviewValue, { color: colors.ink }]} numberOfLines={2}>
           {eventName || '—'}
         </Text>
       </View>
@@ -92,11 +92,11 @@ export function Step2Details(): React.JSX.Element {
         }
       />
 
-      <Text style={styles.label}>Age Limit</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Age Limit</Text>
       <View style={styles.row}>
         <View style={styles.halfField}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Min Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -108,7 +108,7 @@ export function Step2Details(): React.JSX.Element {
         </View>
         <View style={styles.halfField}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Max Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -140,9 +140,9 @@ export function Step2Details(): React.JSX.Element {
         }
       />
 
-      <Text style={styles.label}>{maxParticipantsLabel}</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>{maxParticipantsLabel}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="Enter number"
         placeholderTextColor={colors.inkSoft}
         keyboardType="numeric"
@@ -152,11 +152,11 @@ export function Step2Details(): React.JSX.Element {
         }
       />
 
-      <Text style={styles.label}>Price</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Price</Text>
       <View style={styles.priceRow}>
-        <Text style={styles.dollarSign}>$</Text>
+        <Text style={[styles.dollarSign, { color: colors.ink }]}>$</Text>
         <TextInput
-          style={[styles.input, styles.priceInput]}
+          style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }, styles.priceInput]}
           placeholder="0.00"
           placeholderTextColor={colors.inkSoft}
           keyboardType="numeric"
@@ -173,7 +173,6 @@ export function Step2Details(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     paddingHorizontal: 20,
@@ -183,33 +182,26 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 16,
   },
   // Auto-generated name preview
   namePreview: {
-    backgroundColor: colors.cobaltTint,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.cobalt + '30',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 20,
@@ -217,7 +209,6 @@ const styles = StyleSheet.create({
   namePreviewLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -225,7 +216,6 @@ const styles = StyleSheet.create({
   namePreviewValue: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   row: {
     flexDirection: 'row',
@@ -242,7 +232,6 @@ const styles = StyleSheet.create({
   dollarSign: {
     fontFamily: fonts.body,
     fontSize: 18,
-    color: colors.ink,
     marginRight: 8,
     marginBottom: 16,
   },

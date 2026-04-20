@@ -52,8 +52,8 @@ export function InsuranceDocumentSelector({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Insurance Document</Text>
-        <View style={styles.loadingContainer}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Insurance Document</Text>
+        <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
           <ActivityIndicator size="small" color={colors.cobalt} />
         </View>
       </View>
@@ -65,10 +65,10 @@ export function InsuranceDocumentSelector({
   if (activeDocuments.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Insurance Document</Text>
-        <View style={styles.warningCard}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Insurance Document</Text>
+        <View style={[styles.warningCard, { backgroundColor: colors.surface, borderColor: colors.heart + '33' }]}>
           <Ionicons name="warning-outline" size={28} color={colors.heart} />
-          <Text style={styles.warningText}>
+          <Text style={[styles.warningText, { color: colors.ink }]}>
             You need a valid insurance document to reserve this court
           </Text>
           <TouchableOpacity
@@ -85,7 +85,7 @@ export function InsuranceDocumentSelector({
               size={18}
               color={colors.cobalt}
             />
-            <Text style={styles.profileLinkText}>Add in Profile</Text>
+            <Text style={[styles.profileLinkText, { color: colors.cobalt }]}>Add in Profile</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -94,36 +94,34 @@ export function InsuranceDocumentSelector({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Insurance Document</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Insurance Document</Text>
       {activeDocuments.map((doc: any) => {
         const isSelected = doc.id === selectedDocumentId;
         return (
           <TouchableOpacity
             key={doc.id}
             style={[
-              styles.documentCard,
-              isSelected && styles.documentCardSelected,
-            ]}
+              styles.documentCard, { backgroundColor: colors.surface },
+              isSelected && styles.documentCardSelected, isSelected && { borderColor: colors.cobalt, backgroundColor: colors.cobalt + '0D' }]}
             onPress={() => onSelect(doc.id)}
             activeOpacity={0.7}
             accessibilityRole="radio"
             accessibilityState={{ selected: isSelected }}
             accessibilityLabel={`${doc.policyName}, expires ${formatDate(doc.expiryDate)}${isSelected ? ', selected' : ''}`}
           >
-            <View style={styles.radioOuter}>
-              {isSelected && <View style={styles.radioInner} />}
+            <View style={[styles.radioOuter, { borderColor: colors.inkFaint }]}>
+              {isSelected && <View style={[styles.radioInner, { backgroundColor: colors.cobalt }]} />}
             </View>
             <View style={styles.documentInfo}>
               <Text
                 style={[
-                  styles.policyName,
-                  isSelected && styles.policyNameSelected,
-                ]}
+                  styles.policyName, { color: colors.ink },
+                  isSelected && styles.policyNameSelected, isSelected && { color: colors.cobalt }]}
                 numberOfLines={1}
               >
                 {doc.policyName}
               </Text>
-              <Text style={styles.expiryDate}>
+              <Text style={[styles.expiryDate, { color: colors.inkFaint }]}>
                 Expires {formatDate(doc.expiryDate)}
               </Text>
             </View>
@@ -141,27 +139,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginBottom: Spacing.sm,
   },
   loadingContainer: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
   },
   warningCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.heart + '33',
   },
   warningText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
@@ -174,11 +167,9 @@ const styles = StyleSheet.create({
   profileLinkText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
     marginLeft: Spacing.xs,
   },
   documentCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: Spacing.sm,
@@ -187,16 +178,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  documentCardSelected: {
-    borderColor: colors.cobalt,
-    backgroundColor: colors.cobalt + '0D',
-  },
+  documentCardSelected: {},
   radioOuter: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: colors.inkFaint,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
@@ -205,7 +192,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.cobalt,
   },
   documentInfo: {
     flex: 1,
@@ -213,15 +199,11 @@ const styles = StyleSheet.create({
   policyName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
   },
-  policyNameSelected: {
-    color: colors.cobalt,
-  },
+  policyNameSelected: {},
   expiryDate: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 2,
   },
 });

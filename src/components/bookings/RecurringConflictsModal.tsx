@@ -69,19 +69,19 @@ export function RecurringConflictsModal({
       animationType="fade"
       onRequestClose={onCancel}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: `${colors.ink}80` }]}>
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={onCancel}
         />
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.header}>
             <Ionicons name="alert-circle" size={28} color={colors.gold} />
-            <Text style={styles.title}>Some Dates Unavailable</Text>
+            <Text style={[styles.title, { color: colors.ink }]}>Some Dates Unavailable</Text>
           </View>
 
-          <Text style={styles.summary}>
+          <Text style={[styles.summary, { color: colors.inkFaint }]}>
             {conflicts.length} of {conflicts.length + availableCount} dates have
             conflicts.
             {availableCount > 0
@@ -93,8 +93,8 @@ export function RecurringConflictsModal({
             {conflicts.map((c, i) => (
               <View key={i} style={styles.conflictRow}>
                 <Ionicons name="close-circle" size={16} color={colors.heart} />
-                <Text style={styles.conflictDate}>{formatDate(c.date)}</Text>
-                <Text style={styles.conflictReason}>
+                <Text style={[styles.conflictDate, { color: colors.ink }]}>{formatDate(c.date)}</Text>
+                <Text style={[styles.conflictReason, { color: colors.heart }]}>
                   {reasonLabel(c.reason)}
                 </Text>
               </View>
@@ -126,13 +126,11 @@ export function RecurringConflictsModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: `${colors.ink}80`,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -148,12 +146,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     ...typeScale.h3,
-    color: colors.ink,
   },
   summary: {
     fontFamily: fonts.body,
     ...typeScale.body,
-    color: colors.inkFaint,
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -170,13 +166,11 @@ const styles = StyleSheet.create({
   conflictDate: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     flex: 1,
   },
   conflictReason: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.heart,
     textTransform: 'uppercase',
   },
   actions: {

@@ -63,42 +63,50 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
       onRequestClose={handleCancel}
     >
       <View style={styles.overlay}>
-        <View style={styles.modal}>
+        <View
+          style={[
+            styles.modal,
+            { backgroundColor: colors.background, shadowColor: colors.black },
+          ]}
+        >
           {/* Provider Icon */}
           <View style={styles.iconContainer}>
             <View
               style={[
                 styles.iconCircle,
+                { borderColor: colors.border },
                 {
                   backgroundColor:
-                    provider === 'apple'
-                      ? colors.black
-                      : colors.white,
+                    provider === 'apple' ? colors.black : colors.white,
                 },
               ]}
             >
               <Ionicons
                 name={getProviderIcon()}
                 size={40}
-                color={
-                  provider === 'apple' ? colors.white : colors.black
-                }
+                color={provider === 'apple' ? colors.white : colors.black}
               />
             </View>
           </View>
 
           {/* Title */}
-          <Text style={styles.title}>Link Your Account</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            Link Your Account
+          </Text>
 
           {/* Explanation */}
-          <Text style={styles.explanation}>
-            An account with <Text style={styles.email}>{email}</Text> already
-            exists. Would you like to link your {getProviderName()} account?
+          <Text style={[styles.explanation, { color: colors.textSecondary }]}>
+            An account with{' '}
+            <Text style={[styles.email, { color: colors.textPrimary }]}>
+              {email}
+            </Text>{' '}
+            already exists. Would you like to link your {getProviderName()}{' '}
+            account?
           </Text>
 
           {/* Password Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>
+            <Text style={[styles.inputLabel, { color: colors.textPrimary }]}>
               Enter your password to confirm:
             </Text>
             <TextInput
@@ -115,9 +123,19 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
 
           {/* Error Message */}
           {error && (
-            <View style={styles.errorContainer}>
+            <View
+              style={[
+                styles.errorContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderLeftColor: colors.heart,
+                },
+              ]}
+            >
               <Ionicons name="alert-circle" size={20} color={colors.heart} />
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={[styles.errorText, { color: colors.heart }]}>
+                {error}
+              </Text>
             </View>
           )}
 
@@ -139,13 +157,20 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
           </View>
 
           {/* Security Note */}
-          <View style={styles.securityNote}>
+          <View
+            style={[
+              styles.securityNote,
+              { backgroundColor: colors.surface, borderLeftColor: colors.ink },
+            ]}
+          >
             <Ionicons
               name="shield-checkmark-outline"
               size={16}
               color={colors.ink}
             />
-            <Text style={styles.securityText}>
+            <Text
+              style={[styles.securityText, { color: colors.textSecondary }]}
+            >
               Your password is required to verify your identity and link your
               accounts securely.
             </Text>
@@ -165,14 +190,12 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   modal: {
-    backgroundColor: colors.background,
     borderRadius: 16,
     padding: Spacing.xl,
     width: '100%',
     maxWidth: 400,
     ...Platform.select({
       ios: {
-        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -193,46 +216,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.border,
   },
   title: {
     ...TextStyles.h2,
-    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
   explanation: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   email: {
     fontWeight: '600',
-    color: colors.textPrimary,
   },
   inputContainer: {
     marginBottom: Spacing.md,
   },
   inputLabel: {
     ...TextStyles.body,
-    color: colors.textPrimary,
     marginBottom: Spacing.sm,
     fontWeight: '600',
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.md,
     borderLeftWidth: 4,
-    borderLeftColor: colors.heart,
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.heart,
     marginLeft: Spacing.sm,
     flex: 1,
   },
@@ -244,15 +259,12 @@ const styles = StyleSheet.create({
   securityNote: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: colors.ink,
   },
   securityText: {
     ...TextStyles.caption,
-    color: colors.textSecondary,
     marginLeft: Spacing.sm,
     flex: 1,
   },

@@ -91,14 +91,14 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
   const userName = `${user.firstName} ${user.lastName}`;
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.userName}>{userName}</Text>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
+      <Text style={[styles.userName, { color: colors.ink }]}>{userName}</Text>
 
-      <Text style={styles.courtName}>
+      <Text style={[styles.courtName, { color: colors.inkFaint }]}>
         {timeSlot.court.name} Ã¢â‚¬â€ {timeSlot.court.facility.name}
       </Text>
 
-      <Text style={styles.dateTime}>
+      <Text style={[styles.dateTime, { color: colors.ink }]}>
         {formatBookingDateTime(
           timeSlot.date,
           timeSlot.startTime,
@@ -108,7 +108,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
 
       <View style={styles.buttonRow}>
         <TouchableOpacity
-          style={[styles.button, styles.approveButton]}
+          style={[styles.button, styles.approveButton, { backgroundColor: colors.cobalt }]}
           onPress={() => onApprove(cancelRequest.id)}
           disabled={isLoading}
           accessibilityLabel={`Approve cancellation for ${userName}`}
@@ -117,12 +117,12 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
           {isLoading ? (
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
-            <Text style={styles.buttonText}>Approve</Text>
+            <Text style={[styles.buttonText, { color: colors.white }]}>Approve</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.denyButton]}
+          style={[styles.button, styles.denyButton, { backgroundColor: colors.heart }]}
           onPress={() => onDeny(cancelRequest.id)}
           disabled={isLoading}
           accessibilityLabel={`Deny cancellation for ${userName}`}
@@ -131,7 +131,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
           {isLoading ? (
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
-            <Text style={styles.buttonText}>Deny</Text>
+            <Text style={[styles.buttonText, { color: colors.white }]}>Deny</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -141,7 +141,6 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.md,
     ...Shadows.sm,
@@ -149,19 +148,16 @@ const styles = StyleSheet.create({
   userName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: Spacing.xs,
   },
   courtName: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     marginBottom: Spacing.xs,
   },
   dateTime: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   buttonRow: {
@@ -175,15 +171,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  approveButton: {
-    backgroundColor: colors.cobalt,
-  },
-  denyButton: {
-    backgroundColor: colors.heart,
-  },
+  approveButton: {},
+  denyButton: {},
   buttonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.white,
   },
 });

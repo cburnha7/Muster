@@ -13,7 +13,7 @@ interface GroundMapPreviewProps {
 export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewProps) {
   const { colors } = useTheme();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background, shadowColor: colors.ink }]}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
         <Ionicons name="close" size={24} color={colors.inkFaint} />
       </TouchableOpacity>
@@ -21,7 +21,7 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
       <TouchableOpacity style={styles.content} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.header}>
           <Ionicons name="business-outline" size={24} color={colors.cobalt} />
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1}>
             {ground.name}
           </Text>
         </View>
@@ -29,14 +29,14 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
         <View style={styles.details}>
           <View style={styles.detailRow}>
             <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
-            <Text style={styles.detailText} numberOfLines={1}>
+            <Text style={[styles.detailText, { color: colors.inkFaint }]} numberOfLines={1}>
               {ground.street}, {ground.city}
             </Text>
           </View>
           {ground.courts && ground.courts.length > 0 && (
             <View style={styles.detailRow}>
               <Ionicons name="grid-outline" size={16} color={colors.inkFaint} />
-              <Text style={styles.detailText}>
+              <Text style={[styles.detailText, { color: colors.inkFaint }]}>
                 {ground.courts.length} court{ground.courts.length !== 1 ? 's' : ''}
               </Text>
             </View>
@@ -44,7 +44,7 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.viewButton}>View Details â†’</Text>
+          <Text style={[styles.viewButton, { color: colors.cobalt }]}>View Details â†’</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -57,9 +57,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: colors.background,
     borderRadius: 12,
-    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -86,7 +84,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TextStyles.h4,
-    color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
   },
@@ -101,7 +98,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     flex: 1,
   },
   footer: {
@@ -109,7 +105,6 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     ...TextStyles.bodyLarge,
-    color: colors.cobalt,
     fontWeight: '600',
   },
 });

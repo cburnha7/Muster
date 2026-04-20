@@ -88,16 +88,16 @@ export function Step3Who() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.heading}>Who can join?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Who can join?</Text>
 
       {/* Number of Teams */}
-      <Text style={styles.label}>Number of Teams</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Number of Teams</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="e.g. 8"
         placeholderTextColor={colors.inkSoft}
         keyboardType="numeric"
@@ -119,7 +119,7 @@ export function Step3Who() {
       />
 
       {/* Age Limit — Max Birth Year + computed age */}
-      <Text style={styles.label}>Age Limit</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Age Limit</Text>
       <View style={styles.row}>
         <View style={styles.flex2}>
           <FormSelect
@@ -134,9 +134,9 @@ export function Step3Who() {
         </View>
         {computedAge !== null && (
           <View style={styles.flex1}>
-            <Text style={styles.sublabel}>Age</Text>
-            <View style={styles.readOnlyBox}>
-              <Text style={styles.readOnlyText}>U{computedAge}</Text>
+            <Text style={[styles.sublabel, { color: colors.inkSoft }]}>Age</Text>
+            <View style={[styles.readOnlyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.readOnlyText, { color: colors.ink }]}>U{computedAge}</Text>
             </View>
           </View>
         )}
@@ -154,10 +154,10 @@ export function Step3Who() {
       />
 
       {/* Visibility toggle */}
-      <Text style={styles.label}>Visibility</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Visibility</Text>
       <View style={styles.visRow}>
         <TouchableOpacity
-          style={[styles.visBtn, privateSelected && styles.visBtnActive]}
+          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, privateSelected && styles.visBtnActive, privateSelected && { backgroundColor: colors.pine, borderColor: colors.pine }]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'private' })
           }
@@ -169,13 +169,13 @@ export function Step3Who() {
             color={privateSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, privateSelected && styles.visTextActive]}
+            style={[styles.visText, { color: colors.ink }, privateSelected && styles.visTextActive, privateSelected && { color: colors.white }]}
           >
             Private
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.visBtn, publicSelected && styles.visBtnActive]}
+          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, publicSelected && styles.visBtnActive, publicSelected && { backgroundColor: colors.pine, borderColor: colors.pine }]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'public' })
           }
@@ -187,7 +187,7 @@ export function Step3Who() {
             color={publicSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, publicSelected && styles.visTextActive]}
+            style={[styles.visText, { color: colors.ink }, publicSelected && styles.visTextActive, publicSelected && { color: colors.white }]}
           >
             Public
           </Text>
@@ -198,8 +198,8 @@ export function Step3Who() {
       {privateSelected && (
         <>
           {requiredTeams > 0 && (
-            <View style={styles.counterRow}>
-              <Text style={styles.counterText}>
+            <View style={[styles.counterRow, { backgroundColor: colors.pineTint }]}>
+              <Text style={[styles.counterText, { color: colors.pine }]}>
                 {invitedCount} of {requiredTeams} teams invited
               </Text>
               {invitedCount >= requiredTeams && (
@@ -211,9 +211,9 @@ export function Step3Who() {
               )}
             </View>
           )}
-          <Text style={styles.label}>Search Rosters</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Search Rosters</Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Search by name..."
             placeholderTextColor={colors.inkSoft}
             value={query}
@@ -227,7 +227,7 @@ export function Step3Who() {
             />
           )}
           {results.length > 0 && (
-            <View style={styles.resultsList}>
+            <View style={[styles.resultsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {results.map(roster => {
                 const added = state.invitedRosters.some(
                   r => r.id === roster.id
@@ -235,7 +235,7 @@ export function Step3Who() {
                 return (
                   <TouchableOpacity
                     key={roster.id}
-                    style={styles.resultRow}
+                    style={[styles.resultRow, { borderBottomColor: colors.border }]}
                     onPress={() => {
                       dispatch({ type: 'ADD_ROSTER', roster });
                       setQuery('');
@@ -250,7 +250,7 @@ export function Step3Who() {
                       color={colors.inkSoft}
                     />
                     <Text
-                      style={[styles.resultName, added && styles.resultMuted]}
+                      style={[styles.resultName, { color: colors.ink }, added && styles.resultMuted, added && { color: colors.inkSoft }]}
                     >
                       {roster.name}
                     </Text>
@@ -269,13 +269,13 @@ export function Step3Who() {
           {state.invitedRosters.length > 0 && (
             <View style={styles.chipList}>
               {state.invitedRosters.map(roster => (
-                <View key={roster.id} style={styles.chip}>
+                <View key={roster.id} style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Ionicons
                     name="people-outline"
                     size={14}
                     color={colors.pine}
                   />
-                  <Text style={styles.chipText}>{roster.name}</Text>
+                  <Text style={[styles.chipText, { color: colors.ink }]}>{roster.name}</Text>
                   <TouchableOpacity
                     onPress={() =>
                       dispatch({ type: 'REMOVE_ROSTER', id: roster.id })
@@ -297,9 +297,9 @@ export function Step3Who() {
       {/* Public: minimum player rating */}
       {publicSelected && (
         <>
-          <Text style={styles.label}>Minimum Player Rating</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Minimum Player Rating</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="0 – 100"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -319,52 +319,44 @@ export function Step3Who() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
     marginTop: 16,
   },
   sublabel: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginBottom: 6,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   row: { flexDirection: 'row', gap: 12, alignItems: 'flex-end' },
   flex1: { flex: 1 },
   flex2: { flex: 2 },
   readOnlyBox: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  readOnlyText: { fontFamily: fonts.label, fontSize: 16, color: colors.ink },
+  readOnlyText: { fontFamily: fonts.label, fontSize: 16 },
   visRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   visBtn: {
     flex: 1,
@@ -374,41 +366,33 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  visBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
-  visText: { fontFamily: fonts.ui, fontSize: 15, color: colors.ink },
-  visTextActive: { color: colors.white },
+  visBtnActive: {},
+  visText: { fontFamily: fonts.ui, fontSize: 15 },
+  visTextActive: {},
   counterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.pineTint,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
   },
-  counterText: { fontFamily: fonts.label, fontSize: 14, color: colors.pine },
+  counterText: { fontFamily: fonts.label, fontSize: 14 },
   searchInput: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 12,
   },
   loader: { marginVertical: 8 },
   resultsList: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -419,15 +403,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   resultName: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
-  resultMuted: { color: colors.inkSoft },
+  resultMuted: {},
   chipList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -438,12 +420,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.surface,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  chipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  chipText: { fontFamily: fonts.body, fontSize: 13 },
 });

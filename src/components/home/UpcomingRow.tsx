@@ -52,7 +52,7 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Coming Up</Text>
+      <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Coming Up</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -67,27 +67,27 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
           return (
             <TouchableOpacity
               key={booking.id}
-              style={[styles.card, isToday && styles.cardToday]}
+              style={[styles.card, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.ink }, isToday && styles.cardToday, isToday && { backgroundColor: colors.primaryFixed }]}
               onPress={() => onPress(booking)}
               activeOpacity={0.85}
             >
               {/* Date chip */}
-              <View style={[styles.dateChip, isToday && styles.dateChipToday]}>
+              <View style={[styles.dateChip, { backgroundColor: colors.surfaceContainerHigh }, isToday && styles.dateChipToday, isToday && { backgroundColor: colors.primary }]}>
                 <Text
-                  style={[styles.dateWeekday, isToday && styles.dateTextToday]}
+                  style={[styles.dateWeekday, { color: colors.onSurfaceVariant }, isToday && styles.dateTextToday, isToday && { color: colors.white }]}
                 >
                   {weekday}
                 </Text>
-                <Text style={[styles.dateDay, isToday && styles.dateTextToday]}>
+                <Text style={[styles.dateDay, { color: colors.onSurface }, isToday && styles.dateTextToday, isToday && { color: colors.white }]}>
                   {day}
                 </Text>
               </View>
 
               {/* Event info */}
-              <Text style={styles.eventTitle} numberOfLines={2}>
+              <Text style={[styles.eventTitle, { color: colors.onSurface }]} numberOfLines={2}>
                 {event.title}
               </Text>
-              <Text style={styles.eventTime}>{formatTime(startDate)}</Text>
+              <Text style={[styles.eventTime, { color: colors.onSurfaceVariant }]}>{formatTime(startDate)}</Text>
 
               {(event.facility?.name || event.locationName) && (
                 <View style={styles.locationRow}>
@@ -96,7 +96,7 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
                     size={12}
                     color={colors.outline}
                   />
-                  <Text style={styles.locationText} numberOfLines={1}>
+                  <Text style={[styles.locationText, { color: colors.outline }]} numberOfLines={1}>
                     {event.facility?.name || event.locationName}
                   </Text>
                 </View>
@@ -109,7 +109,7 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
                   size={12}
                   color={colors.secondary}
                 />
-                <Text style={styles.youreInText}>You're in</Text>
+                <Text style={[styles.youreInText, { color: colors.secondary }]}>You're in</Text>
               </View>
             </TouchableOpacity>
           );
@@ -126,7 +126,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
     letterSpacing: -0.3,
     marginBottom: 12,
   },
@@ -135,57 +134,44 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   card: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 14,
     width: 150,
     gap: 8,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 1,
   },
-  cardToday: {
-    backgroundColor: colors.primaryFixed,
-  },
+  cardToday: {},
   dateChip: {
     alignSelf: 'flex-start',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerHigh,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  dateChipToday: {
-    backgroundColor: colors.primary,
-  },
+  dateChipToday: {},
   dateWeekday: {
     fontFamily: fonts.label,
     fontSize: 9,
-    color: colors.onSurfaceVariant,
     letterSpacing: 0.8,
   },
   dateDay: {
     fontFamily: fonts.heading,
     fontSize: 16,
-    color: colors.onSurface,
     marginTop: -2,
   },
-  dateTextToday: {
-    color: colors.white,
-  },
+  dateTextToday: {},
   eventTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.onSurface,
     letterSpacing: -0.1,
     lineHeight: 18,
   },
   eventTime: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
   },
   locationRow: {
     flexDirection: 'row',
@@ -195,7 +181,6 @@ const styles = StyleSheet.create({
   locationText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.outline,
     flex: 1,
   },
   youreInBadge: {
@@ -207,6 +192,5 @@ const styles = StyleSheet.create({
   youreInText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.secondary,
   },
 });

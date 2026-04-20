@@ -67,17 +67,17 @@ export function Step4Courts() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.heading}>Courts and settings</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Courts and settings</Text>
 
       {/* Courts section */}
-      <View style={styles.section}>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Courts / Fields</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Courts / Fields</Text>
           <TouchableOpacity style={styles.addButton} onPress={openAdd}>
             <Ionicons
               name="add-circle"
@@ -85,26 +85,26 @@ export function Step4Courts() {
               color={colors.cobalt}
               style={{ marginRight: 4 }}
             />
-            <Text style={styles.addButtonText}>Add Court</Text>
+            <Text style={[styles.addButtonText, { color: colors.cobalt }]}>Add Court</Text>
           </TouchableOpacity>
         </View>
 
         {state.courts.length === 0 ? (
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.inkSoft }]}>
             No courts added yet. Add courts to set individual pricing.
           </Text>
         ) : (
           state.courts.map(court => (
-            <View key={court.id} style={styles.courtCard}>
+            <View key={court.id} style={[styles.courtCard, { backgroundColor: colors.white, borderColor: colors.border }]}>
               <View style={styles.courtInfo}>
-                <Text style={styles.courtName}>{court.name}</Text>
-                <Text style={styles.courtDetails}>
+                <Text style={[styles.courtName, { color: colors.ink }]}>{court.name}</Text>
+                <Text style={[styles.courtDetails, { color: colors.inkSoft }]}>
                   {court.sportType.charAt(0).toUpperCase() +
                     court.sportType.slice(1)}{' '}
                   • {court.isIndoor ? 'Indoor' : 'Outdoor'} • Capacity:{' '}
                   {court.capacity}
                 </Text>
-                <Text style={styles.courtPrice}>
+                <Text style={[styles.courtPrice, { color: colors.cobalt }]}>
                   ${court.pricePerHour}/hour
                 </Text>
               </View>
@@ -154,9 +154,9 @@ export function Step4Courts() {
         onRequestClose={closeModal}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+          <View style={[styles.modalContainer, { backgroundColor: colors.white }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
                 {editingId ? 'Edit Court/Field' : 'Add Court/Field'}
               </Text>
               <TouchableOpacity onPress={closeModal}>
@@ -172,7 +172,7 @@ export function Step4Courts() {
                 placeholder="e.g., Court 1, Field A"
               />
 
-              <Text style={styles.inputLabel}>Sport Type *</Text>
+              <Text style={[styles.inputLabel, { color: colors.ink }]}>Sport Type *</Text>
               <View style={styles.sportChipRow}>
                 {availableSports.map(sport => {
                   const isSelected = draft.sportType === sport;
@@ -180,16 +180,14 @@ export function Step4Courts() {
                     <TouchableOpacity
                       key={sport}
                       style={[
-                        styles.sportChip,
-                        isSelected && styles.sportChipSelected,
-                      ]}
+                        styles.sportChip, { backgroundColor: colors.white, borderColor: colors.border },
+                        isSelected && styles.sportChipSelected, isSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                       onPress={() => setDraft({ ...draft, sportType: sport })}
                     >
                       <Text
                         style={[
-                          styles.sportChipText,
-                          isSelected && styles.sportChipTextSelected,
-                        ]}
+                          styles.sportChipText, { color: colors.inkSoft },
+                          isSelected && styles.sportChipTextSelected, isSelected && { color: colors.white }]}
                       >
                         {formatSportType(sport)}
                       </Text>
@@ -216,15 +214,14 @@ export function Step4Courts() {
               >
                 <View
                   style={[
-                    styles.checkbox,
-                    draft.isIndoor && styles.checkboxChecked,
-                  ]}
+                    styles.checkbox, { borderColor: colors.inkSoft },
+                    draft.isIndoor && styles.checkboxChecked, draft.isIndoor && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                 >
                   {draft.isIndoor && (
                     <Ionicons name="checkmark" size={16} color={colors.white} />
                   )}
                 </View>
-                <Text style={styles.checkboxLabel}>Indoor Court</Text>
+                <Text style={[styles.checkboxLabel, { color: colors.ink }]}>Indoor Court</Text>
               </TouchableOpacity>
 
               <FormInput
@@ -238,18 +235,18 @@ export function Step4Courts() {
               />
             </ScrollView>
 
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, { borderTopColor: colors.border }]}>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancel]}
+                style={[styles.modalBtn, styles.modalBtnCancel, { backgroundColor: colors.surface }]}
                 onPress={closeModal}
               >
-                <Text style={styles.modalBtnCancelText}>Back</Text>
+                <Text style={[styles.modalBtnCancelText, { color: colors.inkSoft }]}>Back</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnPrimary]}
+                style={[styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: colors.cobalt }]}
                 onPress={handleSave}
               >
-                <Text style={styles.modalBtnPrimaryText}>
+                <Text style={[styles.modalBtnPrimaryText, { color: colors.white }]}>
                   {editingId ? 'Update Court' : 'Add Court'}
                 </Text>
               </TouchableOpacity>
@@ -262,16 +259,14 @@ export function Step4Courts() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   section: {
-    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 14,
@@ -285,41 +280,35 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 17,
-    color: colors.ink,
   },
   addButton: { flexDirection: 'row', alignItems: 'center' },
-  addButtonText: { fontFamily: fonts.ui, fontSize: 14, color: colors.cobalt },
+  addButtonText: { fontFamily: fonts.ui, fontSize: 14 },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
     paddingVertical: 16,
   },
   courtCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     padding: 12,
     borderRadius: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   courtInfo: { flex: 1 },
   courtName: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 2,
   },
   courtDetails: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginBottom: 2,
   },
-  courtPrice: { fontFamily: fonts.label, fontSize: 14, color: colors.cobalt },
+  courtPrice: { fontFamily: fonts.label, fontSize: 14 },
   courtActions: { flexDirection: 'row', alignItems: 'center' },
   iconBtn: { padding: 8 },
 
@@ -332,7 +321,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     width: '100%',
     maxWidth: 500,
@@ -344,14 +332,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  modalTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
+  modalTitle: { fontFamily: fonts.heading, fontSize: 18 },
   modalBody: { padding: Spacing.lg },
   inputLabel: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
   },
@@ -360,22 +346,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.white,
     marginRight: Spacing.sm,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  sportChipSelected: {},
   sportChipText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
   },
-  sportChipTextSelected: { color: colors.white, fontFamily: fonts.ui },
+  sportChipTextSelected: { fontFamily: fonts.ui },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -386,21 +366,16 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.inkSoft,
     marginRight: Spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
-  checkboxLabel: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
+  checkboxChecked: {},
+  checkboxLabel: { fontFamily: fonts.body, fontSize: 14 },
   modalActions: {
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   modalBtn: {
     flex: 1,
@@ -409,16 +384,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 4,
   },
-  modalBtnCancel: { backgroundColor: colors.surface },
+  modalBtnCancel: {},
   modalBtnCancelText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.inkSoft,
   },
-  modalBtnPrimary: { backgroundColor: colors.cobalt },
+  modalBtnPrimary: {},
   modalBtnPrimaryText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.white,
   },
 });

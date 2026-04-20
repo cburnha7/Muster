@@ -114,10 +114,10 @@ export function Step3Ground() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>Where's the game?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Where's the game?</Text>
 
       {loadingFacilities ? (
         <ActivityIndicator
@@ -127,7 +127,7 @@ export function Step3Ground() {
         />
       ) : facilityError ? (
         <TouchableOpacity onPress={loadFacilities}>
-          <Text style={styles.errorText}>{facilityError}</Text>
+          <Text style={[styles.errorText, { color: colors.heart }]}>{facilityError}</Text>
         </TouchableOpacity>
       ) : (
         <FormSelect
@@ -148,7 +148,7 @@ export function Step3Ground() {
               style={styles.loader}
             />
           ) : courtError ? (
-            <Text style={styles.errorText}>{courtError}</Text>
+            <Text style={[styles.errorText, { color: colors.heart }]}>{courtError}</Text>
           ) : (
             <FormSelect
               label="Court"
@@ -163,12 +163,12 @@ export function Step3Ground() {
       )}
 
       <TouchableOpacity
-        style={styles.bookButton}
+        style={[styles.bookButton, { borderColor: colors.cobalt }]}
         onPress={handleBookCourtTime}
         activeOpacity={0.8}
       >
         <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
-        <Text style={styles.bookButtonText}>Book Court Time</Text>
+        <Text style={[styles.bookButtonText, { color: colors.cobalt }]}>Book Court Time</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -177,7 +177,6 @@ export function Step3Ground() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     paddingHorizontal: 20,
@@ -187,7 +186,6 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   loader: {
@@ -196,7 +194,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     textAlign: 'center',
     marginVertical: 16,
   },
@@ -205,7 +202,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 14,
     marginTop: 24,
@@ -214,6 +210,5 @@ const styles = StyleSheet.create({
   bookButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.cobalt,
   },
 });

@@ -73,7 +73,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
+      style={[styles.container, { backgroundColor: colors.white, shadowColor: colors.black }, style]}
       onPress={() => onPress?.(match)}
       activeOpacity={0.7}
     >
@@ -84,7 +84,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           { backgroundColor: getStatusColor(match.status) },
         ]}
       >
-        <Text style={styles.statusText}>{getStatusText(match.status)}</Text>
+        <Text style={[styles.statusText, { color: colors.white }]}>{getStatusText(match.status)}</Text>
       </View>
 
       {/* Match Details */}
@@ -97,7 +97,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               size={14}
               color={colors.inkSecondary}
             />
-            <Text style={styles.dateTimeText}>
+            <Text style={[styles.dateTimeText, { color: colors.inkSecondary }]}>
               {formatDate(match.scheduledAt)}
             </Text>
           </View>
@@ -107,7 +107,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               size={14}
               color={colors.inkSecondary}
             />
-            <Text style={styles.dateTimeText}>
+            <Text style={[styles.dateTimeText, { color: colors.inkSecondary }]}>
               {formatTime(match.scheduledAt)}
             </Text>
           </View>
@@ -123,18 +123,17 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                 size={16}
                 color={colors.inkSecondary}
               />
-              <Text style={styles.teamName} numberOfLines={1}>
+              <Text style={[styles.teamName, { color: colors.ink }]} numberOfLines={1}>
                 {match.homeTeam?.name || 'Home Team'}
               </Text>
             </View>
             {hasScores && (
               <Text
                 style={[
-                  styles.score,
+                  styles.score, { color: colors.inkSecondary },
                   isCompleted &&
                     match.outcome === 'home_win' &&
-                    styles.winningScore,
-                ]}
+                    styles.winningScore]}
               >
                 {match.homeScore}
               </Text>
@@ -143,7 +142,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
           {/* Divider */}
           <View style={styles.divider}>
-            <Text style={styles.vsText}>vs</Text>
+            <Text style={[styles.vsText, { color: colors.inkMuted }]}>vs</Text>
           </View>
 
           {/* Away Team */}
@@ -154,18 +153,17 @@ export const MatchCard: React.FC<MatchCardProps> = ({
                 size={16}
                 color={colors.inkSecondary}
               />
-              <Text style={styles.teamName} numberOfLines={1}>
+              <Text style={[styles.teamName, { color: colors.ink }]} numberOfLines={1}>
                 {match.awayTeam?.name || 'Away Team'}
               </Text>
             </View>
             {hasScores && (
               <Text
                 style={[
-                  styles.score,
+                  styles.score, { color: colors.inkSecondary },
                   isCompleted &&
                     match.outcome === 'away_win' &&
-                    styles.winningScore,
-                ]}
+                    styles.winningScore]}
               >
                 {match.awayScore}
               </Text>
@@ -175,9 +173,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
         {/* Event Link */}
         {match.event && (
-          <View style={styles.eventLink}>
+          <View style={[styles.eventLink, { borderTopColor: colors.border }]}>
             <Ionicons name="link-outline" size={14} color={colors.cobalt} />
-            <Text style={styles.eventText} numberOfLines={1}>
+            <Text style={[styles.eventText, { color: colors.cobalt }]} numberOfLines={1}>
               Linked to event: {match.event.title}
             </Text>
           </View>
@@ -191,7 +189,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               size={14}
               color={colors.inkSecondary}
             />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Text style={[styles.locationText, { color: colors.inkSecondary }]} numberOfLines={1}>
               {match.event?.facility?.name ||
                 match.event?.locationName ||
                 'TBD'}
@@ -201,13 +199,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
         {/* Notes */}
         {match.notes && (
-          <View style={styles.notesContainer}>
+          <View style={[styles.notesContainer, { backgroundColor: colors.background }]}>
             <Ionicons
               name="document-text-outline"
               size={14}
               color={colors.inkSecondary}
             />
-            <Text style={styles.notesText} numberOfLines={2}>
+            <Text style={[styles.notesText, { color: colors.inkSecondary }]} numberOfLines={2}>
               {match.notes}
             </Text>
           </View>
@@ -216,15 +214,15 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
       {/* Outcome Badge (for completed matches) */}
       {isCompleted && match.outcome && (
-        <View style={styles.outcomeContainer}>
+        <View style={[styles.outcomeContainer, { borderTopColor: colors.border }]}>
           {match.outcome === 'draw' ? (
-            <View style={styles.drawBadge}>
-              <Text style={styles.drawText}>Draw</Text>
+            <View style={[styles.drawBadge, { backgroundColor: colors.border }]}>
+              <Text style={[styles.drawText, { color: colors.inkSecondary }]}>Draw</Text>
             </View>
           ) : (
-            <View style={styles.winnerBadge}>
+            <View style={[styles.winnerBadge, { backgroundColor: colors.warningLight }]}>
               <Ionicons name="trophy" size={14} color={colors.gold} />
-              <Text style={styles.winnerText}>
+              <Text style={[styles.winnerText, { color: colors.gold }]}>
                 {match.outcome === 'home_win'
                   ? match.homeTeam?.name
                   : match.awayTeam?.name}{' '}
@@ -240,12 +238,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -264,7 +260,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.white,
   },
   matchInfo: {
     gap: 12,
@@ -280,7 +275,6 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 13,
-    color: colors.inkSecondary,
   },
   teamsContainer: {
     gap: 8,
@@ -299,19 +293,15 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
     flex: 1,
   },
   score: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.inkSecondary,
     minWidth: 40,
     textAlign: 'center',
   },
-  winningScore: {
-    color: colors.cobalt,
-  },
+  winningScore: {},
   divider: {
     alignItems: 'center',
     paddingVertical: 4,
@@ -319,7 +309,6 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.inkMuted,
   },
   eventLink: {
     flexDirection: 'row',
@@ -327,11 +316,9 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   eventText: {
     fontSize: 13,
-    color: colors.cobalt,
     fontWeight: '500',
     flex: 1,
   },
@@ -342,20 +329,17 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 13,
-    color: colors.inkSecondary,
     flex: 1,
   },
   notesContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 6,
-    backgroundColor: colors.background,
     padding: 8,
     borderRadius: 8,
   },
   notesText: {
     fontSize: 13,
-    color: colors.inkSecondary,
     flex: 1,
     lineHeight: 18,
   },
@@ -363,13 +347,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   winnerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.warningLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -378,10 +360,8 @@ const styles = StyleSheet.create({
   winnerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.gold,
   },
   drawBadge: {
-    backgroundColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -390,6 +370,5 @@ const styles = StyleSheet.create({
   drawText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.inkSecondary,
   },
 });

@@ -204,19 +204,19 @@ export function ConversationListScreen() {
           size={56}
           color={colors.outlineVariant}
         />
-        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+        <Text style={[styles.emptyTitle, { color: colors.onSurface }, { color: colors.textPrimary }]}>
           {emptyState.title}
         </Text>
-        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }, { color: colors.textSecondary }]}>
           {emptyState.subtitle}
         </Text>
         {emptyState.actionLabel && (
           <TouchableOpacity
-            style={styles.emptyAction}
+            style={[styles.emptyAction, { backgroundColor: colors.primary }]}
             onPress={handleEmptyAction}
             activeOpacity={0.7}
           >
-            <Text style={styles.emptyActionText}>{emptyState.actionLabel}</Text>
+            <Text style={[styles.emptyActionText, { color: colors.white }]}>{emptyState.actionLabel}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -225,7 +225,7 @@ export function ConversationListScreen() {
 
   if (isLoading && conversations.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonConversationRow key={i} />
         ))}
@@ -234,7 +234,7 @@ export function ConversationListScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.surface }, { backgroundColor: colors.bgScreen }]}>
       {/* Family crew selector */}
       {hasDependents && (
         <MyCrewRow
@@ -255,18 +255,16 @@ export function ConversationListScreen() {
           <TouchableOpacity
             key={f.key}
             style={[
-              styles.chip,
-              activeFilter === f.key && styles.chipActive,
-              activeFilter !== f.key && { backgroundColor: colors.bgCard },
-            ]}
+              styles.chip, { backgroundColor: colors.surfaceContainer },
+              activeFilter === f.key && styles.chipActive, activeFilter === f.key && { backgroundColor: colors.cobalt },
+              activeFilter !== f.key && { backgroundColor: colors.bgCard }]}
             onPress={() => setActiveFilter(f.key)}
             activeOpacity={0.75}
           >
             <Text
               style={[
-                styles.chipText,
-                activeFilter === f.key && styles.chipTextActive,
-              ]}
+                styles.chipText, { color: colors.onSurfaceVariant },
+                activeFilter === f.key && styles.chipTextActive, activeFilter === f.key && { color: colors.white }]}
             >
               {f.label}
             </Text>
@@ -287,7 +285,7 @@ export function ConversationListScreen() {
             onMute={handleMute}
           />
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.outlineVariant + '50' }]} />}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -310,13 +308,12 @@ export function ConversationListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
+  container: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { flex: 1 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
     marginHorizontal: 16,
     marginVertical: 10,
     paddingHorizontal: 12,
@@ -328,7 +325,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
   },
   filterScroll: { flexGrow: 0, flexShrink: 0 },
   filterRow: {
@@ -342,18 +338,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surfaceContainer,
   },
-  chipActive: { backgroundColor: colors.cobalt },
+  chipActive: {},
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
   },
-  chipTextActive: { color: colors.white },
+  chipTextActive: {},
   separator: {
     height: 1,
-    backgroundColor: colors.outlineVariant + '50',
     marginLeft: 76,
   },
   emptyState: {
@@ -365,13 +358,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -380,7 +371,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 9999,
-    backgroundColor: colors.primary,
   },
-  emptyActionText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
+  emptyActionText: { fontFamily: fonts.ui, fontSize: 15 },
 });

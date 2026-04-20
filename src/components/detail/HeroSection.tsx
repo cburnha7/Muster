@@ -73,7 +73,7 @@ export function HeroSection({
     >
       {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
 
-      <Text style={styles.title} numberOfLines={3}>
+      <Text style={[styles.title, { color: colors.onSurface }]} numberOfLines={3}>
         {title}
       </Text>
 
@@ -97,17 +97,17 @@ export function HeroSection({
         </View>
       )}
 
-      {headline ? <Text style={styles.headline}>{headline}</Text> : null}
+      {headline ? <Text style={[styles.headline, { color: colors.onSurface }]}>{headline}</Text> : null}
 
       {subline ? (
         onSublinePress ? (
           <TouchableOpacity onPress={onSublinePress} activeOpacity={0.7}>
-            <Text style={[styles.subline, styles.sublineTappable]}>
+            <Text style={[styles.subline, { color: colors.onSurfaceVariant }, styles.sublineTappable, { color: colors.primary }]}>
               {subline}
             </Text>
           </TouchableOpacity>
         ) : (
-          <Text style={styles.subline}>{subline}</Text>
+          <Text style={[styles.subline, { color: colors.onSurfaceVariant }]}>{subline}</Text>
         )
       ) : null}
 
@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 28,
-    color: colors.onSurface,
     letterSpacing: -0.5,
     marginBottom: 10,
   },
@@ -152,18 +151,15 @@ const styles = StyleSheet.create({
   headline: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: colors.onSurface,
     marginTop: 4,
     marginBottom: 2,
   },
   subline: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
     marginTop: 4,
   },
   sublineTappable: {
-    color: colors.primary,
     textDecorationLine: 'underline',
   },
 });

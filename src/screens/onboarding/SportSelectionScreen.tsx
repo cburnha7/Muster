@@ -55,7 +55,7 @@ export const SportSelectionScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
     >
       <View style={styles.content}>
         {/* Top bar */}
@@ -72,7 +72,7 @@ export const SportSelectionScreen: React.FC = () => {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[styles.progressDot, i <= 1 && styles.progressDotActive]}
+                style={[styles.progressDot, { backgroundColor: colors.outlineVariant }, i <= 1 && styles.progressDotActive, i <= 1 && { backgroundColor: colors.primary }]}
               />
             ))}
           </View>
@@ -86,10 +86,10 @@ export const SportSelectionScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: colors.onSurface }]}>
               {isGuardian ? 'Sports your kids play' : 'Sports you play'}
             </Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
               We'll personalize your feed and recommendations
             </Text>
 
@@ -105,14 +105,13 @@ export const SportSelectionScreen: React.FC = () => {
         <View style={styles.bottomSection}>
           <TouchableOpacity
             style={[
-              styles.continueButton,
-              !canContinue && styles.continueButtonDisabled,
-            ]}
+              styles.continueButton, { backgroundColor: colors.primary },
+              !canContinue && styles.continueButtonDisabled]}
             onPress={handleContinue}
             disabled={!canContinue}
             activeOpacity={0.85}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={[styles.continueButtonText, { color: colors.white }]}>Continue</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -123,7 +122,6 @@ export const SportSelectionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -151,10 +149,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.outlineVariant,
   },
   progressDotActive: {
-    backgroundColor: colors.primary,
     width: 24,
     borderRadius: 4,
   },
@@ -168,14 +164,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.onSurface,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
     lineHeight: 24,
     marginBottom: 32,
   },
@@ -184,7 +178,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   continueButton: {
-    backgroundColor: colors.primary,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -198,7 +191,6 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
 });

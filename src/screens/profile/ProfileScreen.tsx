@@ -137,7 +137,7 @@ export function ProfileScreen() {
 
   if (!authUser) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <EmptyState
           icon="person-outline"
           title="Profile Unavailable"
@@ -151,7 +151,7 @@ export function ProfileScreen() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={[
         styles.content,
         contentMaxWidth
@@ -191,15 +191,15 @@ export function ProfileScreen() {
       {/* Action buttons */}
       <View style={styles.actionRow}>
         <TouchableOpacity
-          style={styles.actionBtn}
+          style={[styles.actionBtn, { borderColor: colors.primary }]}
           onPress={() => (navigation as any).navigate('EditProfile')}
           activeOpacity={0.7}
         >
           <Ionicons name="create-outline" size={18} color={colors.primary} />
-          <Text style={styles.actionBtnText}>Edit</Text>
+          <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, styles.actionBtnCobalt]}
+          style={[styles.actionBtn, { borderColor: colors.primary }, styles.actionBtnCobalt, { borderColor: colors.cobalt }]}
           onPress={() =>
             (navigation as any).navigate('AvailabilityCalendar', {
               userId: authUser.id,
@@ -208,15 +208,15 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, styles.actionBtnTextCobalt]}>
+          <Text style={[styles.actionBtnText, { color: colors.primary }, styles.actionBtnTextCobalt, { color: colors.cobalt }]}>
             Availability
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Recent Games ───────────────────────────── */}
-      <Text style={styles.sectionTitle}>Recent Games</Text>
-      <View style={styles.sectionCard}>
+      <Text style={[styles.sectionTitle, { color: colors.pine }]}>Recent Games</Text>
+      <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {loadingStats ? (
           Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
         ) : recentGames.length === 0 ? (
@@ -226,7 +226,7 @@ export function ProfileScreen() {
               size={32}
               color={colors.outlineVariant}
             />
-            <Text style={styles.emptyText}>No games played yet</Text>
+            <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No games played yet</Text>
             <TouchableOpacity
               onPress={() =>
                 (navigation as any)
@@ -235,7 +235,7 @@ export function ProfileScreen() {
               }
               activeOpacity={0.7}
             >
-              <Text style={styles.emptyAction}>Find one nearby</Text>
+              <Text style={[styles.emptyAction, { color: colors.pine }]}>Find one nearby</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -246,9 +246,8 @@ export function ProfileScreen() {
               <PressableCard
                 key={event.id}
                 style={[
-                  styles.gameRow,
-                  idx === recentGames.length - 1 && styles.gameRowLast,
-                ]}
+                  styles.gameRow, { borderBottomColor: colors.outlineVariant + '50' },
+                  idx === recentGames.length - 1 && styles.gameRowLast]}
                 onPress={() =>
                   (navigation as any).navigate('Home', {
                     screen: 'EventDetails',
@@ -260,10 +259,10 @@ export function ProfileScreen() {
                   style={[styles.sportDot, { backgroundColor: sportColor }]}
                 />
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.onSurface }]} numberOfLines={1}>
                     {event.title}
                   </Text>
-                  <Text style={styles.gameMeta} numberOfLines={1}>
+                  <Text style={[styles.gameMeta, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
                     {formatEventDate(event.startTime as any)}{' '}
                     {(event as any).facility?.name
                       ? `· ${(event as any).facility.name}`
@@ -282,8 +281,8 @@ export function ProfileScreen() {
       </View>
 
       {/* ── Teams ──────────────────────────────────── */}
-      <Text style={styles.sectionTitle}>Teams</Text>
-      <View style={styles.sectionCard}>
+      <Text style={[styles.sectionTitle, { color: colors.pine }]}>Teams</Text>
+      <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {loadingStats ? (
           Array.from({ length: 2 }).map((_, i) => <SkeletonRow key={i} />)
         ) : myTeams.length === 0 ? (
@@ -293,7 +292,7 @@ export function ProfileScreen() {
               size={32}
               color={colors.outlineVariant}
             />
-            <Text style={styles.emptyText}>No teams yet</Text>
+            <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No teams yet</Text>
             <TouchableOpacity
               onPress={() =>
                 (navigation as any)
@@ -302,7 +301,7 @@ export function ProfileScreen() {
               }
               activeOpacity={0.7}
             >
-              <Text style={styles.emptyAction}>Join or create one</Text>
+              <Text style={[styles.emptyAction, { color: colors.pine }]}>Join or create one</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -314,9 +313,8 @@ export function ProfileScreen() {
               <PressableCard
                 key={team.id}
                 style={[
-                  styles.gameRow,
-                  idx === myTeams.length - 1 && styles.gameRowLast,
-                ]}
+                  styles.gameRow, { borderBottomColor: colors.outlineVariant + '50' },
+                  idx === myTeams.length - 1 && styles.gameRowLast]}
                 onPress={() =>
                   (navigation as any).getParent()?.navigate('Teams', {
                     screen: 'TeamDetails',
@@ -333,10 +331,10 @@ export function ProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={styles.gameName} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.onSurface }]} numberOfLines={1}>
                     {team.name}
                   </Text>
-                  <Text style={styles.gameMeta}>
+                  <Text style={[styles.gameMeta, { color: colors.onSurfaceVariant }]}>
                     {team.members?.length ?? 0} players
                   </Text>
                 </View>
@@ -358,7 +356,7 @@ export function ProfileScreen() {
         activeOpacity={0.7}
       >
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
-        <Text style={styles.logoutText}>Log Out</Text>
+        <Text style={[styles.logoutText, { color: colors.error }]}>Log Out</Text>
       </TouchableOpacity>
 
       <View style={{ height: 32 }} />
@@ -369,7 +367,6 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     paddingBottom: 24,
@@ -390,36 +387,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.primary,
     gap: 4,
   },
-  actionBtnCobalt: {
-    borderColor: colors.cobalt,
-  },
+  actionBtnCobalt: {},
   actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.primary,
   },
-  actionBtnTextCobalt: {
-    color: colors.cobalt,
-  },
+  actionBtnTextCobalt: {},
 
   // ── Section ────────────────────────────────────
   sectionTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.pine,
     marginTop: 24,
     marginBottom: 10,
     letterSpacing: -0.2,
   },
   sectionCard: {
-    backgroundColor: colors.surface,
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
   },
 
   // ── Game / Team Rows ───────────────────────────
@@ -430,7 +418,6 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant + '50',
   },
   gameRowLast: {
     borderBottomWidth: 0,
@@ -457,12 +444,10 @@ const styles = StyleSheet.create({
   gameName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
   },
   gameMeta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
   },
 
   // ── Empty States ───────────────────────────────
@@ -475,12 +460,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
   },
   emptyAction: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
     marginTop: 4,
   },
 
@@ -496,6 +479,5 @@ const styles = StyleSheet.create({
   logoutText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.error,
   },
 });

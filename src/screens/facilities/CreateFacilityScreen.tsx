@@ -324,29 +324,29 @@ function CreateFacilityInner() {
         onRequestClose={() => setShowDuplicateModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.duplicateModalContent}>
+          <View style={[styles.duplicateModalContent, { backgroundColor: colors.white }]}>
             <View style={styles.duplicateModalHeader}>
               <Ionicons name="warning" size={32} color={colors.gold} />
-              <Text style={styles.modalTitle}>Grounds Already Exist</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>Grounds Already Exist</Text>
             </View>
 
-            <Text style={styles.modalDescription}>
+            <Text style={[styles.modalDescription, { color: colors.inkSoft }]}>
               We found {duplicates.length} existing{' '}
               {duplicates.length === 1 ? 'ground' : 'grounds'} at this address:
             </Text>
 
             <ScrollView style={styles.duplicateList}>
               {duplicates.map(facility => (
-                <View key={facility.id} style={styles.duplicateCard}>
-                  <Text style={styles.duplicateName}>{facility.name}</Text>
-                  <Text style={styles.duplicateAddress}>
+                <View key={facility.id} style={[styles.duplicateCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Text style={[styles.duplicateName, { color: colors.ink }]}>{facility.name}</Text>
+                  <Text style={[styles.duplicateAddress, { color: colors.inkSoft }]}>
                     {facility.street}, {facility.city}, {facility.state}{' '}
                     {facility.zipCode}
                   </Text>
                   <View style={styles.sportTypeRow}>
                     {facility.sportTypes.map(sport => (
-                      <View key={sport} style={styles.sportBadge}>
-                        <Text style={styles.sportBadgeText}>{sport}</Text>
+                      <View key={sport} style={[styles.sportBadge, { backgroundColor: colors.cobalt }]}>
+                        <Text style={[styles.sportBadgeText, { color: colors.white }]}>{sport}</Text>
                       </View>
                     ))}
                   </View>
@@ -354,22 +354,22 @@ function CreateFacilityInner() {
               ))}
             </ScrollView>
 
-            <Text style={styles.modalQuestion}>
+            <Text style={[styles.modalQuestion, { color: colors.ink }]}>
               Are you sure you want to create another ground at this location?
             </Text>
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.surface }]}
                 onPress={() => setShowDuplicateModal(false)}
               >
-                <Text style={styles.cancelButtonText}>Go Back</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.inkSoft }]}>Go Back</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.continueButton]}
+                style={[styles.modalButton, styles.continueButton, { backgroundColor: colors.cobalt }]}
                 onPress={handleContinueAnyway}
               >
-                <Text style={styles.continueButtonText}>Create Anyway</Text>
+                <Text style={[styles.continueButtonText, { color: colors.white }]}>Create Anyway</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -409,7 +409,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   duplicateModalContent: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     width: '100%',
@@ -426,39 +425,32 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   modalDescription: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     marginBottom: Spacing.lg,
     textAlign: 'center',
   },
   duplicateList: { maxHeight: 200, marginBottom: Spacing.lg },
   duplicateCard: {
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   duplicateName: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 4,
   },
   duplicateAddress: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginBottom: Spacing.sm,
   },
   sportTypeRow: { flexDirection: 'row', flexWrap: 'wrap' },
   sportBadge: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 12,
@@ -468,12 +460,10 @@ const styles = StyleSheet.create({
   sportBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.white,
   },
   modalQuestion: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.ink,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
@@ -485,16 +475,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 4,
   },
-  cancelButton: { backgroundColor: colors.surface },
+  cancelButton: {},
   cancelButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.inkSoft,
   },
-  continueButton: { backgroundColor: colors.cobalt },
+  continueButton: {},
   continueButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.white,
   },
 });

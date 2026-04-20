@@ -63,13 +63,13 @@ export function HeaderUserSelector() {
           <View
             style={[styles.avatarFallback, { backgroundColor: avatarColor }]}
           >
-            <Text style={styles.avatarInitial}>{initial}</Text>
+            <Text style={[styles.avatarInitial, { color: colors.white }]}>{initial}</Text>
           </View>
         )}
       </TouchableOpacity>
       {unreadCount > 0 && (
         <View
-          style={[styles.notifDot, { borderColor: colors.bgScreen }]}
+          style={[styles.notifDot, { backgroundColor: colors.heart }, { borderColor: colors.bgScreen }]}
         />
       )}
     </View>
@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   notifDot: {
     position: 'absolute',
@@ -104,7 +103,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.heart,
     borderWidth: 2,
   },
 });

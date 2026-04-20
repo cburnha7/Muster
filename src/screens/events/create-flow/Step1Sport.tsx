@@ -15,10 +15,10 @@ export function Step1Sport() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>What are you playing?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>What are you playing?</Text>
       <SportIconGrid selected={state.sport || ''} onSelect={handleSelect} />
     </ScrollView>
   );
@@ -27,7 +27,6 @@ export function Step1Sport() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     paddingHorizontal: 20,
@@ -37,7 +36,6 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
 });

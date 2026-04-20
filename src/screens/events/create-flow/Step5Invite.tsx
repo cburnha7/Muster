@@ -170,14 +170,14 @@ export function Step5Invite() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>Who's invited?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Who's invited?</Text>
 
       <View style={styles.visibilityRow}>
         <TouchableOpacity
-          style={[styles.visButton, privateSelected && styles.visButtonActive]}
+          style={[styles.visButton, { backgroundColor: colors.surface, borderColor: colors.border }, privateSelected && styles.visButtonActive, privateSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
           onPress={() => handleVisibility('private')}
           activeOpacity={0.8}
         >
@@ -187,13 +187,13 @@ export function Step5Invite() {
             color={privateSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, privateSelected && styles.visTextActive]}
+            style={[styles.visText, { color: colors.ink }, privateSelected && styles.visTextActive, privateSelected && { color: colors.white }]}
           >
             Private
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.visButton, publicSelected && styles.visButtonActive]}
+          style={[styles.visButton, { backgroundColor: colors.surface, borderColor: colors.border }, publicSelected && styles.visButtonActive, publicSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
           onPress={() => handleVisibility('public')}
           activeOpacity={0.8}
         >
@@ -203,7 +203,7 @@ export function Step5Invite() {
             color={publicSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, publicSelected && styles.visTextActive]}
+            style={[styles.visText, { color: colors.ink }, publicSelected && styles.visTextActive, publicSelected && { color: colors.white }]}
           >
             Public
           </Text>
@@ -212,11 +212,11 @@ export function Step5Invite() {
 
       {privateSelected && (
         <>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: colors.ink }]}>
             {isGame ? 'Search Rosters' : 'Search Rosters & Players'}
           </Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder={
               isGame ? 'Search rosters...' : 'Search rosters or players...'
             }
@@ -234,7 +234,7 @@ export function Step5Invite() {
           )}
 
           {searchResults.length > 0 && (
-            <View style={styles.resultsList}>
+            <View style={[styles.resultsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {searchResults.map(item => {
                 const alreadyAdded = state.invitedItems.some(
                   i => i.id === item.id
@@ -242,7 +242,7 @@ export function Step5Invite() {
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={styles.resultRow}
+                    style={[styles.resultRow, { borderBottomColor: colors.border }]}
                     onPress={() => handleAddInvite(item)}
                     disabled={alreadyAdded}
                     activeOpacity={0.7}
@@ -267,9 +267,8 @@ export function Step5Invite() {
                     )}
                     <Text
                       style={[
-                        styles.resultName,
-                        alreadyAdded && styles.resultNameMuted,
-                      ]}
+                        styles.resultName, { color: colors.ink },
+                        alreadyAdded && styles.resultNameMuted, alreadyAdded && { color: colors.inkSoft }]}
                     >
                       {item.name}
                     </Text>
@@ -287,7 +286,7 @@ export function Step5Invite() {
           )}
 
           <TouchableOpacity
-            style={styles.inviteToMusterBtn}
+            style={[styles.inviteToMusterBtn, { borderColor: colors.cobalt }]}
             onPress={() => setShowInviteModal(true)}
             activeOpacity={0.7}
           >
@@ -296,13 +295,13 @@ export function Step5Invite() {
               size={18}
               color={colors.cobalt}
             />
-            <Text style={styles.inviteToMusterText}>Invite to Muster</Text>
+            <Text style={[styles.inviteToMusterText, { color: colors.cobalt }]}>Invite to Muster</Text>
           </TouchableOpacity>
 
           {state.invitedItems.length > 0 && (
             <View style={styles.chipsContainer}>
               {state.invitedItems.map(item => (
-                <View key={item.id} style={styles.inviteeCard}>
+                <View key={item.id} style={[styles.inviteeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <View style={styles.inviteeRow}>
                     {item.type === 'roster' ? (
                       <Ionicons
@@ -317,10 +316,10 @@ export function Step5Invite() {
                         color={colors.cobalt}
                       />
                     )}
-                    <Text style={styles.chipText}>{item.name}</Text>
+                    <Text style={[styles.chipText, { color: colors.ink }]}>{item.name}</Text>
                     {(item as any).pending && (
-                      <View style={styles.pendingBadge}>
-                        <Text style={styles.pendingBadgeText}>Pending</Text>
+                      <View style={[styles.pendingBadge, { backgroundColor: colors.gold }]}>
+                        <Text style={[styles.pendingBadgeText, { color: colors.white }]}>Pending</Text>
                       </View>
                     )}
                     <TouchableOpacity
@@ -351,9 +350,9 @@ export function Step5Invite() {
 
       {publicSelected && (
         <>
-          <Text style={styles.label}>Minimum Player Rating</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Minimum Player Rating</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="0 – 100"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -375,7 +374,6 @@ export function Step5Invite() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     paddingHorizontal: 20,
@@ -385,13 +383,11 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   visibilityRow: {
@@ -407,42 +403,29 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  visButtonActive: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  visButtonActive: {},
   visText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink,
   },
-  visTextActive: {
-    color: colors.white,
-  },
+  visTextActive: {},
   searchInput: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 12,
   },
   loader: {
     marginVertical: 8,
   },
   resultsList: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -453,7 +436,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   avatar: {
     width: 24,
@@ -464,22 +446,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
-  resultNameMuted: {
-    color: colors.inkSoft,
-  },
+  resultNameMuted: {},
   chipsContainer: {
     gap: 8,
     marginBottom: 16,
   },
   inviteeCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   inviteeRow: {
     flexDirection: 'row',
@@ -490,17 +467,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.surface,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   chipText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.ink,
     flex: 1,
   },
   inviteToMusterBtn: {
@@ -512,16 +486,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     borderRadius: 10,
   },
   inviteToMusterText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
   },
   pendingBadge: {
-    backgroundColor: colors.gold,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -529,18 +500,14 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.white,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 16,
   },
 });

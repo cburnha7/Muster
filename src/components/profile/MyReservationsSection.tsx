@@ -232,9 +232,9 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
       >
         <View style={styles.sectionInner}>
           {Array.from(facilityGroups.values()).map(group => (
-            <View key={group.id} style={styles.facilityGroup}>
+            <View key={group.id} style={[styles.facilityGroup, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
               <TouchableOpacity
-                style={styles.facilityHeader}
+                style={[styles.facilityHeader, { backgroundColor: colors.surface }]}
                 onPress={() =>
                   (navigation as any).navigate('FacilityDetails', {
                     facilityId: group.id,
@@ -242,7 +242,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 }
                 activeOpacity={0.7}
               >
-                <Text style={styles.facilityName} numberOfLines={1}>
+                <Text style={[styles.facilityName, { color: colors.ink }]} numberOfLines={1}>
                   {group.name}
                 </Text>
                 <Ionicons
@@ -252,39 +252,39 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 />
               </TouchableOpacity>
               {group.items.map(r => (
-                <View key={r.id} style={styles.slotRow}>
+                <View key={r.id} style={[styles.slotRow, { borderTopColor: `${colors.inkFaint}20` }]}>
                   <View style={styles.slotInfo}>
-                    <Text style={styles.slotCourt}>
+                    <Text style={[styles.slotCourt, { color: colors.ink }]}>
                       {r.timeSlot.court.name}
                     </Text>
-                    <Text style={styles.slotDateTime}>
+                    <Text style={[styles.slotDateTime, { color: colors.inkFaint }]}>
                       {formatDate(r.timeSlot.date)} Ã‚Â·{' '}
                       {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
                       {formatTime(r.timeSlot.endTime)}
                     </Text>
                   </View>
                   {r.cancellationStatus === 'pending_cancellation' ? (
-                    <View style={styles.pendingBadge}>
+                    <View style={[styles.pendingBadge, { backgroundColor: `${colors.warning}15` }]}>
                       <Ionicons
                         name="time-outline"
                         size={14}
                         color={colors.warning}
                       />
-                      <Text style={styles.pendingText}>Pending</Text>
+                      <Text style={[styles.pendingText, { color: colors.warning }]}>Pending</Text>
                     </View>
                   ) : r.usedForEventId ? (
                     <TouchableOpacity
-                      style={styles.viewEventButton}
+                      style={[styles.viewEventButton, { backgroundColor: `${colors.ink}10` }]}
                       onPress={() => handleViewEvent(r.usedForEventId!)}
                       activeOpacity={0.7}
                     >
                       <Ionicons name="calendar" size={16} color={colors.ink} />
-                      <Text style={styles.viewEventText}>View Event</Text>
+                      <Text style={[styles.viewEventText, { color: colors.ink }]}>View Event</Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.slotActions}>
                       <TouchableOpacity
-                        style={styles.createButton}
+                        style={[styles.createButton, { backgroundColor: `${colors.cobalt}10` }]}
                         onPress={() => handleCreateEvent(r)}
                         activeOpacity={0.7}
                       >
@@ -293,12 +293,12 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                           size={16}
                           color={colors.cobalt}
                         />
-                        <Text style={styles.createButtonText}>
+                        <Text style={[styles.createButtonText, { color: colors.cobalt }]}>
                           Create Event
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.cancelButton}
+                        style={[styles.cancelButton, { backgroundColor: `${colors.heart}10` }]}
                         onPress={() => handleCancelReservation(r)}
                         activeOpacity={0.7}
                       >
@@ -307,7 +307,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                           size={16}
                           color={colors.heart}
                         />
-                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                        <Text style={[styles.cancelButtonText, { color: colors.heart }]}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -350,9 +350,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   facilityGroup: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -364,13 +362,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     paddingHorizontal: 14,
-    backgroundColor: colors.surface,
     gap: 6,
   },
   facilityName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
     flex: 1,
   },
   slotRow: {
@@ -379,7 +375,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: `${colors.inkFaint}20`,
   },
   slotInfo: {
     flex: 1,
@@ -388,12 +383,10 @@ const styles = StyleSheet.create({
   slotCourt: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
   },
   slotDateTime: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   slotActions: {
@@ -407,13 +400,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: `${colors.cobalt}10`,
     gap: 4,
   },
   createButtonText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: colors.cobalt,
   },
   cancelButton: {
     flexDirection: 'row',
@@ -421,13 +412,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: `${colors.heart}10`,
     gap: 4,
   },
   cancelButtonText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: colors.heart,
   },
   viewEventButton: {
     flexDirection: 'row',
@@ -435,26 +424,22 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: `${colors.ink}10`,
     gap: 4,
   },
   viewEventText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: colors.ink,
   },
   pendingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: `${colors.warning}15`,
     borderRadius: 6,
     gap: 4,
   },
   pendingText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.warning,
   },
 });

@@ -184,7 +184,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader title="Join Roster" />
@@ -196,8 +196,8 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.form}>
-          <Text style={styles.title}>Enter Invite Code</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.ink }]}>Enter Invite Code</Text>
+          <Text style={[styles.subtitle, { color: colors.inkSoft }]}>
             Enter the invite code shared by the roster manager to join the
             roster
           </Text>
@@ -224,28 +224,28 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
 
           {validatedTeam && (
             <View style={styles.validatedSection}>
-              <View style={styles.successBanner}>
-                <Text style={styles.successText}>Valid Invite Code</Text>
+              <View style={[styles.successBanner, { backgroundColor: colors.pineTint, borderLeftColor: colors.pine }]}>
+                <Text style={[styles.successText, { color: colors.pine }]}>Valid Invite Code</Text>
                 {expiresAt && (
-                  <Text style={styles.expiresText}>
+                  <Text style={[styles.expiresText, { color: colors.pine }]}>
                     Expires: {new Date(expiresAt).toLocaleDateString()}
                   </Text>
                 )}
               </View>
 
-              <Text style={styles.teamPreviewTitle}>Roster Preview</Text>
+              <Text style={[styles.teamPreviewTitle, { color: colors.ink }]}>Roster Preview</Text>
 
-              <View style={styles.teamInfo}>
-                <Text style={styles.teamNameText}>{validatedTeam.name}</Text>
-                <Text style={styles.infoItem}>
+              <View style={[styles.teamInfo, { backgroundColor: colors.white, borderColor: colors.border }]}>
+                <Text style={[styles.teamNameText, { color: colors.ink }]}>{validatedTeam.name}</Text>
+                <Text style={[styles.infoItem, { color: colors.inkSoft }]}>
                   Sport:{' '}
                   {validatedTeam.sportType?.charAt(0).toUpperCase() +
                     validatedTeam.sportType?.slice(1).replace(/_/g, ' ')}
                 </Text>
-                <Text style={styles.infoItem}>
+                <Text style={[styles.infoItem, { color: colors.inkSoft }]}>
                   Skill Level: {validatedTeam.skillLevel}
                 </Text>
-                <Text style={styles.infoItem}>
+                <Text style={[styles.infoItem, { color: colors.inkSoft }]}>
                   Players: {validatedTeam.memberCount}/
                   {validatedTeam.maxMembers}
                 </Text>
@@ -263,9 +263,9 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
             </View>
           )}
 
-          <View style={styles.helpSection}>
-            <Text style={styles.helpTitle}>Don't have an invite code?</Text>
-            <Text style={styles.helpText}>
+          <View style={[styles.helpSection, { backgroundColor: colors.white }]}>
+            <Text style={[styles.helpTitle, { color: colors.ink }]}>Don't have an invite code?</Text>
+            <Text style={[styles.helpText, { color: colors.inkSoft }]}>
               Ask the roster manager to share their invite code with you, or
               browse public rosters to join without a code.
             </Text>
@@ -288,15 +288,15 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
         onRequestClose={() => setShowDependentPicker(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Who's joining?</Text>
-            <Text style={styles.modalSubtitle}>
+          <View style={[styles.modalContent, { backgroundColor: colors.white }]}>
+            <Text style={[styles.modalTitle, { color: colors.ink }]}>Who's joining?</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.inkSoft }]}>
               Select who will be added to {validatedTeam?.name}
             </Text>
 
             {/* Self option */}
             <TouchableOpacity
-              style={styles.pickerOption}
+              style={[styles.pickerOption, { backgroundColor: colors.surface }]}
               onPress={() => handleDependentSelection(user?.id || '')}
               activeOpacity={0.7}
             >
@@ -306,10 +306,10 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
                 color={colors.cobalt}
               />
               <View style={styles.pickerOptionText}>
-                <Text style={styles.pickerOptionName}>
+                <Text style={[styles.pickerOptionName, { color: colors.ink }]}>
                   Me ({user?.firstName})
                 </Text>
-                <Text style={styles.pickerOptionHint}>Join as a player</Text>
+                <Text style={[styles.pickerOptionHint, { color: colors.inkFaint }]}>Join as a player</Text>
               </View>
               <Ionicons
                 name="chevron-forward"
@@ -322,7 +322,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
             {dependents.map((dep: DependentSummary) => (
               <TouchableOpacity
                 key={dep.id}
-                style={styles.pickerOption}
+                style={[styles.pickerOption, { backgroundColor: colors.surface }]}
                 onPress={() => handleDependentSelection(dep.id)}
                 activeOpacity={0.7}
               >
@@ -332,10 +332,10 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
                   color={colors.gold}
                 />
                 <View style={styles.pickerOptionText}>
-                  <Text style={styles.pickerOptionName}>
+                  <Text style={[styles.pickerOptionName, { color: colors.ink }]}>
                     {dep.firstName} {dep.lastName}
                   </Text>
-                  <Text style={styles.pickerOptionHint}>
+                  <Text style={[styles.pickerOptionHint, { color: colors.inkFaint }]}>
                     Join as your child
                   </Text>
                 </View>
@@ -352,7 +352,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
               onPress={() => setShowDependentPicker(false)}
               activeOpacity={0.75}
             >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={[styles.cancelBtnText, { color: colors.inkSoft }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -364,7 +364,6 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     flex: 1,
@@ -379,12 +378,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.ink,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: colors.inkSoft,
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -393,62 +390,50 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   successBanner: {
-    backgroundColor: colors.pineTint,
     borderRadius: 8,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: colors.pine,
   },
   successText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.pine,
     marginBottom: 4,
   },
   expiresText: {
     fontSize: 14,
-    color: colors.pine,
   },
   teamPreviewTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: 8,
   },
   teamNameText: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.ink,
     marginBottom: 4,
   },
   teamInfo: {
-    backgroundColor: colors.white,
     borderRadius: 8,
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   infoItem: {
     fontSize: 14,
-    color: colors.inkSoft,
     lineHeight: 20,
   },
   helpSection: {
     marginTop: 32,
     padding: 16,
-    backgroundColor: colors.white,
     borderRadius: 8,
     gap: 12,
   },
   helpTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
   },
   helpText: {
     fontSize: 14,
-    color: colors.inkSoft,
     lineHeight: 20,
   },
 
@@ -459,7 +444,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -469,12 +453,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.ink,
     textAlign: 'center',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -484,7 +466,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: colors.surface,
     gap: 12,
   },
   pickerOptionText: {
@@ -493,11 +474,9 @@ const styles = StyleSheet.create({
   pickerOptionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
   },
   pickerOptionHint: {
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   cancelBtn: {
@@ -508,6 +487,5 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.inkSoft,
   },
 });

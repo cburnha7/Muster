@@ -710,7 +710,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
   if (error || !team) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ErrorDisplay
           message={error || 'Roster not found'}
           onRetry={loadTeamDetails}
@@ -735,15 +735,15 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
       >
         {/* ── Invitation Banner ── */}
         {isPendingInvite && (
-          <View style={styles.invitationBanner}>
-            <View style={styles.invitationBannerIcon}>
+          <View style={[styles.invitationBanner, { backgroundColor: colors.goldLight + '20', borderColor: colors.goldLight + '40' }]}>
+            <View style={[styles.invitationBannerIcon, { backgroundColor: colors.goldLight + '30' }]}>
               <Ionicons name="mail-outline" size={24} color={colors.gold} />
             </View>
             <View style={styles.invitationBannerContent}>
-              <Text style={styles.invitationBannerTitle}>
+              <Text style={[styles.invitationBannerTitle, { color: colors.ink }]}>
                 You've been invited!
               </Text>
-              <Text style={styles.invitationBannerText}>
+              <Text style={[styles.invitationBannerText, { color: colors.inkFaint }]}>
                 You've been invited to join this roster. Review the details
                 below and decide if you'd like to join.
               </Text>
@@ -769,7 +769,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Team Chat button ── */}
             {isMember && (
               <TouchableOpacity
-                style={styles.chatBtn}
+                style={[styles.chatBtn, { backgroundColor: colors.cobalt + '12' }]}
                 onPress={async () => {
                   try {
                     const conv =
@@ -797,7 +797,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                   size={18}
                   color={colors.cobalt}
                 />
-                <Text style={styles.chatBtnText}>
+                <Text style={[styles.chatBtnText, { color: colors.cobalt }]}>
                   Team Chat
                   {chatUnreadCount > 0 ? ` · ${chatUnreadCount} new` : ''}
                 </Text>
@@ -807,13 +807,13 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Share Invite Link (managers only) ── */}
             {!readOnly && isManagerRole && isMember && (
               <TouchableOpacity
-                style={styles.inviteLinkBtn}
+                style={[styles.inviteLinkBtn, { backgroundColor: colors.gold + '18' }]}
                 onPress={handleShareInviteLink}
                 activeOpacity={0.8}
                 disabled={isGeneratingLink}
               >
                 <Ionicons name="link-outline" size={18} color={colors.gold} />
-                <Text style={styles.inviteLinkBtnText}>
+                <Text style={[styles.inviteLinkBtnText, { color: colors.gold }]}>
                   {isGeneratingLink
                     ? 'Generating link...'
                     : 'Share Invite Link'}
@@ -835,7 +835,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 : {})}
             >
               {activeMembers.length <= 1 && (
-                <Text style={styles.emptyMsg}>
+                <Text style={[styles.emptyMsg, { color: colors.onSurfaceVariant }]}>
                   Your roster needs more players — share the code to grow
                 </Text>
               )}
@@ -916,7 +916,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               })}
               {pendingMembers.length > 0 && (
                 <>
-                  <Text style={styles.pendingHeader}>Pending</Text>
+                  <Text style={[styles.pendingHeader, { color: colors.onSurfaceVariant }]}>Pending</Text>
                   {pendingMembers.map(m => (
                     <PersonRow
                       key={m.userId}
@@ -938,7 +938,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                   style={styles.leaveLink}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.leaveLinkText}>Leave roster</Text>
+                  <Text style={[styles.leaveLinkText, { color: colors.error }]}>Leave roster</Text>
                 </TouchableOpacity>
               )}
             </DetailCard>
@@ -971,14 +971,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           color={isPending ? colors.gold : colors.cobalt}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.leagueName}>{league.name}</Text>
-                          <Text style={styles.leagueSport}>
+                          <Text style={[styles.leagueName, { color: colors.onSurface }]}>{league.name}</Text>
+                          <Text style={[styles.leagueSport, { color: colors.onSurfaceVariant }]}>
                             {league.sportType}
                           </Text>
                         </View>
                         {isPending && (
-                          <View style={styles.pendingLeagueBadge}>
-                            <Text style={styles.pendingLeagueBadgeText}>
+                          <View style={[styles.pendingLeagueBadge, { backgroundColor: colors.goldLight }]}>
+                            <Text style={[styles.pendingLeagueBadgeText, { color: colors.ink }]}>
                               Pending
                             </Text>
                           </View>
@@ -998,7 +998,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Upcoming games card ── */}
             <DetailCard title="Upcoming games" delay={150}>
               {upcomingEvents.length === 0 ? (
-                <Text style={styles.emptyMsg}>No games scheduled yet</Text>
+                <Text style={[styles.emptyMsg, { color: colors.onSurfaceVariant }]}>No games scheduled yet</Text>
               ) : (
                 upcomingEvents.slice(0, 3).map(event => (
                   <TouchableOpacity
@@ -1011,10 +1011,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                     style={styles.eventRow}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.eventDate}>
+                    <Text style={[styles.eventDate, { color: colors.onSurfaceVariant }]}>
                       {formatDate(event.startTime)}
                     </Text>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <Text style={[styles.eventTitle, { color: colors.onSurface }]}>{event.title}</Text>
                     <Ionicons
                       name="chevron-forward"
                       size={16}
@@ -1065,18 +1065,18 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {!readOnly && isCaptain && (
               <View style={styles.ownerActions}>
                 <TouchableOpacity
-                  style={styles.ownerEditBtn}
+                  style={[styles.ownerEditBtn, { backgroundColor: colors.pine }]}
                   onPress={() => setEditMode(true)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.ownerEditBtnText}>Edit Roster</Text>
+                  <Text style={[styles.ownerEditBtnText, { color: colors.white }]}>Edit Roster</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.ownerDeleteBtn}
+                  style={[styles.ownerDeleteBtn, { borderColor: colors.heart }]}
                   onPress={() => setShowDeleteModal(true)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.ownerDeleteBtnText}>Delete Roster</Text>
+                  <Text style={[styles.ownerDeleteBtnText, { color: colors.heart }]}>Delete Roster</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1097,9 +1097,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
               return (
                 <>
-                  <Text style={styles.editStepLabel}>Roster Name</Text>
+                  <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Roster Name</Text>
                   <TextInput
-                    style={styles.editInput}
+                    style={[styles.editInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.white }]}
                     value={formName}
                     onChangeText={setFormName}
                     placeholder="Roster name"
@@ -1108,7 +1108,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {nameOk && (
                     <>
-                      <Text style={styles.editStepLabel}>Sport</Text>
+                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Sport</Text>
                       <FormSelect
                         label=""
                         options={sportTypeOptions}
@@ -1124,13 +1124,12 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {sportOk && (
                     <>
-                      <Text style={styles.editStepLabel}>Visibility</Text>
+                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Visibility</Text>
                       <View style={styles.editRow}>
                         <TouchableOpacity
                           style={[
-                            styles.editToggle,
-                            !formIsPublic && styles.editToggleActive,
-                          ]}
+                            styles.editToggle, { backgroundColor: colors.white, borderColor: colors.white },
+                            !formIsPublic && styles.editToggleActive, !formIsPublic && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                           onPress={() => setFormIsPublic(false)}
                           activeOpacity={0.75}
                         >
@@ -1141,18 +1140,16 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           />
                           <Text
                             style={[
-                              styles.editToggleText,
-                              !formIsPublic && styles.editToggleTextActive,
-                            ]}
+                              styles.editToggleText, { color: colors.ink },
+                              !formIsPublic && styles.editToggleTextActive, !formIsPublic && { color: colors.white }]}
                           >
                             Private
                           </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
-                            styles.editToggle,
-                            formIsPublic && styles.editToggleActive,
-                          ]}
+                            styles.editToggle, { backgroundColor: colors.white, borderColor: colors.white },
+                            formIsPublic && styles.editToggleActive, formIsPublic && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                           onPress={() => setFormIsPublic(true)}
                           activeOpacity={0.75}
                         >
@@ -1163,9 +1160,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           />
                           <Text
                             style={[
-                              styles.editToggleText,
-                              formIsPublic && styles.editToggleTextActive,
-                            ]}
+                              styles.editToggleText, { color: colors.ink },
+                              formIsPublic && styles.editToggleTextActive, formIsPublic && { color: colors.white }]}
                           >
                             Public
                           </Text>
@@ -1176,9 +1172,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {visOk && (
                     <>
-                      <Text style={styles.editStepLabel}>Max Players</Text>
+                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Max Players</Text>
                       <TextInput
-                        style={styles.editInput}
+                        style={[styles.editInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.white }]}
                         value={formMaxMembers}
                         onChangeText={v => {
                           const n = parseInt(v, 10);
@@ -1194,7 +1190,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
                   {maxOk && (
                     <>
-                      <Text style={styles.editStepLabel}>Skill Level</Text>
+                      <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Skill Level</Text>
                       <FormSelect
                         label=""
                         options={skillLevelOptions}
@@ -1214,7 +1210,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               !!formMaxMembers &&
               parseInt(formMaxMembers) > 0 && (
                 <View style={styles.addMembersSection}>
-                  <Text style={styles.editStepLabel}>Invite Players</Text>
+                  <Text style={[styles.editStepLabel, { color: colors.inkFaint }]}>Invite Players</Text>
                   <AddMemberSearch
                     onAddMember={handleAddMemberDirectly}
                     existingMemberIds={allMemberIds}
@@ -1281,22 +1277,22 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
           style={styles.conflictBackdrop}
           onPress={() => setShowConflictModal(false)}
         >
-          <View style={styles.conflictModal}>
+          <View style={[styles.conflictModal, { backgroundColor: colors.white }]}>
             <Ionicons
               name="warning-outline"
               size={32}
               color={colors.heart}
               style={{ alignSelf: 'center', marginBottom: 12 }}
             />
-            <Text style={styles.conflictTitle}>Can't Delete Yet</Text>
-            <Text style={styles.conflictMessage}>
+            <Text style={[styles.conflictTitle, { color: colors.ink }]}>Can't Delete Yet</Text>
+            <Text style={[styles.conflictMessage, { color: colors.inkSoft }]}>
               This roster is registered in upcoming events. Remove it from each
               event before deleting.
             </Text>
             {conflictEvents.map(evt => (
               <TouchableOpacity
                 key={evt.id}
-                style={styles.conflictEventRow}
+                style={[styles.conflictEventRow, { backgroundColor: colors.surface }]}
                 onPress={() => {
                   setShowConflictModal(false);
                   (navigation as any).navigate('Home', {
@@ -1307,10 +1303,10 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 activeOpacity={0.7}
               >
                 <View style={styles.conflictEventInfo}>
-                  <Text style={styles.conflictEventTitle} numberOfLines={1}>
+                  <Text style={[styles.conflictEventTitle, { color: colors.ink }]} numberOfLines={1}>
                     {evt.title}
                   </Text>
-                  <Text style={styles.conflictEventDate}>
+                  <Text style={[styles.conflictEventDate, { color: colors.inkSoft }]}>
                     {new Date(evt.startTime).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
@@ -1326,11 +1322,11 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={styles.conflictDismissBtn}
+              style={[styles.conflictDismissBtn, { backgroundColor: colors.surface }]}
               onPress={() => setShowConflictModal(false)}
               activeOpacity={0.7}
             >
-              <Text style={styles.conflictDismissText}>Got it</Text>
+              <Text style={[styles.conflictDismissText, { color: colors.ink }]}>Got it</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -1359,25 +1355,21 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   // Invitation banner
   invitationBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.goldLight + '20',
     borderRadius: 12,
     padding: 16,
     margin: 16,
     marginBottom: 0,
     borderWidth: 1,
-    borderColor: colors.goldLight + '40',
     gap: 12,
   },
   invitationBannerIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.goldLight + '30',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1387,19 +1379,16 @@ const styles = StyleSheet.create({
   invitationBannerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.ink,
     marginBottom: 4,
   },
   invitationBannerText: {
     fontSize: 14,
-    color: colors.inkFaint,
     lineHeight: 20,
   },
   // Teammates card
   emptyMsg: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 8,
@@ -1407,7 +1396,6 @@ const styles = StyleSheet.create({
   pendingHeader: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 12,
@@ -1422,7 +1410,6 @@ const styles = StyleSheet.create({
   leaveLinkText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.error,
   },
   // Leagues card
   leagueRow: {
@@ -1437,16 +1424,13 @@ const styles = StyleSheet.create({
   leagueName: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.onSurface,
   },
   leagueSport: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
     marginTop: 1,
   },
   pendingLeagueBadge: {
-    backgroundColor: colors.goldLight,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -1454,7 +1438,6 @@ const styles = StyleSheet.create({
   pendingLeagueBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.ink,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -1468,13 +1451,11 @@ const styles = StyleSheet.create({
   eventDate: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
     width: 48,
   },
   eventTitle: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.onSurface,
     flex: 1,
   },
   // Owner edit/delete actions
@@ -1485,7 +1466,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ownerEditBtn: {
-    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1493,11 +1473,9 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   ownerDeleteBtn: {
     borderWidth: 2,
-    borderColor: colors.heart,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1505,7 +1483,6 @@ const styles = StyleSheet.create({
   ownerDeleteBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.heart,
   },
   // Invites / Add members section
   addMembersSection: {
@@ -1519,22 +1496,18 @@ const styles = StyleSheet.create({
   editStepLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 20,
     marginBottom: 8,
   },
   editInput: {
-    backgroundColor: colors.white,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.white,
   },
   editRow: {
     flexDirection: 'row',
@@ -1547,26 +1520,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: colors.white,
     borderWidth: 1.5,
-    borderColor: colors.white,
     gap: 6,
   },
-  editToggleActive: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  editToggleActive: {},
   editToggleText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.ink,
   },
-  editToggleTextActive: {
-    color: colors.white,
-  },
+  editToggleTextActive: {},
   // Legacy retained for badge rendering compatibility
   pendingBadge: {
-    backgroundColor: colors.goldLight + '30',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -1574,7 +1538,6 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.gold,
   },
   chatBtn: {
     flexDirection: 'row',
@@ -1585,13 +1548,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: colors.cobalt + '12',
     gap: 8,
   },
   chatBtnText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.cobalt,
   },
   inviteLinkBtn: {
     flexDirection: 'row',
@@ -1602,13 +1563,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: colors.gold + '18',
     gap: 8,
   },
   inviteLinkBtnText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.gold,
   },
   conflictBackdrop: {
     flex: 1,
@@ -1617,7 +1576,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   conflictModal: {
-    backgroundColor: colors.white,
     borderRadius: 20,
     padding: 24,
     maxHeight: '70%',
@@ -1625,21 +1583,18 @@ const styles = StyleSheet.create({
   conflictTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
     textAlign: 'center',
     marginBottom: 8,
   },
   conflictMessage: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
     marginBottom: 20,
   },
   conflictEventRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
@@ -1648,23 +1603,19 @@ const styles = StyleSheet.create({
   conflictEventTitle: {
     fontFamily: fonts.headingSemi || fonts.heading,
     fontSize: 15,
-    color: colors.ink,
   },
   conflictEventDate: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
   },
   conflictDismissBtn: {
     alignItems: 'center',
     paddingVertical: 14,
     marginTop: 12,
     borderRadius: 12,
-    backgroundColor: colors.surface,
   },
   conflictDismissText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink,
   },
 });

@@ -71,12 +71,12 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
     return (
       <View style={styles.emptyState}>
         <Ionicons name="basketball-outline" size={64} color={colors.inkFaint} />
-        <Text style={styles.emptyStateTitle}>No Courts Yet</Text>
-        <Text style={styles.emptyStateText}>
+        <Text style={[styles.emptyStateTitle, { color: colors.ink }]}>No Courts Yet</Text>
+        <Text style={[styles.emptyStateText, { color: colors.inkFaint }]}>
           Add courts or fields to start managing availability and rentals
         </Text>
-        <TouchableOpacity style={styles.emptyStateButton} onPress={onAddCourt}>
-          <Text style={styles.emptyStateButtonText}>Add Your First Court</Text>
+        <TouchableOpacity style={[styles.emptyStateButton, { backgroundColor: colors.cobalt }]} onPress={onAddCourt}>
+          <Text style={[styles.emptyStateButtonText, { color: colors.surface }]}>Add Your First Court</Text>
         </TouchableOpacity>
       </View>
     );
@@ -85,31 +85,31 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
   return (
     <View style={styles.container}>
       {courts.map((court) => (
-        <View key={court.id} style={styles.courtCard}>
+        <View key={court.id} style={[styles.courtCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
           <View style={styles.courtHeader}>
             <View style={styles.courtInfo}>
-              <Text style={styles.courtName}>{court.name}</Text>
-              <Text style={styles.courtDetails}>
+              <Text style={[styles.courtName, { color: colors.ink }]}>{court.name}</Text>
+              <Text style={[styles.courtDetails, { color: colors.inkFaint }]}>
                 {court.sportType} â€¢ {court.isIndoor ? 'Indoor' : 'Outdoor'} â€¢ Capacity: {court.capacity}
               </Text>
               {court.pricePerHour && (
-                <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>
+                <Text style={[styles.courtPrice, { color: colors.cobalt }]}>${court.pricePerHour}/hour</Text>
               )}
             </View>
-            <View style={[styles.statusBadge, !court.isActive && styles.statusBadgeInactive]}>
-              <Text style={[styles.statusText, !court.isActive && styles.statusTextInactive]}>
+            <View style={[styles.statusBadge, { backgroundColor: colors.cobaltLight }, !court.isActive && styles.statusBadgeInactive, !court.isActive && { backgroundColor: colors.inkFaint }]}>
+              <Text style={[styles.statusText, { color: colors.cobalt }, !court.isActive && styles.statusTextInactive, !court.isActive && { color: colors.surface }]}>
                 {court.isActive ? 'Active' : 'Inactive'}
               </Text>
             </View>
           </View>
 
-          <View style={styles.courtActions}>
+          <View style={[styles.courtActions, { borderTopColor: colors.border }]}>
             <TouchableOpacity
               style={styles.courtActionButton}
               onPress={() => onEditCourt(court)}
             >
               <Ionicons name="create-outline" size={20} color={colors.cobalt} />
-              <Text style={styles.courtActionText}>Edit</Text>
+              <Text style={[styles.courtActionText, { color: colors.cobalt }]}>Edit</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -121,7 +121,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
                 size={20}
                 color={colors.ink}
               />
-              <Text style={[styles.courtActionText, { color: colors.ink }]}>
+              <Text style={[styles.courtActionText, { color: colors.cobalt }, { color: colors.ink }]}>
                 {court.isActive ? 'Deactivate' : 'Activate'}
               </Text>
             </TouchableOpacity>
@@ -131,7 +131,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
               onPress={() => handleDeleteCourt(court)}
             >
               <Ionicons name="trash-outline" size={20} color={colors.heart} />
-              <Text style={[styles.courtActionText, { color: colors.heart }]}>Delete</Text>
+              <Text style={[styles.courtActionText, { color: colors.cobalt }, { color: colors.heart }]}>Delete</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -145,12 +145,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   courtCard: {
-    backgroundColor: colors.background,
     padding: Spacing.lg,
     borderRadius: 12,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   courtHeader: {
     flexDirection: 'row',
@@ -163,42 +161,32 @@ const styles = StyleSheet.create({
   courtName: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 4,
   },
   courtDetails: {
     fontSize: 14,
-    color: colors.inkFaint,
     marginBottom: 4,
   },
   courtPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   statusBadge: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 16,
-    backgroundColor: colors.cobaltLight,
   },
-  statusBadgeInactive: {
-    backgroundColor: colors.inkFaint,
-  },
+  statusBadgeInactive: {},
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.cobalt,
   },
-  statusTextInactive: {
-    color: colors.surface,
-  },
+  statusTextInactive: {},
   courtActions: {
     flexDirection: 'row',
     gap: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   courtActionButton: {
     flexDirection: 'row',
@@ -208,7 +196,6 @@ const styles = StyleSheet.create({
   courtActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   emptyState: {
     alignItems: 'center',
@@ -217,18 +204,15 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptyStateText: {
     fontSize: 14,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },
   emptyStateButton: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: 8,
@@ -236,6 +220,5 @@ const styles = StyleSheet.create({
   emptyStateButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.surface,
   },
 });

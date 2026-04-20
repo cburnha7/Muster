@@ -144,38 +144,38 @@ export function OwnerReservationsSection({
       <CollapsibleSection title="Upcoming Reservations" count={rentals.length}>
         <View style={styles.sectionInner}>
           {rentals.map(r => (
-            <View key={r.id} style={styles.card}>
+            <View key={r.id} style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
               <View style={styles.cardHeader}>
-                <Text style={styles.courtName} numberOfLines={1}>
+                <Text style={[styles.courtName, { color: colors.ink }]} numberOfLines={1}>
                   {r.timeSlot.court.name}
                 </Text>
-                <Text style={styles.price}>${r.totalPrice.toFixed(2)}</Text>
+                <Text style={[styles.price, { color: colors.cobalt }]}>${r.totalPrice.toFixed(2)}</Text>
               </View>
-              <Text style={styles.dateTime}>
+              <Text style={[styles.dateTime, { color: colors.inkFaint }]}>
                 {formatDate(r.timeSlot.date)} Ã‚Â·{' '}
                 {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
                 {formatTime(r.timeSlot.endTime)}
               </Text>
-              <Text style={styles.playerName}>
+              <Text style={[styles.playerName, { color: colors.inkFaint }]}>
                 {r.user.firstName} {r.user.lastName}
               </Text>
               {r.usedForEventId ? (
                 <TouchableOpacity
-                  style={styles.eventBadge}
+                  style={[styles.eventBadge, { backgroundColor: colors.ink + '15' }]}
                   onPress={() => handleViewEvent(r.usedForEventId!)}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="calendar" size={14} color={colors.ink} />
-                  <Text style={styles.eventBadgeText}>Event Linked</Text>
+                  <Text style={[styles.eventBadgeText, { color: colors.ink }]}>Event Linked</Text>
                 </TouchableOpacity>
               ) : (
-                <View style={styles.noEventBadge}>
+                <View style={[styles.noEventBadge, { backgroundColor: colors.inkFaint + '15' }]}>
                   <Ionicons
                     name="calendar-outline"
                     size={14}
                     color={colors.inkFaint}
                   />
-                  <Text style={styles.noEventBadgeText}>No Event</Text>
+                  <Text style={[styles.noEventBadgeText, { color: colors.inkFaint }]}>No Event</Text>
                 </View>
               )}
             </View>
@@ -200,10 +200,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -218,25 +216,21 @@ const styles = StyleSheet.create({
   courtName: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
     marginRight: 8,
   },
   price: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
   },
   dateTime: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: 2,
   },
   playerName: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: 8,
   },
   eventBadge: {
@@ -246,13 +240,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: colors.ink + '15',
     gap: 4,
   },
   eventBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.ink,
   },
   noEventBadge: {
     flexDirection: 'row',
@@ -261,12 +253,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: colors.inkFaint + '15',
     gap: 4,
   },
   noEventBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
   },
 });

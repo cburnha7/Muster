@@ -17,7 +17,7 @@ export function ReactionPicker({ onSelect, onDismiss }: ReactionPickerProps) {
       onPress={onDismiss}
       activeOpacity={1}
     >
-      <View style={styles.picker}>
+      <View style={[styles.picker, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.black }]}>
         {EMOJIS.map(emoji => (
           <TouchableOpacity
             key={emoji}
@@ -49,11 +49,9 @@ const styles = StyleSheet.create({
   },
   picker: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 28,
     padding: 6,
     gap: 4,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,

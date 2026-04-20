@@ -174,12 +174,12 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.pickerModal}>
-        <View style={styles.pickerHeader}>
+      <SafeAreaView style={[styles.pickerModal, { backgroundColor: colors.white }]}>
+        <View style={[styles.pickerHeader, { borderBottomColor: colors.inkFaint + '20' }]}>
           <TouchableOpacity onPress={onClose} accessibilityRole="button">
-            <Text style={styles.pickerCancelText}>Cancel</Text>
+            <Text style={[styles.pickerCancelText, { color: colors.cobalt }]}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.pickerTitle}>{title}</Text>
+          <Text style={[styles.pickerTitle, { color: colors.ink }]}>{title}</Text>
           <View style={styles.pickerHeaderSpacer} />
         </View>
         <FlatList
@@ -191,10 +191,9 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
             return (
               <TouchableOpacity
                 style={[
-                  styles.pickerOption,
-                  isSelected && styles.pickerOptionSelected,
-                  isExcluded && styles.pickerOptionDisabled,
-                ]}
+                  styles.pickerOption, { borderBottomColor: colors.inkFaint + '10' },
+                  isSelected && styles.pickerOptionSelected, isSelected && { backgroundColor: colors.cobalt + '10' },
+                  isExcluded && styles.pickerOptionDisabled]}
                 onPress={() => {
                   if (!isExcluded) {
                     onSelect(item);
@@ -206,10 +205,9 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
               >
                 <Text
                   style={[
-                    styles.pickerOptionText,
-                    isSelected && styles.pickerOptionTextSelected,
-                    isExcluded && styles.pickerOptionTextDisabled,
-                  ]}
+                    styles.pickerOptionText, { color: colors.ink },
+                    isSelected && styles.pickerOptionTextSelected, isSelected && { color: colors.cobalt },
+                    isExcluded && styles.pickerOptionTextDisabled, isExcluded && { color: colors.inkFaint }]}
                 >
                   {item.name}
                 </Text>
@@ -231,13 +229,13 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onCancel}
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.white }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: colors.inkFaint + '20', backgroundColor: colors.white }]}>
           <TouchableOpacity onPress={onCancel} accessibilityRole="button">
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={[styles.cancelText, { color: colors.cobalt }]}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>{isEdit ? 'Edit Game' : 'Add Game'}</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>{isEdit ? 'Edit Game' : 'Add Game'}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -247,36 +245,35 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           keyboardShouldPersistTaps="handled"
         >
           {/* Home Roster */}
-          <Text style={styles.fieldLabel}>Home Roster</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Home Roster</Text>
           <TouchableOpacity
-            style={styles.fieldTrigger}
+            style={[styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' }]}
             onPress={() => setShowHomePicker(true)}
             accessibilityRole="button"
             accessibilityLabel={`Home Roster: ${homeRoster?.name ?? 'Select'}`}
           >
             <Ionicons name="shield-outline" size={18} color={colors.inkFaint} />
-            <Text style={[styles.fieldText, !homeRoster && styles.placeholder]}>
+            <Text style={[styles.fieldText, { color: colors.ink }, !homeRoster && styles.placeholder, !homeRoster && { color: colors.inkFaint }]}>
               {homeRoster?.name ?? 'Select home roster'}
             </Text>
             <Ionicons name="chevron-down" size={18} color={colors.inkFaint} />
           </TouchableOpacity>
 
           {/* Away Roster */}
-          <Text style={styles.fieldLabel}>Away Roster</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Away Roster</Text>
           <TouchableOpacity
             style={[
-              styles.fieldTrigger,
+              styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' },
               homeRosterId !== '' &&
                 awayRosterId !== '' &&
                 homeRosterId === awayRosterId &&
-                styles.fieldTriggerError,
-            ]}
+                styles.fieldTriggerError]}
             onPress={() => setShowAwayPicker(true)}
             accessibilityRole="button"
             accessibilityLabel={`Away Roster: ${awayRoster?.name ?? 'Select'}`}
           >
             <Ionicons name="shield-outline" size={18} color={colors.inkFaint} />
-            <Text style={[styles.fieldText, !awayRoster && styles.placeholder]}>
+            <Text style={[styles.fieldText, { color: colors.ink }, !awayRoster && styles.placeholder, !awayRoster && { color: colors.inkFaint }]}>
               {awayRoster?.name ?? 'Select away roster'}
             </Text>
             <Ionicons name="chevron-down" size={18} color={colors.inkFaint} />
@@ -284,15 +281,15 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           {homeRosterId !== '' &&
             awayRosterId !== '' &&
             homeRosterId === awayRosterId && (
-              <Text style={styles.errorText}>
+              <Text style={[styles.errorText, { color: colors.heart }]}>
                 Home and away rosters must be different
               </Text>
             )}
 
           {/* Date */}
-          <Text style={styles.fieldLabel}>Date</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Date</Text>
           <TouchableOpacity
-            style={styles.fieldTrigger}
+            style={[styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' }]}
             onPress={() => setShowDatePicker(true)}
             accessibilityRole="button"
             accessibilityLabel={`Date: ${formatDateDisplay(date)}`}
@@ -302,7 +299,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
               size={18}
               color={colors.inkFaint}
             />
-            <Text style={[styles.fieldText, !date && styles.placeholder]}>
+            <Text style={[styles.fieldText, { color: colors.ink }, !date && styles.placeholder, !date && { color: colors.inkFaint }]}>
               {formatDateDisplay(date)}
             </Text>
           </TouchableOpacity>
@@ -319,22 +316,22 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
                   style={styles.doneButton}
                   onPress={handleDateConfirmIOS}
                 >
-                  <Text style={styles.doneText}>Done</Text>
+                  <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
                 </TouchableOpacity>
               )}
             </View>
           )}
 
           {/* Time */}
-          <Text style={styles.fieldLabel}>Time</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Time</Text>
           <TouchableOpacity
-            style={styles.fieldTrigger}
+            style={[styles.fieldTrigger, { backgroundColor: colors.white, borderColor: colors.inkFaint + '40' }]}
             onPress={() => setShowTimePicker(true)}
             accessibilityRole="button"
             accessibilityLabel={`Time: ${formatTimeDisplay(time)}`}
           >
             <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
-            <Text style={[styles.fieldText, !time && styles.placeholder]}>
+            <Text style={[styles.fieldText, { color: colors.ink }, !time && styles.placeholder, !time && { color: colors.inkFaint }]}>
               {formatTimeDisplay(time)}
             </Text>
           </TouchableOpacity>
@@ -352,7 +349,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
                   style={styles.doneButton}
                   onPress={handleTimeConfirmIOS}
                 >
-                  <Text style={styles.doneText}>Done</Text>
+                  <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -360,9 +357,9 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
         </ScrollView>
 
         {/* Save button */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: colors.white, borderTopColor: colors.inkFaint + '20' }]}>
           <TouchableOpacity
-            style={[styles.saveButton, !allFilled && styles.saveButtonDisabled]}
+            style={[styles.saveButton, { backgroundColor: colors.cobalt }, !allFilled && styles.saveButtonDisabled, !allFilled && { backgroundColor: colors.inkFaint + '40' }]}
             onPress={handleSave}
             disabled={!allFilled}
             accessibilityRole="button"
@@ -371,9 +368,8 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           >
             <Text
               style={[
-                styles.saveButtonText,
-                !allFilled && styles.saveButtonTextDisabled,
-              ]}
+                styles.saveButtonText, { color: colors.white },
+                !allFilled && styles.saveButtonTextDisabled, !allFilled && { color: colors.white + '80' }]}
             >
               Save
             </Text>
@@ -405,7 +401,6 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -414,18 +409,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inkFaint + '20',
-    backgroundColor: colors.white,
   },
   cancelText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
   },
   title: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   headerSpacer: {
     width: 60,
@@ -440,7 +431,6 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.ink,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: Spacing.sm,
@@ -449,30 +439,22 @@ const styles = StyleSheet.create({
   fieldTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.inkFaint + '40',
     paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 10,
   },
-  fieldTriggerError: {
-    borderColor: colors.heart,
-  },
+  fieldTriggerError: {},
   fieldText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
-  placeholder: {
-    color: colors.inkFaint,
-  },
+  placeholder: {},
   errorText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.heart,
     marginTop: Spacing.xs,
   },
   doneButton: {
@@ -484,35 +466,25 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
   },
   footer: {
     padding: Spacing.lg,
-    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.inkFaint + '20',
   },
   saveButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.md + 2,
     alignItems: 'center',
   },
-  saveButtonDisabled: {
-    backgroundColor: colors.inkFaint + '40',
-  },
+  saveButtonDisabled: {},
   saveButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
-  saveButtonTextDisabled: {
-    color: colors.white + '80',
-  },
+  saveButtonTextDisabled: {},
   // Roster picker modal styles
   pickerModal: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   pickerHeader: {
     flexDirection: 'row',
@@ -521,17 +493,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inkFaint + '20',
   },
   pickerCancelText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
   },
   pickerTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   pickerHeaderSpacer: {
     width: 60,
@@ -543,25 +512,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inkFaint + '10',
   },
-  pickerOptionSelected: {
-    backgroundColor: colors.cobalt + '10',
-  },
+  pickerOptionSelected: {},
   pickerOptionDisabled: {
     opacity: 0.4,
   },
   pickerOptionText: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     flex: 1,
   },
   pickerOptionTextSelected: {
     fontFamily: fonts.semibold,
-    color: colors.cobalt,
   },
-  pickerOptionTextDisabled: {
-    color: colors.inkFaint,
-  },
+  pickerOptionTextDisabled: {},
 });

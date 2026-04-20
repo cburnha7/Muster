@@ -59,14 +59,14 @@ export function PersonRow({
 
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>{name}</Text>
+          <Text style={[styles.name, { color: colors.onSurface }]} numberOfLines={1}>{name}</Text>
           {role ? (
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{role}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: colors.secondaryContainer }]}>
+              <Text style={[styles.roleText, { color: colors.secondary }]}>{role}</Text>
             </View>
           ) : null}
         </View>
-        {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
+        {subtitle ? <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]} numberOfLines={1}>{subtitle}</Text> : null}
       </View>
 
       {rightElement ? (
@@ -117,11 +117,9 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.onSurface,
     flexShrink: 1,
   },
   roleBadge: {
-    backgroundColor: colors.secondaryContainer,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -129,12 +127,10 @@ const styles = StyleSheet.create({
   roleText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.secondary,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
     marginTop: 1,
   },
 });

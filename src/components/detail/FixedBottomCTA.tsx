@@ -57,7 +57,7 @@ export function FixedBottomCTA({
 
   return (
     <View
-      style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.outlineVariant }, { paddingBottom: Math.max(insets.bottom, 12) }]}
     >
       <TouchableOpacity
         style={buttonStyle}
@@ -93,7 +93,7 @@ export function FixedBottomCTA({
           activeOpacity={0.7}
           style={styles.secondary2}
         >
-          <Text style={styles.secondaryText}>{secondaryLabel}</Text>
+          <Text style={[styles.secondaryText, { color: colors.onSurfaceVariant }]}>{secondaryLabel}</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -104,9 +104,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
   },
   button: {
     borderRadius: 9999,
@@ -122,36 +120,20 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 6,
   },
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  confirmed: {
-    backgroundColor: colors.cobalt,
-  },
+  primary: {},
+  confirmed: {},
   secondary: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1.5,
-    borderColor: colors.primary,
   },
-  danger: {
-    backgroundColor: colors.error,
-  },
-  disabled: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
+  danger: {},
+  disabled: {},
   label: {
     fontFamily: fonts.ui,
     fontSize: 16,
   },
-  labelLight: {
-    color: colors.white,
-  },
-  labelPrimary: {
-    color: colors.primary,
-  },
-  labelDimmed: {
-    color: colors.onSurfaceVariant,
-  },
+  labelLight: {},
+  labelPrimary: {},
+  labelDimmed: {},
   secondary2: {
     alignItems: 'center',
     paddingVertical: 10,
@@ -159,6 +141,5 @@ const styles = StyleSheet.create({
   secondaryText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
   },
 });

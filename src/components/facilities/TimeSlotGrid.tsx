@@ -118,8 +118,8 @@ export function TimeSlotGrid({
     return (
       <View style={styles.emptyState}>
         <Ionicons name="time-outline" size={48} color={colors.inkFaint} />
-        <Text style={styles.emptyStateText}>No time slots available</Text>
-        <Text style={styles.emptyStateSubtext}>
+        <Text style={[styles.emptyStateText, { color: colors.ink }]}>No time slots available</Text>
+        <Text style={[styles.emptyStateSubtext, { color: colors.inkFaint }]}>
           Time slots will appear here once created
         </Text>
       </View>
@@ -138,10 +138,9 @@ export function TimeSlotGrid({
             <TouchableOpacity
               key={slot.id || `${slot.startTime}-${index}`}
               style={[
-                styles.slotCard,
+                styles.slotCard, { backgroundColor: colors.background, borderColor: colors.border },
                 { borderLeftColor: slotColor, borderLeftWidth: 4 },
-                isSelected && styles.slotCardSelected,
-              ]}
+                isSelected && styles.slotCardSelected, isSelected && { backgroundColor: colors.surface, borderColor: colors.gold }]}
               onPress={() => handleSlotPress(slot)}
               onLongPress={() => handleSlotLongPress(slot)}
               disabled={!isInteractive}
@@ -150,7 +149,7 @@ export function TimeSlotGrid({
               <View style={styles.slotHeader}>
                 <View style={styles.slotTime}>
                   <Ionicons name="time-outline" size={16} color={colors.ink} />
-                  <Text style={styles.slotTimeText}>
+                  <Text style={[styles.slotTimeText, { color: colors.ink }]}>
                     {formatTime12(slot.startTime)} -{' '}
                     {formatTime12(slot.endTime)}
                   </Text>
@@ -163,7 +162,7 @@ export function TimeSlotGrid({
                     size={12}
                     color={colors.surface}
                   />
-                  <Text style={styles.statusBadgeText}>
+                  <Text style={[styles.statusBadgeText, { color: colors.surface }]}>
                     {getSlotLabel(slot)}
                   </Text>
                 </View>
@@ -176,18 +175,18 @@ export function TimeSlotGrid({
                     size={14}
                     color={colors.inkFaint}
                   />
-                  <Text style={styles.courtName}>{slot.courtName}</Text>
+                  <Text style={[styles.courtName, { color: colors.inkFaint }]}>{slot.courtName}</Text>
                 </View>
               )}
 
               {slot.blockReason && (
-                <View style={styles.blockReasonContainer}>
+                <View style={[styles.blockReasonContainer, { borderTopColor: colors.border }]}>
                   <Ionicons
                     name="information-circle-outline"
                     size={14}
                     color={colors.heart}
                   />
-                  <Text style={styles.blockReasonText} numberOfLines={2}>
+                  <Text style={[styles.blockReasonText, { color: colors.heart }]} numberOfLines={2}>
                     {slot.blockReason}
                   </Text>
                 </View>
@@ -218,17 +217,12 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   slotCard: {
-    backgroundColor: colors.background,
     padding: Spacing.md,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
     position: 'relative',
   },
-  slotCardSelected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.gold,
-  },
+  slotCardSelected: {},
   slotHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -244,7 +238,6 @@ const styles = StyleSheet.create({
   slotTimeText: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.ink,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -257,7 +250,6 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.surface,
   },
   courtInfo: {
     flexDirection: 'row',
@@ -267,7 +259,6 @@ const styles = StyleSheet.create({
   },
   courtName: {
     fontSize: 13,
-    color: colors.inkFaint,
   },
   blockReasonContainer: {
     flexDirection: 'row',
@@ -276,12 +267,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   blockReasonText: {
     flex: 1,
     fontSize: 12,
-    color: colors.heart,
     fontStyle: 'italic',
   },
   selectedIndicator: {
@@ -297,12 +286,10 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: Spacing.md,
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
     textAlign: 'center',
   },

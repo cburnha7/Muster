@@ -76,14 +76,14 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
         {/* Top row: badge + relative time */}
         <View style={styles.topRow}>
           <View style={styles.badge}>
-            {live && <View style={styles.liveDot} />}
-            <Text style={styles.badgeText}>{live ? 'LIVE' : 'NEXT UP'}</Text>
+            {live && <View style={[styles.liveDot, { backgroundColor: colors.secondaryContainer }]} />}
+            <Text style={[styles.badgeText, { color: colors.white }]}>{live ? 'LIVE' : 'NEXT UP'}</Text>
           </View>
           <Text style={styles.relativeTime}>{relativeTime}</Text>
         </View>
 
         {/* Title */}
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.white }]} numberOfLines={2}>
           {event.title}
         </Text>
 
@@ -138,7 +138,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
                         style={styles.avatarImg}
                       />
                     ) : (
-                      <Text style={styles.avatarInitial}>
+                      <Text style={[styles.avatarInitial, { color: colors.white }]}>
                         {p.user?.firstName?.charAt(0) ?? '?'}
                       </Text>
                     )}
@@ -154,7 +154,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
                       },
                     ]}
                   >
-                    <Text style={styles.avatarInitial}>
+                    <Text style={[styles.avatarInitial, { color: colors.white }]}>
                       +{event.participants.length - 4}
                     </Text>
                   </View>
@@ -167,7 +167,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
               </Text>
             )}
           </View>
-          <View style={styles.arrowCircle}>
+          <View style={[styles.arrowCircle, { backgroundColor: colors.white }]}>
             <Ionicons
               name="arrow-forward"
               size={16}
@@ -206,12 +206,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.secondaryContainer,
   },
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.white,
     letterSpacing: 1.2,
   },
   relativeTime: {
@@ -224,7 +222,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.white,
     letterSpacing: -0.3,
   },
 
@@ -290,7 +287,6 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.label,
     fontSize: 9,
-    color: colors.white,
   },
   fillingFast: {
     fontFamily: fonts.label,
@@ -302,7 +298,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

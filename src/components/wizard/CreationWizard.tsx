@@ -99,12 +99,12 @@ export function CreationWizard({
 
   if (showSuccess && successScreen) {
     return (
-      <SafeAreaView style={styles.container}>{successScreen}</SafeAreaView>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>{successScreen}</SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -134,9 +134,9 @@ export function CreationWizard({
         >
           {step && (
             <>
-              <Text style={styles.headline}>{step.headline}</Text>
+              <Text style={[styles.headline, { color: colors.onSurface }]}>{step.headline}</Text>
               {step.subtitle && (
-                <Text style={styles.subtitle}>{step.subtitle}</Text>
+                <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{step.subtitle}</Text>
               )}
               <View style={styles.stepContent}>{step.content}</View>
             </>
@@ -147,9 +147,8 @@ export function CreationWizard({
         <View style={styles.bottomBar}>
           <TouchableOpacity
             style={[
-              styles.continueBtn,
-              (!canAdvance || isSubmitting) && styles.continueBtnDisabled,
-            ]}
+              styles.continueBtn, { backgroundColor: colors.primary },
+              (!canAdvance || isSubmitting) && styles.continueBtnDisabled]}
             onPress={handleNext}
             disabled={!canAdvance || isSubmitting}
             activeOpacity={0.7}
@@ -157,7 +156,7 @@ export function CreationWizard({
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} size="small" />
             ) : (
-              <Text style={styles.continueBtnText}>
+              <Text style={[styles.continueBtnText, { color: colors.white }]}>
                 {isLastStep ? submitLabel : 'Continue'}
               </Text>
             )}
@@ -174,7 +173,6 @@ export type WizardGoToStep = (index: number) => void;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -204,14 +202,12 @@ const styles = StyleSheet.create({
   headline: {
     fontFamily: fonts.heading,
     fontSize: 26,
-    color: colors.onSurface,
     marginBottom: 4,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurfaceVariant,
     marginBottom: 8,
     lineHeight: 21,
   },
@@ -227,7 +223,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   continueBtn: {
-    backgroundColor: colors.primary,
     borderRadius: 9999,
     paddingVertical: 16,
     alignItems: 'center',
@@ -239,6 +234,5 @@ const styles = StyleSheet.create({
   continueBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
 });

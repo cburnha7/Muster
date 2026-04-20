@@ -46,16 +46,16 @@ export function CancellationPolicyDisplay({
   const showDestination = teamPenaltyPct > 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.ink + '30' }]}>
       <View style={styles.header}>
         <Ionicons name="shield-checkmark-outline" size={20} color={colors.ink} />
-        <Text style={styles.title}>Cancellation Policy</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>Cancellation Policy</Text>
       </View>
 
       <View style={styles.body}>
         <View style={styles.row}>
           <Ionicons name="time-outline" size={16} color={colors.cobalt} />
-          <Text style={styles.text}>{refundLine}</Text>
+          <Text style={[styles.text, { color: colors.ink }]}>{refundLine}</Text>
         </View>
 
         <View style={styles.row}>
@@ -64,13 +64,13 @@ export function CancellationPolicyDisplay({
             size={16}
             color={teamPenaltyPct === 0 ? colors.cobalt : colors.gold}
           />
-          <Text style={styles.text}>{penaltyLine}</Text>
+          <Text style={[styles.text, { color: colors.ink }]}>{penaltyLine}</Text>
         </View>
 
         {showDestination && (
           <View style={styles.row}>
             <Ionicons name="arrow-forward-circle-outline" size={16} color={colors.inkFaint} />
-            <Text style={styles.text}>
+            <Text style={[styles.text, { color: colors.ink }]}>
               Penalty goes to: {formatPenaltyDestination(penaltyDestination)}.
             </Text>
           </View>
@@ -82,10 +82,8 @@ export function CancellationPolicyDisplay({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.ink + '30',
     padding: Spacing.md,
   },
   header: {
@@ -97,7 +95,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
   },
   body: {
     gap: Spacing.sm,
@@ -111,7 +108,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     lineHeight: 20,
   },
 });

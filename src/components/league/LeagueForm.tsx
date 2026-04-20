@@ -662,7 +662,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     return (
-      <View style={styles.calendar}>
+      <View style={[styles.calendar, { backgroundColor: colors.background, borderColor: colors.border }]}>
         <View style={styles.calendarHeader}>
           <TouchableOpacity
             onPress={goToPrevMonth}
@@ -671,7 +671,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           >
             <Ionicons name="chevron-back" size={20} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={styles.calendarMonthLabel}>{calendarMonthLabel}</Text>
+          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>{calendarMonthLabel}</Text>
           <TouchableOpacity
             onPress={goToNextMonth}
             style={styles.calendarNav}
@@ -682,7 +682,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         </View>
         <View style={styles.calendarDayHeaders}>
           {dayLabels.map(d => (
-            <Text key={d} style={styles.calendarDayHeader}>
+            <Text key={d} style={[styles.calendarDayHeader, { color: colors.inkFaint }]}>
               {d}
             </Text>
           ))}
@@ -702,19 +702,17 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   key={di}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.calendarDaySelected,
-                    isTodayDate && !isSelected && styles.calendarDayToday,
-                  ]}
+                    isSelected && styles.calendarDaySelected, isSelected && { backgroundColor: colors.cobalt },
+                    isTodayDate && !isSelected && styles.calendarDayToday, isTodayDate && !isSelected && { backgroundColor: colors.successLight }]}
                   onPress={() => handleSelectDate(day)}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
                   accessibilityRole="button"
                 >
                   <Text
                     style={[
-                      styles.calendarDayText,
-                      isSelected && styles.calendarDayTextSelected,
-                      isTodayDate && !isSelected && styles.calendarDayTextToday,
-                    ]}
+                      styles.calendarDayText, { color: colors.ink },
+                      isSelected && styles.calendarDayTextSelected, isSelected && { color: colors.white },
+                      isTodayDate && !isSelected && styles.calendarDayTextToday, isTodayDate && !isSelected && { color: colors.cobalt }]}
                   >
                     {day}
                   </Text>
@@ -749,7 +747,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     return (
-      <View style={styles.calendar}>
+      <View style={[styles.calendar, { backgroundColor: colors.background, borderColor: colors.border }]}>
         <View style={styles.calendarHeader}>
           <TouchableOpacity
             onPress={goToCutoffPrevMonth}
@@ -758,7 +756,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           >
             <Ionicons name="chevron-back" size={20} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={styles.calendarMonthLabel}>
+          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>
             {cutoffCalendarMonthLabel}
           </Text>
           <TouchableOpacity
@@ -771,7 +769,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         </View>
         <View style={styles.calendarDayHeaders}>
           {dayLabels.map(d => (
-            <Text key={d} style={styles.calendarDayHeader}>
+            <Text key={d} style={[styles.calendarDayHeader, { color: colors.inkFaint }]}>
               {d}
             </Text>
           ))}
@@ -791,19 +789,17 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   key={di}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.calendarDaySelected,
-                    isTodayDate && !isSelected && styles.calendarDayToday,
-                  ]}
+                    isSelected && styles.calendarDaySelected, isSelected && { backgroundColor: colors.cobalt },
+                    isTodayDate && !isSelected && styles.calendarDayToday, isTodayDate && !isSelected && { backgroundColor: colors.successLight }]}
                   onPress={() => handleSelectCutoffDate(day)}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
                   accessibilityRole="button"
                 >
                   <Text
                     style={[
-                      styles.calendarDayText,
-                      isSelected && styles.calendarDayTextSelected,
-                      isTodayDate && !isSelected && styles.calendarDayTextToday,
-                    ]}
+                      styles.calendarDayText, { color: colors.ink },
+                      isSelected && styles.calendarDayTextSelected, isSelected && { color: colors.white },
+                      isTodayDate && !isSelected && styles.calendarDayTextToday, isTodayDate && !isSelected && { color: colors.cobalt }]}
                   >
                     {day}
                   </Text>
@@ -838,7 +834,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     return (
-      <View style={styles.calendar}>
+      <View style={[styles.calendar, { backgroundColor: colors.background, borderColor: colors.border }]}>
         <View style={styles.calendarHeader}>
           <TouchableOpacity
             onPress={goToEndPrevMonth}
@@ -847,7 +843,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           >
             <Ionicons name="chevron-back" size={20} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={styles.calendarMonthLabel}>{endCalendarMonthLabel}</Text>
+          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>{endCalendarMonthLabel}</Text>
           <TouchableOpacity
             onPress={goToEndNextMonth}
             style={styles.calendarNav}
@@ -858,7 +854,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         </View>
         <View style={styles.calendarDayHeaders}>
           {dayLabels.map(d => (
-            <Text key={d} style={styles.calendarDayHeader}>
+            <Text key={d} style={[styles.calendarDayHeader, { color: colors.inkFaint }]}>
               {d}
             </Text>
           ))}
@@ -877,10 +873,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   key={di}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.calendarDaySelected,
-                    isTodayDate && !isSelected && styles.calendarDayToday,
-                    isBeforeStart && { opacity: 0.3 },
-                  ]}
+                    isSelected && styles.calendarDaySelected, isSelected && { backgroundColor: colors.cobalt },
+                    isTodayDate && !isSelected && styles.calendarDayToday, isTodayDate && !isSelected && { backgroundColor: colors.successLight },
+                    isBeforeStart && { opacity: 0.3 }]}
                   onPress={() => !isBeforeStart && handleSelectEndDate(day)}
                   disabled={isBeforeStart}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
@@ -888,10 +883,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 >
                   <Text
                     style={[
-                      styles.calendarDayText,
-                      isSelected && styles.calendarDayTextSelected,
-                      isTodayDate && !isSelected && styles.calendarDayTextToday,
-                    ]}
+                      styles.calendarDayText, { color: colors.ink },
+                      isSelected && styles.calendarDayTextSelected, isSelected && { color: colors.white },
+                      isTodayDate && !isSelected && styles.calendarDayTextToday, isTodayDate && !isSelected && { color: colors.cobalt }]}
                   >
                     {day}
                   </Text>
@@ -905,7 +899,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -924,13 +918,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           />
 
           {!leagueFormat && (
-            <View style={styles.formatHint}>
+            <View style={[styles.formatHint, { backgroundColor: colors.surface }]}>
               <Ionicons
                 name="information-circle-outline"
                 size={18}
                 color={colors.inkFaint}
               />
-              <Text style={styles.formatHintText}>
+              <Text style={[styles.formatHintText, { color: colors.inkFaint }]}>
                 Select a league format to configure the rest of the league
                 settings.
               </Text>
@@ -985,7 +979,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
               {/* Gender Restriction */}
               <View style={{ marginBottom: 16 }}>
-                <Text style={styles.fieldLabel}>Gender Restriction</Text>
+                <Text style={[styles.fieldLabel, { color: colors.ink }]}>Gender Restriction</Text>
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                   {[
                     { label: 'Open to All', value: '' },
@@ -1028,9 +1022,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
 
               {/* Calendar date picker for Season Start Date */}
-              <Text style={styles.fieldLabel}>Season Start Date</Text>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>Season Start Date</Text>
               <TouchableOpacity
-                style={styles.datePickerTrigger}
+                style={[styles.datePickerTrigger, { borderColor: colors.border, backgroundColor: colors.background }]}
                 onPress={() => setShowCalendar(!showCalendar)}
                 accessibilityRole="button"
                 accessibilityLabel="Select season start date"
@@ -1042,9 +1036,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
                 <Text
                   style={[
-                    styles.datePickerText,
-                    !startDate && styles.datePickerPlaceholder,
-                  ]}
+                    styles.datePickerText, { color: colors.ink },
+                    !startDate && styles.datePickerPlaceholder, !startDate && { color: colors.inkFaint }]}
                 >
                   {startDate ? formatDateDisplay(startDate) : 'Select a date'}
                 </Text>
@@ -1078,9 +1071,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               {/* End Date picker Ã¢â‚¬â€ visible for "All at Once" frequency */}
               {gameFrequency === 'all_at_once' && (
                 <>
-                  <Text style={styles.fieldLabel}>End Date</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.ink }]}>End Date</Text>
                   <TouchableOpacity
-                    style={styles.datePickerTrigger}
+                    style={[styles.datePickerTrigger, { borderColor: colors.border, backgroundColor: colors.background }]}
                     onPress={() => setShowEndCalendar(!showEndCalendar)}
                     accessibilityRole="button"
                     accessibilityLabel="Select end date"
@@ -1092,9 +1085,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     />
                     <Text
                       style={[
-                        styles.datePickerText,
-                        !endDate && styles.datePickerPlaceholder,
-                      ]}
+                        styles.datePickerText, { color: colors.ink },
+                        !endDate && styles.datePickerPlaceholder, !endDate && { color: colors.inkFaint }]}
                     >
                       {endDate
                         ? formatDateDisplay(endDate)
@@ -1117,7 +1109,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         size={16}
                         color={colors.heart}
                       />
-                      <Text style={styles.clearDateText}>Clear end date</Text>
+                      <Text style={[styles.clearDateText, { color: colors.heart }]}>Clear end date</Text>
                     </TouchableOpacity>
                   )}
                 </>
@@ -1188,8 +1180,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
               {/* Projected End Date Ã¢â‚¬â€ read-only */}
               <View style={styles.projectedEndRow}>
-                <Text style={styles.fieldLabel}>Projected End Date</Text>
-                <Text style={styles.projectedEndValue}>
+                <Text style={[styles.fieldLabel, { color: colors.ink }]}>Projected End Date</Text>
+                <Text style={[styles.projectedEndValue, { color: colors.cobalt }]}>
                   {projectedEndDate ||
                     (gameFrequency === 'all_at_once'
                       ? 'Select an end date above'
@@ -1212,25 +1204,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               {/* Game Day Ã¢â‚¬â€ hidden for "All at Once" frequency */}
               {gameFrequency !== 'all_at_once' && (
                 <>
-                  <Text style={styles.fieldLabel}>Game Day</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.ink }]}>Game Day</Text>
                   <View style={styles.dayChipsRow}>
                     {dayLabels.map((label, idx) => (
                       <TouchableOpacity
                         key={idx}
                         style={[
-                          styles.dayChip,
+                          styles.dayChip, { backgroundColor: colors.border, borderColor: colors.border },
                           preferredGameDays.includes(idx) &&
-                            styles.dayChipSelected,
-                        ]}
+                            styles.dayChipSelected, preferredGameDays.includes(idx) && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                         onPress={() => toggleGameDay(idx)}
                         activeOpacity={0.7}
                       >
                         <Text
                           style={[
-                            styles.dayChipText,
+                            styles.dayChipText, { color: colors.inkFaint },
                             preferredGameDays.includes(idx) &&
-                              styles.dayChipTextSelected,
-                          ]}
+                              styles.dayChipTextSelected, preferredGameDays.includes(idx) && { color: colors.white }]}
                         >
                           {label}
                         </Text>
@@ -1258,13 +1248,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               {/* Confirmed Rosters Ã¢â‚¬â€ displayed outside the invite card */}
               {addedRosters.length > 0 && (
                 <View style={styles.confirmedRostersSection}>
-                  <Text style={styles.confirmedRostersTitle}>
+                  <Text style={[styles.confirmedRostersTitle, { color: colors.ink }]}>
                     Rosters ({addedRosters.length})
                   </Text>
                   {addedRosters.map(item => (
-                    <View key={item.id} style={styles.addedRosterItem}>
+                    <View key={item.id} style={[styles.addedRosterItem, { backgroundColor: colors.surface, borderColor: colors.cobalt + '40' }]}>
                       <View style={styles.addedRosterInfo}>
-                        <View style={styles.addedRosterIcon}>
+                        <View style={[styles.addedRosterIcon, { backgroundColor: colors.cobalt }]}>
                           <Ionicons
                             name="shield-outline"
                             size={18}
@@ -1272,11 +1262,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           />
                         </View>
                         <View style={styles.addedRosterDetails}>
-                          <Text style={styles.addedRosterName}>
+                          <Text style={[styles.addedRosterName, { color: colors.ink }]}>
                             {item.name}
                           </Text>
                           {item.sportType && (
-                            <Text style={styles.addedRosterMeta}>
+                            <Text style={[styles.addedRosterMeta, { color: colors.inkFaint }]}>
                               {item.sportType} Ã¢â‚¬Â¢ {item.memberCount ?? 0} players
                             </Text>
                           )}
@@ -1300,12 +1290,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               )}
 
               {/* Invite Rosters Ã¢â‚¬â€ card with invited list and search */}
-              <View style={styles.addRostersSection}>
+              <View style={[styles.addRostersSection, { backgroundColor: colors.white, borderColor: colors.border }]}>
                 <View style={styles.addRostersHeader}>
-                  <Text style={styles.addRostersTitle}>Invite Rosters</Text>
+                  <Text style={[styles.addRostersTitle, { color: colors.ink }]}>Invite Rosters</Text>
                   {invitedRosters.length > 0 && (
-                    <View style={styles.rosterCountBadge}>
-                      <Text style={styles.rosterCountBadgeText}>
+                    <View style={[styles.rosterCountBadge, { backgroundColor: colors.cobalt }]}>
+                      <Text style={[styles.rosterCountBadgeText, { color: colors.white }]}>
                         {invitedRosters.length}
                       </Text>
                     </View>
@@ -1315,13 +1305,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 {/* Invited Rosters (pending confirmation) */}
                 {invitedRosters.length > 0 && (
                   <View style={styles.addedRostersContainer}>
-                    <Text style={styles.invitedRostersTitle}>
+                    <Text style={[styles.invitedRostersTitle, { color: colors.gold }]}>
                       Pending ({invitedRosters.length})
                     </Text>
                     {invitedRosters.map(item => (
-                      <View key={item.id} style={styles.invitedRosterItem}>
+                      <View key={item.id} style={[styles.invitedRosterItem, { backgroundColor: colors.warningLight, borderColor: colors.goldLight }]}>
                         <View style={styles.addedRosterInfo}>
-                          <View style={styles.invitedRosterIcon}>
+                          <View style={[styles.invitedRosterIcon, { backgroundColor: colors.gold }]}>
                             <Ionicons
                               name="time-outline"
                               size={18}
@@ -1329,10 +1319,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             />
                           </View>
                           <View style={styles.addedRosterDetails}>
-                            <Text style={styles.addedRosterName}>
+                            <Text style={[styles.addedRosterName, { color: colors.ink }]}>
                               {item.name}
                             </Text>
-                            <Text style={styles.invitedRosterStatus}>
+                            <Text style={[styles.invitedRosterStatus, { color: colors.gold }]}>
                               Pending confirmation
                             </Text>
                           </View>
@@ -1355,13 +1345,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 )}
 
                 {invitedRosters.length === 0 && (
-                  <Text style={styles.addRostersDescription}>
+                  <Text style={[styles.addRostersDescription, { color: colors.inkFaint }]}>
                     Search below to invite rosters to this league.
                   </Text>
                 )}
 
                 {/* Search Input */}
-                <View style={styles.rosterSearchContainer}>
+                <View style={[styles.rosterSearchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Ionicons
                     name="search"
                     size={20}
@@ -1369,7 +1359,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     style={styles.rosterSearchIcon}
                   />
                   <TextInput
-                    style={styles.rosterSearchInput}
+                    style={[styles.rosterSearchInput, { color: colors.ink }]}
                     value={rosterSearchQuery}
                     onChangeText={text => {
                       setRosterSearchQuery(text);
@@ -1392,19 +1382,19 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
                 {rosterSearchQuery.trim().length > 0 &&
                   rosterSearchQuery.trim().length < 2 && (
-                    <Text style={styles.searchHint}>
+                    <Text style={[styles.searchHint, { color: colors.inkFaint }]}>
                       Type at least 2 characters to search
                     </Text>
                   )}
 
                 {rosterSearchError && (
-                  <View style={styles.searchErrorRow}>
+                  <View style={[styles.searchErrorRow, { backgroundColor: colors.errorLight }]}>
                     <Ionicons
                       name="alert-circle"
                       size={16}
                       color={colors.heart}
                     />
-                    <Text style={styles.searchErrorText}>
+                    <Text style={[styles.searchErrorText, { color: colors.heart }]}>
                       {rosterSearchError}
                     </Text>
                   </View>
@@ -1412,20 +1402,20 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
                 {rosterSearchResults.length > 0 && (
                   <View style={styles.rosterResultsContainer}>
-                    <Text style={styles.rosterResultsHeader}>
+                    <Text style={[styles.rosterResultsHeader, { color: colors.inkFaint }]}>
                       {rosterSearchResults.length} roster
                       {rosterSearchResults.length !== 1 ? 's' : ''} found
                     </Text>
                     {rosterSearchResults.map(r => (
                       <TouchableOpacity
                         key={r.id}
-                        style={styles.rosterResultItem}
+                        style={[styles.rosterResultItem, { backgroundColor: colors.white, borderColor: colors.border }]}
                         onPress={() => handleAddRoster(r)}
                         accessibilityRole="button"
                         accessibilityLabel={`Add ${r.name}`}
                       >
                         <View style={styles.rosterResultInfo}>
-                          <View style={styles.rosterResultIcon}>
+                          <View style={[styles.rosterResultIcon, { backgroundColor: colors.inkFaint }]}>
                             <Ionicons
                               name="shield-outline"
                               size={16}
@@ -1433,11 +1423,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             />
                           </View>
                           <View style={styles.rosterResultDetails}>
-                            <Text style={styles.rosterResultName}>
+                            <Text style={[styles.rosterResultName, { color: colors.ink }]}>
                               {r.name}
                             </Text>
                             {r.sportType && (
-                              <Text style={styles.rosterResultMeta}>
+                              <Text style={[styles.rosterResultMeta, { color: colors.inkFaint }]}>
                                 {r.sportType} Ã¢â‚¬Â¢ {r.memberCount ?? 0} players
                               </Text>
                             )}
@@ -1463,10 +1453,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         size={40}
                         color={colors.inkFaint}
                       />
-                      <Text style={styles.rosterNoResultsText}>
+                      <Text style={[styles.rosterNoResultsText, { color: colors.inkFaint }]}>
                         No rosters found
                       </Text>
-                      <Text style={styles.rosterNoResultsHint}>
+                      <Text style={[styles.rosterNoResultsHint, { color: colors.inkFaint }]}>
                         Try a different roster name
                       </Text>
                     </View>
@@ -1474,13 +1464,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
 
               {/* Registration Cutoff Date */}
-              <Text style={styles.fieldLabel}>Registration Cutoff</Text>
-              <Text style={styles.cutoffDescription}>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>Registration Cutoff</Text>
+              <Text style={[styles.cutoffDescription, { color: colors.inkFaint }]}>
                 After this date, no more rosters can join. Game scheduling and
                 any registration fee transactions will be triggered.
               </Text>
               <TouchableOpacity
-                style={styles.datePickerTrigger}
+                style={[styles.datePickerTrigger, { borderColor: colors.border, backgroundColor: colors.background }]}
                 onPress={() => setShowCutoffCalendar(!showCutoffCalendar)}
                 accessibilityRole="button"
                 accessibilityLabel="Select registration cutoff date"
@@ -1492,9 +1482,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
                 <Text
                   style={[
-                    styles.datePickerText,
-                    !registrationCutoffDate && styles.datePickerPlaceholder,
-                  ]}
+                    styles.datePickerText, { color: colors.ink },
+                    !registrationCutoffDate && styles.datePickerPlaceholder, !registrationCutoffDate && { color: colors.inkFaint }]}
                 >
                   {registrationCutoffDate
                     ? formatDateDisplay(registrationCutoffDate)
@@ -1517,26 +1506,25 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     size={16}
                     color={colors.heart}
                   />
-                  <Text style={styles.clearDateText}>Clear cutoff date</Text>
+                  <Text style={[styles.clearDateText, { color: colors.heart }]}>Clear cutoff date</Text>
                 </TouchableOpacity>
               )}
 
               {/* Track Standings Toggle Ã¢â‚¬â€ hidden for tournament format */}
               {leagueFormat !== 'tournament' && (
-                <View style={styles.toggleCard}>
+                <View style={[styles.toggleCard, { backgroundColor: colors.white, borderColor: colors.border }]}>
                   <View style={styles.toggleRow}>
                     <View style={styles.toggleInfo}>
-                      <Text style={styles.toggleLabel}>Track Standings</Text>
-                      <Text style={styles.toggleDescription}>
+                      <Text style={[styles.toggleLabel, { color: colors.ink }]}>Track Standings</Text>
+                      <Text style={[styles.toggleDescription, { color: colors.inkFaint }]}>
                         Record wins, draws, and losses to maintain a league
                         standings table
                       </Text>
                     </View>
                     <TouchableOpacity
                       style={[
-                        styles.toggle,
-                        trackStandings && styles.toggleActive,
-                      ]}
+                        styles.toggle, { backgroundColor: colors.border },
+                        trackStandings && styles.toggleActive, trackStandings && { backgroundColor: colors.cobalt }]}
                       onPress={() => setTrackStandings(!trackStandings)}
                       activeOpacity={0.7}
                       accessibilityRole="switch"
@@ -1544,9 +1532,8 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     >
                       <View
                         style={[
-                          styles.toggleThumb,
-                          trackStandings && styles.toggleThumbActive,
-                        ]}
+                          styles.toggleThumb, { backgroundColor: colors.white },
+                          trackStandings && styles.toggleThumbActive]}
                       />
                     </TouchableOpacity>
                   </View>
@@ -1612,7 +1599,6 @@ const styles = StyleSheet.create({
   formatHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     gap: 8,
@@ -1621,12 +1607,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     lineHeight: 20,
   },
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   scrollView: {
     flex: 1,
@@ -1641,7 +1625,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 16,
     lineHeight: 22,
-    color: colors.ink,
     marginBottom: Spacing.xs,
     fontWeight: '600',
   },
@@ -1650,11 +1633,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: colors.background,
     marginBottom: Spacing.md,
     gap: 10,
   },
@@ -1662,16 +1643,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
-  datePickerPlaceholder: {
-    color: colors.inkFaint,
-  },
+  datePickerPlaceholder: {},
   calendar: {
-    backgroundColor: colors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: 12,
     marginBottom: Spacing.lg,
   },
@@ -1687,7 +1663,6 @@ const styles = StyleSheet.create({
   calendarMonthLabel: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.ink,
   },
   calendarDayHeaders: {
     flexDirection: 'row',
@@ -1698,7 +1673,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
   },
   calendarWeek: {
@@ -1711,23 +1685,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  calendarDaySelected: {
-    backgroundColor: colors.cobalt,
-  },
-  calendarDayToday: {
-    backgroundColor: colors.successLight,
-  },
+  calendarDaySelected: {},
+  calendarDayToday: {},
   calendarDayText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
   },
   calendarDayTextSelected: {
-    color: colors.white,
     fontFamily: fonts.semibold,
   },
   calendarDayTextToday: {
-    color: colors.cobalt,
     fontFamily: fonts.semibold,
   },
   // Projected end date
@@ -1737,18 +1704,15 @@ const styles = StyleSheet.create({
   projectedEndValue: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.cobalt,
     marginTop: 4,
   },
   // Toggle card
   toggleCard: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -1762,30 +1726,24 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.ink,
   },
   toggleDescription: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   toggle: {
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.border,
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
-  toggleActive: {
-    backgroundColor: colors.cobalt,
-  },
+  toggleActive: {},
   toggleThumb: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.white,
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -1798,7 +1756,6 @@ const styles = StyleSheet.create({
   cutoffDescription: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: Spacing.sm,
     lineHeight: 18,
   },
@@ -1812,7 +1769,6 @@ const styles = StyleSheet.create({
   clearDateText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.heart,
   },
   // Day chips
   dayChipsRow: {
@@ -1825,23 +1781,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.border,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  dayChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  dayChipSelected: {},
   dayChipText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     fontWeight: '600',
   },
-  dayChipTextSelected: {
-    color: colors.white,
-  },
+  dayChipTextSelected: {},
   // Confirmed Rosters section Ã¢â‚¬â€ displayed above the invite card
   confirmedRostersSection: {
     gap: 8,
@@ -1850,18 +1798,15 @@ const styles = StyleSheet.create({
   confirmedRostersTitle: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 4,
   },
   // Add Rosters section Ã¢â‚¬â€ matches Create Roster's Add Players pattern
   addRostersSection: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     gap: 12,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   addRostersHeader: {
     flexDirection: 'row',
@@ -1871,10 +1816,8 @@ const styles = StyleSheet.create({
   addRostersTitle: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.ink,
   },
   rosterCountBadge: {
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     minWidth: 24,
     height: 24,
@@ -1885,12 +1828,10 @@ const styles = StyleSheet.create({
   rosterCountBadgeText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.white,
   },
   addRostersDescription: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     lineHeight: 20,
   },
   addedRostersContainer: {
@@ -1899,17 +1840,14 @@ const styles = StyleSheet.create({
   addedRostersTitle: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.ink,
   },
   addedRosterItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.cobalt + '40',
   },
   addedRosterInfo: {
     flexDirection: 'row',
@@ -1920,7 +1858,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1931,13 +1868,11 @@ const styles = StyleSheet.create({
   addedRosterName: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 2,
   },
   addedRosterMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
   },
   removeRosterBtn: {
     padding: 4,
@@ -1946,23 +1881,19 @@ const styles = StyleSheet.create({
   invitedRostersTitle: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.gold,
   },
   invitedRosterItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.warningLight,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.goldLight,
   },
   invitedRosterIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.gold,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1970,7 +1901,6 @@ const styles = StyleSheet.create({
   invitedRosterStatus: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.gold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 2,
@@ -1978,16 +1908,13 @@ const styles = StyleSheet.create({
   searchHint: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     fontStyle: 'italic',
   },
   rosterSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -1998,7 +1925,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
     paddingVertical: 4,
   },
   rosterSearchSpinner: {
@@ -2008,14 +1934,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: colors.errorLight,
     borderRadius: 8,
     gap: 6,
   },
   searchErrorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     flex: 1,
   },
   rosterResultsContainer: {
@@ -2024,17 +1948,14 @@ const styles = StyleSheet.create({
   rosterResultsHeader: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.inkFaint,
   },
   rosterResultItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   rosterResultInfo: {
     flexDirection: 'row',
@@ -2045,7 +1966,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.inkFaint,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -2056,13 +1976,11 @@ const styles = StyleSheet.create({
   rosterResultName: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 2,
   },
   rosterResultMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
   },
   rosterNoResults: {
     alignItems: 'center',
@@ -2072,12 +1990,10 @@ const styles = StyleSheet.create({
   rosterNoResultsText: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.inkFaint,
   },
   rosterNoResultsHint: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     textAlign: 'center',
   },
   // Vertically stacked buttons Ã¢â‚¬â€ matching Roster edit screen

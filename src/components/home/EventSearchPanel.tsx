@@ -231,7 +231,7 @@ export function EventSearchPanel({
   if (!visible) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
@@ -266,7 +266,7 @@ export function EventSearchPanel({
       {/* Age filter */}
       <View style={styles.ageRow}>
         <TextInput
-          style={styles.ageInput}
+          style={[styles.ageInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.border, shadowColor: colors.black }]}
           placeholder="Min age"
           placeholderTextColor={colors.inkFaint}
           value={minAgeFilter}
@@ -274,7 +274,7 @@ export function EventSearchPanel({
           keyboardType="number-pad"
         />
         <TextInput
-          style={styles.ageInput}
+          style={[styles.ageInput, { backgroundColor: colors.white, color: colors.ink, borderColor: colors.border, shadowColor: colors.black }]}
           placeholder="Max age"
           placeholderTextColor={colors.inkFaint}
           value={maxAgeFilter}
@@ -285,10 +285,10 @@ export function EventSearchPanel({
 
       {/* Location */}
       <View style={styles.locationRow}>
-        <View style={styles.locationInput}>
+        <View style={[styles.locationInput, { backgroundColor: colors.white, borderColor: colors.white }]}>
           <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
           <TextInput
-            style={styles.locationText}
+            style={[styles.locationText, { color: colors.ink }]}
             placeholder="City or venue"
             placeholderTextColor={colors.inkFaint}
             value={locationText}
@@ -302,7 +302,7 @@ export function EventSearchPanel({
           />
         </View>
         <TouchableOpacity
-          style={styles.gpsBtn}
+          style={[styles.gpsBtn, { backgroundColor: colors.white, borderColor: colors.white }]}
           onPress={handleUseCurrentLocation}
           disabled={locationLoading}
         >
@@ -317,7 +317,7 @@ export function EventSearchPanel({
       {/* Reset link */}
       {hasFilters && (
         <TouchableOpacity onPress={handleReset} style={styles.resetRow}>
-          <Text style={styles.resetText}>Reset Filters</Text>
+          <Text style={[styles.resetText, { color: colors.heart }]}>Reset Filters</Text>
         </TouchableOpacity>
       )}
 
@@ -329,7 +329,7 @@ export function EventSearchPanel({
       ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.inkFaint }]}>
             {hasFilters ? 'No games found' : 'Start searching for games'}
           </Text>
         </View>
@@ -347,7 +347,7 @@ export function EventSearchPanel({
 
       {/* Create Event pinned at bottom */}
       <TouchableOpacity
-        style={styles.createBtn}
+        style={[styles.createBtn, { backgroundColor: colors.cobalt }]}
         onPress={onCreateEvent}
         activeOpacity={0.85}
       >
@@ -356,7 +356,7 @@ export function EventSearchPanel({
           size={20}
           color={colors.white}
         />
-        <Text style={styles.createBtnText}>Create Event</Text>
+        <Text style={[styles.createBtnText, { color: colors.white }]}>Create Event</Text>
       </TouchableOpacity>
     </View>
   );
@@ -369,7 +369,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
     zIndex: 50,
   },
   filterRow: {
@@ -387,16 +386,12 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: colors.white,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -413,26 +408,21 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     gap: 6,
     borderWidth: 1,
-    borderColor: colors.white,
   },
   locationText: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
   },
   gpsBtn: {
-    backgroundColor: colors.white,
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: colors.white,
   },
   resetRow: {
     alignItems: 'flex-end',
@@ -442,7 +432,6 @@ const styles = StyleSheet.create({
   resetText: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.heart,
   },
   centered: {
     flex: 1,
@@ -453,7 +442,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
   },
   listContent: {
     paddingBottom: 80,
@@ -466,13 +454,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cobalt,
     paddingVertical: 16,
     gap: 8,
   },
   createBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
 });

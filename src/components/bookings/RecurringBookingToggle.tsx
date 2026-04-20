@@ -58,11 +58,11 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
   maxEndDate.setFullYear(maxEndDate.getFullYear() + 1);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: `${colors.inkFaint}20` }]}>
       <View style={styles.toggleRow}>
         <View style={styles.toggleLabel}>
           <Ionicons name="repeat" size={20} color={colors.cobalt} />
-          <Text style={styles.toggleText}>Repeat Booking</Text>
+          <Text style={[styles.toggleText, { color: colors.ink }]}>Repeat Booking</Text>
         </View>
         <Switch
           value={value.enabled}
@@ -76,40 +76,36 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
       </View>
 
       {value.enabled && (
-        <View style={styles.options}>
+        <View style={[styles.options, { borderTopColor: `${colors.inkFaint}15` }]}>
           {/* Frequency selector */}
-          <Text style={styles.fieldLabel}>Frequency</Text>
+          <Text style={[styles.fieldLabel, { color: colors.inkFaint }]}>Frequency</Text>
           <View style={styles.frequencyRow}>
             <TouchableOpacity
               style={[
-                styles.freqButton,
-                value.frequency === 'weekly' && styles.freqButtonActive,
-              ]}
+                styles.freqButton, { borderColor: `${colors.inkFaint}30` },
+                value.frequency === 'weekly' && styles.freqButtonActive, value.frequency === 'weekly' && { backgroundColor: `${colors.cobalt}15`, borderColor: colors.cobalt }]}
               onPress={() => handleFrequency('weekly')}
               activeOpacity={0.7}
             >
               <Text
                 style={[
-                  styles.freqText,
-                  value.frequency === 'weekly' && styles.freqTextActive,
-                ]}
+                  styles.freqText, { color: colors.inkFaint },
+                  value.frequency === 'weekly' && styles.freqTextActive, value.frequency === 'weekly' && { color: colors.cobalt }]}
               >
                 Weekly
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
-                styles.freqButton,
-                value.frequency === 'monthly' && styles.freqButtonActive,
-              ]}
+                styles.freqButton, { borderColor: `${colors.inkFaint}30` },
+                value.frequency === 'monthly' && styles.freqButtonActive, value.frequency === 'monthly' && { backgroundColor: `${colors.cobalt}15`, borderColor: colors.cobalt }]}
               onPress={() => handleFrequency('monthly')}
               activeOpacity={0.7}
             >
               <Text
                 style={[
-                  styles.freqText,
-                  value.frequency === 'monthly' && styles.freqTextActive,
-                ]}
+                  styles.freqText, { color: colors.inkFaint },
+                  value.frequency === 'monthly' && styles.freqTextActive, value.frequency === 'monthly' && { color: colors.cobalt }]}
               >
                 Monthly
               </Text>
@@ -117,9 +113,9 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
           </View>
 
           {/* End date picker */}
-          <Text style={styles.fieldLabel}>Repeat Until</Text>
+          <Text style={[styles.fieldLabel, { color: colors.inkFaint }]}>Repeat Until</Text>
           <TouchableOpacity
-            style={styles.dateButton}
+            style={[styles.dateButton, { borderColor: `${colors.inkFaint}30`, backgroundColor: colors.surface }]}
             onPress={() => setShowDatePicker(true)}
             activeOpacity={0.7}
           >
@@ -128,7 +124,7 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
               size={18}
               color={colors.inkFaint}
             />
-            <Text style={styles.dateText}>
+            <Text style={[styles.dateText, { color: colors.ink }]}>
               {value.endDate ? formatDate(value.endDate) : 'Select end date'}
             </Text>
           </TouchableOpacity>
@@ -151,12 +147,10 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: `${colors.inkFaint}20`,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -171,18 +165,15 @@ const styles = StyleSheet.create({
   toggleText: {
     fontFamily: fonts.ui,
     ...typeScale.body,
-    color: colors.ink,
   },
   options: {
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: `${colors.inkFaint}15`,
   },
   fieldLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -197,21 +188,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: `${colors.inkFaint}30`,
     alignItems: 'center',
   },
-  freqButtonActive: {
-    backgroundColor: `${colors.cobalt}15`,
-    borderColor: colors.cobalt,
-  },
+  freqButtonActive: {},
   freqText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.inkFaint,
   },
-  freqTextActive: {
-    color: colors.cobalt,
-  },
+  freqTextActive: {},
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -220,12 +204,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: `${colors.inkFaint}30`,
-    backgroundColor: colors.surface,
   },
   dateText: {
     fontFamily: fonts.body,
     ...typeScale.body,
-    color: colors.ink,
   },
 });

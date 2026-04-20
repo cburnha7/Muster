@@ -111,8 +111,8 @@ export function AddressAutocomplete({
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={styles.inputRow}>
+      {label ? <Text style={[styles.label, { color: colors.inkSoft }]}>{label}</Text> : null}
+      <View style={[styles.inputRow, { backgroundColor: colors.white, borderColor: colors.border }]}>
         <Ionicons
           name="search-outline"
           size={18}
@@ -120,7 +120,7 @@ export function AddressAutocomplete({
           style={styles.searchIcon}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: colors.ink }]}
           placeholder={placeholder}
           placeholderTextColor={colors.inkFaint}
           value={value}
@@ -137,15 +137,14 @@ export function AddressAutocomplete({
       </View>
 
       {suggestions.length > 0 && (
-        <View style={styles.suggestionsContainer}>
+        <View style={[styles.suggestionsContainer, { backgroundColor: colors.white, borderColor: colors.border, shadowColor: colors.black }]}>
           {suggestions.slice(0, 5).map((suggestion, idx) => (
             <TouchableOpacity
               key={suggestion.place_id || idx}
               style={[
                 styles.suggestionItem,
                 idx < Math.min(suggestions.length, 5) - 1 &&
-                  styles.suggestionBorder,
-              ]}
+                  styles.suggestionBorder, idx < Math.min(suggestions.length, 5) - 1 && { borderBottomColor: colors.border }]}
               onPress={() => handleSelect(suggestion)}
               activeOpacity={0.7}
             >
@@ -156,17 +155,17 @@ export function AddressAutocomplete({
                 style={styles.suggestionIcon}
               />
               <View style={styles.suggestionTextContainer}>
-                <Text style={styles.suggestionMain} numberOfLines={1}>
+                <Text style={[styles.suggestionMain, { color: colors.ink }]} numberOfLines={1}>
                   {suggestion.structured_formatting?.main_text ||
                     suggestion.description}
                 </Text>
-                <Text style={styles.suggestionSecondary} numberOfLines={1}>
+                <Text style={[styles.suggestionSecondary, { color: colors.inkSoft }]} numberOfLines={1}>
                   {suggestion.structured_formatting?.secondary_text || ''}
                 </Text>
               </View>
             </TouchableOpacity>
           ))}
-          <Text style={styles.poweredBy}>powered by Google</Text>
+          <Text style={[styles.poweredBy, { color: colors.inkFaint }]}>powered by Google</Text>
         </View>
       )}
     </View>
@@ -180,7 +179,6 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 6,
@@ -188,10 +186,8 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
@@ -202,20 +198,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     padding: 0,
   },
   loader: {
     marginLeft: 8,
   },
   suggestionsContainer: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     marginTop: 4,
     overflow: 'hidden',
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -229,7 +221,6 @@ const styles = StyleSheet.create({
   },
   suggestionBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
   suggestionIcon: {
     marginRight: 10,
@@ -241,18 +232,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     fontWeight: '600',
-    color: colors.ink,
   },
   suggestionSecondary: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSoft,
     marginTop: 1,
   },
   poweredBy: {
     fontFamily: fonts.body,
     fontSize: 10,
-    color: colors.inkFaint,
     textAlign: 'right',
     paddingHorizontal: 14,
     paddingVertical: 6,

@@ -241,7 +241,7 @@ export const RegistrationScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
@@ -261,9 +261,8 @@ export const RegistrationScreen: React.FC = () => {
               <View
                 key={i}
                 style={[
-                  styles.progressDot,
-                  i <= step && styles.progressDotActive,
-                ]}
+                  styles.progressDot, { backgroundColor: colors.outlineVariant },
+                  i <= step && styles.progressDotActive, i <= step && { backgroundColor: colors.primary }]}
               />
             ))}
           </View>
@@ -275,13 +274,13 @@ export const RegistrationScreen: React.FC = () => {
         {/* Animated step content */}
         <Animated.View style={[styles.inner, { opacity: fadeAnim }]}>
           {/* Header */}
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{subtitle}</Text>
 
           {/* General error */}
           {errors.general && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{errors.general}</Text>
+            <View style={[styles.errorBanner, { backgroundColor: colors.errorContainer }]}>
+              <Text style={[styles.errorText, { color: colors.onErrorContainer }]}>{errors.general}</Text>
             </View>
           )}
 
@@ -304,9 +303,9 @@ export const RegistrationScreen: React.FC = () => {
                     disabled={isLoading || ssoLoading !== null}
                   />
                   <View style={styles.divider}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerText}>or</Text>
-                    <View style={styles.dividerLine} />
+                    <View style={[styles.dividerLine, { backgroundColor: colors.outlineVariant }]} />
+                    <Text style={[styles.dividerText, { color: colors.outline }]}>or</Text>
+                    <View style={[styles.dividerLine, { backgroundColor: colors.outlineVariant }]} />
                   </View>
                 </>
               )}
@@ -389,13 +388,13 @@ export const RegistrationScreen: React.FC = () => {
               <View style={styles.termsSection}>
                 <Checkbox
                   label={
-                    <Text style={styles.checkboxLabel}>
+                    <Text style={[styles.checkboxLabel, { color: colors.onSurfaceVariant }]}>
                       I agree to the{' '}
-                      <Text style={styles.link} onPress={handleOpenTerms}>
+                      <Text style={[styles.link, { color: colors.primary }]} onPress={handleOpenTerms}>
                         Terms of Service
                       </Text>{' '}
                       and{' '}
-                      <Text style={styles.link} onPress={handleOpenPrivacy}>
+                      <Text style={[styles.link, { color: colors.primary }]} onPress={handleOpenPrivacy}>
                         Privacy Policy
                       </Text>
                     </Text>
@@ -428,8 +427,8 @@ export const RegistrationScreen: React.FC = () => {
               onPress={() => navigation.navigate('Login' as never)}
               activeOpacity={0.75}
             >
-              <Text style={styles.loginLinkText}>
-                Already have an account? <Text style={styles.link}>Log In</Text>
+              <Text style={[styles.loginLinkText, { color: colors.onSurfaceVariant }]}>
+                Already have an account? <Text style={[styles.link, { color: colors.primary }]}>Log In</Text>
               </Text>
             </TouchableOpacity>
           )}
@@ -442,7 +441,6 @@ export const RegistrationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -472,10 +470,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.outlineVariant,
   },
   progressDotActive: {
-    backgroundColor: colors.primary,
     width: 24,
     borderRadius: 4,
   },
@@ -493,14 +489,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.onSurface,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
     lineHeight: 24,
     marginBottom: 32,
   },
@@ -519,19 +513,16 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.outlineVariant,
     opacity: 0.4,
   },
   dividerText: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.outline,
     marginHorizontal: 16,
   },
 
   // ── Error banner ────────────────────────
   errorBanner: {
-    backgroundColor: colors.errorContainer,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -540,7 +531,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.onErrorContainer,
     textAlign: 'center',
   },
 
@@ -551,11 +541,9 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
     lineHeight: 20,
   },
   link: {
-    color: colors.primary,
     fontFamily: fonts.headingSemi,
   },
 
@@ -576,6 +564,5 @@ const styles = StyleSheet.create({
   loginLinkText: {
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
   },
 });

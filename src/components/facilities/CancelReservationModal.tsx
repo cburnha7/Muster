@@ -83,12 +83,12 @@ export function CancelReservationModal({
           onPress={handleClose}
         />
 
-        <View style={styles.modal}>
-          <View style={styles.header}>
+        <View style={[styles.modal, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+          <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
             <View style={styles.iconContainer}>
               <Ionicons name="alert-circle" size={24} color={colors.heart} />
             </View>
-            <Text style={styles.title}>Cancel Reservation</Text>
+            <Text style={[styles.title, { color: colors.ink }]}>Cancel Reservation</Text>
             <TouchableOpacity
               onPress={handleClose}
               style={styles.closeButton}
@@ -99,30 +99,30 @@ export function CancelReservationModal({
           </View>
 
           {reservationDetails && (
-            <View style={styles.detailsContainer}>
-              <Text style={styles.detailsTitle}>Reservation Details:</Text>
-              <Text style={styles.detailsText}>
+            <View style={[styles.detailsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+              <Text style={[styles.detailsTitle, { color: colors.mid }]}>Reservation Details:</Text>
+              <Text style={[styles.detailsText, { color: colors.ink }]}>
                 {reservationDetails.facilityName} -{' '}
                 {reservationDetails.courtName}
               </Text>
-              <Text style={styles.detailsText}>
+              <Text style={[styles.detailsText, { color: colors.ink }]}>
                 {reservationDetails.date} at {reservationDetails.time}
               </Text>
             </View>
           )}
 
           <View style={styles.content}>
-            <Text style={styles.warningText}>
+            <Text style={[styles.warningText, { color: colors.inkFaint }]}>
               Your cancellation request will be sent to the facility owner for
               approval. Once approved, you will receive a refund according to
               the cancellation policy.
             </Text>
 
-            <Text style={styles.label}>
-              Cancellation Reason <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.ink }]}>
+              Cancellation Reason <Text style={[styles.required, { color: colors.heart }]}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.background, color: colors.ink }]}
               placeholder="Please provide a reason for cancellation (minimum 10 characters)"
               placeholderTextColor={colors.inkFaint}
               value={reason}
@@ -133,12 +133,12 @@ export function CancelReservationModal({
               editable={!isSubmitting}
               maxLength={500}
             />
-            <Text style={styles.charCount}>
+            <Text style={[styles.charCount, { color: colors.inkFaint }]}>
               {reason.length}/500 characters (minimum 10)
             </Text>
           </View>
 
-          <View style={styles.actions}>
+          <View style={[styles.actions, { borderTopColor: colors.border }]}>
             <FormButton
               title="Keep Reservation"
               variant="outline"
@@ -150,7 +150,7 @@ export function CancelReservationModal({
               title={isSubmitting ? 'Submitting...' : 'Request Cancellation'}
               variant="primary"
               onPress={handleConfirm}
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button, styles.cancelButton, { backgroundColor: colors.heart }]}
               disabled={isSubmitting || reason.trim().length < 10}
             />
           </View>
@@ -173,11 +173,9 @@ const styles = StyleSheet.create({
   modal: {
     width: '90%',
     maxWidth: 500,
-    backgroundColor: colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 5,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -187,16 +185,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   iconContainer: {
     marginRight: Spacing.sm,
   },
   title: {
     ...TextStyles.h4,
-    color: colors.ink,
     flex: 1,
   },
   closeButton: {
@@ -205,19 +200,15 @@ const styles = StyleSheet.create({
   detailsContainer: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   detailsTitle: {
     ...TextStyles.caption,
     fontWeight: '600',
-    color: colors.mid,
     marginBottom: Spacing.xs,
   },
   detailsText: {
     ...TextStyles.body,
-    color: colors.ink,
     marginBottom: 2,
   },
   content: {
@@ -226,33 +217,25 @@ const styles = StyleSheet.create({
   },
   warningText: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     marginBottom: Spacing.lg,
     lineHeight: 20,
   },
   label: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: Spacing.sm,
   },
-  required: {
-    color: colors.heart,
-  },
+  required: {},
   input: {
     ...TextStyles.body,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     minHeight: 100,
-    backgroundColor: colors.background,
-    color: colors.ink,
   },
   charCount: {
     ...TextStyles.caption,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
     textAlign: 'right',
   },
@@ -262,12 +245,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     gap: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   button: {
     flex: 1,
   },
-  cancelButton: {
-    backgroundColor: colors.heart,
-  },
+  cancelButton: {},
 });

@@ -132,11 +132,11 @@ export function BlockTimeSlotModal({
       onRequestClose={handleClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
+        <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <View>
-              <Text style={styles.modalTitle}>Block Time Slot</Text>
-              <Text style={styles.modalSubtitle}>{courtName}</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>Block Time Slot</Text>
+              <Text style={[styles.modalSubtitle, { color: colors.inkFaint }]}>{courtName}</Text>
             </View>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={colors.ink} />
@@ -146,10 +146,10 @@ export function BlockTimeSlotModal({
           <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
             {/* Date Display */}
             <View style={styles.field}>
-              <Text style={styles.label}>Date</Text>
-              <View style={styles.dateDisplay}>
+              <Text style={[styles.label, { color: colors.ink }]}>Date</Text>
+              <View style={[styles.dateDisplay, { backgroundColor: colors.background, borderColor: colors.border }]}>
                 <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
-                <Text style={styles.dateText}>
+                <Text style={[styles.dateText, { color: colors.ink }]}>
                   {new Date(selectedDate).toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'long',
@@ -162,13 +162,13 @@ export function BlockTimeSlotModal({
 
             {/* Start Time */}
             <View style={styles.field}>
-              <Text style={styles.label}>Start Time</Text>
+              <Text style={[styles.label, { color: colors.ink }]}>Start Time</Text>
               <TouchableOpacity
-                style={styles.timeButton}
+                style={[styles.timeButton, { backgroundColor: colors.background, borderColor: colors.border }]}
                 onPress={() => setShowStartPicker(true)}
               >
                 <Ionicons name="time-outline" size={20} color={colors.cobalt} />
-                <Text style={styles.timeButtonText}>{formatTime12(formatTime24(startTime))}</Text>
+                <Text style={[styles.timeButtonText, { color: colors.ink }]}>{formatTime12(formatTime24(startTime))}</Text>
                 <Ionicons name="chevron-down" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
               {showStartPicker && (
@@ -185,13 +185,13 @@ export function BlockTimeSlotModal({
 
             {/* End Time */}
             <View style={styles.field}>
-              <Text style={styles.label}>End Time</Text>
+              <Text style={[styles.label, { color: colors.ink }]}>End Time</Text>
               <TouchableOpacity
-                style={styles.timeButton}
+                style={[styles.timeButton, { backgroundColor: colors.background, borderColor: colors.border }]}
                 onPress={() => setShowEndPicker(true)}
               >
                 <Ionicons name="time-outline" size={20} color={colors.cobalt} />
-                <Text style={styles.timeButtonText}>{formatTime12(formatTime24(endTime))}</Text>
+                <Text style={[styles.timeButtonText, { color: colors.ink }]}>{formatTime12(formatTime24(endTime))}</Text>
                 <Ionicons name="chevron-down" size={20} color={colors.inkFaint} />
               </TouchableOpacity>
               {showEndPicker && (
@@ -208,11 +208,11 @@ export function BlockTimeSlotModal({
 
             {/* Block Reason */}
             <View style={styles.field}>
-              <Text style={styles.label}>
-                Reason for Blocking <Text style={styles.required}>*</Text>
+              <Text style={[styles.label, { color: colors.ink }]}>
+                Reason for Blocking <Text style={[styles.required, { color: colors.heart }]}>*</Text>
               </Text>
               <TextInput
-                style={styles.textArea}
+                style={[styles.textArea, { backgroundColor: colors.background, borderColor: colors.border, color: colors.ink }]}
                 value={blockReason}
                 onChangeText={setBlockReason}
                 placeholder="e.g., Maintenance, Private event, Weather conditions"
@@ -221,35 +221,35 @@ export function BlockTimeSlotModal({
                 numberOfLines={4}
                 textAlignVertical="top"
               />
-              <Text style={styles.hint}>
+              <Text style={[styles.hint, { color: colors.inkFaint }]}>
                 This reason will be visible to users viewing availability
               </Text>
             </View>
 
             {/* Info Box */}
-            <View style={styles.infoBox}>
+            <View style={[styles.infoBox, { backgroundColor: colors.inkSoft + '20', borderColor: colors.ink + '40' }]}>
               <Ionicons name="information-circle" size={20} color={colors.ink} />
-              <Text style={styles.infoText}>
+              <Text style={[styles.infoText, { color: colors.ink }]}>
                 Blocked time slots cannot be booked by users. You can unblock them later if needed.
               </Text>
             </View>
           </ScrollView>
 
-          <View style={styles.modalFooter}>
+          <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button, styles.cancelButton, { backgroundColor: colors.background, borderColor: colors.border }]}
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={[styles.cancelButtonText, { color: colors.ink }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.blockButton, loading && styles.buttonDisabled]}
+              style={[styles.button, styles.blockButton, { backgroundColor: colors.heart }, loading && styles.buttonDisabled]}
               onPress={handleBlockSlot}
               disabled={loading}
             >
               <Ionicons name="close-circle" size={20} color={colors.surface} />
-              <Text style={styles.blockButtonText}>
+              <Text style={[styles.blockButtonText, { color: colors.surface }]}>
                 {loading ? 'Blocking...' : 'Block Slot'}
               </Text>
             </TouchableOpacity>
@@ -267,7 +267,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -278,16 +277,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: 4,
   },
   closeButton: {
@@ -302,69 +298,53 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: Spacing.sm,
   },
-  required: {
-    color: colors.heart,
-  },
+  required: {},
   dateDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: colors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   dateText: {
     fontSize: 15,
-    color: colors.ink,
   },
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: colors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   timeButtonText: {
     flex: 1,
     fontSize: 15,
-    color: colors.ink,
   },
   textArea: {
-    backgroundColor: colors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: Spacing.md,
     fontSize: 15,
-    color: colors.ink,
     minHeight: 100,
   },
   hint: {
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
   },
   infoBox: {
     flexDirection: 'row',
     gap: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: colors.inkSoft + '20',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.ink + '40',
   },
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: colors.ink,
     lineHeight: 18,
   },
   modalFooter: {
@@ -372,7 +352,6 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   button: {
     flex: 1,
@@ -385,22 +364,16 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   cancelButton: {
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
   },
-  blockButton: {
-    backgroundColor: colors.heart,
-  },
+  blockButton: {},
   blockButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.surface,
   },
   buttonDisabled: {
     opacity: 0.5,

@@ -16,8 +16,8 @@ export function EmptyHomeState({ userName, onCreateEvent }: EmptyHomeStateProps)
 
   return (
     <View style={styles.container}>
-      <Text style={styles.greeting}>{greeting}, {firstName}</Text>
-      <Text style={styles.message}>
+      <Text style={[styles.greeting, { color: colors.onSurface }]}>{greeting}, {firstName}</Text>
+      <Text style={[styles.message, { color: colors.onSurfaceVariant }]}>
         No games on the schedule yet.{'\n'}Time to get one going.
       </Text>
 
@@ -49,14 +49,12 @@ const styles = StyleSheet.create({
   greeting: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.onSurface,
     letterSpacing: -0.4,
     textAlign: 'center',
   },
   message: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 24,
     marginTop: 8,

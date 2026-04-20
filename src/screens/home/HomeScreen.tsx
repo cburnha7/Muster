@@ -680,7 +680,7 @@ export function HomeScreen() {
 
   if (authLoading || isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <LoadingSpinner size={40} color={colors.primary} />
       </View>
     );
@@ -688,14 +688,14 @@ export function HomeScreen() {
 
   if (error) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ErrorDisplay message={error} onRetry={handleRefresh} />
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -737,7 +737,7 @@ export function HomeScreen() {
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
             <View
-              style={[styles.calendarCard, { backgroundColor: colors.bgCard }]}
+              style={[styles.calendarCard, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.ink }, { backgroundColor: colors.bgCard }]}
             >
               <Calendar
                 current={selectedDate}
@@ -761,13 +761,13 @@ export function HomeScreen() {
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.onSurface }, { color: colors.textPrimary }]}>
               Games near you
             </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Events' as any)}
             >
-              <Text style={styles.seeAll}>See all</Text>
+              <Text style={[styles.seeAll, { color: colors.cobalt }]}>See all</Text>
             </TouchableOpacity>
           </View>
 
@@ -782,9 +782,8 @@ export function HomeScreen() {
               <TouchableOpacity
                 key={event.id}
                 style={[
-                  styles.discoverCard,
-                  { backgroundColor: colors.bgCard },
-                ]}
+                  styles.discoverCard, { backgroundColor: colors.surfaceContainerLowest },
+                  { backgroundColor: colors.bgCard }]}
                 onPress={() =>
                   navigation.navigate('EventDetails', { eventId: event.id })
                 }
@@ -792,9 +791,8 @@ export function HomeScreen() {
               >
                 <View
                   style={[
-                    styles.discoverIcon,
-                    { backgroundColor: colors.bgSubtle },
-                  ]}
+                    styles.discoverIcon, { backgroundColor: colors.surfaceContainerLow },
+                    { backgroundColor: colors.bgSubtle }]}
                 >
                   <Text style={{ fontSize: 20 }}>
                     {getSportEmoji(event.sportType)}
@@ -803,18 +801,16 @@ export function HomeScreen() {
                 <View style={styles.discoverInfo}>
                   <Text
                     style={[
-                      styles.discoverTitle,
-                      { color: colors.textPrimary },
-                    ]}
+                      styles.discoverTitle, { color: colors.onSurface },
+                      { color: colors.textPrimary }]}
                     numberOfLines={1}
                   >
                     {event.title}
                   </Text>
                   <Text
                     style={[
-                      styles.discoverMeta,
-                      { color: colors.textSecondary },
-                    ]}
+                      styles.discoverMeta, { color: colors.onSurfaceVariant },
+                      { color: colors.textSecondary }]}
                     numberOfLines={1}
                   >
                     {formatEventTime(event.startTime)} {'\u00B7'}{' '}
@@ -831,9 +827,8 @@ export function HomeScreen() {
                 >
                   <Text
                     style={[
-                      styles.joinBtnText,
-                      { color: colors.textSecondary },
-                    ]}
+                      styles.joinBtnText, { color: colors.cobalt },
+                      { color: colors.textSecondary }]}
                   >
                     Join
                   </Text>
@@ -842,16 +837,16 @@ export function HomeScreen() {
             ))
           ) : (
             <View
-              style={[styles.discoverEmpty, { backgroundColor: colors.bgCard }]}
+              style={[styles.discoverEmpty, { backgroundColor: colors.surfaceContainerLowest }, { backgroundColor: colors.bgCard }]}
             >
-              <Text style={styles.discoverEmptyText}>
+              <Text style={[styles.discoverEmptyText, { color: colors.onSurfaceVariant }]}>
                 No games near you yet
               </Text>
               <TouchableOpacity
-                style={styles.hostFirstBtn}
+                style={[styles.hostFirstBtn, { backgroundColor: colors.cobalt }]}
                 onPress={handleCreateEvent}
               >
-                <Text style={styles.hostFirstBtnText}>Host the first one</Text>
+                <Text style={[styles.hostFirstBtnText, { color: colors.white }]}>Host the first one</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -860,7 +855,7 @@ export function HomeScreen() {
 
       {/* FAB */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.cobalt }]}
         onPress={handleCreateEvent}
         activeOpacity={0.85}
         accessibilityRole="button"
@@ -915,7 +910,6 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -931,27 +925,23 @@ const styles = StyleSheet.create({
   // ── Loading ─────────────────────────────
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.outline,
   },
 
   // ── Inbox button ────────────────────────
   inboxBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
     marginTop: 20,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -961,13 +951,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.pine,
   },
   inboxBtnText: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurface,
   },
 
   // ── Calendar section ────────────────────
@@ -975,10 +963,8 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   calendarCard: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 20,
     padding: 8,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
@@ -990,7 +976,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.outline,
     textAlign: 'center',
     paddingVertical: 24,
   },
@@ -1006,20 +991,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
     letterSpacing: -0.3,
   },
   seeAll: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.cobalt,
   },
 
   // ── Discover cards ────────────────────
   discoverCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 14,
     marginBottom: 10,
@@ -1029,7 +1011,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: colors.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1039,12 +1020,10 @@ const styles = StyleSheet.create({
   discoverTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.onSurface,
   },
   discoverMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
     marginTop: 2,
   },
   joinBtn: {
@@ -1054,12 +1033,10 @@ const styles = StyleSheet.create({
   joinBtnText: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.cobalt,
   },
 
   // ── Discover empty ────────────────────
   discoverEmpty: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -1067,11 +1044,9 @@ const styles = StyleSheet.create({
   discoverEmptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurfaceVariant,
     marginBottom: 12,
   },
   hostFirstBtn: {
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -1079,7 +1054,6 @@ const styles = StyleSheet.create({
   hostFirstBtnText: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.white,
   },
 
   // ── Upcoming section ───────────────────
@@ -1095,10 +1069,8 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -1108,17 +1080,14 @@ const styles = StyleSheet.create({
   // ── Inbox modal ─────────────────────────
   inboxBackdrop: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingBottom: 70,
   },
   inboxModal: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 24,
     maxHeight: '80%',
     overflow: 'hidden',
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 32,
@@ -1134,7 +1103,6 @@ const styles = StyleSheet.create({
   inboxTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.onSurface,
   },
   inboxScroll: {
     paddingVertical: 8,

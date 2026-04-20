@@ -144,11 +144,11 @@ export function SearchResultsScreen({
 
   const renderTabButton = (tab: TabType, label: string, count?: number) => (
     <TouchableOpacity
-      style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
+      style={[styles.tabButton, { backgroundColor: colors.surface }, activeTab === tab && styles.tabButtonActive, activeTab === tab && { backgroundColor: colors.cobalt }]}
       onPress={() => setActiveTab(tab)}
       activeOpacity={0.75}
     >
-      <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+      <Text style={[styles.tabText, { color: colors.inkSoft }, activeTab === tab && styles.tabTextActive, activeTab === tab && { color: colors.white }]}>
         {label}
         {count !== undefined && ` (${count})`}
       </Text>
@@ -158,8 +158,8 @@ export function SearchResultsScreen({
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="search-outline" size={64} color={colors.inkFaint} />
-      <Text style={styles.emptyTitle}>No results found</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={[styles.emptyTitle, { color: colors.ink }]}>No results found</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.inkSoft }]}>
         Try adjusting your search or filters
       </Text>
     </View>
@@ -170,7 +170,7 @@ export function SearchResultsScreen({
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={styles.loadingText}>Searching...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkSoft }]}>Searching...</Text>
         </View>
       );
     }
@@ -313,7 +313,7 @@ export function SearchResultsScreen({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <SearchBar
         value={query}
         onChangeText={setQuery}
@@ -325,12 +325,12 @@ export function SearchResultsScreen({
       />
 
       <View style={styles.header}>
-        <Text style={styles.resultCount}>
+        <Text style={[styles.resultCount, { color: colors.inkSoft }]}>
           {totalResults} {totalResults === 1 ? 'result' : 'results'}
         </Text>
       </View>
 
-      <View style={styles.tabContainer}>
+      <View style={[styles.tabContainer, { borderBottomColor: colors.border, backgroundColor: colors.white }]}>
         {renderTabButton('all', 'All', totalResults)}
         {renderTabButton('events', 'Events', events.length)}
         {renderTabButton('facilities', 'Facilities', facilities.length)}
@@ -345,7 +345,6 @@ export function SearchResultsScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   header: {
     paddingHorizontal: 16,
@@ -353,7 +352,6 @@ const styles = StyleSheet.create({
   },
   resultCount: {
     fontSize: 14,
-    color: colors.inkSoft,
     fontWeight: '500',
   },
   tabContainer: {
@@ -361,27 +359,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.white,
   },
   tabButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: colors.surface,
   },
-  tabButtonActive: {
-    backgroundColor: colors.cobalt,
-  },
+  tabButtonActive: {},
   tabText: {
     fontSize: 14,
-    color: colors.inkSoft,
     fontWeight: '500',
   },
-  tabTextActive: {
-    color: colors.white,
-  },
+  tabTextActive: {},
   listContent: {
     padding: 16,
   },
@@ -394,7 +384,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.inkSoft,
   },
   emptyContainer: {
     flex: 1,
@@ -405,13 +394,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
   },
 });

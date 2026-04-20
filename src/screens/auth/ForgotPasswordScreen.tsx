@@ -109,17 +109,17 @@ export const ForgotPasswordScreen: React.FC = () => {
 
   if (state.isSuccess) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}>
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={80} color={colors.cobalt} />
           </View>
-          <Text style={styles.successTitle}>Check Your Email</Text>
-          <Text style={styles.successMessage}>
+          <Text style={[styles.successTitle, { color: colors.textPrimary }]}>Check Your Email</Text>
+          <Text style={[styles.successMessage, { color: colors.textSecondary }]}>
             Password reset email sent. Please check your inbox and follow the
             instructions to reset your password.
           </Text>
-          <Text style={styles.successNote}>
+          <Text style={[styles.successNote, { color: colors.textTertiary }]}>
             If you don't see the email, check your spam folder.
           </Text>
           <Button
@@ -128,9 +128,9 @@ export const ForgotPasswordScreen: React.FC = () => {
             variant="primary"
           />
           <TouchableOpacity style={styles.retryLink} onPress={handleRetry}>
-            <Text style={styles.retryLinkText}>
+            <Text style={[styles.retryLinkText, { color: colors.textSecondary }]}>
               Didn't receive the email?{' '}
-              <Text style={styles.link}>Try again</Text>
+              <Text style={[styles.link, { color: colors.cobalt }]}>Try again</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -140,7 +140,7 @@ export const ForgotPasswordScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -154,12 +154,12 @@ export const ForgotPasswordScreen: React.FC = () => {
           disabled={state.isLoading}
         >
           <Ionicons name="arrow-back" size={24} color={colors.cobalt} />
-          <Text style={styles.backButtonText}>Back to Login</Text>
+          <Text style={[styles.backButtonText, { color: colors.cobalt }]}>Back to Login</Text>
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Forgot Password?</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Forgot Password?</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Enter your email address and we'll send you instructions to reset
             your password.
           </Text>
@@ -183,7 +183,7 @@ export const ForgotPasswordScreen: React.FC = () => {
         />
 
         {state.errors.general && (
-          <Text style={styles.errorText}>{state.errors.general}</Text>
+          <Text style={[styles.errorText, { color: colors.heart }]}>{state.errors.general}</Text>
         )}
 
         <Button
@@ -194,13 +194,13 @@ export const ForgotPasswordScreen: React.FC = () => {
           disabled={!state.email.trim() || state.isLoading}
         />
 
-        <View style={styles.infoBox}>
+        <View style={[styles.infoBox, { backgroundColor: colors.surface, borderLeftColor: colors.ink }]}>
           <Ionicons
             name="information-circle-outline"
             size={20}
             color={colors.ink}
           />
-          <Text style={styles.infoText}>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
             The reset link will expire in 1 hour for security reasons.
           </Text>
         </View>
@@ -212,7 +212,6 @@ export const ForgotPasswordScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -227,7 +226,6 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     ...TextStyles.body,
-    color: colors.cobalt,
     marginLeft: Spacing.sm,
     fontWeight: '600',
   },
@@ -236,32 +234,26 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TextStyles.h1,
-    color: colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   subtitle: {
     ...TextStyles.body,
-    color: colors.textSecondary,
   },
   errorText: {
     ...TextStyles.body,
-    color: colors.heart,
     textAlign: 'center',
     marginVertical: Spacing.md,
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 8,
     marginTop: Spacing.lg,
     borderLeftWidth: 4,
-    borderLeftColor: colors.ink,
   },
   infoText: {
     ...TextStyles.caption,
-    color: colors.textSecondary,
     marginLeft: Spacing.sm,
     flex: 1,
   },
@@ -276,19 +268,16 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...TextStyles.h1,
-    color: colors.textPrimary,
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
   successMessage: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
   successNote: {
     ...TextStyles.caption,
-    color: colors.textTertiary,
     textAlign: 'center',
     marginBottom: Spacing.xxl,
   },
@@ -298,10 +287,8 @@ const styles = StyleSheet.create({
   },
   retryLinkText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
   },
   link: {
-    color: colors.cobalt,
     fontWeight: '600',
   },
 });

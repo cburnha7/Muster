@@ -103,7 +103,7 @@ function ConversationRowInner({
     });
     return (
       <TouchableOpacity
-        style={styles.swipeActionLeft}
+        style={[styles.swipeActionLeft, { backgroundColor: colors.onSurfaceVariant }]}
         onPress={() => {
           swipeableRef.current?.close();
           onMute?.(conversation);
@@ -118,7 +118,7 @@ function ConversationRowInner({
             size={22}
             color={colors.white}
           />
-          <Text style={styles.swipeActionText}>
+          <Text style={[styles.swipeActionText, { color: colors.white }]}>
             {isMuted ? 'Unmute' : 'Mute'}
           </Text>
         </Animated.View>
@@ -137,7 +137,7 @@ function ConversationRowInner({
     });
     return (
       <TouchableOpacity
-        style={styles.swipeActionRight}
+        style={[styles.swipeActionRight, { backgroundColor: colors.primary }]}
         onPress={() => {
           swipeableRef.current?.close();
           onPin?.(conversation);
@@ -148,7 +148,7 @@ function ConversationRowInner({
           style={[styles.swipeActionContent, { transform: [{ scale }] }]}
         >
           <Ionicons name="pin" size={22} color={colors.white} />
-          <Text style={styles.swipeActionText}>Pin</Text>
+          <Text style={[styles.swipeActionText, { color: colors.white }]}>Pin</Text>
         </Animated.View>
       </TouchableOpacity>
     );
@@ -157,11 +157,10 @@ function ConversationRowInner({
   const rowContent = (
     <TouchableOpacity
       style={[
-        styles.row,
+        styles.row, { backgroundColor: colors.surfaceContainerLowest },
         { backgroundColor: colors.bgCard },
-        hasUnread && styles.rowUnread,
-        isMuted && styles.rowMuted,
-      ]}
+        hasUnread && styles.rowUnread, hasUnread && { backgroundColor: colors.primary + '08' },
+        isMuted && styles.rowMuted]}
       onPress={() => onPress(conversation)}
       activeOpacity={0.7}
     >
@@ -199,10 +198,9 @@ function ConversationRowInner({
         <View style={styles.topRow}>
           <Text
             style={[
-              styles.name,
+              styles.name, { color: colors.onSurface },
               { color: colors.textPrimary },
-              hasUnread && styles.nameUnread,
-            ]}
+              hasUnread && styles.nameUnread]}
             numberOfLines={1}
           >
             {displayName}
@@ -210,10 +208,9 @@ function ConversationRowInner({
           {lastMsg && (
             <Text
               style={[
-                styles.timestamp,
+                styles.timestamp, { color: colors.onSurfaceVariant },
                 { color: colors.textSecondary },
-                hasUnread && styles.timestampUnread,
-              ]}
+                hasUnread && styles.timestampUnread, hasUnread && { color: colors.primary }]}
             >
               {formatTimestamp(lastMsg.createdAt)}
             </Text>
@@ -222,11 +219,10 @@ function ConversationRowInner({
         <View style={styles.bottomRow}>
           <Text
             style={[
-              styles.preview,
+              styles.preview, { color: colors.onSurfaceVariant },
               { color: colors.textSecondary },
-              hasUnread && styles.previewUnread,
-              isSystemPreview && styles.previewSystem,
-            ]}
+              hasUnread && styles.previewUnread, hasUnread && { color: colors.onSurface },
+              isSystemPreview && styles.previewSystem]}
             numberOfLines={1}
           >
             {lastMsg
@@ -236,8 +232,8 @@ function ConversationRowInner({
               : 'No messages yet'}
           </Text>
           {hasUnread && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
+            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.badgeText, { color: colors.white }]}>
                 {conversation.unreadCount > 99
                   ? '99+'
                   : conversation.unreadCount}
@@ -281,11 +277,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    backgroundColor: colors.surfaceContainerLowest,
   },
-  rowUnread: {
-    backgroundColor: colors.primary + '08',
-  },
+  rowUnread: {},
   rowMuted: {
     opacity: 0.5,
   },
@@ -307,27 +300,23 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
   },
   nameUnread: { fontFamily: fonts.headingSemi },
   timestamp: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
     flexShrink: 0,
   },
-  timestampUnread: { fontFamily: fonts.label, color: colors.primary },
+  timestampUnread: { fontFamily: fonts.label },
   bottomRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   preview: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
   },
-  previewUnread: { color: colors.onSurface, fontFamily: fonts.label },
+  previewUnread: { fontFamily: fonts.label },
   previewSystem: { fontStyle: 'italic' },
   badge: {
-    backgroundColor: colors.primary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -338,17 +327,14 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.white,
   },
   swipeActionLeft: {
-    backgroundColor: colors.onSurfaceVariant,
     justifyContent: 'center',
     alignItems: 'flex-start',
     paddingHorizontal: 20,
     width: 90,
   },
   swipeActionRight: {
-    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'flex-end',
     paddingHorizontal: 20,
@@ -361,6 +347,5 @@ const styles = StyleSheet.create({
   swipeActionText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.white,
   },
 });

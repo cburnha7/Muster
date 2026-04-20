@@ -72,23 +72,23 @@ export function InviteToMusterModal({ visible, onClose, onInvite }: InviteToMust
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.centeredView}
         >
-          <Pressable style={styles.card} onPress={() => {}}>
-            <Text style={styles.title}>Invite to Muster</Text>
-            <Text style={styles.subtitle}>Invite someone who isn't on Muster yet</Text>
+          <Pressable style={[styles.card, { backgroundColor: colors.white }]} onPress={() => {}}>
+            <Text style={[styles.title, { color: colors.ink }]}>Invite to Muster</Text>
+            <Text style={[styles.subtitle, { color: colors.inkSoft }]}>Invite someone who isn't on Muster yet</Text>
 
-            <Text style={styles.inputLabel}>Player Name</Text>
+            <Text style={[styles.inputLabel, { color: colors.ink }]}>Player Name</Text>
             <TextInput
-              style={[styles.input, nameError ? styles.inputError : undefined]}
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }, nameError ? styles.inputError : undefined, nameError ? { borderColor: colors.heart } : {}]}
               placeholder="Full name"
               placeholderTextColor={colors.inkSoft}
               value={name}
               onChangeText={(t) => { setName(t); if (nameError) setNameError(''); }}
             />
-            {!!nameError && <Text style={styles.errorText}>{nameError}</Text>}
+            {!!nameError && <Text style={[styles.errorText, { color: colors.heart }]}>{nameError}</Text>}
 
-            <Text style={styles.inputLabel}>Email Address</Text>
+            <Text style={[styles.inputLabel, { color: colors.ink }]}>Email Address</Text>
             <TextInput
-              style={[styles.input, emailError ? styles.inputError : undefined]}
+              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }, emailError ? styles.inputError : undefined, emailError ? { borderColor: colors.heart } : {}]}
               placeholder="email@example.com"
               placeholderTextColor={colors.inkSoft}
               keyboardType="email-address"
@@ -96,14 +96,14 @@ export function InviteToMusterModal({ visible, onClose, onInvite }: InviteToMust
               value={email}
               onChangeText={(t) => { setEmail(t); if (emailError) setEmailError(''); }}
             />
-            {!!emailError && <Text style={styles.errorText}>{emailError}</Text>}
+            {!!emailError && <Text style={[styles.errorText, { color: colors.heart }]}>{emailError}</Text>}
 
-            <TouchableOpacity style={styles.inviteBtn} onPress={handleInvite} activeOpacity={0.8}>
-              <Text style={styles.inviteBtnText}>Invite</Text>
+            <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.cobalt }]} onPress={handleInvite} activeOpacity={0.8}>
+              <Text style={[styles.inviteBtnText, { color: colors.white }]}>Invite</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleClose} activeOpacity={0.7} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: colors.inkSoft }]}>Cancel</Text>
             </TouchableOpacity>
           </Pressable>
         </KeyboardAvoidingView>
@@ -126,7 +126,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 24,
     width: '90%',
@@ -135,46 +134,36 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.ink,
     marginBottom: 4,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     marginBottom: 20,
   },
   inputLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.ink,
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 12,
   },
-  inputError: {
-    borderColor: colors.heart,
-  },
+  inputError: {},
   errorText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.heart,
     marginTop: -8,
     marginBottom: 8,
   },
   inviteBtn: {
-    backgroundColor: colors.cobalt,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
@@ -183,7 +172,6 @@ const styles = StyleSheet.create({
   inviteBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   cancelBtn: {
     alignItems: 'center',
@@ -192,6 +180,5 @@ const styles = StyleSheet.create({
   cancelText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
   },
 });

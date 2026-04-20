@@ -46,12 +46,12 @@ export function Step5Policies() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.heading}>Policies and waivers</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Policies and waivers</Text>
 
       {/* Cancellation Policy */}
       <CancellationPolicyPicker
@@ -60,13 +60,13 @@ export function Step5Policies() {
       />
 
       {/* Booking Confirmation */}
-      <View style={styles.toggleSection}>
+      <View style={[styles.toggleSection, { backgroundColor: colors.surface }]}>
         <View style={styles.toggleRow}>
           <View style={styles.toggleInfo}>
-            <Text style={styles.toggleLabel}>
+            <Text style={[styles.toggleLabel, { color: colors.ink }]}>
               Requires Booking Confirmation
             </Text>
-            <Text style={styles.toggleDescription}>
+            <Text style={[styles.toggleDescription, { color: colors.inkSoft }]}>
               All reservation requests must be approved before they are
               confirmed
             </Text>
@@ -85,13 +85,13 @@ export function Step5Policies() {
 
       {/* Insurance — only when confirmation is on */}
       {state.requiresBookingConfirmation && (
-        <View style={styles.toggleSection}>
+        <View style={[styles.toggleSection, { backgroundColor: colors.surface }]}>
           <View style={styles.toggleRow}>
             <View style={styles.toggleInfo}>
-              <Text style={styles.toggleLabel}>
+              <Text style={[styles.toggleLabel, { color: colors.ink }]}>
                 Requires Proof of Insurance
               </Text>
-              <Text style={styles.toggleDescription}>
+              <Text style={[styles.toggleDescription, { color: colors.inkSoft }]}>
                 Renters must attach a valid insurance document when reserving a
                 court
               </Text>
@@ -107,11 +107,11 @@ export function Step5Policies() {
       )}
 
       {/* Waiver */}
-      <View style={styles.toggleSection}>
+      <View style={[styles.toggleSection, { backgroundColor: colors.surface }]}>
         <View style={styles.toggleRow}>
           <View style={styles.toggleInfo}>
-            <Text style={styles.toggleLabel}>Waiver Requirement</Text>
-            <Text style={styles.toggleDescription}>
+            <Text style={[styles.toggleLabel, { color: colors.ink }]}>Waiver Requirement</Text>
+            <Text style={[styles.toggleDescription, { color: colors.inkSoft }]}>
               Require players to sign a waiver before booking. Uploading a new
               version invalidates all previous signatures.
             </Text>
@@ -133,7 +133,7 @@ export function Step5Policies() {
       {state.waiverRequired && (
         <View style={styles.uploadSection}>
           {state.waiverFileName ? (
-            <View style={styles.fileCard}>
+            <View style={[styles.fileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.fileInfo}>
                 <Ionicons
                   name="document-text-outline"
@@ -141,10 +141,10 @@ export function Step5Policies() {
                   color={colors.cobalt}
                 />
                 <View style={styles.fileDetails}>
-                  <Text style={styles.fileName} numberOfLines={1}>
+                  <Text style={[styles.fileName, { color: colors.ink }]} numberOfLines={1}>
                     {state.waiverFileName}
                   </Text>
-                  <Text style={styles.fileHint}>PDF waiver</Text>
+                  <Text style={[styles.fileHint, { color: colors.inkSoft }]}>PDF waiver</Text>
                 </View>
               </View>
               <TouchableOpacity
@@ -156,7 +156,7 @@ export function Step5Policies() {
             </View>
           ) : (
             <TouchableOpacity
-              style={styles.uploadBox}
+              style={[styles.uploadBox, { borderColor: colors.cobalt, backgroundColor: colors.surface }]}
               onPress={handlePickPdf}
               activeOpacity={0.7}
             >
@@ -165,8 +165,8 @@ export function Step5Policies() {
                 size={32}
                 color={colors.cobalt}
               />
-              <Text style={styles.uploadText}>Upload Waiver PDF</Text>
-              <Text style={styles.uploadHint}>Tap to select a PDF file</Text>
+              <Text style={[styles.uploadText, { color: colors.cobalt }]}>Upload Waiver PDF</Text>
+              <Text style={[styles.uploadHint, { color: colors.inkSoft }]}>Tap to select a PDF file</Text>
             </TouchableOpacity>
           )}
 
@@ -189,16 +189,14 @@ export function Step5Policies() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   toggleSection: {
-    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 14,
@@ -213,54 +211,45 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 15,
     lineHeight: 22,
-    color: colors.ink,
     marginBottom: 2,
   },
   toggleDescription: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
   },
   uploadSection: { marginTop: 4 },
   uploadBox: {
     borderWidth: 2,
-    borderColor: colors.cobalt,
     borderStyle: 'dashed',
     borderRadius: 14,
     paddingVertical: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
   },
   uploadText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.cobalt,
     marginTop: 8,
   },
   uploadHint: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginTop: 4,
   },
   fileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   fileInfo: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
   fileDetails: { flex: 1 },
-  fileName: { fontFamily: fonts.label, fontSize: 15, color: colors.ink },
+  fileName: { fontFamily: fonts.label, fontSize: 15 },
   fileHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSoft,
     marginTop: 2,
   },
 });

@@ -83,7 +83,7 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
 
     return (
       <TouchableOpacity
-        style={styles.userItem}
+        style={[styles.userItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => handleAddMember(item)}
         disabled={isAdding}
         activeOpacity={0.75}
@@ -95,8 +95,8 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
               style={styles.userAvatar}
             />
           ) : (
-            <View style={[styles.userAvatar, styles.userAvatarPlaceholder]}>
-              <Text style={styles.userAvatarText}>
+            <View style={[styles.userAvatar, styles.userAvatarPlaceholder, { backgroundColor: colors.cobalt }]}>
+              <Text style={[styles.userAvatarText, { color: colors.white }]}>
                 {(item.firstName && item.firstName[0]) ||
                   item.email?.[0]?.toUpperCase() ||
                   '?'}
@@ -104,10 +104,10 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
             </View>
           )}
           <View style={styles.userDetails}>
-            <Text style={styles.userName}>
+            <Text style={[styles.userName, { color: colors.ink }]}>
               {item.firstName} {item.lastName}
             </Text>
-            <Text style={styles.userEmail}>{item.email}</Text>
+            <Text style={[styles.userEmail, { color: colors.inkFaint }]}>{item.email}</Text>
           </View>
         </View>
 
@@ -124,7 +124,7 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Ionicons
           name="search"
           size={20}
@@ -132,7 +132,7 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
           style={styles.searchIcon}
         />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.ink }]}
           placeholder="Search by name or email..."
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -149,12 +149,12 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
       </View>
 
       {searchQuery.trim().length > 0 && searchQuery.trim().length < 2 && (
-        <Text style={styles.hint}>Type at least 2 characters to search</Text>
+        <Text style={[styles.hint, { color: colors.inkFaint }]}>Type at least 2 characters to search</Text>
       )}
 
       {searchResults.length > 0 && (
         <View style={styles.resultsContainer}>
-          <Text style={styles.resultsHeader}>
+          <Text style={[styles.resultsHeader, { color: colors.inkFaint }]}>
             {searchResults.length} member{searchResults.length !== 1 ? 's' : ''}{' '}
             found
           </Text>
@@ -173,8 +173,8 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
         searchResults.length === 0 && (
           <View style={styles.noResults}>
             <Ionicons name="search-outline" size={48} color={colors.inkFaint} />
-            <Text style={styles.noResultsText}>No members found</Text>
-            <Text style={styles.noResultsHint}>
+            <Text style={[styles.noResultsText, { color: colors.inkFaint }]}>No members found</Text>
+            <Text style={[styles.noResultsHint, { color: colors.inkFaint }]}>
               Try searching by first name, last name, or email
             </Text>
           </View>
@@ -190,10 +190,8 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -203,7 +201,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: colors.ink,
     paddingVertical: 4,
   },
   searchSpinner: {
@@ -211,7 +208,6 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 13,
-    color: colors.inkFaint,
     fontStyle: 'italic',
   },
   resultsContainer: {
@@ -220,7 +216,6 @@ const styles = StyleSheet.create({
   resultsHeader: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.inkFaint,
   },
   resultsList: {
     maxHeight: 300,
@@ -229,11 +224,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: 8,
   },
   userInfo: {
@@ -248,14 +241,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   userAvatarPlaceholder: {
-    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
   userAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.white,
   },
   userDetails: {
     flex: 1,
@@ -263,12 +254,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.ink,
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 13,
-    color: colors.inkFaint,
   },
   addButton: {
     padding: 4,
@@ -281,11 +270,9 @@ const styles = StyleSheet.create({
   noResultsText: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.inkFaint,
   },
   noResultsHint: {
     fontSize: 13,
-    color: colors.inkFaint,
     textAlign: 'center',
   },
 });

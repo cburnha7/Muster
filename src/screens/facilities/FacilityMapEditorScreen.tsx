@@ -112,7 +112,7 @@ export function FacilityMapEditorScreen(): JSX.Element {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Facility Map"
         leftIcon="arrow-back"
@@ -134,9 +134,9 @@ export function FacilityMapEditorScreen(): JSX.Element {
 
         {/* Next Steps */}
         {mapImageUri && (
-          <View style={styles.nextStepsCard}>
-            <Text style={styles.nextStepsTitle}>Next Steps</Text>
-            <Text style={styles.nextStepsText}>
+          <View style={[styles.nextStepsCard, { backgroundColor: colors.background, borderColor: colors.border, borderLeftColor: colors.cobalt }]}>
+            <Text style={[styles.nextStepsTitle, { color: colors.ink }]}>Next Steps</Text>
+            <Text style={[styles.nextStepsText, { color: colors.mid }]}>
               After saving the map, you can define court boundaries to help
               users identify specific courts and fields on your facility.
             </Text>
@@ -145,7 +145,7 @@ export function FacilityMapEditorScreen(): JSX.Element {
       </ScrollView>
 
       {/* Action Buttons */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <FormButton
           title="Cancel"
           variant="outline"
@@ -165,9 +165,9 @@ export function FacilityMapEditorScreen(): JSX.Element {
       {/* Loading Overlay */}
       {uploading && (
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
+          <View style={[styles.loadingCard, { backgroundColor: colors.background }]}>
             <LoadingSpinner />
-            <Text style={styles.loadingText}>Uploading facility map...</Text>
+            <Text style={[styles.loadingText, { color: colors.ink }]}>Uploading facility map...</Text>
           </View>
         </View>
       )}
@@ -178,7 +178,6 @@ export function FacilityMapEditorScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -187,33 +186,26 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   nextStepsCard: {
-    backgroundColor: colors.background,
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
     borderLeftWidth: 4,
-    borderLeftColor: colors.cobalt,
     marginTop: Spacing.xl,
   },
   nextStepsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: Spacing.sm,
   },
   nextStepsText: {
     fontSize: 14,
-    color: colors.mid,
     lineHeight: 20,
   },
   actions: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   actionButton: {
     flex: 1,
@@ -230,7 +222,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingCard: {
-    backgroundColor: colors.background,
     padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
@@ -238,7 +229,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: colors.ink,
     marginTop: Spacing.md,
     textAlign: 'center',
   },

@@ -26,7 +26,7 @@ export function FamilyPulseSection() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Family</Text>
+      <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Family</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -43,7 +43,7 @@ export function FamilyPulseSection() {
           return (
             <TouchableOpacity
               key={dep.id}
-              style={styles.card}
+              style={[styles.card, { backgroundColor: colors.white }]}
               onPress={() =>
                 (navigation as any).navigate('DependentProfile', {
                   dependentId: dep.id,
@@ -52,12 +52,12 @@ export function FamilyPulseSection() {
               activeOpacity={0.8}
             >
               <View style={[styles.depAvatar, { backgroundColor: color }]}>
-                <Text style={styles.depInitial}>{initial}</Text>
+                <Text style={[styles.depInitial, { color: colors.white }]}>{initial}</Text>
               </View>
-              <Text style={styles.depName} numberOfLines={1}>
+              <Text style={[styles.depName, { color: colors.onSurface }]} numberOfLines={1}>
                 {dep.firstName}
               </Text>
-              <Text style={styles.depAge}>Age {age}</Text>
+              <Text style={[styles.depAge, { color: colors.onSurfaceVariant }]}>Age {age}</Text>
               <TouchableOpacity
                 style={styles.findGameCta}
                 onPress={() =>
@@ -66,7 +66,7 @@ export function FamilyPulseSection() {
                     ?.navigate('Home', { screen: 'HomeScreen' })
                 }
               >
-                <Text style={styles.findGameText}>Find game Ã¢â€ â€™</Text>
+                <Text style={[styles.findGameText, { color: colors.primary }]}>Find game Ã¢â€ â€™</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           );
@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
     letterSpacing: -0.3,
     marginBottom: 12,
   },
@@ -92,7 +91,6 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 14,
     padding: 14,
     width: 120,
@@ -109,17 +107,14 @@ const styles = StyleSheet.create({
   depInitial: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   depName: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.onSurface,
   },
   depAge: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
   },
   findGameCta: {
     marginTop: 2,
@@ -127,6 +122,5 @@ const styles = StyleSheet.create({
   findGameText: {
     fontFamily: fonts.ui,
     fontSize: 11,
-    color: colors.primary,
   },
 });

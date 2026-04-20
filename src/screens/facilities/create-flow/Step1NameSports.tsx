@@ -61,15 +61,15 @@ export function Step1NameSports() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.heading}>Name your ground</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Name your ground</Text>
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.name}
         onChangeText={v =>
           dispatch({ type: 'SET_FIELD', field: 'name', value: v })
@@ -78,7 +78,7 @@ export function Step1NameSports() {
         placeholderTextColor={colors.inkSoft}
       />
 
-      <Text style={styles.fieldLabel}>Sport types</Text>
+      <Text style={[styles.fieldLabel, { color: colors.inkSoft }]}>Sport types</Text>
       <SportIconGrid
         selected={state.sportTypes}
         onSelect={toggleSport}
@@ -86,16 +86,16 @@ export function Step1NameSports() {
       />
 
       {/* Optional photos picker */}
-      <Text style={[styles.fieldLabel, { marginTop: 20 }]}>
+      <Text style={[styles.fieldLabel, { color: colors.inkSoft }, { marginTop: 20 }]}>
         Photos (optional)
       </Text>
       <TouchableOpacity
-        style={styles.pickerBtn}
+        style={[styles.pickerBtn, { borderColor: colors.cobalt }]}
         onPress={handlePickPhotos}
         activeOpacity={0.7}
       >
         <Ionicons name="images-outline" size={18} color={colors.cobalt} />
-        <Text style={styles.pickerBtnText}>
+        <Text style={[styles.pickerBtnText, { color: colors.cobalt }]}>
           {state.pendingPhotos.length > 0
             ? `${state.pendingPhotos.length} photo${state.pendingPhotos.length > 1 ? 's' : ''} selected`
             : 'Add photos'}
@@ -103,16 +103,16 @@ export function Step1NameSports() {
       </TouchableOpacity>
 
       {/* Optional map picker */}
-      <Text style={[styles.fieldLabel, { marginTop: 16 }]}>
+      <Text style={[styles.fieldLabel, { color: colors.inkSoft }, { marginTop: 16 }]}>
         Facility map (optional)
       </Text>
       <TouchableOpacity
-        style={styles.pickerBtn}
+        style={[styles.pickerBtn, { borderColor: colors.cobalt }]}
         onPress={handlePickMap}
         activeOpacity={0.7}
       >
         <Ionicons name="map-outline" size={18} color={colors.cobalt} />
-        <Text style={styles.pickerBtnText}>
+        <Text style={[styles.pickerBtnText, { color: colors.cobalt }]}>
           {state.pendingMapFile
             ? state.pendingMapFile.name
             : 'Add map (JPEG, PNG, or PDF)'}
@@ -123,30 +123,25 @@ export function Step1NameSports() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.white,
     marginBottom: 20,
   },
   fieldLabel: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -159,13 +154,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     marginBottom: 8,
   },
   pickerBtnText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.cobalt,
     flex: 1,
   },
 });

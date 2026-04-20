@@ -85,10 +85,10 @@ export const TextInput: React.FC<TextInputProps> = ({
         { transform: [{ translateX: shakeAnim }] }
       ]}
     >
-      <Text style={styles.label} accessibilityLabel={accessibilityLabel || label}>
+      <Text style={[styles.label, { color: colors.textPrimary }]} accessibilityLabel={accessibilityLabel || label}>
         {label}
       </Text>
-      <View style={[styles.inputContainer, { borderColor }]}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.surface }, { borderColor }]}>
         {icon && (
           <Ionicons
             name={icon}
@@ -98,7 +98,7 @@ export const TextInput: React.FC<TextInputProps> = ({
           />
         )}
         <RNTextInput
-          style={[styles.input, icon && styles.inputWithIcon]}
+          style={[styles.input, { color: colors.textPrimary }, icon && styles.inputWithIcon]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -129,7 +129,7 @@ export const TextInput: React.FC<TextInputProps> = ({
       </View>
       {error && (
         <Animated.Text
-          style={[styles.errorText, { opacity: errorOpacity }]}
+          style={[styles.errorText, { color: colors.heart }, { opacity: errorOpacity }]}
           accessibilityLiveRegion="polite"
           accessibilityRole="alert"
         >
@@ -146,14 +146,12 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TextStyles.body,
-    color: colors.textPrimary,
     marginBottom: Spacing.xs,
     fontWeight: '600',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderWidth: 1,
     borderRadius: 8,
     height: 48,
@@ -165,7 +163,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...TextStyles.body,
-    color: colors.textPrimary,
     height: '100%',
   },
   inputWithIcon: {
@@ -177,7 +174,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.caption,
-    color: colors.heart,
     marginTop: Spacing.xs,
     marginLeft: Spacing.xs,
   },

@@ -71,8 +71,8 @@ export function MessageBubble({
         {/* Avatar or spacer for other users */}
         {!isOwn &&
           (showAvatar ? (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitial}>
+            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+              <Text style={[styles.avatarInitial, { color: colors.primary }]}>
                 {message.sender?.firstName?.charAt(0) ?? '?'}
               </Text>
             </View>
@@ -82,18 +82,18 @@ export function MessageBubble({
 
         <View style={[styles.column, isOwn && styles.columnOwn]}>
           {showSender && !isOwn && message.sender && (
-            <Text style={styles.senderName}>
+            <Text style={[styles.senderName, { color: colors.primary }]}>
               {message.sender.firstName} {message.sender.lastName.charAt(0)}.
             </Text>
           )}
 
           {/* Quoted reply */}
           {message.replyTo && (
-            <View style={[styles.replyQuote, isOwn && styles.replyQuoteOwn]}>
-              <Text style={styles.replyName} numberOfLines={1}>
+            <View style={[styles.replyQuote, { backgroundColor: colors.surfaceContainer, borderLeftColor: colors.primary }, isOwn && styles.replyQuoteOwn]}>
+              <Text style={[styles.replyName, { color: colors.primary }]} numberOfLines={1}>
                 {message.replyTo.sender?.firstName ?? 'Message'}
               </Text>
-              <Text style={styles.replyText} numberOfLines={2}>
+              <Text style={[styles.replyText, { color: colors.onSurfaceVariant }]} numberOfLines={2}>
                 {message.replyTo.content}
               </Text>
             </View>
@@ -102,32 +102,31 @@ export function MessageBubble({
           <View
             style={[
               styles.bubble,
-              isOwn ? styles.bubbleOwn : styles.bubbleOther,
+              isOwn ? styles.bubbleOwn : styles.bubbleOther, isOwn ? { backgroundColor: colors.primary } : {},
               message.sendError && styles.bubbleError,
-              message.priority === 'URGENT' && styles.bubbleAnnouncement,
-            ]}
+              message.priority === 'URGENT' && styles.bubbleAnnouncement, message.priority === 'URGENT' && { borderLeftColor: colors.tertiary }]}
           >
             {message.priority === 'URGENT' && (
               <View style={styles.announceHeader}>
                 <Ionicons name="megaphone" size={12} color={colors.tertiary} />
-                <Text style={styles.announceLabel}>Announcement</Text>
+                <Text style={[styles.announceLabel, { color: colors.tertiary }]}>Announcement</Text>
               </View>
             )}
-            <Text style={[styles.content, isOwn && styles.contentOwn]}>
+            <Text style={[styles.content, { color: colors.onSurface }, isOwn && styles.contentOwn, isOwn && { color: colors.white }]}>
               {message.content}
             </Text>
             {(showTimestamp || message.isSending || message.sendError) && (
               <View style={styles.metaRow}>
                 {message.isSending && (
-                  <Text style={[styles.status, isOwn && styles.statusOwn]}>
+                  <Text style={[styles.status, { color: colors.onSurfaceVariant }, isOwn && styles.statusOwn]}>
                     Sending...
                   </Text>
                 )}
                 {message.sendError && (
-                  <Text style={styles.statusError}>Failed</Text>
+                  <Text style={[styles.statusError, { color: colors.error }]}>Failed</Text>
                 )}
                 {showTimestamp && !message.isSending && !message.sendError && (
-                  <Text style={[styles.time, isOwn && styles.timeOwn]}>
+                  <Text style={[styles.time, { color: colors.onSurfaceVariant }, isOwn && styles.timeOwn]}>
                     {formatTime(message.createdAt)}
                   </Text>
                 )}
@@ -137,7 +136,7 @@ export function MessageBubble({
 
           {/* Read receipt */}
           {showReadReceipt && (
-            <Text style={[styles.readReceipt, isOwn && styles.readReceiptOwn]}>
+            <Text style={[styles.readReceipt, { color: colors.onSurfaceVariant }, isOwn && styles.readReceiptOwn]}>
               {showReadReceipt === 'sending'
                 ? 'Sending...'
                 : showReadReceipt === 'read'
@@ -153,9 +152,8 @@ export function MessageBubble({
                 <TouchableOpacity
                   key={g.emoji}
                   style={[
-                    styles.reactionPill,
-                    g.hasMe && styles.reactionPillMine,
-                  ]}
+                    styles.reactionPill, { backgroundColor: colors.surfaceContainer },
+                    g.hasMe && styles.reactionPillMine, g.hasMe && { backgroundColor: colors.primary + '15', borderColor: colors.primary + '40' }]}
                   onPress={() =>
                     onToggleReaction?.(message.id, g.emoji, g.hasMe)
                   }
@@ -164,9 +162,8 @@ export function MessageBubble({
                   <Text style={styles.reactionEmoji}>{g.emoji}</Text>
                   <Text
                     style={[
-                      styles.reactionCount,
-                      g.hasMe && styles.reactionCountMine,
-                    ]}
+                      styles.reactionCount, { color: colors.onSurface },
+                      g.hasMe && styles.reactionCountMine, g.hasMe && { color: colors.primary }]}
                   >
                     {g.count}
                   </Text>
@@ -193,7 +190,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.primary + '20',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -205,32 +201,27 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.primary,
   },
   column: { maxWidth: '75%', gap: 2 },
   columnOwn: { alignItems: 'flex-end' },
   senderName: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.primary,
     marginBottom: 2,
     paddingLeft: 4,
   },
   replyQuote: {
-    backgroundColor: colors.surfaceContainer,
     borderLeftWidth: 2,
-    borderLeftColor: colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     marginBottom: 2,
   },
   replyQuoteOwn: { borderLeftColor: 'rgba(255,255,255,0.5)' },
-  replyName: { fontFamily: fonts.label, fontSize: 11, color: colors.primary },
+  replyName: { fontFamily: fonts.label, fontSize: 11 },
   replyText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
   },
   bubble: {
     paddingHorizontal: 12,
@@ -239,17 +230,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   bubbleOwn: {
-    backgroundColor: colors.primary,
     borderBottomRightRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderBottomLeftRadius: 4,
   },
   bubbleError: { opacity: 0.6 },
   bubbleAnnouncement: {
     borderLeftWidth: 3,
-    borderLeftColor: colors.tertiary,
   },
   announceHeader: {
     flexDirection: 'row',
@@ -260,16 +248,14 @@ const styles = StyleSheet.create({
   announceLabel: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.tertiary,
     textTransform: 'uppercase',
   },
   content: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
     lineHeight: 21,
   },
-  contentOwn: { color: colors.white },
+  contentOwn: {},
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -279,20 +265,17 @@ const styles = StyleSheet.create({
   time: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
   },
   timeOwn: { color: 'rgba(255,255,255,0.7)' },
   status: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
   },
   statusOwn: { color: 'rgba(255,255,255,0.7)' },
-  statusError: { fontFamily: fonts.body, fontSize: 11, color: colors.error },
+  statusError: { fontFamily: fonts.body, fontSize: 11 },
   readReceipt: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
     marginTop: 2,
     paddingHorizontal: 4,
   },
@@ -302,22 +285,18 @@ const styles = StyleSheet.create({
   reactionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 12,
     gap: 3,
   },
   reactionPillMine: {
-    backgroundColor: colors.primary + '15',
     borderWidth: 1,
-    borderColor: colors.primary + '40',
   },
   reactionEmoji: { fontSize: 14 },
   reactionCount: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.onSurface,
   },
-  reactionCountMine: { color: colors.primary },
+  reactionCountMine: {},
 });

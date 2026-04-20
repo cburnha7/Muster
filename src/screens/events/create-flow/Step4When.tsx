@@ -139,10 +139,10 @@ export function Step4When() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>When's it happening?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>When's it happening?</Text>
 
       {loadingDates ? (
         <ActivityIndicator
@@ -151,7 +151,7 @@ export function Step4When() {
           style={styles.loader}
         />
       ) : dateError ? (
-        <Text style={styles.errorText}>{dateError}</Text>
+        <Text style={[styles.errorText, { color: colors.heart }]}>{dateError}</Text>
       ) : (
         <FormSelect
           label="Date"
@@ -164,7 +164,7 @@ export function Step4When() {
 
       {state.selectedDate !== '' && (
         <>
-          <Text style={styles.label}>Time Slots</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Time Slots</Text>
           {loadingSlots ? (
             <ActivityIndicator
               size="small"
@@ -172,9 +172,9 @@ export function Step4When() {
               style={styles.loader}
             />
           ) : slotError ? (
-            <Text style={styles.errorText}>{slotError}</Text>
+            <Text style={[styles.errorText, { color: colors.heart }]}>{slotError}</Text>
           ) : slotsForDate.length === 0 ? (
-            <Text style={styles.emptyText}>No time slots available</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSoft }]}>No time slots available</Text>
           ) : (
             <View style={styles.slotsGrid}>
               {slotsForDate
@@ -186,20 +186,18 @@ export function Step4When() {
                     <TouchableOpacity
                       key={slot.id}
                       style={[
-                        styles.slotChip,
-                        selected && styles.slotChipSelected,
-                        disabled && styles.slotChipDisabled,
-                      ]}
+                        styles.slotChip, { backgroundColor: colors.surface, borderColor: colors.border },
+                        selected && styles.slotChipSelected, selected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
+                        disabled && styles.slotChipDisabled]}
                       onPress={() => handleSlotToggle(slot)}
                       disabled={disabled}
                       activeOpacity={0.7}
                     >
                       <Text
                         style={[
-                          styles.slotText,
-                          selected && styles.slotTextSelected,
-                          disabled && styles.slotTextDisabled,
-                        ]}
+                          styles.slotText, { color: colors.ink },
+                          selected && styles.slotTextSelected, selected && { color: colors.white },
+                          disabled && styles.slotTextDisabled, disabled && { color: colors.inkSoft }]}
                       >
                         {slot.startTime} – {slot.endTime}
                       </Text>
@@ -212,7 +210,7 @@ export function Step4When() {
       )}
 
       <View style={styles.recurringRow}>
-        <Text style={styles.label}>Recurring</Text>
+        <Text style={[styles.label, { color: colors.ink }]}>Recurring</Text>
         <Switch
           value={state.recurring}
           onValueChange={v =>
@@ -239,9 +237,9 @@ export function Step4When() {
             }
           />
 
-          <Text style={styles.label}>Series End Date</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Series End Date</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.inkSoft}
             value={state.recurringEndDate}
@@ -262,7 +260,6 @@ export function Step4When() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   content: {
     paddingHorizontal: 20,
@@ -272,19 +269,16 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
     marginVertical: 16,
   },
@@ -298,28 +292,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  slotChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  slotChipSelected: {},
   slotChipDisabled: {
     opacity: 0.4,
   },
   slotText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
   },
-  slotTextSelected: {
-    color: colors.white,
-  },
-  slotTextDisabled: {
-    color: colors.inkSoft,
-  },
+  slotTextSelected: {},
+  slotTextDisabled: {},
   recurringRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -328,15 +312,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 16,
   },
   loader: {
@@ -345,7 +326,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     textAlign: 'center',
     marginVertical: 16,
   },

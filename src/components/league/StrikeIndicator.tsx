@@ -26,8 +26,7 @@ export const StrikeIndicator: React.FC<StrikeIndicatorProps> = ({
       <View
         style={[
           styles.badge,
-          isAtThreshold ? styles.badgeDanger : styles.badgeWarning,
-        ]}
+          isAtThreshold ? styles.badgeDanger : styles.badgeWarning, isAtThreshold ? { backgroundColor: colors.heart } : {}]}
         accessibilityRole="text"
         accessibilityLabel={`${rosterName} has ${strikeCount} ${strikeCount === 1 ? 'strike' : 'strikes'}`}
       >
@@ -37,7 +36,7 @@ export const StrikeIndicator: React.FC<StrikeIndicatorProps> = ({
           color={isAtThreshold ? colors.white : colors.ink}
         />
         <Text
-          style={[styles.badgeText, isAtThreshold && styles.badgeTextDanger]}
+          style={[styles.badgeText, { color: colors.ink }, isAtThreshold && styles.badgeTextDanger, isAtThreshold && { color: colors.white }]}
         >
           {strikeCount} {strikeCount === 1 ? 'strike' : 'strikes'}
         </Text>
@@ -45,12 +44,12 @@ export const StrikeIndicator: React.FC<StrikeIndicatorProps> = ({
 
       {isAtThreshold && onRemoveRoster && (
         <TouchableOpacity
-          style={styles.removeButton}
+          style={[styles.removeButton, { backgroundColor: colors.heart }]}
           onPress={onRemoveRoster}
           accessibilityRole="button"
           accessibilityLabel={`Remove ${rosterName} from league`}
         >
-          <Text style={styles.removeButtonText}>Remove Roster</Text>
+          <Text style={[styles.removeButtonText, { color: colors.white }]}>Remove Roster</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -71,24 +70,16 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 12,
   },
-  badgeWarning: {
-    backgroundColor: colors.goldLight,
-  },
-  badgeDanger: {
-    backgroundColor: colors.heart,
-  },
+  badgeWarning: {},
+  badgeDanger: {},
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.ink,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  badgeTextDanger: {
-    color: colors.white,
-  },
+  badgeTextDanger: {},
   removeButton: {
-    backgroundColor: colors.heart,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -96,6 +87,5 @@ const styles = StyleSheet.create({
   removeButtonText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: colors.white,
   },
 });

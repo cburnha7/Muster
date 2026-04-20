@@ -14,14 +14,14 @@ export function SystemMessage({ content, priority }: SystemMessageProps) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.line, isUrgent && styles.lineUrgent]} />
+      <View style={[styles.line, { backgroundColor: colors.outlineVariant }, isUrgent && styles.lineUrgent, isUrgent && { backgroundColor: colors.warning + '60' }]} />
       <Text
-        style={[styles.text, isUrgent && styles.textUrgent]}
+        style={[styles.text, { color: colors.onSurfaceVariant }, isUrgent && styles.textUrgent, isUrgent && { color: colors.warning }]}
         numberOfLines={2}
       >
         {content}
       </Text>
-      <View style={[styles.line, isUrgent && styles.lineUrgent]} />
+      <View style={[styles.line, { backgroundColor: colors.outlineVariant }, isUrgent && styles.lineUrgent, isUrgent && { backgroundColor: colors.warning + '60' }]} />
     </View>
   );
 }
@@ -37,20 +37,15 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.outlineVariant,
   },
-  lineUrgent: {
-    backgroundColor: colors.warning + '60',
-  },
+  lineUrgent: {},
   text: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
     textAlign: 'center',
     flexShrink: 1,
   },
   textUrgent: {
-    color: colors.warning,
     fontFamily: fonts.label,
   },
 });

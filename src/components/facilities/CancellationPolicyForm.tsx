@@ -149,13 +149,13 @@ export function CancellationPolicyForm({
         keyboardShouldPersistTaps="handled"
       >
         {/* Info banner */}
-        <View style={styles.infoBanner}>
+        <View style={[styles.infoBanner, { backgroundColor: colors.cobaltLight }]}>
           <Ionicons
             name="information-circle-outline"
             size={20}
             color={colors.ink}
           />
-          <Text style={styles.infoText}>
+          <Text style={[styles.infoText, { color: colors.ink }]}>
             Your cancellation policy is required before your facility can appear
             in booking flows. Changes only apply to future bookings.
           </Text>
@@ -170,7 +170,7 @@ export function CancellationPolicyForm({
           error={errors.noticeWindowHours}
           required
         />
-        <Text style={styles.fieldHint}>
+        <Text style={[styles.fieldHint, { color: colors.inkFaint }]}>
           Hours before game start that a roster can cancel without penalty.
         </Text>
 
@@ -183,7 +183,7 @@ export function CancellationPolicyForm({
           error={errors.teamPenaltyPct}
           required
         />
-        <Text style={styles.fieldHint}>
+        <Text style={[styles.fieldHint, { color: colors.inkFaint }]}>
           Percentage (0Ã¢â‚¬â€œ100) of the cancelling roster's escrow that is forfeited
           for late cancellations.
         </Text>
@@ -199,12 +199,12 @@ export function CancellationPolicyForm({
           error={errors.penaltyDestination}
           required
         />
-        <Text style={styles.fieldHint}>
+        <Text style={[styles.fieldHint, { color: colors.inkFaint }]}>
           Who receives the forfeited amount when a roster cancels late.
         </Text>
 
         {policyVersion && (
-          <Text style={styles.versionText}>
+          <Text style={[styles.versionText, { color: colors.inkFaint }]}>
             Last updated: {new Date(policyVersion).toLocaleDateString()}
           </Text>
         )}
@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
   },
   infoBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.cobaltLight,
     borderRadius: 8,
     padding: Spacing.md,
     marginBottom: Spacing.xl,
@@ -253,13 +252,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.ink,
     lineHeight: 20,
   },
   fieldHint: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     marginTop: -8,
     marginBottom: Spacing.lg,
     paddingHorizontal: 2,
@@ -267,7 +264,6 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginBottom: Spacing.lg,
   },

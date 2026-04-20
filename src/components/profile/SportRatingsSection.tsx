@@ -75,7 +75,7 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.title}>Rankings</Text>
+      <Text style={[styles.title, { color: colors.ink }]}>Rankings</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -102,25 +102,25 @@ export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
           const ageIsLove = ageDisplay === LOVE_LABEL;
 
           return (
-            <View key={r.sportType} style={styles.card}>
-              <Text style={styles.sportName}>
+            <View key={r.sportType} style={[styles.card, { backgroundColor: colors.white, shadowColor: colors.ink }]}>
+              <Text style={[styles.sportName, { color: colors.cobalt }]}>
                 {formatSportName(r.sportType)}
               </Text>
 
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Open</Text>
+                <Text style={[styles.statLabel, { color: colors.inkSoft }]}>Open</Text>
                 <Text
-                  style={[styles.statValue, openIsLove && styles.loveLabel]}
+                  style={[styles.statValue, { color: colors.ink }, openIsLove && styles.loveLabel, openIsLove && { color: colors.inkFaint }]}
                 >
                   {openDisplay}
                 </Text>
               </View>
 
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>
+                <Text style={[styles.statLabel, { color: colors.inkSoft }]}>
                   {r.ageBracket ? r.ageBracket : 'Age'}
                 </Text>
-                <Text style={[styles.statValue, ageIsLove && styles.loveLabel]}>
+                <Text style={[styles.statValue, { color: colors.ink }, ageIsLove && styles.loveLabel, ageIsLove && { color: colors.inkFaint }]}>
                   {ageDisplay}
                 </Text>
               </View>
@@ -139,7 +139,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginBottom: 10,
     letterSpacing: -0.3,
   },
@@ -148,11 +147,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
     width: 160,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -161,7 +158,6 @@ const styles = StyleSheet.create({
   sportName: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.cobalt,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -175,17 +171,14 @@ const styles = StyleSheet.create({
   statLabel: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
   },
   statValue: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.ink,
   },
   loveLabel: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     fontStyle: 'italic',
   },
 });

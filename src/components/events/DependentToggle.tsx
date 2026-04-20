@@ -60,10 +60,9 @@ export function DependentToggle({
         {/* Guardian pill */}
         <TouchableOpacity
           style={[
-            styles.pill,
+            styles.pill, { backgroundColor: colors.surface },
             isActive({ type: 'individual', userId: guardian.id }) &&
-              styles.pillActive,
-          ]}
+              styles.pillActive, isActive({ type: 'individual', userId: guardian.id }) && { backgroundColor: colors.cobalt }]}
           onPress={() =>
             onFilterChange({ type: 'individual', userId: guardian.id })
           }
@@ -71,10 +70,9 @@ export function DependentToggle({
         >
           <Text
             style={[
-              styles.pillText,
+              styles.pillText, { color: colors.ink },
               isActive({ type: 'individual', userId: guardian.id }) &&
-                styles.pillTextActive,
-            ]}
+                styles.pillTextActive, isActive({ type: 'individual', userId: guardian.id }) && { color: colors.white }]}
           >
             {guardian.firstName}
           </Text>
@@ -85,10 +83,9 @@ export function DependentToggle({
           <TouchableOpacity
             key={dep.id}
             style={[
-              styles.pill,
+              styles.pill, { backgroundColor: colors.surface },
               isActive({ type: 'individual', userId: dep.id }) &&
-                styles.pillActive,
-            ]}
+                styles.pillActive, isActive({ type: 'individual', userId: dep.id }) && { backgroundColor: colors.cobalt }]}
             onPress={() =>
               onFilterChange({ type: 'individual', userId: dep.id })
             }
@@ -96,10 +93,9 @@ export function DependentToggle({
           >
             <Text
               style={[
-                styles.pillText,
+                styles.pillText, { color: colors.ink },
                 isActive({ type: 'individual', userId: dep.id }) &&
-                  styles.pillTextActive,
-              ]}
+                  styles.pillTextActive, isActive({ type: 'individual', userId: dep.id }) && { color: colors.white }]}
             >
               {dep.firstName}
             </Text>
@@ -122,17 +118,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 9999,
-    backgroundColor: colors.surface,
   },
-  pillActive: {
-    backgroundColor: colors.cobalt,
-  },
+  pillActive: {},
   pillText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.ink,
   },
-  pillTextActive: {
-    color: colors.white,
-  },
+  pillTextActive: {},
 });

@@ -84,12 +84,12 @@ export function BulkBookingConfirmationModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.modal}>
+        <View style={[styles.modal, { backgroundColor: colors.surface }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
               <Ionicons name="cart" size={28} color={colors.cobalt} />
-              <Text style={styles.title}>Confirm Booking</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.ink }]}>Confirm Booking</Text>
+              <Text style={[styles.subtitle, { color: colors.inkFaint }]}>
                 {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''} at{' '}
                 {facilityName}
               </Text>
@@ -107,22 +107,22 @@ export function BulkBookingConfirmationModal({
                         size={16}
                         color={colors.cobalt}
                       />
-                      <Text style={styles.courtName}>{courtName}</Text>
+                      <Text style={[styles.courtName, { color: colors.ink }]}>{courtName}</Text>
                     </View>
                     {Array.from(dateMap.entries()).map(([date, slots]) => (
                       <View key={date} style={styles.dateGroup}>
-                        <Text style={styles.dateLabel}>{formatDate(date)}</Text>
+                        <Text style={[styles.dateLabel, { color: colors.inkFaint }]}>{formatDate(date)}</Text>
                         {slots
                           .sort((a, b) =>
                             a.startTime.localeCompare(b.startTime)
                           )
                           .map(slot => (
                             <View key={slot.slotId} style={styles.slotRow}>
-                              <Text style={styles.slotTime}>
+                              <Text style={[styles.slotTime, { color: colors.ink }]}>
                                 {formatTime12(slot.startTime)} –{' '}
                                 {formatTime12(slot.endTime)}
                               </Text>
-                              <Text style={styles.slotPrice}>
+                              <Text style={[styles.slotPrice, { color: colors.cobalt }]}>
                                 ${slot.price.toFixed(2)}
                               </Text>
                             </View>
@@ -134,22 +134,22 @@ export function BulkBookingConfirmationModal({
               })}
             </View>
 
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalPrice}>${totalPrice.toFixed(2)}</Text>
+            <View style={[styles.totalRow, { backgroundColor: `${colors.cobalt}10` }]}>
+              <Text style={[styles.totalLabel, { color: colors.ink }]}>Total</Text>
+              <Text style={[styles.totalPrice, { color: colors.cobalt }]}>${totalPrice.toFixed(2)}</Text>
             </View>
 
             {insuranceContent && (
               <View style={styles.insuranceSection}>{insuranceContent}</View>
             )}
 
-            <View style={styles.notice}>
+            <View style={[styles.notice, { borderLeftColor: colors.gold, backgroundColor: `${colors.gold}10` }]}>
               <Ionicons
                 name="information-circle"
                 size={18}
                 color={colors.gold}
               />
-              <Text style={styles.noticeText}>
+              <Text style={[styles.noticeText, { color: colors.ink }]}>
                 Cancellations must be made at least 2 hours before start time.
               </Text>
             </View>
@@ -160,7 +160,7 @@ export function BulkBookingConfirmationModal({
                 onPress={onClose}
                 disabled={loading}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={[styles.cancelBtnText, { color: colors.cobalt }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -170,7 +170,7 @@ export function BulkBookingConfirmationModal({
                 onPress={onConfirm}
                 disabled={loading || confirmDisabled}
               >
-                <Text style={styles.confirmBtnText}>
+                <Text style={[styles.confirmBtnText, { color: colors.surface }]}>
                   {loading
                     ? 'Booking...'
                     : confirmLabel ||
@@ -199,7 +199,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modal: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -209,18 +208,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   title: {
     fontFamily: fonts.heading,
     ...typeScale.h2,
-    color: colors.ink,
     marginTop: Spacing.sm,
   },
   subtitle: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
     marginTop: 4,
   },
   body: { padding: Spacing.lg },
@@ -234,13 +230,11 @@ const styles = StyleSheet.create({
   courtName: {
     fontFamily: fonts.semibold,
     ...typeScale.body,
-    color: colors.ink,
   },
   dateGroup: { marginLeft: 22, marginBottom: Spacing.sm },
   dateLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
@@ -249,18 +243,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 4,
   },
-  slotTime: { fontFamily: fonts.body, ...typeScale.body, color: colors.ink },
+  slotTime: { fontFamily: fonts.body, ...typeScale.body },
   slotPrice: {
     fontFamily: fonts.semibold,
     ...typeScale.body,
-    color: colors.cobalt,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: Spacing.md,
-    backgroundColor: `${colors.cobalt}10`,
     borderRadius: 12,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
@@ -268,12 +260,10 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontFamily: fonts.semibold,
     ...typeScale.h3,
-    color: colors.ink,
   },
   totalPrice: {
     fontFamily: fonts.heading,
     ...typeScale.h2,
-    color: colors.cobalt,
   },
   insuranceSection: {
     paddingHorizontal: Spacing.lg,
@@ -287,15 +277,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     padding: Spacing.sm,
     borderLeftWidth: 3,
-    borderLeftColor: colors.gold,
-    backgroundColor: `${colors.gold}10`,
     borderRadius: 8,
   },
   noticeText: {
     flex: 1,
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.ink,
   },
   buttons: {
     flexDirection: 'row',
@@ -308,7 +295,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt },
+  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   confirmBtn: {
     flex: 2,
     ...ComponentStyles.button.primary,
@@ -317,5 +304,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
-  confirmBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.surface },
+  confirmBtnText: { fontFamily: fonts.ui, fontSize: 15 },
 });

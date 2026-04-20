@@ -68,11 +68,11 @@ export function Step4Who() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.heading}>Who can join?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Who can join?</Text>
 
       {/* Gender */}
       <FormSelect
@@ -86,11 +86,11 @@ export function Step4Who() {
       />
 
       {/* Age Limit */}
-      <Text style={styles.label}>Age Limit</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Age Limit</Text>
       <View style={styles.row}>
         <View style={styles.half}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Min Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -102,7 +102,7 @@ export function Step4Who() {
         </View>
         <View style={styles.half}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Max Age"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -126,10 +126,10 @@ export function Step4Who() {
       />
 
       {/* Visibility toggle */}
-      <Text style={styles.label}>Visibility</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Visibility</Text>
       <View style={styles.visRow}>
         <TouchableOpacity
-          style={[styles.visBtn, privateSelected && styles.visBtnActive]}
+          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, privateSelected && styles.visBtnActive, privateSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'private' })
           }
@@ -141,13 +141,13 @@ export function Step4Who() {
             color={privateSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, privateSelected && styles.visTextActive]}
+            style={[styles.visText, { color: colors.ink }, privateSelected && styles.visTextActive, privateSelected && { color: colors.white }]}
           >
             Private
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.visBtn, publicSelected && styles.visBtnActive]}
+          style={[styles.visBtn, { backgroundColor: colors.surface, borderColor: colors.border }, publicSelected && styles.visBtnActive, publicSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
           onPress={() =>
             dispatch({ type: 'SET_VISIBILITY', visibility: 'public' })
           }
@@ -159,7 +159,7 @@ export function Step4Who() {
             color={publicSelected ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.visText, publicSelected && styles.visTextActive]}
+            style={[styles.visText, { color: colors.ink }, publicSelected && styles.visTextActive, publicSelected && { color: colors.white }]}
           >
             Public
           </Text>
@@ -169,9 +169,9 @@ export function Step4Who() {
       {/* Private: roster search */}
       {privateSelected && (
         <>
-          <Text style={styles.label}>Search Rosters</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Search Rosters</Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="Search by name..."
             placeholderTextColor={colors.inkSoft}
             value={query}
@@ -185,7 +185,7 @@ export function Step4Who() {
             />
           )}
           {results.length > 0 && (
-            <View style={styles.resultsList}>
+            <View style={[styles.resultsList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {results.map(roster => {
                 const added = state.invitedRosters.some(
                   r => r.id === roster.id
@@ -193,7 +193,7 @@ export function Step4Who() {
                 return (
                   <TouchableOpacity
                     key={roster.id}
-                    style={styles.resultRow}
+                    style={[styles.resultRow, { borderBottomColor: colors.border }]}
                     onPress={() => {
                       dispatch({ type: 'ADD_ROSTER', roster });
                       setQuery('');
@@ -208,7 +208,7 @@ export function Step4Who() {
                       color={colors.inkSoft}
                     />
                     <Text
-                      style={[styles.resultName, added && styles.resultMuted]}
+                      style={[styles.resultName, { color: colors.ink }, added && styles.resultMuted, added && { color: colors.inkSoft }]}
                     >
                       {roster.name}
                     </Text>
@@ -227,13 +227,13 @@ export function Step4Who() {
           {state.invitedRosters.length > 0 && (
             <View style={styles.chipList}>
               {state.invitedRosters.map(roster => (
-                <View key={roster.id} style={styles.chip}>
+                <View key={roster.id} style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Ionicons
                     name="people-outline"
                     size={14}
                     color={colors.cobalt}
                   />
-                  <Text style={styles.chipText}>{roster.name}</Text>
+                  <Text style={[styles.chipText, { color: colors.ink }]}>{roster.name}</Text>
                   <TouchableOpacity
                     onPress={() =>
                       dispatch({ type: 'REMOVE_ROSTER', id: roster.id })
@@ -255,9 +255,9 @@ export function Step4Who() {
       {/* Public: minimum player rating */}
       {publicSelected && (
         <>
-          <Text style={styles.label}>Minimum Player Rating</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>Minimum Player Rating</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="0 – 100"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -277,31 +277,26 @@ export function Step4Who() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
     marginTop: 16,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   row: { flexDirection: 'row', gap: 12 },
@@ -315,31 +310,24 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  visBtnActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  visText: { fontFamily: fonts.ui, fontSize: 15, color: colors.ink },
-  visTextActive: { color: colors.white },
+  visBtnActive: {},
+  visText: { fontFamily: fonts.ui, fontSize: 15 },
+  visTextActive: {},
   searchInput: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 12,
   },
   loader: { marginVertical: 8 },
   resultsList: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -350,15 +338,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   resultName: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
-  resultMuted: { color: colors.inkSoft },
+  resultMuted: {},
   chipList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -369,12 +355,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.surface,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  chipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
+  chipText: { fontFamily: fonts.body, fontSize: 13 },
 });

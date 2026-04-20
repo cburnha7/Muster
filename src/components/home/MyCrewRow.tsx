@@ -30,7 +30,7 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.textPrimary }]}>
+      <Text style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}>
         The Family
       </Text>
       <ScrollView
@@ -69,7 +69,7 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
                   </View>
                 ) : (
                   <View style={[styles.circle, { backgroundColor: m.color }]}>
-                    <Text style={styles.initial}>
+                    <Text style={[styles.initial, { color: colors.white }]}>
                       {m.firstName?.charAt(0)?.toUpperCase() ?? '?'}
                     </Text>
                   </View>
@@ -77,14 +77,13 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
               </View>
               <Text
                 style={[
-                  styles.name,
-                  active && styles.nameActive,
+                  styles.name, { color: colors.inkSoft },
+                  active && styles.nameActive, active && { color: colors.ink },
                   {
                     color: active
                       ? colors.textPrimary
                       : colors.textSecondary,
-                  },
-                ]}
+                  }]}
                 numberOfLines={1}
               >
                 {m.firstName}
@@ -116,13 +115,12 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
           </View>
           <Text
             style={[
-              styles.name,
+              styles.name, { color: colors.inkSoft },
               { color: colors.textSecondary },
               allActive && {
                 fontFamily: fonts.label,
                 color: colors.textPrimary,
-              },
-            ]}
+              }]}
             numberOfLines={1}
           >
             All
@@ -138,7 +136,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -165,17 +162,14 @@ const styles = StyleSheet.create({
   initial: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: colors.white,
   },
   name: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.inkSoft,
     marginTop: 4,
     textAlign: 'center',
   },
   nameActive: {
     fontFamily: fonts.label,
-    color: colors.ink,
   },
 });

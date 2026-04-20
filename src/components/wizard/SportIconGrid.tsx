@@ -33,13 +33,13 @@ export function SportIconGrid({
         return (
           <View key={sport.key} style={styles.cellWrapper}>
             <TouchableOpacity
-              style={[styles.card, isSelected && styles.cardSelected]}
+              style={[styles.card, { backgroundColor: colors.surface }, isSelected && styles.cardSelected, isSelected && { backgroundColor: colors.primary }]}
               onPress={() => onSelect(sport.key)}
               activeOpacity={0.75}
             >
               <Text style={styles.emoji}>{sport.emoji}</Text>
               <Text
-                style={[styles.label, isSelected && styles.labelSelected]}
+                style={[styles.label, { color: colors.onSurface }, isSelected && styles.labelSelected, isSelected && { color: colors.white }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
@@ -68,13 +68,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 4,
     borderRadius: 14,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardSelected: {
-    backgroundColor: colors.primary,
-  },
+  cardSelected: {},
   emoji: {
     fontSize: 32,
     marginBottom: 6,
@@ -83,11 +80,9 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.onSurface,
     textAlign: 'center',
   },
   labelSelected: {
-    color: colors.white,
     fontFamily: fonts.ui,
   },
 });

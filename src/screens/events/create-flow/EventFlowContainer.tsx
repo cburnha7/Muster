@@ -46,7 +46,7 @@ export function EventFlowContainer({
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.bgScreen }]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.headerRow}>
         <TouchableOpacity
           onPress={handleBack}
@@ -71,14 +71,13 @@ export function EventFlowContainer({
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[
-                styles.button,
-                (!enabled || state.isSubmitting) && styles.buttonDisabled,
-              ]}
+                styles.button, { backgroundColor: colors.cobalt },
+                (!enabled || state.isSubmitting) && styles.buttonDisabled, (!enabled || state.isSubmitting) && { backgroundColor: colors.inkSoft }]}
               onPress={handlePress}
               disabled={!enabled || state.isSubmitting}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>
+              <Text style={[styles.buttonText, { color: colors.white }]}>
                 {state.isSubmitting
                   ? 'Creating...'
                   : isLastStep
@@ -96,7 +95,6 @@ export function EventFlowContainer({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   headerRow: {
     flexDirection: 'row',
@@ -120,18 +118,15 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   button: {
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonDisabled: {
-    backgroundColor: colors.inkSoft,
     opacity: 0.5,
   },
   buttonText: {
-    color: colors.white,
     fontFamily: fonts.ui,
     fontSize: 16,
   },

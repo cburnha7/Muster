@@ -109,7 +109,7 @@ export const CreateMatchScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Create Match"
           leftIcon="arrow-back"
@@ -117,14 +117,14 @@ export const CreateMatchScreen: React.FC = () => {
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={styles.loadingText}>Loading league data...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkFaint }]}>Loading league data...</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Create Match"
         leftIcon="arrow-back"
@@ -146,7 +146,6 @@ export const CreateMatchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   loadingContainer: {
     flex: 1,
@@ -156,6 +155,5 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: colors.inkFaint,
   },
 });

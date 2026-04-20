@@ -57,14 +57,14 @@ export function ContextIndicator() {
   return (
     <>
       <TouchableOpacity
-        style={styles.pill}
+        style={[styles.pill, { backgroundColor: colors.surface }]}
         onPress={() => hasDependents && setMenuVisible(true)}
         activeOpacity={hasDependents ? 0.7 : 1}
         accessibilityRole="button"
         accessibilityLabel={`Active account: ${displayName}. ${hasDependents ? 'Tap to switch.' : ''}`}
       >
         <Ionicons name="person" size={14} color={colors.onSurface} />
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={[styles.name, { color: colors.onSurface }]} numberOfLines={1}>
           {displayName}
         </Text>
         {hasDependents && (
@@ -79,7 +79,7 @@ export function ContextIndicator() {
         onRequestClose={() => setMenuVisible(false)}
       >
         <Pressable style={styles.backdrop} onPress={() => setMenuVisible(false)}>
-          <View style={styles.dropdown}>
+          <View style={[styles.dropdown, { backgroundColor: colors.surface }]}>
             <FlatList
               data={switcherItems}
               keyExtractor={(item) => item.id ?? 'guardian'}
@@ -87,7 +87,7 @@ export function ContextIndicator() {
                 const isActive = item.id === activeUserId;
                 return (
                   <TouchableOpacity
-                    style={[styles.row, isActive && styles.activeRow]}
+                    style={[styles.row, isActive && styles.activeRow, isActive && { backgroundColor: colors.primary + '0D' }]}
                     onPress={() => handleSwitch(item.id)}
                     accessibilityRole="menuitem"
                     accessibilityLabel={`Switch to ${item.name}`}
@@ -99,7 +99,7 @@ export function ContextIndicator() {
                       style={styles.rowIcon}
                     />
                     <Text
-                      style={[styles.rowText, isActive && styles.activeRowText]}
+                      style={[styles.rowText, { color: colors.onSurface }, isActive && styles.activeRowText, isActive && { color: colors.primary }]}
                       numberOfLines={1}
                     >
                       {item.name}
@@ -127,12 +127,10 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     maxWidth: 220,
     gap: 5,
-    backgroundColor: colors.surface,
   },
   name: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.onSurface,
     flexShrink: 1,
   },
   backdrop: {
@@ -144,7 +142,6 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   dropdown: {
-    backgroundColor: colors.surface,
     borderRadius: BorderRadius.md,
     minWidth: 220,
     maxWidth: 280,
@@ -157,9 +154,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
-  activeRow: {
-    backgroundColor: colors.primary + '0D',
-  },
+  activeRow: {},
   rowIcon: {
     marginRight: 8,
   },
@@ -167,10 +162,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.onSurface,
   },
   activeRowText: {
     fontFamily: fonts.label,
-    color: colors.primary,
   },
 });

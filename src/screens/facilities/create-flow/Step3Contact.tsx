@@ -12,18 +12,18 @@ export function Step3Contact() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.heading}>Contact info</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.heading, { color: colors.ink }]}>Contact info</Text>
+      <Text style={[styles.subtitle, { color: colors.inkSoft }]}>
         Optional details so players can reach you.
       </Text>
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.contactName}
         onChangeText={v => setField('contactName', v)}
         placeholder="Contact name"
@@ -31,7 +31,7 @@ export function Step3Contact() {
       />
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.contactPhone}
         onChangeText={v => setField('contactPhone', v)}
         placeholder="Phone number"
@@ -40,7 +40,7 @@ export function Step3Contact() {
       />
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.contactEmail}
         onChangeText={v => setField('contactEmail', v)}
         placeholder="Email address"
@@ -50,7 +50,7 @@ export function Step3Contact() {
       />
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.contactWebsite}
         onChangeText={v => setField('contactWebsite', v)}
         placeholder="Website URL"
@@ -63,30 +63,25 @@ export function Step3Contact() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 4,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSoft,
     marginBottom: 24,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.white,
     marginBottom: 14,
   },
 });

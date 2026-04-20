@@ -142,10 +142,10 @@ export function DayScheduleTimeline({
             const ampm = h >= 12 ? 'PM' : 'AM';
             return (
               <View key={h} style={[styles.hourLine, { top }]}>
-                <Text style={styles.hourLabel}>
+                <Text style={[styles.hourLabel, { color: colors.inkSoft }]}>
                   {h12} {ampm}
                 </Text>
-                <View style={styles.hourDivider} />
+                <View style={[styles.hourDivider, { backgroundColor: colors.border }]} />
               </View>
             );
           })}
@@ -214,18 +214,17 @@ export function DayScheduleTimeline({
       {/* Duration display */}
       {duration > 0 && (
         <View
-          style={[styles.durationRow, tooShort && styles.durationRowWarning]}
+          style={[styles.durationRow, { backgroundColor: colors.pineTint }, tooShort && styles.durationRowWarning, tooShort && { backgroundColor: colors.heartTint }]}
         >
           <Text
             style={[
-              styles.durationText,
-              tooShort && styles.durationTextWarning,
-            ]}
+              styles.durationText, { color: colors.pine },
+              tooShort && styles.durationTextWarning, tooShort && { color: colors.heart }]}
           >
             {fmt12(selectedStart!)} Ã¢â‚¬â€œ {fmt12(selectedEnd!)} Ã‚Â· {durationLabel}
           </Text>
           {tooShort && (
-            <Text style={styles.warningText}>
+            <Text style={[styles.warningText, { color: colors.heart }]}>
               Minimum booking is {minimumMinutes} min
             </Text>
           )}
@@ -249,11 +248,10 @@ const styles = StyleSheet.create({
     width: 48,
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textAlign: 'right',
     marginRight: 8,
   },
-  hourDivider: { flex: 1, height: 1, backgroundColor: colors.border },
+  hourDivider: { flex: 1, height: 1 },
   slotBlock: {
     position: 'absolute',
     left: 0,
@@ -270,13 +268,12 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.pineTint,
     borderRadius: 12,
     padding: 12,
     marginTop: 12,
   },
-  durationRowWarning: { backgroundColor: colors.heartTint },
-  durationText: { fontFamily: fonts.label, fontSize: 14, color: colors.pine },
-  durationTextWarning: { color: colors.heart },
-  warningText: { fontFamily: fonts.body, fontSize: 12, color: colors.heart },
+  durationRowWarning: {},
+  durationText: { fontFamily: fonts.label, fontSize: 14 },
+  durationTextWarning: {},
+  warningText: { fontFamily: fonts.body, fontSize: 12 },
 });

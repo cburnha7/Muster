@@ -33,10 +33,10 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.surfaceContainerLowest, borderTopColor: colors.outlineVariant }]}>
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.surfaceContainer, color: colors.onSurface }]}
           value={text}
           onChangeText={setText}
           placeholder="Message"
@@ -49,7 +49,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
         />
         {hasText && (
           <TouchableOpacity
-            style={[styles.sendBtn, disabled && styles.sendBtnDisabled]}
+            style={[styles.sendBtn, { backgroundColor: colors.primary }, disabled && styles.sendBtnDisabled]}
             onPress={handleSend}
             disabled={disabled}
             activeOpacity={0.7}
@@ -68,28 +68,23 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: colors.surfaceContainerLowest,
     borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
     gap: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: colors.surfaceContainer,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingTop: Platform.OS === 'ios' ? 10 : 8,
     paddingBottom: Platform.OS === 'ios' ? 10 : 8,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
     maxHeight: 120,
   },
   sendBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,

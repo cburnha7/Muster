@@ -16,9 +16,9 @@ export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
       <TouchableOpacity
-        style={[styles.button, viewMode === 'list' && styles.buttonActive]}
+        style={[styles.button, viewMode === 'list' && styles.buttonActive, viewMode === 'list' && { backgroundColor: colors.cobalt }]}
         onPress={() => onToggle('list')}
         activeOpacity={0.7}
       >
@@ -29,7 +29,7 @@ export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
         />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.button, viewMode === 'map' && styles.buttonActive]}
+        style={[styles.button, viewMode === 'map' && styles.buttonActive, viewMode === 'map' && { backgroundColor: colors.cobalt }]}
         onPress={() => onToggle('map')}
         activeOpacity={0.7}
       >
@@ -46,7 +46,6 @@ export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 2,
   },
@@ -55,7 +54,5 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
   },
-  buttonActive: {
-    backgroundColor: colors.cobalt,
-  },
+  buttonActive: {},
 });

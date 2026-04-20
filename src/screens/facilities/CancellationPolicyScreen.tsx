@@ -24,7 +24,7 @@ export function CancellationPolicyScreen() {
   const { facilityId } = route.params ?? {};
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Cancellation Policy"
         leftIcon="arrow-back"
@@ -41,6 +41,5 @@ export function CancellationPolicyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
 });

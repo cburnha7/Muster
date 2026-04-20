@@ -53,7 +53,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
   const dateTime = formatDateTime(event.startTime);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background, shadowColor: colors.ink }]}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
         <Ionicons name="close" size={24} color={colors.inkFaint} />
       </TouchableOpacity>
@@ -65,7 +65,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
             size={24}
             color={colors.cobalt}
           />
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1}>
             {event.title}
           </Text>
         </View>
@@ -73,20 +73,20 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
         <View style={styles.details}>
           <View style={styles.detailRow}>
             <Ionicons name="calendar-outline" size={16} color={colors.inkFaint} />
-            <Text style={styles.detailText}>
+            <Text style={[styles.detailText, { color: colors.inkFaint }]}>
               {dateTime.date} at {dateTime.time}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
-            <Text style={styles.detailText} numberOfLines={1}>
+            <Text style={[styles.detailText, { color: colors.inkFaint }]} numberOfLines={1}>
               {event.facility?.name || event.locationName || 'Location TBD'}
             </Text>
           </View>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.viewButton}>View Details â†’</Text>
+          <Text style={[styles.viewButton, { color: colors.cobalt }]}>View Details â†’</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -99,9 +99,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: colors.background,
     borderRadius: 12,
-    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -128,7 +126,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TextStyles.h4,
-    color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
   },
@@ -143,7 +140,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     flex: 1,
   },
   footer: {
@@ -151,7 +147,6 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     ...TextStyles.bodyLarge,
-    color: colors.cobalt,
     fontWeight: '600',
   },
 });

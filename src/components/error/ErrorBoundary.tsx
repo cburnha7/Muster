@@ -89,25 +89,25 @@ export class ErrorBoundary extends Component<
 
       // Default error UI
       return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={styles.content}>
             <Ionicons name="alert-circle" size={64} color={colors.error} />
-            <Text style={styles.title}>Oops! Something went wrong</Text>
-            <Text style={styles.message}>
+            <Text style={[styles.title, { color: colors.ink }]}>Oops! Something went wrong</Text>
+            <Text style={[styles.message, { color: colors.inkSecondary }]}>
               We're sorry for the inconvenience. The app encountered an
               unexpected error.
             </Text>
 
             {this.state.error && (
-              <ScrollView style={styles.errorDetails}>
-                <Text style={styles.errorTitle}>Error:</Text>
-                <Text style={styles.errorText}>
+              <ScrollView style={[styles.errorDetails, { backgroundColor: colors.errorLight }]}>
+                <Text style={[styles.errorTitle, { color: colors.error }]}>Error:</Text>
+                <Text style={[styles.errorText, { color: colors.error }]}>
                   {this.state.error.toString()}
                 </Text>
                 {this.state.errorInfo && (
                   <>
-                    <Text style={styles.errorTitle}>Component Stack:</Text>
-                    <Text style={styles.errorText}>
+                    <Text style={[styles.errorTitle, { color: colors.error }]}>Component Stack:</Text>
+                    <Text style={[styles.errorText, { color: colors.error }]}>
                       {this.state.errorInfo.componentStack}
                     </Text>
                   </>
@@ -115,11 +115,11 @@ export class ErrorBoundary extends Component<
               </ScrollView>
             )}
 
-            <TouchableOpacity style={styles.button} onPress={this.resetError}>
-              <Text style={styles.buttonText}>Try Again</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: colors.cobalt }]} onPress={this.resetError}>
+              <Text style={[styles.buttonText, { color: colors.white }]}>Try Again</Text>
             </TouchableOpacity>
 
-            <Text style={styles.helpText}>
+            <Text style={[styles.helpText, { color: colors.inkMuted }]}>
               If the problem persists, please restart the app or contact
               support.
             </Text>
@@ -135,7 +135,6 @@ export class ErrorBoundary extends Component<
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -147,14 +146,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    color: colors.inkSecondary,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
@@ -162,7 +159,6 @@ const styles = StyleSheet.create({
   errorDetails: {
     width: '100%',
     maxHeight: 200,
-    backgroundColor: colors.errorLight,
     borderRadius: 8,
     padding: 12,
     marginBottom: 24,
@@ -170,30 +166,25 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.error,
     marginBottom: 8,
   },
   errorText: {
     fontSize: 12,
-    color: colors.error,
     fontFamily: 'monospace',
     marginBottom: 12,
   },
   button: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 16,
   },
   buttonText: {
-    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
   helpText: {
     fontSize: 14,
-    color: colors.inkMuted,
     textAlign: 'center',
   },
 });

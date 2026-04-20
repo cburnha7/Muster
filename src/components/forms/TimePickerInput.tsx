@@ -68,23 +68,23 @@ export function TimePickerInput({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <Text style={styles.label}>
+      <Text style={[styles.label, { color: colors.ink }]}>
         {label}
-        {required && <Text style={styles.required}> *</Text>}
+        {required && <Text style={[styles.required, { color: colors.heart }]}> *</Text>}
       </Text>
       <TouchableOpacity
-        style={[styles.trigger, error ? styles.triggerError : null]}
+        style={[styles.trigger, { backgroundColor: colors.surface, borderColor: colors.inkFaint + '40' }, error ? styles.triggerError : null, error ? { borderColor: colors.heart } : {}]}
         onPress={() => setShowPicker(true)}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${formatDisplay(value)}`}
       >
         <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
-        <Text style={[styles.triggerText, !value && styles.placeholder]}>
+        <Text style={[styles.triggerText, { color: colors.ink }, !value && styles.placeholder, !value && { color: colors.inkFaint }]}>
           {formatDisplay(value)}
         </Text>
       </TouchableOpacity>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: colors.heart }]}>{error}</Text> : null}
 
       {showPicker && (
         <>
@@ -100,7 +100,7 @@ export function TimePickerInput({
               style={styles.doneButton}
               onPress={handleConfirmIOS}
             >
-              <Text style={styles.doneText}>Done</Text>
+              <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
             </TouchableOpacity>
           )}
         </>
@@ -116,39 +116,28 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: 6,
   },
-  required: {
-    color: colors.heart,
-  },
+  required: {},
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.inkFaint + '40',
     paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 10,
   },
-  triggerError: {
-    borderColor: colors.heart,
-  },
+  triggerError: {},
   triggerText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
-  placeholder: {
-    color: colors.inkFaint,
-  },
+  placeholder: {},
   error: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.heart,
     marginTop: 4,
   },
   doneButton: {
@@ -160,6 +149,5 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
   },
 });

@@ -158,10 +158,10 @@ export function EditCourtModal({
       onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.surface }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity
             onPress={handleClose}
             disabled={loading}
@@ -169,7 +169,7 @@ export function EditCourtModal({
           >
             <Ionicons name="close" size={24} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Court</Text>
+          <Text style={[styles.headerTitle, { color: colors.ink }]}>Edit Court</Text>
           <View style={styles.closeButton} />
         </View>
 
@@ -228,7 +228,7 @@ export function EditCourtModal({
           />
         </ScrollView>
 
-        <View style={styles.actions}>
+        <View style={[styles.actions, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
           <FormButton
             title="Cancel"
             variant="outline"
@@ -252,7 +252,6 @@ export function EditCourtModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -260,14 +259,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
   },
   closeButton: {
     width: 40,
@@ -285,9 +281,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   actionButton: {
     flex: 1,

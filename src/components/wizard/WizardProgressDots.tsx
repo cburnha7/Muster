@@ -16,9 +16,8 @@ export function WizardProgressDots({ total, current }: WizardProgressDotsProps) 
           key={i}
           style={[
             styles.dot,
-            i <= current ? styles.dotActive : styles.dotInactive,
-            i < current && styles.dotCompleted,
-          ]}
+            i <= current ? styles.dotActive : styles.dotInactive, i <= current ? { backgroundColor: colors.primary } : {},
+            i < current && styles.dotCompleted, i < current && { backgroundColor: colors.primary }]}
         />
       ))}
     </View>
@@ -38,14 +37,11 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 24,
-    backgroundColor: colors.primary,
   },
   dotCompleted: {
     width: 12,
-    backgroundColor: colors.primary,
   },
   dotInactive: {
     width: 12,
-    backgroundColor: colors.outlineVariant,
   },
 });

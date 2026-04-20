@@ -93,10 +93,10 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.white }]}>
       <View style={styles.matchInfo}>
-        <Text style={styles.matchTitle}>Record Match Result</Text>
-        <Text style={styles.matchDate}>
+        <Text style={[styles.matchTitle, { color: colors.ink }]}>Record Match Result</Text>
+        <Text style={[styles.matchDate, { color: colors.inkSecondary }]}>
           {new Date(match.scheduledAt).toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
@@ -109,8 +109,8 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
 
       <View style={styles.scoresContainer}>
         <View style={styles.teamScore}>
-          <Text style={styles.teamLabel}>Home Roster</Text>
-          <Text style={styles.teamName} numberOfLines={1}>
+          <Text style={[styles.teamLabel, { color: colors.inkMuted }]}>Home Roster</Text>
+          <Text style={[styles.teamName, { color: colors.ink }]} numberOfLines={1}>
             {match.homeTeam?.name || 'Home Roster'}
           </Text>
           <FormInput
@@ -125,12 +125,12 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
         </View>
 
         <View style={styles.vsDivider}>
-          <Text style={styles.vsText}>vs</Text>
+          <Text style={[styles.vsText, { color: colors.inkMuted }]}>vs</Text>
         </View>
 
         <View style={styles.teamScore}>
-          <Text style={styles.teamLabel}>Away Roster</Text>
-          <Text style={styles.teamName} numberOfLines={1}>
+          <Text style={[styles.teamLabel, { color: colors.inkMuted }]}>Away Roster</Text>
+          <Text style={[styles.teamName, { color: colors.ink }]} numberOfLines={1}>
             {match.awayTeam?.name || 'Away Roster'}
           </Text>
           <FormInput
@@ -145,9 +145,9 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
         </View>
       </View>
 
-      <View style={styles.outcomeContainer}>
-        <Text style={styles.outcomeLabel}>Outcome:</Text>
-        <Text style={styles.outcomeText}>{getOutcome()}</Text>
+      <View style={[styles.outcomeContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.outcomeLabel, { color: colors.inkSecondary }]}>Outcome:</Text>
+        <Text style={[styles.outcomeText, { color: colors.cobalt }]}>{getOutcome()}</Text>
       </View>
 
       <View style={styles.actions}>
@@ -174,7 +174,6 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
     padding: 16,
   },
   matchInfo: {
@@ -184,12 +183,10 @@ const styles = StyleSheet.create({
   matchTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 8,
   },
   matchDate: {
     fontSize: 14,
-    color: colors.inkSecondary,
   },
   scoresContainer: {
     flexDirection: 'row',
@@ -202,14 +199,12 @@ const styles = StyleSheet.create({
   teamLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.inkMuted,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 12,
   },
   scoreInput: {
@@ -222,10 +217,8 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.inkMuted,
   },
   outcomeContainer: {
-    backgroundColor: colors.background,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -234,13 +227,11 @@ const styles = StyleSheet.create({
   outcomeLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginBottom: 8,
   },
   outcomeText: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.cobalt,
   },
   actions: {
     flexDirection: 'row',

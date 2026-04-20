@@ -315,14 +315,14 @@ export function Step4Where() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>Where's the game?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Where's the game?</Text>
 
       <View style={styles.modeRow}>
         <TouchableOpacity
-          style={[styles.modeBtn, isMuster && styles.modeBtnActive]}
+          style={[styles.modeBtn, { backgroundColor: colors.surface, borderColor: colors.border }, isMuster && styles.modeBtnActive, isMuster && { backgroundColor: colors.pine, borderColor: colors.pine }]}
           onPress={() =>
             dispatch({ type: 'SET_LOCATION_MODE', mode: 'muster' })
           }
@@ -334,13 +334,13 @@ export function Step4Where() {
             color={isMuster ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.modeBtnText, isMuster && styles.modeBtnTextActive]}
+            style={[styles.modeBtnText, { color: colors.ink }, isMuster && styles.modeBtnTextActive, isMuster && { color: colors.white }]}
           >
             Muster Location
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.modeBtn, isOpen && styles.modeBtnActive]}
+          style={[styles.modeBtn, { backgroundColor: colors.surface, borderColor: colors.border }, isOpen && styles.modeBtnActive, isOpen && { backgroundColor: colors.pine, borderColor: colors.pine }]}
           onPress={() => dispatch({ type: 'SET_LOCATION_MODE', mode: 'open' })}
           activeOpacity={0.8}
         >
@@ -350,7 +350,7 @@ export function Step4Where() {
             color={isOpen ? colors.white : colors.ink}
           />
           <Text
-            style={[styles.modeBtnText, isOpen && styles.modeBtnTextActive]}
+            style={[styles.modeBtnText, { color: colors.ink }, isOpen && styles.modeBtnTextActive, isOpen && { color: colors.white }]}
           >
             Open Ground
           </Text>
@@ -376,9 +376,9 @@ export function Step4Where() {
           )}
 
           {noSportMatch && (
-            <View style={styles.warningCard}>
+            <View style={[styles.warningCard, { backgroundColor: colors.heartTint, borderColor: colors.heart }]}>
               <Ionicons name="warning-outline" size={18} color={colors.heart} />
-              <Text style={styles.warningText}>
+              <Text style={[styles.warningText, { color: colors.heart }]}>
                 No courts at this location are available for{' '}
                 {state.sport || 'the selected sport'}.
               </Text>
@@ -414,8 +414,8 @@ export function Step4Where() {
                   style={styles.loader}
                 />
               ) : isAvailable === true ? (
-                <View style={styles.availableCard}>
-                  <View style={styles.availableIcon}>
+                <View style={[styles.availableCard, { backgroundColor: colors.pineTint, borderColor: colors.pine }]}>
+                  <View style={[styles.availableIcon, { backgroundColor: colors.white }]}>
                     <Ionicons
                       name="checkmark-circle"
                       size={24}
@@ -423,28 +423,28 @@ export function Step4Where() {
                     />
                   </View>
                   <View style={styles.availableInfo}>
-                    <Text style={styles.availableLabel}>Available</Text>
-                    <Text style={styles.availableDate}>{eventDateLabel}</Text>
-                    <Text style={styles.availableTime}>{eventTimeLabel}</Text>
+                    <Text style={[styles.availableLabel, { color: colors.pine }]}>Available</Text>
+                    <Text style={[styles.availableDate, { color: colors.ink }]}>{eventDateLabel}</Text>
+                    <Text style={[styles.availableTime, { color: colors.inkSoft }]}>{eventTimeLabel}</Text>
                     {availabilityIsOwner && (
-                      <Text style={styles.ownerNote}>You own this ground</Text>
+                      <Text style={[styles.ownerNote, { color: colors.pine }]}>You own this ground</Text>
                     )}
                   </View>
                 </View>
               ) : isAvailable === false ? (
-                <View style={styles.unavailableCard}>
+                <View style={[styles.unavailableCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Ionicons
                     name="close-circle-outline"
                     size={24}
                     color={colors.heart}
                   />
-                  <Text style={styles.unavailableText}>
+                  <Text style={[styles.unavailableText, { color: colors.inkSoft }]}>
                     {availabilityIsOwner
                       ? 'This time slot is reserved by another user.'
                       : 'You don\u2019t have a reservation for this time.'}
                   </Text>
                   <TouchableOpacity
-                    style={styles.bookCourtBtn}
+                    style={[styles.bookCourtBtn, { backgroundColor: colors.pine }]}
                     onPress={handleBookCourtTime}
                     activeOpacity={0.8}
                   >
@@ -453,7 +453,7 @@ export function Step4Where() {
                       size={16}
                       color={colors.white}
                     />
-                    <Text style={styles.bookCourtBtnText}>Book Court Time</Text>
+                    <Text style={[styles.bookCourtBtnText, { color: colors.white }]}>Book Court Time</Text>
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -464,9 +464,9 @@ export function Step4Where() {
 
       {isOpen && (
         <>
-          <Text style={styles.fieldLabel}>Location Name</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Location Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="e.g. Central Park, Main Street Gym"
             placeholderTextColor={colors.inkSoft}
             value={state.locationName}
@@ -474,9 +474,9 @@ export function Step4Where() {
               dispatch({ type: 'SET_FIELD', field: 'locationName', value: v })
             }
           />
-          <Text style={styles.fieldLabel}>Street Address</Text>
+          <Text style={[styles.fieldLabel, { color: colors.ink }]}>Street Address</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="123 Main St"
             placeholderTextColor={colors.inkSoft}
             value={state.locationAddress}
@@ -490,9 +490,9 @@ export function Step4Where() {
           />
           <View style={styles.addressRow}>
             <View style={{ flex: 2 }}>
-              <Text style={styles.fieldLabel}>City</Text>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>City</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
                 placeholder="City"
                 placeholderTextColor={colors.inkSoft}
                 value={(state as any).locationCity || ''}
@@ -506,9 +506,9 @@ export function Step4Where() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fieldLabel}>State</Text>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>State</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
                 placeholder="ST"
                 placeholderTextColor={colors.inkSoft}
                 value={(state as any).locationState || ''}
@@ -522,9 +522,9 @@ export function Step4Where() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fieldLabel}>Zip</Text>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>Zip</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
                 placeholder="00000"
                 placeholderTextColor={colors.inkSoft}
                 keyboardType="numeric"
@@ -542,12 +542,12 @@ export function Step4Where() {
 
           {/* Previously used locations */}
           {savedLocations.length > 0 && (
-            <View style={styles.savedSection}>
-              <Text style={styles.savedTitle}>Previously used</Text>
+            <View style={[styles.savedSection, { borderTopColor: colors.border }]}>
+              <Text style={[styles.savedTitle, { color: colors.inkFaint }]}>Previously used</Text>
               {savedLocations.map(loc => (
                 <TouchableOpacity
                   key={loc.id}
-                  style={styles.savedRow}
+                  style={[styles.savedRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
                   onPress={() => {
                     dispatch({
                       type: 'SET_FIELD',
@@ -568,11 +568,11 @@ export function Step4Where() {
                     color={colors.cobalt}
                   />
                   <View style={styles.savedInfo}>
-                    <Text style={styles.savedName} numberOfLines={1}>
+                    <Text style={[styles.savedName, { color: colors.ink }]} numberOfLines={1}>
                       {loc.name}
                     </Text>
                     {loc.address ? (
-                      <Text style={styles.savedAddress} numberOfLines={1}>
+                      <Text style={[styles.savedAddress, { color: colors.inkSoft }]} numberOfLines={1}>
                         {loc.address}
                       </Text>
                     ) : null}
@@ -606,12 +606,11 @@ function fmt12(time: string): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   modeRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
@@ -623,47 +622,39 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  modeBtnActive: { backgroundColor: colors.pine, borderColor: colors.pine },
-  modeBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.ink },
-  modeBtnTextActive: { color: colors.white },
+  modeBtnActive: {},
+  modeBtnText: { fontFamily: fonts.ui, fontSize: 14 },
+  modeBtnTextActive: {},
   loader: { marginVertical: 16 },
   warningCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.heartTint,
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.heart,
   },
   warningText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     flex: 1,
   },
   availableCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: colors.pineTint,
     borderRadius: 14,
     padding: 16,
     marginTop: 12,
     borderWidth: 1.5,
-    borderColor: colors.pine,
   },
   availableIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -671,40 +662,33 @@ const styles = StyleSheet.create({
   availableLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.pine,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   availableDate: {
     fontFamily: fonts.headingSemi || fonts.heading,
     fontSize: 16,
-    color: colors.ink,
   },
   availableTime: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
   },
   ownerNote: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.pine,
     marginTop: 2,
   },
   unavailableCard: {
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 24,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   unavailableText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
   },
   bookCourtBtn: {
@@ -712,42 +696,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
   },
-  bookCourtBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
+  bookCourtBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   fieldLabel: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   addressRow: { flexDirection: 'row', gap: 8 },
   savedSection: {
     marginTop: 20,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     paddingTop: 16,
   },
   savedTitle: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -758,22 +735,18 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: colors.surface,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   savedInfo: { flex: 1 },
   savedName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   savedAddress: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginTop: 2,
   },
 });

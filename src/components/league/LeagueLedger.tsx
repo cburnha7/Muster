@@ -68,18 +68,18 @@ function TransactionRow({ item }: { item: LeagueTransaction }) {
           style={styles.icon}
         />
         <View style={styles.rowInfo}>
-          <Text style={styles.typeLabel}>{getTypeLabel(item.type)}</Text>
-          <Text style={styles.description} numberOfLines={1}>
+          <Text style={[styles.typeLabel, { color: colors.ink }]}>{getTypeLabel(item.type)}</Text>
+          <Text style={[styles.description, { color: colors.inkFaint }]} numberOfLines={1}>
             {item.description}
           </Text>
-          <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+          <Text style={[styles.date, { color: colors.inkFaint }]}>{formatDate(item.createdAt)}</Text>
         </View>
       </View>
       <View style={styles.rowRight}>
         <Text style={[styles.amount, { color: typeColor }]}>
           {formatCurrency(item.amount)}
         </Text>
-        <Text style={styles.balance}>
+        <Text style={[styles.balance, { color: colors.inkFaint }]}>
           Bal: {formatCurrency(item.balanceAfter)}
         </Text>
       </View>
@@ -119,7 +119,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
     return (
       <View style={styles.center}>
         <Ionicons name="alert-circle-outline" size={24} color={colors.heart} />
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.errorText, { color: colors.heart }]}>{error}</Text>
       </View>
     );
   }
@@ -128,7 +128,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
     return (
       <View style={styles.center}>
         <Ionicons name="receipt-outline" size={32} color={colors.inkFaint} />
-        <Text style={styles.emptyText}>No transactions yet</Text>
+        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>No transactions yet</Text>
       </View>
     );
   }
@@ -138,9 +138,9 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Season Ledger</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>Season Ledger</Text>
         <View style={styles.balanceBadge}>
-          <Text style={styles.balanceLabel}>BALANCE</Text>
+          <Text style={[styles.balanceLabel, { color: colors.inkFaint }]}>BALANCE</Text>
           <Text style={[
             styles.balanceValue,
             { color: currentBalance >= 0 ? colors.cobalt : colors.heart },
@@ -154,7 +154,7 @@ export function LeagueLedger({ leagueId, seasonId }: LeagueLedgerProps) {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <TransactionRow item={item} />}
         scrollEnabled={false}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.inkFaint }]} />}
       />
     </View>
   );
@@ -173,14 +173,12 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   balanceBadge: { alignItems: 'flex-end' },
   balanceLabel: {
     fontFamily: fonts.label,
     fontSize: 10,
     letterSpacing: 1.2,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
   },
   balanceValue: {
@@ -200,18 +198,15 @@ const styles = StyleSheet.create({
   typeLabel: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.ink,
   },
   description: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 1,
   },
   date: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   rowRight: { alignItems: 'flex-end', marginLeft: 12 },
@@ -222,24 +217,20 @@ const styles = StyleSheet.create({
   balance: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.inkFaint,
     opacity: 0.3,
   },
   errorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     marginTop: 8,
   },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: 8,
   },
 });

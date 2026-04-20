@@ -134,7 +134,7 @@ export function TransferAccountScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.screen, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader title="Transfer Account" />
       <KeyboardAvoidingView
         style={styles.flex}
@@ -146,15 +146,15 @@ export function TransferAccountScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Permanent action warning */}
-          <View style={styles.warningCard}>
+          <View style={[styles.warningCard, { backgroundColor: colors.tertiary + '15', borderColor: colors.tertiary + '30' }]}>
             <Ionicons
               name="warning-outline"
               size={24}
               color={colors.tertiary}
             />
             <View style={styles.warningTextContainer}>
-              <Text style={styles.warningTitle}>This action is permanent</Text>
-              <Text style={styles.warningBody}>
+              <Text style={[styles.warningTitle, { color: colors.onSurface }]}>This action is permanent</Text>
+              <Text style={[styles.warningBody, { color: colors.onSurfaceFaint }]}>
                 Transferring this account will create an independent Muster
                 account for the dependent. They will be removed from your
                 dependents list and will manage their own account going forward.
@@ -165,7 +165,7 @@ export function TransferAccountScreen() {
           </View>
 
           {/* Credential fields */}
-          <Text style={styles.sectionLabel}>New Account Credentials</Text>
+          <Text style={[styles.sectionLabel, { color: colors.onSurface }]}>New Account Credentials</Text>
 
           <FormInput
             label="Email Address"
@@ -231,7 +231,6 @@ export function TransferAccountScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -242,12 +241,10 @@ const styles = StyleSheet.create({
   },
   warningCard: {
     flexDirection: 'row',
-    backgroundColor: colors.tertiary + '15',
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: colors.tertiary + '30',
   },
   warningTextContainer: {
     flex: 1,
@@ -256,19 +253,16 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.onSurface,
     marginBottom: 4,
   },
   warningBody: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceFaint,
     lineHeight: 20,
   },
   sectionLabel: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
     marginBottom: Spacing.sm,
   },
   submitContainer: {

@@ -74,7 +74,7 @@ export function ProfileCard({
   const bornFormatted = dateOfBirth ? formatDate(dateOfBirth) : null;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
       {/* Sport Rankings */}
       <SportRatingsSection userId={userId} />
 
@@ -83,7 +83,7 @@ export function ProfileCard({
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.avatar} />
         ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+          <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.surfaceContainerHigh }]}>
             <Ionicons name="person" size={56} color={colors.outline} />
           </View>
         )}
@@ -96,7 +96,7 @@ export function ProfileCard({
         {(age !== null || gender) && (
           <View style={styles.infoRow}>
             <Ionicons name="person-outline" size={16} color={colors.cobalt} />
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>
               {age !== null ? `${age} years old` : ''}
               {age !== null && gender ? '  Ã‚Â·  ' : ''}
               {gender || ''}
@@ -107,28 +107,28 @@ export function ProfileCard({
         {bornFormatted && (
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={16} color={colors.cobalt} />
-            <Text style={styles.infoText}>Born {bornFormatted}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>Born {bornFormatted}</Text>
           </View>
         )}
 
         {email ? (
           <View style={styles.infoRow}>
             <Ionicons name="mail-outline" size={16} color={colors.cobalt} />
-            <Text style={styles.infoText}>{email}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>{email}</Text>
           </View>
         ) : null}
 
         {phone ? (
           <View style={styles.infoRow}>
             <Ionicons name="call-outline" size={16} color={colors.cobalt} />
-            <Text style={styles.infoText}>{phone}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>{phone}</Text>
           </View>
         ) : null}
 
         {address ? (
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={16} color={colors.cobalt} />
-            <Text style={styles.infoText}>{address}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>{address}</Text>
           </View>
         ) : null}
       </View>
@@ -138,10 +138,8 @@ export function ProfileCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -157,14 +155,12 @@ const styles = StyleSheet.create({
     borderRadius: 70,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.surfaceContainerHigh,
     alignItems: 'center',
     justifyContent: 'center',
   },
   name: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.ink,
     textAlign: 'center',
     marginTop: 12,
     letterSpacing: -0.3,
@@ -181,7 +177,6 @@ const styles = StyleSheet.create({
   infoText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     flex: 1,
   },
 });

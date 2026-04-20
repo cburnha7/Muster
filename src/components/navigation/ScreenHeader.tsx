@@ -56,14 +56,13 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   return (
     <View
       style={[
-        styles.container,
+        styles.container, { borderBottomColor: colors.outlineVariant, shadowColor: colors.ink },
         {
           backgroundColor,
           paddingTop: insets.top,
           borderBottomWidth: showBorder ? 1 : 0,
         },
-        style,
-      ]}
+        style]}
     >
       <StatusBar
         barStyle={
@@ -140,8 +139,6 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderBottomColor: colors.outlineVariant,
-    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: 1,

@@ -39,24 +39,24 @@ export function UpsellModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={onClose}
         />
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.iconCircle}>
+            <View style={[styles.iconCircle, { backgroundColor: `${colors.gold}20` }]}>
               <Ionicons
                 name="lock-open-outline"
                 size={28}
                 color={colors.gold}
               />
             </View>
-            <Text style={styles.title}>Upgrade to {planInfo.label}</Text>
-            <Text style={styles.price}>{planInfo.price}</Text>
+            <Text style={[styles.title, { color: colors.ink }]}>Upgrade to {planInfo.label}</Text>
+            <Text style={[styles.price, { color: colors.cobalt }]}>{planInfo.price}</Text>
           </View>
 
           {/* Features list */}
@@ -68,24 +68,24 @@ export function UpsellModal({
                   size={18}
                   color={colors.cobalt}
                 />
-                <Text style={styles.featureText}>{feature}</Text>
+                <Text style={[styles.featureText, { color: colors.ink }]}>{feature}</Text>
               </View>
             ))}
           </ScrollView>
 
           {/* Actions */}
           <TouchableOpacity
-            style={styles.upgradeButton}
+            style={[styles.upgradeButton, { backgroundColor: colors.cobalt }]}
             onPress={() => onUpgrade(requiredPlan)}
             activeOpacity={0.8}
           >
-            <Text style={styles.upgradeButtonText}>
+            <Text style={[styles.upgradeButtonText, { color: colors.white }]}>
               Upgrade to {planInfo.label} â€” {planInfo.price}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.dismissButton} onPress={onClose}>
-            <Text style={styles.dismissText}>Not now</Text>
+            <Text style={[styles.dismissText, { color: colors.inkFaint }]}>Not now</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -96,13 +96,11 @@ export function UpsellModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -117,7 +115,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: `${colors.gold}20`,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -125,13 +122,11 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     ...typeScale.h2,
-    color: colors.ink,
     textAlign: 'center',
   },
   price: {
     fontFamily: fonts.display,
     ...typeScale.h3,
-    color: colors.cobalt,
     marginTop: 4,
   },
   featuresList: {
@@ -147,11 +142,9 @@ const styles = StyleSheet.create({
   featureText: {
     fontFamily: fonts.body,
     ...typeScale.body,
-    color: colors.ink,
     flex: 1,
   },
   upgradeButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
@@ -159,7 +152,6 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
   },
   dismissButton: {
     paddingVertical: 12,
@@ -168,6 +160,5 @@ const styles = StyleSheet.create({
   dismissText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
   },
 });

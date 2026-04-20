@@ -114,9 +114,9 @@ export const MatchForm: React.FC<MatchFormProps> = ({
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Match Details</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Match Details</Text>
 
         <FormSelect
           label="Home Roster *"
@@ -137,8 +137,8 @@ export const MatchForm: React.FC<MatchFormProps> = ({
         />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Schedule</Text>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Schedule</Text>
 
         <FormInput
           label="Match Date *"
@@ -157,8 +157,8 @@ export const MatchForm: React.FC<MatchFormProps> = ({
         />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Optional Information</Text>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Optional Information</Text>
 
         <FormSelect
           label="Link to Event"
@@ -203,17 +203,14 @@ export const MatchForm: React.FC<MatchFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   section: {
-    backgroundColor: colors.surface,
     padding: 16,
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 16,
   },
   actions: {

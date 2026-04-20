@@ -142,12 +142,12 @@ export function UserReservationsTab({
     return (
       <View style={st.centered}>
         <Ionicons name="calendar-outline" size={40} color={colors.inkFaint} />
-        <Text style={st.emptyTitle}>No upcoming reservations</Text>
-        <Text style={st.emptySubtitle}>
+        <Text style={[st.emptyTitle, { color: colors.ink }]}>No upcoming reservations</Text>
+        <Text style={[st.emptySubtitle, { color: colors.inkSoft }]}>
           You don't have any upcoming court time at {facilityName}.
         </Text>
         <TouchableOpacity
-          style={st.bookBtn}
+          style={[st.bookBtn, { backgroundColor: colors.cobalt }]}
           activeOpacity={0.7}
           onPress={() =>
             (navigation as any).navigate('CourtAvailability', {
@@ -157,7 +157,7 @@ export function UserReservationsTab({
           }
         >
           <Ionicons name="add-circle-outline" size={18} color={colors.white} />
-          <Text style={st.bookBtnText}>Book Court Time</Text>
+          <Text style={[st.bookBtnText, { color: colors.white }]}>Book Court Time</Text>
         </TouchableOpacity>
       </View>
     );
@@ -165,15 +165,15 @@ export function UserReservationsTab({
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40, paddingTop: 8 }}>
-      <Text style={st.sectionLabel}>YOUR UPCOMING RESERVATIONS</Text>
+      <Text style={[st.sectionLabel, { color: colors.inkSoft }]}>YOUR UPCOMING RESERVATIONS</Text>
       <View style={{ paddingHorizontal: 16, gap: 10 }}>
         {rentals.map(r => (
-          <View key={r.id} style={st.card}>
-            <Text style={st.courtName} numberOfLines={1}>
+          <View key={r.id} style={[st.card, { backgroundColor: colors.white, shadowColor: colors.black }]}>
+            <Text style={[st.courtName, { color: colors.ink }]} numberOfLines={1}>
               {r.timeSlot.court.name}
             </Text>
-            <Text style={st.dateTime}>{formatDate(r.timeSlot.date)}</Text>
-            <Text style={st.timeRange}>
+            <Text style={[st.dateTime, { color: colors.inkSoft }]}>{formatDate(r.timeSlot.date)}</Text>
+            <Text style={[st.timeRange, { color: colors.cobalt }]}>
               {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
               {formatTime(r.timeSlot.endTime)}
             </Text>
@@ -194,13 +194,11 @@ const st = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginTop: 12,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 20,
@@ -209,17 +207,15 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 12,
     marginTop: 20,
   },
-  bookBtnText: { fontFamily: fonts.ui, fontSize: 14, color: colors.white },
+  bookBtnText: { fontFamily: fonts.ui, fontSize: 14 },
   sectionLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginHorizontal: 16,
@@ -227,10 +223,8 @@ const st = StyleSheet.create({
     marginBottom: 10,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 14,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -239,14 +233,12 @@ const st = StyleSheet.create({
   courtName: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 4,
   },
-  dateTime: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
+  dateTime: { fontFamily: fonts.body, fontSize: 13 },
   timeRange: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.cobalt,
     marginTop: 2,
   },
 });

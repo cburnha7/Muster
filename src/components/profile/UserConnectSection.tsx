@@ -115,7 +115,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
                 Active
               </Text>
             </View>
-            <Text style={styles.hint}>
+            <Text style={[styles.hint, { color: colors.inkFaint }]}>
               You can receive payments from bookings and join fees.
             </Text>
           </View>
@@ -128,11 +128,11 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
                 Pending
               </Text>
             </View>
-            <Text style={styles.hint}>
+            <Text style={[styles.hint, { color: colors.inkFaint }]}>
               Your account is under review. You can resume onboarding if needed.
             </Text>
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, { backgroundColor: colors.cobalt }]}
               onPress={handleOnboard}
               disabled={onboarding}
               activeOpacity={0.7}
@@ -140,18 +140,18 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
               {onboarding ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={styles.buttonText}>Resume</Text>
+                <Text style={[styles.buttonText, { color: colors.white }]}>Resume</Text>
               )}
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.statusRow}>
-            <Text style={styles.hint}>
+            <Text style={[styles.hint, { color: colors.inkFaint }]}>
               Set up a payment account to receive funds from bookings and join
               fees.
             </Text>
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, { backgroundColor: colors.cobalt }]}
               onPress={handleOnboard}
               disabled={onboarding}
               activeOpacity={0.7}
@@ -159,7 +159,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
               {onboarding ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={styles.buttonText}>Set Up Payments</Text>
+                <Text style={[styles.buttonText, { color: colors.white }]}>Set Up Payments</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -193,11 +193,9 @@ const styles = StyleSheet.create({
   hint: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
     lineHeight: 18,
   },
   button: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 10,
     borderRadius: 8,
@@ -208,6 +206,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.white,
   },
 });

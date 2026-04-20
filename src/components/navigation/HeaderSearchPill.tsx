@@ -64,12 +64,12 @@ export function HeaderSearchPill({
   if (active) {
     return (
       <View
-        style={[styles.pillActive, { backgroundColor: colors.bgCard }]}
+        style={[styles.pillActive, { backgroundColor: colors.surfaceContainerLowest, borderColor: colors.cobalt, shadowColor: colors.cobalt }, { backgroundColor: colors.bgCard }]}
       >
         <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           ref={inputRef}
-          style={[styles.activeInput, { color: colors.textPrimary }]}
+          style={[styles.activeInput, { color: colors.onSurface }, { color: colors.textPrimary }]}
           placeholder={placeholder}
           placeholderTextColor={colors.textSecondary}
           value={query}
@@ -91,7 +91,7 @@ export function HeaderSearchPill({
 
   return (
     <TouchableOpacity
-      style={[styles.pill, { backgroundColor: colors.bgInput }]}
+      style={[styles.pill, { backgroundColor: colors.surfaceContainer, borderColor: colors.outlineVariant, shadowColor: colors.black }, { backgroundColor: colors.bgInput }]}
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityRole="button"
@@ -99,7 +99,7 @@ export function HeaderSearchPill({
     >
       <Ionicons name="search" size={20} color={colors.textSecondary} />
       <Text
-        style={[styles.text, { color: colors.textSecondary }]}
+        style={[styles.text, { color: colors.outline }, { color: colors.textSecondary }]}
         numberOfLines={1}
       >
         {placeholder}
@@ -112,15 +112,12 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
     flex: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
     borderWidth: 1.5,
-    borderColor: colors.outlineVariant,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -129,15 +126,12 @@ const styles = StyleSheet.create({
   pillActive: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
     flex: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
     borderWidth: 2,
-    borderColor: colors.cobalt,
-    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -147,13 +141,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 17,
-    color: colors.onSurface,
     padding: 0,
   },
   text: {
     fontFamily: fonts.body,
     fontSize: 17,
-    color: colors.outline,
     flex: 1,
   },
 });

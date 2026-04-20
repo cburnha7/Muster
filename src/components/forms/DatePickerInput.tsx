@@ -65,23 +65,23 @@ export function DatePickerInput({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <Text style={styles.label}>
+      <Text style={[styles.label, { color: colors.onSurface }]}>
         {label}
-        {required && <Text style={styles.required}> *</Text>}
+        {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
       </Text>
       <TouchableOpacity
-        style={[styles.trigger, error ? styles.triggerError : null]}
+        style={[styles.trigger, { backgroundColor: colors.surfaceContainer }, error ? styles.triggerError : null, error ? { borderColor: colors.error } : {}]}
         onPress={() => setShowPicker(true)}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${formatDisplay(value)}`}
       >
         <Ionicons name="calendar-outline" size={18} color={colors.onSurfaceVariant} />
-        <Text style={[styles.triggerText, !value && styles.placeholder]}>
+        <Text style={[styles.triggerText, { color: colors.onSurface }, !value && styles.placeholder, !value && { color: colors.onSurfaceVariant }]}>
           {formatDisplay(value)}
         </Text>
       </TouchableOpacity>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
       {showPicker && (
         <>
@@ -95,7 +95,7 @@ export function DatePickerInput({
           />
           {Platform.OS === 'ios' && (
             <TouchableOpacity style={styles.doneButton} onPress={handleConfirmIOS}>
-              <Text style={styles.doneText}>Done</Text>
+              <Text style={[styles.doneText, { color: colors.primary }]}>Done</Text>
             </TouchableOpacity>
           )}
         </>
@@ -111,16 +111,12 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.onSurface,
     marginBottom: 6,
   },
-  required: {
-    color: colors.error,
-  },
+  required: {},
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -128,21 +124,16 @@ const styles = StyleSheet.create({
   },
   triggerError: {
     borderWidth: 1,
-    borderColor: colors.error,
   },
   triggerText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
     flex: 1,
   },
-  placeholder: {
-    color: colors.onSurfaceVariant,
-  },
+  placeholder: {},
   error: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.error,
     marginTop: 4,
   },
   doneButton: {
@@ -154,6 +145,5 @@ const styles = StyleSheet.create({
   doneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.primary,
   },
 });

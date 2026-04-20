@@ -155,7 +155,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -163,7 +163,7 @@ export const RecordMatchResultScreen: React.FC = () => {
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={styles.loadingText}>Loading match data...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkFaint }]}>Loading match data...</Text>
         </View>
       </View>
     );
@@ -171,21 +171,21 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (!match) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
           onLeftPress={handleCancel}
         />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Match not found</Text>
+          <Text style={[styles.errorText, { color: colors.heart }]}>Match not found</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Record Match Result"
         leftIcon="arrow-back"
@@ -204,7 +204,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
         {showStandings && standings.length > 0 && (
           <View style={styles.standingsSection}>
-            <Text style={styles.standingsTitle}>Updated Standings</Text>
+            <Text style={[styles.standingsTitle, { color: colors.ink }]}>Updated Standings</Text>
             <StandingsTable
               standings={standings}
               onTeamPress={handleTeamPress}
@@ -219,7 +219,6 @@ export const RecordMatchResultScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -235,7 +234,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: colors.inkFaint,
   },
   errorContainer: {
     flex: 1,
@@ -245,7 +243,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: colors.heart,
     textAlign: 'center',
   },
   standingsSection: {
@@ -255,7 +252,6 @@ const styles = StyleSheet.create({
   standingsTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 16,
   },
 });

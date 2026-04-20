@@ -104,7 +104,7 @@ export function RedeemCodeScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
@@ -115,22 +115,22 @@ export function RedeemCodeScreen() {
               size={48}
               color={colors.secondary}
             />
-            <Text style={styles.successText}>{successMsg}</Text>
+            <Text style={[styles.successText, { color: colors.onSurface }]}>{successMsg}</Text>
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Text style={styles.primaryBtnText}>Back to Profile</Text>
+              <Text style={[styles.primaryBtnText, { color: colors.white }]}>Back to Profile</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             {/* Code Input */}
-            <Text style={styles.label}>Promo Code</Text>
+            <Text style={[styles.label, { color: colors.outline }]}>Promo Code</Text>
             <View style={styles.inputRow}>
               <TextInput
-                style={[styles.input, validated && styles.inputDisabled]}
+                style={[styles.input, { backgroundColor: colors.white, color: colors.onSurface, borderColor: `${colors.outline}30` }, validated && styles.inputDisabled, validated && { backgroundColor: `${colors.primary}10`, borderColor: colors.primary }]}
                 placeholder="Enter your code"
                 placeholderTextColor={colors.outline}
                 value={code}
@@ -145,7 +145,7 @@ export function RedeemCodeScreen() {
               />
               {!validated && (
                 <TouchableOpacity
-                  style={styles.validateBtn}
+                  style={[styles.validateBtn, { backgroundColor: colors.primary }]}
                   onPress={handleValidate}
                   disabled={isValidating}
                   activeOpacity={0.7}
@@ -153,23 +153,23 @@ export function RedeemCodeScreen() {
                   {isValidating ? (
                     <ActivityIndicator color={colors.white} size="small" />
                   ) : (
-                    <Text style={styles.validateBtnText}>Apply</Text>
+                    <Text style={[styles.validateBtnText, { color: colors.white }]}>Apply</Text>
                   )}
                 </TouchableOpacity>
               )}
             </View>
 
-            {error && <Text style={styles.error}>{error}</Text>}
+            {error && <Text style={[styles.error, { color: colors.error }]}>{error}</Text>}
 
             {validated && (
               <>
-                <Text style={styles.label}>Select Your Tier</Text>
+                <Text style={[styles.label, { color: colors.outline }]}>Select Your Tier</Text>
                 {TIERS.map(tier => {
                   const active = selectedTier === tier.key;
                   return (
                     <TouchableOpacity
                       key={tier.key}
-                      style={[styles.tierCard, active && styles.tierCardActive]}
+                      style={[styles.tierCard, { backgroundColor: colors.white }, active && styles.tierCardActive, active && { borderColor: colors.primary, backgroundColor: `${colors.primary}08` }]}
                       onPress={() => setSelectedTier(tier.key)}
                       activeOpacity={0.7}
                     >
@@ -181,13 +181,12 @@ export function RedeemCodeScreen() {
                       <View style={styles.tierInfo}>
                         <Text
                           style={[
-                            styles.tierLabel,
-                            active && styles.tierLabelActive,
-                          ]}
+                            styles.tierLabel, { color: colors.onSurface },
+                            active && styles.tierLabelActive, active && { color: colors.primary }]}
                         >
                           {tier.label}
                         </Text>
-                        <Text style={styles.tierDesc}>{tier.desc}</Text>
+                        <Text style={[styles.tierDesc, { color: colors.outline }]}>{tier.desc}</Text>
                       </View>
                       {active && (
                         <Ionicons
@@ -202,9 +201,8 @@ export function RedeemCodeScreen() {
 
                 <TouchableOpacity
                   style={[
-                    styles.primaryBtn,
-                    !selectedTier && styles.primaryBtnDisabled,
-                  ]}
+                    styles.primaryBtn, { backgroundColor: colors.primary },
+                    !selectedTier && styles.primaryBtnDisabled]}
                   onPress={handleRedeem}
                   disabled={!selectedTier || isRedeeming}
                   activeOpacity={0.7}
@@ -212,7 +210,7 @@ export function RedeemCodeScreen() {
                   {isRedeeming ? (
                     <ActivityIndicator color={colors.white} size="small" />
                   ) : (
-                    <Text style={styles.primaryBtnText}>Redeem</Text>
+                    <Text style={[styles.primaryBtnText, { color: colors.white }]}>Redeem</Text>
                   )}
                 </TouchableOpacity>
               </>
@@ -226,12 +224,11 @@ export function RedeemCodeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   content: { padding: 20, paddingBottom: 40 },
   label: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.outline,
     textTransform: 'uppercase',
     marginBottom: 8,
     marginTop: 16,
@@ -239,70 +236,55 @@ const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: {
     flex: 1,
-    backgroundColor: colors.white,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.onSurface,
     borderWidth: 1,
-    borderColor: `${colors.outline}30`,
   },
-  inputDisabled: {
-    backgroundColor: `${colors.primary}10`,
-    borderColor: colors.primary,
-  },
+  inputDisabled: {},
   validateBtn: {
-    backgroundColor: colors.primary,
     borderRadius: 9999,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
-  validateBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
+  validateBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   error: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.error,
     marginTop: 6,
   },
   tierCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
-  tierCardActive: {
-    borderColor: colors.primary,
-    backgroundColor: `${colors.primary}08`,
-  },
+  tierCardActive: {},
   tierInfo: { flex: 1, marginLeft: 12 },
-  tierLabel: { fontFamily: fonts.ui, fontSize: 15, color: colors.onSurface },
-  tierLabelActive: { color: colors.primary },
+  tierLabel: { fontFamily: fonts.ui, fontSize: 15 },
+  tierLabelActive: {},
   tierDesc: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.outline,
     marginTop: 2,
   },
   primaryBtn: {
-    backgroundColor: colors.primary,
     borderRadius: 9999,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 20,
   },
   primaryBtnDisabled: { opacity: 0.5 },
-  primaryBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.white },
+  primaryBtnText: { fontFamily: fonts.ui, fontSize: 16 },
   successCard: { alignItems: 'center', marginTop: 40, gap: 16 },
   successText: {
     fontFamily: fonts.body,
     ...typeScale.body,
-    color: colors.onSurface,
     textAlign: 'center',
   },
 });

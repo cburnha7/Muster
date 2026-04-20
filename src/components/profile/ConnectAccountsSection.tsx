@@ -149,7 +149,7 @@ export function ConnectAccountsSection({
     <CollapsibleSection title="Stripe Connect" count={accounts.length}>
       <View style={styles.body}>
         {accounts.length === 0 ? (
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.inkFaint }]}>
             You don't manage any rosters, facilities, or leagues yet.
           </Text>
         ) : (
@@ -160,11 +160,11 @@ export function ConnectAccountsSection({
             return (
               <View
                 key={`${account.entityType}-${account.entityId}`}
-                style={styles.entityRow}
+                style={[styles.entityRow, { borderBottomColor: `${colors.inkFaint}30` }]}
               >
                 <View style={styles.entityInfo}>
-                  <Text style={styles.entityName}>{account.entityName}</Text>
-                  <Text style={styles.entityType}>
+                  <Text style={[styles.entityName, { color: colors.ink }]}>{account.entityName}</Text>
+                  <Text style={[styles.entityType, { color: colors.inkFaint }]}>
                     {getEntityLabel(account.entityType)}
                   </Text>
                 </View>
@@ -172,7 +172,7 @@ export function ConnectAccountsSection({
                   <StatusBadge status={status} />
                   {status !== 'active' && (
                     <TouchableOpacity
-                      style={styles.onboardButton}
+                      style={[styles.onboardButton, { backgroundColor: colors.cobalt }]}
                       onPress={() =>
                         handleOnboard(account.entityType, account.entityId)
                       }
@@ -182,7 +182,7 @@ export function ConnectAccountsSection({
                       {isOnboarding ? (
                         <ActivityIndicator size="small" color={colors.white} />
                       ) : (
-                        <Text style={styles.onboardButtonText}>
+                        <Text style={[styles.onboardButtonText, { color: colors.white }]}>
                           {status === 'pending' ? 'Resume' : 'Set Up'}
                         </Text>
                       )}
@@ -229,7 +229,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
   },
   entityRow: {
     flexDirection: 'row',
@@ -237,7 +236,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: `${colors.inkFaint}30`,
   },
   entityInfo: {
     flex: 1,
@@ -246,12 +244,10 @@ const styles = StyleSheet.create({
   entityName: {
     fontFamily: fonts.body,
     ...typeScale.body,
-    color: colors.ink,
   },
   entityType: {
     fontFamily: fonts.label,
     ...typeScale.label,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   entityActions: {
@@ -269,7 +265,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   onboardButton: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: 8,
@@ -279,6 +274,5 @@ const styles = StyleSheet.create({
   onboardButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.white,
   },
 });

@@ -141,11 +141,11 @@ export function AvatarBottomSheet() {
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {/* ── Profiles ─────────────────────────── */}
-        <Text style={styles.sectionLabel}>PROFILES</Text>
+        <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>PROFILES</Text>
 
         {/* Current user */}
         <TouchableOpacity
-          style={[styles.personRow, !activeUserId && styles.personRowActive]}
+          style={[styles.personRow, !activeUserId && styles.personRowActive, !activeUserId && { backgroundColor: colors.primaryFixed || `${colors.primary}10` }]}
           onPress={() => {
             handleSwitchUser(null);
             navigateTo('ProfileScreen');
@@ -184,9 +184,8 @@ export function AvatarBottomSheet() {
           <View style={styles.personInfo}>
             <Text
               style={[
-                styles.personName,
-                !activeUserId && styles.personNameActive,
-              ]}
+                styles.personName, { color: colors.onSurface },
+                !activeUserId && styles.personNameActive, !activeUserId && { color: colors.primary }]}
             >
               {user.firstName} {user.lastName}
             </Text>
@@ -208,7 +207,7 @@ export function AvatarBottomSheet() {
           return (
             <TouchableOpacity
               key={dep.id}
-              style={[styles.personRow, isActive && styles.personRowActive]}
+              style={[styles.personRow, isActive && styles.personRowActive, isActive && { backgroundColor: colors.primaryFixed || `${colors.primary}10` }]}
               onPress={() => {
                 handleSwitchUser(dep.id);
                 navigateTo('DependentProfile', { dependentId: dep.id });
@@ -241,14 +240,13 @@ export function AvatarBottomSheet() {
               <View style={styles.personInfo}>
                 <Text
                   style={[
-                    styles.personName,
-                    isActive && styles.personNameActive,
-                  ]}
+                    styles.personName, { color: colors.onSurface },
+                    isActive && styles.personNameActive, isActive && { color: colors.primary }]}
                 >
                   {dep.firstName}
                 </Text>
               </View>
-              <Text style={styles.ageText}>age {age}</Text>
+              <Text style={[styles.ageText, { color: colors.onSurfaceVariant }]}>age {age}</Text>
               {isActive && (
                 <Ionicons name="checkmark" size={20} color={colors.secondary} />
               )}
@@ -262,14 +260,14 @@ export function AvatarBottomSheet() {
           onPress={() => navigateTo('DependentForm', {})}
           activeOpacity={0.7}
         >
-          <View style={[styles.personAvatar, styles.addChildAvatar]}>
+          <View style={[styles.personAvatar, styles.addChildAvatar, { backgroundColor: colors.surfaceContainer }]}>
             <Ionicons name="add" size={20} color={colors.primary} />
           </View>
-          <Text style={styles.addChildText}>Add a child</Text>
+          <Text style={[styles.addChildText, { color: colors.primary }]}>Add a child</Text>
         </TouchableOpacity>
 
         {/* ── Quick Actions ────────────────────── */}
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.outlineVariant + '80' }]} />
 
         <TouchableOpacity
           style={styles.menuRow}
@@ -284,7 +282,7 @@ export function AvatarBottomSheet() {
             size={20}
             color={colors.onSurface}
           />
-          <Text style={styles.menuText}>Notifications</Text>
+          <Text style={[styles.menuText, { color: colors.onSurface }]}>Notifications</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
@@ -305,7 +303,7 @@ export function AvatarBottomSheet() {
             size={20}
             color={colors.onSurface}
           />
-          <Text style={styles.menuText}>Settings</Text>
+          <Text style={[styles.menuText, { color: colors.onSurface }]}>Settings</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
@@ -316,13 +314,13 @@ export function AvatarBottomSheet() {
         {/* ── Plan Section ────────────────────── */}
         {isFreeTier && (
           <>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.outlineVariant + '80' }]} />
             <View style={styles.planRow}>
-              <Text style={styles.planText}>
-                Plan: <Text style={styles.planTier}>{tierName}</Text>
+              <Text style={[styles.planText, { color: colors.onSurfaceVariant }]}>
+                Plan: <Text style={[styles.planTier, { color: colors.onSurface }]}>{tierName}</Text>
               </Text>
               <TouchableOpacity
-                style={styles.upgradeBtn}
+                style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
                 activeOpacity={0.7}
                 onPress={() => {
                   close();
@@ -348,14 +346,14 @@ export function AvatarBottomSheet() {
         )}
 
         {/* ── Log Out ─────────────────────────── */}
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.outlineVariant + '80' }]} />
         <TouchableOpacity
           style={styles.logoutRow}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={styles.logoutText}>Log out</Text>
+          <Text style={[styles.logoutText, { color: colors.error }]}>Log out</Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />
@@ -366,12 +364,10 @@ export function AvatarBottomSheet() {
 
 const styles = StyleSheet.create({
   sheetBackground: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
   handleIndicator: {
-    backgroundColor: colors.outlineVariant,
     width: 36,
   },
   content: {
@@ -391,7 +387,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -406,19 +401,16 @@ const styles = StyleSheet.create({
   userName: {
     fontFamily: fonts.heading,
     fontSize: 17,
-    color: colors.onSurface,
   },
   userEmail: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
     marginTop: 1,
   },
 
   // ── Divider ───────────────────────────
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.outlineVariant + '80',
     marginVertical: 8,
   },
 
@@ -426,7 +418,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
     letterSpacing: 1,
     marginTop: 4,
     marginBottom: 8,
@@ -440,9 +431,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 2,
   },
-  personRowActive: {
-    backgroundColor: colors.primaryFixed || `${colors.primary}10`,
-  },
+  personRowActive: {},
   personAvatar: {
     width: 36,
     height: 36,
@@ -461,34 +450,27 @@ const styles = StyleSheet.create({
   personName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
   },
   personNameActive: {
     fontFamily: fonts.label,
-    color: colors.primary,
   },
   meLabel: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
   },
   ageText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
     marginRight: 8,
   },
   editDepBtn: {
     padding: 10,
     marginLeft: 4,
   },
-  addChildAvatar: {
-    backgroundColor: colors.surfaceContainer,
-  },
+  addChildAvatar: {},
   addChildText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.primary,
     marginLeft: 10,
   },
 
@@ -504,7 +486,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
   },
 
   // ── Plan ──────────────────────────────
@@ -518,14 +499,11 @@ const styles = StyleSheet.create({
   planText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
   },
   planTier: {
     fontFamily: fonts.label,
-    color: colors.onSurface,
   },
   upgradeBtn: {
-    backgroundColor: colors.primary,
     borderRadius: 9999,
     paddingVertical: 6,
     paddingHorizontal: 16,
@@ -546,6 +524,5 @@ const styles = StyleSheet.create({
   logoutText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.error,
   },
 });

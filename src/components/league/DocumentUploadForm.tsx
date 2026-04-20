@@ -124,10 +124,10 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.white }]}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Upload Document</Text>
-        <Text style={styles.sectionDescription}>
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>Upload Document</Text>
+        <Text style={[styles.sectionDescription, { color: colors.inkSecondary }]}>
           Upload a PDF document (max 10MB)
         </Text>
 
@@ -141,7 +141,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
         />
 
         <TouchableOpacity
-          style={styles.fileSelector}
+          style={[styles.fileSelector, { borderColor: colors.border, backgroundColor: colors.background }]}
           onPress={handleFileSelect}
           disabled={loading}
         >
@@ -152,29 +152,29 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           />
           {selectedFile ? (
             <View style={styles.fileInfo}>
-              <Text style={styles.fileName}>{selectedFile.name}</Text>
-              <Text style={styles.fileSize}>
+              <Text style={[styles.fileName, { color: colors.ink }]}>{selectedFile.name}</Text>
+              <Text style={[styles.fileSize, { color: colors.inkSecondary }]}>
                 {formatFileSize(selectedFile.size)}
               </Text>
             </View>
           ) : (
-            <Text style={styles.fileSelectorText}>
+            <Text style={[styles.fileSelectorText, { color: colors.inkSecondary }]}>
               Tap to select a PDF file
             </Text>
           )}
         </TouchableOpacity>
 
-        {errors.file && <Text style={styles.errorText}>{errors.file}</Text>}
+        {errors.file && <Text style={[styles.errorText, { color: colors.error }]}>{errors.file}</Text>}
 
-        <View style={styles.requirements}>
-          <Text style={styles.requirementsTitle}>Requirements:</Text>
+        <View style={[styles.requirements, { backgroundColor: colors.background }]}>
+          <Text style={[styles.requirementsTitle, { color: colors.inkSecondary }]}>Requirements:</Text>
           <View style={styles.requirementItem}>
             <Ionicons
               name="checkmark-circle-outline"
               size={16}
               color={colors.inkSecondary}
             />
-            <Text style={styles.requirementText}>PDF format only</Text>
+            <Text style={[styles.requirementText, { color: colors.inkSecondary }]}>PDF format only</Text>
           </View>
           <View style={styles.requirementItem}>
             <Ionicons
@@ -182,12 +182,12 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
               size={16}
               color={colors.inkSecondary}
             />
-            <Text style={styles.requirementText}>Maximum file size: 10MB</Text>
+            <Text style={[styles.requirementText, { color: colors.inkSecondary }]}>Maximum file size: 10MB</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderTopColor: colors.border }]}>
         {onCancel && (
           <FormButton
             title="Cancel"
@@ -210,26 +210,21 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.white,
-  },
+  container: {},
   section: {
     padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: colors.inkSecondary,
     marginBottom: 16,
   },
   fileSelector: {
     borderWidth: 2,
-    borderColor: colors.border,
     borderStyle: 'dashed',
     borderRadius: 12,
     padding: 32,
@@ -237,11 +232,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 16,
     marginBottom: 8,
-    backgroundColor: colors.background,
   },
   fileSelectorText: {
     fontSize: 16,
-    color: colors.inkSecondary,
     marginTop: 12,
   },
   fileInfo: {
@@ -251,28 +244,23 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: 4,
   },
   fileSize: {
     fontSize: 14,
-    color: colors.inkSecondary,
   },
   errorText: {
     fontSize: 14,
-    color: colors.error,
     marginTop: 4,
   },
   requirements: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: colors.background,
     borderRadius: 8,
   },
   requirementsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginBottom: 8,
   },
   requirementItem: {
@@ -282,7 +270,6 @@ const styles = StyleSheet.create({
   },
   requirementText: {
     fontSize: 14,
-    color: colors.inkSecondary,
     marginLeft: 8,
   },
   actions: {
@@ -290,7 +277,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   actionButton: {
     flex: 1,

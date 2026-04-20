@@ -66,10 +66,10 @@ export function VisualDaySchedule({
           const ampm = h >= 12 ? 'PM' : 'AM';
           return (
             <View key={h} style={[styles.hourRow, { top }]}>
-              <Text style={styles.hourLabel}>
+              <Text style={[styles.hourLabel, { color: colors.inkSoft }]}>
                 {h12} {ampm}
               </Text>
-              <View style={styles.hourLine} />
+              <View style={[styles.hourLine, { backgroundColor: colors.border }]} />
             </View>
           );
         })}
@@ -86,9 +86,9 @@ export function VisualDaySchedule({
             return (
               <View
                 key={`booked-${i}`}
-                style={[styles.bookedBlock, { top, height }]}
+                style={[styles.bookedBlock, { backgroundColor: colors.border }, { top, height }]}
               >
-                <Text style={styles.bookedLabel}>Booked</Text>
+                <Text style={[styles.bookedLabel, { color: colors.inkFaint }]}>Booked</Text>
               </View>
             );
           })}
@@ -103,8 +103,8 @@ export function VisualDaySchedule({
               ((toMin(block.endTime) - toMin(block.startTime)) / 60) *
               HOUR_HEIGHT;
             return (
-              <View key={`own-${i}`} style={[styles.ownBlock, { top, height }]}>
-                <Text style={styles.ownLabel}>Your Reservation</Text>
+              <View key={`own-${i}`} style={[styles.ownBlock, { backgroundColor: colors.cobaltLight, borderColor: colors.sportHockey }, { top, height }]}>
+                <Text style={[styles.ownLabel, { color: colors.sportHockey }]}>Your Reservation</Text>
               </View>
             );
           })}
@@ -115,14 +115,13 @@ export function VisualDaySchedule({
           propEndMin > propStartMin && (
             <View
               style={[
-                styles.proposedBlock,
+                styles.proposedBlock, { backgroundColor: colors.pine + '30', borderColor: colors.pine },
                 {
                   top: ((propStartMin - firstMin) / 60) * HOUR_HEIGHT,
                   height: ((propEndMin - propStartMin) / 60) * HOUR_HEIGHT,
-                },
-              ]}
+                }]}
             >
-              <Text style={styles.proposedLabel}>
+              <Text style={[styles.proposedLabel, { color: colors.pine }]}>
                 {fmt12(proposedStart!)} Ã¢â‚¬â€œ {fmt12(proposedEnd!)}
               </Text>
             </View>
@@ -146,51 +145,43 @@ const styles = StyleSheet.create({
     width: 48,
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textAlign: 'right',
     paddingRight: 6,
   },
-  hourLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  hourLine: { flex: 1, height: 1 },
   bookedBlock: {
     position: 'absolute',
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: colors.border,
     justifyContent: 'center',
     paddingLeft: 12,
   },
   bookedLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkFaint,
   },
   ownBlock: {
     position: 'absolute',
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: colors.cobaltLight,
     justifyContent: 'center',
     paddingLeft: 12,
     borderWidth: 1,
-    borderColor: colors.sportHockey,
   },
   ownLabel: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.sportHockey,
   },
   proposedBlock: {
     position: 'absolute',
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: colors.pine + '30',
     justifyContent: 'center',
     paddingLeft: 12,
     borderWidth: 2,
-    borderColor: colors.pine,
   },
-  proposedLabel: { fontFamily: fonts.label, fontSize: 13, color: colors.pine },
+  proposedLabel: { fontFamily: fonts.label, fontSize: 13 },
 });

@@ -61,7 +61,7 @@ export function FacilityFlowContainer({
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.bgScreen }]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.headerRow}>
         <View style={styles.backBtn} />
         <View style={styles.dotsWrapper}>
@@ -78,12 +78,12 @@ export function FacilityFlowContainer({
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, !enabled && styles.buttonDisabled]}
+            style={[styles.button, { backgroundColor: colors.pine }, !enabled && styles.buttonDisabled, !enabled && { backgroundColor: colors.inkSoft }]}
             onPress={handlePress}
             disabled={!enabled || state.isSubmitting}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>
+            <Text style={[styles.buttonText, { color: colors.white }]}>
               {state.isSubmitting
                 ? 'Creating...'
                 : isLastStep
@@ -98,7 +98,7 @@ export function FacilityFlowContainer({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.white },
+  root: { flex: 1 },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -110,12 +110,11 @@ const styles = StyleSheet.create({
   stageContainer: { flex: 1 },
   buttonContainer: { paddingHorizontal: 20, paddingBottom: 16, paddingTop: 8 },
   button: {
-    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonDisabled: { backgroundColor: colors.inkSoft, opacity: 0.5 },
-  buttonText: { color: colors.white, fontFamily: fonts.ui, fontSize: 16 },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: { fontFamily: fonts.ui, fontSize: 16 },
 });

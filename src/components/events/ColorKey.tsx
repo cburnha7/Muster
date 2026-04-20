@@ -27,7 +27,7 @@ export function ColorKey({ entries }: ColorKeyProps) {
           <View
             style={[styles.circle, { backgroundColor: entry.color }]}
           />
-          <Text style={styles.name}>{entry.firstName}</Text>
+          <Text style={[styles.name, { color: colors.inkFaint }]}>{entry.firstName}</Text>
         </View>
       ))}
     </View>
@@ -55,6 +55,5 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
   },
 });

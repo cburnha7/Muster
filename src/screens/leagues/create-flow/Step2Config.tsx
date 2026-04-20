@@ -88,16 +88,16 @@ export function Step2Config() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.heading}>How's it set up?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>How's it set up?</Text>
 
       {/* Host Name */}
-      <Text style={styles.label}>Host Name</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Host Name</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="League or host name"
         placeholderTextColor={colors.inkSoft}
         value={state.hostName}
@@ -117,18 +117,18 @@ export function Step2Config() {
       />
 
       {/* Game Days */}
-      <Text style={styles.label}>Game Days</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Game Days</Text>
       <View style={styles.daysRow}>
         {ALL_DAYS.map(day => {
           const active = state.gameDays.includes(day);
           return (
             <TouchableOpacity
               key={day}
-              style={[styles.dayChip, active && styles.dayChipActive]}
+              style={[styles.dayChip, { backgroundColor: colors.surface, borderColor: colors.border }, active && styles.dayChipActive, active && { backgroundColor: colors.pine, borderColor: colors.pine }]}
               onPress={() => dispatch({ type: 'TOGGLE_DAY', day })}
             >
               <Text
-                style={[styles.dayChipText, active && styles.dayChipTextActive]}
+                style={[styles.dayChipText, { color: colors.ink }, active && styles.dayChipTextActive, active && { color: colors.white }]}
               >
                 {day}
               </Text>
@@ -138,7 +138,7 @@ export function Step2Config() {
       </View>
 
       {/* Time Window */}
-      <Text style={styles.label}>Time Window</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Time Window</Text>
       <View
         style={{
           flexDirection: 'row',
@@ -209,9 +209,9 @@ export function Step2Config() {
       />
 
       {/* Number of Games */}
-      <Text style={styles.label}>Number of Games</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Number of Games</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
         placeholder="Total games in the league"
         placeholderTextColor={colors.inkSoft}
         keyboardType="numeric"
@@ -222,11 +222,11 @@ export function Step2Config() {
       {/* Games Per Period (hidden for block) */}
       {showGamesPerPeriod && (
         <>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: colors.ink }]}>
             {gamesPerPeriodLabel(state.frequency)}
           </Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
             placeholder="e.g. 4"
             placeholderTextColor={colors.inkSoft}
             keyboardType="numeric"
@@ -240,38 +240,32 @@ export function Step2Config() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
     marginTop: 16,
   },
   sublabelCenter: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginBottom: 4,
     textAlign: 'center',
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
   },
   row: { flexDirection: 'row', gap: 12 },
@@ -281,11 +275,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  dayChipActive: { backgroundColor: colors.pine, borderColor: colors.pine },
-  dayChipText: { fontFamily: fonts.body, fontSize: 13, color: colors.ink },
-  dayChipTextActive: { color: colors.white, fontFamily: fonts.label },
+  dayChipActive: {},
+  dayChipText: { fontFamily: fonts.body, fontSize: 13 },
+  dayChipTextActive: { fontFamily: fonts.label },
 });

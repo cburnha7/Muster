@@ -52,7 +52,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   return (
     <TouchableOpacity
       style={[
-        styles.container,
+        styles.container, { shadowColor: colors.black },
         {
           width: size,
           height: size,
@@ -60,8 +60,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           backgroundColor: disabled ? colors.inkMuted : backgroundColor,
         },
         getPositionStyle(),
-        style,
-      ]}
+        style]}
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.8}
@@ -81,7 +80,6 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 4,

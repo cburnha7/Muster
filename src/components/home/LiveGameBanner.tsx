@@ -50,30 +50,30 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.errorLight, borderColor: colors.error }]}
       onPress={() => onPress(booking)}
       activeOpacity={0.85}
     >
-      <View style={styles.liveLabel}>
-        <Animated.View style={[styles.liveDot, { opacity: pulseAnim }]} />
-        <Text style={styles.liveText}>LIVE</Text>
+      <View style={[styles.liveLabel, { backgroundColor: colors.error }]}>
+        <Animated.View style={[styles.liveDot, { backgroundColor: colors.white }, { opacity: pulseAnim }]} />
+        <Text style={[styles.liveText, { color: colors.white }]}>LIVE</Text>
       </View>
       <View style={styles.info}>
         <Text
-          style={[styles.title, { color: colors.textPrimary }]}
+          style={[styles.title, { color: colors.onSurface }, { color: colors.textPrimary }]}
           numberOfLines={1}
         >
           {emoji} {event.title}
         </Text>
         <Text
-          style={[styles.meta, { color: colors.textSecondary }]}
+          style={[styles.meta, { color: colors.onSurfaceVariant }, { color: colors.textSecondary }]}
           numberOfLines={1}
         >
           {event.facility?.name || event.locationName || 'Game'} Â· Started{' '}
           {mins}m ago
         </Text>
       </View>
-      <Text style={styles.arrow}>â†’</Text>
+      <Text style={[styles.arrow, { color: colors.onSurfaceVariant }]}>â†’</Text>
     </TouchableOpacity>
   );
 }
@@ -82,20 +82,17 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.errorLight,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 12,
     gap: 10,
     borderWidth: 1,
-    borderColor: colors.error,
   },
   liveLabel: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: colors.error,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -104,12 +101,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.white,
   },
   liveText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.white,
     letterSpacing: 1,
   },
   info: {
@@ -119,16 +114,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.onSurface,
   },
   meta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
   },
   arrow: {
     fontFamily: fonts.body,
     fontSize: 18,
-    color: colors.onSurfaceVariant,
   },
 });

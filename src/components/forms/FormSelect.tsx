@@ -77,21 +77,19 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   const renderOption = ({ item }: { item: SelectOption }) => (
     <TouchableOpacity
       style={[
-        styles.option,
+        styles.option, { borderBottomColor: colors.surfaceContainerLow },
         { borderBottomColor: colors.border },
-        item.disabled && styles.optionDisabled,
-        item.value === value && styles.optionSelected,
-      ]}
+        item.disabled && styles.optionDisabled, item.disabled && { backgroundColor: colors.surfaceContainerLow },
+        item.value === value && styles.optionSelected, item.value === value && { backgroundColor: colors.primaryFixed }]}
       onPress={() => handleSelect(item)}
       disabled={item.disabled}
     >
       <Text
         style={[
-          styles.optionText,
+          styles.optionText, { color: colors.onSurface },
           { color: colors.textPrimary },
-          item.disabled && styles.optionTextDisabled,
-          item.value === value && styles.optionTextSelected,
-        ]}
+          item.disabled && styles.optionTextDisabled, item.disabled && { color: colors.outline },
+          item.value === value && styles.optionTextSelected, item.value === value && { color: colors.primary }]}
       >
         {item.label}
       </Text>
@@ -105,34 +103,32 @@ export const FormSelect: React.FC<FormSelectProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && (
         <Text
-          style={[styles.label, { color: colors.textPrimary }, labelStyle]}
+          style={[styles.label, { color: colors.onSurface }, { color: colors.textPrimary }, labelStyle]}
         >
           {label}
-          {required && <Text style={styles.required}> *</Text>}
+          {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
         </Text>
       )}
 
       <TouchableOpacity
         style={[
-          styles.select,
+          styles.select, { backgroundColor: colors.surfaceContainerLowest, borderColor: colors.outlineVariant, shadowColor: colors.ink },
           {
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
           },
-          error && styles.selectError,
-          disabled && styles.selectDisabled,
-          selectStyle,
-        ]}
+          error && styles.selectError, error && { borderColor: colors.error, backgroundColor: colors.errorContainer },
+          disabled && styles.selectDisabled, disabled && { backgroundColor: colors.surfaceContainerLow, borderColor: colors.outlineVariant },
+          selectStyle]}
         onPress={() => !disabled && setIsModalVisible(true)}
         disabled={disabled}
       >
         <Text
           style={[
-            styles.selectText,
+            styles.selectText, { color: colors.onSurface },
             { color: colors.textPrimary },
-            !selectedOption && styles.placeholderText,
-            disabled && styles.selectTextDisabled,
-          ]}
+            !selectedOption && styles.placeholderText, !selectedOption && { color: colors.outline },
+            disabled && styles.selectTextDisabled, disabled && { color: colors.outline }]}
         >
           {selectedOption ? selectedOption.label : placeholder}
         </Text>
@@ -149,7 +145,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         />
       </TouchableOpacity>
 
-      {error && <Text style={[styles.error, errorStyle]}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: colors.error }, errorStyle]}>{error}</Text>}
 
       <Modal
         visible={isModalVisible}
@@ -159,21 +155,19 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       >
         <SafeAreaView
           style={[
-            styles.modalContainer,
-            { backgroundColor: colors.bgScreen },
-          ]}
+            styles.modalContainer, { backgroundColor: colors.surfaceContainerLowest },
+            { backgroundColor: colors.bgScreen }]}
         >
           <View
             style={[
-              styles.modalHeader,
-              { borderBottomColor: colors.border },
-            ]}
+              styles.modalHeader, { borderBottomColor: colors.surfaceContainerLow },
+              { borderBottomColor: colors.border }]}
           >
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: colors.primary }]}>Cancel</Text>
             </TouchableOpacity>
             <Text
-              style={[styles.modalTitle, { color: colors.textPrimary }]}
+              style={[styles.modalTitle, { color: colors.onSurface }, { color: colors.textPrimary }]}
             >
               {label || 'Select Option'}
             </Text>
@@ -189,7 +183,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
             ListFooterComponent={
               footerOption ? (
                 <TouchableOpacity
-                  style={styles.footerOption}
+                  style={[styles.footerOption, { borderTopColor: colors.outlineVariant, backgroundColor: colors.surfaceContainerLow }]}
                   onPress={() => {
                     setIsModalVisible(false);
                     footerOption.onPress();
@@ -203,7 +197,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
                       style={{ marginRight: 10 }}
                     />
                   )}
-                  <Text style={styles.footerOptionText}>
+                  <Text style={[styles.footerOptionText, { color: colors.primary }]}>
                     {footerOption.label}
                   </Text>
                   <Ionicons
@@ -228,58 +222,39 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontFamily: fonts.label,
-    color: colors.onSurface,
     marginBottom: 8,
   },
-  required: {
-    color: colors.error,
-  },
+  required: {},
   select: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 48,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
-  selectError: {
-    borderColor: colors.error,
-    backgroundColor: colors.errorContainer,
-  },
-  selectDisabled: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderColor: colors.outlineVariant,
-  },
+  selectError: {},
+  selectDisabled: {},
   selectText: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurface,
     flex: 1,
   },
-  placeholderText: {
-    color: colors.outline,
-  },
-  selectTextDisabled: {
-    color: colors.outline,
-  },
+  placeholderText: {},
+  selectTextDisabled: {},
   error: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.error,
     marginTop: 4,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -288,17 +263,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceContainerLow,
   },
   cancelText: {
     fontSize: 16,
     fontFamily: fonts.ui,
-    color: colors.primary,
   },
   modalTitle: {
     fontSize: 18,
     fontFamily: fonts.headingSemi,
-    color: colors.onSurface,
   },
   placeholder: {
     width: 60, // Same width as cancel button for centering
@@ -313,40 +285,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceContainerLow,
   },
-  optionSelected: {
-    backgroundColor: colors.primaryFixed,
-  },
-  optionDisabled: {
-    backgroundColor: colors.surfaceContainerLow,
-  },
+  optionSelected: {},
+  optionDisabled: {},
   optionText: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurface,
     flex: 1,
   },
   optionTextSelected: {
-    color: colors.primary,
     fontFamily: fonts.label,
   },
-  optionTextDisabled: {
-    color: colors.outline,
-  },
+  optionTextDisabled: {},
   footerOption: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
-    backgroundColor: colors.surfaceContainerLow,
   },
   footerOptionText: {
     fontSize: 16,
     fontFamily: fonts.ui,
-    color: colors.primary,
     flex: 1,
   },
 });

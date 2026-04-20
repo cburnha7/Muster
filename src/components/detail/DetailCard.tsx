@@ -37,17 +37,16 @@ export function DetailCard({ title, children, action, style, delay = 0 }: Detail
   return (
     <Animated.View
       style={[
-        styles.card,
+        styles.card, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.onSurface },
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        style,
-      ]}
+        style]}
     >
       {title ? (
         <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
           {action ? (
             <TouchableOpacity onPress={action.onPress} activeOpacity={0.7}>
-              <Text style={styles.action}>{action.label}</Text>
+              <Text style={[styles.action, { color: colors.primary }]}>{action.label}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -59,12 +58,10 @@ export function DetailCard({ title, children, action, style, delay = 0 }: Detail
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 6,
     padding: 16,
-    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -79,12 +76,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.onSurface,
     letterSpacing: -0.1,
   },
   action: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.primary,
   },
 });

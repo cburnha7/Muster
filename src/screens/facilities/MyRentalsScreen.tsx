@@ -230,23 +230,23 @@ export function MyRentalsScreen() {
             : 'help-circle';
 
     return (
-      <View key={rental.id} style={styles.rentalCard}>
+      <View key={rental.id} style={[styles.rentalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {/* Status Badge */}
         <View style={styles.badgeRow}>
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
             <Ionicons name={statusIcon} size={16} color={colors.surface} />
-            <Text style={styles.statusText}>{rental.status.toUpperCase()}</Text>
+            <Text style={[styles.statusText, { color: colors.surface }]}>{rental.status.toUpperCase()}</Text>
           </View>
 
           {/* Cancellation Pending Badge */}
           {rental.cancellationStatus === 'pending' && (
-            <View style={[styles.statusBadge, styles.cancellationPendingBadge]}>
+            <View style={[styles.statusBadge, styles.cancellationPendingBadge, { backgroundColor: colors.gold }]}>
               <Ionicons
                 name="hourglass-outline"
                 size={14}
                 color={colors.surface}
               />
-              <Text style={styles.cancellationPendingText}>
+              <Text style={[styles.cancellationPendingText, { color: colors.surface }]}>
                 CANCELLATION PENDING
               </Text>
             </View>
@@ -258,10 +258,10 @@ export function MyRentalsScreen() {
           onPress={() => handleViewFacility(rental.timeSlot.court.facility.id)}
           activeOpacity={0.7}
         >
-          <Text style={styles.facilityName}>
+          <Text style={[styles.facilityName, { color: colors.ink }]}>
             {rental.timeSlot.court.facility.name}
           </Text>
-          <Text style={styles.facilityAddress}>
+          <Text style={[styles.facilityAddress, { color: colors.inkFaint }]}>
             {rental.timeSlot.court.facility.street},{' '}
             {rental.timeSlot.court.facility.city},{' '}
             {rental.timeSlot.court.facility.state}
@@ -269,10 +269,10 @@ export function MyRentalsScreen() {
         </TouchableOpacity>
 
         {/* Court Info */}
-        <View style={styles.courtInfo}>
+        <View style={[styles.courtInfo, { backgroundColor: colors.white }]}>
           <Ionicons name="basketball" size={20} color={colors.cobalt} />
-          <Text style={styles.courtName}>{rental.timeSlot.court.name}</Text>
-          <Text style={styles.courtSportType}>
+          <Text style={[styles.courtName, { color: colors.ink }]}>{rental.timeSlot.court.name}</Text>
+          <Text style={[styles.courtSportType, { color: colors.inkFaint }]}>
             • {rental.timeSlot.court.sportType}
           </Text>
         </View>
@@ -285,11 +285,11 @@ export function MyRentalsScreen() {
               size={18}
               color={colors.inkFaint}
             />
-            <Text style={styles.dateTimeText}>{formattedDate}</Text>
+            <Text style={[styles.dateTimeText, { color: colors.ink }]}>{formattedDate}</Text>
           </View>
           <View style={styles.dateTimeRow}>
             <Ionicons name="time-outline" size={18} color={colors.inkFaint} />
-            <Text style={styles.dateTimeText}>
+            <Text style={[styles.dateTimeText, { color: colors.ink }]}>
               {formatTime12(rental.timeSlot.startTime)} -{' '}
               {formatTime12(rental.timeSlot.endTime)}
             </Text>
@@ -297,16 +297,16 @@ export function MyRentalsScreen() {
         </View>
 
         {/* Price */}
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceLabel}>Total Price:</Text>
-          <Text style={styles.priceValue}>${rental.totalPrice.toFixed(2)}</Text>
+        <View style={[styles.priceContainer, { borderTopColor: colors.border }]}>
+          <Text style={[styles.priceLabel, { color: colors.inkFaint }]}>Total Price:</Text>
+          <Text style={[styles.priceValue, { color: colors.cobalt }]}>${rental.totalPrice.toFixed(2)}</Text>
         </View>
 
         {/* Action Buttons */}
         {isUpcoming && rental.status === 'confirmed' && (
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.createEventButton}
+              style={[styles.createEventButton, { backgroundColor: colors.white, borderColor: colors.cobalt }]}
               onPress={() => handleCreateEvent(rental)}
             >
               <Ionicons
@@ -314,15 +314,14 @@ export function MyRentalsScreen() {
                 size={20}
                 color={colors.cobalt}
               />
-              <Text style={styles.createEventButtonText}>Create Event</Text>
+              <Text style={[styles.createEventButtonText, { color: colors.cobalt }]}>Create Event</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
-                styles.cancelButton,
+                styles.cancelButton, { backgroundColor: colors.white, borderColor: colors.heart },
                 rental.cancellationStatus === 'pending' &&
-                  styles.cancelButtonDisabled,
-              ]}
+                  styles.cancelButtonDisabled, rental.cancellationStatus === 'pending' && { borderColor: colors.inkFaint }]}
               onPress={() => handleCancelRental(rental)}
               disabled={rental.cancellationStatus === 'pending'}
             >
@@ -337,10 +336,9 @@ export function MyRentalsScreen() {
               />
               <Text
                 style={[
-                  styles.cancelButtonText,
+                  styles.cancelButtonText, { color: colors.heart },
                   rental.cancellationStatus === 'pending' &&
-                    styles.cancelButtonTextDisabled,
-                ]}
+                    styles.cancelButtonTextDisabled, rental.cancellationStatus === 'pending' && { color: colors.inkFaint }]}
               >
                 Cancel
               </Text>
@@ -350,13 +348,13 @@ export function MyRentalsScreen() {
 
         {/* Cancellation Info */}
         {rental.status === 'cancelled' && rental.cancellationReason && (
-          <View style={styles.cancellationInfo}>
+          <View style={[styles.cancellationInfo, { backgroundColor: colors.white }]}>
             <Ionicons
               name="information-circle"
               size={16}
               color={colors.inkFaint}
             />
-            <Text style={styles.cancellationText}>
+            <Text style={[styles.cancellationText, { color: colors.inkFaint }]}>
               {rental.cancellationReason}
             </Text>
           </View>
@@ -368,16 +366,16 @@ export function MyRentalsScreen() {
   if (loading) {
     return (
       <View
-        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
+        style={[styles.loadingContainer, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
-        <Text style={styles.loadingText}>Loading your rentals...</Text>
+        <Text style={[styles.loadingText, { color: colors.inkFaint }]}>Loading your rentals...</Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -391,9 +389,9 @@ export function MyRentalsScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Rentals</Text>
-          <Text style={styles.headerSubtitle}>
+        <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
+          <Text style={[styles.headerTitle, { color: colors.ink }]}>My Rentals</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.inkFaint }]}>
             Manage your court and field bookings
           </Text>
         </View>
@@ -402,10 +400,10 @@ export function MyRentalsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="calendar" size={24} color={colors.cobalt} />
-            <Text style={styles.sectionTitle}>Upcoming Rentals</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Upcoming Rentals</Text>
             {upcomingRentals.length > 0 && (
-              <View style={styles.countBadge}>
-                <Text style={styles.countText}>{upcomingRentals.length}</Text>
+              <View style={[styles.countBadge, { backgroundColor: colors.cobalt }]}>
+                <Text style={[styles.countText, { color: colors.surface }]}>{upcomingRentals.length}</Text>
               </View>
             )}
           </View>
@@ -413,14 +411,14 @@ export function MyRentalsScreen() {
           {upcomingRentals.length > 0 ? (
             upcomingRentals.map(rental => renderRentalCard(rental, true))
           ) : (
-            <View style={styles.emptyState}>
+            <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Ionicons
                 name="calendar-outline"
                 size={64}
                 color={colors.inkFaint}
               />
-              <Text style={styles.emptyStateTitle}>No Upcoming Rentals</Text>
-              <Text style={styles.emptyStateSubtitle}>
+              <Text style={[styles.emptyStateTitle, { color: colors.ink }]}>No Upcoming Rentals</Text>
+              <Text style={[styles.emptyStateSubtitle, { color: colors.inkFaint }]}>
                 Book a court or field to get started
               </Text>
             </View>
@@ -431,15 +429,14 @@ export function MyRentalsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="time" size={24} color={colors.inkFaint} />
-            <Text style={styles.sectionTitle}>Past Rentals</Text>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>Past Rentals</Text>
             {pastRentals.length > 0 && (
               <View
                 style={[
-                  styles.countBadge,
-                  { backgroundColor: colors.inkFaint },
-                ]}
+                  styles.countBadge, { backgroundColor: colors.cobalt },
+                  { backgroundColor: colors.inkFaint }]}
               >
-                <Text style={styles.countText}>{pastRentals.length}</Text>
+                <Text style={[styles.countText, { color: colors.surface }]}>{pastRentals.length}</Text>
               </View>
             )}
           </View>
@@ -447,10 +444,10 @@ export function MyRentalsScreen() {
           {pastRentals.length > 0 ? (
             pastRentals.map(rental => renderRentalCard(rental, false))
           ) : (
-            <View style={styles.emptyState}>
+            <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Ionicons name="time-outline" size={64} color={colors.inkFaint} />
-              <Text style={styles.emptyStateTitle}>No Past Rentals</Text>
-              <Text style={styles.emptyStateSubtitle}>
+              <Text style={[styles.emptyStateTitle, { color: colors.ink }]}>No Past Rentals</Text>
+              <Text style={[styles.emptyStateSubtitle, { color: colors.inkFaint }]}>
                 Your rental history will appear here
               </Text>
             </View>
@@ -464,7 +461,6 @@ export function MyRentalsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -473,26 +469,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: Spacing.md,
     ...TextStyles.body,
-    color: colors.inkFaint,
   },
   header: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.background,
   },
   headerTitle: {
     ...TextStyles.h2,
-    color: colors.ink,
   },
   headerSubtitle: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
   },
   section: {
@@ -506,11 +496,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TextStyles.h3,
-    color: colors.ink,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
@@ -519,16 +507,13 @@ const styles = StyleSheet.create({
   },
   countText: {
     ...TextStyles.caption,
-    color: colors.surface,
     fontWeight: '700',
   },
   rentalCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -541,7 +526,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...TextStyles.caption,
-    color: colors.surface,
     fontWeight: '700',
   },
   badgeRow: {
@@ -550,24 +534,19 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.md,
   },
-  cancellationPendingBadge: {
-    backgroundColor: colors.gold,
-  },
+  cancellationPendingBadge: {},
   cancellationPendingText: {
     fontFamily: fonts.label,
     fontSize: 10,
     lineHeight: 14,
     letterSpacing: 1.8,
-    color: colors.surface,
   },
   facilityName: {
     ...TextStyles.h4,
-    color: colors.ink,
     marginBottom: Spacing.xs,
   },
   facilityAddress: {
     ...TextStyles.caption,
-    color: colors.inkFaint,
     marginBottom: Spacing.md,
   },
   courtInfo: {
@@ -577,17 +556,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    backgroundColor: colors.white,
     borderRadius: 8,
   },
   courtName: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.ink,
   },
   courtSportType: {
     ...TextStyles.body,
-    color: colors.inkFaint,
   },
   dateTimeContainer: {
     gap: Spacing.sm,
@@ -600,7 +576,6 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     ...TextStyles.body,
-    color: colors.ink,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -608,16 +583,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     marginBottom: Spacing.md,
   },
   priceLabel: {
     ...TextStyles.body,
-    color: colors.inkFaint,
   },
   priceValue: {
     ...TextStyles.h4,
-    color: colors.cobalt,
     fontWeight: '700',
   },
   actionButtons: {
@@ -631,16 +603,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: colors.white,
     borderWidth: 2,
-    borderColor: colors.cobalt,
     borderRadius: 8,
     paddingVertical: Spacing.md,
   },
   createEventButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   cancelButton: {
     flex: 1,
@@ -648,55 +617,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    backgroundColor: colors.white,
     borderWidth: 2,
-    borderColor: colors.heart,
     borderRadius: 8,
     paddingVertical: Spacing.md,
   },
   cancelButtonText: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.heart,
   },
   cancelButtonDisabled: {
-    borderColor: colors.inkFaint,
     opacity: 0.5,
   },
-  cancelButtonTextDisabled: {
-    color: colors.inkFaint,
-  },
+  cancelButtonTextDisabled: {},
   cancellationInfo: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.xs,
     marginTop: Spacing.sm,
     padding: Spacing.sm,
-    backgroundColor: colors.white,
     borderRadius: 6,
   },
   cancellationText: {
     flex: 1,
     ...TextStyles.caption,
-    color: colors.inkFaint,
   },
   emptyState: {
     alignItems: 'center',
     padding: Spacing.xxl,
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     borderStyle: 'dashed',
   },
   emptyStateTitle: {
     ...TextStyles.h4,
-    color: colors.ink,
     marginTop: Spacing.md,
   },
   emptyStateSubtitle: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: Spacing.xs,
   },

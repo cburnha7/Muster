@@ -103,10 +103,10 @@ export function HoursOfOperationSection({
     editingDay !== null ? getHoursForDay(editingDay) : null;
 
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, { backgroundColor: colors.white, shadowColor: colors.ink }]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Hours of Operation</Text>
-        <Text style={styles.sectionSubtitle}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Hours of Operation</Text>
+        <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
           Set when your ground is available for booking
         </Text>
       </View>
@@ -116,15 +116,15 @@ export function HoursOfOperationSection({
         return (
           <TouchableOpacity
             key={index}
-            style={styles.dayRow}
+            style={[styles.dayRow, { borderBottomColor: colors.border }]}
             onPress={() => handleEditDay(index)}
             activeOpacity={0.7}
           >
-            <Text style={styles.dayName}>{day}</Text>
+            <Text style={[styles.dayName, { color: colors.textPrimary }]}>{day}</Text>
             {dayHours.isClosed ? (
-              <Text style={styles.closedText}>Closed</Text>
+              <Text style={[styles.closedText, { color: colors.textTertiary }]}>Closed</Text>
             ) : (
-              <Text style={styles.hoursText}>
+              <Text style={[styles.hoursText, { color: colors.textSecondary }]}>
                 {formatTimeDisplay(dayHours.startTime)} -{' '}
                 {formatTimeDisplay(dayHours.endTime)}
               </Text>
@@ -148,10 +148,10 @@ export function HoursOfOperationSection({
           setEditingDay(null);
         }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.white }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                 {editingDay !== null ? DAYS[editingDay] : ''}
               </Text>
               <TouchableOpacity
@@ -171,18 +171,16 @@ export function HoursOfOperationSection({
                 onPress={handleToggleClosed}
                 activeOpacity={0.7}
               >
-                <Text style={styles.closedToggleLabel}>Closed</Text>
+                <Text style={[styles.closedToggleLabel, { color: colors.textPrimary }]}>Closed</Text>
                 <View
                   style={[
-                    styles.toggle,
-                    currentDayHours?.isClosed && styles.toggleActive,
-                  ]}
+                    styles.toggle, { backgroundColor: colors.border },
+                    currentDayHours?.isClosed && styles.toggleActive, currentDayHours?.isClosed && { backgroundColor: colors.cobalt }]}
                 >
                   <View
                     style={[
-                      styles.toggleThumb,
-                      currentDayHours?.isClosed && styles.toggleThumbActive,
-                    ]}
+                      styles.toggleThumb, { backgroundColor: colors.white },
+                      currentDayHours?.isClosed && styles.toggleThumbActive]}
                   />
                 </View>
               </TouchableOpacity>
@@ -205,7 +203,7 @@ export function HoursOfOperationSection({
 
                   {/* Apply to All Days */}
                   <TouchableOpacity
-                    style={styles.applyAllButton}
+                    style={[styles.applyAllButton, { borderColor: colors.border }]}
                     onPress={handleApplyToAll}
                   >
                     <Ionicons
@@ -213,21 +211,21 @@ export function HoursOfOperationSection({
                       size={20}
                       color={colors.cobalt}
                     />
-                    <Text style={styles.applyAllText}>Apply to all days</Text>
+                    <Text style={[styles.applyAllText, { color: colors.cobalt }]}>Apply to all days</Text>
                   </TouchableOpacity>
                 </>
               )}
             </View>
 
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, { borderTopColor: colors.border }]}>
               <TouchableOpacity
-                style={styles.doneButton}
+                style={[styles.doneButton, { backgroundColor: colors.cobalt }]}
                 onPress={() => {
                   setShowEditModal(false);
                   setEditingDay(null);
                 }}
               >
-                <Text style={styles.doneButtonText}>Done</Text>
+                <Text style={[styles.doneButtonText, { color: colors.textInverse }]}>Done</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -239,12 +237,10 @@ export function HoursOfOperationSection({
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.white,
     padding: Spacing.lg,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
     borderRadius: 12,
-    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -258,43 +254,35 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TextStyles.h3,
-    color: colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   sectionSubtitle: {
     ...TextStyles.caption,
-    color: colors.textSecondary,
   },
   dayRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   dayName: {
     ...TextStyles.body,
-    color: colors.textPrimary,
     fontWeight: '600',
     flex: 1,
   },
   hoursText: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     marginRight: Spacing.sm,
   },
   closedText: {
     ...TextStyles.body,
-    color: colors.textTertiary,
     marginRight: Spacing.sm,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -305,11 +293,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   modalTitle: {
     ...TextStyles.h3,
-    color: colors.textPrimary,
   },
   modalBody: {
     padding: Spacing.lg,
@@ -323,25 +309,20 @@ const styles = StyleSheet.create({
   },
   closedToggleLabel: {
     ...TextStyles.body,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   toggle: {
     width: 50,
     height: 30,
     borderRadius: 15,
-    backgroundColor: colors.border,
     padding: 2,
     justifyContent: 'center',
   },
-  toggleActive: {
-    backgroundColor: colors.cobalt,
-  },
+  toggleActive: {},
   toggleThumb: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: colors.white,
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -352,7 +333,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 10,
     backgroundColor: 'transparent',
     paddingVertical: 12,
@@ -361,23 +341,19 @@ const styles = StyleSheet.create({
   },
   applyAllText: {
     ...TextStyles.body,
-    color: colors.cobalt,
     fontWeight: '600',
   },
   modalActions: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   doneButton: {
-    backgroundColor: colors.cobalt,
     paddingVertical: Spacing.md,
     borderRadius: 8,
     alignItems: 'center',
   },
   doneButtonText: {
     ...TextStyles.body,
-    color: colors.textInverse,
     fontWeight: '600',
   },
 });

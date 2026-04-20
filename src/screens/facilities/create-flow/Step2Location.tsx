@@ -12,15 +12,15 @@ export function Step2Location() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.heading}>Where is it?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>Where is it?</Text>
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.street}
         onChangeText={v => setField('street', v)}
         placeholder="Street address"
@@ -28,7 +28,7 @@ export function Step2Location() {
       />
 
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
         value={state.city}
         onChangeText={v => setField('city', v)}
         placeholder="City"
@@ -37,14 +37,14 @@ export function Step2Location() {
 
       <View style={styles.row}>
         <TextInput
-          style={[styles.textInput, styles.halfInput]}
+          style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }, styles.halfInput]}
           value={state.state}
           onChangeText={v => setField('state', v)}
           placeholder="State"
           placeholderTextColor={colors.inkSoft}
         />
         <TextInput
-          style={[styles.textInput, styles.halfInput]}
+          style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }, styles.halfInput]}
           value={state.zipCode}
           onChangeText={v => setField('zipCode', v)}
           placeholder="ZIP code"
@@ -57,24 +57,20 @@ export function Step2Location() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.ink,
-    backgroundColor: colors.white,
     marginBottom: 14,
   },
   row: { flexDirection: 'row', gap: 12 },

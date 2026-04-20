@@ -193,13 +193,13 @@ export const ResetPasswordScreen: React.FC = () => {
 
   if (state.isSuccess) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}>
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={80} color={colors.cobalt} />
           </View>
-          <Text style={styles.successTitle}>Password Reset Successful</Text>
-          <Text style={styles.successMessage}>
+          <Text style={[styles.successTitle, { color: colors.textPrimary }]}>Password Reset Successful</Text>
+          <Text style={[styles.successMessage, { color: colors.textSecondary }]}>
             Your password has been reset successfully. You can now log in with
             your new password.
           </Text>
@@ -215,7 +215,7 @@ export const ResetPasswordScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -224,8 +224,8 @@ export const ResetPasswordScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Reset Password</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Reset Password</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Enter your new password below. Make sure it's strong and secure.
           </Text>
         </View>
@@ -249,7 +249,7 @@ export const ResetPasswordScreen: React.FC = () => {
 
         {state.newPassword && !state.errors.newPassword && (
           <View style={styles.strengthContainer}>
-            <Text style={styles.strengthLabel}>Password Strength:</Text>
+            <Text style={[styles.strengthLabel, { color: colors.textSecondary }]}>Password Strength:</Text>
             <Text
               style={[styles.strengthValue, { color: passwordStrength.color }]}
             >
@@ -277,13 +277,13 @@ export const ResetPasswordScreen: React.FC = () => {
 
         {state.errors.general && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{state.errors.general}</Text>
+            <Text style={[styles.errorText, { color: colors.heart }]}>{state.errors.general}</Text>
             {state.errors.general.includes('invalid or expired') && (
               <TouchableOpacity
                 style={styles.requestNewLink}
                 onPress={handleRequestNewReset}
               >
-                <Text style={styles.requestNewLinkText}>
+                <Text style={[styles.requestNewLinkText, { color: colors.cobalt }]}>
                   Request new reset link
                 </Text>
               </TouchableOpacity>
@@ -304,8 +304,8 @@ export const ResetPasswordScreen: React.FC = () => {
           }
         />
 
-        <View style={styles.requirementsBox}>
-          <Text style={styles.requirementsTitle}>Password Requirements:</Text>
+        <View style={[styles.requirementsBox, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.requirementsTitle, { color: colors.textPrimary }]}>Password Requirements:</Text>
           <View style={styles.requirement}>
             <Ionicons
               name={
@@ -320,7 +320,7 @@ export const ResetPasswordScreen: React.FC = () => {
                   : colors.textTertiary
               }
             />
-            <Text style={styles.requirementText}>At least 8 characters</Text>
+            <Text style={[styles.requirementText, { color: colors.textSecondary }]}>At least 8 characters</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
@@ -336,7 +336,7 @@ export const ResetPasswordScreen: React.FC = () => {
                   : colors.textTertiary
               }
             />
-            <Text style={styles.requirementText}>One uppercase letter</Text>
+            <Text style={[styles.requirementText, { color: colors.textSecondary }]}>One uppercase letter</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
@@ -352,7 +352,7 @@ export const ResetPasswordScreen: React.FC = () => {
                   : colors.textTertiary
               }
             />
-            <Text style={styles.requirementText}>One lowercase letter</Text>
+            <Text style={[styles.requirementText, { color: colors.textSecondary }]}>One lowercase letter</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
@@ -368,7 +368,7 @@ export const ResetPasswordScreen: React.FC = () => {
                   : colors.textTertiary
               }
             />
-            <Text style={styles.requirementText}>One number</Text>
+            <Text style={[styles.requirementText, { color: colors.textSecondary }]}>One number</Text>
           </View>
           <View style={styles.requirement}>
             <Ionicons
@@ -384,7 +384,7 @@ export const ResetPasswordScreen: React.FC = () => {
                   : colors.textTertiary
               }
             />
-            <Text style={styles.requirementText}>One special character</Text>
+            <Text style={[styles.requirementText, { color: colors.textSecondary }]}>One special character</Text>
           </View>
         </View>
       </ScrollView>
@@ -395,7 +395,6 @@ export const ResetPasswordScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -408,12 +407,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TextStyles.h1,
-    color: colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   subtitle: {
     ...TextStyles.body,
-    color: colors.textSecondary,
   },
   strengthContainer: {
     flexDirection: 'row',
@@ -424,7 +421,6 @@ const styles = StyleSheet.create({
   },
   strengthLabel: {
     ...TextStyles.caption,
-    color: colors.textSecondary,
     marginRight: Spacing.xs,
   },
   strengthValue: {
@@ -436,7 +432,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TextStyles.body,
-    color: colors.heart,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
@@ -445,11 +440,9 @@ const styles = StyleSheet.create({
   },
   requestNewLinkText: {
     ...TextStyles.body,
-    color: colors.cobalt,
     fontWeight: '600',
   },
   requirementsBox: {
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 8,
     marginTop: Spacing.lg,
@@ -457,7 +450,6 @@ const styles = StyleSheet.create({
   requirementsTitle: {
     ...TextStyles.body,
     fontWeight: '600',
-    color: colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   requirement: {
@@ -467,7 +459,6 @@ const styles = StyleSheet.create({
   },
   requirementText: {
     ...TextStyles.caption,
-    color: colors.textSecondary,
     marginLeft: Spacing.sm,
   },
   successContainer: {
@@ -481,13 +472,11 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...TextStyles.h1,
-    color: colors.textPrimary,
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
   successMessage: {
     ...TextStyles.body,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: Spacing.xxl,
   },

@@ -118,7 +118,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
     return (
       <View style={st.centered}>
         <Ionicons name="calendar-outline" size={48} color={colors.inkFaint} />
-        <Text style={st.emptyText}>No courts set up yet</Text>
+        <Text style={[st.emptyText, { color: colors.inkFaint }]}>No courts set up yet</Text>
       </View>
     );
   }
@@ -127,7 +127,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
       {/* Court selector chips */}
       <View style={st.section}>
-        <Text style={st.sectionTitle}>Court</Text>
+        <Text style={[st.sectionTitle, { color: colors.ink }]}>Court</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -138,7 +138,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
             return (
               <TouchableOpacity
                 key={court.id}
-                style={[st.courtChip, isSelected && st.courtChipSelected]}
+                style={[st.courtChip, { borderColor: colors.border, backgroundColor: colors.white }, isSelected && st.courtChipSelected, isSelected && { borderColor: colors.cobalt, backgroundColor: colors.cobalt }]}
                 onPress={() => setSelectedCourt(court)}
                 activeOpacity={0.7}
               >
@@ -149,9 +149,8 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
                 />
                 <Text
                   style={[
-                    st.courtChipText,
-                    isSelected && st.courtChipTextSelected,
-                  ]}
+                    st.courtChipText, { color: colors.ink },
+                    isSelected && st.courtChipTextSelected, isSelected && { color: colors.white }]}
                 >
                   {court.name}
                 </Text>
@@ -163,19 +162,19 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
 
       {/* Calendar */}
       <View style={st.section}>
-        <Text style={st.sectionTitle}>Select Date</Text>
+        <Text style={[st.sectionTitle, { color: colors.ink }]}>Select Date</Text>
         <Calendar
           current={selectedDate}
           onDayPress={handleDateSelect}
           markedDates={markedDates}
           theme={calendarTheme}
-          style={st.calendar}
+          style={[st.calendar, { backgroundColor: colors.white, shadowColor: colors.ink }]}
         />
       </View>
 
       {/* Day schedule */}
       <View style={st.section}>
-        <Text style={st.sectionTitle}>
+        <Text style={[st.sectionTitle, { color: colors.ink }]}>
           {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
@@ -187,7 +186,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
         {loadingSchedule ? (
           <View style={st.centered}>
             <ActivityIndicator size="small" color={colors.cobalt} />
-            <Text style={st.loadingText}>Loading schedule...</Text>
+            <Text style={[st.loadingText, { color: colors.inkFaint }]}>Loading schedule...</Text>
           </View>
         ) : schedule.length > 0 ? (
           <VisualDaySchedule
@@ -203,7 +202,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
               size={32}
               color={colors.inkFaint}
             />
-            <Text style={st.emptyText}>No schedule for this date</Text>
+            <Text style={[st.emptyText, { color: colors.inkFaint }]}>No schedule for this date</Text>
           </View>
         )}
       </View>
@@ -218,7 +217,6 @@ const st = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.headingSemi || fonts.heading,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   courtRow: {
@@ -233,25 +231,15 @@ const st = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
   },
-  courtChipSelected: {
-    borderColor: colors.cobalt,
-    backgroundColor: colors.cobalt,
-  },
+  courtChipSelected: {},
   courtChipText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.ink,
   },
-  courtChipTextSelected: {
-    color: colors.white,
-  },
+  courtChipTextSelected: {},
   calendar: {
     borderRadius: 12,
-    backgroundColor: colors.white,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -267,11 +255,9 @@ const st = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
   },
   loadingText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
   },
 });

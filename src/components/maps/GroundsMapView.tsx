@@ -53,7 +53,9 @@ export function GroundsMapView({
 
   if (loading || !userLocation) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.surface }]}
+      >
         <LoadingSpinner />
       </View>
     );
@@ -116,10 +118,20 @@ export function GroundsMapView({
               <View
                 style={[
                   markerStyles.pin,
+                  {
+                    backgroundColor: colors.cobalt,
+                    borderColor: colors.white,
+                    shadowColor: colors.black,
+                  },
                   selectedGround?.id === ground.id && markerStyles.pinSelected,
+                  selectedGround?.id === ground.id && {
+                    backgroundColor: colors.pine,
+                  },
                 ]}
               >
-                <Text style={markerStyles.pinText}>{index + 1}</Text>
+                <Text style={[markerStyles.pinText, { color: colors.white }]}>
+                  {index + 1}
+                </Text>
               </View>
             </Marker>
           );
@@ -151,7 +163,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surface,
   },
 });
 
@@ -160,25 +171,20 @@ const markerStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: colors.white,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 4,
   },
   pinSelected: {
-    backgroundColor: colors.pine,
     width: 38,
     height: 38,
     borderRadius: 19,
   },
   pinText: {
-    color: colors.white,
     fontSize: 14,
     fontWeight: '700',
   },

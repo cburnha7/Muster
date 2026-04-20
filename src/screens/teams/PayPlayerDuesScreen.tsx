@@ -86,7 +86,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Season Dues"
           leftIcon="""
@@ -94,7 +94,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
         />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={styles.loadingText}>Loading dues information...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkFaint }]}>Loading dues information...</Text>
         </View>
       </View>
     );
@@ -102,7 +102,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Season Dues"
           leftIcon="""
@@ -110,9 +110,9 @@ export const PayPlayerDuesScreen: React.FC = () => {
         />
         <View style={styles.centered}>
           <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadStatus} activeOpacity={0.75}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={[styles.errorText, { color: colors.heart }]}>{error}</Text>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.cobalt }]} onPress={loadStatus} activeOpacity={0.75}>
+            <Text style={[styles.retryButtonText, { color: colors.white }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -125,27 +125,27 @@ export const PayPlayerDuesScreen: React.FC = () => {
     : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Season Dues"
         leftIcon="""
         
       />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Season Dues</Text>
+        <View style={[styles.card, { backgroundColor: colors.white }]}>
+          <Text style={[styles.cardTitle, { color: colors.ink }]}>Season Dues</Text>
 
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>AMOUNT</Text>
-            <Text style={styles.detailValue}>
+          <View style={[styles.detailRow, { borderBottomColor: colors.surface }]}>
+            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>AMOUNT</Text>
+            <Text style={[styles.detailValue, { color: colors.ink }]}>
               {duesAmountCents > 0 ? formatCurrency(duesAmountCents) : 'Not set'}
             </Text>
           </View>
 
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>STATUS</Text>
-            <View style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusUnpaid]}>
-              <Text style={[styles.statusText, isPaid ? styles.statusTextPaid : styles.statusTextUnpaid]}>
+          <View style={[styles.detailRow, { borderBottomColor: colors.surface }]}>
+            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>STATUS</Text>
+            <View style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusUnpaid, isPaid ? { backgroundColor: colors.pineTint } : {}]}>
+              <Text style={[styles.statusText, isPaid ? styles.statusTextPaid : styles.statusTextUnpaid, isPaid ? { color: colors.pine } : {}]}>
                 {isPaid ? 'Paid' : 'Unpaid'}
               </Text>
             </View>
@@ -153,9 +153,9 @@ export const PayPlayerDuesScreen: React.FC = () => {
         </View>
 
         {isPaid && (
-          <View style={styles.successCard}>
+          <View style={[styles.successCard, { backgroundColor: colors.white }]}>
             <Ionicons name="checkmark-circle" size={24} color={colors.pine} />
-            <Text style={styles.successText}>
+            <Text style={[styles.successText, { color: colors.ink }]}>
               Your season dues have been paid. You're all set.
             </Text>
           </View>
@@ -163,17 +163,17 @@ export const PayPlayerDuesScreen: React.FC = () => {
       </ScrollView>
 
       {!isPaid && duesAmountCents > 0 && !isDependent && (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { borderTopColor: colors.border, backgroundColor: colors.white }]}>
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[styles.cancelButton, { borderColor: colors.inkFaint }]}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
             activeOpacity={0.75}
           >
-            <Text style={styles.cancelButtonText}>Go Back</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.ink }]}>Go Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.payButton, paying && styles.payButtonDisabled]}
+            style={[styles.payButton, { backgroundColor: colors.cobalt }, paying && styles.payButtonDisabled]}
             onPress={handlePayDues}
             disabled={paying}
             testID="pay-dues-button"
@@ -185,7 +185,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
             {paying ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.payButtonText}>
+              <Text style={[styles.payButtonText, { color: colors.white }]}>
                 Pay {formatCurrency(duesAmountCents)}
               </Text>
             )}
@@ -194,10 +194,10 @@ export const PayPlayerDuesScreen: React.FC = () => {
       )}
 
       {!isPaid && isDependent && (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { borderTopColor: colors.border, backgroundColor: colors.white }]}>
           <View style={styles.dependentNotice}>
             <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
-            <Text style={styles.dependentNoticeText}>
+            <Text style={[styles.dependentNoticeText, { color: colors.ink }]}>
               Payments for {activeName} must be made from the parent account.
             </Text>
           </View>
@@ -210,7 +210,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white },
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',
@@ -220,91 +220,86 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint },
+  },
   errorText: {
     marginTop: Spacing.md,
     fontFamily: fonts.body,
     fontSize: 17,
-    color: colors.heart,
-    textAlign: 'center' },
+    textAlign: 'center',
+  },
   retryButton: {
     marginTop: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: colors.cobalt },
+  },
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white },
+  },
   scrollView: {
     flex: 1 },
   scrollContent: {
     padding: Spacing.lg,
     paddingBottom: 120 },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
-    marginBottom: Spacing.md },
+    marginBottom: Spacing.md,
+  },
   cardTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
-    marginBottom: Spacing.md },
+    marginBottom: Spacing.md,
+  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface },
+  },
   detailLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
     letterSpacing: 1.6,
-    color: colors.inkFaint,
-    textTransform: 'uppercase' },
+    textTransform: 'uppercase',
+  },
   detailValue: {
     fontFamily: fonts.ui,
     fontSize: 17,
-    color: colors.ink,
-    textAlign: 'right' },
+    textAlign: 'right',
+  },
   statusBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 6 },
-  statusPaid: {
-    backgroundColor: colors.pineTint },
-  statusUnpaid: {
-    backgroundColor: colors.goldTint },
+  statusPaid: {},
+  statusUnpaid: {},
   statusText: {
     fontFamily: fonts.label,
     fontSize: 12 },
-  statusTextPaid: {
-    color: colors.pine },
-  statusTextUnpaid: {
-    color: colors.gold },
+  statusTextPaid: {},
+  statusTextUnpaid: {},
   successCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
-    marginBottom: Spacing.md },
+    marginBottom: Spacing.md,
+  },
   successText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
-    lineHeight: 20 },
+    lineHeight: 20,
+  },
   bottomBar: {
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.white },
+  },
   cancelButton: {
     flex: 1,
     alignItems: 'center',
@@ -313,24 +308,24 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.inkFaint },
+  },
   cancelButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink },
+  },
   payButton: {
     flex: 2,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.cobalt },
+  },
   payButtonDisabled: {
     opacity: 0.5 },
   payButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white },
+  },
   dependentNotice: {
     flex: 1,
     flexDirection: 'row',
@@ -339,7 +334,7 @@ const styles = StyleSheet.create({
   dependentNoticeText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
-    lineHeight: 20 } });
+    lineHeight: 20,
+  } });

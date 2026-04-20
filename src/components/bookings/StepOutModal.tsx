@@ -49,7 +49,7 @@ export function StepOutModal({
           onPress={onCancel}
         />
         <View
-          style={[styles.modalContent, { backgroundColor: colors.bgCard }]}
+          style={[styles.modalContent, { backgroundColor: colors.surface }, { backgroundColor: colors.bgCard }]}
         >
           <View style={styles.header}>
             <Ionicons
@@ -57,17 +57,17 @@ export function StepOutModal({
               size={32}
               color={colors.textSecondary}
             />
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
+            <Text style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}>
               Leave
             </Text>
           </View>
 
-          <Text style={[styles.eventTitle, { color: colors.textPrimary }]}>
+          <Text style={[styles.eventTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
             {eventTitle}
           </Text>
 
           <Text
-            style={[styles.description, { color: colors.textSecondary }]}
+            style={[styles.description, { color: colors.inkFaint }, { color: colors.textSecondary }]}
           >
             Are you sure you want to leave this event? You will be removed as a
             participant.
@@ -77,31 +77,29 @@ export function StepOutModal({
             <TouchableOpacity
               style={[
                 styles.button,
-                styles.buttonSecondary,
-                { borderColor: colors.border },
-              ]}
+                styles.buttonSecondary, { backgroundColor: colors.surface, borderColor: colors.border },
+                { borderColor: colors.border }]}
               onPress={onCancel}
               disabled={isSubmitting}
             >
               <Text
                 style={[
-                  styles.buttonSecondaryText,
-                  { color: colors.textPrimary },
-                ]}
+                  styles.buttonSecondaryText, { color: colors.ink },
+                  { color: colors.textPrimary }]}
               >
                 Cancel
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.buttonMuted]}
+              style={[styles.button, styles.buttonMuted, { borderColor: colors.inkFaint }]}
               onPress={handleConfirm}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <ActivityIndicator color={colors.ink} />
               ) : (
-                <Text style={styles.buttonMutedText}>Leave</Text>
+                <Text style={[styles.buttonMutedText, { color: colors.ink }]}>Leave</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -120,7 +118,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -134,19 +131,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.ink,
     marginTop: 12,
   },
   eventTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
     textAlign: 'center',
     marginBottom: 16,
   },
   description: {
     fontSize: 15,
-    color: colors.inkFaint,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -164,23 +158,18 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   buttonSecondary: {
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   buttonSecondaryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
   },
   buttonMuted: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.inkFaint,
   },
   buttonMutedText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.ink,
   },
 });

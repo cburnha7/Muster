@@ -66,26 +66,24 @@ export const FormInput = forwardRef<any, FormInputProps>(
         {label && (
           <Text
             style={[
-              styles.label,
+              styles.label, { color: colors.onSurface },
               { color: colors.textPrimary },
-              labelStyle,
-            ]}
+              labelStyle]}
           >
             {label}
-            {required && <Text style={styles.required}> *</Text>}
+            {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
           </Text>
         )}
 
         <View
           style={[
-            styles.inputContainer,
+            styles.inputContainer, { backgroundColor: colors.surfaceContainer },
             { backgroundColor: colors.bgInput },
             isFocused && [
               styles.inputContainerFocused,
               { backgroundColor: colors.bgCard },
             ],
-            error && styles.inputContainerError,
-          ]}
+            error && styles.inputContainerError, error && { backgroundColor: colors.errorContainer }]}
         >
           {leftIcon && (
             <Ionicons
@@ -105,13 +103,12 @@ export const FormInput = forwardRef<any, FormInputProps>(
           <TextInput
             ref={inputRef}
             style={[
-              styles.input,
+              styles.input, { color: colors.onSurface },
               { color: colors.textPrimary },
               leftIcon && styles.inputWithLeftIcon,
               (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
               Platform.OS === 'web' && { outlineStyle: 'none' as any },
-              inputStyle,
-            ]}
+              inputStyle]}
             secureTextEntry={isSecure}
             onFocus={() => setIsFocused(true)}
             onBlur={() => {
@@ -158,7 +155,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
           )}
         </View>
 
-        {error && <Text style={[styles.error, errorStyle]}>{error}</Text>}
+        {error && <Text style={[styles.error, { color: colors.error }, errorStyle]}>{error}</Text>}
       </View>
     );
   }
@@ -171,17 +168,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontFamily: fonts.headingSemi,
-    color: colors.onSurface,
     marginBottom: 8,
     letterSpacing: -0.1,
   },
-  required: {
-    color: colors.error,
-  },
+  required: {},
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: 'transparent',
@@ -190,17 +183,14 @@ const styles = StyleSheet.create({
   },
   inputContainerFocused: {
     borderColor: 'rgba(0, 82, 255, 0.2)',
-    backgroundColor: colors.surfaceContainerLowest,
   },
   inputContainerError: {
     borderColor: 'rgba(186, 26, 26, 0.2)',
-    backgroundColor: colors.errorContainer,
   },
   input: {
     flex: 1,
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurface,
     paddingVertical: 14,
   },
   inputWithLeftIcon: {
@@ -219,7 +209,6 @@ const styles = StyleSheet.create({
   error: {
     fontSize: 13,
     fontFamily: fonts.body,
-    color: colors.error,
     marginTop: 6,
   },
 });

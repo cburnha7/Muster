@@ -61,12 +61,12 @@ function CrewEventCardInner({
       <View style={styles.row}>
         <View style={styles.info}>
           <Text
-            style={[styles.title, { color: colors.textPrimary }]}
+            style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}
             numberOfLines={1}
           >
             {event.title}
           </Text>
-          <Text style={[styles.meta, { color: colors.textSecondary }]}>
+          <Text style={[styles.meta, { color: colors.inkSoft }, { color: colors.textSecondary }]}>
             {formatDay(start)} Â· {formatTime(start)}
           </Text>
           {(event.facility?.name || event.locationName) && (
@@ -77,7 +77,7 @@ function CrewEventCardInner({
                 color={colors.textSecondary}
               />
               <Text
-                style={[styles.locText, { color: colors.textSecondary }]}
+                style={[styles.locText, { color: colors.inkSoft }, { color: colors.textSecondary }]}
                 numberOfLines={1}
               >
                 {event.facility?.name || event.locationName}
@@ -108,12 +108,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.headingSemi || fonts.heading,
     fontSize: 15,
-    color: colors.ink,
   },
   meta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
   },
   locRow: {
     flexDirection: 'row',
@@ -124,7 +122,6 @@ const styles = StyleSheet.create({
   locText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSoft,
     flex: 1,
   },
   dot: {

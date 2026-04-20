@@ -334,7 +334,7 @@ export function DependentFormScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.surfaceContainerLowest }]}>
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -343,7 +343,7 @@ export function DependentFormScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.screen, { backgroundColor: colors.surfaceContainerLowest }, { backgroundColor: colors.bgScreen }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -389,7 +389,7 @@ export function DependentFormScreen() {
 
           {/* Gender */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionLabel}>Gender</Text>
+            <Text style={[styles.sectionLabel, { color: colors.onSurface }]}>Gender</Text>
             <View style={styles.chipContainer}>
               {[
                 { label: 'Male', value: 'male' },
@@ -399,7 +399,7 @@ export function DependentFormScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.value}
-                    style={[styles.chip, selected && styles.chipSelected]}
+                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.primary, borderColor: colors.primary }]}
                     onPress={() =>
                       setGender(gender === opt.value ? '' : opt.value)
                     }
@@ -415,9 +415,8 @@ export function DependentFormScreen() {
                     )}
                     <Text
                       style={[
-                        styles.chipText,
-                        selected && styles.chipTextSelected,
-                      ]}
+                        styles.chipText, { color: colors.onSurface },
+                        selected && styles.chipTextSelected, selected && { color: colors.white }]}
                     >
                       {opt.label}
                     </Text>
@@ -429,14 +428,14 @@ export function DependentFormScreen() {
 
           {/* Sport preferences — chip-style multi-select */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionLabel}>Sport Preferences</Text>
+            <Text style={[styles.sectionLabel, { color: colors.onSurface }]}>Sport Preferences</Text>
             <View style={styles.chipContainer}>
               {SPORT_OPTIONS.map(sport => {
                 const selected = sportPreferences.includes(sport.value);
                 return (
                   <TouchableOpacity
                     key={sport.value}
-                    style={[styles.chip, selected && styles.chipSelected]}
+                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.primary, borderColor: colors.primary }]}
                     onPress={() => toggleSport(sport.value)}
                     activeOpacity={0.7}
                     accessibilityRole="checkbox"
@@ -453,9 +452,8 @@ export function DependentFormScreen() {
                     )}
                     <Text
                       style={[
-                        styles.chipText,
-                        selected && styles.chipTextSelected,
-                      ]}
+                        styles.chipText, { color: colors.onSurface },
+                        selected && styles.chipTextSelected, selected && { color: colors.white }]}
                     >
                       {sport.label}
                     </Text>
@@ -464,7 +462,7 @@ export function DependentFormScreen() {
               })}
             </View>
             {errors.sportPreferences && (
-              <Text style={styles.errorText}>{errors.sportPreferences}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.sportPreferences}</Text>
             )}
           </View>
 
@@ -531,9 +529,9 @@ export function DependentFormScreen() {
 
           {/* General error */}
           {errors.general && (
-            <View style={styles.generalErrorContainer}>
+            <View style={[styles.generalErrorContainer, { backgroundColor: colors.error + '10' }]}>
               <Ionicons name="alert-circle" size={16} color={colors.error} />
-              <Text style={styles.generalErrorText}>{errors.general}</Text>
+              <Text style={[styles.generalErrorText, { color: colors.error }]}>{errors.general}</Text>
             </View>
           )}
 
@@ -562,7 +560,6 @@ export function DependentFormScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
   },
   flex: {
     flex: 1,
@@ -573,7 +570,6 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
   },
   loadingContent: {
     flex: 1,
@@ -586,7 +582,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.onSurface,
     marginBottom: 8,
     fontFamily: fonts.body,
   },
@@ -601,34 +596,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
+  chipSelected: {},
   chipIcon: {
     marginRight: 4,
   },
   chipText: {
     fontSize: 14,
     fontFamily: fonts.label,
-    color: colors.onSurface,
   },
-  chipTextSelected: {
-    color: colors.white,
-  },
+  chipTextSelected: {},
   errorText: {
     fontSize: 14,
-    color: colors.error,
     marginTop: 4,
   },
   generalErrorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.error + '10',
     borderRadius: 8,
     padding: 12,
     gap: 8,
@@ -638,7 +623,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.error,
   },
   submitContainer: {
     marginTop: Spacing.md,

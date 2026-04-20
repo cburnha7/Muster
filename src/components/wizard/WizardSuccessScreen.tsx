@@ -67,26 +67,25 @@ export function WizardSuccessScreen({
       {/* Celebration icon */}
       <Animated.View
         style={[
-          styles.emojiCircle,
+          styles.emojiCircle, { backgroundColor: colors.secondaryContainer },
           {
             opacity: opacityAnim,
             transform: [{ scale: scaleAnim }],
-          },
-        ]}
+          }]}
       >
         <Text style={styles.emoji}>{emoji}</Text>
       </Animated.View>
 
       <Animated.View style={{ opacity: opacityAnim }}>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
+        {subtitle && <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{subtitle}</Text>}
       </Animated.View>
 
       {/* Summary card */}
       {summaryRows && summaryRows.length > 0 && (
         <Animated.View
           style={[
-            styles.summaryCard,
+            styles.summaryCard, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.onSurface },
             {
               opacity: cardAnim,
               transform: [
@@ -97,19 +96,17 @@ export function WizardSuccessScreen({
                   }),
                 },
               ],
-            },
-          ]}
+            }]}
         >
           {summaryRows.map((row, i) => (
             <View
               key={i}
               style={[
                 styles.summaryRow,
-                i < summaryRows.length - 1 && styles.summaryRowBorder,
-              ]}
+                i < summaryRows.length - 1 && styles.summaryRowBorder, i < summaryRows.length - 1 && { borderBottomColor: colors.outlineVariant }]}
             >
-              <Text style={styles.summaryLabel}>{row.label}</Text>
-              <Text style={styles.summaryValue}>{row.value}</Text>
+              <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>{row.label}</Text>
+              <Text style={[styles.summaryValue, { color: colors.onSurface }]}>{row.value}</Text>
             </View>
           ))}
         </Animated.View>
@@ -124,8 +121,7 @@ export function WizardSuccessScreen({
               key={i}
               style={[
                 styles.actionBtn,
-                isPrimary ? styles.actionPrimary : styles.actionSecondary,
-              ]}
+                isPrimary ? styles.actionPrimary : styles.actionSecondary, isPrimary ? { backgroundColor: colors.primary } : {}]}
               onPress={action.onPress}
               activeOpacity={0.7}
             >
@@ -141,8 +137,7 @@ export function WizardSuccessScreen({
                   styles.actionText,
                   isPrimary
                     ? styles.actionTextPrimary
-                    : styles.actionTextSecondary,
-                ]}
+                    : styles.actionTextSecondary, isPrimary ? { color: colors.white } : {}]}
               >
                 {action.label}
               </Text>
@@ -165,7 +160,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: colors.secondaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -176,24 +170,20 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.onSurface,
     textAlign: 'center',
     marginBottom: 4,
   },
   subtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: 8,
   },
   summaryCard: {
     width: '100%',
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 16,
     marginTop: 20,
-    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -207,17 +197,14 @@ const styles = StyleSheet.create({
   },
   summaryRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
   },
   summaryLabel: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
   },
   summaryValue: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.onSurface,
   },
   actionsContainer: {
     width: '100%',
@@ -232,20 +219,12 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     gap: 8,
   },
-  actionPrimary: {
-    backgroundColor: colors.primary,
-  },
-  actionSecondary: {
-    backgroundColor: colors.surfaceContainer,
-  },
+  actionPrimary: {},
+  actionSecondary: {},
   actionText: {
     fontFamily: fonts.ui,
     fontSize: 15,
   },
-  actionTextPrimary: {
-    color: colors.white,
-  },
-  actionTextSecondary: {
-    color: colors.primary,
-  },
+  actionTextPrimary: {},
+  actionTextSecondary: {},
 });

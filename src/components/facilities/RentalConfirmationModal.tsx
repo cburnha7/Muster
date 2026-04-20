@@ -84,21 +84,21 @@ export function RentalConfirmationModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.iconContainer}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
                 <Ionicons
                   name="calendar-outline"
                   size={32}
                   color={colors.cobalt}
                 />
               </View>
-              <Text style={styles.title}>
+              <Text style={[styles.title, { color: colors.ink }]}>
                 Confirm {slotCount > 1 ? `${slotCount} Rentals` : 'Rental'}
               </Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.subtitle, { color: colors.inkFaint }]}>
                 Please review your booking details
               </Text>
             </View>
@@ -107,29 +107,29 @@ export function RentalConfirmationModal({
             <View style={styles.detailsContainer}>
               {/* Facility */}
               <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
+                <View style={[styles.detailIcon, { backgroundColor: colors.surface }]}>
                   <Ionicons name="location" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Facility</Text>
-                  <Text style={styles.detailValue}>{facilityName}</Text>
+                  <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>Facility</Text>
+                  <Text style={[styles.detailValue, { color: colors.ink }]}>{facilityName}</Text>
                 </View>
               </View>
 
               {/* Court */}
               <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
+                <View style={[styles.detailIcon, { backgroundColor: colors.surface }]}>
                   <Ionicons name="basketball" size={20} color={colors.cobalt} />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Court</Text>
-                  <Text style={styles.detailValue}>{courtName}</Text>
+                  <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>Court</Text>
+                  <Text style={[styles.detailValue, { color: colors.ink }]}>{courtName}</Text>
                 </View>
               </View>
 
               {/* Date */}
               <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
+                <View style={[styles.detailIcon, { backgroundColor: colors.surface }]}>
                   <Ionicons
                     name="calendar-outline"
                     size={20}
@@ -137,14 +137,14 @@ export function RentalConfirmationModal({
                   />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Date</Text>
-                  <Text style={styles.detailValue}>{formattedDate}</Text>
+                  <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>Date</Text>
+                  <Text style={[styles.detailValue, { color: colors.ink }]}>{formattedDate}</Text>
                 </View>
               </View>
 
               {/* Time */}
               <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
+                <View style={[styles.detailIcon, { backgroundColor: colors.surface }]}>
                   <Ionicons
                     name="time-outline"
                     size={20}
@@ -152,24 +152,24 @@ export function RentalConfirmationModal({
                   />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Time</Text>
-                  <Text style={styles.detailValue}>
+                  <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>Time</Text>
+                  <Text style={[styles.detailValue, { color: colors.ink }]}>
                     {formatTime12(startTime)} - {formatTime12(endTime)}
                   </Text>
                   {slotCount > 1 && (
-                    <Text style={styles.detailSubvalue}>
+                    <Text style={[styles.detailSubvalue, { color: colors.inkFaint }]}>
                       {slotCount} consecutive time slots
                     </Text>
                   )}
-                  <Text style={styles.detailSubvalue}>
+                  <Text style={[styles.detailSubvalue, { color: colors.inkFaint }]}>
                     Duration: {formattedDuration}
                   </Text>
                 </View>
               </View>
 
               {/* Price */}
-              <View style={[styles.detailRow, styles.priceRow]}>
-                <View style={styles.detailIcon}>
+              <View style={[styles.detailRow, styles.priceRow, { backgroundColor: colors.surface }]}>
+                <View style={[styles.detailIcon, { backgroundColor: colors.surface }]}>
                   <Ionicons
                     name="cash-outline"
                     size={20}
@@ -177,8 +177,8 @@ export function RentalConfirmationModal({
                   />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Total Price</Text>
-                  <Text style={styles.priceValue}>${price.toFixed(2)}</Text>
+                  <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>Total Price</Text>
+                  <Text style={[styles.priceValue, { color: colors.cobalt }]}>${price.toFixed(2)}</Text>
                 </View>
               </View>
             </View>
@@ -203,9 +203,8 @@ export function RentalConfirmationModal({
                 >
                   <View
                     style={[
-                      styles.checkbox,
-                      policyAcknowledged && styles.checkboxChecked,
-                    ]}
+                      styles.checkbox, { borderColor: colors.inkFaint },
+                      policyAcknowledged && styles.checkboxChecked, policyAcknowledged && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                   >
                     {policyAcknowledged && (
                       <Ionicons
@@ -215,19 +214,19 @@ export function RentalConfirmationModal({
                       />
                     )}
                   </View>
-                  <Text style={styles.acknowledgementText}>
+                  <Text style={[styles.acknowledgementText, { color: colors.ink }]}>
                     I acknowledge and accept the facility's cancellation policy
                   </Text>
                 </Pressable>
               </View>
             ) : (
-              <View style={styles.noticeContainer}>
+              <View style={[styles.noticeContainer, { backgroundColor: colors.surface, borderLeftColor: colors.gold }]}>
                 <Ionicons
                   name="information-circle"
                   size={20}
                   color={colors.gold}
                 />
-                <Text style={styles.noticeText}>
+                <Text style={[styles.noticeText, { color: colors.ink }]}>
                   Cancellations must be made at least 2 hours before the start
                   time for a full refund.
                 </Text>
@@ -237,23 +236,21 @@ export function RentalConfirmationModal({
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.cobalt }]}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.confirmButton,
-                  isConfirmDisabled && styles.confirmButtonDisabled,
-                ]}
+                  isConfirmDisabled && styles.confirmButtonDisabled, isConfirmDisabled && { backgroundColor: colors.inkFaint }]}
                 onPress={handleConfirm}
                 disabled={isConfirmDisabled}
                 testID="confirm-booking-button"
               >
                 <Text
                   style={[
-                    styles.confirmButtonText,
-                    isConfirmDisabled && styles.confirmButtonTextDisabled,
-                  ]}
+                    styles.confirmButtonText, { color: colors.surface },
+                    isConfirmDisabled && styles.confirmButtonTextDisabled, isConfirmDisabled && { color: colors.surface }]}
                 >
                   Confirm {slotCount > 1 ? `${slotCount} Bookings` : 'Booking'}
                 </Text>
@@ -278,7 +275,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -288,25 +284,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
   },
   title: {
     ...TextStyles.h2,
-    color: colors.ink,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     textAlign: 'center',
   },
   detailsContainer: {
@@ -320,7 +312,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   priceRow: {
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     marginTop: Spacing.sm,
@@ -329,7 +320,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -338,34 +328,28 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     ...TextStyles.caption,
-    color: colors.inkFaint,
     marginBottom: 2,
   },
   detailValue: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.ink,
   },
   detailSubvalue: {
     ...TextStyles.caption,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   priceValue: {
     ...TextStyles.h3,
-    color: colors.cobalt,
     fontWeight: '700',
   },
   noticeContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     marginHorizontal: Spacing.lg,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.gold,
   },
   policyContainer: {
     marginHorizontal: Spacing.lg,
@@ -373,7 +357,6 @@ const styles = StyleSheet.create({
   noticeText: {
     flex: 1,
     ...TextStyles.caption,
-    color: colors.ink,
     lineHeight: 18,
   },
   buttonContainer: {
@@ -390,7 +373,6 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   confirmButton: {
     flex: 2,
@@ -403,15 +385,11 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.surface,
   },
   confirmButtonDisabled: {
-    backgroundColor: colors.inkFaint,
     opacity: 0.6,
   },
-  confirmButtonTextDisabled: {
-    color: colors.surface,
-  },
+  confirmButtonTextDisabled: {},
   acknowledgementRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -424,18 +402,13 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.inkFaint,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
-  checkboxChecked: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  checkboxChecked: {},
   acknowledgementText: {
     ...TextStyles.caption,
-    color: colors.ink,
     flex: 1,
     lineHeight: 18,
   },

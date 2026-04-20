@@ -160,20 +160,20 @@ export function PurchaseHistorySection({
           {purchases.map(purchase => {
             const status = getStatusInfo(purchase);
             return (
-              <View key={purchase.id} style={styles.card}>
+              <View key={purchase.id} style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
                 <View style={styles.purchaseHeader}>
-                  <Text style={styles.facilityName} numberOfLines={1}>
+                  <Text style={[styles.facilityName, { color: colors.ink }]} numberOfLines={1}>
                     {purchase.timeSlot.court.facility.name}
                   </Text>
-                  <Text style={styles.price}>
+                  <Text style={[styles.price, { color: colors.cobalt }]}>
                     ${purchase.totalPrice.toFixed(2)}
                   </Text>
                 </View>
-                <Text style={styles.courtName}>
+                <Text style={[styles.courtName, { color: colors.inkFaint }]}>
                   {purchase.timeSlot.court.name} Ã‚Â·{' '}
                   {formatDate(purchase.timeSlot.date)}
                 </Text>
-                <Text style={styles.timeText}>
+                <Text style={[styles.timeText, { color: colors.inkFaint }]}>
                   {formatTime(purchase.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
                   {formatTime(purchase.timeSlot.endTime)}
                 </Text>
@@ -207,10 +207,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -225,25 +223,21 @@ const styles = StyleSheet.create({
   facilityName: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
     marginRight: 8,
   },
   price: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
   },
   courtName: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: 2,
   },
   timeText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: 8,
   },
   statusBadge: {

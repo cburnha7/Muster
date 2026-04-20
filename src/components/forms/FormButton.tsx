@@ -131,20 +131,19 @@ export const FormButton: React.FC<FormButtonProps> = ({
         style={[
           styles.text,
           textSizeStyle,
-          variant === 'primary' && styles.primaryText,
+          variant === 'primary' && styles.primaryText, variant === 'primary' && { color: colors.white },
           variant === 'secondary' && [
             styles.secondaryText,
             { color: colors.textPrimary },
           ],
-          variant === 'outline' && styles.outlineText,
+          variant === 'outline' && styles.outlineText, variant === 'outline' && { color: colors.primary },
           variant === 'muted' && [
             styles.mutedText,
             { color: colors.textSecondary },
           ],
-          variant === 'danger' && styles.dangerText,
-          isDisabled && styles.disabledText,
-          textStyle,
-        ]}
+          variant === 'danger' && styles.dangerText, variant === 'danger' && { color: colors.white },
+          isDisabled && styles.disabledText, isDisabled && { color: colors.outline },
+          textStyle]}
       >
         {title}
       </Text>
@@ -194,7 +193,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
         style={[
           styles.button,
           sizeStyle,
-          variant === 'primary' && styles.primaryFlat,
+          variant === 'primary' && styles.primaryFlat, variant === 'primary' && { backgroundColor: colors.surfaceContainerHigh },
           variant === 'secondary' && [
             styles.secondary,
             { backgroundColor: colors.bgSubtle },
@@ -204,11 +203,10 @@ export const FormButton: React.FC<FormButtonProps> = ({
             { borderColor: colors.border },
           ],
           variant === 'muted' && styles.muted,
-          variant === 'danger' && styles.danger,
-          isDisabled && styles.disabled,
+          variant === 'danger' && styles.danger, variant === 'danger' && { backgroundColor: colors.error },
+          isDisabled && styles.disabled, isDisabled && { backgroundColor: colors.surfaceDim, borderColor: colors.surfaceDim },
           style,
-          { transform: [{ scale: scaleAnim }] },
-        ]}
+          { transform: [{ scale: scaleAnim }] }]}
       >
         {content}
       </Animated.View>
@@ -257,51 +255,29 @@ const styles = StyleSheet.create({
 
   // Color variants
   primary: {},
-  primaryFlat: {
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  primaryText: {
-    color: colors.white,
-  },
+  primaryFlat: {},
+  primaryText: {},
 
-  secondary: {
-    backgroundColor: colors.surfaceContainerLow,
-  },
-  secondaryText: {
-    color: colors.onSurface,
-  },
+  secondary: {},
+  secondaryText: {},
 
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: colors.outlineVariant,
   },
-  outlineText: {
-    color: colors.primary,
-  },
+  outlineText: {},
 
   muted: {
     backgroundColor: 'transparent',
   },
-  mutedText: {
-    color: colors.onSurfaceVariant,
-  },
+  mutedText: {},
 
-  danger: {
-    backgroundColor: colors.error,
-  },
-  dangerText: {
-    color: colors.white,
-  },
+  danger: {},
+  dangerText: {},
 
   // Disabled
-  disabled: {
-    backgroundColor: colors.surfaceDim,
-    borderColor: colors.surfaceDim,
-  },
-  disabledText: {
-    color: colors.outline,
-  },
+  disabled: {},
+  disabledText: {},
 
   // Icons
   leftIcon: { marginRight: 8 },

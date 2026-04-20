@@ -93,28 +93,28 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
   };
 
   const renderHeader = () => (
-    <View style={styles.headerRow}>
+    <View style={[styles.headerRow, { backgroundColor: colors.background, borderBottomColor: colors.cobalt }]}>
       <TouchableOpacity
         style={[styles.headerCell, styles.rankCell]}
         onPress={() => handleSort('rank')}
       >
-        <Text style={styles.headerText}>#</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>#</Text>
         {renderSortIcon('rank')}
       </TouchableOpacity>
 
       <View style={[styles.headerCell, styles.playerCell]}>
-        <Text style={styles.headerText}>Player</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>Player</Text>
       </View>
 
       <View style={[styles.headerCell, styles.teamCell]}>
-        <Text style={styles.headerText}>Roster</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>Roster</Text>
       </View>
 
       <TouchableOpacity
         style={[styles.headerCell, styles.statCell]}
         onPress={() => handleSort('matchesPlayed')}
       >
-        <Text style={styles.headerText}>MP</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>MP</Text>
         {renderSortIcon('matchesPlayed')}
       </TouchableOpacity>
 
@@ -122,19 +122,19 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
         style={[styles.headerCell, styles.statCell]}
         onPress={() => handleSort('averageRating')}
       >
-        <Text style={styles.headerText}>Avg</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>Avg</Text>
         {renderSortIcon('averageRating')}
       </TouchableOpacity>
 
       <View style={[styles.headerCell, styles.statCell]}>
-        <Text style={styles.headerText}>Votes</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>Votes</Text>
       </View>
 
       <TouchableOpacity
         style={[styles.headerCell, styles.statCell]}
         onPress={() => handleSort('performanceScore')}
       >
-        <Text style={styles.headerText}>Score</Text>
+        <Text style={[styles.headerText, { color: colors.ink }]}>Score</Text>
         {renderSortIcon('performanceScore')}
       </TouchableOpacity>
     </View>
@@ -160,7 +160,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
         {rank <= 3 && (
           <Ionicons name={iconName} size={12} color={colors.white} />
         )}
-        <Text style={styles.rankText}>{rank}</Text>
+        <Text style={[styles.rankText, { color: colors.white }]}>{rank}</Text>
       </View>
     );
   };
@@ -173,7 +173,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
     index: number;
   }) => (
     <TouchableOpacity
-      style={[styles.row, index % 2 === 0 && styles.evenRow]}
+      style={[styles.row, { borderBottomColor: colors.border }, index % 2 === 0 && styles.evenRow, index % 2 === 0 && { backgroundColor: colors.background }]}
       onPress={() => onPlayerPress?.(item.player.id)}
       activeOpacity={0.7}
     >
@@ -182,36 +182,36 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
       </View>
 
       <View style={[styles.cell, styles.playerCell]}>
-        <Text style={styles.playerName} numberOfLines={1}>
+        <Text style={[styles.playerName, { color: colors.ink }]} numberOfLines={1}>
           {item.player.firstName} {item.player.lastName}
         </Text>
       </View>
 
       <View style={[styles.cell, styles.teamCell]}>
-        <Text style={styles.teamText} numberOfLines={1}>
+        <Text style={[styles.teamText, { color: colors.inkSecondary }]} numberOfLines={1}>
           {item.team.name}
         </Text>
       </View>
 
       <View style={[styles.cell, styles.statCell]}>
-        <Text style={styles.statText}>{item.stats.matchesPlayed}</Text>
+        <Text style={[styles.statText, { color: colors.inkSecondary }]}>{item.stats.matchesPlayed}</Text>
       </View>
 
       <View style={[styles.cell, styles.statCell]}>
         <View style={styles.ratingContainer}>
           <Ionicons name="star" size={12} color={colors.gold} />
-          <Text style={styles.ratingText}>
+          <Text style={[styles.ratingText, { color: colors.gold }]}>
             {item.stats.averageRating.toFixed(1)}
           </Text>
         </View>
       </View>
 
       <View style={[styles.cell, styles.statCell]}>
-        <Text style={styles.statText}>{item.stats.totalVotes}</Text>
+        <Text style={[styles.statText, { color: colors.inkSecondary }]}>{item.stats.totalVotes}</Text>
       </View>
 
       <View style={[styles.cell, styles.statCell]}>
-        <Text style={[styles.statText, styles.scoreText]}>
+        <Text style={[styles.statText, { color: colors.inkSecondary }, styles.scoreText, { color: colors.cobalt }]}>
           {item.stats.performanceScore.toFixed(0)}
         </Text>
       </View>
@@ -228,10 +228,10 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
         disabled={loading}
       >
         {loading ? (
-          <Text style={styles.loadMoreText}>Loading...</Text>
+          <Text style={[styles.loadMoreText, { color: colors.cobalt }]}>Loading...</Text>
         ) : (
           <>
-            <Text style={styles.loadMoreText}>Load More</Text>
+            <Text style={[styles.loadMoreText, { color: colors.cobalt }]}>Load More</Text>
             <Ionicons name="chevron-down" size={16} color={colors.cobalt} />
           </>
         )}
@@ -242,15 +242,15 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
   const renderEmpty = () => (
     <View style={styles.emptyState}>
       <Ionicons name="people-outline" size={48} color={colors.inkMuted} />
-      <Text style={styles.emptyText}>No player rankings yet</Text>
-      <Text style={styles.emptySubtext}>
+      <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No player rankings yet</Text>
+      <Text style={[styles.emptySubtext, { color: colors.inkMuted }]}>
         Rankings will appear after matches are played
       </Text>
     </View>
   );
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, style]}>
       <FlatList
         data={sortedRankings}
         renderItem={renderItem}
@@ -263,13 +263,13 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
       />
 
       {/* Legend */}
-      <View style={styles.legend}>
-        <Text style={styles.legendTitle}>Legend:</Text>
+      <View style={[styles.legend, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+        <Text style={[styles.legendTitle, { color: colors.inkSecondary }]}>Legend:</Text>
         <View style={styles.legendItems}>
-          <Text style={styles.legendItem}>MP = Matches Played</Text>
-          <Text style={styles.legendItem}>Avg = Average Rating</Text>
-          <Text style={styles.legendItem}>Votes = Total Votes Received</Text>
-          <Text style={styles.legendItem}>Score = Performance Score</Text>
+          <Text style={[styles.legendItem, { color: colors.inkMuted }]}>MP = Matches Played</Text>
+          <Text style={[styles.legendItem, { color: colors.inkMuted }]}>Avg = Average Rating</Text>
+          <Text style={[styles.legendItem, { color: colors.inkMuted }]}>Votes = Total Votes Received</Text>
+          <Text style={[styles.legendItem, { color: colors.inkMuted }]}>Score = Performance Score</Text>
         </View>
       </View>
     </View>
@@ -278,23 +278,17 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
     flex: 1,
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: colors.background,
     borderBottomWidth: 2,
-    borderBottomColor: colors.cobalt,
   },
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  evenRow: {
-    backgroundColor: colors.background,
-  },
+  evenRow: {},
   headerCell: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -326,45 +320,33 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.ink,
   },
   rankBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.border,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
     minWidth: 36,
   },
-  goldBadge: {
-    backgroundColor: colors.gold,
-  },
-  silverBadge: {
-    backgroundColor: colors.inkMuted,
-  },
-  bronzeBadge: {
-    backgroundColor: colors.warning,
-  },
+  goldBadge: {},
+  silverBadge: {},
+  bronzeBadge: {},
   rankText: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.white,
   },
   playerName: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.ink,
   },
   teamText: {
     fontSize: 13,
-    color: colors.inkSecondary,
   },
   statText: {
     fontSize: 14,
-    color: colors.inkSecondary,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -374,11 +356,9 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.gold,
   },
   scoreText: {
     fontWeight: '700',
-    color: colors.cobalt,
   },
   loadMoreButton: {
     flexDirection: 'row',
@@ -390,7 +370,6 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   emptyState: {
     alignItems: 'center',
@@ -401,25 +380,20 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: colors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },
   legend: {
     padding: 12,
-    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   legendTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.inkSecondary,
     marginBottom: 6,
   },
   legendItems: {
@@ -429,6 +403,5 @@ const styles = StyleSheet.create({
   },
   legendItem: {
     fontSize: 11,
-    color: colors.inkMuted,
   },
 });

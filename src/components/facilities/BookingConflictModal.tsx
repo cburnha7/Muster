@@ -63,14 +63,14 @@ export function BookingConflictModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.modal}>
+        <View style={[styles.modal, { backgroundColor: colors.surface }]}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.header}>
-              <View style={styles.iconWrap}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
+              <View style={[styles.iconWrap, { backgroundColor: `${colors.gold}15` }]}>
                 <Ionicons name="warning" size={28} color={colors.gold} />
               </View>
-              <Text style={styles.title}>Some Slots Unavailable</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.ink }]}>Some Slots Unavailable</Text>
+              <Text style={[styles.subtitle, { color: colors.inkFaint }]}>
                 {conflicts.length} slot{conflicts.length !== 1 ? 's' : ''}{' '}
                 became unavailable since you selected{' '}
                 {conflicts.length !== 1 ? 'them' : 'it'}.
@@ -86,14 +86,14 @@ export function BookingConflictModal({
                     color={colors.heart}
                   />
                   <View style={styles.conflictInfo}>
-                    <Text style={styles.conflictCourt}>{c.courtName}</Text>
-                    <Text style={styles.conflictDetail}>
+                    <Text style={[styles.conflictCourt, { color: colors.ink }]}>{c.courtName}</Text>
+                    <Text style={[styles.conflictDetail, { color: colors.inkFaint }]}>
                       {formatDate(c.date)}
                       {c.startTime && c.endTime
                         ? ` · ${formatTime12(c.startTime)} – ${formatTime12(c.endTime)}`
                         : ''}
                     </Text>
-                    <Text style={styles.conflictReason}>
+                    <Text style={[styles.conflictReason, { color: colors.heart }]}>
                       {c.reason === 'rented'
                         ? 'Already rented'
                         : c.reason === 'blocked'
@@ -106,13 +106,13 @@ export function BookingConflictModal({
             </View>
 
             {availableCount > 0 && (
-              <View style={styles.availableNote}>
+              <View style={[styles.availableNote, { backgroundColor: `${colors.cobalt}10` }]}>
                 <Ionicons
                   name="checkmark-circle"
                   size={18}
                   color={colors.cobalt}
                 />
-                <Text style={styles.availableText}>
+                <Text style={[styles.availableText, { color: colors.cobalt }]}>
                   {availableCount} slot{availableCount !== 1 ? 's are' : ' is'}{' '}
                   still available
                 </Text>
@@ -125,7 +125,7 @@ export function BookingConflictModal({
                 onPress={onClose}
                 disabled={loading}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={[styles.cancelBtnText, { color: colors.cobalt }]}>Cancel</Text>
               </TouchableOpacity>
               {availableCount > 0 && (
                 <TouchableOpacity
@@ -133,7 +133,7 @@ export function BookingConflictModal({
                   onPress={onBookAvailable}
                   disabled={loading}
                 >
-                  <Text style={styles.bookBtnText}>
+                  <Text style={[styles.bookBtnText, { color: colors.surface }]}>
                     {loading
                       ? 'Booking...'
                       : `Book ${availableCount} Available`}
@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modal: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -165,26 +164,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   iconWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: `${colors.gold}15`,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontFamily: fonts.heading,
     ...typeScale.h2,
-    color: colors.ink,
     marginTop: Spacing.sm,
   },
   subtitle: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
     marginTop: 4,
     textAlign: 'center',
   },
@@ -199,18 +194,15 @@ const styles = StyleSheet.create({
   conflictCourt: {
     fontFamily: fonts.semibold,
     ...typeScale.body,
-    color: colors.ink,
   },
   conflictDetail: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
     marginTop: 1,
   },
   conflictReason: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.heart,
     textTransform: 'uppercase',
     marginTop: 2,
   },
@@ -221,13 +213,11 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
     padding: Spacing.sm,
-    backgroundColor: `${colors.cobalt}10`,
     borderRadius: 8,
   },
   availableText: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.cobalt,
   },
   buttons: {
     flexDirection: 'row',
@@ -240,12 +230,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt },
+  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   bookBtn: {
     flex: 2,
     ...ComponentStyles.button.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bookBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.surface },
+  bookBtnText: { fontFamily: fonts.ui, fontSize: 15 },
 });

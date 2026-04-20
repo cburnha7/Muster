@@ -85,8 +85,8 @@ export function NotificationBell() {
           color={colors.textPrimary}
         />
         {count > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
+          <View style={[styles.badge, { backgroundColor: colors.heart }]}>
+            <Text style={[styles.badgeText, { color: colors.white }]}>
               {count > 99 ? '99+' : String(count)}
             </Text>
           </View>
@@ -101,21 +101,19 @@ export function NotificationBell() {
       >
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <Pressable
-            style={[styles.panel, { backgroundColor: colors.bgCard }]}
+            style={[styles.panel, { backgroundColor: colors.white, shadowColor: colors.black }, { backgroundColor: colors.bgCard }]}
             onPress={e => e.stopPropagation()}
           >
             <SafeAreaView>
               <View
                 style={[
-                  styles.panelHeader,
-                  { borderBottomColor: colors.border },
-                ]}
+                  styles.panelHeader, { borderBottomColor: colors.surface },
+                  { borderBottomColor: colors.border }]}
               >
                 <Text
                   style={[
-                    styles.panelTitle,
-                    { color: colors.textPrimary },
-                  ]}
+                    styles.panelTitle, { color: colors.ink },
+                    { color: colors.textPrimary }]}
                 >
                   Notifications
                 </Text>
@@ -137,9 +135,8 @@ export function NotificationBell() {
                   />
                   <Text
                     style={[
-                      styles.emptyText,
-                      { color: colors.textSecondary },
-                    ]}
+                      styles.emptyText, { color: colors.inkSoft },
+                      { color: colors.textSecondary }]}
                   >
                     You're all caught up.
                   </Text>
@@ -153,17 +150,15 @@ export function NotificationBell() {
                     <TouchableOpacity
                       key={item.id}
                       style={[
-                        styles.notifRow,
-                        { borderBottomColor: colors.border },
-                      ]}
+                        styles.notifRow, { borderBottomColor: colors.surface },
+                        { borderBottomColor: colors.border }]}
                       onPress={() => handleItemPress(item)}
                       activeOpacity={0.7}
                     >
                       <View
                         style={[
-                          styles.notifIcon,
-                          { backgroundColor: colors.bgScreen },
-                        ]}
+                          styles.notifIcon, { backgroundColor: colors.surface },
+                          { backgroundColor: colors.bgScreen }]}
                       >
                         <Ionicons
                           name={ICON_MAP[item.type] || 'notifications-outline'}
@@ -174,17 +169,15 @@ export function NotificationBell() {
                       <View style={styles.notifBody}>
                         <Text
                           style={[
-                            styles.notifTitle,
-                            { color: colors.textPrimary },
-                          ]}
+                            styles.notifTitle, { color: colors.ink },
+                            { color: colors.textPrimary }]}
                         >
                           {item.title}
                         </Text>
                         <Text
                           style={[
-                            styles.notifSubtitle,
-                            { color: colors.textSecondary },
-                          ]}
+                            styles.notifSubtitle, { color: colors.inkSoft },
+                            { color: colors.textSecondary }]}
                           numberOfLines={1}
                         >
                           {item.subtitle}
@@ -218,7 +211,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: colors.heart,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -226,7 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  badgeText: { fontFamily: fonts.ui, fontSize: 10, color: colors.white },
+  badgeText: { fontFamily: fonts.ui, fontSize: 10 },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',
@@ -234,14 +226,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   panel: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     marginTop: 60,
     marginLeft: 12,
     marginRight: 12,
     maxHeight: 420,
     width: 320,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -254,11 +244,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
   },
-  panelTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
+  panelTitle: { fontFamily: fonts.heading, fontSize: 18 },
   emptyState: { alignItems: 'center', paddingVertical: 40, gap: 12 },
-  emptyText: { fontFamily: fonts.body, fontSize: 15, color: colors.inkSoft },
+  emptyText: { fontFamily: fonts.body, fontSize: 15 },
   list: { maxHeight: 340 },
   notifRow: {
     flexDirection: 'row',
@@ -266,23 +255,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
   },
   notifIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   notifBody: { flex: 1 },
-  notifTitle: { fontFamily: fonts.label, fontSize: 14, color: colors.ink },
+  notifTitle: { fontFamily: fonts.label, fontSize: 14 },
   notifSubtitle: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginTop: 1,
   },
 });

@@ -221,11 +221,11 @@ export function InsuranceDocumentForm({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        style={styles.modalContainer}
+        style={[styles.modalContainer, { backgroundColor: colors.white }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: colors.surface }]}>
           <TouchableOpacity
             onPress={onClose}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -234,7 +234,7 @@ export function InsuranceDocumentForm({
           >
             <Ionicons name="close" size={24} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add Insurance Document</Text>
+          <Text style={[styles.headerTitle, { color: colors.ink }]}>Add Insurance Document</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -245,11 +245,11 @@ export function InsuranceDocumentForm({
         >
           {/* File Picker */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Document File <Text style={styles.required}>*</Text>
+            <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+              Document File <Text style={[styles.required, { color: colors.heart }]}>*</Text>
             </Text>
             <TouchableOpacity
-              style={[styles.filePicker, errors.file && styles.filePickerError]}
+              style={[styles.filePicker, { backgroundColor: colors.surface, borderColor: colors.surface }, errors.file && styles.filePickerError, errors.file && { borderColor: colors.heart }]}
               onPress={handlePickFile}
               activeOpacity={0.7}
               accessibilityRole="button"
@@ -262,7 +262,7 @@ export function InsuranceDocumentForm({
                     size={22}
                     color={colors.cobalt}
                   />
-                  <Text style={styles.fileName} numberOfLines={1}>
+                  <Text style={[styles.fileName, { color: colors.ink }]} numberOfLines={1}>
                     {selectedFile.name}
                   </Text>
                   <TouchableOpacity
@@ -288,28 +288,27 @@ export function InsuranceDocumentForm({
                     size={28}
                     color={colors.inkFaint}
                   />
-                  <Text style={styles.filePlaceholderText}>
+                  <Text style={[styles.filePlaceholderText, { color: colors.inkFaint }]}>
                     Tap to select a file
                   </Text>
-                  <Text style={styles.fileHint}>
+                  <Text style={[styles.fileHint, { color: colors.inkFaint }]}>
                     PDF, JPEG, or PNG Ã¢â‚¬â€ 10 MB max
                   </Text>
                 </View>
               )}
             </TouchableOpacity>
-            {errors.file && <Text style={styles.errorText}>{errors.file}</Text>}
+            {errors.file && <Text style={[styles.errorText, { color: colors.heart }]}>{errors.file}</Text>}
           </View>
 
           {/* Policy Name */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Policy Name <Text style={styles.required}>*</Text>
+            <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+              Policy Name <Text style={[styles.required, { color: colors.heart }]}>*</Text>
             </Text>
             <TextInput
               style={[
-                styles.textInput,
-                errors.policyName && styles.textInputError,
-              ]}
+                styles.textInput, { backgroundColor: colors.surface, borderColor: colors.surface, color: colors.ink },
+                errors.policyName && styles.textInputError, errors.policyName && { borderColor: colors.heart }]}
               value={policyName}
               onChangeText={text => {
                 setPolicyName(text);
@@ -322,20 +321,19 @@ export function InsuranceDocumentForm({
               accessibilityLabel="Policy name"
             />
             {errors.policyName && (
-              <Text style={styles.errorText}>{errors.policyName}</Text>
+              <Text style={[styles.errorText, { color: colors.heart }]}>{errors.policyName}</Text>
             )}
           </View>
 
           {/* Expiry Date */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Expiry Date <Text style={styles.required}>*</Text>
+            <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+              Expiry Date <Text style={[styles.required, { color: colors.heart }]}>*</Text>
             </Text>
             <TextInput
               style={[
-                styles.textInput,
-                errors.expiryDate && styles.textInputError,
-              ]}
+                styles.textInput, { backgroundColor: colors.surface, borderColor: colors.surface, color: colors.ink },
+                errors.expiryDate && styles.textInputError, errors.expiryDate && { borderColor: colors.heart }]}
               value={expiryDateText}
               onChangeText={text => {
                 setExpiryDateText(text);
@@ -349,18 +347,17 @@ export function InsuranceDocumentForm({
               accessibilityLabel="Expiry date"
             />
             {errors.expiryDate && (
-              <Text style={styles.errorText}>{errors.expiryDate}</Text>
+              <Text style={[styles.errorText, { color: colors.heart }]}>{errors.expiryDate}</Text>
             )}
           </View>
         </ScrollView>
 
         {/* Submit Button */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { borderTopColor: colors.surface }]}>
           <TouchableOpacity
             style={[
-              styles.submitButton,
-              isLoading && styles.submitButtonDisabled,
-            ]}
+              styles.submitButton, { backgroundColor: colors.cobalt },
+              isLoading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={isLoading}
             activeOpacity={0.7}
@@ -376,7 +373,7 @@ export function InsuranceDocumentForm({
                   size={20}
                   color={colors.white}
                 />
-                <Text style={styles.submitButtonText}>Upload Document</Text>
+                <Text style={[styles.submitButtonText, { color: colors.white }]}>Upload Document</Text>
               </>
             )}
           </TouchableOpacity>
@@ -389,7 +386,6 @@ export function InsuranceDocumentForm({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   header: {
     flexDirection: 'row',
@@ -399,12 +395,10 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
   },
   headerTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   scrollContent: {
     flex: 1,
@@ -418,23 +412,16 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: Spacing.sm,
   },
-  required: {
-    color: colors.heart,
-  },
+  required: {},
   filePicker: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.surface,
     borderStyle: 'dashed',
     overflow: 'hidden',
   },
-  filePickerError: {
-    borderColor: colors.heart,
-  },
+  filePickerError: {},
   filePlaceholder: {
     alignItems: 'center',
     paddingVertical: Spacing.xxl,
@@ -443,13 +430,11 @@ const styles = StyleSheet.create({
   filePlaceholderText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: Spacing.sm,
   },
   fileHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
   },
   fileSelected: {
@@ -461,36 +446,27 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     marginHorizontal: Spacing.sm,
   },
   textInput: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.surface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 14,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
   },
-  textInputError: {
-    borderColor: colors.heart,
-  },
+  textInputError: {},
   errorText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.heart,
     marginTop: Spacing.xs,
   },
   footer: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.surface,
   },
   submitButton: {
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 14,
     flexDirection: 'row',
@@ -503,7 +479,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
     marginLeft: Spacing.sm,
   },
 });

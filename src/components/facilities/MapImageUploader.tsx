@@ -181,62 +181,62 @@ export function MapImageUploader({
     <View style={styles.container}>
       {/* Instructions */}
       {showInstructions && (
-        <View style={styles.instructionsCard}>
+        <View style={[styles.instructionsCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
           <View style={styles.instructionHeader}>
             <Ionicons name="information-circle" size={24} color={colors.ink} />
-            <Text style={styles.instructionTitle}>Upload Facility Map</Text>
+            <Text style={[styles.instructionTitle, { color: colors.ink }]}>Upload Facility Map</Text>
           </View>
-          <Text style={styles.instructionText}>
+          <Text style={[styles.instructionText, { color: colors.mid }]}>
             Upload a clear image showing the layout of your facility. This will
             help users understand the location of courts and fields.
           </Text>
-          <View style={styles.requirementsList}>
-            <Text style={styles.requirementItem}>
+          <View style={[styles.requirementsList, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>
               â€¢ Minimum size: {minDimensions.width}x{minDimensions.height}{' '}
               pixels
             </Text>
-            <Text style={styles.requirementItem}>
+            <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>
               â€¢ Maximum size: {maxDimensions.width}x{maxDimensions.height}{' '}
               pixels
             </Text>
-            <Text style={styles.requirementItem}>
+            <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>
               â€¢ Maximum file size: 10MB
             </Text>
-            <Text style={styles.requirementItem}>â€¢ Formats: JPEG, PNG</Text>
+            <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>â€¢ Formats: JPEG, PNG</Text>
           </View>
         </View>
       )}
 
       {/* Image Preview or Upload Placeholder */}
       {imageUri ? (
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
           <Image
             source={{ uri: imageUri }}
-            style={styles.mapImage}
+            style={[styles.mapImage, { backgroundColor: colors.surface }]}
             resizeMode="contain"
           />
-          <View style={styles.imageOverlay}>
+          <View style={[styles.imageOverlay, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
             <TouchableOpacity
-              style={[styles.imageButton, styles.changeButton]}
+              style={[styles.imageButton, styles.changeButton, { backgroundColor: colors.surface, borderColor: colors.cobalt }]}
               onPress={handlePickImage}
               disabled={disabled}
             >
               <Ionicons name="images" size={20} color={colors.cobalt} />
-              <Text style={styles.changeButtonText}>Change</Text>
+              <Text style={[styles.changeButtonText, { color: colors.cobalt }]}>Change</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.imageButton, styles.removeButton]}
+              style={[styles.imageButton, styles.removeButton, { backgroundColor: colors.surface, borderColor: colors.heart }]}
               onPress={handleRemoveImage}
               disabled={disabled}
             >
               <Ionicons name="trash" size={20} color={colors.heart} />
-              <Text style={styles.removeButtonText}>Remove</Text>
+              <Text style={[styles.removeButtonText, { color: colors.heart }]}>Remove</Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         <TouchableOpacity
-          style={styles.uploadPlaceholder}
+          style={[styles.uploadPlaceholder, { backgroundColor: colors.background, borderColor: colors.border }]}
           onPress={handlePickImage}
           disabled={disabled}
         >
@@ -245,8 +245,8 @@ export function MapImageUploader({
             size={48}
             color={colors.inkFaint}
           />
-          <Text style={styles.uploadPlaceholderTitle}>Upload Facility Map</Text>
-          <Text style={styles.uploadPlaceholderText}>{placeholderText}</Text>
+          <Text style={[styles.uploadPlaceholderTitle, { color: colors.ink }]}>Upload Facility Map</Text>
+          <Text style={[styles.uploadPlaceholderText, { color: colors.inkFaint }]}>{placeholderText}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -258,12 +258,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   instructionsCard: {
-    backgroundColor: colors.background,
     padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   instructionHeader: {
     flexDirection: 'row',
@@ -273,44 +271,35 @@ const styles = StyleSheet.create({
   instructionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginLeft: Spacing.sm,
   },
   instructionText: {
     fontSize: 15,
-    color: colors.mid,
     lineHeight: 22,
     marginBottom: Spacing.md,
   },
   requirementsList: {
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
   },
   requirementItem: {
     fontSize: 14,
-    color: colors.inkFaint,
     marginBottom: Spacing.xs,
   },
   imageContainer: {
-    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   mapImage: {
     width: '100%',
     height: 400,
-    backgroundColor: colors.surface,
   },
   imageOverlay: {
     flexDirection: 'row',
     padding: Spacing.md,
     gap: Spacing.md,
-    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   imageButton: {
     flex: 1,
@@ -323,30 +312,22 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   changeButton: {
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.cobalt,
   },
   changeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   removeButton: {
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.heart,
   },
   removeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.heart,
   },
   uploadPlaceholder: {
-    backgroundColor: colors.background,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: colors.border,
     borderStyle: 'dashed',
     padding: Spacing.xxl,
     alignItems: 'center',
@@ -356,13 +337,11 @@ const styles = StyleSheet.create({
   uploadPlaceholderTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   uploadPlaceholderText: {
     fontSize: 15,
-    color: colors.inkFaint,
     textAlign: 'center',
   },
 });

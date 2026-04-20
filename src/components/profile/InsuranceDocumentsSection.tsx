@@ -47,7 +47,7 @@ export function InsuranceDocumentsSection({
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
         <ActivityIndicator size="small" color={colors.cobalt} />
       </View>
     );
@@ -60,13 +60,13 @@ export function InsuranceDocumentsSection({
     >
       <View style={styles.container}>
         {!documents || documents.length === 0 ? (
-          <View style={styles.emptyCard}>
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
             <Ionicons
               name="document-text-outline"
               size={32}
               color={colors.inkFaint}
             />
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: colors.inkFaint }]}>
               No insurance documents yet. Add one to attach to court
               reservations.
             </Text>
@@ -78,20 +78,19 @@ export function InsuranceDocumentsSection({
               <View
                 key={doc.id}
                 style={[
-                  styles.documentCard,
-                  isExpired && styles.documentCardExpired,
-                ]}
+                  styles.documentCard, { backgroundColor: colors.surface, shadowColor: colors.black },
+                  isExpired && styles.documentCardExpired]}
                 accessibilityLabel={`${doc.policyName}, expires ${formatDate(doc.expiryDate)}, ${isExpired ? 'expired' : 'active'}`}
               >
                 <View style={styles.documentInfo}>
                   <Text
-                    style={[styles.policyName, isExpired && styles.textExpired]}
+                    style={[styles.policyName, { color: colors.ink }, isExpired && styles.textExpired, isExpired && { color: colors.inkFaint }]}
                     numberOfLines={1}
                   >
                     {doc.policyName}
                   </Text>
                   <Text
-                    style={[styles.expiryDate, isExpired && styles.textExpired]}
+                    style={[styles.expiryDate, { color: colors.inkFaint }, isExpired && styles.textExpired, isExpired && { color: colors.inkFaint }]}
                   >
                     Expires {formatDate(doc.expiryDate)}
                   </Text>
@@ -99,16 +98,14 @@ export function InsuranceDocumentsSection({
                 <View
                   style={[
                     styles.badge,
-                    isExpired ? styles.badgeExpired : styles.badgeActive,
-                  ]}
+                    isExpired ? styles.badgeExpired : styles.badgeActive, isExpired ? { backgroundColor: colors.inkFaint + '1A' } : {}]}
                 >
                   <Text
                     style={[
                       styles.badgeText,
                       isExpired
                         ? styles.badgeTextExpired
-                        : styles.badgeTextActive,
-                    ]}
+                        : styles.badgeTextActive, isExpired ? { color: colors.inkFaint } : {}]}
                   >
                     {isExpired ? 'Expired' : 'Active'}
                   </Text>
@@ -119,14 +116,14 @@ export function InsuranceDocumentsSection({
         )}
 
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.surface, borderColor: colors.cobalt }]}
           onPress={onAddDocument}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Add Insurance Document"
         >
           <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
-          <Text style={styles.addButtonText}>Add Insurance Document</Text>
+          <Text style={[styles.addButtonText, { color: colors.cobalt }]}>Add Insurance Document</Text>
         </TouchableOpacity>
       </View>
     </CollapsibleSection>
@@ -138,22 +135,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   loadingContainer: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
   },
   emptyCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -162,18 +155,15 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
   documentCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -189,55 +179,44 @@ const styles = StyleSheet.create({
   policyName: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
   },
   expiryDate: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 2,
   },
-  textExpired: {
-    color: colors.inkFaint,
-  },
+  textExpired: {},
   badge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: 8,
   },
   badgeActive: {
-    backgroundColor: colors.cobalt + '1A', // 10% opacity pine
+    // 10% opacity pine,
   },
   badgeExpired: {
-    backgroundColor: colors.inkFaint + '1A', // 10% opacity
+    // 10% opacity,
   },
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
     textTransform: 'uppercase',
   },
-  badgeTextActive: {
-    color: colors.cobalt,
-  },
-  badgeTextExpired: {
-    color: colors.inkFaint,
-  },
+  badgeTextActive: {},
+  badgeTextExpired: {},
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
     marginTop: Spacing.sm,
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.cobalt,
     borderStyle: 'dashed',
   },
   addButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
     marginLeft: Spacing.sm,
   },
 });

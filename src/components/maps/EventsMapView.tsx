@@ -41,7 +41,7 @@ export function EventsMapView({ events, userBookedEventIds, onEventPress }: Even
 
   if (loading || !userLocation) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
         <LoadingSpinner />
       </View>
     );
@@ -103,6 +103,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surface,
   },
 });

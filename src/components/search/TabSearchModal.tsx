@@ -123,7 +123,7 @@ export function TabSearchModal({
   if (!visible) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
@@ -151,7 +151,7 @@ export function TabSearchModal({
       {/* Age filter */}
       <View style={styles.ageRow}>
         <TextInput
-          style={styles.ageInput}
+          style={[styles.ageInput, { backgroundColor: colors.surface, color: colors.ink, borderColor: colors.border, shadowColor: colors.black }]}
           placeholder="Min age"
           placeholderTextColor={colors.inkFaint}
           value={minAgeFilter}
@@ -159,7 +159,7 @@ export function TabSearchModal({
           keyboardType="number-pad"
         />
         <TextInput
-          style={styles.ageInput}
+          style={[styles.ageInput, { backgroundColor: colors.surface, color: colors.ink, borderColor: colors.border, shadowColor: colors.black }]}
           placeholder="Max age"
           placeholderTextColor={colors.inkFaint}
           value={maxAgeFilter}
@@ -176,7 +176,7 @@ export function TabSearchModal({
       ) : results.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="search-outline" size={40} color={colors.inkFaint} />
-          <Text style={styles.emptyText}>No results found</Text>
+          <Text style={[styles.emptyText, { color: colors.inkFaint }]}>No results found</Text>
         </View>
       ) : (
         <FlatList
@@ -185,9 +185,8 @@ export function TabSearchModal({
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
-                styles.resultRow,
-                { backgroundColor: colors.bgCard },
-              ]}
+                styles.resultRow, { backgroundColor: colors.surface, shadowColor: colors.ink },
+                { backgroundColor: colors.bgCard }]}
               onPress={() => {
                 onResultPress(item);
                 onClose();
@@ -197,9 +196,8 @@ export function TabSearchModal({
               <View style={styles.resultBody}>
                 <Text
                   style={[
-                    styles.resultName,
-                    { color: colors.textPrimary },
-                  ]}
+                    styles.resultName, { color: colors.ink },
+                    { color: colors.textPrimary }]}
                   numberOfLines={1}
                 >
                   {item.name}
@@ -207,9 +205,8 @@ export function TabSearchModal({
                 {item.subtitle && (
                   <Text
                     style={[
-                      styles.resultSub,
-                      { color: colors.textSecondary },
-                    ]}
+                      styles.resultSub, { color: colors.inkFaint },
+                      { color: colors.textSecondary }]}
                     numberOfLines={1}
                   >
                     {item.subtitle}
@@ -231,7 +228,7 @@ export function TabSearchModal({
       {/* Create button */}
       {createLabel && onCreatePress && (
         <TouchableOpacity
-          style={styles.createBtn}
+          style={[styles.createBtn, { backgroundColor: colors.cobalt }]}
           onPress={onCreatePress}
           activeOpacity={0.85}
         >
@@ -240,7 +237,7 @@ export function TabSearchModal({
             size={20}
             color={colors.white}
           />
-          <Text style={styles.createBtnText}>{createLabel}</Text>
+          <Text style={[styles.createBtnText, { color: colors.white }]}>{createLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -254,7 +251,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
     zIndex: 100,
   },
   filterRow: {
@@ -272,16 +268,12 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -296,18 +288,15 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
   },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     marginHorizontal: Spacing.lg,
     marginBottom: 6,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -319,12 +308,10 @@ const styles = StyleSheet.create({
   resultName: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
   },
   resultSub: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 1,
   },
   listContent: {
@@ -338,13 +325,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cobalt,
     paddingVertical: 16,
     gap: 8,
   },
   createBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
 });

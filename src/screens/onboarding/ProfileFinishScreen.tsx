@@ -105,7 +105,7 @@ export const ProfileFinishScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
     >
       <View style={styles.content}>
         {/* Top bar */}
@@ -116,7 +116,7 @@ export const ProfileFinishScreen: React.FC = () => {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[styles.progressDot, styles.progressDotActive]}
+                style={[styles.progressDot, { backgroundColor: colors.outlineVariant }, styles.progressDotActive, { backgroundColor: colors.primary }]}
               />
             ))}
           </View>
@@ -134,32 +134,32 @@ export const ProfileFinishScreen: React.FC = () => {
                 color={colors.secondary}
               />
             </View>
-            <Text style={styles.title}>You're all set!</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.onSurface }]}>You're all set!</Text>
+            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
               Here's a quick recap of your setup
             </Text>
           </View>
 
           {summaryItems.length > 0 && (
-            <View style={styles.summaryCard}>
+            <View style={[styles.summaryCard, { backgroundColor: colors.surfaceContainerLowest }]}>
               {summaryItems.map((item, index) => (
                 <View key={index} style={styles.summaryRow}>
-                  <View style={styles.summaryIconCircle}>
+                  <View style={[styles.summaryIconCircle, { backgroundColor: colors.primaryFixed }]}>
                     <Ionicons
                       name={item.icon}
                       size={18}
                       color={colors.primary}
                     />
                   </View>
-                  <Text style={styles.summaryLabel}>{item.label}</Text>
+                  <Text style={[styles.summaryLabel, { color: colors.onSurface }]}>{item.label}</Text>
                 </View>
               ))}
             </View>
           )}
 
           {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View style={[styles.errorContainer, { backgroundColor: colors.errorContainer }]}>
+              <Text style={[styles.errorText, { color: colors.onErrorContainer }]}>{error}</Text>
             </View>
           )}
         </Animated.View>
@@ -167,7 +167,7 @@ export const ProfileFinishScreen: React.FC = () => {
         {/* Bottom CTA */}
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[styles.finishButton, loading && styles.finishButtonLoading]}
+            style={[styles.finishButton, { backgroundColor: colors.primary }, loading && styles.finishButtonLoading]}
             onPress={handleFinish}
             disabled={loading}
             activeOpacity={0.85}
@@ -175,7 +175,7 @@ export const ProfileFinishScreen: React.FC = () => {
             {loading ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.finishButtonText}>Let's go</Text>
+              <Text style={[styles.finishButtonText, { color: colors.white }]}>Let's go</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -202,7 +202,6 @@ function capitalize(str: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -230,10 +229,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.outlineVariant,
   },
   progressDotActive: {
-    backgroundColor: colors.primary,
     width: 24,
     borderRadius: 4,
   },
@@ -251,7 +248,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.onSurface,
     letterSpacing: -0.5,
     marginBottom: 8,
     textAlign: 'center',
@@ -259,12 +255,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
     lineHeight: 24,
     textAlign: 'center',
   },
   summaryCard: {
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 20,
     padding: 24,
     gap: 16,
@@ -278,27 +272,23 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: colors.primaryFixed,
     justifyContent: 'center',
     alignItems: 'center',
   },
   summaryLabel: {
     fontSize: 15,
     fontFamily: fonts.body,
-    color: colors.onSurface,
     flex: 1,
   },
   errorContainer: {
     marginTop: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.errorContainer,
     borderRadius: 12,
   },
   errorText: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.onErrorContainer,
     textAlign: 'center',
   },
   bottomSection: {
@@ -306,7 +296,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   finishButton: {
-    backgroundColor: colors.primary,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -320,7 +309,6 @@ const styles = StyleSheet.create({
   finishButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.white,
     letterSpacing: -0.1,
   },
 });

@@ -31,7 +31,7 @@ export function ContextualReturnButton() {
       activeOpacity={0.7}
     >
       <Ionicons name="arrow-back" size={16} color={colors.pine} />
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.pine }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -49,6 +49,5 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.pine,
   },
 });

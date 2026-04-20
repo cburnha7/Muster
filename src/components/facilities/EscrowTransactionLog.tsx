@@ -101,8 +101,8 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
   });
 
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Escrow Transactions</Text>
+    <View style={[styles.section, { backgroundColor: colors.white, borderColor: colors.white }]}>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Escrow Transactions</Text>
 
       {isLoading ? (
         <ActivityIndicator
@@ -111,7 +111,7 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
           style={styles.loader}
         />
       ) : transactions.length === 0 ? (
-        <Text style={styles.emptyText}>No transactions</Text>
+        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>No transactions</Text>
       ) : (
         transactions.map((tx: EscrowTransaction) => {
           const config = TYPE_CONFIG[tx.type] ?? TYPE_CONFIG.authorization;
@@ -120,7 +120,7 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
           return (
             <View
               key={tx.id}
-              style={styles.row}
+              style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.white }]}
               accessibilityRole="summary"
               accessibilityLabel={`${config.label}, ${formatCents(tx.amount)}, ${tx.status}`}
             >
@@ -134,14 +134,14 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
               </View>
 
               <View style={styles.rowContent}>
-                <Text style={styles.typeLabel}>{config.label}</Text>
-                <Text style={styles.timestamp}>
+                <Text style={[styles.typeLabel, { color: colors.ink }]}>{config.label}</Text>
+                <Text style={[styles.timestamp, { color: colors.inkFaint }]}>
                   {formatTimestamp(tx.createdAt)}
                 </Text>
               </View>
 
               <View style={styles.rowRight}>
-                <Text style={styles.amount}>{formatCents(tx.amount)}</Text>
+                <Text style={[styles.amount, { color: colors.ink }]}>{formatCents(tx.amount)}</Text>
                 <View
                   style={[
                     styles.badge,
@@ -163,16 +163,13 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: colors.white,
   },
   sectionTitle: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   loader: {
@@ -181,19 +178,16 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: colors.white,
   },
   iconCircle: {
     width: 40,
@@ -209,12 +203,10 @@ const styles = StyleSheet.create({
   typeLabel: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
   },
   timestamp: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   rowRight: {
@@ -223,7 +215,6 @@ const styles = StyleSheet.create({
   amount: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   badge: {
     paddingHorizontal: Spacing.sm,

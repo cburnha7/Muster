@@ -116,7 +116,7 @@ export function AddCourtScreen(): JSX.Element {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader title="Add Court" showBack />
@@ -191,7 +191,7 @@ export function AddCourtScreen(): JSX.Element {
         />
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <FormButton
           title="Cancel"
           variant="outline"
@@ -214,7 +214,6 @@ export function AddCourtScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -226,9 +225,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   actionButton: {
     flex: 1,

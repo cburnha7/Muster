@@ -18,25 +18,24 @@ interface QuickStatsRowProps {
 export function QuickStatsRow({ stats }: QuickStatsRowProps) {
   const { colors } = useTheme();
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.onSurface }]}>
       {stats.map((stat, i) => (
         <View
           key={i}
-          style={[styles.card, i < stats.length - 1 && styles.cardBorder]}
+          style={[styles.card, i < stats.length - 1 && styles.cardBorder, i < stats.length - 1 && { borderRightColor: colors.outlineVariant }]}
         >
-          <Text style={styles.value}>{stat.value}</Text>
-          <Text style={styles.label}>{stat.label}</Text>
+          <Text style={[styles.value, { color: colors.onSurface }]}>{stat.value}</Text>
+          <Text style={[styles.label, { color: colors.onSurfaceVariant }]}>{stat.label}</Text>
           {stat.fillRatio !== undefined && (
-            <View style={styles.bar}>
+            <View style={[styles.bar, { backgroundColor: colors.outlineVariant }]}>
               <View
                 style={[
-                  styles.barFill,
-                  { width: `${Math.min(stat.fillRatio, 1) * 100}%` as any },
-                ]}
+                  styles.barFill, { backgroundColor: colors.primary },
+                  { width: `${Math.min(stat.fillRatio, 1) * 100}%` as any }]}
               />
             </View>
           )}
-          {stat.sub ? <Text style={styles.sub}>{stat.sub}</Text> : null}
+          {stat.sub ? <Text style={[styles.sub, { color: colors.onSurfaceVariant }]}>{stat.sub}</Text> : null}
         </View>
       ))}
     </View>
@@ -46,11 +45,9 @@ export function QuickStatsRow({ stats }: QuickStatsRowProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 8,
-    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -65,39 +62,33 @@ const styles = StyleSheet.create({
   },
   cardBorder: {
     borderRightWidth: 1,
-    borderRightColor: colors.outlineVariant,
   },
   value: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.onSurface,
     letterSpacing: -0.3,
     marginBottom: 2,
   },
   label: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   bar: {
     height: 3,
     width: '80%',
-    backgroundColor: colors.outlineVariant,
     borderRadius: 2,
     marginTop: 6,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    backgroundColor: colors.primary,
     borderRadius: 2,
   },
   sub: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
     marginTop: 3,
   },
 });

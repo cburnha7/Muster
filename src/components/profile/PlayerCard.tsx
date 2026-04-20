@@ -51,11 +51,11 @@ export function PlayerCard({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={() => {}}>
+      <Pressable style={[styles.backdrop, { backgroundColor: colors.overlay }]} onPress={onClose}>
+        <Pressable style={[styles.card, { backgroundColor: colors.white, shadowColor: colors.black }]} onPress={() => {}}>
           {/* Close button */}
           <TouchableOpacity
-            style={styles.closeButton}
+            style={[styles.closeButton, { backgroundColor: colors.surfaceContainerHigh }]}
             onPress={onClose}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -72,20 +72,20 @@ export function PlayerCard({
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatar} />
             ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+              <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.surfaceContainerHigh }]}>
                 <Ionicons name="person" size={34} color={colors.outline} />
               </View>
             )}
           </View>
 
           {/* Name */}
-          <Text style={styles.name}>
+          <Text style={[styles.name, { color: colors.ink }]}>
             {firstName} {lastName}
           </Text>
 
           {/* Age + Gender */}
           {(age !== null || gender) && (
-            <Text style={styles.detail}>
+            <Text style={[styles.detail, { color: colors.inkSoft }]}>
               {age !== null ? `${age} years old` : ''}
               {age !== null && gender ? '  Ã‚Â·  ' : ''}
               {gender || ''}
@@ -100,18 +100,15 @@ export function PlayerCard({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 20,
     padding: 24,
     width: '100%',
     maxWidth: 320,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,
@@ -125,7 +122,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.surfaceContainerHigh,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -139,14 +135,12 @@ const styles = StyleSheet.create({
     borderRadius: 40,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.surfaceContainerHigh,
     alignItems: 'center',
     justifyContent: 'center',
   },
   name: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
     textAlign: 'center',
     marginTop: 12,
     letterSpacing: -0.3,
@@ -154,7 +148,6 @@ const styles = StyleSheet.create({
   detail: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     textAlign: 'center',
     marginTop: 6,
   },
