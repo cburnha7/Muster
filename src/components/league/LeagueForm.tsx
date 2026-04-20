@@ -662,7 +662,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     return (
-      <View style={[styles.calendar, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.calendar,
+          { backgroundColor: colors.background, borderColor: colors.border },
+        ]}
+      >
         <View style={styles.calendarHeader}>
           <TouchableOpacity
             onPress={goToPrevMonth}
@@ -671,7 +676,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           >
             <Ionicons name="chevron-back" size={20} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>{calendarMonthLabel}</Text>
+          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>
+            {calendarMonthLabel}
+          </Text>
           <TouchableOpacity
             onPress={goToNextMonth}
             style={styles.calendarNav}
@@ -682,7 +689,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         </View>
         <View style={styles.calendarDayHeaders}>
           {dayLabels.map(d => (
-            <Text key={d} style={[styles.calendarDayHeader, { color: colors.inkFaint }]}>
+            <Text
+              key={d}
+              style={[styles.calendarDayHeader, { color: colors.inkFaint }]}
+            >
               {d}
             </Text>
           ))}
@@ -702,17 +712,25 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   key={di}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.calendarDaySelected, isSelected && { backgroundColor: colors.cobalt },
-                    isTodayDate && !isSelected && styles.calendarDayToday, isTodayDate && !isSelected && { backgroundColor: colors.successLight }]}
+                    isSelected && styles.calendarDaySelected,
+                    isSelected && { backgroundColor: colors.cobalt },
+                    isTodayDate && !isSelected && styles.calendarDayToday,
+                    isTodayDate &&
+                      !isSelected && { backgroundColor: colors.successLight },
+                  ]}
                   onPress={() => handleSelectDate(day)}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
                   accessibilityRole="button"
                 >
                   <Text
                     style={[
-                      styles.calendarDayText, { color: colors.ink },
-                      isSelected && styles.calendarDayTextSelected, isSelected && { color: colors.white },
-                      isTodayDate && !isSelected && styles.calendarDayTextToday, isTodayDate && !isSelected && { color: colors.cobalt }]}
+                      styles.calendarDayText,
+                      { color: colors.ink },
+                      isSelected && styles.calendarDayTextSelected,
+                      isSelected && { color: colors.white },
+                      isTodayDate && !isSelected && styles.calendarDayTextToday,
+                      isTodayDate && !isSelected && { color: colors.cobalt },
+                    ]}
                   >
                     {day}
                   </Text>
@@ -747,7 +765,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     return (
-      <View style={[styles.calendar, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.calendar,
+          { backgroundColor: colors.background, borderColor: colors.border },
+        ]}
+      >
         <View style={styles.calendarHeader}>
           <TouchableOpacity
             onPress={goToCutoffPrevMonth}
@@ -769,7 +792,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         </View>
         <View style={styles.calendarDayHeaders}>
           {dayLabels.map(d => (
-            <Text key={d} style={[styles.calendarDayHeader, { color: colors.inkFaint }]}>
+            <Text
+              key={d}
+              style={[styles.calendarDayHeader, { color: colors.inkFaint }]}
+            >
               {d}
             </Text>
           ))}
@@ -789,17 +815,25 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   key={di}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.calendarDaySelected, isSelected && { backgroundColor: colors.cobalt },
-                    isTodayDate && !isSelected && styles.calendarDayToday, isTodayDate && !isSelected && { backgroundColor: colors.successLight }]}
+                    isSelected && styles.calendarDaySelected,
+                    isSelected && { backgroundColor: colors.cobalt },
+                    isTodayDate && !isSelected && styles.calendarDayToday,
+                    isTodayDate &&
+                      !isSelected && { backgroundColor: colors.successLight },
+                  ]}
                   onPress={() => handleSelectCutoffDate(day)}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
                   accessibilityRole="button"
                 >
                   <Text
                     style={[
-                      styles.calendarDayText, { color: colors.ink },
-                      isSelected && styles.calendarDayTextSelected, isSelected && { color: colors.white },
-                      isTodayDate && !isSelected && styles.calendarDayTextToday, isTodayDate && !isSelected && { color: colors.cobalt }]}
+                      styles.calendarDayText,
+                      { color: colors.ink },
+                      isSelected && styles.calendarDayTextSelected,
+                      isSelected && { color: colors.white },
+                      isTodayDate && !isSelected && styles.calendarDayTextToday,
+                      isTodayDate && !isSelected && { color: colors.cobalt },
+                    ]}
                   >
                     {day}
                   </Text>
@@ -834,7 +868,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
 
     return (
-      <View style={[styles.calendar, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.calendar,
+          { backgroundColor: colors.background, borderColor: colors.border },
+        ]}
+      >
         <View style={styles.calendarHeader}>
           <TouchableOpacity
             onPress={goToEndPrevMonth}
@@ -843,7 +882,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           >
             <Ionicons name="chevron-back" size={20} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>{endCalendarMonthLabel}</Text>
+          <Text style={[styles.calendarMonthLabel, { color: colors.ink }]}>
+            {endCalendarMonthLabel}
+          </Text>
           <TouchableOpacity
             onPress={goToEndNextMonth}
             style={styles.calendarNav}
@@ -854,7 +895,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         </View>
         <View style={styles.calendarDayHeaders}>
           {dayLabels.map(d => (
-            <Text key={d} style={[styles.calendarDayHeader, { color: colors.inkFaint }]}>
+            <Text
+              key={d}
+              style={[styles.calendarDayHeader, { color: colors.inkFaint }]}
+            >
               {d}
             </Text>
           ))}
@@ -873,9 +917,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   key={di}
                   style={[
                     styles.calendarDayCell,
-                    isSelected && styles.calendarDaySelected, isSelected && { backgroundColor: colors.cobalt },
-                    isTodayDate && !isSelected && styles.calendarDayToday, isTodayDate && !isSelected && { backgroundColor: colors.successLight },
-                    isBeforeStart && { opacity: 0.3 }]}
+                    isSelected && styles.calendarDaySelected,
+                    isSelected && { backgroundColor: colors.cobalt },
+                    isTodayDate && !isSelected && styles.calendarDayToday,
+                    isTodayDate &&
+                      !isSelected && { backgroundColor: colors.successLight },
+                    isBeforeStart && { opacity: 0.3 },
+                  ]}
                   onPress={() => !isBeforeStart && handleSelectEndDate(day)}
                   disabled={isBeforeStart}
                   accessibilityLabel={`Select ${cellDate.toLocaleDateString()}`}
@@ -883,9 +931,13 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 >
                   <Text
                     style={[
-                      styles.calendarDayText, { color: colors.ink },
-                      isSelected && styles.calendarDayTextSelected, isSelected && { color: colors.white },
-                      isTodayDate && !isSelected && styles.calendarDayTextToday, isTodayDate && !isSelected && { color: colors.cobalt }]}
+                      styles.calendarDayText,
+                      { color: colors.ink },
+                      isSelected && styles.calendarDayTextSelected,
+                      isSelected && { color: colors.white },
+                      isTodayDate && !isSelected && styles.calendarDayTextToday,
+                      isTodayDate && !isSelected && { color: colors.cobalt },
+                    ]}
                   >
                     {day}
                   </Text>
@@ -918,7 +970,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
           />
 
           {!leagueFormat && (
-            <View style={[styles.formatHint, { backgroundColor: colors.surface }]}>
+            <View
+              style={[styles.formatHint, { backgroundColor: colors.surface }]}
+            >
               <Ionicons
                 name="information-circle-outline"
                 size={18}
@@ -979,7 +1033,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
               {/* Gender Restriction */}
               <View style={{ marginBottom: 16 }}>
-                <Text style={[styles.fieldLabel, { color: colors.ink }]}>Gender Restriction</Text>
+                <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+                  Gender Restriction
+                </Text>
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                   {[
                     { label: 'Open to All', value: '' },
@@ -1022,9 +1078,17 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
 
               {/* Calendar date picker for Season Start Date */}
-              <Text style={[styles.fieldLabel, { color: colors.ink }]}>Season Start Date</Text>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+                Season Start Date
+              </Text>
               <TouchableOpacity
-                style={[styles.datePickerTrigger, { borderColor: colors.border, backgroundColor: colors.background }]}
+                style={[
+                  styles.datePickerTrigger,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                  },
+                ]}
                 onPress={() => setShowCalendar(!showCalendar)}
                 accessibilityRole="button"
                 accessibilityLabel="Select season start date"
@@ -1036,8 +1100,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
                 <Text
                   style={[
-                    styles.datePickerText, { color: colors.ink },
-                    !startDate && styles.datePickerPlaceholder, !startDate && { color: colors.inkFaint }]}
+                    styles.datePickerText,
+                    { color: colors.ink },
+                    !startDate && styles.datePickerPlaceholder,
+                    !startDate && { color: colors.inkFaint },
+                  ]}
                 >
                   {startDate ? formatDateDisplay(startDate) : 'Select a date'}
                 </Text>
@@ -1071,9 +1138,17 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               {/* End Date picker Ã¢â‚¬â€ visible for "All at Once" frequency */}
               {gameFrequency === 'all_at_once' && (
                 <>
-                  <Text style={[styles.fieldLabel, { color: colors.ink }]}>End Date</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+                    End Date
+                  </Text>
                   <TouchableOpacity
-                    style={[styles.datePickerTrigger, { borderColor: colors.border, backgroundColor: colors.background }]}
+                    style={[
+                      styles.datePickerTrigger,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.background,
+                      },
+                    ]}
                     onPress={() => setShowEndCalendar(!showEndCalendar)}
                     accessibilityRole="button"
                     accessibilityLabel="Select end date"
@@ -1085,8 +1160,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     />
                     <Text
                       style={[
-                        styles.datePickerText, { color: colors.ink },
-                        !endDate && styles.datePickerPlaceholder, !endDate && { color: colors.inkFaint }]}
+                        styles.datePickerText,
+                        { color: colors.ink },
+                        !endDate && styles.datePickerPlaceholder,
+                        !endDate && { color: colors.inkFaint },
+                      ]}
                     >
                       {endDate
                         ? formatDateDisplay(endDate)
@@ -1109,7 +1187,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         size={16}
                         color={colors.heart}
                       />
-                      <Text style={[styles.clearDateText, { color: colors.heart }]}>Clear end date</Text>
+                      <Text
+                        style={[styles.clearDateText, { color: colors.heart }]}
+                      >
+                        Clear end date
+                      </Text>
                     </TouchableOpacity>
                   )}
                 </>
@@ -1180,8 +1262,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
               {/* Projected End Date Ã¢â‚¬â€ read-only */}
               <View style={styles.projectedEndRow}>
-                <Text style={[styles.fieldLabel, { color: colors.ink }]}>Projected End Date</Text>
-                <Text style={[styles.projectedEndValue, { color: colors.cobalt }]}>
+                <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+                  Projected End Date
+                </Text>
+                <Text
+                  style={[styles.projectedEndValue, { color: colors.cobalt }]}
+                >
                   {projectedEndDate ||
                     (gameFrequency === 'all_at_once'
                       ? 'Select an end date above'
@@ -1204,23 +1290,39 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               {/* Game Day Ã¢â‚¬â€ hidden for "All at Once" frequency */}
               {gameFrequency !== 'all_at_once' && (
                 <>
-                  <Text style={[styles.fieldLabel, { color: colors.ink }]}>Game Day</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+                    Game Day
+                  </Text>
                   <View style={styles.dayChipsRow}>
                     {dayLabels.map((label, idx) => (
                       <TouchableOpacity
                         key={idx}
                         style={[
-                          styles.dayChip, { backgroundColor: colors.border, borderColor: colors.border },
+                          styles.dayChip,
+                          {
+                            backgroundColor: colors.border,
+                            borderColor: colors.border,
+                          },
                           preferredGameDays.includes(idx) &&
-                            styles.dayChipSelected, preferredGameDays.includes(idx) && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                            styles.dayChipSelected,
+                          preferredGameDays.includes(idx) && {
+                            backgroundColor: colors.cobalt,
+                            borderColor: colors.cobalt,
+                          },
+                        ]}
                         onPress={() => toggleGameDay(idx)}
                         activeOpacity={0.7}
                       >
                         <Text
                           style={[
-                            styles.dayChipText, { color: colors.inkFaint },
+                            styles.dayChipText,
+                            { color: colors.inkFaint },
                             preferredGameDays.includes(idx) &&
-                              styles.dayChipTextSelected, preferredGameDays.includes(idx) && { color: colors.white }]}
+                              styles.dayChipTextSelected,
+                            preferredGameDays.includes(idx) && {
+                              color: colors.white,
+                            },
+                          ]}
                         >
                           {label}
                         </Text>
@@ -1234,7 +1336,16 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               <TimePickerInput
                 label="Time Range Start"
                 value={timeWindowStart}
-                onChange={setTimeWindowStart}
+                onChange={v => {
+                  setTimeWindowStart(v);
+                  // Auto-set end to start + 1 hour
+                  const parts = v.split(':').map(Number);
+                  const h = (parts[0] ?? 0) + 1;
+                  const m = parts[1] ?? 0;
+                  setTimeWindowEnd(
+                    `${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+                  );
+                }}
                 error={errors.timeWindowStart}
               />
 
@@ -1248,13 +1359,32 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               {/* Confirmed Rosters Ã¢â‚¬â€ displayed outside the invite card */}
               {addedRosters.length > 0 && (
                 <View style={styles.confirmedRostersSection}>
-                  <Text style={[styles.confirmedRostersTitle, { color: colors.ink }]}>
+                  <Text
+                    style={[
+                      styles.confirmedRostersTitle,
+                      { color: colors.ink },
+                    ]}
+                  >
                     Rosters ({addedRosters.length})
                   </Text>
                   {addedRosters.map(item => (
-                    <View key={item.id} style={[styles.addedRosterItem, { backgroundColor: colors.surface, borderColor: colors.cobalt + '40' }]}>
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.addedRosterItem,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.cobalt + '40',
+                        },
+                      ]}
+                    >
                       <View style={styles.addedRosterInfo}>
-                        <View style={[styles.addedRosterIcon, { backgroundColor: colors.cobalt }]}>
+                        <View
+                          style={[
+                            styles.addedRosterIcon,
+                            { backgroundColor: colors.cobalt },
+                          ]}
+                        >
                           <Ionicons
                             name="shield-outline"
                             size={18}
@@ -1262,12 +1392,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           />
                         </View>
                         <View style={styles.addedRosterDetails}>
-                          <Text style={[styles.addedRosterName, { color: colors.ink }]}>
+                          <Text
+                            style={[
+                              styles.addedRosterName,
+                              { color: colors.ink },
+                            ]}
+                          >
                             {item.name}
                           </Text>
                           {item.sportType && (
-                            <Text style={[styles.addedRosterMeta, { color: colors.inkFaint }]}>
-                              {item.sportType} Ã¢â‚¬Â¢ {item.memberCount ?? 0} players
+                            <Text
+                              style={[
+                                styles.addedRosterMeta,
+                                { color: colors.inkFaint },
+                              ]}
+                            >
+                              {item.sportType} Ã¢â‚¬Â¢ {item.memberCount ?? 0}{' '}
+                              players
                             </Text>
                           )}
                         </View>
@@ -1290,12 +1431,29 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               )}
 
               {/* Invite Rosters Ã¢â‚¬â€ card with invited list and search */}
-              <View style={[styles.addRostersSection, { backgroundColor: colors.white, borderColor: colors.border }]}>
+              <View
+                style={[
+                  styles.addRostersSection,
+                  { backgroundColor: colors.white, borderColor: colors.border },
+                ]}
+              >
                 <View style={styles.addRostersHeader}>
-                  <Text style={[styles.addRostersTitle, { color: colors.ink }]}>Invite Rosters</Text>
+                  <Text style={[styles.addRostersTitle, { color: colors.ink }]}>
+                    Invite Rosters
+                  </Text>
                   {invitedRosters.length > 0 && (
-                    <View style={[styles.rosterCountBadge, { backgroundColor: colors.cobalt }]}>
-                      <Text style={[styles.rosterCountBadgeText, { color: colors.white }]}>
+                    <View
+                      style={[
+                        styles.rosterCountBadge,
+                        { backgroundColor: colors.cobalt },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.rosterCountBadgeText,
+                          { color: colors.white },
+                        ]}
+                      >
                         {invitedRosters.length}
                       </Text>
                     </View>
@@ -1305,13 +1463,32 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 {/* Invited Rosters (pending confirmation) */}
                 {invitedRosters.length > 0 && (
                   <View style={styles.addedRostersContainer}>
-                    <Text style={[styles.invitedRostersTitle, { color: colors.gold }]}>
+                    <Text
+                      style={[
+                        styles.invitedRostersTitle,
+                        { color: colors.gold },
+                      ]}
+                    >
                       Pending ({invitedRosters.length})
                     </Text>
                     {invitedRosters.map(item => (
-                      <View key={item.id} style={[styles.invitedRosterItem, { backgroundColor: colors.warningLight, borderColor: colors.goldLight }]}>
+                      <View
+                        key={item.id}
+                        style={[
+                          styles.invitedRosterItem,
+                          {
+                            backgroundColor: colors.warningLight,
+                            borderColor: colors.goldLight,
+                          },
+                        ]}
+                      >
                         <View style={styles.addedRosterInfo}>
-                          <View style={[styles.invitedRosterIcon, { backgroundColor: colors.gold }]}>
+                          <View
+                            style={[
+                              styles.invitedRosterIcon,
+                              { backgroundColor: colors.gold },
+                            ]}
+                          >
                             <Ionicons
                               name="time-outline"
                               size={18}
@@ -1319,10 +1496,20 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             />
                           </View>
                           <View style={styles.addedRosterDetails}>
-                            <Text style={[styles.addedRosterName, { color: colors.ink }]}>
+                            <Text
+                              style={[
+                                styles.addedRosterName,
+                                { color: colors.ink },
+                              ]}
+                            >
                               {item.name}
                             </Text>
-                            <Text style={[styles.invitedRosterStatus, { color: colors.gold }]}>
+                            <Text
+                              style={[
+                                styles.invitedRosterStatus,
+                                { color: colors.gold },
+                              ]}
+                            >
                               Pending confirmation
                             </Text>
                           </View>
@@ -1345,13 +1532,26 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 )}
 
                 {invitedRosters.length === 0 && (
-                  <Text style={[styles.addRostersDescription, { color: colors.inkFaint }]}>
+                  <Text
+                    style={[
+                      styles.addRostersDescription,
+                      { color: colors.inkFaint },
+                    ]}
+                  >
                     Search below to invite rosters to this league.
                   </Text>
                 )}
 
                 {/* Search Input */}
-                <View style={[styles.rosterSearchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.rosterSearchContainer,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="search"
                     size={20}
@@ -1382,19 +1582,28 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
                 {rosterSearchQuery.trim().length > 0 &&
                   rosterSearchQuery.trim().length < 2 && (
-                    <Text style={[styles.searchHint, { color: colors.inkFaint }]}>
+                    <Text
+                      style={[styles.searchHint, { color: colors.inkFaint }]}
+                    >
                       Type at least 2 characters to search
                     </Text>
                   )}
 
                 {rosterSearchError && (
-                  <View style={[styles.searchErrorRow, { backgroundColor: colors.errorLight }]}>
+                  <View
+                    style={[
+                      styles.searchErrorRow,
+                      { backgroundColor: colors.errorLight },
+                    ]}
+                  >
                     <Ionicons
                       name="alert-circle"
                       size={16}
                       color={colors.heart}
                     />
-                    <Text style={[styles.searchErrorText, { color: colors.heart }]}>
+                    <Text
+                      style={[styles.searchErrorText, { color: colors.heart }]}
+                    >
                       {rosterSearchError}
                     </Text>
                   </View>
@@ -1402,20 +1611,36 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
 
                 {rosterSearchResults.length > 0 && (
                   <View style={styles.rosterResultsContainer}>
-                    <Text style={[styles.rosterResultsHeader, { color: colors.inkFaint }]}>
+                    <Text
+                      style={[
+                        styles.rosterResultsHeader,
+                        { color: colors.inkFaint },
+                      ]}
+                    >
                       {rosterSearchResults.length} roster
                       {rosterSearchResults.length !== 1 ? 's' : ''} found
                     </Text>
                     {rosterSearchResults.map(r => (
                       <TouchableOpacity
                         key={r.id}
-                        style={[styles.rosterResultItem, { backgroundColor: colors.white, borderColor: colors.border }]}
+                        style={[
+                          styles.rosterResultItem,
+                          {
+                            backgroundColor: colors.white,
+                            borderColor: colors.border,
+                          },
+                        ]}
                         onPress={() => handleAddRoster(r)}
                         accessibilityRole="button"
                         accessibilityLabel={`Add ${r.name}`}
                       >
                         <View style={styles.rosterResultInfo}>
-                          <View style={[styles.rosterResultIcon, { backgroundColor: colors.inkFaint }]}>
+                          <View
+                            style={[
+                              styles.rosterResultIcon,
+                              { backgroundColor: colors.inkFaint },
+                            ]}
+                          >
                             <Ionicons
                               name="shield-outline"
                               size={16}
@@ -1423,12 +1648,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             />
                           </View>
                           <View style={styles.rosterResultDetails}>
-                            <Text style={[styles.rosterResultName, { color: colors.ink }]}>
+                            <Text
+                              style={[
+                                styles.rosterResultName,
+                                { color: colors.ink },
+                              ]}
+                            >
                               {r.name}
                             </Text>
                             {r.sportType && (
-                              <Text style={[styles.rosterResultMeta, { color: colors.inkFaint }]}>
-                                {r.sportType} Ã¢â‚¬Â¢ {r.memberCount ?? 0} players
+                              <Text
+                                style={[
+                                  styles.rosterResultMeta,
+                                  { color: colors.inkFaint },
+                                ]}
+                              >
+                                {r.sportType} Ã¢â‚¬Â¢ {r.memberCount ?? 0}{' '}
+                                players
                               </Text>
                             )}
                           </View>
@@ -1453,10 +1689,20 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         size={40}
                         color={colors.inkFaint}
                       />
-                      <Text style={[styles.rosterNoResultsText, { color: colors.inkFaint }]}>
+                      <Text
+                        style={[
+                          styles.rosterNoResultsText,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
                         No rosters found
                       </Text>
-                      <Text style={[styles.rosterNoResultsHint, { color: colors.inkFaint }]}>
+                      <Text
+                        style={[
+                          styles.rosterNoResultsHint,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
                         Try a different roster name
                       </Text>
                     </View>
@@ -1464,13 +1710,23 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </View>
 
               {/* Registration Cutoff Date */}
-              <Text style={[styles.fieldLabel, { color: colors.ink }]}>Registration Cutoff</Text>
-              <Text style={[styles.cutoffDescription, { color: colors.inkFaint }]}>
+              <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+                Registration Cutoff
+              </Text>
+              <Text
+                style={[styles.cutoffDescription, { color: colors.inkFaint }]}
+              >
                 After this date, no more rosters can join. Game scheduling and
                 any registration fee transactions will be triggered.
               </Text>
               <TouchableOpacity
-                style={[styles.datePickerTrigger, { borderColor: colors.border, backgroundColor: colors.background }]}
+                style={[
+                  styles.datePickerTrigger,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.background,
+                  },
+                ]}
                 onPress={() => setShowCutoffCalendar(!showCutoffCalendar)}
                 accessibilityRole="button"
                 accessibilityLabel="Select registration cutoff date"
@@ -1482,8 +1738,11 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
                 <Text
                   style={[
-                    styles.datePickerText, { color: colors.ink },
-                    !registrationCutoffDate && styles.datePickerPlaceholder, !registrationCutoffDate && { color: colors.inkFaint }]}
+                    styles.datePickerText,
+                    { color: colors.ink },
+                    !registrationCutoffDate && styles.datePickerPlaceholder,
+                    !registrationCutoffDate && { color: colors.inkFaint },
+                  ]}
                 >
                   {registrationCutoffDate
                     ? formatDateDisplay(registrationCutoffDate)
@@ -1506,25 +1765,45 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     size={16}
                     color={colors.heart}
                   />
-                  <Text style={[styles.clearDateText, { color: colors.heart }]}>Clear cutoff date</Text>
+                  <Text style={[styles.clearDateText, { color: colors.heart }]}>
+                    Clear cutoff date
+                  </Text>
                 </TouchableOpacity>
               )}
 
               {/* Track Standings Toggle Ã¢â‚¬â€ hidden for tournament format */}
               {leagueFormat !== 'tournament' && (
-                <View style={[styles.toggleCard, { backgroundColor: colors.white, borderColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.toggleCard,
+                    {
+                      backgroundColor: colors.white,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   <View style={styles.toggleRow}>
                     <View style={styles.toggleInfo}>
-                      <Text style={[styles.toggleLabel, { color: colors.ink }]}>Track Standings</Text>
-                      <Text style={[styles.toggleDescription, { color: colors.inkFaint }]}>
+                      <Text style={[styles.toggleLabel, { color: colors.ink }]}>
+                        Track Standings
+                      </Text>
+                      <Text
+                        style={[
+                          styles.toggleDescription,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
                         Record wins, draws, and losses to maintain a league
                         standings table
                       </Text>
                     </View>
                     <TouchableOpacity
                       style={[
-                        styles.toggle, { backgroundColor: colors.border },
-                        trackStandings && styles.toggleActive, trackStandings && { backgroundColor: colors.cobalt }]}
+                        styles.toggle,
+                        { backgroundColor: colors.border },
+                        trackStandings && styles.toggleActive,
+                        trackStandings && { backgroundColor: colors.cobalt },
+                      ]}
                       onPress={() => setTrackStandings(!trackStandings)}
                       activeOpacity={0.7}
                       accessibilityRole="switch"
@@ -1532,8 +1811,10 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                     >
                       <View
                         style={[
-                          styles.toggleThumb, { backgroundColor: colors.white },
-                          trackStandings && styles.toggleThumbActive]}
+                          styles.toggleThumb,
+                          { backgroundColor: colors.white },
+                          trackStandings && styles.toggleThumbActive,
+                        ]}
                       />
                     </TouchableOpacity>
                   </View>

@@ -340,7 +340,19 @@ export function EditEventScreen(): JSX.Element {
 
   // Handle input change
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+
+      // When start time changes, auto-set end time to start + 1 hour
+      if (field === 'startTime' && value) {
+        const parts = value.split(':').map(Number);
+        const h = (parts[0] ?? 0) + 1;
+        const m = parts[1] ?? 0;
+        next.endTime = `${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+
+      return next;
+    });
 
     // Clear error when user starts typing
     if (errors[field]) {

@@ -160,8 +160,17 @@ export function Step3When() {
             mode="time"
             minuteInterval={15}
             onChange={(_, d) => {
-              if (d)
+              if (d) {
                 dispatch({ type: 'SET_FIELD', field: 'startTime', value: d });
+                // Auto-set end time to start + 1 hour
+                const autoEnd = new Date(d.getTime());
+                autoEnd.setHours(autoEnd.getHours() + 1);
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'endTime',
+                  value: autoEnd,
+                });
+              }
             }}
           />
         </View>
