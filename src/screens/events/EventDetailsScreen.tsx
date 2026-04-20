@@ -841,9 +841,9 @@ export function EventDetailsScreen() {
     ctaVariant = 'confirmed';
     ctaAction = () => {};
   } else if (isOrganizer && !isUserBooked) {
-    ctaLabel = "Join Up — You're hosting";
-    ctaVariant = 'primary';
-    ctaAction = handleBookEvent;
+    ctaLabel = '';
+    ctaVariant = 'disabled';
+    ctaAction = () => {};
   } else if (isUserBooked) {
     ctaLabel = familyInLabel ?? "You're in ✓";
     ctaVariant = 'confirmed';
@@ -1330,7 +1330,10 @@ export function EventDetailsScreen() {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={styles.ownerJoinBtn}
+                style={[
+                  styles.ownerJoinBtn,
+                  { backgroundColor: colors.cobalt },
+                ]}
                 onPress={handleBookEvent}
                 disabled={isBooking || availableSpots <= 0}
                 activeOpacity={0.7}
@@ -1338,9 +1341,13 @@ export function EventDetailsScreen() {
                 <Ionicons
                   name="add-circle-outline"
                   size={18}
-                  color={colors.cobalt}
+                  color={colors.white}
                 />
-                <Text style={styles.ownerJoinBtnText}>Join Up</Text>
+                <Text
+                  style={[styles.ownerJoinBtnText, { color: colors.white }]}
+                >
+                  Join Up
+                </Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -1361,8 +1368,8 @@ export function EventDetailsScreen() {
         )}
       </ScrollView>
 
-      {/* FixedBottomCTA — hidden for past events */}
-      {!isPastEvent && (
+      {/* FixedBottomCTA — hidden for past events and when organizer has inline Join Up */}
+      {!isPastEvent && !(isOrganizer && !isUserBooked) && (
         <FixedBottomCTA
           label={ctaLabel}
           onPress={ctaAction}
@@ -1514,9 +1521,7 @@ export function EventDetailsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={{
-                backgroundColor: waiverAgreed
-                  ? colors.cobalt
-                  : colors.inkFaint,
+                backgroundColor: waiverAgreed ? colors.cobalt : colors.inkFaint,
                 borderRadius: 12,
                 paddingVertical: 14,
                 alignItems: 'center',
@@ -1873,15 +1878,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderWidth: 2,
-    borderColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 14,
   },
   ownerJoinBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.cobalt,
   },
   ownerStepOutBtn: {
     flexDirection: 'row',
