@@ -64,12 +64,24 @@ export function HeaderSearchPill({
   if (active) {
     return (
       <View
-        style={[styles.pillActive, { backgroundColor: colors.surface, borderColor: colors.cobalt, shadowColor: colors.cobalt }, { backgroundColor: colors.bgCard }]}
+        style={[
+          styles.pillActive,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.cobalt,
+            shadowColor: colors.cobalt,
+          },
+          { backgroundColor: colors.bgCard },
+        ]}
       >
         <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           ref={inputRef}
-          style={[styles.activeInput, { color: colors.ink }, { color: colors.textPrimary }]}
+          style={[
+            styles.activeInput,
+            { color: colors.ink },
+            { color: colors.textPrimary },
+          ]}
           placeholder={placeholder}
           placeholderTextColor={colors.textSecondary}
           value={query}
@@ -82,7 +94,11 @@ export function HeaderSearchPill({
             onPress={() => handleChangeText('')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close-circle" size={20} color={colors.inkSecondary} />
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color={colors.inkSecondary}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -91,7 +107,15 @@ export function HeaderSearchPill({
 
   return (
     <TouchableOpacity
-      style={[styles.pill, { backgroundColor: colors.bgSubtle, borderColor: colors.border, shadowColor: colors.black }, { backgroundColor: colors.bgInput }]}
+      style={[
+        styles.pill,
+        {
+          backgroundColor: colors.bgSubtle,
+          borderColor: colors.border,
+          shadowColor: colors.black,
+        },
+        { backgroundColor: colors.bgInput },
+      ]}
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityRole="button"
@@ -99,7 +123,11 @@ export function HeaderSearchPill({
     >
       <Ionicons name="search" size={20} color={colors.textSecondary} />
       <Text
-        style={[styles.text, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
+        style={[
+          styles.text,
+          { color: colors.inkSecondary },
+          { color: colors.textSecondary },
+        ]}
         numberOfLines={1}
       >
         {placeholder}
@@ -114,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 14,
     gap: 10,
     borderWidth: 1.5,
@@ -122,13 +150,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
+    minHeight: 48,
   },
   pillActive: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 14,
     gap: 10,
     borderWidth: 2,
@@ -136,16 +165,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+    minHeight: 48,
   },
   activeInput: {
     flex: 1,
     fontFamily: fonts.body,
-    fontSize: 17,
+    fontSize: 16,
+    lineHeight: 22,
     padding: 0,
   },
   text: {
     fontFamily: fonts.body,
-    fontSize: 17,
+    fontSize: 16,
+    lineHeight: 22,
     flex: 1,
   },
 });
