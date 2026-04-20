@@ -100,7 +100,7 @@ function formatTimestamp(iso: string): string {
   const period = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 || 12;
   const mins = String(m).padStart(2, '0');
-  return `${month} ${day}, ${year} Ã¢â‚¬Â¢ ${hour12}:${mins} ${period}`;
+  return `${month} ${day}, ${year} • ${hour12}:${mins} ${period}`;
 }
 
 export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {

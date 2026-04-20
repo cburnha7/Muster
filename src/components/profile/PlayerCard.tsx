@@ -87,7 +87,7 @@ export function PlayerCard({
           {(age !== null || gender) && (
             <Text style={[styles.detail, { color: colors.inkSoft }]}>
               {age !== null ? `${age} years old` : ''}
-              {age !== null && gender ? '  Ã‚Â·  ' : ''}
+              {age !== null && gender ? '  ·  ' : ''}
               {gender || ''}
             </Text>
           )}

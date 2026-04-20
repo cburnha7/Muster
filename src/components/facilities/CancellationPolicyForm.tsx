@@ -184,7 +184,7 @@ export function CancellationPolicyForm({
           required
         />
         <Text style={[styles.fieldHint, { color: colors.inkFaint }]}>
-          Percentage (0Ã¢â‚¬â€œ100) of the cancelling roster's escrow that is forfeited
+          Percentage (0–100) of the cancelling roster's escrow that is forfeited
           for late cancellations.
         </Text>
 

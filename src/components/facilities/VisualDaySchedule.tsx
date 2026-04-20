@@ -122,7 +122,7 @@ export function VisualDaySchedule({
                 }]}
             >
               <Text style={[styles.proposedLabel, { color: colors.pine }]}>
-                {fmt12(proposedStart!)} Ã¢â‚¬â€œ {fmt12(proposedEnd!)}
+                {fmt12(proposedStart!)} – {fmt12(proposedEnd!)}
               </Text>
             </View>
           )}

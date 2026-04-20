@@ -33,7 +33,7 @@ export function FormatCard({
       </View>
       {selected && (
         <View style={[styles.checkCircle, { backgroundColor: colors.cobalt }]}>
-          <Text style={[styles.checkmark, { color: colors.white }]}>Ã¢Å“â€œ</Text>
+          <Text style={[styles.checkmark, { color: colors.white }]}>"</Text>
         </View>
       )}
     </TouchableOpacity>

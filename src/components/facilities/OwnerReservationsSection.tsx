@@ -152,8 +152,8 @@ export function OwnerReservationsSection({
                 <Text style={[styles.price, { color: colors.cobalt }]}>${r.totalPrice.toFixed(2)}</Text>
               </View>
               <Text style={[styles.dateTime, { color: colors.inkFaint }]}>
-                {formatDate(r.timeSlot.date)} Ã‚Â·{' '}
-                {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
+                {formatDate(r.timeSlot.date)} ·{' '}
+                {formatTime(r.timeSlot.startTime)} –{' '}
                 {formatTime(r.timeSlot.endTime)}
               </Text>
               <Text style={[styles.playerName, { color: colors.inkFaint }]}>

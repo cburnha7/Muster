@@ -1,5 +1,5 @@
 /**
- * RecurringBookingToggle Ã¢â‚¬â€ Repeat Booking toggle with frequency + end date pickers.
+ * RecurringBookingToggle — Repeat Booking toggle with frequency + end date pickers.
  * Shown below the time slot selector in the court booking flow.
  */
 

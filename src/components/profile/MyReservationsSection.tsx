@@ -161,7 +161,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
     .filter(r => {
       if (r.status !== 'confirmed') return false;
 
-      // Parse the slot date as local (YYYY-MM-DD Ã¢â€ â€™ year, month, day)
+      // Parse the slot date as local (YYYY-MM-DD ' year, month, day)
       const parts = r.timeSlot.date.split('T')[0]!.split('-');
       const slotYear = parseInt(parts[0]!, 10);
       const slotMonth = parseInt(parts[1]!, 10) - 1;
@@ -258,8 +258,8 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       {r.timeSlot.court.name}
                     </Text>
                     <Text style={[styles.slotDateTime, { color: colors.inkFaint }]}>
-                      {formatDate(r.timeSlot.date)} Ã‚Â·{' '}
-                      {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
+                      {formatDate(r.timeSlot.date)} ·{' '}
+                      {formatTime(r.timeSlot.startTime)} –{' '}
                       {formatTime(r.timeSlot.endTime)}
                     </Text>
                   </View>

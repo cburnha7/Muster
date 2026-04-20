@@ -21,7 +21,7 @@ interface TimePickerInputProps {
 }
 
 /**
- * Native time picker input Ã¢â‚¬â€ replaces free-text time fields.
+ * Native time picker input — replaces free-text time fields.
  * Accepts and emits time as "HH:MM" (24-hour) string.
  */
 export function TimePickerInput({

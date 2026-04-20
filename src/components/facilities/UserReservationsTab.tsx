@@ -174,7 +174,7 @@ export function UserReservationsTab({
             </Text>
             <Text style={[st.dateTime, { color: colors.inkSoft }]}>{formatDate(r.timeSlot.date)}</Text>
             <Text style={[st.timeRange, { color: colors.cobalt }]}>
-              {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
+              {formatTime(r.timeSlot.startTime)} –{' '}
               {formatTime(r.timeSlot.endTime)}
             </Text>
           </View>

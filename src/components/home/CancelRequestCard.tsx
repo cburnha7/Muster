@@ -40,7 +40,7 @@ export interface CancelRequestCardProps {
 
 /**
  * Formats a date string and time range for display.
- * e.g. "Jan 20, 2024 Ã¢â‚¬Â¢ 2:00 PM Ã¢â‚¬â€œ 3:00 PM"
+ * e.g. "Jan 20, 2024 • 2:00 PM – 3:00 PM"
  */
 function formatBookingDateTime(
   dateStr: string,
@@ -76,7 +76,7 @@ function formatBookingDateTime(
       : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
   };
 
-  return `${datePart} Ã¢â‚¬Â¢ ${formatTime(startTime)} Ã¢â‚¬â€œ ${formatTime(endTime)}`;
+  return `${datePart} • ${formatTime(startTime)} – ${formatTime(endTime)}`;
 }
 
 export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
@@ -95,7 +95,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
       <Text style={[styles.userName, { color: colors.ink }]}>{userName}</Text>
 
       <Text style={[styles.courtName, { color: colors.inkFaint }]}>
-        {timeSlot.court.name} Ã¢â‚¬â€ {timeSlot.court.facility.name}
+        {timeSlot.court.name} — {timeSlot.court.facility.name}
       </Text>
 
       <Text style={[styles.dateTime, { color: colors.ink }]}>

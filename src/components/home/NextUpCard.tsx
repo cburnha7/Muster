@@ -173,7 +173,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
             )}
             {spotsLeft > 0 && spotsLeft <= 3 && (
               <Text style={styles.fillingFast}>
-                Filling fast Ã¢â‚¬â€ {spotsLeft} spot
+                Filling fast — {spotsLeft} spot
                 {spotsLeft !== 1 ? 's' : ''} left
               </Text>
             )}

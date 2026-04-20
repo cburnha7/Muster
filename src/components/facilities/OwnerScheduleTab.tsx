@@ -180,7 +180,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
             month: 'long',
             day: 'numeric',
           })}
-          {selectedCourt ? ` Â· ${selectedCourt.name}` : ''}
+          {selectedCourt ? ` · ${selectedCourt.name}` : ''}
         </Text>
 
         {loadingSchedule ? (

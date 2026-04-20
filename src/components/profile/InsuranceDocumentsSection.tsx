@@ -15,7 +15,7 @@ import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocument
  * InsuranceDocumentsSection
  *
  * Displays the user's insurance documents on the ProfileScreen.
- * Lists all documents with status badges Ã¢â‚¬â€ expired documents are
+ * Lists all documents with status badges — expired documents are
  * grayed out with an "Expired" label, active ones show a green badge.
  * Provides an "Add Insurance Document" button.
  *

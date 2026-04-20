@@ -255,7 +255,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'Double Elimination', value: 'double_elimination' },
   ];
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Calendar helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Calendar helpers --------------------------------------------
   const getDaysInMonth = (year: number, month: number) =>
     new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) =>
@@ -376,7 +376,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     year: 'numeric',
   });
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Projected end date Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Projected end date ------------------------------------------
   const projectedEndDate = (() => {
     if (!startDate) return '';
     // For "all at once", show the user-selected end date
@@ -416,7 +416,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     });
   })();
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Day chips Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Day chips ---------------------------------------------------
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const toggleGameDay = (day: number) => {
@@ -425,7 +425,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Format change handler Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Format change handler --------------------------------------
   const handleFormatChange = (format: string) => {
     setLeagueFormat(format as any);
     // Clear format-specific fields but retain shared fields
@@ -438,7 +438,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Roster search (debounced, like player search) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Roster search (debounced, like player search) -------------
   useEffect(() => {
     const query = rosterSearchQuery.trim();
     if (query.length < 2) {
@@ -493,7 +493,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     setInvitedRosters(prev => prev.filter(r => r.id !== rosterId));
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Validation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Validation --------------------------------------------------
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -640,7 +640,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Calendar renderer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Calendar renderer -------------------------------------------
   const renderCalendar = () => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
@@ -743,7 +743,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ Cutoff Calendar renderer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- Cutoff Calendar renderer ------------------------------------
   const renderCutoffCalendar = () => {
     const year = cutoffCalendarMonth.getFullYear();
     const month = cutoffCalendarMonth.getMonth();
@@ -846,7 +846,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // Ã¢â€â‚¬Ã¢â€â‚¬ End Date Calendar renderer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  // -- End Date Calendar renderer ---------------------------------
   const renderEndCalendar = () => {
     const year = endCalendarMonth.getFullYear();
     const month = endCalendarMonth.getMonth();
@@ -959,7 +959,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.form}>
-          {/* League Format Selector Ã¢â‚¬â€ required before other fields */}
+          {/* League Format Selector — required before other fields */}
           <FormSelect
             label="League Format *"
             placeholder="Select league format"
@@ -1116,9 +1116,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </TouchableOpacity>
               {showCalendar && renderCalendar()}
 
-              {/* Ã¢â€â‚¬Ã¢â€â‚¬ Format-specific fields Ã¢â€â‚¬Ã¢â€â‚¬ */}
+              {/* -- Format-specific fields -- */}
 
-              {/* Game Frequency Ã¢â‚¬â€ all formats */}
+              {/* Game Frequency — all formats */}
               <FormSelect
                 label="Game Frequency"
                 placeholder="Select frequency"
@@ -1135,7 +1135,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 }}
               />
 
-              {/* End Date picker Ã¢â‚¬â€ visible for "All at Once" frequency */}
+              {/* End Date picker — visible for "All at Once" frequency */}
               {gameFrequency === 'all_at_once' && (
                 <>
                   <Text style={[styles.fieldLabel, { color: colors.ink }]}>
@@ -1197,7 +1197,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </>
               )}
 
-              {/* Season Length Ã¢â‚¬â€ Season and Season with Playoffs only, hidden for All at Once */}
+              {/* Season Length — Season and Season with Playoffs only, hidden for All at Once */}
               {(leagueFormat === 'season' ||
                 leagueFormat === 'season_with_playoffs') &&
                 gameFrequency !== 'all_at_once' && (
@@ -1212,7 +1212,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   />
                 )}
 
-              {/* Number of Games per Roster Ã¢â‚¬â€ Season and Season with Playoffs only */}
+              {/* Number of Games per Roster — Season and Season with Playoffs only */}
               {(leagueFormat === 'season' ||
                 leagueFormat === 'season_with_playoffs') && (
                 <FormInput
@@ -1225,7 +1225,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
               )}
 
-              {/* Playoff fields Ã¢â‚¬â€ Season with Playoffs only */}
+              {/* Playoff fields — Season with Playoffs only */}
               {leagueFormat === 'season_with_playoffs' && (
                 <>
                   <FormInput
@@ -1260,7 +1260,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
               )}
 
-              {/* Projected End Date Ã¢â‚¬â€ read-only */}
+              {/* Projected End Date — read-only */}
               <View style={styles.projectedEndRow}>
                 <Text style={[styles.fieldLabel, { color: colors.ink }]}>
                   Projected End Date
@@ -1287,7 +1287,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 error={errors.suggestedRosterSize}
               />
 
-              {/* Game Day Ã¢â‚¬â€ hidden for "All at Once" frequency */}
+              {/* Game Day — hidden for "All at Once" frequency */}
               {gameFrequency !== 'all_at_once' && (
                 <>
                   <Text style={[styles.fieldLabel, { color: colors.ink }]}>
@@ -1356,7 +1356,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 error={errors.timeWindowEnd}
               />
 
-              {/* Confirmed Rosters Ã¢â‚¬â€ displayed outside the invite card */}
+              {/* Confirmed Rosters — displayed outside the invite card */}
               {addedRosters.length > 0 && (
                 <View style={styles.confirmedRostersSection}>
                   <Text
@@ -1407,7 +1407,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                                 { color: colors.inkFaint },
                               ]}
                             >
-                              {item.sportType} Ã¢â‚¬Â¢ {item.memberCount ?? 0}{' '}
+                              {item.sportType} • {item.memberCount ?? 0}{' '}
                               players
                             </Text>
                           )}
@@ -1430,7 +1430,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </View>
               )}
 
-              {/* Invite Rosters Ã¢â‚¬â€ card with invited list and search */}
+              {/* Invite Rosters — card with invited list and search */}
               <View
                 style={[
                   styles.addRostersSection,
@@ -1663,7 +1663,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                                   { color: colors.inkFaint },
                                 ]}
                               >
-                                {r.sportType} Ã¢â‚¬Â¢ {r.memberCount ?? 0}{' '}
+                                {r.sportType} • {r.memberCount ?? 0}{' '}
                                 players
                               </Text>
                             )}
@@ -1771,7 +1771,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </TouchableOpacity>
               )}
 
-              {/* Track Standings Toggle Ã¢â‚¬â€ hidden for tournament format */}
+              {/* Track Standings Toggle — hidden for tournament format */}
               {leagueFormat !== 'tournament' && (
                 <View
                   style={[
@@ -1821,7 +1821,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </View>
               )}
 
-              {/* Points Configuration Ã¢â‚¬â€ only when tracking standings */}
+              {/* Points Configuration — only when tracking standings */}
               {trackStandings && (
                 <View style={styles.pointsSection}>
                   <FormInput
@@ -1853,7 +1853,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </>
           )}
 
-          {/* Buttons Ã¢â‚¬â€ vertically stacked, matching Roster edit screen */}
+          {/* Buttons — vertically stacked, matching Roster edit screen */}
           <View style={styles.buttonStack}>
             <FormButton
               title={isEdit ? 'Update League' : 'Create League'}
@@ -2071,7 +2071,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dayChipTextSelected: {},
-  // Confirmed Rosters section Ã¢â‚¬â€ displayed above the invite card
+  // Confirmed Rosters section — displayed above the invite card
   confirmedRostersSection: {
     gap: 8,
     marginBottom: Spacing.md,
@@ -2081,7 +2081,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 4,
   },
-  // Add Rosters section Ã¢â‚¬â€ matches Create Roster's Add Players pattern
+  // Add Rosters section — matches Create Roster's Add Players pattern
   addRostersSection: {
     borderRadius: 12,
     padding: 16,
@@ -2277,7 +2277,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-  // Vertically stacked buttons Ã¢â‚¬â€ matching Roster edit screen
+  // Vertically stacked buttons — matching Roster edit screen
   buttonStack: {
     marginTop: Spacing.lg,
     gap: 12,

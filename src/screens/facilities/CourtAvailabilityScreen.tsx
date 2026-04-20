@@ -130,7 +130,7 @@ export function CourtAvailabilityScreen() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [markedDates, setMarkedDates] = useState<any>({});
 
-  // Selection cart Ã¢â‚¬â€ persists across court/date changes
+  // Selection cart — persists across court/date changes
   const [selectionCart, setSelectionCart] = useState<Map<string, CartSlot>>(
     new Map()
   );
@@ -385,12 +385,12 @@ export function CourtAvailabilityScreen() {
 
   const handleDateSelect = (day: DateData) => {
     setSelectedDate(day.dateString);
-    // Cart persists Ã¢â‚¬â€ no clearing
+    // Cart persists — no clearing
   };
 
   const handleCourtSelect = (court: Court) => {
     setSelectedCourt(court);
-    // Cart persists Ã¢â‚¬â€ no clearing
+    // Cart persists — no clearing
   };
 
   const addSlotToCart = useCallback(
@@ -1016,8 +1016,8 @@ export function CourtAvailabilityScreen() {
               <Ionicons name="cart" size={18} color={colors.cobalt} />
               <Text style={styles.footerStatsText}>
                 {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''}
-                {cartCourtCount > 1 ? ` Ã‚Â· ${cartCourtCount} courts` : ''}
-                {cartDayCount > 1 ? ` Ã‚Â· ${cartDayCount} days` : ''}
+                {cartCourtCount > 1 ? ` · ${cartCourtCount} courts` : ''}
+                {cartDayCount > 1 ? ` · ${cartDayCount} days` : ''}
               </Text>
             </View>
             <Text style={styles.footerPrice}>${cartTotal.toFixed(2)}</Text>

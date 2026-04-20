@@ -99,7 +99,7 @@ export function ProfileCard({
         )}
       </View>
 
-      {/* Name Ã¢â‚¬â€ removed, shown in header */}
+      {/* Name — removed, shown in header */}
 
       {/* Info Rows */}
       <View style={styles.infoSection}>
@@ -108,7 +108,7 @@ export function ProfileCard({
             <Ionicons name="person-outline" size={16} color={colors.cobalt} />
             <Text style={[styles.infoText, { color: colors.inkSoft }]}>
               {age !== null ? `${age} years old` : ''}
-              {age !== null && gender ? '  Ã‚Â·  ' : ''}
+              {age !== null && gender ? '  ·  ' : ''}
               {gender || ''}
             </Text>
           </View>

@@ -69,7 +69,7 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
           style={[styles.meta, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
           numberOfLines={1}
         >
-          {event.facility?.name || event.locationName || 'Game'} Â· Started{' '}
+          {event.facility?.name || event.locationName || 'Game'} · Started{' '}
           {mins}m ago
         </Text>
       </View>

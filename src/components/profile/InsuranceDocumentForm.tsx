@@ -21,7 +21,7 @@ import { useUploadInsuranceDocumentMutation } from '../../store/api/insuranceDoc
  * InsuranceDocumentForm
  *
  * Modal form for uploading a new insurance document.
- * Includes file picker (PDF/JPEG/PNG, Ã¢â€°Â¤10 MB), policy name input,
+ * Includes file picker (PDF/JPEG/PNG,  -10 MB), policy name input,
  * and expiry date input with client-side validation.
  *
  * Requirements: 1.2, 1.4, 1.5, 1.6
@@ -292,7 +292,7 @@ export function InsuranceDocumentForm({
                     Tap to select a file
                   </Text>
                   <Text style={[styles.fileHint, { color: colors.inkFaint }]}>
-                    PDF, JPEG, or PNG Ã¢â‚¬â€ 10 MB max
+                    PDF, JPEG, or PNG — 10 MB max
                   </Text>
                 </View>
               )}

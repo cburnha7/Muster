@@ -221,7 +221,7 @@ export function DayScheduleTimeline({
               styles.durationText, { color: colors.pine },
               tooShort && styles.durationTextWarning, tooShort && { color: colors.heart }]}
           >
-            {fmt12(selectedStart!)} Ã¢â‚¬â€œ {fmt12(selectedEnd!)} Ã‚Â· {durationLabel}
+            {fmt12(selectedStart!)} – {fmt12(selectedEnd!)} · {durationLabel}
           </Text>
           {tooShort && (
             <Text style={[styles.warningText, { color: colors.heart }]}>

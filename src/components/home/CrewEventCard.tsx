@@ -67,7 +67,7 @@ function CrewEventCardInner({
             {event.title}
           </Text>
           <Text style={[styles.meta, { color: colors.inkSoft }, { color: colors.textSecondary }]}>
-            {formatDay(start)} Â· {formatTime(start)}
+            {formatDay(start)} · {formatTime(start)}
           </Text>
           {(event.facility?.name || event.locationName) && (
             <View style={styles.locRow}>

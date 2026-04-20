@@ -66,7 +66,7 @@ export function FamilyPulseSection() {
                     ?.navigate('Home', { screen: 'HomeScreen' })
                 }
               >
-                <Text style={[styles.findGameText, { color: colors.cobalt }]}>Find game Ã¢â€ â€™</Text>
+                <Text style={[styles.findGameText, { color: colors.cobalt }]}>Find game '</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           );

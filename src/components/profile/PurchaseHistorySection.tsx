@@ -170,11 +170,11 @@ export function PurchaseHistorySection({
                   </Text>
                 </View>
                 <Text style={[styles.courtName, { color: colors.inkFaint }]}>
-                  {purchase.timeSlot.court.name} Ã‚Â·{' '}
+                  {purchase.timeSlot.court.name} ·{' '}
                   {formatDate(purchase.timeSlot.date)}
                 </Text>
                 <Text style={[styles.timeText, { color: colors.inkFaint }]}>
-                  {formatTime(purchase.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
+                  {formatTime(purchase.timeSlot.startTime)} –{' '}
                   {formatTime(purchase.timeSlot.endTime)}
                 </Text>
                 <View
