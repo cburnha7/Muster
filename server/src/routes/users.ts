@@ -1129,6 +1129,59 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
   }
 });
 
+// ── Open Ground saved locations ──────────────────────────────────────────────
+// Must be defined BEFORE /:id to avoid Express matching "open-ground-locations" as an ID param
+
+// GET /users/open-ground-locations — fetch saved locations for the current user
+router.get('/open-ground-locations', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
+
+    const locations = await prisma.savedOpenGroundLocation.findMany({
+      where: { userId },
+      orderBy: { lastUsedAt: 'desc' },
+      select: { id: true, name: true, address: true, lastUsedAt: true },
+      take: 10,
+    });
+
+    res.json(locations);
+  } catch (error) {
+    console.error('Get open ground locations error:', error);
+    res.status(500).json({ error: 'Failed to fetch locations' });
+  }
+});
+
+// POST /users/open-ground-locations — upsert a location (create or bump lastUsedAt)
+router.post('/open-ground-locations', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const { name, address } = req.body as { name: string; address?: string };
+    if (!name?.trim())
+      return res.status(400).json({ error: 'name is required' });
+
+    const location = await prisma.savedOpenGroundLocation.upsert({
+      where: {
+        userId_name_address: {
+          userId,
+          name: name.trim(),
+          address: address?.trim() ?? '',
+        },
+      },
+      create: { userId, name: name.trim(), address: address?.trim() ?? null },
+      update: { lastUsedAt: new Date() },
+      select: { id: true, name: true, address: true, lastUsedAt: true },
+    });
+
+    res.json(location);
+  } catch (error) {
+    console.error('Save open ground location error:', error);
+    res.status(500).json({ error: 'Failed to save location' });
+  }
+});
+
 // Get user profile by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -1248,58 +1301,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ error: 'Failed to update user' });
-  }
-});
-
-// ── Open Ground saved locations ──────────────────────────────────────────────
-
-// GET /users/open-ground-locations — fetch saved locations for the current user
-router.get('/open-ground-locations', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user?.userId;
-    if (!userId)
-      return res.status(401).json({ error: 'Authentication required' });
-
-    const locations = await prisma.savedOpenGroundLocation.findMany({
-      where: { userId },
-      orderBy: { lastUsedAt: 'desc' },
-      select: { id: true, name: true, address: true, lastUsedAt: true },
-      take: 10,
-    });
-
-    res.json(locations);
-  } catch (error) {
-    console.error('Get open ground locations error:', error);
-    res.status(500).json({ error: 'Failed to fetch locations' });
-  }
-});
-
-// POST /users/open-ground-locations — upsert a location (create or bump lastUsedAt)
-router.post('/open-ground-locations', authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user!.userId;
-
-    const { name, address } = req.body as { name: string; address?: string };
-    if (!name?.trim())
-      return res.status(400).json({ error: 'name is required' });
-
-    const location = await prisma.savedOpenGroundLocation.upsert({
-      where: {
-        userId_name_address: {
-          userId,
-          name: name.trim(),
-          address: address?.trim() ?? '',
-        },
-      },
-      create: { userId, name: name.trim(), address: address?.trim() ?? null },
-      update: { lastUsedAt: new Date() },
-      select: { id: true, name: true, address: true, lastUsedAt: true },
-    });
-
-    res.json(location);
-  } catch (error) {
-    console.error('Save open ground location error:', error);
-    res.status(500).json({ error: 'Failed to save location' });
   }
 });
 
