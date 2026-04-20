@@ -10,7 +10,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 
-const PLAN_HIERARCHY = ['free', 'roster', 'league', 'facility_basic', 'facility_pro'];
+const PLAN_HIERARCHY = [
+  'free',
+  'roster',
+  'league',
+  'facility_basic',
+  'facility_pro',
+];
 
 /** Maps membershipTier values to equivalent subscription plans */
 const TIER_TO_PLAN: Record<string, string> = {
@@ -24,10 +30,21 @@ const TIER_TO_PLAN: Record<string, string> = {
  * Check if a user bypasses the plan gate via role or membershipTier.
  * Returns true if the user should be allowed through regardless of subscription.
  */
-export async function userBypassesPlanGate(userId: string, requiredPlan: string): Promise<boolean> {
+export async function userBypassesPlanGate(
+  userId: string,
+  requiredPlan: string
+): Promise<boolean> {
+  // If memberships are disabled, bypass all plan gates
+  if (process.env.MEMBERSHIPS_ENABLED === 'false') return true;
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true, membershipTier: true, trialTier: true, trialExpiry: true },
+    select: {
+      role: true,
+      membershipTier: true,
+      trialTier: true,
+      trialExpiry: true,
+    },
   });
 
   if (!user) return false;
@@ -42,7 +59,11 @@ export async function userBypassesPlanGate(userId: string, requiredPlan: string)
   if (PLAN_HIERARCHY.indexOf(tierPlan) >= requiredIndex) return true;
 
   // Check active trial tier
-  if (user.trialTier && user.trialExpiry && new Date(user.trialExpiry) > new Date()) {
+  if (
+    user.trialTier &&
+    user.trialExpiry &&
+    new Date(user.trialExpiry) > new Date()
+  ) {
     const trialPlan = TIER_TO_PLAN[user.trialTier] || 'free';
     if (PLAN_HIERARCHY.indexOf(trialPlan) >= requiredIndex) return true;
   }
@@ -72,7 +93,10 @@ export function requirePlan(requiredPlan: string) {
       });
 
       const userPlan = subscription?.plan || 'free';
-      const isActive = !subscription || subscription.status === 'active' || subscription.status === 'trialing';
+      const isActive =
+        !subscription ||
+        subscription.status === 'active' ||
+        subscription.status === 'trialing';
 
       const userIndex = PLAN_HIERARCHY.indexOf(userPlan);
       const requiredIndex = PLAN_HIERARCHY.indexOf(requiredPlan);
