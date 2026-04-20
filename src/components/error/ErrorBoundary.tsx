@@ -25,16 +25,77 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
+/** Default error fallback UI — function component so it can use useTheme() */
+function DefaultErrorFallback({
+  error,
+  errorInfo,
+  onReset,
+}: {
+  error: Error;
+  errorInfo: ErrorInfo | null;
+  onReset: () => void;
+}) {
+  const { colors } = useTheme();
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
+        <Ionicons name="alert-circle" size={64} color={colors.error} />
+        <Text style={[styles.title, { color: colors.ink }]}>
+          Oops! Something went wrong
+        </Text>
+        <Text style={[styles.message, { color: colors.inkSecondary }]}>
+          We're sorry for the inconvenience. The app encountered an unexpected
+          error.
+        </Text>
+
+        <ScrollView
+          style={[styles.errorDetails, { backgroundColor: colors.errorLight }]}
+        >
+          <Text style={[styles.errorTitle, { color: colors.error }]}>
+            Error:
+          </Text>
+          <Text style={[styles.errorText, { color: colors.error }]}>
+            {error.toString()}
+          </Text>
+          {errorInfo && (
+            <>
+              <Text style={[styles.errorTitle, { color: colors.error }]}>
+                Component Stack:
+              </Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {errorInfo.componentStack}
+              </Text>
+            </>
+          )}
+        </ScrollView>
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.cobalt }]}
+          onPress={onReset}
+        >
+          <Text style={[styles.buttonText, { color: colors.white }]}>
+            Try Again
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.helpText, { color: colors.inkMuted }]}>
+          If the problem persists, please restart the app or contact support.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 /**
- * Error Boundary component to catch and handle React component errors
- * Prevents the entire app from crashing when a component error occurs
+ * Error Boundary component to catch and handle React component errors.
+ * Prevents the entire app from crashing when a component error occurs.
  */
 export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
   constructor(props: ErrorBoundaryProps) {
-  const { colors } = useTheme();
     super(props);
     this.state = {
       hasError: false,
@@ -44,41 +105,21 @@ export class ErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return {
-      hasError: true,
-      error,
-    };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error to console
     console.error('Error Boundary caught an error:', error, errorInfo);
-
-    // Update state with error info
-    this.setState({
-      errorInfo,
-    });
-
-    // Call custom error handler if provided
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
-
-    // In production, you would send this to a crash reporting service
-    // Example: Sentry.captureException(error, { extra: errorInfo });
+    this.setState({ errorInfo });
+    this.props.onError?.(error, errorInfo);
   }
 
   resetError = (): void => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    });
+    this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render(): ReactNode {
     if (this.state.hasError && this.state.error) {
-      // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback(
           this.state.error,
@@ -87,44 +128,12 @@ export class ErrorBoundary extends Component<
         );
       }
 
-      // Default error UI
       return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={styles.content}>
-            <Ionicons name="alert-circle" size={64} color={colors.error} />
-            <Text style={[styles.title, { color: colors.ink }]}>Oops! Something went wrong</Text>
-            <Text style={[styles.message, { color: colors.inkSecondary }]}>
-              We're sorry for the inconvenience. The app encountered an
-              unexpected error.
-            </Text>
-
-            {this.state.error && (
-              <ScrollView style={[styles.errorDetails, { backgroundColor: colors.errorLight }]}>
-                <Text style={[styles.errorTitle, { color: colors.error }]}>Error:</Text>
-                <Text style={[styles.errorText, { color: colors.error }]}>
-                  {this.state.error.toString()}
-                </Text>
-                {this.state.errorInfo && (
-                  <>
-                    <Text style={[styles.errorTitle, { color: colors.error }]}>Component Stack:</Text>
-                    <Text style={[styles.errorText, { color: colors.error }]}>
-                      {this.state.errorInfo.componentStack}
-                    </Text>
-                  </>
-                )}
-              </ScrollView>
-            )}
-
-            <TouchableOpacity style={[styles.button, { backgroundColor: colors.cobalt }]} onPress={this.resetError}>
-              <Text style={[styles.buttonText, { color: colors.white }]}>Try Again</Text>
-            </TouchableOpacity>
-
-            <Text style={[styles.helpText, { color: colors.inkMuted }]}>
-              If the problem persists, please restart the app or contact
-              support.
-            </Text>
-          </View>
-        </View>
+        <DefaultErrorFallback
+          error={this.state.error}
+          errorInfo={this.state.errorInfo}
+          onReset={this.resetError}
+        />
       );
     }
 

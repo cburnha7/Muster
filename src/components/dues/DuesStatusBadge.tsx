@@ -2,13 +2,13 @@
  * DuesStatusBadge
  *
  * A small badge that shows whether a player or roster has paid their dues.
- * Uses brand colors: grass for paid, court for pending, track for unpaid.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fonts, useTheme } from '../../theme';
+import { useTheme, fonts } from '../../theme';
+import { SemanticColors } from '../../theme/tokens';
 
 export type DuesStatus = 'paid' | 'pending' | 'unpaid';
 
@@ -17,33 +17,32 @@ interface DuesStatusBadgeProps {
   compact?: boolean;
 }
 
-const statusConfig: Record<
-  DuesStatus,
-  { label: string; bg: string; color: string; icon: string }
-> = {
-  paid: {
-    label: 'Paid',
-    bg: colors.successLight,
-    color: colors.pine,
-    icon: 'checkmark-circle',
-  },
-  pending: {
-    label: 'Pending',
-    bg: colors.goldLight + '30',
-    color: colors.gold,
-    icon: 'time',
-  },
-  unpaid: {
-    label: 'Unpaid',
-    bg: colors.heart + '18',
-    color: colors.heart,
-    icon: 'alert-circle',
-  },
-};
+function getStatusConfig(colors: SemanticColors) {
+  return {
+    paid: {
+      label: 'Paid',
+      bg: colors.successLight,
+      color: colors.pine,
+      icon: 'checkmark-circle',
+    },
+    pending: {
+      label: 'Pending',
+      bg: colors.goldLight + '30',
+      color: colors.gold,
+      icon: 'time',
+    },
+    unpaid: {
+      label: 'Unpaid',
+      bg: colors.heart + '18',
+      color: colors.heart,
+      icon: 'alert-circle',
+    },
+  };
+}
 
 export function DuesStatusBadge({ status, compact }: DuesStatusBadgeProps) {
   const { colors } = useTheme();
-  const config = statusConfig[status];
+  const config = getStatusConfig(colors)[status];
 
   return (
     <View style={[styles.badge, { backgroundColor: config.bg }]}>

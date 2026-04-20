@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, Spacing, useTheme } from '../../theme';
+import { SemanticColors } from '../../theme/tokens';
 import { useGetEscrowTransactionsQuery } from '../../store/api/insuranceDocumentsApi';
 
 export interface EscrowTransactionLogProps {
@@ -25,42 +26,50 @@ interface EscrowTransaction {
   createdAt: string;
 }
 
-const TYPE_CONFIG: Record<
+function getTypeConfig(
+  colors: SemanticColors
+): Record<
   TransactionType,
   { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }
-> = {
-  authorization: {
-    label: 'Authorization',
-    icon: 'card-outline',
-    color: colors.ink,
-  },
-  capture: {
-    label: 'Capture',
-    icon: 'checkmark-circle-outline',
-    color: colors.cobalt,
-  },
-  surplus_payout: {
-    label: 'Surplus Payout',
-    icon: 'arrow-up-outline',
-    color: colors.cobalt,
-  },
-  shortfall_charge: {
-    label: 'Shortfall Charge',
-    icon: 'arrow-down-outline',
-    color: colors.heart,
-  },
-  refund: {
-    label: 'Refund',
-    icon: 'return-down-back-outline',
-    color: colors.gold,
-  },
-};
+> {
+  return {
+    authorization: {
+      label: 'Authorization',
+      icon: 'card-outline',
+      color: colors.ink,
+    },
+    capture: {
+      label: 'Capture',
+      icon: 'checkmark-circle-outline',
+      color: colors.cobalt,
+    },
+    surplus_payout: {
+      label: 'Surplus Payout',
+      icon: 'arrow-up-outline',
+      color: colors.cobalt,
+    },
+    shortfall_charge: {
+      label: 'Shortfall Charge',
+      icon: 'arrow-down-outline',
+      color: colors.heart,
+    },
+    refund: {
+      label: 'Refund',
+      icon: 'return-down-back-outline',
+      color: colors.gold,
+    },
+  };
+}
 
-const STATUS_COLOR: Record<TransactionStatus, string> = {
-  pending: colors.gold,
-  completed: colors.cobalt,
-  failed: colors.heart,
-};
+function getStatusColor(
+  colors: SemanticColors
+): Record<TransactionStatus, string> {
+  return {
+    pending: colors.gold,
+    completed: colors.cobalt,
+    failed: colors.heart,
+  };
+}
 
 function formatCents(cents: number): string {
   const dollars = Math.abs(cents) / 100;
@@ -101,8 +110,15 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
   });
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.white, borderColor: colors.white }]}>
-      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Escrow Transactions</Text>
+    <View
+      style={[
+        styles.section,
+        { backgroundColor: colors.white, borderColor: colors.white },
+      ]}
+    >
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+        Escrow Transactions
+      </Text>
 
       {isLoading ? (
         <ActivityIndicator
@@ -111,16 +127,23 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
           style={styles.loader}
         />
       ) : transactions.length === 0 ? (
-        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>No transactions</Text>
+        <Text style={[styles.emptyText, { color: colors.inkFaint }]}>
+          No transactions
+        </Text>
       ) : (
         transactions.map((tx: EscrowTransaction) => {
-          const config = TYPE_CONFIG[tx.type] ?? TYPE_CONFIG.authorization;
-          const statusColor = STATUS_COLOR[tx.status] ?? colors.gold;
+          const typeConfig = getTypeConfig(colors);
+          const statusColors = getStatusColor(colors);
+          const config = typeConfig[tx.type] ?? typeConfig.authorization;
+          const statusColor = statusColors[tx.status] ?? colors.gold;
 
           return (
             <View
               key={tx.id}
-              style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.white }]}
+              style={[
+                styles.row,
+                { backgroundColor: colors.surface, borderColor: colors.white },
+              ]}
               accessibilityRole="summary"
               accessibilityLabel={`${config.label}, ${formatCents(tx.amount)}, ${tx.status}`}
             >
@@ -134,14 +157,18 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
               </View>
 
               <View style={styles.rowContent}>
-                <Text style={[styles.typeLabel, { color: colors.ink }]}>{config.label}</Text>
+                <Text style={[styles.typeLabel, { color: colors.ink }]}>
+                  {config.label}
+                </Text>
                 <Text style={[styles.timestamp, { color: colors.inkFaint }]}>
                   {formatTimestamp(tx.createdAt)}
                 </Text>
               </View>
 
               <View style={styles.rowRight}>
-                <Text style={[styles.amount, { color: colors.ink }]}>{formatCents(tx.amount)}</Text>
+                <Text style={[styles.amount, { color: colors.ink }]}>
+                  {formatCents(tx.amount)}
+                </Text>
                 <View
                   style={[
                     styles.badge,
