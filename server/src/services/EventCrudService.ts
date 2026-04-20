@@ -637,6 +637,13 @@ export async function createEvent(
       cleanEventData.invitedUserIds = invitedUserIds;
     }
 
+    // Strip undefined values — Prisma rejects undefined for optional fields
+    for (const key of Object.keys(cleanEventData)) {
+      if (cleanEventData[key] === undefined) {
+        delete cleanEventData[key];
+      }
+    }
+
     // Create the event(s)
     // For recurring events, create one event per occurrence date
     const isRecurring =
