@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { processCompletedGame } from '../services/PlayerRatingService';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
 // Get debrief-eligible events for current user
 // Events that ended within last 24 hours where user hasn't submitted debrief
-router.get('/', async (req, res) => {
+router.get('/', optionalAuthMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -56,9 +57,9 @@ router.get('/', async (req, res) => {
 });
 
 // Get debrief details for a specific event (participants list)
-router.get('/:eventId', async (req, res) => {
+router.get('/:eventId', optionalAuthMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -156,12 +157,9 @@ router.get('/:eventId', async (req, res) => {
 });
 
 // Submit debrief (salutes + optional facility rating)
-router.post('/:eventId/submit', async (req, res) => {
+router.post('/:eventId/submit', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
 
     const { eventId } = req.params;
     const { salutedUserIds, facilityRating } = req.body;

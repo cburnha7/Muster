@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 
 // ─── Service imports ────────────────────────────────────────────────────────
@@ -29,14 +30,10 @@ router.get('/', async (req, res) => {
 });
 
 // Get event by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuthMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const requestingUserId =
-      (req.query.userId as string | undefined) ||
-      (req as any).effectiveUserId ||
-      (req as any).user?.userId ||
-      (req.headers['x-user-id'] as string | undefined);
+    const requestingUserId = req.user?.userId;
     const event = await EventCrudService.getEventById(id, requestingUserId);
     res.json(event);
   } catch (error: any) {
@@ -58,31 +55,21 @@ router.get('/:id/participants', async (req, res) => {
 });
 
 // Check if user has submitted salutes for an event
-router.get('/:id/salutes/status', async (req, res) => {
+router.get('/:id/salutes/status', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = req.user!.userId;
 
-    // TODO: Get user ID from auth token
-    // For now, use the first user
-    const fromUser = await prisma.user.findFirst({
-      select: { id: true },
-    });
-
-    if (!fromUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if user has submitted salutes for this event
-    const existingSalutes = await prisma.salute.findMany({
+    const saluteCount = await prisma.salute.count({
       where: {
         eventId: id,
-        fromUserId: fromUser.id,
+        fromUserId: userId,
       },
     });
 
     res.json({
-      hasSubmitted: existingSalutes.length > 0,
-      saluteCount: existingSalutes.length,
+      hasSubmitted: saluteCount > 0,
+      saluteCount,
     });
   } catch (error) {
     console.error('Check salute status error:', error);
@@ -91,11 +78,9 @@ router.get('/:id/salutes/status', async (req, res) => {
 });
 
 // Create event
-router.post('/', requireNonDependent, async (req, res) => {
+router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
   try {
-    const authenticatedUserId =
-      (req as any).user?.userId ||
-      (req.headers['x-user-id'] as string | undefined);
+    const authenticatedUserId = req.user!.userId;
     const result = await EventCrudService.createEvent(
       req.body,
       authenticatedUserId
@@ -108,7 +93,7 @@ router.post('/', requireNonDependent, async (req, res) => {
 });
 
 // Update event
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
     const event = await EventCrudService.updateEvent(id, req.body);
@@ -120,9 +105,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Cancel/Delete event
-// If event has participants, mark as cancelled with reason
-// If event has no participants, delete it entirely
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
     const { reason } = req.body;
@@ -133,51 +116,42 @@ router.delete('/:id', async (req, res) => {
       res.status(204).send();
     }
   } catch (error: any) {
-    console.error('❌ Cancel/Delete event error:', error);
+    console.error('Cancel/Delete event error:', error);
     sendServiceError(res, error);
   }
 });
 
 // Book event
-router.post('/:id/book', async (req, res) => {
+router.post('/:id/book', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const { userId } = req.body;
+    const userId = req.user!.userId;
     const booking = await EventCrudService.bookEvent(id, userId);
     res.status(201).json(booking);
   } catch (error: any) {
-    console.error('❌ Book event error:', error);
+    console.error('Book event error:', error);
     sendServiceError(res, error);
   }
 });
 
 // Cancel booking
-router.delete('/:id/book/:bookingId', async (req, res) => {
+router.delete('/:id/book/:bookingId', authMiddleware, async (req, res) => {
   try {
     const { id, bookingId } = req.params;
     await EventCrudService.cancelBooking(id, bookingId);
     res.status(204).send();
   } catch (error: any) {
-    console.error('❌ Cancel booking error:', error);
+    console.error('Cancel booking error:', error);
     sendServiceError(res, error);
   }
 });
 
 // Submit salutes for event participants
-router.post('/:id/salutes', async (req, res) => {
+router.post('/:id/salutes', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
+    const fromUserId = req.user!.userId;
     const { salutedUserIds } = req.body;
-
-    // TODO: Get user ID from auth token
-    // For now, use the first user
-    const fromUser = await prisma.user.findFirst({
-      select: { id: true },
-    });
-
-    if (!fromUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
 
     // Validate event exists and is in the past
     const event = await prisma.event.findUnique({
@@ -208,75 +182,82 @@ router.post('/:id/salutes', async (req, res) => {
         .json({ error: 'Can only salute up to 3 participants per event' });
     }
 
+    // Cannot salute yourself
+    if (salutedUserIds.includes(fromUserId)) {
+      return res.status(400).json({ error: "You can't salute yourself" });
+    }
+
     // Check if user already submitted salutes for this event
-    const existingSalutes = await prisma.salute.findMany({
+    const existingCount = await prisma.salute.count({
       where: {
         eventId: id,
-        fromUserId: fromUser.id,
+        fromUserId,
       },
     });
 
-    if (existingSalutes.length > 0) {
+    if (existingCount > 0) {
       return res
         .status(400)
         .json({ error: 'Salutes already submitted for this event' });
     }
 
-    // Create salutes
+    // Create salutes in a transaction
     const salutes = await prisma.$transaction(
-      salutedUserIds.map(toUserId =>
+      salutedUserIds.map((toUserId: string) =>
         prisma.salute.create({
           data: {
             eventId: id,
-            fromUserId: fromUser.id,
+            fromUserId,
             toUserId,
           },
         })
       )
     );
 
-    // Recalculate ratings for saluted users
-    const ratingsUpdated = await Promise.all(
-      salutedUserIds.map(async userId => {
-        // Get total salutes received
-        const totalSalutes = await prisma.salute.count({
-          where: { toUserId: userId },
-        });
+    // Batch recalculate ratings — get all counts in two queries instead of N+1
+    const [saluteCounts, gameCounts] = await Promise.all([
+      prisma.salute.groupBy({
+        by: ['toUserId'],
+        where: { toUserId: { in: salutedUserIds } },
+        _count: true,
+      }),
+      prisma.booking.groupBy({
+        by: ['userId'],
+        where: {
+          userId: { in: salutedUserIds },
+          status: 'confirmed',
+          event: { endTime: { lt: new Date() } },
+        },
+        _count: true,
+      }),
+    ]);
 
-        // Get total games played
-        const totalGames = await prisma.booking.count({
-          where: {
-            userId,
-            status: 'confirmed',
-            event: {
-              endTime: { lt: new Date() },
-            },
-          },
-        });
+    const saluteMap = new Map(saluteCounts.map(s => [s.toUserId, s._count]));
+    const gameMap = new Map(gameCounts.map(g => [g.userId, g._count]));
 
-        // Calculate new rating (simple formula: base 1.0 + salutes/games ratio)
-        // This gives a boost based on salute frequency
+    // Update all ratings in a single transaction
+    await prisma.$transaction(
+      salutedUserIds.map((userId: string) => {
+        const totalSalutes = saluteMap.get(userId) || 0;
+        const totalGames = gameMap.get(userId) || 0;
         const saluteRatio = totalGames > 0 ? totalSalutes / totalGames : 0;
-        const newRating = Math.min(5.0, 1.0 + saluteRatio * 2); // Cap at 5.0
+        const newRating = Math.min(5.0, 1.0 + saluteRatio * 2);
 
-        // Update user rating
-        await prisma.user.update({
+        return prisma.user.update({
           where: { id: userId },
           data: {
             currentRating: newRating,
-            pickupRating: newRating, // For now, use same rating for pickup
+            pickupRating: newRating,
             ratingLastUpdated: new Date(),
           },
         });
-
-        return userId;
       })
     );
 
     res.json({
       success: true,
       salutesRecorded: salutes.length,
-      ratingsUpdated: ratingsUpdated.length,
+      ratingsUpdated: salutedUserIds.length,
     });
   } catch (error) {
     console.error('Submit salutes error:', error);
@@ -307,24 +288,15 @@ router.get('/:id/salutes', async (req, res) => {
 });
 
 // Get current user's salutes for an event
-router.get('/:id/salutes/me', async (req, res) => {
+router.get('/:id/salutes/me', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-
-    // TODO: Get user ID from auth token
-    // For now, use the first user
-    const user = await prisma.user.findFirst({
-      select: { id: true },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    const userId = req.user!.userId;
 
     const salutes = await prisma.salute.findMany({
       where: {
         eventId: id,
-        fromUserId: user.id,
+        fromUserId: userId,
       },
       select: {
         toUserId: true,
@@ -338,10 +310,7 @@ router.get('/:id/salutes/me', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/events/send-reminders — cron job: send 24h and 1h game reminders
-// Called periodically (every 15 min) to post system messages in game threads
-// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/events/send-reminders — cron job endpoint
 router.post('/send-reminders', async (req, res) => {
   try {
     const now = new Date();
@@ -456,18 +425,14 @@ router.post('/send-reminders', async (req, res) => {
   }
 });
 
-// ── Availability check for invitees ──
 // POST /events/check-availability
-// Body: { userIds: string[], rosterIds: string[], dates: { date: string, startTime: string, endTime: string }[] }
-// Returns: { [inviteeId]: boolean[] } — one boolean per date, true = available
-router.post('/check-availability', async (req, res) => {
+router.post('/check-availability', authMiddleware, async (req, res) => {
   try {
     const { userIds = [], rosterIds = [], dates = [] } = req.body;
     if (!Array.isArray(dates) || dates.length === 0) {
       return res.json({});
     }
 
-    // Expand roster IDs to their member user IDs
     const rosterMembers: Record<string, string[]> = {};
     if (rosterIds.length > 0) {
       const members = await prisma.teamMember.findMany({
@@ -480,16 +445,12 @@ router.post('/check-availability', async (req, res) => {
       }
     }
 
-    // Collect all unique user IDs to check
     const allUserIds = new Set<string>(userIds);
     for (const memberIds of Object.values(rosterMembers)) {
       for (const uid of memberIds) allUserIds.add(uid);
     }
 
-    // For each date window, find users who have a confirmed booking/participation
     const result: Record<string, boolean[]> = {};
-
-    // Initialize result arrays
     for (const uid of userIds) result[uid] = [];
     for (const rid of rosterIds) result[rid] = [];
 
@@ -498,7 +459,6 @@ router.post('/check-availability', async (req, res) => {
       const dayStart = new Date(`${date}T${startTime}:00`);
       const dayEnd = new Date(`${date}T${endTime}:00`);
 
-      // Find events that overlap this time window for any of our users
       const conflicting = await prisma.event.findMany({
         where: {
           status: { in: ['active', 'confirmed'] },
@@ -529,7 +489,6 @@ router.post('/check-availability', async (req, res) => {
         },
       });
 
-      // Collect busy user IDs for this date
       const busyUsers = new Set<string>();
       for (const evt of conflicting) {
         if (allUserIds.has(evt.organizerId)) busyUsers.add(evt.organizerId);
@@ -537,12 +496,10 @@ router.post('/check-availability', async (req, res) => {
         for (const gp of evt.gameParticipations) busyUsers.add(gp.userId);
       }
 
-      // Player availability
       for (const uid of userIds) {
         result[uid]!.push(!busyUsers.has(uid));
       }
 
-      // Roster availability (worst-case: if ANY member is busy, mark unavailable)
       for (const rid of rosterIds) {
         const members = rosterMembers[rid] || [];
         const available =

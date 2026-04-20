@@ -14,8 +14,15 @@
 import express, { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { stripe, calculatePlatformFee } from '../services/stripe-connect';
-import { generateIdempotencyKey, IdempotencyAction } from '../utils/idempotency';
-import { capturePublicEventEscrow, facilityCancelPublicEvent } from '../services/public-event-escrow';
+import {
+  generateIdempotencyKey,
+  IdempotencyAction,
+} from '../utils/idempotency';
+import {
+  capturePublicEventEscrow,
+  facilityCancelPublicEvent,
+} from '../services/public-event-escrow';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -33,10 +40,10 @@ const router = express.Router();
  *   - perPersonPrice: number   — Price per attendee (in dollars)
  *   - minAttendeeCount: number — Minimum attendees required
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
+    const userId = req.user!.userId;
     const {
-      userId,
       rosterId,
       facilityId,
       courtId,
@@ -46,19 +53,35 @@ router.post('/', async (req: Request, res: Response) => {
     } = req.body;
 
     // --- Validate required fields ---
-    if (!userId || !rosterId || !facilityId || !courtId || !timeSlotId || perPersonPrice == null || minAttendeeCount == null) {
+    if (
+      !rosterId ||
+      !facilityId ||
+      !courtId ||
+      !timeSlotId ||
+      perPersonPrice == null ||
+      minAttendeeCount == null
+    ) {
       return res.status(400).json({
-        error: 'Missing required fields: userId, rosterId, facilityId, courtId, timeSlotId, perPersonPrice, minAttendeeCount',
+        error:
+          'Missing required fields: rosterId, facilityId, courtId, timeSlotId, perPersonPrice, minAttendeeCount',
       });
     }
 
     // --- Validate numeric fields ---
     if (typeof perPersonPrice !== 'number' || perPersonPrice <= 0) {
-      return res.status(400).json({ error: 'perPersonPrice must be a positive number' });
+      return res
+        .status(400)
+        .json({ error: 'perPersonPrice must be a positive number' });
     }
 
-    if (typeof minAttendeeCount !== 'number' || !Number.isInteger(minAttendeeCount) || minAttendeeCount < 1) {
-      return res.status(400).json({ error: 'minAttendeeCount must be a positive integer' });
+    if (
+      typeof minAttendeeCount !== 'number' ||
+      !Number.isInteger(minAttendeeCount) ||
+      minAttendeeCount < 1
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'minAttendeeCount must be a positive integer' });
     }
 
     // --- Verify the user is a captain/manager of the roster ---
@@ -72,7 +95,9 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     if (!membership) {
-      return res.status(403).json({ error: 'Only the roster manager can create a public event' });
+      return res
+        .status(403)
+        .json({ error: 'Only the roster manager can create a public event' });
     }
 
     // --- Verify roster exists and has Stripe Connect account ---
@@ -86,7 +111,9 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (!roster.stripeAccountId) {
-      return res.status(400).json({ error: 'Roster has not completed Stripe Connect onboarding' });
+      return res
+        .status(400)
+        .json({ error: 'Roster has not completed Stripe Connect onboarding' });
     }
 
     // --- Verify facility exists and is onboarded ---
@@ -100,7 +127,9 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (!facility.stripeConnectAccountId) {
-      return res.status(400).json({ error: 'Facility has not completed Stripe Connect onboarding' });
+      return res.status(400).json({
+        error: 'Facility has not completed Stripe Connect onboarding',
+      });
     }
 
     // --- Verify court belongs to the facility ---
@@ -110,7 +139,9 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     if (!court || court.facilityId !== facilityId) {
-      return res.status(404).json({ error: 'Court not found at this facility' });
+      return res
+        .status(404)
+        .json({ error: 'Court not found at this facility' });
     }
 
     if (!court.isActive) {
@@ -132,7 +163,9 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     if (!timeSlot || timeSlot.courtId !== courtId) {
-      return res.status(404).json({ error: 'Time slot not found for this court' });
+      return res
+        .status(404)
+        .json({ error: 'Time slot not found for this court' });
     }
 
     if (timeSlot.status !== 'available') {
@@ -140,7 +173,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // --- Create booking atomically ---
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       const booking = await tx.booking.create({
         data: {
           userId,
@@ -230,7 +263,13 @@ router.get('/:bookingId', async (req: Request, res: Response) => {
       where: { id: bookingId },
       include: {
         facility: {
-          select: { id: true, name: true, street: true, city: true, state: true },
+          select: {
+            id: true,
+            name: true,
+            street: true,
+            city: true,
+            state: true,
+          },
         },
         court: {
           select: { id: true, name: true, sportType: true },
@@ -333,151 +372,170 @@ router.get('/', async (req: Request, res: Response) => {
  *
  * Returns the PaymentIntent client_secret for the frontend to confirm payment.
  */
-router.post('/:bookingId/register', async (req: Request, res: Response) => {
-  try {
-    const { bookingId } = req.params as { bookingId: string };
-    const { userId } = req.body;
+router.post(
+  '/:bookingId/register',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { bookingId } = req.params as { bookingId: string };
+      const userId = req.user!.userId;
 
-    // --- Validate required fields ---
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
-    }
-
-    // --- Fetch the booking ---
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        participants: {
-          select: { id: true, rosterId: true, role: true, paymentStatus: true },
-        },
-      },
-    });
-
-    if (!booking) {
-      return res.status(404).json({ error: 'Public event not found' });
-    }
-
-    if (booking.bookingType !== 'public_event') {
-      return res.status(400).json({ error: 'Booking is not a public event' });
-    }
-
-    if (booking.status !== 'pending') {
-      return res.status(400).json({ error: 'Event is not accepting registrations' });
-    }
-
-    // --- Check for duplicate registration ---
-    const alreadyRegistered = booking.participants.some(
-      (p) => p.rosterId === userId && p.role === 'participant',
-    );
-
-    if (alreadyRegistered) {
-      return res.status(409).json({ error: 'User is already registered for this event' });
-    }
-
-    // --- Fetch the roster manager's Connect account (booking host) ---
-    const hostRoster = await prisma.team.findUnique({
-      where: { id: booking.bookingHostId! },
-      select: { stripeAccountId: true },
-    });
-
-    if (!hostRoster?.stripeAccountId) {
-      return res.status(400).json({ error: 'Event host has not completed Stripe Connect onboarding' });
-    }
-
-    // --- Calculate escrow amount in cents ---
-    const escrowAmountCents = Math.round((booking.perPersonPrice ?? 0) * 100);
-
-    if (escrowAmountCents <= 0) {
-      return res.status(400).json({ error: 'Invalid per-person price for this event' });
-    }
-
-    const platformFee = calculatePlatformFee(escrowAmountCents);
-    const idempotencyKey = generateIdempotencyKey(bookingId, `${userId}:register`, IdempotencyAction.CREATE);
-
-    // --- Create participant and PaymentIntent atomically ---
-    const participant = await prisma.$transaction(async (tx) => {
-      const bp = await tx.bookingParticipant.create({
-        data: {
-          bookingId,
-          rosterId: userId,
-          role: 'participant',
-          escrowAmount: escrowAmountCents,
-          paymentStatus: 'pending',
+      // --- Fetch the booking ---
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          participants: {
+            select: {
+              id: true,
+              rosterId: true,
+              role: true,
+              paymentStatus: true,
+            },
+          },
         },
       });
 
-      return bp;
-    });
+      if (!booking) {
+        return res.status(404).json({ error: 'Public event not found' });
+      }
 
-    // --- Create Stripe PaymentIntent with manual capture ---
-    const intent = await stripe.paymentIntents.create(
-      {
-        amount: escrowAmountCents,
-        currency: 'usd',
-        capture_method: 'manual',
-        application_fee_amount: platformFee,
-        transfer_data: {
-          destination: hostRoster.stripeAccountId,
+      if (booking.bookingType !== 'public_event') {
+        return res.status(400).json({ error: 'Booking is not a public event' });
+      }
+
+      if (booking.status !== 'pending') {
+        return res
+          .status(400)
+          .json({ error: 'Event is not accepting registrations' });
+      }
+
+      // --- Check for duplicate registration ---
+      const alreadyRegistered = booking.participants.some(
+        p => p.rosterId === userId && p.role === 'participant'
+      );
+
+      if (alreadyRegistered) {
+        return res
+          .status(409)
+          .json({ error: 'User is already registered for this event' });
+      }
+
+      // --- Fetch the roster manager's Connect account (booking host) ---
+      const hostRoster = await prisma.team.findUnique({
+        where: { id: booking.bookingHostId! },
+        select: { stripeAccountId: true },
+      });
+
+      if (!hostRoster?.stripeAccountId) {
+        return res.status(400).json({
+          error: 'Event host has not completed Stripe Connect onboarding',
+        });
+      }
+
+      // --- Calculate escrow amount in cents ---
+      const escrowAmountCents = Math.round((booking.perPersonPrice ?? 0) * 100);
+
+      if (escrowAmountCents <= 0) {
+        return res
+          .status(400)
+          .json({ error: 'Invalid per-person price for this event' });
+      }
+
+      const platformFee = calculatePlatformFee(escrowAmountCents);
+      const idempotencyKey = generateIdempotencyKey(
+        bookingId,
+        `${userId}:register`,
+        IdempotencyAction.CREATE
+      );
+
+      // --- Create participant and PaymentIntent atomically ---
+      const participant = await prisma.$transaction(async tx => {
+        const bp = await tx.bookingParticipant.create({
+          data: {
+            bookingId,
+            rosterId: userId,
+            role: 'participant',
+            escrowAmount: escrowAmountCents,
+            paymentStatus: 'pending',
+          },
+        });
+
+        return bp;
+      });
+
+      // --- Create Stripe PaymentIntent with manual capture ---
+      const intent = await stripe.paymentIntents.create(
+        {
+          amount: escrowAmountCents,
+          currency: 'usd',
+          capture_method: 'manual',
+          application_fee_amount: platformFee,
+          transfer_data: {
+            destination: hostRoster.stripeAccountId,
+          },
+          transfer_group: bookingId,
+          metadata: {
+            booking_id: bookingId,
+            participant_role: 'participant',
+            participant_id: participant.id,
+            user_id: userId,
+          },
         },
-        transfer_group: bookingId,
-        metadata: {
-          booking_id: bookingId,
-          participant_role: 'participant',
-          participant_id: participant.id,
-          user_id: userId,
-        },
-      },
-      {
-        idempotencyKey,
-      },
-    );
+        {
+          idempotencyKey,
+        }
+      );
 
-    // --- Update participant with PaymentIntent ID ---
-    await prisma.bookingParticipant.update({
-      where: { id: participant.id },
-      data: {
-        stripePaymentIntentId: intent.id,
-        paymentStatus: 'authorized',
-      },
-    });
-
-    // --- Check if minimum attendee count is now reached and auto-trigger capture ---
-    let escrowCaptured = false;
-    const minAttendees = booking.minAttendeeCount ?? 0;
-
-    if (minAttendees > 0) {
-      const authorizedCount = await prisma.bookingParticipant.count({
-        where: {
-          bookingId,
-          role: 'participant',
+      // --- Update participant with PaymentIntent ID ---
+      await prisma.bookingParticipant.update({
+        where: { id: participant.id },
+        data: {
+          stripePaymentIntentId: intent.id,
           paymentStatus: 'authorized',
         },
       });
 
-      if (authorizedCount >= minAttendees && booking.status === 'pending') {
-        try {
-          await capturePublicEventEscrow(bookingId as string);
-          escrowCaptured = true;
-        } catch (captureError) {
-          // Log but don't fail the registration — the attendee is registered,
-          // capture can be retried later (e.g. by the cutoff job or manually)
-          console.error('Auto-capture failed after registration:', captureError);
+      // --- Check if minimum attendee count is now reached and auto-trigger capture ---
+      let escrowCaptured = false;
+      const minAttendees = booking.minAttendeeCount ?? 0;
+
+      if (minAttendees > 0) {
+        const authorizedCount = await prisma.bookingParticipant.count({
+          where: {
+            bookingId,
+            role: 'participant',
+            paymentStatus: 'authorized',
+          },
+        });
+
+        if (authorizedCount >= minAttendees && booking.status === 'pending') {
+          try {
+            await capturePublicEventEscrow(bookingId as string);
+            escrowCaptured = true;
+          } catch (captureError) {
+            // Log but don't fail the registration — the attendee is registered,
+            // capture can be retried later (e.g. by the cutoff job or manually)
+            console.error(
+              'Auto-capture failed after registration:',
+              captureError
+            );
+          }
         }
       }
-    }
 
-    res.status(201).json({
-      participantId: participant.id,
-      clientSecret: intent.client_secret,
-      escrowAmount: escrowAmountCents,
-      currency: 'usd',
-      escrowCaptured,
-    });
-  } catch (error) {
-    console.error('Error registering for public event:', error);
-    res.status(500).json({ error: 'Failed to register for public event' });
+      res.status(201).json({
+        participantId: participant.id,
+        clientSecret: intent.client_secret,
+        escrowAmount: escrowAmountCents,
+        currency: 'usd',
+        escrowCaptured,
+      });
+    } catch (error) {
+      console.error('Error registering for public event:', error);
+      res.status(500).json({ error: 'Failed to register for public event' });
+    }
   }
-});
+);
 
 /**
  * POST /api/public-events/:bookingId/facility-cancel
@@ -489,48 +547,58 @@ router.post('/:bookingId/register', async (req: Request, res: Response) => {
  * Body:
  *   - facilityId: string — ID of the facility (used to verify the caller is the facility operator)
  */
-router.post('/:bookingId/facility-cancel', async (req: Request, res: Response) => {
-  try {
-    const { bookingId } = req.params as { bookingId: string };
-    const { facilityId } = req.body;
+router.post(
+  '/:bookingId/facility-cancel',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { bookingId } = req.params as { bookingId: string };
+      const { facilityId } = req.body;
 
-    if (!facilityId) {
-      return res.status(400).json({ error: 'Missing required field: facilityId' });
+      if (!facilityId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: facilityId' });
+      }
+
+      // Verify the booking exists and belongs to this facility
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: {
+          id: true,
+          bookingType: true,
+          status: true,
+          facilityId: true,
+        },
+      });
+
+      if (!booking) {
+        return res.status(404).json({ error: 'Public event not found' });
+      }
+
+      if (booking.bookingType !== 'public_event') {
+        return res.status(400).json({ error: 'Booking is not a public event' });
+      }
+
+      if (booking.facilityId !== facilityId) {
+        return res
+          .status(403)
+          .json({ error: 'Facility does not own this event' });
+      }
+
+      await facilityCancelPublicEvent(bookingId);
+
+      res.json({
+        message: 'Public event cancelled. All attendees have been refunded.',
+      });
+    } catch (error: any) {
+      if (error.message?.includes('already cancelled')) {
+        return res.status(409).json({ error: error.message });
+      }
+      console.error('Error cancelling public event:', error);
+      res.status(500).json({ error: 'Failed to cancel public event' });
     }
-
-    // Verify the booking exists and belongs to this facility
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      select: {
-        id: true,
-        bookingType: true,
-        status: true,
-        facilityId: true,
-      },
-    });
-
-    if (!booking) {
-      return res.status(404).json({ error: 'Public event not found' });
-    }
-
-    if (booking.bookingType !== 'public_event') {
-      return res.status(400).json({ error: 'Booking is not a public event' });
-    }
-
-    if (booking.facilityId !== facilityId) {
-      return res.status(403).json({ error: 'Facility does not own this event' });
-    }
-
-    await facilityCancelPublicEvent(bookingId);
-
-    res.json({ message: 'Public event cancelled. All attendees have been refunded.' });
-  } catch (error: any) {
-    if (error.message?.includes('already cancelled')) {
-      return res.status(409).json({ error: error.message });
-    }
-    console.error('Error cancelling public event:', error);
-    res.status(500).json({ error: 'Failed to cancel public event' });
   }
-});
+);
 
 export default router;

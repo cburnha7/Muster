@@ -51,9 +51,9 @@ export const authMiddleware = (
 };
 
 /**
- * Optional auth middleware — tries JWT first, falls back to X-User-Id header.
- * Used on read endpoints where auth is helpful but not required,
- * and on endpoints that need backward compatibility during token refresh.
+ * Optional auth middleware — tries JWT only. No header fallbacks.
+ * If a valid JWT is present, req.user is set. Otherwise req.user is undefined.
+ * Used on read endpoints where auth is helpful but not required.
  */
 export const optionalAuthMiddleware = (
   req: Request,
@@ -62,7 +62,6 @@ export const optionalAuthMiddleware = (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-    const xUserId = req.headers['x-user-id'] as string | undefined;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
@@ -72,6 +71,8 @@ export const optionalAuthMiddleware = (
         token.startsWith('mock_token_') &&
         process.env.NODE_ENV === 'development'
       ) {
+        // In dev mode with mock tokens, allow X-User-Id for testing convenience
+        const xUserId = req.headers['x-user-id'] as string | undefined;
         if (xUserId) {
           req.user = { userId: xUserId };
         }
@@ -83,18 +84,31 @@ export const optionalAuthMiddleware = (
       return next();
     }
 
-    // Fallback to X-User-Id header (for backward compat during token refresh)
-    if (xUserId) {
-      req.user = { userId: xUserId };
-    }
-
+    // No auth header — proceed without user context
     next();
   } catch (error) {
-    // JWT verification failed — try X-User-Id as last resort
-    const xUserId = req.headers['x-user-id'] as string | undefined;
-    if (xUserId) {
-      req.user = { userId: xUserId };
-    }
+    // JWT verification failed — proceed without user context
     next();
   }
 };
+
+/**
+ * Helper to resolve the authenticated user ID from the request.
+ * Returns undefined if not authenticated. Never reads from headers or body.
+ */
+export function getAuthUserId(req: Request): string | undefined {
+  return req.user?.userId;
+}
+
+/**
+ * Helper to require authenticated user ID — returns 401 if not present.
+ * Use in route handlers after authMiddleware or optionalAuthMiddleware.
+ */
+export function requireAuthUserId(req: Request, res: Response): string | null {
+  const userId = req.user?.userId;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required' });
+    return null;
+  }
+  return userId;
+}

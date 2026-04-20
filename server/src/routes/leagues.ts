@@ -55,18 +55,21 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/leagues/:id/deletion-preview
-router.get('/:id/deletion-preview', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const userId =
-      (req.query.userId as string) || (req.headers['x-user-id'] as string);
-    const preview = await LeagueCrudService.getDeletionPreview(id, userId);
-    res.json(preview);
-  } catch (error: any) {
-    console.error('Error generating deletion preview:', error);
-    sendError(res, error);
+router.get(
+  '/:id/deletion-preview',
+  optionalAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const userId = req.user?.userId || (req.query.userId as string);
+      const preview = await LeagueCrudService.getDeletionPreview(id, userId);
+      res.json(preview);
+    } catch (error: any) {
+      console.error('Error generating deletion preview:', error);
+      sendError(res, error);
+    }
   }
-});
+);
 
 // GET /api/leagues/:id
 router.get('/:id', async (req: Request, res: Response) => {
@@ -88,10 +91,7 @@ router.post(
   requirePlan('league'),
   async (req: Request, res: Response) => {
     try {
-      const authenticatedUserId =
-        req.user?.userId ||
-        (req.headers['x-user-id'] as string | undefined) ||
-        req.body.organizerId;
+      const authenticatedUserId = req.user!.userId;
       const league = await LeagueCrudService.createLeague(
         req.body,
         authenticatedUserId
@@ -105,7 +105,7 @@ router.post(
 );
 
 // PUT /api/leagues/:id
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
     const league = await LeagueCrudService.updateLeague(id, req.body);
@@ -119,6 +119,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 // DELETE /api/leagues/:id
 router.delete(
   '/:id',
+  authMiddleware,
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {
@@ -138,20 +139,24 @@ router.delete(
 // ============================================================================
 
 // POST /api/leagues/:id/join
-router.post('/:id/join', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const effectiveRosterId = req.body.rosterId || req.body.teamId;
-    const membership = await LeagueMembershipService.joinLeague(
-      id,
-      effectiveRosterId
-    );
-    res.status(201).json(membership);
-  } catch (error: any) {
-    console.error('Error joining league:', error);
-    sendError(res, error);
+router.post(
+  '/:id/join',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const effectiveRosterId = req.body.rosterId || req.body.teamId;
+      const membership = await LeagueMembershipService.joinLeague(
+        id,
+        effectiveRosterId
+      );
+      res.status(201).json(membership);
+    } catch (error: any) {
+      console.error('Error joining league:', error);
+      sendError(res, error);
+    }
   }
-});
+);
 
 // GET /api/leagues/:id/join-requests
 router.get('/:id/join-requests', async (req: Request, res: Response) => {
@@ -172,6 +177,7 @@ router.get('/:id/join-requests', async (req: Request, res: Response) => {
 // PUT /api/leagues/:id/join-requests/:requestId
 router.put(
   '/:id/join-requests/:requestId',
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { id, requestId } = req.params as {
@@ -194,25 +200,30 @@ router.put(
 );
 
 // POST /api/leagues/:id/invite-roster
-router.post('/:id/invite-roster', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { rosterId, userId } = req.body;
-    const membership = await LeagueMembershipService.inviteRoster(
-      id,
-      rosterId,
-      userId
-    );
-    res.status(201).json(membership);
-  } catch (error: any) {
-    console.error('Error inviting roster:', error);
-    sendError(res, error);
+router.post(
+  '/:id/invite-roster',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const { rosterId, userId } = req.body;
+      const membership = await LeagueMembershipService.inviteRoster(
+        id,
+        rosterId,
+        userId
+      );
+      res.status(201).json(membership);
+    } catch (error: any) {
+      console.error('Error inviting roster:', error);
+      sendError(res, error);
+    }
   }
-});
+);
 
 // PUT /api/leagues/:id/invitations/:invitationId
 router.put(
   '/:id/invitations/:invitationId',
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { id, invitationId } = req.params as {
@@ -235,17 +246,21 @@ router.put(
 );
 
 // POST /api/leagues/:id/leave
-router.post('/:id/leave', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { teamId, userId } = req.body;
-    await LeagueMembershipService.leaveLeague(id, teamId, userId);
-    res.status(204).send();
-  } catch (error: any) {
-    console.error('Error leaving league:', error);
-    sendError(res, error);
+router.post(
+  '/:id/leave',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const { teamId, userId } = req.body;
+      await LeagueMembershipService.leaveLeague(id, teamId, userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error leaving league:', error);
+      sendError(res, error);
+    }
   }
-});
+);
 
 // GET /api/leagues/:id/members
 router.get('/:id/members', async (req: Request, res: Response) => {
@@ -266,6 +281,7 @@ router.get('/:id/members', async (req: Request, res: Response) => {
 // DELETE /api/leagues/:leagueId/memberships/:membershipId
 router.delete(
   '/:leagueId/memberships/:membershipId',
+  authMiddleware,
   async (req: Request, res: Response) => {
     try {
       const { leagueId, membershipId } = req.params as {
@@ -551,102 +567,159 @@ router.get('/:id/events', async (req: Request, res: Response) => {
 });
 
 // POST /api/leagues/:id/events
-router.post('/:id/events', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const {
-      title,
-      description,
-      startTime,
-      endTime,
-      facilityId,
-      rosterIds,
-      userId,
-    } = req.body;
+router.post(
+  '/:id/events',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const {
+        title,
+        description,
+        startTime,
+        endTime,
+        facilityId,
+        rosterIds,
+        userId,
+      } = req.body;
 
-    if (!title || !startTime || !endTime || !userId) {
-      return res.status(400).json({
-        error: 'Missing required fields: title, startTime, endTime, userId',
-      });
-    }
-
-    const league = await prisma.league.findUnique({
-      where: { id },
-      select: { id: true, sportType: true, organizerId: true },
-    });
-
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
-
-    if (league.organizerId !== userId) {
-      return res.status(403).json({
-        error: 'Only the league owner or admins can perform this action',
-      });
-    }
-
-    const eventStartTime = new Date(startTime);
-    const eventEndTime = new Date(endTime);
-
-    if (rosterIds && rosterIds.length > 0) {
-      if (rosterIds.length < 2) {
-        return res
-          .status(400)
-          .json({ error: 'League events require at least 2 rosters' });
+      if (!title || !startTime || !endTime || !userId) {
+        return res.status(400).json({
+          error: 'Missing required fields: title, startTime, endTime, userId',
+        });
       }
 
-      const overlappingEvents = await prisma.event.findMany({
-        where: {
-          eligibilityRestrictedToLeagues: { has: id },
-          status: 'active',
-          startTime: { lt: eventEndTime },
-          endTime: { gt: eventStartTime },
-        },
-        select: {
-          id: true,
-          title: true,
-          startTime: true,
-          endTime: true,
-          eligibilityRestrictedToTeams: true,
-        },
+      const league = await prisma.league.findUnique({
+        where: { id },
+        select: { id: true, sportType: true, organizerId: true },
       });
 
-      const conflicts: Array<{
-        rosterId: string;
-        rosterName: string;
-        conflictingEventId: string;
-        conflictingEventTitle: string;
-        startTime: Date;
-        endTime: Date;
-      }> = [];
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
 
-      const fetchedRosters = await prisma.team.findMany({
-        where: { id: { in: rosterIds } },
-        select: { id: true, name: true },
-      });
-      const rosterNameMap = new Map(fetchedRosters.map(r => [r.id, r.name]));
+      if (league.organizerId !== userId) {
+        return res.status(403).json({
+          error: 'Only the league owner or admins can perform this action',
+        });
+      }
 
-      for (const event of overlappingEvents) {
-        for (const rosterId of rosterIds) {
-          if (event.eligibilityRestrictedToTeams.includes(rosterId)) {
-            conflicts.push({
-              rosterId,
-              rosterName: rosterNameMap.get(rosterId) || 'Unknown Roster',
-              conflictingEventId: event.id,
-              conflictingEventTitle: event.title,
-              startTime: event.startTime,
-              endTime: event.endTime,
-            });
+      const eventStartTime = new Date(startTime);
+      const eventEndTime = new Date(endTime);
+
+      if (rosterIds && rosterIds.length > 0) {
+        if (rosterIds.length < 2) {
+          return res
+            .status(400)
+            .json({ error: 'League events require at least 2 rosters' });
+        }
+
+        const overlappingEvents = await prisma.event.findMany({
+          where: {
+            eligibilityRestrictedToLeagues: { has: id },
+            status: 'active',
+            startTime: { lt: eventEndTime },
+            endTime: { gt: eventStartTime },
+          },
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            endTime: true,
+            eligibilityRestrictedToTeams: true,
+          },
+        });
+
+        const conflicts: Array<{
+          rosterId: string;
+          rosterName: string;
+          conflictingEventId: string;
+          conflictingEventTitle: string;
+          startTime: Date;
+          endTime: Date;
+        }> = [];
+
+        const fetchedRosters = await prisma.team.findMany({
+          where: { id: { in: rosterIds } },
+          select: { id: true, name: true },
+        });
+        const rosterNameMap = new Map(fetchedRosters.map(r => [r.id, r.name]));
+
+        for (const event of overlappingEvents) {
+          for (const rosterId of rosterIds) {
+            if (event.eligibilityRestrictedToTeams.includes(rosterId)) {
+              conflicts.push({
+                rosterId,
+                rosterName: rosterNameMap.get(rosterId) || 'Unknown Roster',
+                conflictingEventId: event.id,
+                conflictingEventTitle: event.title,
+                startTime: event.startTime,
+                endTime: event.endTime,
+              });
+            }
           }
         }
+
+        if (conflicts.length > 0) {
+          return res
+            .status(409)
+            .json({ error: 'Scheduling conflict', conflicts });
+        }
+
+        const event = await prisma.event.create({
+          data: {
+            title,
+            description: description || '',
+            sportType: league.sportType,
+            skillLevel: 'all',
+            eventType: 'game',
+            startTime: eventStartTime,
+            endTime: eventEndTime,
+            maxParticipants: 100,
+            organizerId: userId,
+            ...(facilityId && { facilityId }),
+            eligibilityRestrictedToLeagues: [id],
+            eligibilityRestrictedToTeams: rosterIds,
+          },
+          include: {
+            facility: {
+              select: {
+                id: true,
+                name: true,
+                street: true,
+                city: true,
+                state: true,
+              },
+            },
+            organizer: {
+              select: { id: true, firstName: true, lastName: true },
+            },
+          },
+        });
+
+        const responseEvent = {
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          sportType: event.sportType,
+          startTime: event.startTime,
+          endTime: event.endTime,
+          maxParticipants: event.maxParticipants,
+          currentParticipants: event.currentParticipants,
+          facility: event.facility,
+          organizer: event.organizer,
+          assignedRosters: rosterIds.map((rid: string) => ({
+            id: rid,
+            name: rosterNameMap.get(rid) || 'Unknown Roster',
+          })),
+        };
+
+        NotificationService.notifyEventRosterAssignment(id, title, rosterIds);
+
+        return res.status(201).json(responseEvent);
       }
 
-      if (conflicts.length > 0) {
-        return res
-          .status(409)
-          .json({ error: 'Scheduling conflict', conflicts });
-      }
-
+      // No roster assignment — create open event
       const event = await prisma.event.create({
         data: {
           title,
@@ -660,7 +733,7 @@ router.post('/:id/events', async (req: Request, res: Response) => {
           organizerId: userId,
           ...(facilityId && { facilityId }),
           eligibilityRestrictedToLeagues: [id],
-          eligibilityRestrictedToTeams: rosterIds,
+          eligibilityRestrictedToTeams: [],
         },
         include: {
           facility: {
@@ -689,69 +762,16 @@ router.post('/:id/events', async (req: Request, res: Response) => {
         currentParticipants: event.currentParticipants,
         facility: event.facility,
         organizer: event.organizer,
-        assignedRosters: rosterIds.map((rid: string) => ({
-          id: rid,
-          name: rosterNameMap.get(rid) || 'Unknown Roster',
-        })),
+        assignedRosters: [],
       };
 
-      NotificationService.notifyEventRosterAssignment(id, title, rosterIds);
-
       return res.status(201).json(responseEvent);
+    } catch (error) {
+      console.error('Error creating league event:', error);
+      res.status(500).json({ error: 'Failed to create league event' });
     }
-
-    // No roster assignment — create open event
-    const event = await prisma.event.create({
-      data: {
-        title,
-        description: description || '',
-        sportType: league.sportType,
-        skillLevel: 'all',
-        eventType: 'game',
-        startTime: eventStartTime,
-        endTime: eventEndTime,
-        maxParticipants: 100,
-        organizerId: userId,
-        ...(facilityId && { facilityId }),
-        eligibilityRestrictedToLeagues: [id],
-        eligibilityRestrictedToTeams: [],
-      },
-      include: {
-        facility: {
-          select: {
-            id: true,
-            name: true,
-            street: true,
-            city: true,
-            state: true,
-          },
-        },
-        organizer: {
-          select: { id: true, firstName: true, lastName: true },
-        },
-      },
-    });
-
-    const responseEvent = {
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      sportType: event.sportType,
-      startTime: event.startTime,
-      endTime: event.endTime,
-      maxParticipants: event.maxParticipants,
-      currentParticipants: event.currentParticipants,
-      facility: event.facility,
-      organizer: event.organizer,
-      assignedRosters: [],
-    };
-
-    return res.status(201).json(responseEvent);
-  } catch (error) {
-    console.error('Error creating league event:', error);
-    res.status(500).json({ error: 'Failed to create league event' });
   }
-});
+);
 
 // ============================================================================
 // COMMISSIONER TEAM MANAGEMENT (kept inline)
@@ -765,12 +785,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const { id: leagueId } = req.params as { id: string };
-      const userId =
-        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
+      const userId = req.user!.userId;
 
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
@@ -948,12 +963,7 @@ router.post(
         id: string;
         teamId: string;
       };
-      const userId =
-        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
+      const userId = req.user!.userId;
 
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
@@ -1067,12 +1077,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const { id: leagueId } = req.params as { id: string };
-      const userId =
-        req.user?.userId || (req.headers['x-user-id'] as string | undefined);
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
+      const userId = req.user!.userId;
 
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
@@ -1803,20 +1808,13 @@ router.get('/:id/ledger', async (req: Request, res: Response) => {
 // Upload league cover image
 router.post(
   '/:id/cover',
+  authMiddleware,
   uploadCover.single('image'),
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params as { id: string };
       const file = req.file;
-      const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-
-      if (!userId) {
-        if (file?.path) {
-          const fs = require('fs');
-          fs.unlinkSync(file.path);
-        }
-        return res.status(401).json({ error: 'Authentication required' });
-      }
+      const userId = req.user!.userId;
 
       const validation = validateImageFile(file as Express.Multer.File);
       if (!validation.valid) {
@@ -1895,48 +1893,48 @@ router.post(
 );
 
 // Delete league cover image
-router.delete('/:id/cover', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
+router.delete(
+  '/:id/cover',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const userId = req.user!.userId;
 
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+      const league = await prisma.league.findUnique({
+        where: { id },
+        select: { id: true, organizerId: true, imageUrl: true },
+      });
 
-    const league = await prisma.league.findUnique({
-      where: { id },
-      select: { id: true, organizerId: true, imageUrl: true },
-    });
+      if (!league) {
+        return res.status(404).json({ error: 'League not found' });
+      }
 
-    if (!league) {
-      return res.status(404).json({ error: 'League not found' });
-    }
+      if (league.organizerId !== userId) {
+        return res.status(403).json({
+          error: 'Only the league organizer can delete the cover image',
+        });
+      }
 
-    if (league.organizerId !== userId) {
-      return res.status(403).json({
-        error: 'Only the league organizer can delete the cover image',
+      if (!league.imageUrl) {
+        return res.status(404).json({ error: 'No cover image to delete' });
+      }
+
+      await deleteImageFiles(league.imageUrl);
+
+      await prisma.league.update({
+        where: { id },
+        data: { imageUrl: null },
+      });
+
+      res.status(200).json({ message: 'Cover image deleted' });
+    } catch (error: any) {
+      console.error('Delete league cover image error:', error);
+      res.status(500).json({
+        error: error.message || 'Failed to delete cover image',
       });
     }
-
-    if (!league.imageUrl) {
-      return res.status(404).json({ error: 'No cover image to delete' });
-    }
-
-    await deleteImageFiles(league.imageUrl);
-
-    await prisma.league.update({
-      where: { id },
-      data: { imageUrl: null },
-    });
-
-    res.status(200).json({ message: 'Cover image deleted' });
-  } catch (error: any) {
-    console.error('Delete league cover image error:', error);
-    res.status(500).json({
-      error: error.message || 'Failed to delete cover image',
-    });
   }
-});
+);
 
 export default router;

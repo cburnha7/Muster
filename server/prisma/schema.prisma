@@ -859,6 +859,7 @@ model FacilityTimeSlot {
   @@index([courtId])
   @@index([date])
   @@index([status])
+  @@index([courtId, status, date])
   @@map("facility_time_slots")
 }
 
@@ -921,6 +922,7 @@ model FacilityRental {
   @@index([usedForEventId])
   @@index([bookingSessionId])
   @@index([recurringGroupId])
+  @@index([userId, status, usedForEventId])
   @@map("facility_rentals")
 }
 

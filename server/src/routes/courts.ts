@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
 import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -136,191 +137,203 @@ router.get('/facilities/:facilityId/courts/:courtId', async (req, res) => {
 });
 
 // Create new court
-router.post('/facilities/:facilityId/courts', async (req, res) => {
-  try {
-    const { facilityId } = req.params;
-    const {
-      name,
-      sportType,
-      capacity,
-      isIndoor,
-      boundaryCoordinates,
-      pricePerHour,
-      displayOrder,
-    } = req.body;
-
-    // TODO: Add authorization check - only facility owner can create courts
-    // For now, verify facility exists
-    const facility = await prisma.facility.findUnique({
-      where: { id: facilityId },
-    });
-
-    if (!facility) {
-      return res.status(404).json({ error: 'Facility not found' });
-    }
-
-    // Validate required fields
-    if (!name || !sportType) {
-      return res
-        .status(400)
-        .json({ error: 'Name and sport type are required' });
-    }
-
-    // Check for duplicate court name within facility
-    const existingCourt = await prisma.facilityCourt.findFirst({
-      where: {
-        facilityId,
-        name,
-      },
-    });
-
-    if (existingCourt) {
-      return res
-        .status(400)
-        .json({ error: 'Court with this name already exists' });
-    }
-
-    const court = await prisma.facilityCourt.create({
-      data: {
-        facilityId,
+router.post(
+  '/facilities/:facilityId/courts',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { facilityId } = req.params;
+      const {
         name,
         sportType,
-        capacity: capacity || 1,
-        isIndoor: isIndoor || false,
-        boundaryCoordinates: boundaryCoordinates || null,
-        pricePerHour: pricePerHour || null,
-        displayOrder: displayOrder || 0,
-      },
-    });
+        capacity,
+        isIndoor,
+        boundaryCoordinates,
+        pricePerHour,
+        displayOrder,
+      } = req.body;
 
-    // Queue async slot generation (non-blocking)
-    console.log(`🕐 Queueing slot generation for court: ${court.name}`);
-    queueSlotGeneration(court.id).catch(error => {
-      console.error('Async slot generation queue error:', error);
-    });
+      // TODO: Add authorization check - only facility owner can create courts
+      // For now, verify facility exists
+      const facility = await prisma.facility.findUnique({
+        where: { id: facilityId },
+      });
 
-    // Return immediately with court data
-    res.status(201).json(court);
-  } catch (error) {
-    console.error('Create court error:', error);
-    res.status(500).json({ error: 'Failed to create court' });
-  }
-});
+      if (!facility) {
+        return res.status(404).json({ error: 'Facility not found' });
+      }
 
-// Update court
-router.put('/facilities/:facilityId/courts/:courtId', async (req, res) => {
-  try {
-    const { facilityId, courtId } = req.params;
-    const {
-      name,
-      sportType,
-      capacity,
-      isIndoor,
-      isActive,
-      boundaryCoordinates,
-      pricePerHour,
-      displayOrder,
-    } = req.body;
+      // Validate required fields
+      if (!name || !sportType) {
+        return res
+          .status(400)
+          .json({ error: 'Name and sport type are required' });
+      }
 
-    // TODO: Add authorization check - only facility owner can update courts
-
-    // Verify court exists and belongs to facility
-    const existingCourt = await prisma.facilityCourt.findFirst({
-      where: {
-        id: courtId,
-        facilityId,
-      },
-    });
-
-    if (!existingCourt) {
-      return res.status(404).json({ error: 'Court not found' });
-    }
-
-    // If name is being changed, check for duplicates
-    if (name && name !== existingCourt.name) {
-      const duplicateCourt = await prisma.facilityCourt.findFirst({
+      // Check for duplicate court name within facility
+      const existingCourt = await prisma.facilityCourt.findFirst({
         where: {
           facilityId,
           name,
-          id: { not: courtId },
         },
       });
 
-      if (duplicateCourt) {
+      if (existingCourt) {
         return res
           .status(400)
           .json({ error: 'Court with this name already exists' });
       }
+
+      const court = await prisma.facilityCourt.create({
+        data: {
+          facilityId,
+          name,
+          sportType,
+          capacity: capacity || 1,
+          isIndoor: isIndoor || false,
+          boundaryCoordinates: boundaryCoordinates || null,
+          pricePerHour: pricePerHour || null,
+          displayOrder: displayOrder || 0,
+        },
+      });
+
+      // Queue async slot generation (non-blocking)
+      console.log(`🕐 Queueing slot generation for court: ${court.name}`);
+      queueSlotGeneration(court.id).catch(error => {
+        console.error('Async slot generation queue error:', error);
+      });
+
+      // Return immediately with court data
+      res.status(201).json(court);
+    } catch (error) {
+      console.error('Create court error:', error);
+      res.status(500).json({ error: 'Failed to create court' });
     }
-
-    const court = await prisma.facilityCourt.update({
-      where: { id: courtId },
-      data: {
-        ...(name && { name }),
-        ...(sportType && { sportType }),
-        ...(capacity !== undefined && { capacity }),
-        ...(isIndoor !== undefined && { isIndoor }),
-        ...(isActive !== undefined && { isActive }),
-        ...(boundaryCoordinates !== undefined && { boundaryCoordinates }),
-        ...(pricePerHour !== undefined && { pricePerHour }),
-        ...(displayOrder !== undefined && { displayOrder }),
-      },
-    });
-
-    res.json(court);
-  } catch (error) {
-    console.error('Update court error:', error);
-    res.status(500).json({ error: 'Failed to update court' });
   }
-});
+);
+
+// Update court
+router.put(
+  '/facilities/:facilityId/courts/:courtId',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { facilityId, courtId } = req.params;
+      const {
+        name,
+        sportType,
+        capacity,
+        isIndoor,
+        isActive,
+        boundaryCoordinates,
+        pricePerHour,
+        displayOrder,
+      } = req.body;
+
+      // TODO: Add authorization check - only facility owner can update courts
+
+      // Verify court exists and belongs to facility
+      const existingCourt = await prisma.facilityCourt.findFirst({
+        where: {
+          id: courtId,
+          facilityId,
+        },
+      });
+
+      if (!existingCourt) {
+        return res.status(404).json({ error: 'Court not found' });
+      }
+
+      // If name is being changed, check for duplicates
+      if (name && name !== existingCourt.name) {
+        const duplicateCourt = await prisma.facilityCourt.findFirst({
+          where: {
+            facilityId,
+            name,
+            id: { not: courtId },
+          },
+        });
+
+        if (duplicateCourt) {
+          return res
+            .status(400)
+            .json({ error: 'Court with this name already exists' });
+        }
+      }
+
+      const court = await prisma.facilityCourt.update({
+        where: { id: courtId },
+        data: {
+          ...(name && { name }),
+          ...(sportType && { sportType }),
+          ...(capacity !== undefined && { capacity }),
+          ...(isIndoor !== undefined && { isIndoor }),
+          ...(isActive !== undefined && { isActive }),
+          ...(boundaryCoordinates !== undefined && { boundaryCoordinates }),
+          ...(pricePerHour !== undefined && { pricePerHour }),
+          ...(displayOrder !== undefined && { displayOrder }),
+        },
+      });
+
+      res.json(court);
+    } catch (error) {
+      console.error('Update court error:', error);
+      res.status(500).json({ error: 'Failed to update court' });
+    }
+  }
+);
 
 // Delete court
-router.delete('/facilities/:facilityId/courts/:courtId', async (req, res) => {
-  try {
-    const { facilityId, courtId } = req.params;
+router.delete(
+  '/facilities/:facilityId/courts/:courtId',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { facilityId, courtId } = req.params;
 
-    // TODO: Add authorization check - only facility owner can delete courts
+      // TODO: Add authorization check - only facility owner can delete courts
 
-    // Verify court exists and belongs to facility
-    const court = await prisma.facilityCourt.findFirst({
-      where: {
-        id: courtId,
-        facilityId,
-      },
-    });
-
-    if (!court) {
-      return res.status(404).json({ error: 'Court not found' });
-    }
-
-    // Check if court has any future rentals
-    const futureRentals = await prisma.facilityRental.count({
-      where: {
-        timeSlot: {
-          courtId,
-          date: { gte: new Date() },
+      // Verify court exists and belongs to facility
+      const court = await prisma.facilityCourt.findFirst({
+        where: {
+          id: courtId,
+          facilityId,
         },
-        status: 'confirmed',
-      },
-    });
-
-    if (futureRentals > 0) {
-      return res.status(400).json({
-        error:
-          'Cannot delete court with future rentals. Cancel all rentals first.',
       });
+
+      if (!court) {
+        return res.status(404).json({ error: 'Court not found' });
+      }
+
+      // Check if court has any future rentals
+      const futureRentals = await prisma.facilityRental.count({
+        where: {
+          timeSlot: {
+            courtId,
+            date: { gte: new Date() },
+          },
+          status: 'confirmed',
+        },
+      });
+
+      if (futureRentals > 0) {
+        return res.status(400).json({
+          error:
+            'Cannot delete court with future rentals. Cancel all rentals first.',
+        });
+      }
+
+      await prisma.facilityCourt.delete({
+        where: { id: courtId },
+      });
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Delete court error:', error);
+      res.status(500).json({ error: 'Failed to delete court' });
     }
-
-    await prisma.facilityCourt.delete({
-      where: { id: courtId },
-    });
-
-    res.status(204).send();
-  } catch (error) {
-    console.error('Delete court error:', error);
-    res.status(500).json({ error: 'Failed to delete court' });
   }
-});
+);
 
 // ── On-demand schedule: compute availability from operating hours + rentals ──
 router.get(
@@ -541,6 +554,7 @@ router.get(
 // Block time slot(s)
 router.post(
   '/facilities/:facilityId/courts/:courtId/slots/block',
+  authMiddleware,
   async (req, res) => {
     try {
       const { facilityId, courtId } = req.params;
@@ -615,6 +629,7 @@ router.post(
 // Unblock time slot
 router.delete(
   '/facilities/:facilityId/courts/:courtId/slots/:slotId/unblock',
+  authMiddleware,
   async (req, res) => {
     try {
       const { facilityId, courtId, slotId } = req.params;

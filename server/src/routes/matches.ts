@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import { NotificationService } from '../services/NotificationService';
 import { checkBalance } from '../services/balance';
 import { recordLeagueTransaction } from '../services/league-ledger';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -185,7 +186,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/matches - Create new match
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const {
       leagueId,
@@ -195,9 +196,9 @@ router.post('/', async (req: Request, res: Response) => {
       scheduledAt,
       eventId,
       notes,
-      userId,
       courtCost,
     } = req.body;
+    const userId = req.user!.userId;
 
     // Validate required fields
     if (!leagueId || !homeTeamId || !awayTeamId || !scheduledAt) {
@@ -339,10 +340,11 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // PUT /api/matches/:id - Update match
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const { scheduledAt, status, notes, userId } = req.body;
+    const { scheduledAt, status, notes } = req.body;
+    const userId = req.user!.userId;
 
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
@@ -404,10 +406,10 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/matches/:id - Delete match
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const { userId } = req.body;
+    const userId = req.user!.userId;
 
     // Check if match exists
     const existingMatch = await prisma.match.findUnique({
@@ -442,140 +444,143 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
 // PATCH /api/matches/:id/rental - Assign a facility rental to a match
 // Used by the home roster manager to link their confirmed rental to a free league game
-router.patch('/:id/rental', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { rentalId, userId } = req.body;
+router.patch(
+  '/:id/rental',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const { rentalId } = req.body;
+      const userId = req.user!.userId;
 
-    if (!rentalId) {
-      return res
-        .status(400)
-        .json({ error: 'Missing required field: rentalId' });
-    }
+      if (!rentalId) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required field: rentalId' });
+      }
 
-    // Fetch match with league info
-    const existingMatch = await prisma.match.findUnique({
-      where: { id },
-      include: {
-        league: {
-          select: {
-            id: true,
-            pricingType: true,
-            organizerId: true,
+      // Fetch match with league info
+      const existingMatch = await prisma.match.findUnique({
+        where: { id },
+        include: {
+          league: {
+            select: {
+              id: true,
+              pricingType: true,
+              organizerId: true,
+            },
           },
-        },
-        homeTeam: {
-          select: {
-            id: true,
-            members: {
-              where: { role: 'captain', status: 'active' },
-              select: { userId: true },
+          homeTeam: {
+            select: {
+              id: true,
+              members: {
+                where: { role: 'captain', status: 'active' },
+                select: { userId: true },
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!existingMatch) {
-      return res.status(404).json({ error: 'Match not found' });
-    }
+      if (!existingMatch) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
 
-    // Only the home roster manager can assign a rental in a free league
-    const homeManagerIds = existingMatch.homeTeam.members.map(m => m.userId);
-    const isHomeManager = userId && homeManagerIds.includes(userId);
-    const isCommissioner =
-      userId && existingMatch.league.organizerId === userId;
+      // Only the home roster manager can assign a rental in a free league
+      const homeManagerIds = existingMatch.homeTeam.members.map(m => m.userId);
+      const isHomeManager = userId && homeManagerIds.includes(userId);
+      const isCommissioner =
+        userId && existingMatch.league.organizerId === userId;
 
-    if (!isHomeManager && !isCommissioner) {
-      return res
-        .status(403)
-        .json({
+      if (!isHomeManager && !isCommissioner) {
+        return res.status(403).json({
           error:
             'Only the home roster manager or league commissioner can assign a rental to this game',
         });
-    }
+      }
 
-    // Verify the rental exists and belongs to the requesting user
-    const rental = await prisma.facilityRental.findUnique({
-      where: { id: rentalId },
-      select: {
-        id: true,
-        userId: true,
-        status: true,
-        totalPrice: true,
-        timeSlot: {
-          select: {
-            court: {
-              select: {
-                facility: {
-                  select: { id: true },
+      // Verify the rental exists and belongs to the requesting user
+      const rental = await prisma.facilityRental.findUnique({
+        where: { id: rentalId },
+        select: {
+          id: true,
+          userId: true,
+          status: true,
+          totalPrice: true,
+          timeSlot: {
+            select: {
+              court: {
+                select: {
+                  facility: {
+                    select: { id: true },
+                  },
                 },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!rental) {
-      return res.status(404).json({ error: 'Rental not found' });
-    }
+      if (!rental) {
+        return res.status(404).json({ error: 'Rental not found' });
+      }
 
-    if (rental.status !== 'confirmed') {
-      return res
-        .status(400)
-        .json({ error: 'Only confirmed rentals can be assigned to a game' });
-    }
+      if (rental.status !== 'confirmed') {
+        return res
+          .status(400)
+          .json({ error: 'Only confirmed rentals can be assigned to a game' });
+      }
 
-    // Branch on league pricing type:
-    // - Paid league: commissioner books facility, game is confirmed immediately (no away confirmation needed)
-    // - Free league: home manager books facility, away manager must confirm within 48h
-    const isPaidLeague = existingMatch.league.pricingType === 'paid';
+      // Branch on league pricing type:
+      // - Paid league: commissioner books facility, game is confirmed immediately (no away confirmation needed)
+      // - Free league: home manager books facility, away manager must confirm within 48h
+      const isPaidLeague = existingMatch.league.pricingType === 'paid';
 
-    const updateData: any = { rentalId };
+      const updateData: any = { rentalId };
 
-    if (isPaidLeague) {
-      // Paid league: confirm immediately — the league is paying, no away confirmation needed
-      updateData.status = 'confirmed';
-    } else {
-      // Free league: set to pending_away_confirm with 48h deadline
-      const confirmationDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
-      updateData.status = 'pending_away_confirm';
-      updateData.confirmationDeadline = confirmationDeadline;
-    }
+      if (isPaidLeague) {
+        // Paid league: confirm immediately — the league is paying, no away confirmation needed
+        updateData.status = 'confirmed';
+      } else {
+        // Free league: set to pending_away_confirm with 48h deadline
+        const confirmationDeadline = new Date(Date.now() + 48 * 60 * 60 * 1000);
+        updateData.status = 'pending_away_confirm';
+        updateData.confirmationDeadline = confirmationDeadline;
+      }
 
-    const match = await prisma.match.update({
-      where: { id },
-      data: updateData,
-      include: {
-        league: {
-          select: { id: true, name: true, sportType: true },
-        },
-        homeTeam: {
-          select: { id: true, name: true, imageUrl: true },
-        },
-        awayTeam: {
-          select: { id: true, name: true, imageUrl: true },
-        },
-        rental: {
-          select: {
-            id: true,
-            status: true,
-            totalPrice: true,
-            timeSlot: {
-              select: {
-                date: true,
-                startTime: true,
-                endTime: true,
-                court: {
-                  select: {
-                    name: true,
-                    facility: {
-                      select: {
-                        id: true,
-                        name: true,
-                        street: true,
-                        city: true,
+      const match = await prisma.match.update({
+        where: { id },
+        data: updateData,
+        include: {
+          league: {
+            select: { id: true, name: true, sportType: true },
+          },
+          homeTeam: {
+            select: { id: true, name: true, imageUrl: true },
+          },
+          awayTeam: {
+            select: { id: true, name: true, imageUrl: true },
+          },
+          rental: {
+            select: {
+              id: true,
+              status: true,
+              totalPrice: true,
+              timeSlot: {
+                select: {
+                  date: true,
+                  startTime: true,
+                  endTime: true,
+                  court: {
+                    select: {
+                      name: true,
+                      facility: {
+                        select: {
+                          id: true,
+                          name: true,
+                          street: true,
+                          city: true,
+                        },
                       },
                     },
                   },
@@ -584,454 +589,464 @@ router.patch('/:id/rental', async (req: Request, res: Response) => {
             },
           },
         },
-      },
-    });
+      });
 
-    // Record court cost in the league ledger for paid leagues
-    if (isPaidLeague && existingMatch.seasonId && rental) {
-      const courtCost = rental.totalPrice;
-      const facilityId = rental.timeSlot?.court?.facility?.id;
+      // Record court cost in the league ledger for paid leagues
+      if (isPaidLeague && existingMatch.seasonId && rental) {
+        const courtCost = rental.totalPrice;
+        const facilityId = rental.timeSlot?.court?.facility?.id;
 
-      recordLeagueTransaction({
-        leagueId: existingMatch.league.id,
-        seasonId: existingMatch.seasonId,
-        type: 'court_cost',
-        amount: -courtCost,
-        description: `Court cost for ${match.homeTeam.name} vs ${match.awayTeam.name}`,
-        facilityId: facilityId ?? undefined,
-        rentalId: rental.id,
-        matchId: id as string,
-      }).catch(err =>
-        console.error('Failed to record league ledger transaction:', err)
-      );
+        recordLeagueTransaction({
+          leagueId: existingMatch.league.id,
+          seasonId: existingMatch.seasonId,
+          type: 'court_cost',
+          amount: -courtCost,
+          description: `Court cost for ${match.homeTeam.name} vs ${match.awayTeam.name}`,
+          facilityId: facilityId ?? undefined,
+          rentalId: rental.id,
+          matchId: id as string,
+        }).catch(err =>
+          console.error('Failed to record league ledger transaction:', err)
+        );
+      }
+
+      // Only send away confirmation notification for free leagues
+      if (!isPaidLeague && match.rental?.timeSlot?.court) {
+        const { court } = match.rental.timeSlot;
+        const venueDetails = {
+          facilityName: court.facility.name,
+          courtName: court.name,
+          facilityAddress: `${court.facility.street}, ${court.facility.city}`,
+          date:
+            match.rental.timeSlot.date instanceof Date
+              ? match.rental.timeSlot.date.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              : String(match.rental.timeSlot.date),
+          startTime: match.rental.timeSlot.startTime,
+          endTime: match.rental.timeSlot.endTime,
+        };
+
+        const confirmationDeadline = updateData.confirmationDeadline;
+        NotificationService.notifyAwayManagerConfirmation(
+          match.id,
+          venueDetails,
+          confirmationDeadline
+        ).catch(err =>
+          console.error(
+            'Failed to send away manager confirmation notification:',
+            err
+          )
+        );
+      }
+
+      res.json(match);
+    } catch (error) {
+      console.error('Error assigning rental to match:', error);
+      res.status(500).json({ error: 'Failed to assign rental to match' });
     }
-
-    // Only send away confirmation notification for free leagues
-    if (!isPaidLeague && match.rental?.timeSlot?.court) {
-      const { court } = match.rental.timeSlot;
-      const venueDetails = {
-        facilityName: court.facility.name,
-        courtName: court.name,
-        facilityAddress: `${court.facility.street}, ${court.facility.city}`,
-        date:
-          match.rental.timeSlot.date instanceof Date
-            ? match.rental.timeSlot.date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })
-            : String(match.rental.timeSlot.date),
-        startTime: match.rental.timeSlot.startTime,
-        endTime: match.rental.timeSlot.endTime,
-      };
-
-      const confirmationDeadline = updateData.confirmationDeadline;
-      NotificationService.notifyAwayManagerConfirmation(
-        match.id,
-        venueDetails,
-        confirmationDeadline
-      ).catch(err =>
-        console.error(
-          'Failed to send away manager confirmation notification:',
-          err
-        )
-      );
-    }
-
-    res.json(match);
-  } catch (error) {
-    console.error('Error assigning rental to match:', error);
-    res.status(500).json({ error: 'Failed to assign rental to match' });
   }
-});
+);
 
 // PATCH /api/matches/:id/confirm - Away roster manager confirms a free league game
-router.patch('/:id/confirm', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { userId } = req.body;
+router.patch(
+  '/:id/confirm',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const userId = req.user!.userId;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required field: userId' });
-    }
-
-    // Fetch match with away roster members
-    const existingMatch = await prisma.match.findUnique({
-      where: { id },
-      include: {
-        awayTeam: {
-          select: {
-            id: true,
-            members: {
-              where: { role: 'captain', status: 'active' },
-              select: { userId: true },
+      // Fetch match with away roster members
+      const existingMatch = await prisma.match.findUnique({
+        where: { id },
+        include: {
+          awayTeam: {
+            select: {
+              id: true,
+              members: {
+                where: { role: 'captain', status: 'active' },
+                select: { userId: true },
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!existingMatch) {
-      return res.status(404).json({ error: 'Match not found' });
-    }
+      if (!existingMatch) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
 
-    // Match must be in pending_away_confirm status
-    if (existingMatch.status !== 'pending_away_confirm') {
-      return res
-        .status(400)
-        .json({ error: 'Match is not awaiting away roster confirmation' });
-    }
+      // Match must be in pending_away_confirm status
+      if (existingMatch.status !== 'pending_away_confirm') {
+        return res
+          .status(400)
+          .json({ error: 'Match is not awaiting away roster confirmation' });
+      }
 
-    // Verify the requesting user is the away roster manager (captain)
-    const awayManagerIds = existingMatch.awayTeam.members.map(
-      (m: { userId: string }) => m.userId
-    );
-    if (!awayManagerIds.includes(userId)) {
-      return res
-        .status(403)
-        .json({ error: 'Only the away roster manager can confirm this game' });
-    }
+      // Verify the requesting user is the away roster manager (captain)
+      const awayManagerIds = existingMatch.awayTeam.members.map(
+        (m: { userId: string }) => m.userId
+      );
+      if (!awayManagerIds.includes(userId)) {
+        return res.status(403).json({
+          error: 'Only the away roster manager can confirm this game',
+        });
+      }
 
-    // Verify the confirmation deadline hasn't passed
-    if (
-      existingMatch.confirmationDeadline &&
-      new Date() > existingMatch.confirmationDeadline
-    ) {
-      return res
-        .status(400)
-        .json({ error: 'Confirmation deadline has passed' });
-    }
+      // Verify the confirmation deadline hasn't passed
+      if (
+        existingMatch.confirmationDeadline &&
+        new Date() > existingMatch.confirmationDeadline
+      ) {
+        return res
+          .status(400)
+          .json({ error: 'Confirmation deadline has passed' });
+      }
 
-    // Update match status to confirmed
-    const match = await prisma.match.update({
-      where: { id },
-      data: {
-        status: 'confirmed',
-      },
-      include: {
-        league: {
-          select: { id: true, name: true, sportType: true },
+      // Update match status to confirmed
+      const match = await prisma.match.update({
+        where: { id },
+        data: {
+          status: 'confirmed',
         },
-        homeTeam: {
-          select: { id: true, name: true, imageUrl: true },
+        include: {
+          league: {
+            select: { id: true, name: true, sportType: true },
+          },
+          homeTeam: {
+            select: { id: true, name: true, imageUrl: true },
+          },
+          awayTeam: {
+            select: { id: true, name: true, imageUrl: true },
+          },
         },
-        awayTeam: {
-          select: { id: true, name: true, imageUrl: true },
-        },
-      },
-    });
+      });
 
-    res.json(match);
-  } catch (error) {
-    console.error('Error confirming match:', error);
-    res.status(500).json({ error: 'Failed to confirm match' });
+      res.json(match);
+    } catch (error) {
+      console.error('Error confirming match:', error);
+      res.status(500).json({ error: 'Failed to confirm match' });
+    }
   }
-});
+);
 
 export default router;
 
 // POST /api/matches/:id/result - Record match result
-router.post('/:id/result', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { homeScore, awayScore, userId } = req.body;
+router.post(
+  '/:id/result',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const { homeScore, awayScore } = req.body;
+      const userId = req.user!.userId;
 
-    // Validate required fields
-    if (homeScore === undefined || awayScore === undefined) {
-      return res
-        .status(400)
-        .json({ error: 'Missing required fields: homeScore, awayScore' });
-    }
+      // Validate required fields
+      if (homeScore === undefined || awayScore === undefined) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required fields: homeScore, awayScore' });
+      }
 
-    // Validate scores are non-negative
-    if (homeScore < 0 || awayScore < 0) {
-      return res.status(400).json({ error: 'Scores must be non-negative' });
-    }
+      // Validate scores are non-negative
+      if (homeScore < 0 || awayScore < 0) {
+        return res.status(400).json({ error: 'Scores must be non-negative' });
+      }
 
-    // Check if match exists
-    const existingMatch = await prisma.match.findUnique({
-      where: { id },
-      include: {
-        league: true,
-      },
-    });
-
-    if (!existingMatch) {
-      return res.status(404).json({ error: 'Match not found' });
-    }
-
-    // Check if user is league operator
-    if (userId && existingMatch.league.organizerId !== userId) {
-      return res
-        .status(403)
-        .json({ error: 'Only the league operator can record match results' });
-    }
-
-    // Calculate outcome
-    let outcome: string;
-    if (homeScore > awayScore) {
-      outcome = 'home_win';
-    } else if (homeScore < awayScore) {
-      outcome = 'away_win';
-    } else {
-      outcome = 'draw';
-    }
-
-    // Get points config from league
-    const pointsConfig = (existingMatch.league.pointsConfig ?? {}) as Record<
-      string,
-      number
-    >;
-    const winPoints = pointsConfig.win || 3;
-    const drawPoints = pointsConfig.draw || 1;
-    const lossPoints = pointsConfig.loss || 0;
-
-    // Update match
-    const match = await prisma.match.update({
-      where: { id },
-      data: {
-        homeScore,
-        awayScore,
-        outcome,
-        status: 'completed',
-        playedAt: new Date(),
-      },
-    });
-
-    // Lock league from deletion once a match is completed
-    if (existingMatch.leagueId) {
-      const { lockLeagueIfMatchPlayed } =
-        await import('../middleware/league-lock');
-      await lockLeagueIfMatchPlayed(
-        prisma,
-        existingMatch.leagueId,
-        'completed'
-      );
-    }
-
-    // Update home team membership stats
-    const homeMembership = await prisma.leagueMembership.findFirst({
-      where: {
-        leagueId: existingMatch.leagueId,
-        teamId: existingMatch.homeTeamId,
-        status: 'active',
-      },
-    });
-
-    if (homeMembership) {
-      await prisma.leagueMembership.update({
-        where: { id: homeMembership.id },
-        data: {
-          matchesPlayed: { increment: 1 },
-          wins: outcome === 'home_win' ? { increment: 1 } : homeMembership.wins,
-          losses:
-            outcome === 'away_win' ? { increment: 1 } : homeMembership.losses,
-          draws: outcome === 'draw' ? { increment: 1 } : homeMembership.draws,
-          points: {
-            increment:
-              outcome === 'home_win'
-                ? winPoints
-                : outcome === 'draw'
-                  ? drawPoints
-                  : lossPoints,
-          },
-          goalsFor: { increment: homeScore },
-          goalsAgainst: { increment: awayScore },
-          goalDifference: { increment: homeScore - awayScore },
+      // Check if match exists
+      const existingMatch = await prisma.match.findUnique({
+        where: { id },
+        include: {
+          league: true,
         },
       });
-    }
 
-    // Update away team membership stats
-    const awayMembership = await prisma.leagueMembership.findFirst({
-      where: {
-        leagueId: existingMatch.leagueId,
-        teamId: existingMatch.awayTeamId,
-        status: 'active',
-      },
-    });
+      if (!existingMatch) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
 
-    if (awayMembership) {
-      await prisma.leagueMembership.update({
-        where: { id: awayMembership.id },
+      // Check if user is league operator
+      if (userId && existingMatch.league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league operator can record match results' });
+      }
+
+      // Calculate outcome
+      let outcome: string;
+      if (homeScore > awayScore) {
+        outcome = 'home_win';
+      } else if (homeScore < awayScore) {
+        outcome = 'away_win';
+      } else {
+        outcome = 'draw';
+      }
+
+      // Get points config from league
+      const pointsConfig = (existingMatch.league.pointsConfig ?? {}) as Record<
+        string,
+        number
+      >;
+      const winPoints = pointsConfig.win || 3;
+      const drawPoints = pointsConfig.draw || 1;
+      const lossPoints = pointsConfig.loss || 0;
+
+      // Update match
+      const match = await prisma.match.update({
+        where: { id },
         data: {
-          matchesPlayed: { increment: 1 },
-          wins: outcome === 'away_win' ? { increment: 1 } : awayMembership.wins,
-          losses:
-            outcome === 'home_win' ? { increment: 1 } : awayMembership.losses,
-          draws: outcome === 'draw' ? { increment: 1 } : awayMembership.draws,
-          points: {
-            increment:
-              outcome === 'away_win'
-                ? winPoints
-                : outcome === 'draw'
-                  ? drawPoints
-                  : lossPoints,
-          },
-          goalsFor: { increment: awayScore },
-          goalsAgainst: { increment: homeScore },
-          goalDifference: { increment: awayScore - homeScore },
+          homeScore,
+          awayScore,
+          outcome,
+          status: 'completed',
+          playedAt: new Date(),
         },
       });
-    }
 
-    // TODO: Send notifications to participating teams
+      // Lock league from deletion once a match is completed
+      if (existingMatch.leagueId) {
+        const { lockLeagueIfMatchPlayed } =
+          await import('../middleware/league-lock');
+        await lockLeagueIfMatchPlayed(
+          prisma,
+          existingMatch.leagueId,
+          'completed'
+        );
+      }
 
-    // ── Bracket advancement: resolve placeholder in next bracket game ──
-    if (existingMatch.bracketFlag && existingMatch.gameNumber) {
-      const winnerId =
-        outcome === 'home_win'
-          ? existingMatch.homeTeamId
-          : outcome === 'away_win'
-            ? existingMatch.awayTeamId
-            : null;
-      const loserId =
-        outcome === 'home_win'
-          ? existingMatch.awayTeamId
-          : outcome === 'away_win'
-            ? existingMatch.homeTeamId
-            : null;
+      // Update home team membership stats
+      const homeMembership = await prisma.leagueMembership.findFirst({
+        where: {
+          leagueId: existingMatch.leagueId,
+          teamId: existingMatch.homeTeamId,
+          status: 'active',
+        },
+      });
 
-      if (winnerId || loserId) {
-        // Find the winning and losing team names
-        const winnerTeam = winnerId
-          ? await prisma.team.findUnique({
-              where: { id: winnerId },
-              select: { id: true, name: true },
-            })
-          : null;
-        const loserTeam = loserId
-          ? await prisma.team.findUnique({
-              where: { id: loserId },
-              select: { id: true, name: true },
-            })
-          : null;
-
-        const winnerLabel = `Winner of Game ${existingMatch.gameNumber}`;
-        const loserLabel = `Loser of Game ${existingMatch.gameNumber}`;
-
-        // Find bracket matches in this league that reference this game's winner or loser
-        const pendingBracketMatches = await prisma.match.findMany({
-          where: {
-            leagueId: existingMatch.leagueId,
-            bracketFlag: { not: null },
-            status: 'pending_bracket',
-            OR: [
-              {
-                placeholderHome: {
-                  contains: `Game ${existingMatch.gameNumber}`,
-                },
-              },
-              {
-                placeholderAway: {
-                  contains: `Game ${existingMatch.gameNumber}`,
-                },
-              },
-            ],
+      if (homeMembership) {
+        await prisma.leagueMembership.update({
+          where: { id: homeMembership.id },
+          data: {
+            matchesPlayed: { increment: 1 },
+            wins:
+              outcome === 'home_win' ? { increment: 1 } : homeMembership.wins,
+            losses:
+              outcome === 'away_win' ? { increment: 1 } : homeMembership.losses,
+            draws: outcome === 'draw' ? { increment: 1 } : homeMembership.draws,
+            points: {
+              increment:
+                outcome === 'home_win'
+                  ? winPoints
+                  : outcome === 'draw'
+                    ? drawPoints
+                    : lossPoints,
+            },
+            goalsFor: { increment: homeScore },
+            goalsAgainst: { increment: awayScore },
+            goalDifference: { increment: homeScore - awayScore },
           },
-          include: { event: true },
         });
+      }
 
-        for (const bm of pendingBracketMatches) {
-          const updates: any = {};
-          const eventUpdates: any = {};
-          let newTitle = bm.event?.title || '';
+      // Update away team membership stats
+      const awayMembership = await prisma.leagueMembership.findFirst({
+        where: {
+          leagueId: existingMatch.leagueId,
+          teamId: existingMatch.awayTeamId,
+          status: 'active',
+        },
+      });
 
-          // Resolve home placeholder
-          if (
-            bm.placeholderHome &&
-            bm.placeholderHome === winnerLabel &&
-            winnerTeam
-          ) {
-            updates.homeTeamId = winnerTeam.id;
-            updates.placeholderHome = null;
-            newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
-          } else if (
-            bm.placeholderHome &&
-            bm.placeholderHome === loserLabel &&
-            loserTeam
-          ) {
-            updates.homeTeamId = loserTeam.id;
-            updates.placeholderHome = null;
-            newTitle = newTitle.replace(loserLabel, loserTeam.name);
-          }
+      if (awayMembership) {
+        await prisma.leagueMembership.update({
+          where: { id: awayMembership.id },
+          data: {
+            matchesPlayed: { increment: 1 },
+            wins:
+              outcome === 'away_win' ? { increment: 1 } : awayMembership.wins,
+            losses:
+              outcome === 'home_win' ? { increment: 1 } : awayMembership.losses,
+            draws: outcome === 'draw' ? { increment: 1 } : awayMembership.draws,
+            points: {
+              increment:
+                outcome === 'away_win'
+                  ? winPoints
+                  : outcome === 'draw'
+                    ? drawPoints
+                    : lossPoints,
+            },
+            goalsFor: { increment: awayScore },
+            goalsAgainst: { increment: homeScore },
+            goalDifference: { increment: awayScore - homeScore },
+          },
+        });
+      }
 
-          // Resolve away placeholder
-          if (
-            bm.placeholderAway &&
-            bm.placeholderAway === winnerLabel &&
-            winnerTeam
-          ) {
-            updates.awayTeamId = winnerTeam.id;
-            updates.placeholderAway = null;
-            newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
-          } else if (
-            bm.placeholderAway &&
-            bm.placeholderAway === loserLabel &&
-            loserTeam
-          ) {
-            updates.awayTeamId = loserTeam.id;
-            updates.placeholderAway = null;
-            newTitle = newTitle.replace(loserLabel, loserTeam.name);
-          }
+      // TODO: Send notifications to participating teams
 
-          if (Object.keys(updates).length > 0) {
-            // If both sides are now resolved, promote to scheduled
-            const resolvedHome = updates.homeTeamId || bm.homeTeamId;
-            const resolvedAway = updates.awayTeamId || bm.awayTeamId;
-            if (resolvedHome && resolvedAway) {
-              updates.status = 'scheduled';
+      // ── Bracket advancement: resolve placeholder in next bracket game ──
+      if (existingMatch.bracketFlag && existingMatch.gameNumber) {
+        const winnerId =
+          outcome === 'home_win'
+            ? existingMatch.homeTeamId
+            : outcome === 'away_win'
+              ? existingMatch.awayTeamId
+              : null;
+        const loserId =
+          outcome === 'home_win'
+            ? existingMatch.awayTeamId
+            : outcome === 'away_win'
+              ? existingMatch.homeTeamId
+              : null;
+
+        if (winnerId || loserId) {
+          // Find the winning and losing team names
+          const winnerTeam = winnerId
+            ? await prisma.team.findUnique({
+                where: { id: winnerId },
+                select: { id: true, name: true },
+              })
+            : null;
+          const loserTeam = loserId
+            ? await prisma.team.findUnique({
+                where: { id: loserId },
+                select: { id: true, name: true },
+              })
+            : null;
+
+          const winnerLabel = `Winner of Game ${existingMatch.gameNumber}`;
+          const loserLabel = `Loser of Game ${existingMatch.gameNumber}`;
+
+          // Find bracket matches in this league that reference this game's winner or loser
+          const pendingBracketMatches = await prisma.match.findMany({
+            where: {
+              leagueId: existingMatch.leagueId,
+              bracketFlag: { not: null },
+              status: 'pending_bracket',
+              OR: [
+                {
+                  placeholderHome: {
+                    contains: `Game ${existingMatch.gameNumber}`,
+                  },
+                },
+                {
+                  placeholderAway: {
+                    contains: `Game ${existingMatch.gameNumber}`,
+                  },
+                },
+              ],
+            },
+            include: { event: true },
+          });
+
+          for (const bm of pendingBracketMatches) {
+            const updates: any = {};
+            const eventUpdates: any = {};
+            let newTitle = bm.event?.title || '';
+
+            // Resolve home placeholder
+            if (
+              bm.placeholderHome &&
+              bm.placeholderHome === winnerLabel &&
+              winnerTeam
+            ) {
+              updates.homeTeamId = winnerTeam.id;
+              updates.placeholderHome = null;
+              newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
+            } else if (
+              bm.placeholderHome &&
+              bm.placeholderHome === loserLabel &&
+              loserTeam
+            ) {
+              updates.homeTeamId = loserTeam.id;
+              updates.placeholderHome = null;
+              newTitle = newTitle.replace(loserLabel, loserTeam.name);
             }
 
-            await prisma.match.update({ where: { id: bm.id }, data: updates });
+            // Resolve away placeholder
+            if (
+              bm.placeholderAway &&
+              bm.placeholderAway === winnerLabel &&
+              winnerTeam
+            ) {
+              updates.awayTeamId = winnerTeam.id;
+              updates.placeholderAway = null;
+              newTitle = newTitle.replace(winnerLabel, winnerTeam.name);
+            } else if (
+              bm.placeholderAway &&
+              bm.placeholderAway === loserLabel &&
+              loserTeam
+            ) {
+              updates.awayTeamId = loserTeam.id;
+              updates.placeholderAway = null;
+              newTitle = newTitle.replace(loserLabel, loserTeam.name);
+            }
 
-            // Update the linked event title and eligibility
-            if (bm.eventId) {
-              const eligTeams = [resolvedHome, resolvedAway].filter(Boolean);
-              await prisma.event.update({
-                where: { id: bm.eventId },
-                data: {
-                  title: newTitle,
-                  eligibilityRestrictedToTeams: eligTeams,
-                },
+            if (Object.keys(updates).length > 0) {
+              // If both sides are now resolved, promote to scheduled
+              const resolvedHome = updates.homeTeamId || bm.homeTeamId;
+              const resolvedAway = updates.awayTeamId || bm.awayTeamId;
+              if (resolvedHome && resolvedAway) {
+                updates.status = 'scheduled';
+              }
+
+              await prisma.match.update({
+                where: { id: bm.id },
+                data: updates,
               });
+
+              // Update the linked event title and eligibility
+              if (bm.eventId) {
+                const eligTeams = [resolvedHome, resolvedAway].filter(Boolean);
+                await prisma.event.update({
+                  where: { id: bm.eventId },
+                  data: {
+                    title: newTitle,
+                    eligibilityRestrictedToTeams: eligTeams,
+                  },
+                });
+              }
             }
           }
         }
       }
+
+      // Return updated match with full details
+      const updatedMatch = await prisma.match.findUnique({
+        where: { id },
+        include: {
+          league: {
+            select: {
+              id: true,
+              name: true,
+              sportType: true,
+            },
+          },
+          homeTeam: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+            },
+          },
+          awayTeam: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+            },
+          },
+        },
+      });
+
+      res.json(updatedMatch);
+    } catch (error) {
+      console.error('Error recording match result:', error);
+      res.status(500).json({ error: 'Failed to record match result' });
     }
-
-    // Return updated match with full details
-    const updatedMatch = await prisma.match.findUnique({
-      where: { id },
-      include: {
-        league: {
-          select: {
-            id: true,
-            name: true,
-            sportType: true,
-          },
-        },
-        homeTeam: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-          },
-        },
-        awayTeam: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-          },
-        },
-      },
-    });
-
-    res.json(updatedMatch);
-  } catch (error) {
-    console.error('Error recording match result:', error);
-    res.status(500).json({ error: 'Failed to record match result' });
   }
-});
+);

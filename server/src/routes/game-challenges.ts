@@ -18,6 +18,7 @@ import {
   captureEscrow,
   releaseEscrow,
 } from '../services/escrow';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -35,10 +36,10 @@ const router = express.Router();
  *   - courtId: string           — Court ID within the facility
  *   - timeSlotId: string        — Time slot ID for the booking
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
+    const userId = req.user!.userId;
     const {
-      userId,
       challengerRosterId,
       opponentRosterId,
       facilityId,
@@ -48,7 +49,6 @@ router.post('/', async (req: Request, res: Response) => {
 
     // --- Validate required fields ---
     if (
-      !userId ||
       !challengerRosterId ||
       !opponentRosterId ||
       !facilityId ||
@@ -57,7 +57,7 @@ router.post('/', async (req: Request, res: Response) => {
     ) {
       return res.status(400).json({
         error:
-          'Missing required fields: userId, challengerRosterId, opponentRosterId, facilityId, courtId, timeSlotId',
+          'Missing required fields: challengerRosterId, opponentRosterId, facilityId, courtId, timeSlotId',
       });
     }
 
@@ -104,19 +104,14 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (!challengerRoster.stripeAccountId) {
-      return res
-        .status(400)
-        .json({
-          error:
-            'Challenger roster has not completed Stripe Connect onboarding',
-        });
+      return res.status(400).json({
+        error: 'Challenger roster has not completed Stripe Connect onboarding',
+      });
     }
     if (!opponentRoster.stripeAccountId) {
-      return res
-        .status(400)
-        .json({
-          error: 'Opponent roster has not completed Stripe Connect onboarding',
-        });
+      return res.status(400).json({
+        error: 'Opponent roster has not completed Stripe Connect onboarding',
+      });
     }
 
     // --- Verify facility exists and is onboarded ---
@@ -129,11 +124,9 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Facility not found' });
     }
     if (!facility.stripeConnectAccountId) {
-      return res
-        .status(400)
-        .json({
-          error: 'Facility has not completed Stripe Connect onboarding',
-        });
+      return res.status(400).json({
+        error: 'Facility has not completed Stripe Connect onboarding',
+      });
     }
 
     // --- Verify court belongs to the facility ---
@@ -339,194 +332,190 @@ router.get('/:bookingId', async (req: Request, res: Response) => {
  * Body:
  *   - userId: string — ID of the accepting user (must be opponent roster manager)
  */
-router.post('/:bookingId/accept', async (req: Request, res: Response) => {
-  try {
-    const { bookingId } = req.params as { bookingId: string };
-    const { userId } = req.body;
+router.post(
+  '/:bookingId/accept',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { bookingId } = req.params as { bookingId: string };
+      const userId = req.user!.userId;
 
-    if (!userId || !bookingId) {
-      return res
-        .status(400)
-        .json({ error: 'Missing required fields: userId, bookingId' });
-    }
+      // --- Fetch booking with participants ---
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          participants: true,
+        },
+      });
 
-    // --- Fetch booking with participants ---
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        participants: true,
-      },
-    });
+      if (!booking) {
+        return res.status(404).json({ error: 'Game challenge not found' });
+      }
 
-    if (!booking) {
-      return res.status(404).json({ error: 'Game challenge not found' });
-    }
+      if (booking.bookingType !== 'game_challenge') {
+        return res
+          .status(400)
+          .json({ error: 'Booking is not a game challenge' });
+      }
 
-    if (booking.bookingType !== 'game_challenge') {
-      return res.status(400).json({ error: 'Booking is not a game challenge' });
-    }
+      if (booking.status !== 'pending_away_confirm') {
+        return res
+          .status(400)
+          .json({ error: 'Game challenge is not pending acceptance' });
+      }
 
-    if (booking.status !== 'pending_away_confirm') {
-      return res
-        .status(400)
-        .json({ error: 'Game challenge is not pending acceptance' });
-    }
+      // --- Identify home and away participants ---
+      const homeParticipant = booking.participants.find(p => p.role === 'home');
+      const awayParticipant = booking.participants.find(p => p.role === 'away');
 
-    // --- Identify home and away participants ---
-    const homeParticipant = booking.participants.find(p => p.role === 'home');
-    const awayParticipant = booking.participants.find(p => p.role === 'away');
+      if (!homeParticipant || !awayParticipant) {
+        return res
+          .status(500)
+          .json({ error: 'Booking participants are incomplete' });
+      }
 
-    if (!homeParticipant || !awayParticipant) {
-      return res
-        .status(500)
-        .json({ error: 'Booking participants are incomplete' });
-    }
+      // --- Verify the accepting user is the opponent (away) roster manager ---
+      const awayMembership = await prisma.teamMember.findFirst({
+        where: {
+          userId,
+          teamId: awayParticipant.rosterId,
+          role: 'captain',
+          status: 'active',
+        },
+      });
 
-    // --- Verify the accepting user is the opponent (away) roster manager ---
-    const awayMembership = await prisma.teamMember.findFirst({
-      where: {
-        userId,
-        teamId: awayParticipant.rosterId,
-        role: 'captain',
-        status: 'active',
-      },
-    });
-
-    if (!awayMembership) {
-      return res
-        .status(403)
-        .json({
+      if (!awayMembership) {
+        return res.status(403).json({
           error: 'Only the opponent roster manager can accept a game challenge',
         });
-    }
+      }
 
-    // --- Check confirmation deadline ---
-    if (
-      awayParticipant.confirmationDeadline &&
-      new Date() > awayParticipant.confirmationDeadline
-    ) {
-      return res
-        .status(400)
-        .json({ error: 'Confirmation deadline has passed' });
-    }
+      // --- Check confirmation deadline ---
+      if (
+        awayParticipant.confirmationDeadline &&
+        new Date() > awayParticipant.confirmationDeadline
+      ) {
+        return res
+          .status(400)
+          .json({ error: 'Confirmation deadline has passed' });
+      }
 
-    // --- Fetch both rosters for display names ---
-    const [homeRoster, awayRoster] = await Promise.all([
-      prisma.team.findUnique({
-        where: { id: homeParticipant.rosterId },
-        select: { id: true, name: true, stripeAccountId: true },
-      }),
-      prisma.team.findUnique({
-        where: { id: awayParticipant.rosterId },
-        select: { id: true, name: true, stripeAccountId: true },
-      }),
-    ]);
+      // --- Fetch both rosters for display names ---
+      const [homeRoster, awayRoster] = await Promise.all([
+        prisma.team.findUnique({
+          where: { id: homeParticipant.rosterId },
+          select: { id: true, name: true, stripeAccountId: true },
+        }),
+        prisma.team.findUnique({
+          where: { id: awayParticipant.rosterId },
+          select: { id: true, name: true, stripeAccountId: true },
+        }),
+      ]);
 
-    if (!homeRoster?.stripeAccountId || !awayRoster?.stripeAccountId) {
-      return res
-        .status(400)
-        .json({
+      if (!homeRoster?.stripeAccountId || !awayRoster?.stripeAccountId) {
+        return res.status(400).json({
           error: 'Both rosters must have completed Stripe Connect onboarding',
         });
-    }
+      }
 
-    // --- Run checkBalance against both roster managers ---
-    const [homeBalance, awayBalance] = await Promise.all([
-      checkBalance(homeParticipant.rosterId, homeParticipant.escrowAmount),
-      checkBalance(awayParticipant.rosterId, awayParticipant.escrowAmount),
-    ]);
+      // --- Run checkBalance against both roster managers ---
+      const [homeBalance, awayBalance] = await Promise.all([
+        checkBalance(homeParticipant.rosterId, homeParticipant.escrowAmount),
+        checkBalance(awayParticipant.rosterId, awayParticipant.escrowAmount),
+      ]);
 
-    // --- If either is insufficient, return 402 with per-roster shortfall ---
-    if (!homeBalance.sufficient || !awayBalance.sufficient) {
-      const shortfalls: Array<{
-        rosterId: string;
-        rosterName: string;
-        role: string;
-        required: number;
-        shortfall: number;
-      }> = [];
+      // --- If either is insufficient, return 402 with per-roster shortfall ---
+      if (!homeBalance.sufficient || !awayBalance.sufficient) {
+        const shortfalls: Array<{
+          rosterId: string;
+          rosterName: string;
+          role: string;
+          required: number;
+          shortfall: number;
+        }> = [];
 
-      if (!homeBalance.sufficient) {
-        shortfalls.push({
-          rosterId: homeRoster.id,
-          rosterName: homeRoster.name,
-          role: 'home',
-          required: homeParticipant.escrowAmount,
-          shortfall: homeBalance.shortfall,
+        if (!homeBalance.sufficient) {
+          shortfalls.push({
+            rosterId: homeRoster.id,
+            rosterName: homeRoster.name,
+            role: 'home',
+            required: homeParticipant.escrowAmount,
+            shortfall: homeBalance.shortfall,
+          });
+        }
+
+        if (!awayBalance.sufficient) {
+          shortfalls.push({
+            rosterId: awayRoster.id,
+            rosterName: awayRoster.name,
+            role: 'away',
+            required: awayParticipant.escrowAmount,
+            shortfall: awayBalance.shortfall,
+          });
+        }
+
+        return res.status(402).json({
+          error: 'Insufficient balance',
+          message:
+            'One or more rosters have insufficient funds to cover their share of the court cost',
+          shortfalls,
         });
       }
 
-      if (!awayBalance.sufficient) {
-        shortfalls.push({
-          rosterId: awayRoster.id,
-          rosterName: awayRoster.name,
-          role: 'away',
-          required: awayParticipant.escrowAmount,
-          shortfall: awayBalance.shortfall,
+      // --- Both sufficient — update booking status atomically ---
+      const result = await prisma.$transaction(async tx => {
+        const updatedBooking = await tx.booking.update({
+          where: { id: bookingId },
+          data: { status: 'escrow_collecting' },
         });
-      }
 
-      return res.status(402).json({
-        error: 'Insufficient balance',
-        message:
-          'One or more rosters have insufficient funds to cover their share of the court cost',
-        shortfalls,
+        await tx.bookingParticipant.update({
+          where: { id: awayParticipant.id },
+          data: { confirmedAt: new Date() },
+        });
+
+        return updatedBooking;
       });
-    }
 
-    // --- Both sufficient — update booking status atomically ---
-    const result = await prisma.$transaction(async tx => {
-      const updatedBooking = await tx.booking.update({
+      // --- Return success with booking details ---
+      const fullBooking = await prisma.booking.findUnique({
         where: { id: bookingId },
-        data: { status: 'escrow_collecting' },
-      });
-
-      await tx.bookingParticipant.update({
-        where: { id: awayParticipant.id },
-        data: { confirmedAt: new Date() },
-      });
-
-      return updatedBooking;
-    });
-
-    // --- Return success with booking details ---
-    const fullBooking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        facility: {
-          select: { id: true, name: true, street: true, city: true },
-        },
-        court: {
-          select: { id: true, name: true, sportType: true },
-        },
-        participants: {
-          select: {
-            id: true,
-            rosterId: true,
-            role: true,
-            escrowAmount: true,
-            paymentStatus: true,
-            confirmedAt: true,
-            confirmationDeadline: true,
+        include: {
+          facility: {
+            select: { id: true, name: true, street: true, city: true },
+          },
+          court: {
+            select: { id: true, name: true, sportType: true },
+          },
+          participants: {
+            select: {
+              id: true,
+              rosterId: true,
+              role: true,
+              escrowAmount: true,
+              paymentStatus: true,
+              confirmedAt: true,
+              confirmationDeadline: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    res.json({
-      ...fullBooking,
-      homeRoster: { id: homeRoster.id, name: homeRoster.name },
-      awayRoster: { id: awayRoster.id, name: awayRoster.name },
-      balanceCheck: {
-        home: { sufficient: true, shortfall: 0 },
-        away: { sufficient: true, shortfall: 0 },
-      },
-    });
-  } catch (error) {
-    console.error('Error accepting game challenge:', error);
-    res.status(500).json({ error: 'Failed to accept game challenge' });
+      res.json({
+        ...fullBooking,
+        homeRoster: { id: homeRoster.id, name: homeRoster.name },
+        awayRoster: { id: awayRoster.id, name: awayRoster.name },
+        balanceCheck: {
+          home: { sufficient: true, shortfall: 0 },
+          away: { sufficient: true, shortfall: 0 },
+        },
+      });
+    } catch (error) {
+      console.error('Error accepting game challenge:', error);
+      res.status(500).json({ error: 'Failed to accept game challenge' });
+    }
   }
-});
+);
 
 /**
  * POST /api/game-challenges/:bookingId/capture
@@ -541,170 +530,166 @@ router.post('/:bookingId/accept', async (req: Request, res: Response) => {
  * Body:
  *   - userId: string — ID of the user triggering capture (must be home or away roster manager)
  */
-router.post('/:bookingId/capture', async (req: Request, res: Response) => {
-  try {
-    const { bookingId } = req.params as { bookingId: string };
-    const { userId } = req.body;
+router.post(
+  '/:bookingId/capture',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { bookingId } = req.params as { bookingId: string };
+      const userId = req.user!.userId;
 
-    if (!userId || !bookingId) {
-      return res
-        .status(400)
-        .json({ error: 'Missing required fields: userId, bookingId' });
-    }
-
-    // --- Fetch booking with participants ---
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        participants: true,
-        facility: {
-          select: { id: true, stripeConnectAccountId: true },
+      // --- Fetch booking with participants ---
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          participants: true,
+          facility: {
+            select: { id: true, stripeConnectAccountId: true },
+          },
         },
-      },
-    });
+      });
 
-    if (!booking) {
-      return res.status(404).json({ error: 'Game challenge not found' });
-    }
+      if (!booking) {
+        return res.status(404).json({ error: 'Game challenge not found' });
+      }
 
-    if (booking.bookingType !== 'game_challenge') {
-      return res.status(400).json({ error: 'Booking is not a game challenge' });
-    }
+      if (booking.bookingType !== 'game_challenge') {
+        return res
+          .status(400)
+          .json({ error: 'Booking is not a game challenge' });
+      }
 
-    if (booking.status !== 'escrow_collecting') {
-      return res
-        .status(400)
-        .json({ error: 'Booking is not in escrow_collecting status' });
-    }
+      if (booking.status !== 'escrow_collecting') {
+        return res
+          .status(400)
+          .json({ error: 'Booking is not in escrow_collecting status' });
+      }
 
-    // --- Verify facility has a Connect account ---
-    if (!booking.facility?.stripeConnectAccountId) {
-      return res
-        .status(400)
-        .json({
+      // --- Verify facility has a Connect account ---
+      if (!booking.facility?.stripeConnectAccountId) {
+        return res.status(400).json({
           error: 'Facility has not completed Stripe Connect onboarding',
         });
-    }
+      }
 
-    // --- Identify home and away participants ---
-    const homeParticipant = booking.participants.find(p => p.role === 'home');
-    const awayParticipant = booking.participants.find(p => p.role === 'away');
+      // --- Identify home and away participants ---
+      const homeParticipant = booking.participants.find(p => p.role === 'home');
+      const awayParticipant = booking.participants.find(p => p.role === 'away');
 
-    if (!homeParticipant || !awayParticipant) {
-      return res
-        .status(500)
-        .json({ error: 'Booking participants are incomplete' });
-    }
+      if (!homeParticipant || !awayParticipant) {
+        return res
+          .status(500)
+          .json({ error: 'Booking participants are incomplete' });
+      }
 
-    // --- Verify the user is a manager of either roster ---
-    const membership = await prisma.teamMember.findFirst({
-      where: {
-        userId,
-        teamId: { in: [homeParticipant.rosterId, awayParticipant.rosterId] },
-        role: 'captain',
-        status: 'active',
-      },
-    });
+      // --- Verify the user is a manager of either roster ---
+      const membership = await prisma.teamMember.findFirst({
+        where: {
+          userId,
+          teamId: { in: [homeParticipant.rosterId, awayParticipant.rosterId] },
+          role: 'captain',
+          status: 'active',
+        },
+      });
 
-    if (!membership) {
-      return res
-        .status(403)
-        .json({
+      if (!membership) {
+        return res.status(403).json({
           error:
             'Only a roster manager involved in this challenge can trigger capture',
         });
-    }
-
-    const facilityConnectId = booking.facility.stripeConnectAccountId;
-
-    // --- Create escrow intents for both participants ---
-    try {
-      await createEscrowIntent(
-        homeParticipant.id,
-        homeParticipant.escrowAmount,
-        facilityConnectId,
-        bookingId,
-        homeParticipant.role
-      );
-
-      await createEscrowIntent(
-        awayParticipant.id,
-        awayParticipant.escrowAmount,
-        facilityConnectId,
-        bookingId,
-        awayParticipant.role
-      );
-    } catch (intentError) {
-      // If creating intents fails, release any that were created
-      if (homeParticipant.stripePaymentIntentId) {
-        await releaseEscrow(homeParticipant.stripePaymentIntentId).catch(
-          () => {}
-        );
-      }
-      if (awayParticipant.stripePaymentIntentId) {
-        await releaseEscrow(awayParticipant.stripePaymentIntentId).catch(
-          () => {}
-        );
       }
 
-      // Re-fetch participants to release any newly created intents
-      const updatedParticipants = await prisma.bookingParticipant.findMany({
-        where: { bookingId: bookingId },
-      });
-      for (const p of updatedParticipants) {
-        if (p.stripePaymentIntentId && p.paymentStatus === 'authorized') {
-          await releaseEscrow(p.stripePaymentIntentId).catch(() => {});
+      const facilityConnectId = booking.facility.stripeConnectAccountId;
+
+      // --- Create escrow intents for both participants ---
+      try {
+        await createEscrowIntent(
+          homeParticipant.id,
+          homeParticipant.escrowAmount,
+          facilityConnectId,
+          bookingId,
+          homeParticipant.role
+        );
+
+        await createEscrowIntent(
+          awayParticipant.id,
+          awayParticipant.escrowAmount,
+          facilityConnectId,
+          bookingId,
+          awayParticipant.role
+        );
+      } catch (intentError) {
+        // If creating intents fails, release any that were created
+        if (homeParticipant.stripePaymentIntentId) {
+          await releaseEscrow(homeParticipant.stripePaymentIntentId).catch(
+            () => {}
+          );
         }
+        if (awayParticipant.stripePaymentIntentId) {
+          await releaseEscrow(awayParticipant.stripePaymentIntentId).catch(
+            () => {}
+          );
+        }
+
+        // Re-fetch participants to release any newly created intents
+        const updatedParticipants = await prisma.bookingParticipant.findMany({
+          where: { bookingId: bookingId },
+        });
+        for (const p of updatedParticipants) {
+          if (p.stripePaymentIntentId && p.paymentStatus === 'authorized') {
+            await releaseEscrow(p.stripePaymentIntentId).catch(() => {});
+          }
+        }
+
+        return res.status(502).json({
+          error: 'Failed to create escrow intents',
+          message: (intentError as Error).message,
+        });
       }
 
-      return res.status(502).json({
-        error: 'Failed to create escrow intents',
-        message: (intentError as Error).message,
-      });
-    }
+      // --- Attempt simultaneous capture ---
+      try {
+        await captureEscrow(bookingId);
+      } catch (captureError) {
+        // captureEscrow already handles releasing successful intents on failure
+        return res.status(502).json({
+          error: 'Escrow capture failed',
+          message: (captureError as Error).message,
+        });
+      }
 
-    // --- Attempt simultaneous capture ---
-    try {
-      await captureEscrow(bookingId);
-    } catch (captureError) {
-      // captureEscrow already handles releasing successful intents on failure
-      return res.status(502).json({
-        error: 'Escrow capture failed',
-        message: (captureError as Error).message,
-      });
-    }
-
-    // --- Return confirmed booking ---
-    const confirmedBooking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        facility: {
-          select: { id: true, name: true, street: true, city: true },
-        },
-        court: {
-          select: { id: true, name: true, sportType: true },
-        },
-        participants: {
-          select: {
-            id: true,
-            rosterId: true,
-            role: true,
-            escrowAmount: true,
-            paymentStatus: true,
-            confirmedAt: true,
+      // --- Return confirmed booking ---
+      const confirmedBooking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          facility: {
+            select: { id: true, name: true, street: true, city: true },
+          },
+          court: {
+            select: { id: true, name: true, sportType: true },
+          },
+          participants: {
+            select: {
+              id: true,
+              rosterId: true,
+              role: true,
+              escrowAmount: true,
+              paymentStatus: true,
+              confirmedAt: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    res.json({
-      ...confirmedBooking,
-      message: 'Escrow captured successfully — booking confirmed',
-    });
-  } catch (error) {
-    console.error('Error capturing escrow for game challenge:', error);
-    res.status(500).json({ error: 'Failed to capture escrow' });
+      res.json({
+        ...confirmedBooking,
+        message: 'Escrow captured successfully — booking confirmed',
+      });
+    } catch (error) {
+      console.error('Error capturing escrow for game challenge:', error);
+      res.status(500).json({ error: 'Failed to capture escrow' });
+    }
   }
-});
+);
 
 export default router;

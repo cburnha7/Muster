@@ -7,17 +7,12 @@ const router = Router();
 /**
  * Resolve the effective user ID for the request.
  * If the guardian is acting on behalf of a dependent, X-Active-User-Id takes precedence.
- * Falls back to the authenticated user, then X-User-Id header, then query param.
+ * Falls back to the authenticated user, then query param.
  */
 function resolveUserId(req: any): string | undefined {
   const activeId = req.headers['x-active-user-id'] as string | undefined;
   if (activeId) return activeId;
-  return (
-    req.user?.userId ||
-    (req.headers['x-user-id'] as string) ||
-    (req.query.userId as string) ||
-    undefined
-  );
+  return req.user?.userId || (req.query.userId as string) || undefined;
 }
 
 // Search users by name or email
@@ -81,10 +76,6 @@ router.get('/profile', optionalAuthMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
     if (!userId) {
-      const headerUserId = req.headers['x-user-id'] as string | undefined;
-      if (headerUserId) userId = headerUserId;
-    }
-    if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
@@ -124,9 +115,7 @@ router.get('/profile', optionalAuthMiddleware, async (req, res) => {
 // Upload profile image
 router.post('/profile/image', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId)
-      return res.status(401).json({ error: 'Authentication required' });
+    const userId = req.user!.userId;
 
     // For now, accept a base64 image or URL in the body
     const { imageUrl, imageData } = req.body;
@@ -159,9 +148,7 @@ router.post('/profile/image', authMiddleware, async (req, res) => {
 // Delete profile image
 router.delete('/profile/image', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId)
-      return res.status(401).json({ error: 'Authentication required' });
+    const userId = req.user!.userId;
 
     await prisma.user.update({
       where: { id: userId },
@@ -179,10 +166,6 @@ router.delete('/profile/image', authMiddleware, async (req, res) => {
 router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
-    if (!userId) {
-      const headerUserId = req.headers['x-user-id'] as string | undefined;
-      if (headerUserId) userId = headerUserId;
-    }
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -630,8 +613,7 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
     if (!userId) {
-      userId =
-        (req.headers['x-user-id'] as string) || (req.query.userId as string);
+      userId = req.query.userId as string;
     }
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -888,8 +870,7 @@ router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
 // Complete onboarding
 router.put('/onboarding', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = req.user!.userId;
 
     const {
       intents,
@@ -936,8 +917,7 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
 // Update user intents
 router.put('/intents', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const userId = req.user!.userId;
 
     const { intents } = req.body;
     if (!intents || !Array.isArray(intents) || intents.length === 0) {
@@ -1042,16 +1022,7 @@ router.get('/:id', async (req, res) => {
 // Update current user profile
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    let userId = req.user?.userId;
-
-    if (!userId) {
-      const headerUserId = req.headers['x-user-id'] as string | undefined;
-      if (headerUserId) userId = headerUserId;
-    }
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
 
     // Whitelist allowed fields to prevent Prisma errors on unknown columns
     const allowed = [
@@ -1111,7 +1082,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
 });
 
 // Update user by ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { password, ...updateData } = req.body;
@@ -1142,32 +1113,34 @@ router.put('/:id', async (req, res) => {
 // ── Open Ground saved locations ──────────────────────────────────────────────
 
 // GET /users/open-ground-locations — fetch saved locations for the current user
-router.get('/open-ground-locations', async (req, res) => {
-  try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId)
-      return res.status(401).json({ error: 'Authentication required' });
+router.get(
+  '/open-ground-locations',
+  optionalAuthMiddleware,
+  async (req, res) => {
+    try {
+      const userId = req.user?.userId;
+      if (!userId)
+        return res.status(401).json({ error: 'Authentication required' });
 
-    const locations = await prisma.savedOpenGroundLocation.findMany({
-      where: { userId },
-      orderBy: { lastUsedAt: 'desc' },
-      select: { id: true, name: true, address: true, lastUsedAt: true },
-      take: 10,
-    });
+      const locations = await prisma.savedOpenGroundLocation.findMany({
+        where: { userId },
+        orderBy: { lastUsedAt: 'desc' },
+        select: { id: true, name: true, address: true, lastUsedAt: true },
+        take: 10,
+      });
 
-    res.json(locations);
-  } catch (error) {
-    console.error('Get open ground locations error:', error);
-    res.status(500).json({ error: 'Failed to fetch locations' });
+      res.json(locations);
+    } catch (error) {
+      console.error('Get open ground locations error:', error);
+      res.status(500).json({ error: 'Failed to fetch locations' });
+    }
   }
-});
+);
 
 // POST /users/open-ground-locations — upsert a location (create or bump lastUsedAt)
-router.post('/open-ground-locations', async (req, res) => {
+router.post('/open-ground-locations', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId)
-      return res.status(401).json({ error: 'Authentication required' });
+    const userId = req.user!.userId;
 
     const { name, address } = req.body as { name: string; address?: string };
     if (!name?.trim())

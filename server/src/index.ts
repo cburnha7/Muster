@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { prisma } from './lib/prisma';
@@ -147,8 +148,6 @@ const corsOptions: cors.CorsOptions = {
   allowedHeaders: [
     'Content-Type',
     'Authorization',
-    'X-User-Id',
-    'x-user-id',
     'X-Active-User-Id',
     'X-Request-ID',
   ],
@@ -170,7 +169,30 @@ app.use(
   stripeWebhookRoutes
 );
 
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '1mb' }));
+
+// Global rate limiter — 100 requests per minute per IP
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+app.use('/api', globalLimiter);
+
+// Stricter rate limiter for write endpoints
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+// Apply to high-value write paths
+app.use('/api/events', writeLimiter);
+app.use('/api/bookings', writeLimiter);
+app.use('/api/rentals', writeLimiter);
 
 // Gzip compress all responses
 app.use(compression());
@@ -178,9 +200,18 @@ app.use(compression());
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check — verifies database connectivity
+app.get('/health', async (req, res) => {
+  try {
+    await prisma.$queryRawUnsafe('SELECT 1');
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Database unreachable',
+    });
+  }
 });
 
 // API Routes
@@ -231,10 +262,7 @@ app.use(
 
     // Log to app_logs table
     try {
-      const userId =
-        (req as any).user?.userId ||
-        (req.headers['x-user-id'] as string) ||
-        null;
+      const userId = (req as any).user?.userId || null;
       await prisma.appLog.create({
         data: {
           logType: 'error',
@@ -276,10 +304,14 @@ if (require.main === module) {
     console.log(`🚀 Muster API server running on http://localhost:${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
 
-    // Initialize cron jobs (requires: npm install node-cron @types/node-cron)
-    // Uncomment the following lines after installing node-cron:
-    // import { initializeCronJobs } from './jobs';
-    // initializeCronJobs();
+    // Initialize cron jobs
+    try {
+      const { initializeCronJobs } = require('./jobs');
+      initializeCronJobs();
+      console.log('✅ Cron jobs initialized');
+    } catch (cronErr) {
+      console.error('⚠️ Failed to initialize cron jobs:', cronErr);
+    }
   });
 }
 

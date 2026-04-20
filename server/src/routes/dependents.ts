@@ -15,15 +15,15 @@ import {
   updateDependent,
 } from '../services/dependent';
 import { transferAccount } from '../services/transfer';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
 /**
  * Extract the authenticated user's ID from the request.
- * Checks JWT-decoded user first, then falls back to X-User-Id header.
  */
 function getUserId(req: Request): string | undefined {
-  return req.user?.userId || (req.headers['x-user-id'] as string | undefined);
+  return req.user?.userId;
 }
 
 /**
@@ -33,7 +33,7 @@ function getUserId(req: Request): string | undefined {
  *
  * Body: { firstName, lastName, dateOfBirth, sportPreferences?, profileImage? }
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const guardianId = getUserId(req);
     if (!guardianId) {
@@ -64,7 +64,7 @@ router.post('/', async (req: Request, res: Response) => {
  *
  * List all dependents for the authenticated guardian.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const guardianId = getUserId(req);
     if (!guardianId) {
@@ -84,7 +84,7 @@ router.get('/', async (req: Request, res: Response) => {
  *
  * Get a single dependent's full profile.
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const guardianId = getUserId(req);
     if (!guardianId) {
@@ -115,7 +115,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  *
  * Body: { firstName?, lastName?, dateOfBirth?, sportPreferences?, profileImage? }
  */
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const guardianId = getUserId(req);
     if (!guardianId) {
@@ -150,52 +150,56 @@ router.put('/:id', async (req: Request, res: Response) => {
  *
  * Body: { email, password }
  */
-router.post('/:id/transfer', async (req: Request, res: Response) => {
-  try {
-    const guardianId = getUserId(req);
-    if (!guardianId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        error: 'Missing required fields: email, password',
-      });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({
-        error: 'Password must be at least 8 characters',
-      });
-    }
-
-    const transferred = await transferAccount(
-      guardianId,
-      (req.params as { id: string }).id,
-      {
-        email,
-        password,
+router.post(
+  '/:id/transfer',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const guardianId = getUserId(req);
+      if (!guardianId) {
+        return res.status(401).json({ error: 'Authentication required' });
       }
-    );
-    res.json(transferred);
-  } catch (error: any) {
-    if (error.message === 'Dependent not found') {
-      return res.status(404).json({ error: error.message });
+
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({
+          error: 'Missing required fields: email, password',
+        });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({
+          error: 'Password must be at least 8 characters',
+        });
+      }
+
+      const transferred = await transferAccount(
+        guardianId,
+        (req.params as { id: string }).id,
+        {
+          email,
+          password,
+        }
+      );
+      res.json(transferred);
+    } catch (error: any) {
+      if (error.message === 'Dependent not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      if (error.message === 'Not authorized') {
+        return res.status(403).json({ error: error.message });
+      }
+      if (error.message === 'Dependent must be 18 or older to transfer') {
+        return res.status(400).json({ error: error.message });
+      }
+      if (error.message === 'Email address is already in use') {
+        return res.status(409).json({ error: error.message });
+      }
+      console.error('Error transferring dependent account:', error);
+      res.status(500).json({ error: 'Failed to transfer dependent account' });
     }
-    if (error.message === 'Not authorized') {
-      return res.status(403).json({ error: error.message });
-    }
-    if (error.message === 'Dependent must be 18 or older to transfer') {
-      return res.status(400).json({ error: error.message });
-    }
-    if (error.message === 'Email address is already in use') {
-      return res.status(409).json({ error: error.message });
-    }
-    console.error('Error transferring dependent account:', error);
-    res.status(500).json({ error: 'Failed to transfer dependent account' });
   }
-});
+);
 
 export default router;

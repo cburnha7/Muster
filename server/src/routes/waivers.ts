@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
-import { optionalAuthMiddleware } from '../middleware/auth';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -33,10 +33,7 @@ router.get(
   optionalAuthMiddleware,
   async (req, res) => {
     try {
-      const userId =
-        (req.query.userId as string) ||
-        req.user?.userId ||
-        (req.headers['x-user-id'] as string);
+      const userId = (req.query.userId as string) || req.user?.userId;
       if (!userId)
         return res.status(401).json({ error: 'Authentication required' });
 
@@ -79,13 +76,12 @@ router.get(
 );
 
 // POST /api/waivers/sign — sign the current waiver
-router.post('/sign', optionalAuthMiddleware, async (req, res) => {
+router.post('/sign', authMiddleware, async (req, res) => {
   try {
-    const { userId, facilityId } = req.body;
-    if (!userId || !facilityId)
-      return res
-        .status(400)
-        .json({ error: 'userId and facilityId are required' });
+    const userId = req.user!.userId;
+    const { facilityId } = req.body;
+    if (!facilityId)
+      return res.status(400).json({ error: 'facilityId is required' });
 
     const facility = await prisma.facility.findUnique({
       where: { id: facilityId },

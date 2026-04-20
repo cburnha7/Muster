@@ -188,7 +188,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update team
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
     const {
@@ -362,11 +362,10 @@ router.get('/:id/events', async (req, res) => {
 router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
   try {
     const { initialMemberIds, isPublic, ...rest } = req.body;
-    const creatorId =
-      req.user?.userId || (req.headers['x-user-id'] as string | undefined);
+    const creatorId = req.user!.userId;
 
     // Plan gate: 2nd+ roster requires 'roster' plan
-    if (creatorId) {
+    {
       const { userBypassesPlanGate } = require('../middleware/subscription');
       const bypassed = await userBypassesPlanGate(creatorId, 'roster');
       if (!bypassed) {
@@ -518,7 +517,7 @@ router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
 });
 
 // Delete team
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
 
@@ -613,7 +612,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Remove a member from a roster
-router.delete('/:id/members/:userId', async (req, res) => {
+router.delete('/:id/members/:userId', authMiddleware, async (req, res) => {
   try {
     const { id, userId } = req.params;
 
@@ -657,15 +656,11 @@ router.delete('/:id/members/:userId', async (req, res) => {
 });
 
 // Join team
-router.post('/:id/join', async (req, res) => {
+router.post('/:id/join', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId = req.headers['x-user-id'] as string | undefined;
+    const userId = req.user!.userId;
     const { inviteCode } = req.body;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
 
     const team = await prisma.team.findUnique({
       where: { id },
@@ -776,14 +771,10 @@ router.post('/:id/join', async (req, res) => {
 });
 
 // Leave team
-router.post('/:id/leave', async (req, res) => {
+router.post('/:id/leave', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId = req.headers['x-user-id'] as string | undefined;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
 
     const member = await prisma.teamMember.findFirst({
       where: { teamId: id, userId, status: 'active' },
@@ -832,7 +823,7 @@ router.post('/:id/leave', async (req, res) => {
 });
 
 // Add member directly (for private rosters)
-router.post('/:id/add-member', async (req, res) => {
+router.post('/:id/add-member', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
     const { userId } = req.body;
@@ -900,15 +891,11 @@ router.post('/:id/add-member', async (req, res) => {
 });
 
 // Generate invite link for a team (captain/co-captain only)
-router.post('/:id/invite-link', async (req, res) => {
+router.post('/:id/invite-link', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId = req.headers['x-user-id'] as string | undefined;
+    const userId = req.user!.userId;
     const { maxUses } = req.body;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
 
     // Verify team exists and user is captain/co-captain
     const team = await prisma.team.findUnique({
@@ -984,128 +971,127 @@ router.post('/:id/invite-link', async (req, res) => {
 // ============================================================================
 
 // Upload team cover image
-router.post('/:id/cover', uploadCover.single('image'), async (req, res) => {
-  try {
-    const { id } = req.params as { id: string };
-    const file = req.file;
-    const userId =
-      (req as any).user?.userId || (req.headers['x-user-id'] as string);
+router.post(
+  '/:id/cover',
+  authMiddleware,
+  uploadCover.single('image'),
+  async (req, res) => {
+    try {
+      const { id } = req.params as { id: string };
+      const file = req.file;
+      const userId = req.user!.userId;
 
-    if (!userId) {
-      if (file?.path) {
-        const fs = require('fs');
-        fs.unlinkSync(file.path);
-      }
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // Validate file
-    const validation = validateImageFile(file as Express.Multer.File);
-    if (!validation.valid) {
-      return res.status(400).json({ error: validation.error });
-    }
-
-    if (!file) {
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    // Check if team exists
-    const team = await prisma.team.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        imageUrl: true,
-      },
-    });
-
-    if (!team) {
-      if (file.path) {
-        const fs = require('fs');
-        fs.unlinkSync(file.path);
-      }
-      return res.status(404).json({ error: 'Roster not found' });
-    }
-
-    // Authorization: must be captain or manager of the team
-    const membership = await prisma.teamMember.findFirst({
-      where: {
-        teamId: id,
-        userId,
-        status: 'active',
-        role: { in: ['captain', 'co_captain', 'manager'] },
-      },
-    });
-
-    if (!membership) {
-      if (file.path) {
-        const fs = require('fs');
-        fs.unlinkSync(file.path);
-      }
-      return res
-        .status(403)
-        .json({ error: 'Only captains and managers can upload a cover image' });
-    }
-
-    // Process and optimize image
-    const { optimizedPath } = await processMapImage(file.path, {
-      maxWidth: 1600,
-      maxHeight: 600,
-      quality: 85,
-    });
-
-    // Generate URL
-    const imageUrl = generateImageUrl(optimizedPath);
-
-    // Delete old image if it exists
-    if (team.imageUrl) {
-      try {
-        await deleteImageFiles(team.imageUrl);
-      } catch (error) {
-        console.error('Error deleting old team cover image:', error);
-      }
-    }
-
-    // Update team with new cover URL
-    const updatedTeam = await prisma.team.update({
-      where: { id },
-      data: { imageUrl },
-      select: { id: true, imageUrl: true },
-    });
-
-    res.status(200).json({
-      imageUrl: updatedTeam.imageUrl,
-    });
-  } catch (error: any) {
-    console.error('Upload team cover image error:', error);
-
-    // Clean up uploaded file on error
-    if (req.file?.path) {
-      try {
-        const fs = require('fs');
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+      if (!userId) {
+        if (file?.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
         }
-      } catch (cleanupError) {
-        console.error('Error cleaning up file:', cleanupError);
+        return res.status(401).json({ error: 'Authentication required' });
       }
-    }
 
-    res.status(500).json({
-      error: error.message || 'Failed to upload cover image',
-    });
+      // Validate file
+      const validation = validateImageFile(file as Express.Multer.File);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      if (!file) {
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+
+      // Check if team exists
+      const team = await prisma.team.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          imageUrl: true,
+        },
+      });
+
+      if (!team) {
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res.status(404).json({ error: 'Roster not found' });
+      }
+
+      // Authorization: must be captain or manager of the team
+      const membership = await prisma.teamMember.findFirst({
+        where: {
+          teamId: id,
+          userId,
+          status: 'active',
+          role: { in: ['captain', 'co_captain', 'manager'] },
+        },
+      });
+
+      if (!membership) {
+        if (file.path) {
+          const fs = require('fs');
+          fs.unlinkSync(file.path);
+        }
+        return res.status(403).json({
+          error: 'Only captains and managers can upload a cover image',
+        });
+      }
+
+      // Process and optimize image
+      const { optimizedPath } = await processMapImage(file.path, {
+        maxWidth: 1600,
+        maxHeight: 600,
+        quality: 85,
+      });
+
+      // Generate URL
+      const imageUrl = generateImageUrl(optimizedPath);
+
+      // Delete old image if it exists
+      if (team.imageUrl) {
+        try {
+          await deleteImageFiles(team.imageUrl);
+        } catch (error) {
+          console.error('Error deleting old team cover image:', error);
+        }
+      }
+
+      // Update team with new cover URL
+      const updatedTeam = await prisma.team.update({
+        where: { id },
+        data: { imageUrl },
+        select: { id: true, imageUrl: true },
+      });
+
+      res.status(200).json({
+        imageUrl: updatedTeam.imageUrl,
+      });
+    } catch (error: any) {
+      console.error('Upload team cover image error:', error);
+
+      // Clean up uploaded file on error
+      if (req.file?.path) {
+        try {
+          const fs = require('fs');
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up file:', cleanupError);
+        }
+      }
+
+      res.status(500).json({
+        error: error.message || 'Failed to upload cover image',
+      });
+    }
   }
-});
+);
 
 // Delete team cover image
-router.delete('/:id/cover', async (req, res) => {
+router.delete('/:id/cover', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId =
-      (req as any).user?.userId || (req.headers['x-user-id'] as string);
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
 
     // Check if team exists
     const team = await prisma.team.findUnique({

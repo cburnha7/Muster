@@ -52,6 +52,7 @@ function PressableCardInner({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       disabled={disabled}
+      accessibilityRole="button"
     >
       <Animated.View
         style={[style, { transform: [{ scale: scaleAnim }], opacity }]}

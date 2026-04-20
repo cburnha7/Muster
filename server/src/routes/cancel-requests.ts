@@ -7,7 +7,11 @@
 
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
-import { approveCancelRequest, denyCancelRequest } from '../services/cancel-request';
+import {
+  approveCancelRequest,
+  denyCancelRequest,
+} from '../services/cancel-request';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -15,9 +19,9 @@ const router = Router();
 // GET /cancel-requests/pending
 // Fetch pending cancel requests for the authenticated owner's grounds
 // ---------------------------------------------------------------------------
-router.get('/pending', async (req, res) => {
+router.get('/pending', optionalAuthMiddleware, async (req, res) => {
   try {
-    const ownerId = (req.query.userId as string) || (req.headers['x-user-id'] as string);
+    const ownerId = req.user?.userId || (req.query.userId as string);
 
     if (!ownerId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -72,19 +76,14 @@ router.get('/pending', async (req, res) => {
   }
 });
 
-
 // ---------------------------------------------------------------------------
 // POST /cancel-requests/:id/approve
 // Approve a pending cancel request (ground owner only)
 // ---------------------------------------------------------------------------
-router.post('/:id/approve', async (req, res) => {
+router.post('/:id/approve', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const ownerId = (req.query.userId as string) || (req.headers['x-user-id'] as string);
-
-    if (!ownerId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
+    const ownerId = req.user!.userId;
 
     await approveCancelRequest(id, ownerId, prisma);
 
@@ -94,9 +93,12 @@ router.post('/:id/approve', async (req, res) => {
 
     return res.json(updated);
   } catch (error: any) {
-    if (error.message === 'Cancel request not found') return res.status(404).json({ error: error.message });
-    if (error.message === 'Unauthorized') return res.status(403).json({ error: error.message });
-    if (error.message === 'Cancel request already resolved') return res.status(400).json({ error: error.message });
+    if (error.message === 'Cancel request not found')
+      return res.status(404).json({ error: error.message });
+    if (error.message === 'Unauthorized')
+      return res.status(403).json({ error: error.message });
+    if (error.message === 'Cancel request already resolved')
+      return res.status(400).json({ error: error.message });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -105,14 +107,10 @@ router.post('/:id/approve', async (req, res) => {
 // POST /cancel-requests/:id/deny
 // Deny a pending cancel request (ground owner only)
 // ---------------------------------------------------------------------------
-router.post('/:id/deny', async (req, res) => {
+router.post('/:id/deny', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const ownerId = (req.query.userId as string) || (req.headers['x-user-id'] as string);
-
-    if (!ownerId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
+    const ownerId = req.user!.userId;
 
     await denyCancelRequest(id, ownerId, prisma);
 
@@ -122,9 +120,12 @@ router.post('/:id/deny', async (req, res) => {
 
     return res.json(updated);
   } catch (error: any) {
-    if (error.message === 'Cancel request not found') return res.status(404).json({ error: error.message });
-    if (error.message === 'Unauthorized') return res.status(403).json({ error: error.message });
-    if (error.message === 'Cancel request already resolved') return res.status(400).json({ error: error.message });
+    if (error.message === 'Cancel request not found')
+      return res.status(404).json({ error: error.message });
+    if (error.message === 'Unauthorized')
+      return res.status(403).json({ error: error.message });
+    if (error.message === 'Cancel request already resolved')
+      return res.status(400).json({ error: error.message });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -10,12 +10,14 @@ import { createCancelRequest } from '../services/cancel-request';
 import { stripe } from '../services/stripe-connect';
 import { InsuranceDocumentService } from '../services/InsuranceDocumentService';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
 // Rent a time slot
 router.post(
   '/facilities/:facilityId/courts/:courtId/slots/:slotId/rent',
+  authMiddleware,
   requireNonDependent,
   async (req, res) => {
     try {
@@ -24,13 +26,7 @@ router.post(
         courtId: string;
         slotId: string;
       };
-      const { userId } = req.body;
-
-      // TODO: Get userId from auth token instead of request body
-
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
+      const userId = req.user!.userId;
 
       // Verify time slot exists and is available
       const timeSlot = await prisma.facilityTimeSlot.findFirst({
@@ -179,10 +175,11 @@ router.post(
 );
 
 // Cancel rental
-router.delete('/rentals/:rentalId', async (req, res) => {
+router.delete('/rentals/:rentalId', authMiddleware, async (req, res) => {
   try {
     const { rentalId } = req.params as { rentalId: string };
-    const { userId, cancellationReason } = req.body;
+    const { cancellationReason } = req.body;
+    const userId = req.user!.userId;
 
     // TODO: Get userId from auth token
 
@@ -313,327 +310,337 @@ router.delete('/rentals/:rentalId', async (req, res) => {
 });
 
 // Request rental cancellation (user requests, owner approves)
-router.post('/rentals/:rentalId/request-cancellation', async (req, res) => {
-  try {
-    const { rentalId } = req.params as { rentalId: string };
-    const { userId, cancellationReason } = req.body;
+router.post(
+  '/rentals/:rentalId/request-cancellation',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { rentalId } = req.params as { rentalId: string };
+      const { cancellationReason } = req.body;
+      const userId = req.user!.userId;
 
-    // TODO: Get userId from auth token
+      // TODO: Get userId from auth token
 
-    if (!cancellationReason || cancellationReason.trim().length < 10) {
-      return res.status(400).json({
-        error: 'Cancellation reason is required (minimum 10 characters)',
-      });
-    }
-
-    // Verify rental exists
-    const rental = await prisma.facilityRental.findUnique({
-      where: { id: rentalId },
-      include: {
-        timeSlot: {
-          include: {
-            court: {
-              include: {
-                facility: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!rental) {
-      return res.status(404).json({ error: 'Rental not found' });
-    }
-
-    // Verify user owns this rental
-    if (rental.userId !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    if (rental.status === 'cancelled') {
-      return res.status(400).json({ error: 'Rental already cancelled' });
-    }
-
-    if (rental.cancellationStatus === 'pending_cancellation') {
-      return res
-        .status(400)
-        .json({ error: 'Cancellation request already pending' });
-    }
-
-    // Check if rental has been used for an event
-    if (rental.usedForEventId) {
-      return res.status(400).json({
-        error: 'Cannot cancel rental that has been used for an event',
-      });
-    }
-
-    // Update rental with cancellation request
-    const updatedRental = await prisma.facilityRental.update({
-      where: { id: rentalId },
-      data: {
-        cancellationStatus: 'pending_cancellation',
-        cancellationReason: cancellationReason.trim(),
-      },
-      include: {
-        timeSlot: {
-          include: {
-            court: {
-              include: {
-                facility: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // TODO: Send notification to facility owner about cancellation request
-
-    res.json({
-      success: true,
-      message:
-        'Cancellation request submitted. Awaiting facility owner approval.',
-      rental: updatedRental,
-    });
-  } catch (error) {
-    console.error('Request rental cancellation error:', error);
-    res.status(500).json({ error: 'Failed to request cancellation' });
-  }
-});
-
-// Bulk rent multiple time slots in a single transaction
-router.post('/rentals/bulk', requireNonDependent, async (req, res) => {
-  try {
-    const { userId, slots } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    if (!slots || !Array.isArray(slots) || slots.length === 0) {
-      return res.status(400).json({ error: 'At least one slot is required' });
-    }
-
-    const slotIds = slots.map((s: any) => s.slotId);
-
-    // Fetch all referenced time slots
-    const timeSlots = await prisma.facilityTimeSlot.findMany({
-      where: { id: { in: slotIds } },
-      include: {
-        court: {
-          include: { facility: true },
-        },
-      },
-    });
-
-    // Build a lookup for validation
-    const slotMap = new Map(timeSlots.map(ts => [ts.id, ts]));
-
-    const conflicts: any[] = [];
-    const validSlots: any[] = [];
-
-    for (const reqSlot of slots) {
-      const ts = slotMap.get(reqSlot.slotId);
-
-      if (!ts) {
-        conflicts.push({
-          slotId: reqSlot.slotId,
-          courtId: reqSlot.courtId,
-          courtName: 'Unknown',
-          date: null,
-          startTime: null,
-          endTime: null,
-          reason: 'not_found',
+      if (!cancellationReason || cancellationReason.trim().length < 10) {
+        return res.status(400).json({
+          error: 'Cancellation reason is required (minimum 10 characters)',
         });
-        continue;
       }
 
-      // Validate court/facility ownership
-      if (
-        ts.courtId !== reqSlot.courtId ||
-        ts.court.facilityId !== reqSlot.facilityId
-      ) {
-        conflicts.push({
-          slotId: ts.id,
-          courtId: ts.courtId,
-          courtName: ts.court.name,
-          date: ts.date,
-          startTime: ts.startTime,
-          endTime: ts.endTime,
-          reason: 'invalid_reference',
-        });
-        continue;
-      }
-
-      // Check past date+time
-      const slotDate = new Date(ts.date);
-      const [slotH, slotM] = ts.startTime.split(':').map(Number);
-      slotDate.setUTCHours(slotH, slotM, 0, 0);
-      if (slotDate.getTime() <= Date.now()) {
-        conflicts.push({
-          slotId: ts.id,
-          courtId: ts.courtId,
-          courtName: ts.court.name,
-          date: ts.date,
-          startTime: ts.startTime,
-          endTime: ts.endTime,
-          reason: 'past_date',
-        });
-        continue;
-      }
-
-      // Check availability
-      if (ts.status !== 'available') {
-        conflicts.push({
-          slotId: ts.id,
-          courtId: ts.courtId,
-          courtName: ts.court.name,
-          date: ts.date,
-          startTime: ts.startTime,
-          endTime: ts.endTime,
-          reason: ts.status,
-        });
-        continue;
-      }
-
-      validSlots.push({ reqSlot, timeSlot: ts });
-    }
-
-    // If any conflicts, return 409 without creating anything
-    if (conflicts.length > 0) {
-      return res.status(409).json({
-        conflicts,
-        availableSlots: validSlots.map(v => ({
-          slotId: v.timeSlot.id,
-          courtId: v.reqSlot.courtId,
-          facilityId: v.reqSlot.facilityId,
-        })),
-      });
-    }
-
-    // All slots valid — create rentals in a transaction
-    const bookingSessionId = randomUUID();
-
-    // Check for existing rentals (orphaned data) before transaction
-    const existingRentals = await prisma.facilityRental.findMany({
-      where: {
-        timeSlotId: { in: validSlots.map(v => v.timeSlot.id) },
-        status: { not: 'cancelled' },
-      },
-      select: { timeSlotId: true },
-    });
-
-    if (existingRentals.length > 0) {
-      // Some slots already have rental records — treat as conflicts
-      const existingSlotIds = new Set(existingRentals.map(r => r.timeSlotId));
-      const orphanConflicts = validSlots
-        .filter(v => existingSlotIds.has(v.timeSlot.id))
-        .map(v => ({
-          slotId: v.timeSlot.id,
-          courtId: v.timeSlot.courtId,
-          courtName: v.timeSlot.court.name,
-          date: v.timeSlot.date,
-          startTime: v.timeSlot.startTime,
-          endTime: v.timeSlot.endTime,
-          reason: 'already_rented',
-        }));
-
-      const stillValid = validSlots.filter(
-        v => !existingSlotIds.has(v.timeSlot.id)
-      );
-
-      return res.status(409).json({
-        conflicts: orphanConflicts,
-        availableSlots: stillValid.map(v => ({
-          slotId: v.timeSlot.id,
-          courtId: v.reqSlot.courtId,
-          facilityId: v.reqSlot.facilityId,
-        })),
-      });
-    }
-
-    const result = await prisma.$transaction(
-      async tx => {
-        const rentals = [];
-
-        for (const { timeSlot: ts } of validSlots) {
-          const facility = ts.court.facility as typeof ts.court.facility & {
-            requiresBookingConfirmation?: boolean;
-            requiresInsurance?: boolean;
-          };
-          let rentalStatus = 'confirmed';
-          let attachedInsuranceDocumentId: string | null = null;
-
-          // If facility requires booking confirmation, set to pending
-          if (facility.requiresBookingConfirmation) {
-            rentalStatus = 'pending_approval';
-          }
-
-          // If facility requires insurance and a document was provided, attach it
-          if (facility.requiresInsurance && req.body.insuranceDocumentId) {
-            rentalStatus = 'pending_approval';
-            attachedInsuranceDocumentId = req.body.insuranceDocumentId;
-          }
-
-          // Update slot status
-          await tx.facilityTimeSlot.update({
-            where: { id: ts.id },
-            data: { status: 'rented' },
-          });
-
-          // Create rental
-          const rental = await tx.facilityRental.create({
-            data: {
-              userId,
-              timeSlotId: ts.id,
-              totalPrice: ts.price,
-              status: rentalStatus,
-              paymentStatus: ts.price > 0 ? 'pending' : 'paid',
-              bookingSessionId,
-              ...(attachedInsuranceDocumentId
-                ? { attachedInsuranceDocumentId }
-                : {}),
-            },
+      // Verify rental exists
+      const rental = await prisma.facilityRental.findUnique({
+        where: { id: rentalId },
+        include: {
+          timeSlot: {
             include: {
-              timeSlot: {
+              court: {
                 include: {
-                  court: {
-                    include: { facility: true },
-                  },
+                  facility: true,
                 },
               },
             },
-          });
+          },
+        },
+      });
 
-          rentals.push(rental);
+      if (!rental) {
+        return res.status(404).json({ error: 'Rental not found' });
+      }
+
+      // Verify user owns this rental
+      if (rental.userId !== userId) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      if (rental.status === 'cancelled') {
+        return res.status(400).json({ error: 'Rental already cancelled' });
+      }
+
+      if (rental.cancellationStatus === 'pending_cancellation') {
+        return res
+          .status(400)
+          .json({ error: 'Cancellation request already pending' });
+      }
+
+      // Check if rental has been used for an event
+      if (rental.usedForEventId) {
+        return res.status(400).json({
+          error: 'Cannot cancel rental that has been used for an event',
+        });
+      }
+
+      // Update rental with cancellation request
+      const updatedRental = await prisma.facilityRental.update({
+        where: { id: rentalId },
+        data: {
+          cancellationStatus: 'pending_cancellation',
+          cancellationReason: cancellationReason.trim(),
+        },
+        include: {
+          timeSlot: {
+            include: {
+              court: {
+                include: {
+                  facility: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // TODO: Send notification to facility owner about cancellation request
+
+      res.json({
+        success: true,
+        message:
+          'Cancellation request submitted. Awaiting facility owner approval.',
+        rental: updatedRental,
+      });
+    } catch (error) {
+      console.error('Request rental cancellation error:', error);
+      res.status(500).json({ error: 'Failed to request cancellation' });
+    }
+  }
+);
+
+// Bulk rent multiple time slots in a single transaction
+router.post(
+  '/rentals/bulk',
+  authMiddleware,
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { slots } = req.body;
+      const userId = req.user!.userId;
+
+      if (!slots || !Array.isArray(slots) || slots.length === 0) {
+        return res.status(400).json({ error: 'At least one slot is required' });
+      }
+
+      const slotIds = slots.map((s: any) => s.slotId);
+
+      // Fetch all referenced time slots
+      const timeSlots = await prisma.facilityTimeSlot.findMany({
+        where: { id: { in: slotIds } },
+        include: {
+          court: {
+            include: { facility: true },
+          },
+        },
+      });
+
+      // Build a lookup for validation
+      const slotMap = new Map(timeSlots.map(ts => [ts.id, ts]));
+
+      const conflicts: any[] = [];
+      const validSlots: any[] = [];
+
+      for (const reqSlot of slots) {
+        const ts = slotMap.get(reqSlot.slotId);
+
+        if (!ts) {
+          conflicts.push({
+            slotId: reqSlot.slotId,
+            courtId: reqSlot.courtId,
+            courtName: 'Unknown',
+            date: null,
+            startTime: null,
+            endTime: null,
+            reason: 'not_found',
+          });
+          continue;
         }
 
-        return rentals;
-      },
-      { maxWait: 10000, timeout: 30000 }
-    );
+        // Validate court/facility ownership
+        if (
+          ts.courtId !== reqSlot.courtId ||
+          ts.court.facilityId !== reqSlot.facilityId
+        ) {
+          conflicts.push({
+            slotId: ts.id,
+            courtId: ts.courtId,
+            courtName: ts.court.name,
+            date: ts.date,
+            startTime: ts.startTime,
+            endTime: ts.endTime,
+            reason: 'invalid_reference',
+          });
+          continue;
+        }
 
-    const totalPrice = result.reduce((sum, r) => sum + r.totalPrice, 0);
+        // Check past date+time
+        const slotDate = new Date(ts.date);
+        const [slotH, slotM] = ts.startTime.split(':').map(Number);
+        slotDate.setUTCHours(slotH, slotM, 0, 0);
+        if (slotDate.getTime() <= Date.now()) {
+          conflicts.push({
+            slotId: ts.id,
+            courtId: ts.courtId,
+            courtName: ts.court.name,
+            date: ts.date,
+            startTime: ts.startTime,
+            endTime: ts.endTime,
+            reason: 'past_date',
+          });
+          continue;
+        }
 
-    res.status(201).json({
-      bookingSessionId,
-      rentals: result,
-      totalPrice,
-      slotCount: result.length,
-    });
-  } catch (error) {
-    console.error('Bulk rent error:', error);
-    const message =
-      error instanceof Error ? error.message : 'Failed to process bulk booking';
-    res.status(500).json({ error: message });
+        // Check availability
+        if (ts.status !== 'available') {
+          conflicts.push({
+            slotId: ts.id,
+            courtId: ts.courtId,
+            courtName: ts.court.name,
+            date: ts.date,
+            startTime: ts.startTime,
+            endTime: ts.endTime,
+            reason: ts.status,
+          });
+          continue;
+        }
+
+        validSlots.push({ reqSlot, timeSlot: ts });
+      }
+
+      // If any conflicts, return 409 without creating anything
+      if (conflicts.length > 0) {
+        return res.status(409).json({
+          conflicts,
+          availableSlots: validSlots.map(v => ({
+            slotId: v.timeSlot.id,
+            courtId: v.reqSlot.courtId,
+            facilityId: v.reqSlot.facilityId,
+          })),
+        });
+      }
+
+      // All slots valid — create rentals in a transaction
+      const bookingSessionId = randomUUID();
+
+      // Check for existing rentals (orphaned data) before transaction
+      const existingRentals = await prisma.facilityRental.findMany({
+        where: {
+          timeSlotId: { in: validSlots.map(v => v.timeSlot.id) },
+          status: { not: 'cancelled' },
+        },
+        select: { timeSlotId: true },
+      });
+
+      if (existingRentals.length > 0) {
+        // Some slots already have rental records — treat as conflicts
+        const existingSlotIds = new Set(existingRentals.map(r => r.timeSlotId));
+        const orphanConflicts = validSlots
+          .filter(v => existingSlotIds.has(v.timeSlot.id))
+          .map(v => ({
+            slotId: v.timeSlot.id,
+            courtId: v.timeSlot.courtId,
+            courtName: v.timeSlot.court.name,
+            date: v.timeSlot.date,
+            startTime: v.timeSlot.startTime,
+            endTime: v.timeSlot.endTime,
+            reason: 'already_rented',
+          }));
+
+        const stillValid = validSlots.filter(
+          v => !existingSlotIds.has(v.timeSlot.id)
+        );
+
+        return res.status(409).json({
+          conflicts: orphanConflicts,
+          availableSlots: stillValid.map(v => ({
+            slotId: v.timeSlot.id,
+            courtId: v.reqSlot.courtId,
+            facilityId: v.reqSlot.facilityId,
+          })),
+        });
+      }
+
+      const result = await prisma.$transaction(
+        async tx => {
+          const rentals = [];
+
+          for (const { timeSlot: ts } of validSlots) {
+            const facility = ts.court.facility as typeof ts.court.facility & {
+              requiresBookingConfirmation?: boolean;
+              requiresInsurance?: boolean;
+            };
+            let rentalStatus = 'confirmed';
+            let attachedInsuranceDocumentId: string | null = null;
+
+            // If facility requires booking confirmation, set to pending
+            if (facility.requiresBookingConfirmation) {
+              rentalStatus = 'pending_approval';
+            }
+
+            // If facility requires insurance and a document was provided, attach it
+            if (facility.requiresInsurance && req.body.insuranceDocumentId) {
+              rentalStatus = 'pending_approval';
+              attachedInsuranceDocumentId = req.body.insuranceDocumentId;
+            }
+
+            // Update slot status
+            await tx.facilityTimeSlot.update({
+              where: { id: ts.id },
+              data: { status: 'rented' },
+            });
+
+            // Create rental
+            const rental = await tx.facilityRental.create({
+              data: {
+                userId,
+                timeSlotId: ts.id,
+                totalPrice: ts.price,
+                status: rentalStatus,
+                paymentStatus: ts.price > 0 ? 'pending' : 'paid',
+                bookingSessionId,
+                ...(attachedInsuranceDocumentId
+                  ? { attachedInsuranceDocumentId }
+                  : {}),
+              },
+              include: {
+                timeSlot: {
+                  include: {
+                    court: {
+                      include: { facility: true },
+                    },
+                  },
+                },
+              },
+            });
+
+            rentals.push(rental);
+          }
+
+          return rentals;
+        },
+        { maxWait: 10000, timeout: 30000 }
+      );
+
+      const totalPrice = result.reduce((sum, r) => sum + r.totalPrice, 0);
+
+      res.status(201).json({
+        bookingSessionId,
+        rentals: result,
+        totalPrice,
+        slotCount: result.length,
+      });
+    } catch (error) {
+      console.error('Bulk rent error:', error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to process bulk booking';
+      res.status(500).json({ error: message });
+    }
   }
-});
+);
 
 // Get user's rentals (MUST be before /:rentalId to avoid route conflict)
-router.get('/rentals/my-rentals', async (req, res) => {
+router.get('/rentals/my-rentals', optionalAuthMiddleware, async (req, res) => {
   try {
-    const { userId, status, upcoming } = req.query;
+    const { status, upcoming } = req.query;
+    const userId = req.user?.userId || (req.query.userId as string);
 
     // TODO: Get userId from auth token
 
@@ -801,7 +808,7 @@ router.get('/rentals/facilities/:facilityId/rentals', async (req, res) => {
  * Body: { userId, courtId, facilityId, slotStartTime, slotEndTime, frequency, startDate, endDate }
  * Returns: { available: [...], conflicts: [...] }
  */
-router.post('/rentals/recurring/check', async (req, res) => {
+router.post('/rentals/recurring/check', authMiddleware, async (req, res) => {
   try {
     const {
       courtId,
@@ -902,273 +909,283 @@ router.post('/rentals/recurring/check', async (req, res) => {
  * Body: { userId, courtId, facilityId, slotStartTime, slotEndTime, frequency, startDate, endDate, skipConflicts }
  * skipConflicts: if true, only books available slots; if false, fails on any conflict.
  */
-router.post('/rentals/recurring', requireNonDependent, async (req, res) => {
-  try {
-    const {
-      userId,
-      courtId,
-      facilityId,
-      slotStartTime,
-      slotEndTime,
-      frequency,
-      startDate,
-      endDate,
-      skipConflicts,
-    } = req.body;
+router.post(
+  '/rentals/recurring',
+  authMiddleware,
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        courtId,
+        facilityId,
+        slotStartTime,
+        slotEndTime,
+        frequency,
+        startDate,
+        endDate,
+        skipConflicts,
+      } = req.body;
 
-    if (
-      !userId ||
-      !courtId ||
-      !facilityId ||
-      !slotStartTime ||
-      !slotEndTime ||
-      !frequency ||
-      !startDate ||
-      !endDate
-    ) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    if (frequency !== 'weekly' && frequency !== 'monthly') {
-      return res
-        .status(400)
-        .json({ error: 'Frequency must be "weekly" or "monthly"' });
-    }
-
-    const dates = generateOccurrences({
-      frequency: frequency as RecurringFrequency,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-    });
-
-    if (dates.length === 0) {
-      return res.status(400).json({ error: 'No occurrences generated' });
-    }
-
-    if (dates.length > 52) {
-      return res
-        .status(400)
-        .json({ error: 'Recurring series cannot exceed 52 instances' });
-    }
-
-    // Resolve slots
-    const slotsToBook: { slotId: string; price: number; date: Date }[] = [];
-    const conflicts: any[] = [];
-
-    for (const date of dates) {
-      const normalizedDate = new Date(date);
-      normalizedDate.setUTCHours(0, 0, 0, 0);
-
-      const slot = await prisma.facilityTimeSlot.findFirst({
-        where: {
-          courtId,
-          date: normalizedDate,
-          startTime: slotStartTime,
-          endTime: slotEndTime,
-        },
-      });
-
-      const dateStr = normalizedDate.toISOString().split('T')[0];
-
-      if (!slot || slot.status !== 'available') {
-        conflicts.push({
-          date: dateStr,
-          reason: slot ? slot.status : 'no_slot',
-        });
-        continue;
+      if (
+        !userId ||
+        !courtId ||
+        !facilityId ||
+        !slotStartTime ||
+        !slotEndTime ||
+        !frequency ||
+        !startDate ||
+        !endDate
+      ) {
+        return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      // Check orphaned rental
-      const existingRental = await prisma.facilityRental.findUnique({
-        where: { timeSlotId: slot.id },
-      });
-      if (existingRental && existingRental.status !== 'cancelled') {
-        conflicts.push({ date: dateStr, reason: 'already_rented' });
-        continue;
+      if (frequency !== 'weekly' && frequency !== 'monthly') {
+        return res
+          .status(400)
+          .json({ error: 'Frequency must be "weekly" or "monthly"' });
       }
 
-      slotsToBook.push({
-        slotId: slot.id,
-        price: slot.price,
-        date: normalizedDate,
+      const dates = generateOccurrences({
+        frequency: frequency as RecurringFrequency,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
       });
-    }
 
-    if (!skipConflicts && conflicts.length > 0) {
-      return res.status(409).json({
-        error: 'Some dates have conflicts',
-        conflicts,
-        availableCount: slotsToBook.length,
-      });
-    }
+      if (dates.length === 0) {
+        return res.status(400).json({ error: 'No occurrences generated' });
+      }
 
-    if (slotsToBook.length === 0) {
-      return res.status(400).json({ error: 'No available slots to book' });
-    }
+      if (dates.length > 52) {
+        return res
+          .status(400)
+          .json({ error: 'Recurring series cannot exceed 52 instances' });
+      }
 
-    const recurringGroupId = randomUUID();
-    const sd = new Date(startDate);
-    const firstDate = dates[0]!;
+      // Resolve slots
+      const slotsToBook: { slotId: string; price: number; date: Date }[] = [];
+      const conflicts: any[] = [];
 
-    // Fetch facility to check confirmation requirement
-    const facility = await prisma.facility.findUnique({
-      where: { id: facilityId },
-      select: { requiresBookingConfirmation: true, requiresInsurance: true },
-    });
-    const needsApproval = facility?.requiresBookingConfirmation === true;
+      for (const date of dates) {
+        const normalizedDate = new Date(date);
+        normalizedDate.setUTCHours(0, 0, 0, 0);
 
-    const result = await prisma.$transaction(
-      async tx => {
-        // Create recurring booking metadata
-        await tx.recurringBooking.create({
-          data: {
-            groupId: recurringGroupId,
-            frequency,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
-            dayOfWeek: frequency === 'weekly' ? firstDate.getUTCDay() : null,
-            dayOfMonth: frequency === 'monthly' ? firstDate.getUTCDate() : null,
+        const slot = await prisma.facilityTimeSlot.findFirst({
+          where: {
+            courtId,
+            date: normalizedDate,
             startTime: slotStartTime,
             endTime: slotEndTime,
-            courtId,
-            userId,
-            totalInstances: slotsToBook.length,
-            activeInstances: slotsToBook.length,
           },
         });
 
-        const rentals = [];
-        for (const { slotId, price } of slotsToBook) {
-          await tx.facilityTimeSlot.update({
-            where: { id: slotId },
-            data: { status: 'rented' },
-          });
+        const dateStr = normalizedDate.toISOString().split('T')[0];
 
-          const rental = await tx.facilityRental.create({
-            data: {
-              userId,
-              timeSlotId: slotId,
-              totalPrice: price,
-              status: needsApproval ? 'pending_approval' : 'confirmed',
-              paymentStatus: price > 0 ? 'pending' : 'paid',
-              recurringGroupId,
-            },
-            include: {
-              timeSlot: {
-                include: {
-                  court: { include: { facility: true } },
-                },
-              },
-            },
+        if (!slot || slot.status !== 'available') {
+          conflicts.push({
+            date: dateStr,
+            reason: slot ? slot.status : 'no_slot',
           });
-          rentals.push(rental);
+          continue;
         }
 
-        return rentals;
-      },
-      { maxWait: 10000, timeout: 30000 }
-    );
+        // Check orphaned rental
+        const existingRental = await prisma.facilityRental.findUnique({
+          where: { timeSlotId: slot.id },
+        });
+        if (existingRental && existingRental.status !== 'cancelled') {
+          conflicts.push({ date: dateStr, reason: 'already_rented' });
+          continue;
+        }
 
-    const totalPrice = result.reduce((sum, r) => sum + r.totalPrice, 0);
+        slotsToBook.push({
+          slotId: slot.id,
+          price: slot.price,
+          date: normalizedDate,
+        });
+      }
 
-    res.status(201).json({
-      recurringGroupId,
-      frequency,
-      rentals: result,
-      totalPrice,
-      instanceCount: result.length,
-      skippedConflicts: conflicts,
-    });
-  } catch (error) {
-    console.error('Recurring booking error:', error);
-    res.status(500).json({ error: 'Failed to create recurring booking' });
+      if (!skipConflicts && conflicts.length > 0) {
+        return res.status(409).json({
+          error: 'Some dates have conflicts',
+          conflicts,
+          availableCount: slotsToBook.length,
+        });
+      }
+
+      if (slotsToBook.length === 0) {
+        return res.status(400).json({ error: 'No available slots to book' });
+      }
+
+      const recurringGroupId = randomUUID();
+      const sd = new Date(startDate);
+      const firstDate = dates[0]!;
+
+      // Fetch facility to check confirmation requirement
+      const facility = await prisma.facility.findUnique({
+        where: { id: facilityId },
+        select: { requiresBookingConfirmation: true, requiresInsurance: true },
+      });
+      const needsApproval = facility?.requiresBookingConfirmation === true;
+
+      const result = await prisma.$transaction(
+        async tx => {
+          // Create recurring booking metadata
+          await tx.recurringBooking.create({
+            data: {
+              groupId: recurringGroupId,
+              frequency,
+              startDate: new Date(startDate),
+              endDate: new Date(endDate),
+              dayOfWeek: frequency === 'weekly' ? firstDate.getUTCDay() : null,
+              dayOfMonth:
+                frequency === 'monthly' ? firstDate.getUTCDate() : null,
+              startTime: slotStartTime,
+              endTime: slotEndTime,
+              courtId,
+              userId,
+              totalInstances: slotsToBook.length,
+              activeInstances: slotsToBook.length,
+            },
+          });
+
+          const rentals = [];
+          for (const { slotId, price } of slotsToBook) {
+            await tx.facilityTimeSlot.update({
+              where: { id: slotId },
+              data: { status: 'rented' },
+            });
+
+            const rental = await tx.facilityRental.create({
+              data: {
+                userId,
+                timeSlotId: slotId,
+                totalPrice: price,
+                status: needsApproval ? 'pending_approval' : 'confirmed',
+                paymentStatus: price > 0 ? 'pending' : 'paid',
+                recurringGroupId,
+              },
+              include: {
+                timeSlot: {
+                  include: {
+                    court: { include: { facility: true } },
+                  },
+                },
+              },
+            });
+            rentals.push(rental);
+          }
+
+          return rentals;
+        },
+        { maxWait: 10000, timeout: 30000 }
+      );
+
+      const totalPrice = result.reduce((sum, r) => sum + r.totalPrice, 0);
+
+      res.status(201).json({
+        recurringGroupId,
+        frequency,
+        rentals: result,
+        totalPrice,
+        instanceCount: result.length,
+        skippedConflicts: conflicts,
+      });
+    } catch (error) {
+      console.error('Recurring booking error:', error);
+      res.status(500).json({ error: 'Failed to create recurring booking' });
+    }
   }
-});
+);
 
 /**
  * DELETE /rentals/recurring/:groupId — Cancel all future instances in a recurring series.
  * Body: { userId }
  */
-router.delete('/rentals/recurring/:groupId', async (req, res) => {
-  try {
-    const { groupId } = req.params as { groupId: string };
-    const { userId } = req.body;
+router.delete(
+  '/rentals/recurring/:groupId',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { groupId } = req.params as { groupId: string };
+      const { userId } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    const recurringBooking = await prisma.recurringBooking.findUnique({
-      where: { groupId },
-    });
-
-    if (!recurringBooking) {
-      return res.status(404).json({ error: 'Recurring series not found' });
-    }
-
-    if (recurringBooking.userId !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    // Find all future confirmed rentals in this series
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    const futureRentals = await prisma.facilityRental.findMany({
-      where: {
-        recurringGroupId: groupId,
-        status: 'confirmed',
-        usedForEventId: null, // Don't cancel rentals already used for events
-        timeSlot: {
-          date: { gte: today },
-        },
-      },
-      include: { timeSlot: true },
-    });
-
-    if (futureRentals.length === 0) {
-      return res.status(400).json({ error: 'No future instances to cancel' });
-    }
-
-    await prisma.$transaction(async tx => {
-      for (const rental of futureRentals) {
-        await tx.facilityRental.update({
-          where: { id: rental.id },
-          data: {
-            status: 'cancelled',
-            cancelledAt: new Date(),
-            cancellationReason: 'Recurring series cancelled',
-            refundAmount:
-              rental.paymentStatus === 'paid' ? rental.totalPrice : 0,
-          },
-        });
-
-        await tx.facilityTimeSlot.update({
-          where: { id: rental.timeSlotId },
-          data: { status: 'available' },
-        });
+      if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
       }
 
-      // Update active count
-      await tx.recurringBooking.update({
+      const recurringBooking = await prisma.recurringBooking.findUnique({
         where: { groupId },
-        data: {
-          activeInstances: {
-            decrement: futureRentals.length,
+      });
+
+      if (!recurringBooking) {
+        return res.status(404).json({ error: 'Recurring series not found' });
+      }
+
+      if (recurringBooking.userId !== userId) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+
+      // Find all future confirmed rentals in this series
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+
+      const futureRentals = await prisma.facilityRental.findMany({
+        where: {
+          recurringGroupId: groupId,
+          status: 'confirmed',
+          usedForEventId: null, // Don't cancel rentals already used for events
+          timeSlot: {
+            date: { gte: today },
           },
         },
+        include: { timeSlot: true },
       });
-    });
 
-    res.json({
-      cancelledCount: futureRentals.length,
-      message: `Cancelled ${futureRentals.length} future reservation(s) in this series`,
-    });
-  } catch (error) {
-    console.error('Cancel recurring series error:', error);
-    res.status(500).json({ error: 'Failed to cancel recurring series' });
+      if (futureRentals.length === 0) {
+        return res.status(400).json({ error: 'No future instances to cancel' });
+      }
+
+      await prisma.$transaction(async tx => {
+        for (const rental of futureRentals) {
+          await tx.facilityRental.update({
+            where: { id: rental.id },
+            data: {
+              status: 'cancelled',
+              cancelledAt: new Date(),
+              cancellationReason: 'Recurring series cancelled',
+              refundAmount:
+                rental.paymentStatus === 'paid' ? rental.totalPrice : 0,
+            },
+          });
+
+          await tx.facilityTimeSlot.update({
+            where: { id: rental.timeSlotId },
+            data: { status: 'available' },
+          });
+        }
+
+        // Update active count
+        await tx.recurringBooking.update({
+          where: { groupId },
+          data: {
+            activeInstances: {
+              decrement: futureRentals.length,
+            },
+          },
+        });
+      });
+
+      res.json({
+        cancelledCount: futureRentals.length,
+        message: `Cancelled ${futureRentals.length} future reservation(s) in this series`,
+      });
+    } catch (error) {
+      console.error('Cancel recurring series error:', error);
+      res.status(500).json({ error: 'Failed to cancel recurring series' });
+    }
   }
-});
+);
 
 /**
  * GET /rentals/recurring/:groupId — Get all rentals in a recurring series.
@@ -1210,123 +1227,136 @@ router.get('/rentals/recurring/:groupId', async (req, res) => {
 // ---------------------------------------------------------------------------
 // POST /rentals/book-range — Book a court by time range (creates slots + rental)
 // ---------------------------------------------------------------------------
-router.post('/rentals/book-range', requireNonDependent, async (req, res) => {
-  try {
-    const {
-      userId,
-      facilityId,
-      courtId,
-      date,
-      startTime,
-      endTime,
-      insuranceDocumentId,
-    } = req.body;
+router.post(
+  '/rentals/book-range',
+  authMiddleware,
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        facilityId,
+        courtId,
+        date,
+        startTime,
+        endTime,
+        insuranceDocumentId,
+      } = req.body;
 
-    if (!userId || !facilityId || !courtId || !date || !startTime || !endTime) {
-      return res.status(400).json({
-        error:
-          'Missing required fields: userId, facilityId, courtId, date, startTime, endTime',
-      });
-    }
-
-    // Validate court exists and belongs to facility
-    const court = await prisma.facilityCourt.findFirst({
-      where: { id: courtId, facilityId, isActive: true },
-      include: { facility: true },
-    });
-    if (!court) {
-      return res.status(404).json({ error: 'Court not found' });
-    }
-
-    const pricePerHour = court.pricePerHour ?? court.facility.pricePerHour ?? 0;
-    const slotIncrement = court.facility.slotIncrementMinutes || 60;
-
-    // Parse time range into slot boundaries
-    const toMin = (t: string) => {
-      const [h, m] = t.split(':').map(Number);
-      return (h || 0) * 60 + (m || 0);
-    };
-    const startMin = toMin(startTime);
-    const endMin = toMin(endTime);
-    if (endMin <= startMin) {
-      return res
-        .status(400)
-        .json({ error: 'End time must be after start time' });
-    }
-
-    // Check for overlapping rentals
-    const targetDate = new Date(date + 'T00:00:00Z');
-    const existingRentals = await prisma.facilityRental.findMany({
-      where: {
-        status: { in: ['confirmed', 'pending_approval'] },
-        timeSlot: { courtId, date: targetDate },
-      },
-      include: { timeSlot: { select: { startTime: true, endTime: true } } },
-    });
-
-    for (const r of existingRentals) {
-      const rStart = toMin(r.timeSlot.startTime);
-      const rEnd = toMin(r.timeSlot.endTime);
-      if (startMin < rEnd && endMin > rStart) {
-        return res.status(409).json({
-          error: 'Selected time overlaps with an existing reservation',
+      if (
+        !userId ||
+        !facilityId ||
+        !courtId ||
+        !date ||
+        !startTime ||
+        !endTime
+      ) {
+        return res.status(400).json({
+          error:
+            'Missing required fields: userId, facilityId, courtId, date, startTime, endTime',
         });
       }
-    }
 
-    // Determine status based on facility requirements
-    const facility = court.facility as any;
-    let rentalStatus = 'confirmed';
-    if (facility.requiresInsurance || facility.requiresBookingConfirmation) {
-      rentalStatus = 'pending_approval';
-    }
+      // Validate court exists and belongs to facility
+      const court = await prisma.facilityCourt.findFirst({
+        where: { id: courtId, facilityId, isActive: true },
+        include: { facility: true },
+      });
+      if (!court) {
+        return res.status(404).json({ error: 'Court not found' });
+      }
 
-    // Calculate total price
-    const durationMinutes = endMin - startMin;
-    const totalPrice =
-      Math.round((pricePerHour / 60) * durationMinutes * 100) / 100;
+      const pricePerHour =
+        court.pricePerHour ?? court.facility.pricePerHour ?? 0;
+      const slotIncrement = court.facility.slotIncrementMinutes || 60;
 
-    // Create time slot + rental in a transaction
-    const result = await prisma.$transaction(async tx => {
-      const timeSlot = await tx.facilityTimeSlot.create({
-        data: {
-          courtId,
-          date: targetDate,
-          startTime,
-          endTime,
-          price: totalPrice,
-          status: 'rented',
+      // Parse time range into slot boundaries
+      const toMin = (t: string) => {
+        const [h, m] = t.split(':').map(Number);
+        return (h || 0) * 60 + (m || 0);
+      };
+      const startMin = toMin(startTime);
+      const endMin = toMin(endTime);
+      if (endMin <= startMin) {
+        return res
+          .status(400)
+          .json({ error: 'End time must be after start time' });
+      }
+
+      // Check for overlapping rentals
+      const targetDate = new Date(date + 'T00:00:00Z');
+      const existingRentals = await prisma.facilityRental.findMany({
+        where: {
+          status: { in: ['confirmed', 'pending_approval'] },
+          timeSlot: { courtId, date: targetDate },
         },
+        include: { timeSlot: { select: { startTime: true, endTime: true } } },
       });
 
-      const rental = await tx.facilityRental.create({
-        data: {
-          userId,
-          timeSlotId: timeSlot.id,
-          totalPrice,
-          status: rentalStatus,
-          paymentStatus: totalPrice > 0 ? 'pending' : 'paid',
-          ...(insuranceDocumentId
-            ? { attachedInsuranceDocumentId: insuranceDocumentId }
-            : {}),
-        },
-        include: {
-          timeSlot: {
-            include: {
-              court: { include: { facility: true } },
+      for (const r of existingRentals) {
+        const rStart = toMin(r.timeSlot.startTime);
+        const rEnd = toMin(r.timeSlot.endTime);
+        if (startMin < rEnd && endMin > rStart) {
+          return res.status(409).json({
+            error: 'Selected time overlaps with an existing reservation',
+          });
+        }
+      }
+
+      // Determine status based on facility requirements
+      const facility = court.facility as any;
+      let rentalStatus = 'confirmed';
+      if (facility.requiresInsurance || facility.requiresBookingConfirmation) {
+        rentalStatus = 'pending_approval';
+      }
+
+      // Calculate total price
+      const durationMinutes = endMin - startMin;
+      const totalPrice =
+        Math.round((pricePerHour / 60) * durationMinutes * 100) / 100;
+
+      // Create time slot + rental in a transaction
+      const result = await prisma.$transaction(async tx => {
+        const timeSlot = await tx.facilityTimeSlot.create({
+          data: {
+            courtId,
+            date: targetDate,
+            startTime,
+            endTime,
+            price: totalPrice,
+            status: 'rented',
+          },
+        });
+
+        const rental = await tx.facilityRental.create({
+          data: {
+            userId,
+            timeSlotId: timeSlot.id,
+            totalPrice,
+            status: rentalStatus,
+            paymentStatus: totalPrice > 0 ? 'pending' : 'paid',
+            ...(insuranceDocumentId
+              ? { attachedInsuranceDocumentId: insuranceDocumentId }
+              : {}),
+          },
+          include: {
+            timeSlot: {
+              include: {
+                court: { include: { facility: true } },
+              },
             },
           },
-        },
+        });
+
+        return rental;
       });
 
-      return rental;
-    });
-
-    res.status(201).json(result);
-  } catch (error) {
-    console.error('Book range error:', error);
-    res.status(500).json({ error: 'Failed to create reservation' });
+      res.status(201).json(result);
+    } catch (error) {
+      console.error('Book range error:', error);
+      res.status(500).json({ error: 'Failed to create reservation' });
+    }
   }
-});
+);
 
 export default router;

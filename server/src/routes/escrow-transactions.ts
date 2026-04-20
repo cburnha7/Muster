@@ -12,15 +12,15 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { EscrowTransactionService } from '../services/EscrowTransactionService';
+import { optionalAuthMiddleware } from '../middleware/auth';
 
 const router = Router();
 
 /**
  * Extract the authenticated user's ID from the request.
- * Checks JWT-decoded user first, then falls back to X-User-Id header.
  */
 function getUserId(req: Request): string | undefined {
-  return req.user?.userId || (req.headers['x-user-id'] as string | undefined);
+  return req.user?.userId;
 }
 
 /**
@@ -30,11 +30,13 @@ function getUserId(req: Request): string | undefined {
  * Query param: rentalId (required)
  * Access: restricted to the ground owner of the associated facility (403 for non-owners).
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', optionalAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const rentalId = req.query.rentalId as string;
     if (!rentalId) {
-      return res.status(400).json({ error: 'rentalId query parameter is required' });
+      return res
+        .status(400)
+        .json({ error: 'rentalId query parameter is required' });
     }
 
     const userId = getUserId(req);
@@ -67,7 +69,10 @@ router.get('/', async (req: Request, res: Response) => {
     // Restrict access to the ground owner
     const facilityOwnerId = rental.timeSlot.court.facility.ownerId;
     if (userId !== facilityOwnerId) {
-      return res.status(403).json({ error: 'Access denied. Only the ground owner can view escrow transactions.' });
+      return res.status(403).json({
+        error:
+          'Access denied. Only the ground owner can view escrow transactions.',
+      });
     }
 
     const transactions = await EscrowTransactionService.getByRental(rentalId);

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // POST /api/availability/:userId/batch — import a batch of blocks
-router.post('/:userId/batch', async (req, res) => {
+router.post('/:userId/batch', authMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
     const { batchName, events } = req.body;
@@ -47,16 +48,26 @@ router.post('/:userId/batch', async (req, res) => {
 
     res.status(201).json({ count: created.count, batchId });
   } catch (error: any) {
-    console.error('Create availability batch error:', error?.code, error?.message);
+    console.error(
+      'Create availability batch error:',
+      error?.code,
+      error?.message
+    );
     if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
-      return res.status(503).json({ error: 'Availability table not yet created. Run: npx prisma migrate deploy' });
+      return res.status(503).json({
+        error:
+          'Availability table not yet created. Run: npx prisma migrate deploy',
+      });
     }
-    res.status(500).json({ error: 'Failed to create availability blocks', details: error?.message });
+    res.status(500).json({
+      error: 'Failed to create availability blocks',
+      details: error?.message,
+    });
   }
 });
 
 // DELETE /api/availability/:userId/:blockId — delete a single block
-router.delete('/:userId/:blockId', async (req, res) => {
+router.delete('/:userId/:blockId', authMiddleware, async (req, res) => {
   try {
     const { userId, blockId } = req.params;
     await prisma.availabilityBlock.deleteMany({
@@ -70,7 +81,7 @@ router.delete('/:userId/:blockId', async (req, res) => {
 });
 
 // DELETE /api/availability/:userId/batch/:batchId — delete an entire batch
-router.delete('/:userId/batch/:batchId', async (req, res) => {
+router.delete('/:userId/batch/:batchId', authMiddleware, async (req, res) => {
   try {
     const { userId, batchId } = req.params;
     const result = await prisma.availabilityBlock.deleteMany({

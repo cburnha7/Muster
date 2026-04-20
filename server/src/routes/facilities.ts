@@ -18,6 +18,7 @@ import fs from 'fs';
 import path from 'path';
 import { isValidPolicyHours } from '../services/cancellation-window';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 import { sendError, ErrorCode, asyncHandler } from '../utils/errors';
 
 // ─── Service imports ────────────────────────────────────────────────────────
@@ -454,7 +455,7 @@ router.get('/:facilityId/courts/:courtId/slots', async (req, res) => {
 });
 
 // Check for duplicate facilities at address
-router.post('/check-duplicates', async (req, res) => {
+router.post('/check-duplicates', authMiddleware, async (req, res) => {
   try {
     const result = await FacilityCrudService.checkDuplicates(req.body);
     res.json(result);
@@ -465,11 +466,9 @@ router.post('/check-duplicates', async (req, res) => {
 });
 
 // Create facility
-router.post('/', requireNonDependent, async (req, res) => {
+router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
   try {
-    const authenticatedUserId =
-      (req as any).user?.userId ||
-      (req.headers['x-user-id'] as string | undefined);
+    const authenticatedUserId = req.user!.userId;
     const facility = await FacilityCrudService.createFacility(
       req.body,
       authenticatedUserId
@@ -482,11 +481,10 @@ router.post('/', requireNonDependent, async (req, res) => {
 });
 
 // Update facility
-router.put('/:id', requireNonDependent, async (req, res) => {
+router.put('/:id', authMiddleware, requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId =
-      (req as any).user?.userId || (req.headers['x-user-id'] as string);
+    const userId = req.user!.userId;
     const result = await FacilityCrudService.updateFacility(
       id,
       req.body,
@@ -500,11 +498,10 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 });
 
 // Delete facility
-router.delete('/:id', requireNonDependent, async (req, res) => {
+router.delete('/:id', authMiddleware, requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId =
-      (req as any).user?.userId || (req.headers['x-user-id'] as string);
+    const userId = req.user!.userId;
     await FacilityCrudService.deleteFacility(id, userId);
     res.status(204).send();
   } catch (error: any) {
@@ -513,40 +510,43 @@ router.delete('/:id', requireNonDependent, async (req, res) => {
   }
 });
 
-export default router;
-
 // ============================================================================
 // VERIFICATION ROUTES
 // ============================================================================
 
 // Submit verification request
-router.post('/:id/verification', requireNonDependent, async (req, res) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { documents } = req.body;
+router.post(
+  '/:id/verification',
+  authMiddleware,
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { id } = req.params as { id: string };
+      const { documents } = req.body;
 
-    if (!documents || documents.length === 0) {
-      return res
-        .status(400)
-        .json({ error: 'At least one document is required' });
+      if (!documents || documents.length === 0) {
+        return res
+          .status(400)
+          .json({ error: 'At least one document is required' });
+      }
+
+      if (documents.length > 5) {
+        return res.status(400).json({ error: 'Maximum 5 documents allowed' });
+      }
+
+      const verification = await verificationService.submitVerification(
+        id,
+        documents
+      );
+      res.status(201).json(verification);
+    } catch (error: any) {
+      console.error('Submit verification error:', error);
+      res
+        .status(500)
+        .json({ error: error.message || 'Failed to submit verification' });
     }
-
-    if (documents.length > 5) {
-      return res.status(400).json({ error: 'Maximum 5 documents allowed' });
-    }
-
-    const verification = await verificationService.submitVerification(
-      id,
-      documents
-    );
-    res.status(201).json(verification);
-  } catch (error: any) {
-    console.error('Submit verification error:', error);
-    res
-      .status(500)
-      .json({ error: error.message || 'Failed to submit verification' });
   }
-});
+);
 
 // Get verification status
 router.get('/:id/verification', async (req, res) => {
@@ -570,31 +570,36 @@ router.get('/:id/verification', async (req, res) => {
 // ============================================================================
 
 // Create rate schedule
-router.post('/:id/rates', requireNonDependent, async (req, res) => {
-  try {
-    const { id } = req.params as { id: string };
-    const rateData = req.body;
+router.post(
+  '/:id/rates',
+  authMiddleware,
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { id } = req.params as { id: string };
+      const rateData = req.body;
 
-    // Validate rate
-    if (rateData.hourlyRate < 1 || rateData.hourlyRate > 500) {
-      return res
-        .status(400)
-        .json({ error: 'Hourly rate must be between $1 and $500' });
+      // Validate rate
+      if (rateData.hourlyRate < 1 || rateData.hourlyRate > 500) {
+        return res
+          .status(400)
+          .json({ error: 'Hourly rate must be between $1 and $500' });
+      }
+
+      const rate = await prisma.facilityRateSchedule.create({
+        data: {
+          facilityId: id,
+          ...rateData,
+        },
+      });
+
+      res.status(201).json(rate);
+    } catch (error) {
+      console.error('Create rate error:', error);
+      res.status(500).json({ error: 'Failed to create rate schedule' });
     }
-
-    const rate = await prisma.facilityRateSchedule.create({
-      data: {
-        facilityId: id,
-        ...rateData,
-      },
-    });
-
-    res.status(201).json(rate);
-  } catch (error) {
-    console.error('Create rate error:', error);
-    res.status(500).json({ error: 'Failed to create rate schedule' });
   }
-});
+);
 
 // List rate schedules
 router.get('/:id/rates', async (req, res) => {
@@ -614,7 +619,7 @@ router.get('/:id/rates', async (req, res) => {
 });
 
 // Update rate schedule
-router.put('/:id/rates/:rateId', async (req, res) => {
+router.put('/:id/rates/:rateId', authMiddleware, async (req, res) => {
   try {
     const { rateId } = req.params as { rateId: string };
     const rateData = req.body;
@@ -632,7 +637,7 @@ router.put('/:id/rates/:rateId', async (req, res) => {
 });
 
 // Delete rate schedule
-router.delete('/:id/rates/:rateId', async (req, res) => {
+router.delete('/:id/rates/:rateId', authMiddleware, async (req, res) => {
   try {
     const { rateId } = req.params as { rateId: string };
 
@@ -648,7 +653,7 @@ router.delete('/:id/rates/:rateId', async (req, res) => {
 });
 
 // Calculate price for booking
-router.post('/:id/calculate-price', async (req, res) => {
+router.post('/:id/calculate-price', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
     const { startTime, endTime } = req.body;
@@ -681,24 +686,29 @@ router.post('/:id/calculate-price', async (req, res) => {
 // ============================================================================
 
 // Create availability slot
-router.post('/:id/availability', requireNonDependent, async (req, res) => {
-  try {
-    const { id } = req.params as { id: string };
-    const availabilityData = req.body;
+router.post(
+  '/:id/availability',
+  authMiddleware,
+  requireNonDependent,
+  async (req, res) => {
+    try {
+      const { id } = req.params as { id: string };
+      const availabilityData = req.body;
 
-    const slot = await prisma.facilityAvailability.create({
-      data: {
-        facilityId: id,
-        ...availabilityData,
-      },
-    });
+      const slot = await prisma.facilityAvailability.create({
+        data: {
+          facilityId: id,
+          ...availabilityData,
+        },
+      });
 
-    res.status(201).json(slot);
-  } catch (error) {
-    console.error('Create availability error:', error);
-    res.status(500).json({ error: 'Failed to create availability slot' });
+      res.status(201).json(slot);
+    } catch (error) {
+      console.error('Create availability error:', error);
+      res.status(500).json({ error: 'Failed to create availability slot' });
+    }
   }
-});
+);
 
 // List availability slots
 router.get('/:id/availability', async (req, res) => {
@@ -734,7 +744,7 @@ router.get('/:id/availability', async (req, res) => {
 });
 
 // Update availability slot
-router.put('/:id/availability/:slotId', async (req, res) => {
+router.put('/:id/availability/:slotId', authMiddleware, async (req, res) => {
   try {
     const { slotId } = req.params as { slotId: string };
     const availabilityData = req.body;
@@ -752,7 +762,7 @@ router.put('/:id/availability/:slotId', async (req, res) => {
 });
 
 // Delete availability slot
-router.delete('/:id/availability/:slotId', async (req, res) => {
+router.delete('/:id/availability/:slotId', authMiddleware, async (req, res) => {
   try {
     const { slotId } = req.params as { slotId: string };
 
@@ -803,15 +813,12 @@ router.get('/:id/availability/check', async (req, res) => {
 // Upload facility photos
 router.post(
   '/:id/photos',
+  authMiddleware,
   uploadPhoto.array('photos', 20),
   async (req, res) => {
     try {
       const { id } = req.params as { id: string };
-      const userId = req.headers['x-user-id'] as string;
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
+      const userId = req.user!.userId;
 
       const facility = await prisma.facility.findUnique({
         where: { id },
@@ -890,14 +897,10 @@ router.post(
 );
 
 // Delete a facility photo
-router.delete('/:id/photos/:photoId', async (req, res) => {
+router.delete('/:id/photos/:photoId', authMiddleware, async (req, res) => {
   try {
     const { id, photoId } = req.params as { id: string; photoId: string };
-    const userId = req.headers['x-user-id'] as string;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    const userId = req.user!.userId;
 
     const facility = await prisma.facility.findUnique({
       where: { id },
@@ -953,6 +956,7 @@ router.delete('/:id/photos/:photoId', async (req, res) => {
 // Upload facility map image
 router.post(
   '/:id/map',
+  authMiddleware,
   uploadMap.single('image'),
   requireNonDependent,
   async (req, res) => {
@@ -1058,7 +1062,7 @@ router.post(
 );
 
 // Delete facility map image
-router.delete('/:id/map', async (req, res) => {
+router.delete('/:id/map', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
 
@@ -1111,14 +1115,14 @@ router.delete('/:id/map', async (req, res) => {
 // Upload facility cover image
 router.post(
   '/:id/cover',
+  authMiddleware,
   uploadCover.single('image'),
   requireNonDependent,
   async (req, res) => {
     try {
       const { id } = req.params as { id: string };
       const file = req.file;
-      const userId =
-        (req as any).user?.userId || (req.headers['x-user-id'] as string);
+      const userId = req.user!.userId;
 
       // Validate file
       const validation = validateImageFile(file as Express.Multer.File);
@@ -1229,11 +1233,10 @@ router.post(
 );
 
 // Delete facility cover image
-router.delete('/:id/cover', async (req, res) => {
+router.delete('/:id/cover', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId =
-      (req as any).user?.userId || (req.headers['x-user-id'] as string);
+    const userId = req.user!.userId;
 
     // Check if facility exists
     const facility = await prisma.facility.findUnique({
@@ -1412,3 +1415,5 @@ router.put(
     }
   }
 );
+
+export default router;

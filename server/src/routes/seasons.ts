@@ -2,18 +2,14 @@ import express, { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { calculateAvgCourtCost } from '../services/balance';
 import { calculateSuggestedDues } from '../services/suggested-dues';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
 // GET /api/seasons - Get all seasons with filtering and pagination
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const {
-      leagueId,
-      isActive,
-      page = '1',
-      limit = '20'
-    } = req.query;
+    const { leagueId, isActive, page = '1', limit = '20' } = req.query;
 
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
@@ -21,11 +17,11 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Build where clause
     const where: any = {};
-    
+
     if (leagueId) {
       where.leagueId = leagueId;
     }
-    
+
     if (isActive !== undefined) {
       where.isActive = isActive === 'true';
     }
@@ -43,18 +39,18 @@ router.get('/', async (req: Request, res: Response) => {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
+            sportType: true,
+          },
         },
         memberships: {
           where: { status: 'active' },
-          select: { id: true }
+          select: { id: true },
         },
         matches: {
-          select: { id: true }
-        }
+          select: { id: true },
+        },
       },
-      orderBy: { startDate: 'desc' }
+      orderBy: { startDate: 'desc' },
     });
 
     // Add counts
@@ -63,7 +59,7 @@ router.get('/', async (req: Request, res: Response) => {
       memberCount: season.memberships.length,
       matchCount: season.matches.length,
       memberships: undefined,
-      matches: undefined
+      matches: undefined,
     }));
 
     res.json({
@@ -72,8 +68,8 @@ router.get('/', async (req: Request, res: Response) => {
         page: pageNum,
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
-      }
+        totalPages: Math.ceil(total / limitNum),
+      },
     });
   } catch (error) {
     console.error('Error fetching seasons:', error);
@@ -88,7 +84,8 @@ router.get('/suggested-dues', async (req: Request, res: Response) => {
 
     if (!sportType || !gamesPerTeam || !rosterCount) {
       return res.status(400).json({
-        error: 'Missing required query parameters: sportType, gamesPerTeam, rosterCount',
+        error:
+          'Missing required query parameters: sportType, gamesPerTeam, rosterCount',
       });
     }
 
@@ -96,14 +93,22 @@ router.get('/suggested-dues', async (req: Request, res: Response) => {
     const rosterNum = parseInt(rosterCount as string, 10);
 
     if (isNaN(gamesNum) || gamesNum <= 0) {
-      return res.status(400).json({ error: 'gamesPerTeam must be a positive integer' });
+      return res
+        .status(400)
+        .json({ error: 'gamesPerTeam must be a positive integer' });
     }
     if (isNaN(rosterNum) || rosterNum <= 0) {
-      return res.status(400).json({ error: 'rosterCount must be a positive integer' });
+      return res
+        .status(400)
+        .json({ error: 'rosterCount must be a positive integer' });
     }
 
     const avgCourtCost = await calculateAvgCourtCost(sportType as string);
-    const suggestedDues = calculateSuggestedDues(gamesNum, avgCourtCost, rosterNum);
+    const suggestedDues = calculateSuggestedDues(
+      gamesNum,
+      avgCourtCost,
+      rosterNum
+    );
 
     res.json({
       avgCourtCost,
@@ -130,8 +135,8 @@ router.get('/:id', async (req: Request, res: Response) => {
             id: true,
             name: true,
             sportType: true,
-            pointsConfig: true
-          }
+            pointsConfig: true,
+          },
         },
         memberships: {
           where: { status: 'active' },
@@ -141,15 +146,15 @@ router.get('/:id', async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 imageUrl: true,
-                sportType: true
-              }
-            }
+                sportType: true,
+              },
+            },
           },
           orderBy: [
             { points: 'desc' },
             { goalDifference: 'desc' },
-            { goalsFor: 'desc' }
-          ]
+            { goalsFor: 'desc' },
+          ],
         },
         matches: {
           orderBy: { scheduledAt: 'desc' },
@@ -158,19 +163,19 @@ router.get('/:id', async (req: Request, res: Response) => {
               select: {
                 id: true,
                 name: true,
-                imageUrl: true
-              }
+                imageUrl: true,
+              },
             },
             awayTeam: {
               select: {
                 id: true,
                 name: true,
-                imageUrl: true
-              }
-            }
-          }
-        }
-      }
+                imageUrl: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!season) {
@@ -189,14 +194,14 @@ router.get('/:id', async (req: Request, res: Response) => {
         points: membership.points,
         goalsFor: membership.goalsFor,
         goalsAgainst: membership.goalsAgainst,
-        goalDifference: membership.goalDifference
-      }
+        goalDifference: membership.goalDifference,
+      },
     }));
 
     res.json({
       ...season,
       standings,
-      memberships: undefined
+      memberships: undefined,
     });
   } catch (error) {
     console.error('Error fetching season:', error);
@@ -205,26 +210,21 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/seasons - Create new season
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const {
-      leagueId,
-      name,
-      startDate,
-      endDate,
-      userId
-    } = req.body;
+    const { leagueId, name, startDate, endDate } = req.body;
+    const userId = req.user!.userId;
 
     // Validate required fields
     if (!leagueId || !name || !startDate || !endDate) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: leagueId, name, startDate, endDate' 
+      return res.status(400).json({
+        error: 'Missing required fields: leagueId, name, startDate, endDate',
       });
     }
 
     // Check if league exists and user is operator
     const league = await prisma.league.findUnique({
-      where: { id: leagueId }
+      where: { id: leagueId },
     });
 
     if (!league) {
@@ -232,7 +232,9 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     if (userId && league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can create seasons' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can create seasons' });
     }
 
     // Validate dates
@@ -240,7 +242,9 @@ router.post('/', async (req: Request, res: Response) => {
     const end = new Date(endDate);
 
     if (start >= end) {
-      return res.status(400).json({ error: 'Start date must be before end date' });
+      return res
+        .status(400)
+        .json({ error: 'Start date must be before end date' });
     }
 
     // Create season
@@ -249,17 +253,17 @@ router.post('/', async (req: Request, res: Response) => {
         leagueId,
         name,
         startDate: start,
-        endDate: end
+        endDate: end,
       },
       include: {
         league: {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
-        }
-      }
+            sportType: true,
+          },
+        },
+      },
     });
 
     res.status(201).json(season);
@@ -270,23 +274,18 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // PUT /api/seasons/:id - Update season
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const {
-      name,
-      startDate,
-      endDate,
-      isActive,
-      userId
-    } = req.body;
+    const { name, startDate, endDate, isActive } = req.body;
+    const userId = req.user!.userId;
 
     // Check if season exists
     const existingSeason = await prisma.season.findUnique({
       where: { id },
       include: {
-        league: true
-      }
+        league: true,
+      },
     });
 
     if (!existingSeason) {
@@ -295,7 +294,9 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     // Check if user is league operator
     if (userId && existingSeason.league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can update seasons' });
+      return res
+        .status(403)
+        .json({ error: 'Only the league operator can update seasons' });
     }
 
     // Update season
@@ -305,17 +306,17 @@ router.put('/:id', async (req: Request, res: Response) => {
         ...(name && { name }),
         ...(startDate && { startDate: new Date(startDate) }),
         ...(endDate && { endDate: new Date(endDate) }),
-        ...(isActive !== undefined && { isActive })
+        ...(isActive !== undefined && { isActive }),
       },
       include: {
         league: {
           select: {
             id: true,
             name: true,
-            sportType: true
-          }
-        }
-      }
+            sportType: true,
+          },
+        },
+      },
     });
 
     res.json(season);
@@ -326,55 +327,61 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/seasons/:id/complete - Complete season and archive standings
-router.post('/:id/complete', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const { userId } = req.body;
+router.post(
+  '/:id/complete',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const userId = req.user!.userId;
 
-    // Check if season exists
-    const existingSeason = await prisma.season.findUnique({
-      where: { id },
-      include: {
-        league: true
+      // Check if season exists
+      const existingSeason = await prisma.season.findUnique({
+        where: { id },
+        include: {
+          league: true,
+        },
+      });
+
+      if (!existingSeason) {
+        return res.status(404).json({ error: 'Season not found' });
       }
-    });
 
-    if (!existingSeason) {
-      return res.status(404).json({ error: 'Season not found' });
-    }
-
-    // Check if user is league operator
-    if (userId && existingSeason.league.organizerId !== userId) {
-      return res.status(403).json({ error: 'Only the league operator can complete seasons' });
-    }
-
-    // Mark season as completed
-    const season = await prisma.season.update({
-      where: { id },
-      data: {
-        isCompleted: true,
-        isActive: false
-      },
-      include: {
-        league: {
-          select: {
-            id: true,
-            name: true,
-            sportType: true
-          }
-        }
+      // Check if user is league operator
+      if (userId && existingSeason.league.organizerId !== userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the league operator can complete seasons' });
       }
-    });
 
-    // Note: Standings are already archived in the LeagueMembership records
-    // with the seasonId, so no additional archiving is needed
+      // Mark season as completed
+      const season = await prisma.season.update({
+        where: { id },
+        data: {
+          isCompleted: true,
+          isActive: false,
+        },
+        include: {
+          league: {
+            select: {
+              id: true,
+              name: true,
+              sportType: true,
+            },
+          },
+        },
+      });
 
-    res.json(season);
-  } catch (error) {
-    console.error('Error completing season:', error);
-    res.status(500).json({ error: 'Failed to complete season' });
+      // Note: Standings are already archived in the LeagueMembership records
+      // with the seasonId, so no additional archiving is needed
+
+      res.json(season);
+    } catch (error) {
+      console.error('Error completing season:', error);
+      res.status(500).json({ error: 'Failed to complete season' });
+    }
   }
-});
+);
 
 // GET /api/seasons/:id/standings - Get season standings
 router.get('/:id/standings', async (req: Request, res: Response) => {
@@ -384,7 +391,7 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
     const memberships = await prisma.leagueMembership.findMany({
       where: {
         seasonId: id,
-        status: 'active'
+        status: 'active',
       },
       include: {
         team: {
@@ -392,15 +399,15 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
             id: true,
             name: true,
             imageUrl: true,
-            sportType: true
-          }
-        }
+            sportType: true,
+          },
+        },
       },
       orderBy: [
         { points: 'desc' },
         { goalDifference: 'desc' },
-        { goalsFor: 'desc' }
-      ]
+        { goalsFor: 'desc' },
+      ],
     });
 
     // Format standings
@@ -415,8 +422,8 @@ router.get('/:id/standings', async (req: Request, res: Response) => {
         points: membership.points,
         goalsFor: membership.goalsFor,
         goalsAgainst: membership.goalsAgainst,
-        goalDifference: membership.goalDifference
-      }
+        goalDifference: membership.goalDifference,
+      },
     }));
 
     res.json(standings);

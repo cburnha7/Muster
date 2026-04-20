@@ -97,30 +97,8 @@ export class BaseApiService {
           }
         }
 
-        // DEVELOPMENT: Add x-user-id header for mock auth
-        // Read user from TokenStorage instead of authService
+        // User context is handled via JWT Bearer token — no X-User-Id header needed
         const currentUser = await TokenStorage.getUser();
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            '👤 Current user from TokenStorage:',
-            currentUser?.email,
-            currentUser?.id
-          );
-        }
-        if (currentUser && currentUser.id) {
-          config.headers['X-User-Id'] = currentUser.id;
-          if (process.env.NODE_ENV === 'development') {
-            console.log(
-              '🔐 API Request - User ID attached:',
-              currentUser.id,
-              currentUser.email
-            );
-          }
-        } else {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('⚠️ API Request - No current user');
-          }
-        }
 
         // Attach X-Active-User-Id header when acting on behalf of a dependent
         const storeState = getStore().getState();
@@ -184,9 +162,6 @@ export class BaseApiService {
               error.config.headers.Authorization = `Bearer ${tokens.accessToken}`;
               // Re-attach user ID header
               const currentUser = await TokenStorage.getUser();
-              if (currentUser?.id) {
-                error.config.headers['X-User-Id'] = currentUser.id;
-              }
               return this.client.request(error.config);
             }
           } catch (refreshError: any) {

@@ -12,6 +12,7 @@ import {
   confirmPlayerDuesPayment,
 } from '../services/dues';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -26,46 +27,55 @@ const router = express.Router();
  *   - rosterId: string  — Roster ID the player belongs to
  *   - seasonId: string  — Season ID the dues are for
  */
-router.post('/', requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { playerId, rosterId, seasonId } = req.body;
+router.post(
+  '/',
+  authMiddleware,
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const { playerId, rosterId, seasonId } = req.body;
 
-    if (!playerId || !rosterId || !seasonId) {
-      return res.status(400).json({
-        error: 'Missing required fields: playerId, rosterId, seasonId',
+      if (!playerId || !rosterId || !seasonId) {
+        return res.status(400).json({
+          error: 'Missing required fields: playerId, rosterId, seasonId',
+        });
+      }
+
+      const result = await createPlayerDuesPayment(
+        playerId,
+        rosterId,
+        seasonId
+      );
+
+      res.status(201).json({
+        paymentId: result.payment.id,
+        clientSecret: result.clientSecret,
+        amount: result.payment.amount,
+        platformFee: result.payment.platformFee,
       });
-    }
+    } catch (error: any) {
+      console.error('Error creating player dues payment:', error);
 
-    const result = await createPlayerDuesPayment(playerId, rosterId, seasonId);
+      if (error.message === 'Season not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      if (error.message === 'Roster not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      if (
+        error.message === 'No dues amount set for this season' ||
+        error.message ===
+          'Roster manager has not completed Stripe Connect onboarding' ||
+        error.message === 'Player is not an active member of this roster' ||
+        error.message === 'Dues already paid for this season'
+      ) {
+        return res.status(400).json({ error: error.message });
+      }
 
-    res.status(201).json({
-      paymentId: result.payment.id,
-      clientSecret: result.clientSecret,
-      amount: result.payment.amount,
-      platformFee: result.payment.platformFee,
-    });
-  } catch (error: any) {
-    console.error('Error creating player dues payment:', error);
-
-    if (error.message === 'Season not found') {
-      return res.status(404).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to create dues payment' });
     }
-    if (error.message === 'Roster not found') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (
-      error.message === 'No dues amount set for this season' ||
-      error.message ===
-        'Roster manager has not completed Stripe Connect onboarding' ||
-      error.message === 'Player is not an active member of this roster' ||
-      error.message === 'Dues already paid for this season'
-    ) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(500).json({ error: 'Failed to create dues payment' });
   }
-});
+);
 
 /**
  * POST /api/player-dues/:paymentId/confirm
@@ -77,6 +87,7 @@ router.post('/', requireNonDependent, async (req: Request, res: Response) => {
  */
 router.post(
   '/:paymentId/confirm',
+  authMiddleware,
   requireNonDependent,
   async (req: Request, res: Response) => {
     try {

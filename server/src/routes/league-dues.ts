@@ -15,6 +15,7 @@ import {
   getLeagueDuesStatus,
 } from '../services/dues';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -30,44 +31,59 @@ const router = express.Router();
  *   - seasonId:  string — Season ID
  *   - managerId: string — User ID of the roster manager
  */
-router.post('/', requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { rosterId, leagueId, seasonId, managerId } = req.body;
+router.post(
+  '/',
+  authMiddleware,
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const { rosterId, leagueId, seasonId, managerId } = req.body;
 
-    if (!rosterId || !leagueId || !seasonId || !managerId) {
-      return res.status(400).json({
-        error: 'Missing required fields: rosterId, leagueId, seasonId, managerId',
+      if (!rosterId || !leagueId || !seasonId || !managerId) {
+        return res.status(400).json({
+          error:
+            'Missing required fields: rosterId, leagueId, seasonId, managerId',
+        });
+      }
+
+      const result = await createLeagueDuesPayment(
+        rosterId,
+        leagueId,
+        seasonId,
+        managerId
+      );
+
+      res.status(201).json({
+        clientSecret: result.clientSecret,
+        paymentIntentId: result.paymentIntentId,
+        amount: result.amount,
+        platformFee: result.platformFee,
       });
+    } catch (error: any) {
+      console.error('Error creating league dues payment:', error);
+
+      if (
+        error.message === 'Season not found' ||
+        error.message === 'Roster not found'
+      ) {
+        return res.status(404).json({ error: error.message });
+      }
+      if (
+        error.message === 'Season does not belong to this league' ||
+        error.message === 'This league does not require dues' ||
+        error.message === 'No dues amount set for this season' ||
+        error.message ===
+          'League commissioner has not completed Stripe Connect onboarding' ||
+        error.message === 'User is not the manager of this roster' ||
+        error.message === 'Roster is already an active member of this season'
+      ) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      res.status(500).json({ error: 'Failed to create league dues payment' });
     }
-
-    const result = await createLeagueDuesPayment(rosterId, leagueId, seasonId, managerId);
-
-    res.status(201).json({
-      clientSecret: result.clientSecret,
-      paymentIntentId: result.paymentIntentId,
-      amount: result.amount,
-      platformFee: result.platformFee,
-    });
-  } catch (error: any) {
-    console.error('Error creating league dues payment:', error);
-
-    if (error.message === 'Season not found' || error.message === 'Roster not found') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (
-      error.message === 'Season does not belong to this league' ||
-      error.message === 'This league does not require dues' ||
-      error.message === 'No dues amount set for this season' ||
-      error.message === 'League commissioner has not completed Stripe Connect onboarding' ||
-      error.message === 'User is not the manager of this roster' ||
-      error.message === 'Roster is already an active member of this season'
-    ) {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.status(500).json({ error: 'Failed to create league dues payment' });
   }
-});
+);
 
 /**
  * POST /api/league-dues/confirm
@@ -82,24 +98,35 @@ router.post('/', requireNonDependent, async (req: Request, res: Response) => {
  *   - leagueId:        string — League ID
  *   - seasonId:        string — Season ID
  */
-router.post('/confirm', requireNonDependent, async (req: Request, res: Response) => {
-  try {
-    const { paymentIntentId, rosterId, leagueId, seasonId } = req.body;
+router.post(
+  '/confirm',
+  authMiddleware,
+  requireNonDependent,
+  async (req: Request, res: Response) => {
+    try {
+      const { paymentIntentId, rosterId, leagueId, seasonId } = req.body;
 
-    if (!paymentIntentId || !rosterId || !leagueId || !seasonId) {
-      return res.status(400).json({
-        error: 'Missing required fields: paymentIntentId, rosterId, leagueId, seasonId',
-      });
+      if (!paymentIntentId || !rosterId || !leagueId || !seasonId) {
+        return res.status(400).json({
+          error:
+            'Missing required fields: paymentIntentId, rosterId, leagueId, seasonId',
+        });
+      }
+
+      await confirmLeagueDuesPayment(
+        paymentIntentId,
+        rosterId,
+        leagueId,
+        seasonId
+      );
+
+      res.json({ status: 'succeeded' });
+    } catch (error: any) {
+      console.error('Error confirming league dues payment:', error);
+      res.status(500).json({ error: 'Failed to confirm league dues payment' });
     }
-
-    await confirmLeagueDuesPayment(paymentIntentId, rosterId, leagueId, seasonId);
-
-    res.json({ status: 'succeeded' });
-  } catch (error: any) {
-    console.error('Error confirming league dues payment:', error);
-    res.status(500).json({ error: 'Failed to confirm league dues payment' });
   }
-});
+);
 
 /**
  * GET /api/league-dues/status
@@ -117,14 +144,15 @@ router.get('/status', async (req: Request, res: Response) => {
 
     if (!rosterId || !leagueId || !seasonId) {
       return res.status(400).json({
-        error: 'Missing required query parameters: rosterId, leagueId, seasonId',
+        error:
+          'Missing required query parameters: rosterId, leagueId, seasonId',
       });
     }
 
     const status = await getLeagueDuesStatus(
       rosterId as string,
       leagueId as string,
-      seasonId as string,
+      seasonId as string
     );
 
     res.json(status);
@@ -201,13 +229,16 @@ router.get('/league-roster-status', async (req: Request, res: Response) => {
     }));
 
     res.json({
-      pricingType: (season as any).pricingType ?? season.league.pricingType ?? 'free',
+      pricingType:
+        (season as any).pricingType ?? season.league.pricingType ?? 'free',
       duesAmount: (season as any).duesAmount ?? null,
       rosters: rosterStatuses,
     });
   } catch (error) {
     console.error('Error fetching league roster dues status:', error);
-    res.status(500).json({ error: 'Failed to fetch league roster dues status' });
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch league roster dues status' });
   }
 });
 
