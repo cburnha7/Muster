@@ -401,18 +401,24 @@ router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
       }
     }
 
-    // Map frontend isPublic to DB isPrivate, and ensure description has a value
-    const teamData = {
-      ...rest,
-      isPrivate: isPublic === undefined ? false : !isPublic,
+    // Map frontend fields to DB fields explicitly
+    const teamData: any = {
+      name: rest.name,
       description: rest.description || '',
-      // Ensure sportTypes array is populated from sportType if not provided
+      sportType: rest.sportType || rest.sportTypes?.[0] || '',
       sportTypes:
         rest.sportTypes && rest.sportTypes.length > 0
           ? rest.sportTypes
           : rest.sportType
             ? [rest.sportType]
             : [],
+      skillLevel: rest.skillLevel || 'all_levels',
+      maxMembers: rest.maxMembers || 10,
+      isPrivate: isPublic === undefined ? false : !isPublic,
+      ...(rest.genderRestriction
+        ? { genderRestriction: rest.genderRestriction }
+        : {}),
+      ...(rest.imageUrl ? { imageUrl: rest.imageUrl } : {}),
     };
 
     // Create the team
@@ -439,10 +445,12 @@ router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
       Array.isArray(initialMemberIds) &&
       initialMemberIds.length > 0
     ) {
-      // Filter out the creator if they're in the list (already added as captain)
-      const memberIds = creatorId
-        ? initialMemberIds.filter((id: string) => id !== creatorId)
-        : initialMemberIds;
+      // Filter out the creator and any pending invite placeholders
+      const memberIds = (
+        creatorId
+          ? initialMemberIds.filter((id: string) => id !== creatorId)
+          : initialMemberIds
+      ).filter((id: string) => !id.startsWith('pending-'));
 
       if (memberIds.length > 0) {
         await prisma.teamMember.createMany({
