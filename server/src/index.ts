@@ -41,6 +41,7 @@ import escrowTransactionRoutes from './routes/escrow-transactions';
 import waiverRoutes from './routes/waivers';
 import availabilityRoutes from './routes/availability';
 import scheduleRoutes from './routes/schedule';
+import pushTokenRoutes from './routes/push-tokens';
 import { conversationsRouter, messagesRouter } from './routes/conversations';
 import { registerLeagueLockMiddleware } from './middleware/league-lock';
 
@@ -251,6 +252,7 @@ app.use('/api/escrow-transactions', escrowTransactionRoutes);
 app.use('/api/waivers', waiverRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/push-tokens', pushTokenRoutes);
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/messages', messagesRouter);
 

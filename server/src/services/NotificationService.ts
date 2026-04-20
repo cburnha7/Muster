@@ -65,6 +65,7 @@ export class NotificationService {
 
       // TODO: Implement actual notification sending
       // For now, just log
+      await NotificationService.queueNotification(userIds, notification);
       console.log(
         'Sending match scheduled notification to',
         userIds.length,
@@ -138,6 +139,7 @@ export class NotificationService {
       };
 
       // TODO: Implement actual notification sending
+      await NotificationService.queueNotification(userIds, notification);
       console.log(
         'Sending match result notification to',
         userIds.length,
@@ -194,6 +196,7 @@ export class NotificationService {
       };
 
       // TODO: Implement actual notification sending
+      await NotificationService.queueNotification(uniqueUserIds, notification);
       console.log(
         'Sending rules updated notification to',
         uniqueUserIds.length,
@@ -250,6 +253,7 @@ export class NotificationService {
       };
 
       // TODO: Implement actual notification sending
+      await NotificationService.queueNotification(uniqueUserIds, notification);
       console.log(
         'Sending certification notification to',
         uniqueUserIds.length,
@@ -291,6 +295,10 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(
+        [league.organizerId],
+        notification
+      );
       console.log(
         'Sending join request notification to league owner',
         league.organizerId
@@ -343,6 +351,10 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(
+        [captain.userId],
+        notification
+      );
       console.log(
         'Sending join request decision notification to roster owner',
         captain.userId
@@ -386,6 +398,10 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(
+        [captain.userId],
+        notification
+      );
       console.log(
         'Sending league invitation notification to roster owner',
         captain.userId
@@ -432,6 +448,7 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(uniqueUserIds, notification);
       console.log(
         'Sending event assignment notification to',
         uniqueUserIds.length,
@@ -510,6 +527,10 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(
+        homeManagerUserIds,
+        notification
+      );
       console.log(
         'Sending facility booking notification to home roster manager(s)',
         homeManagerUserIds
@@ -605,6 +626,10 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(
+        awayManagerUserIds,
+        notification
+      );
       console.log(
         'Sending away confirmation request to roster manager(s)',
         awayManagerUserIds
@@ -659,6 +684,10 @@ export class NotificationService {
         },
       };
 
+      await NotificationService.queueNotification(
+        [season.league.organizerId],
+        notification
+      );
       console.log(
         `Sending strike threshold notification to commissioner ${season.league.organizerId}`
       );
@@ -908,6 +937,7 @@ export class NotificationService {
       };
 
       // TODO: Implement actual notification sending (push notification, email, etc.)
+      await NotificationService.queueNotification([userId], notification);
       console.log('Sending event auto-opened notification to user', userId);
       console.log('Notification:', notification);
 
@@ -1085,14 +1115,34 @@ export class NotificationService {
   }
 
   /**
-   * Queue notification for batch delivery
+   * Send push notifications to a list of users.
+   * Resolves user IDs to Expo push tokens and sends via the Expo Push API.
    */
   private static async queueNotification(
     userIds: string[],
     notification: NotificationTemplate
   ): Promise<void> {
-    // TODO: Implement notification queue
-    // Could use Redis, Bull, or similar queue system
-    console.log('Queuing notification for', userIds.length, 'users');
+    try {
+      const { sendPushToUsers } = await import('./PushService');
+      await sendPushToUsers(
+        userIds,
+        notification.title,
+        notification.body,
+        notification.data
+      );
+    } catch (error) {
+      console.error('[push] Failed to send notification:', error);
+    }
+  }
+
+  /**
+   * Send a notification to specific user IDs.
+   * Public helper for one-off sends from route handlers.
+   */
+  static async sendToUsers(
+    userIds: string[],
+    notification: NotificationTemplate
+  ): Promise<void> {
+    await NotificationService.queueNotification(userIds, notification);
   }
 }

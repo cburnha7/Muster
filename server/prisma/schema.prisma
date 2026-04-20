@@ -94,6 +94,7 @@ model User {
   insuranceDocuments     InsuranceDocument[]
   waiverSignatures       WaiverSignature[]
   availabilityBlocks     AvailabilityBlock[]
+  pushTokens             PushToken[]
 
   // Self-referential relation for guardian/dependent accounts
   guardian   User?  @relation("GuardianDependents", fields: [guardianId], references: [id])
@@ -1610,4 +1611,22 @@ model AvailabilityBlock {
   @@index([userId])
   @@index([userId, date])
   @@map("availability_blocks")
+}
+
+
+// ── Push Notification Tokens ─────────────────────────────────────────────────
+
+model PushToken {
+  id        String   @id @default(uuid())
+  token     String   // Expo push token (ExponentPushToken[...])
+  platform  String   // "ios" | "android" | "web"
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@map("push_tokens")
 }
