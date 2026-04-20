@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { syncManager } from '../../services/offline';
 import { useNetworkState } from '../../services/network/NetworkService';
+import { tokenColors } from '../../theme/tokens';
 
 export const SyncStatusCard: React.FC = () => {
   const networkState = useNetworkState();
@@ -38,10 +45,10 @@ export const SyncStatusCard: React.FC = () => {
   };
 
   const getStatusColor = () => {
-    if (!networkState.isConnected) return '#FF3B30';
-    if (syncStatus.isSyncing) return '#FF9500';
-    if (syncStatus.queueSize > 0) return '#FF9500';
-    return '#34C759';
+    if (!networkState.isConnected) return tokenColors.error;
+    if (syncStatus.isSyncing) return tokenColors.warning;
+    if (syncStatus.queueSize > 0) return tokenColors.warning;
+    return tokenColors.success;
   };
 
   const getStatusText = () => {
@@ -62,7 +69,9 @@ export const SyncStatusCard: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
+          <View
+            style={[styles.statusDot, { backgroundColor: getStatusColor() }]}
+          />
           <Text style={styles.statusText}>{getStatusText()}</Text>
         </View>
         <Ionicons name={getStatusIcon()} size={24} color={getStatusColor()} />
@@ -76,23 +85,25 @@ export const SyncStatusCard: React.FC = () => {
 
       {syncStatus.queueSize > 0 && (
         <Text style={styles.queueText}>
-          {syncStatus.queueSize} {syncStatus.queueSize === 1 ? 'action' : 'actions'} waiting to sync
+          {syncStatus.queueSize}{' '}
+          {syncStatus.queueSize === 1 ? 'action' : 'actions'} waiting to sync
         </Text>
       )}
 
       <TouchableOpacity
         style={[
           styles.syncButton,
-          (!networkState.isConnected || syncStatus.isSyncing) && styles.syncButtonDisabled,
+          (!networkState.isConnected || syncStatus.isSyncing) &&
+            styles.syncButtonDisabled,
         ]}
         onPress={handleManualSync}
         disabled={!networkState.isConnected || syncStatus.isSyncing}
       >
         {syncStatus.isSyncing ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <ActivityIndicator size="small" color={tokenColors.white} />
         ) : (
           <>
-            <Ionicons name="sync-outline" size={18} color="#FFFFFF" />
+            <Ionicons name="sync-outline" size={18} color={tokenColors.white} />
             <Text style={styles.syncButtonText}>Sync Now</Text>
           </>
         )}
@@ -109,11 +120,11 @@ export const SyncStatusCard: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -138,20 +149,20 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1C1C1E',
+    color: tokenColors.ink,
   },
   lastSyncText: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: tokenColors.inkMuted,
     marginBottom: 8,
   },
   queueText: {
     fontSize: 14,
-    color: '#8E8E93',
+    color: tokenColors.inkMuted,
     marginBottom: 12,
   },
   syncButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: tokenColors.cobalt,
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -160,17 +171,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   syncButtonDisabled: {
-    backgroundColor: '#C7C7CC',
+    backgroundColor: tokenColors.inkMuted,
   },
   syncButtonText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
   offlineNote: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: tokenColors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
     fontStyle: 'italic',

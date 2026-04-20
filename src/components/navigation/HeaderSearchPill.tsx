@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { searchEventBus } from '../../utils';
 
 const PLACEHOLDERS: Record<string, string> = {
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1.5,
     borderColor: colors.outlineVariant,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,

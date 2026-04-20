@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface FormButtonProps {
   title: string;
@@ -71,7 +72,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
     switch (variant) {
       case 'primary':
       case 'danger':
-        return '#FFFFFF';
+        return tokenColors.white;
       case 'secondary':
         return colors.onSurface;
       case 'outline':
@@ -79,7 +80,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
       case 'muted':
         return colors.onSurface;
       default:
-        return '#FFFFFF';
+        return tokenColors.white;
     }
   };
 
@@ -261,7 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerHigh,
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   secondary: {
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   dangerText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // Disabled

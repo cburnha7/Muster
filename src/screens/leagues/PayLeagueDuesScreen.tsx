@@ -15,6 +15,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import {
   leagueDuesService,
   LeagueDuesStatusResponse,
@@ -240,7 +241,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
             accessibilityState={{ disabled: paying }}
           >
             {paying ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={tokenColors.white} />
             ) : (
               <Text style={styles.payButtonText}>
                 Pay {formatCurrency(duesAmountCents)}
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   scrollView: {
     flex: 1,
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -351,10 +352,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusPaid: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: tokenColors.successLight,
   },
   statusUnpaid: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: tokenColors.warningLight,
   },
   statusText: {
     fontFamily: fonts.label,
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
   successCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -402,8 +403,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: tokenColors.border,
+    backgroundColor: tokenColors.surface,
   },
   cancelButton: {
     flex: 1,
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
   payButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   dependentNotice: {
     flex: 1,

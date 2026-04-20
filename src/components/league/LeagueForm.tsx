@@ -24,6 +24,7 @@ import {
 } from '../../types';
 import { teamService } from '../../services/api/TeamService';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 
 interface AddedRoster {
@@ -1000,12 +1001,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         backgroundColor:
                           genderRestriction === opt.value
                             ? colors.cobalt
-                            : '#F3F4F6',
+                            : tokenColors.background,
                         borderWidth: 1,
                         borderColor:
                           genderRestriction === opt.value
                             ? colors.cobalt
-                            : '#E5E7EB',
+                            : tokenColors.border,
                       }}
                       onPress={() => setGenderRestriction(opt.value)}
                     >
@@ -1015,7 +1016,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           fontWeight: '600',
                           color:
                             genderRestriction === opt.value
-                              ? '#FFFFFF'
+                              ? tokenColors.white
                               : colors.inkFaint,
                         }}
                       >
@@ -1267,7 +1268,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           <Ionicons
                             name="shield-outline"
                             size={18}
-                            color="#FFFFFF"
+                            color={tokenColors.white}
                           />
                         </View>
                         <View style={styles.addedRosterDetails}>
@@ -1324,7 +1325,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             <Ionicons
                               name="time-outline"
                               size={18}
-                              color="#FFFFFF"
+                              color={tokenColors.white}
                             />
                           </View>
                           <View style={styles.addedRosterDetails}>
@@ -1428,7 +1429,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             <Ionicons
                               name="shield-outline"
                               size={16}
-                              color="#FFFFFF"
+                              color={tokenColors.white}
                             />
                           </View>
                           <View style={styles.rosterResultDetails}>
@@ -1649,11 +1650,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: tokenColors.background,
     marginBottom: Spacing.md,
     gap: 10,
   },
@@ -1667,10 +1668,10 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   calendar: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: tokenColors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
     padding: 12,
     marginBottom: Spacing.lg,
   },
@@ -1714,7 +1715,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
   },
   calendarDayToday: {
-    backgroundColor: '#EDF7F0',
+    backgroundColor: tokenColors.successLight,
   },
   calendarDayText: {
     fontFamily: fonts.body,
@@ -1722,7 +1723,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   calendarDayTextSelected: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontFamily: fonts.semibold,
   },
   calendarDayTextToday: {
@@ -1741,13 +1742,13 @@ const styles = StyleSheet.create({
   },
   // Toggle card
   toggleCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -1773,7 +1774,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: tokenColors.border,
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
@@ -1784,7 +1785,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -1824,9 +1825,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: tokenColors.border,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: tokenColors.border,
   },
   dayChipSelected: {
     backgroundColor: colors.cobalt,
@@ -1839,7 +1840,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dayChipTextSelected: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   // Confirmed Rosters section — displayed above the invite card
   confirmedRostersSection: {
@@ -1854,13 +1855,13 @@ const styles = StyleSheet.create({
   },
   // Add Rosters section — matches Create Roster's Add Players pattern
   addRostersSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
   },
   addRostersHeader: {
     flexDirection: 'row',
@@ -1884,7 +1885,7 @@ const styles = StyleSheet.create({
   rosterCountBadgeText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   addRostersDescription: {
     fontFamily: fonts.body,
@@ -1951,7 +1952,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF8EE',
+    backgroundColor: tokenColors.warningLight,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
@@ -1986,7 +1987,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -2007,7 +2008,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: tokenColors.errorLight,
     borderRadius: 8,
     gap: 6,
   },
@@ -2029,11 +2030,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
   },
   rosterResultInfo: {
     flexDirection: 'row',

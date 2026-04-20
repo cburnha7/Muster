@@ -16,6 +16,7 @@ import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { LeagueMembership, Team } from '../../../types';
 import { colors, fonts, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 
 interface TeamsTabProps {
   leagueId: string;
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   rosterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     marginHorizontal: 16,
     marginVertical: 4,
     paddingHorizontal: 14,

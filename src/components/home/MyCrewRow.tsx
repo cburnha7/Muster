@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface CrewMember {
   id: string;
@@ -111,7 +112,7 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
                 { backgroundColor: themeColors.textPrimary },
               ]}
             >
-              <Ionicons name="people" size={20} color="#FFFFFF" />
+              <Ionicons name="people" size={20} color={tokenColors.white} />
             </View>
           </View>
           <Text
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
   initial: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   name: {
     fontFamily: fonts.body,

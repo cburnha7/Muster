@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Modal,
   TouchableOpacity,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenFontFamily,
+} from '../../theme/tokens';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -47,8 +53,10 @@ export function ConfirmModal({
   };
 
   const resolvedIconColor =
-    iconColor || (variant === 'danger' ? colors.heart : colors.cobalt);
-  const confirmBg = variant === 'danger' ? colors.heart : colors.cobalt;
+    iconColor ||
+    (variant === 'danger' ? tokenColors.error : tokenColors.cobalt);
+  const confirmBg =
+    variant === 'danger' ? tokenColors.error : tokenColors.cobalt;
 
   return (
     <Modal
@@ -88,7 +96,7 @@ export function ConfirmModal({
               activeOpacity={0.75}
             >
               {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={tokenColors.white} />
               ) : (
                 <Text style={styles.buttonConfirmText}>{confirmText}</Text>
               )}
@@ -103,61 +111,57 @@ export function ConfirmModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: tokenColors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: tokenSpacing.xl,
   },
   modalContent: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
+    padding: tokenSpacing.xl,
     width: '100%',
     maxWidth: 400,
     zIndex: 1,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: tokenSpacing.lg,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.ink,
-    marginTop: 12,
+    ...tokenType.modalTitle,
+    color: tokenColors.ink,
+    marginTop: tokenSpacing.md,
   },
   description: {
-    fontSize: 15,
-    color: colors.inkFaint,
+    ...tokenType.body,
+    color: tokenColors.inkSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: tokenSpacing.xl,
   },
   actions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: tokenSpacing.md,
   },
   button: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: tokenSpacing.md,
+    borderRadius: tokenRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
   },
   buttonSecondary: {
-    backgroundColor: '#F2F2F7',
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
+    backgroundColor: tokenColors.background,
+    borderWidth: 1.5,
+    borderColor: tokenColors.border,
   },
   buttonSecondaryText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
+    ...tokenType.button,
+    color: tokenColors.ink,
   },
   buttonConfirmText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    ...tokenType.button,
+    color: tokenColors.white,
   },
 });

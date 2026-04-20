@@ -1,7 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+} from '../../theme/tokens';
 
 interface ErrorDisplayProps {
   title?: string;
@@ -18,16 +23,15 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   retryText = 'Try Again',
   style,
 }) => {
-  const { colors: themeColors } = useTheme();
   return (
     <View style={[styles.container, style]}>
-      <Ionicons name="alert-circle-outline" size={48} color="#FF3B30" />
-      <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-        {title}
-      </Text>
-      <Text style={[styles.message, { color: themeColors.textSecondary }]}>
-        {message}
-      </Text>
+      <Ionicons
+        name="alert-circle-outline"
+        size={48}
+        color={tokenColors.error}
+      />
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.message}>{message}</Text>
       {onRetry && (
         <TouchableOpacity
           style={styles.retryButton}
@@ -46,32 +50,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: tokenSpacing.xl,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
+    ...tokenType.subheading,
+    color: tokenColors.ink,
+    marginTop: tokenSpacing.lg,
+    marginBottom: tokenSpacing.sm,
     textAlign: 'center',
   },
   message: {
-    fontSize: 16,
-    color: '#666',
+    ...tokenType.body,
+    color: tokenColors.inkSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: tokenSpacing.xl,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: tokenColors.cobalt,
+    paddingHorizontal: tokenSpacing.xl,
+    paddingVertical: tokenSpacing.md,
+    borderRadius: tokenRadius.lg,
   },
   retryText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    ...tokenType.button,
+    color: tokenColors.white,
   },
 });

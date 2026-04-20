@@ -2,7 +2,14 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
-import { colors, fonts, Spacing } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 import { PressableCard } from './PressableCard';
 
 interface BookingCardProps {
@@ -97,7 +104,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         )}
         {booking.status === BookingStatus.PENDING_APPROVAL && (
           <View style={styles.pendingApprovalBadge}>
-            <Ionicons name="time-outline" size={11} color={colors.gold} />
+            <Ionicons name="time-outline" size={11} color={tokenColors.gold} />
             <Text style={styles.pendingApprovalText}>PENDING</Text>
           </View>
         )}
@@ -114,7 +121,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Ionicons name="location-outline" size={16} color={colors.inkFaint} />
+          <Ionicons
+            name="location-outline"
+            size={16}
+            color={tokenColors.inkMuted}
+          />
           <Text style={styles.detailText} numberOfLines={1}>
             {booking.event?.facility?.name || 'Location TBD'}
           </Text>
@@ -125,7 +136,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <Ionicons
               name="calendar-outline"
               size={16}
-              color={colors.inkFaint}
+              color={tokenColors.inkMuted}
             />
             <Text style={styles.detailText}>
               {formatDate(booking.event.startTime)} at{' '}
@@ -139,7 +150,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <Ionicons
               name="hourglass-outline"
               size={16}
-              color={colors.inkFaint}
+              color={tokenColors.inkMuted}
             />
             <Text style={styles.detailText}>
               {(() => {
@@ -159,7 +170,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
         {booking.team && (
           <View style={styles.detailRow}>
-            <Ionicons name="people-outline" size={16} color={colors.inkFaint} />
+            <Ionicons
+              name="people-outline"
+              size={16}
+              color={tokenColors.inkMuted}
+            />
             <Text style={styles.detailText}>Roster: {booking.team.name}</Text>
           </View>
         )}
@@ -177,7 +192,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           {!hidePrice && (
             <Text style={styles.price}>
               {booking.event?.price != null && booking.event.price > 0
-                ? `$${booking.event.price.toFixed(2)}`
+                ? `${booking.event.price.toFixed(2)}`
                 : 'Free'}
             </Text>
           )}
@@ -207,55 +222,51 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
+    padding: tokenSpacing.lg,
     paddingRight: 90,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3.84,
-    elevation: 3,
+    marginVertical: tokenSpacing.sm,
+    marginHorizontal: tokenSpacing.lg,
+    ...tokenShadow.card,
     position: 'relative' as const,
   },
   containerCancelled: {
-    backgroundColor: colors.heartTint,
+    backgroundColor: tokenColors.errorLight,
   },
   containerLive: {
-    backgroundColor: colors.goldTint,
+    backgroundColor: tokenColors.goldLight,
   },
   containerPast: {
-    backgroundColor: colors.surface,
+    backgroundColor: tokenColors.surface,
   },
   bubbleStack: {
     position: 'absolute' as const,
-    top: 12,
-    right: 12,
+    top: tokenSpacing.md,
+    right: tokenSpacing.md,
     alignItems: 'flex-end' as const,
-    gap: 4,
+    gap: tokenSpacing.xs,
     zIndex: 1,
   },
   header: {
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: tokenSpacing.sm,
   },
   eventTitle: {
     fontSize: 18,
-    fontFamily: fonts.headingSemi,
-    color: colors.ink,
+    fontFamily: tokenFontFamily.uiSemiBold,
+    color: tokenColors.ink,
     flex: 1,
   },
   liveBadgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.gold,
+    backgroundColor: tokenColors.gold,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
@@ -265,51 +276,51 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   liveBadgePillText: {
     fontSize: 11,
-    fontFamily: fonts.display,
-    color: '#FFFFFF',
+    fontFamily: tokenFontFamily.display,
+    color: tokenColors.white,
     letterSpacing: 0.5,
   },
   cancelledBadge: {
-    backgroundColor: colors.heart,
+    backgroundColor: tokenColors.error,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
   },
   cancelledBadgeText: {
     fontSize: 11,
-    fontFamily: fonts.display,
-    color: '#FFFFFF',
+    fontFamily: tokenFontFamily.display,
+    color: tokenColors.white,
     letterSpacing: 0.5,
   },
   pastBadge: {
-    backgroundColor: colors.ink,
+    backgroundColor: tokenColors.ink,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
   },
   pastBadgeText: {
     fontSize: 11,
-    fontFamily: fonts.display,
-    color: '#FFFFFF',
+    fontFamily: tokenFontFamily.display,
+    color: tokenColors.white,
     letterSpacing: 0.5,
   },
   details: {
-    marginBottom: 12,
+    marginBottom: tokenSpacing.md,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: tokenSpacing.xs,
   },
   detailText: {
     fontSize: 14,
-    fontFamily: fonts.body,
-    color: colors.inkFaint,
-    marginLeft: 8,
+    fontFamily: tokenFontFamily.uiRegular,
+    color: tokenColors.inkMuted,
+    marginLeft: tokenSpacing.sm,
     flex: 1,
   },
   footer: {
@@ -320,22 +331,22 @@ const styles = StyleSheet.create({
   footerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: tokenSpacing.md,
   },
   participants: {
     fontSize: 13,
-    fontFamily: fonts.body,
-    color: colors.inkFaint,
+    fontFamily: tokenFontFamily.uiRegular,
+    color: tokenColors.inkMuted,
   },
   price: {
     fontSize: 15,
-    fontFamily: fonts.headingSemi,
-    color: colors.ink,
+    fontFamily: tokenFontFamily.uiSemiBold,
+    color: tokenColors.ink,
   },
   pendingLabel: {
     fontSize: 12,
-    fontFamily: fonts.body,
-    color: colors.inkFaint,
+    fontFamily: tokenFontFamily.uiRegular,
+    color: tokenColors.inkMuted,
     fontStyle: 'italic',
   },
   cancelButton: {
@@ -343,43 +354,43 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.gold,
-    backgroundColor: colors.goldTint,
+    borderColor: tokenColors.gold,
+    backgroundColor: tokenColors.goldLight,
   },
   cancelText: {
-    fontFamily: fonts.ui,
-    color: colors.gold,
+    fontFamily: tokenFontFamily.uiBold,
+    color: tokenColors.gold,
     fontSize: 13,
   },
   bookingInfo: {
     borderTopWidth: 1,
-    borderTopColor: colors.surface,
-    paddingTop: 8,
-    marginTop: 12,
+    borderTopColor: tokenColors.surface,
+    paddingTop: tokenSpacing.sm,
+    marginTop: tokenSpacing.md,
   },
   bookingDate: {
     fontSize: 12,
-    fontFamily: fonts.body,
-    color: colors.inkFaint,
+    fontFamily: tokenFontFamily.uiRegular,
+    color: tokenColors.inkMuted,
   },
   cancelledDate: {
     fontSize: 12,
-    fontFamily: fonts.body,
-    color: colors.heart,
+    fontFamily: tokenFontFamily.uiRegular,
+    color: tokenColors.error,
   },
   pendingApprovalBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(196, 168, 130, 0.15)',
-    paddingHorizontal: 8,
+    paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 3,
     borderRadius: 10,
     gap: 5,
   },
   pendingApprovalText: {
     fontSize: 11,
-    fontFamily: fonts.display,
-    color: colors.gold,
+    fontFamily: tokenFontFamily.display,
+    color: tokenColors.gold,
     letterSpacing: 0.5,
   },
 });

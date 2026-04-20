@@ -12,6 +12,7 @@ import {
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { courtService, TimeSlot, Court } from '../../services/api/CourtService';
 import {
   calendarTheme,
@@ -407,7 +408,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   calendarContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     marginBottom: Spacing.md,
     borderRadius: 12,
     marginHorizontal: Spacing.lg,

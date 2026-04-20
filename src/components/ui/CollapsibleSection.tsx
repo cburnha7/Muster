@@ -10,9 +10,13 @@ import {
   UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenFontFamily,
+} from '../../theme/tokens';
 
-// Enable LayoutAnimation on Android
 if (
   Platform.OS === 'android' &&
   UIManager.setLayoutAnimationEnabledExperimental
@@ -36,7 +40,6 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   children,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const { colors: themeColors } = useTheme();
   const rotation = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
 
   const toggle = useCallback(() => {
@@ -68,12 +71,10 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <Ionicons
             name="chevron-forward"
             size={20}
-            color={themeColors.textMuted}
+            color={tokenColors.inkMuted}
           />
         </Animated.View>
-        <Text style={[styles.title, { color: themeColors.textPrimary }]}>
-          {title}
-        </Text>
+        <Text style={styles.title}>{title}</Text>
         {count !== undefined && (
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{count}</Text>
@@ -90,26 +91,26 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: tokenSpacing.lg,
+    paddingTop: tokenSpacing.lg,
+    paddingBottom: tokenSpacing.sm,
     gap: 6,
   },
   title: {
-    fontFamily: fonts.heading,
+    fontFamily: tokenFontFamily.heading,
     fontSize: 24,
-    color: colors.ink,
+    color: tokenColors.ink,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.cobalt}20`,
-    paddingHorizontal: 8,
+    backgroundColor: tokenColors.cobalt + '20',
+    paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: tokenRadius.md,
   },
   countBadgeText: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 11,
-    color: colors.cobalt,
+    color: tokenColors.cobalt,
   },
 });

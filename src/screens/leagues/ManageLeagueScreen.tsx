@@ -33,6 +33,7 @@ import {
 } from '../../types/league';
 import { Team } from '../../types';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export const ManageLeagueScreen: React.FC = () => {
   const { colors: themeColors } = useTheme();
@@ -267,7 +268,9 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (isLoading && !league) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -280,7 +283,9 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (error && !league) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -293,7 +298,9 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (!league) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -307,7 +314,9 @@ export const ManageLeagueScreen: React.FC = () => {
   // Check if user is the operator
   if (user?.id && league.organizerId !== user.id) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -517,9 +526,13 @@ export const ManageLeagueScreen: React.FC = () => {
                   accessibilityLabel="Search"
                 >
                   {isSearchingRosters ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color={tokenColors.white} />
                   ) : (
-                    <Ionicons name="search" size={20} color="#FFFFFF" />
+                    <Ionicons
+                      name="search"
+                      size={20}
+                      color={tokenColors.white}
+                    />
                   )}
                 </TouchableOpacity>
               </View>
@@ -600,7 +613,10 @@ export const ManageLeagueScreen: React.FC = () => {
                             accessibilityLabel={`Invite ${roster.name}`}
                           >
                             {isInviting ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
+                              <ActivityIndicator
+                                size="small"
+                                color={tokenColors.white}
+                              />
                             ) : (
                               <Text style={styles.inviteButtonText}>
                                 Invite
@@ -711,7 +727,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -834,7 +850,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#EDF7F0',
+    backgroundColor: tokenColors.successLight,
     borderRadius: 8,
   },
   inviteSuccessText: {
@@ -849,7 +865,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: tokenColors.errorLight,
     borderRadius: 8,
   },
   inviteErrorText: {
@@ -902,7 +918,7 @@ const styles = StyleSheet.create({
   inviteButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   statusBadgePending: {
     backgroundColor: colors.goldLight,
@@ -911,13 +927,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   statusBadgeActive: {
-    backgroundColor: '#EDF7F0',
+    backgroundColor: tokenColors.successLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   statusBadgeDeclined: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: tokenColors.errorLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,

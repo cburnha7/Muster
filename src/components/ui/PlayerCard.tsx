@@ -10,7 +10,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 import { API_BASE_URL } from '../../services/api/config';
 import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
 import { formatSportType } from '../../utils/formatters';
@@ -185,8 +192,8 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
           {/* Ratings */}
           {loading ? (
             <ActivityIndicator
-              color={colors.cobalt}
-              style={{ marginVertical: 16 }}
+              color={tokenColors.cobalt}
+              style={{ marginVertical: tokenSpacing.lg }}
             />
           ) : ratings.length === 0 ? (
             <Text style={styles.noRatings}>No sport ratings yet</Text>
@@ -268,27 +275,23 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: tokenColors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: tokenSpacing.xl,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: tokenColors.white,
+    borderRadius: tokenRadius.lg,
     width: '100%',
     maxWidth: 360,
-    padding: 20,
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+    padding: tokenSpacing.xl,
+    ...tokenShadow.modal,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: tokenSpacing.lg,
   },
   avatar: {
     width: 72,
@@ -296,69 +299,65 @@ const styles = StyleSheet.create({
     borderRadius: 36,
   },
   avatarFallback: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: tokenColors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitial: {
-    fontFamily: fonts.ui,
+    fontFamily: tokenFontFamily.uiBold,
     fontSize: 28,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   info: {
     flex: 1,
     marginLeft: 14,
   },
   name: {
-    fontFamily: fonts.heading,
+    fontFamily: tokenFontFamily.heading,
     fontSize: 20,
-    color: colors.ink,
+    color: tokenColors.ink,
   },
   metaRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
+    gap: tokenSpacing.sm,
+    marginTop: tokenSpacing.xs,
   },
   meta: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: colors.inkSoft,
+    color: tokenColors.inkSecondary,
   },
   toggleRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: tokenColors.surface,
     borderRadius: 10,
     padding: 3,
     marginBottom: 14,
   },
   toggleBtn: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: tokenSpacing.sm,
+    borderRadius: tokenRadius.sm,
     alignItems: 'center',
   },
   toggleBtnActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#191C1E',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    backgroundColor: tokenColors.white,
+    ...tokenShadow.card,
   },
   toggleText: {
-    fontFamily: fonts.ui,
+    fontFamily: tokenFontFamily.uiBold,
     fontSize: 13,
-    color: colors.inkFaint,
+    color: tokenColors.inkMuted,
   },
   toggleTextActive: {
-    color: colors.ink,
+    color: tokenColors.ink,
   },
   noRatings: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: colors.inkFaint,
+    color: tokenColors.inkMuted,
     textAlign: 'center',
-    paddingVertical: 12,
+    paddingVertical: tokenSpacing.md,
   },
   ratingsList: {
     gap: 6,
@@ -367,46 +366,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: tokenSpacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: tokenColors.border,
   },
   sportName: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 13,
-    color: colors.ink,
+    color: tokenColors.ink,
     textTransform: 'uppercase',
   },
   bracketLabel: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 11,
-    color: colors.inkFaint,
+    color: tokenColors.inkMuted,
     marginTop: 1,
   },
   percentile: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 14,
-    color: colors.cobalt,
+    color: tokenColors.cobalt,
   },
   loveLabel: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: colors.inkFaint,
+    color: tokenColors.inkMuted,
     fontStyle: 'italic',
   },
   leagueSection: {
-    marginTop: 16,
+    marginTop: tokenSpacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: 12,
+    borderTopColor: tokenColors.border,
+    paddingTop: tokenSpacing.md,
   },
   leagueSectionTitle: {
-    fontFamily: fonts.heading,
+    fontFamily: tokenFontFamily.heading,
     fontSize: 13,
-    color: colors.pine,
+    color: tokenColors.success,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   leagueRow: {
     flexDirection: 'row',
@@ -414,21 +413,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: tokenColors.border,
   },
   leagueInfo: {
     flex: 1,
-    marginRight: 8,
+    marginRight: tokenSpacing.sm,
   },
   leagueName: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 13,
-    color: colors.ink,
+    color: tokenColors.ink,
   },
   leagueMeta: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 11,
-    color: colors.inkFaint,
+    color: tokenColors.inkMuted,
     marginTop: 1,
   },
 });

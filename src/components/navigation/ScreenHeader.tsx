@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface ScreenHeaderProps {
   title: string;
@@ -65,7 +66,12 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       ]}
     >
       <StatusBar
-        barStyle={backgroundColor === colors.background || backgroundColor === '#FFFFFF' ? 'dark-content' : 'light-content'}
+        barStyle={
+          backgroundColor === colors.background ||
+          backgroundColor === tokenColors.white
+            ? 'dark-content'
+            : 'light-content'
+        }
         backgroundColor={backgroundColor}
       />
 
@@ -98,7 +104,10 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
             {title}
           </Text>
           {subtitle && (
-            <Text style={[styles.subtitle, { color: textColor }]} numberOfLines={1}>
+            <Text
+              style={[styles.subtitle, { color: textColor }]}
+              numberOfLines={1}
+            >
               {subtitle}
             </Text>
           )}
@@ -107,7 +116,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
         <View style={styles.rightSection}>
           {rightComponent ? (
             rightComponent
-          ) : (rightIcon || rightText) ? (
+          ) : rightIcon || rightText ? (
             <TouchableOpacity
               style={styles.actionButton}
               onPress={onRightPress}
@@ -119,11 +128,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
                 </Text>
               )}
               {rightIcon && (
-                <Ionicons
-                  name={rightIcon as any}
-                  size={24}
-                  color={textColor}
-                />
+                <Ionicons name={rightIcon as any} size={24} color={textColor} />
               )}
             </TouchableOpacity>
           ) : null}
@@ -136,7 +141,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     borderBottomColor: colors.outlineVariant,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: {
       width: 0,
       height: 1,

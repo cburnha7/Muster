@@ -20,6 +20,7 @@ import { userService } from '../../services/api/UserService';
 import { API_BASE_URL } from '../../services/api/config';
 import { authService } from '../../services/auth/AuthService';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 // ── Types ──
 
@@ -589,7 +590,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -704,7 +705,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 16,
     padding: 14,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: tokenColors.errorLight,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.heart,

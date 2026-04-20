@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
 import { useTheme } from '../theme';
+import { tokenColors } from '../theme/tokens';
 import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
 import { HeaderUserSelector } from '../components/navigation/HeaderUserSelector';
 import { NotificationBell } from '../components/navigation/NotificationBell';
@@ -161,7 +162,7 @@ export function TabNavigator() {
               paddingTop: 8,
             },
             tabBarLabelStyle: {
-              fontFamily: 'DMSans_600SemiBold',
+              fontFamily: 'Nunito_600SemiBold',
               fontSize: 10,
               letterSpacing: 0.4,
               marginTop: 2,
@@ -252,5 +253,5 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
   },
-  badgeText: { color: '#FFFFFF', paddingHorizontal: 4 },
+  badgeText: { color: tokenColors.white, paddingHorizontal: 4 },
 });

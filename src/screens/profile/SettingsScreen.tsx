@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as StoreReview from 'expo-store-review';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { userService } from '../../services/api/UserService';
@@ -1217,7 +1218,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,

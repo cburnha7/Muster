@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
@@ -51,18 +52,27 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
     }
   }, [userId, token]);
 
-  useEffect(() => { loadStatus(); }, [loadStatus]);
-  useFocusEffect(useCallback(() => { loadStatus(); }, [loadStatus]));
+  useEffect(() => {
+    loadStatus();
+  }, [loadStatus]);
+  useFocusEffect(
+    useCallback(() => {
+      loadStatus();
+    }, [loadStatus])
+  );
 
   const handleOnboard = async () => {
     try {
       setOnboarding(true);
       const url = `${API_BASE_URL}/stripe/connect/onboard`;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       headers['x-user-id'] = userId;
 
-      const currentUrl = Platform.OS === 'web' ? window.location.href : 'muster://profile';
+      const currentUrl =
+        Platform.OS === 'web' ? window.location.href : 'muster://profile';
 
       const response = await fetch(url, {
         method: 'POST',
@@ -96,42 +106,64 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
   return (
     <CollapsibleSection title="Payment Account">
       <View style={styles.body}>
-
-      {isActive ? (
-        <View style={styles.statusRow}>
-          <View style={[styles.badge, { backgroundColor: `${colors.cobalt}20` }]}>
-            <Text style={[styles.badgeText, { color: colors.cobalt }]}>Active</Text>
+        {isActive ? (
+          <View style={styles.statusRow}>
+            <View
+              style={[styles.badge, { backgroundColor: `${colors.cobalt}20` }]}
+            >
+              <Text style={[styles.badgeText, { color: colors.cobalt }]}>
+                Active
+              </Text>
+            </View>
+            <Text style={styles.hint}>
+              You can receive payments from bookings and join fees.
+            </Text>
           </View>
-          <Text style={styles.hint}>You can receive payments from bookings and join fees.</Text>
-        </View>
-      ) : isPending ? (
-        <View style={styles.statusRow}>
-          <View style={[styles.badge, { backgroundColor: `${colors.gold}20` }]}>
-            <Text style={[styles.badgeText, { color: colors.gold }]}>Pending</Text>
+        ) : isPending ? (
+          <View style={styles.statusRow}>
+            <View
+              style={[styles.badge, { backgroundColor: `${colors.gold}20` }]}
+            >
+              <Text style={[styles.badgeText, { color: colors.gold }]}>
+                Pending
+              </Text>
+            </View>
+            <Text style={styles.hint}>
+              Your account is under review. You can resume onboarding if needed.
+            </Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleOnboard}
+              disabled={onboarding}
+              activeOpacity={0.7}
+            >
+              {onboarding ? (
+                <ActivityIndicator size="small" color={tokenColors.white} />
+              ) : (
+                <Text style={styles.buttonText}>Resume</Text>
+              )}
+            </TouchableOpacity>
           </View>
-          <Text style={styles.hint}>Your account is under review. You can resume onboarding if needed.</Text>
-          <TouchableOpacity style={styles.button} onPress={handleOnboard} disabled={onboarding} activeOpacity={0.7}>
-            {onboarding ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Resume</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.statusRow}>
-          <Text style={styles.hint}>
-            Set up a payment account to receive funds from bookings and join fees.
-          </Text>
-          <TouchableOpacity style={styles.button} onPress={handleOnboard} disabled={onboarding} activeOpacity={0.7}>
-            {onboarding ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Set Up Payments</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
+        ) : (
+          <View style={styles.statusRow}>
+            <Text style={styles.hint}>
+              Set up a payment account to receive funds from bookings and join
+              fees.
+            </Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleOnboard}
+              disabled={onboarding}
+              activeOpacity={0.7}
+            >
+              {onboarding ? (
+                <ActivityIndicator size="small" color={tokenColors.white} />
+              ) : (
+                <Text style={styles.buttonText}>Set Up Payments</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </CollapsibleSection>
   );
@@ -176,6 +208,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

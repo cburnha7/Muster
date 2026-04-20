@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { SportRatingsSection } from './SportRatingsSection';
 
 export interface PlayerCardProps {
@@ -26,7 +27,9 @@ export interface PlayerCardProps {
 function calculateAge(dateOfBirth: string): number | null {
   const dob = new Date(dateOfBirth);
   if (isNaN(dob.getTime())) return null;
-  return Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  return Math.floor(
+    (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+  );
 }
 
 export function PlayerCard({
@@ -76,7 +79,9 @@ export function PlayerCard({
           </View>
 
           {/* Name */}
-          <Text style={styles.name}>{firstName} {lastName}</Text>
+          <Text style={styles.name}>
+            {firstName} {lastName}
+          </Text>
 
           {/* Age + Gender */}
           {(age !== null || gender) && (
@@ -95,7 +100,7 @@ export function PlayerCard({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: tokenColors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -106,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 320,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,

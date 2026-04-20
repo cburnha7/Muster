@@ -16,6 +16,7 @@ import {
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
@@ -261,7 +262,7 @@ export function BookingDetailsScreen(): JSX.Element {
       case BookingStatus.COMPLETED:
         return colors.primary;
       case BookingStatus.NO_SHOW:
-        return '#E8720C';
+        return tokenColors.warning;
       default:
         return colors.onSurfaceVariant;
     }
@@ -273,7 +274,7 @@ export function BookingDetailsScreen(): JSX.Element {
       case PaymentStatus.PAID:
         return colors.secondary;
       case PaymentStatus.PENDING:
-        return '#E8720C';
+        return tokenColors.warning;
       case PaymentStatus.FAILED:
         return colors.error;
       case PaymentStatus.REFUNDED:
@@ -285,7 +286,9 @@ export function BookingDetailsScreen(): JSX.Element {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Booking Details"
           showBack={false}
@@ -298,7 +301,9 @@ export function BookingDetailsScreen(): JSX.Element {
 
   if (error || !booking) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Booking Details"
           showBack={false}
@@ -605,7 +610,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 16,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
@@ -634,7 +639,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   statusText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 12,
     fontFamily: fonts.headingSemi,
   },
@@ -693,7 +698,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   paymentStatusText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 12,
     fontFamily: fonts.headingSemi,
   },
@@ -701,7 +706,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceContainerLow,
   },

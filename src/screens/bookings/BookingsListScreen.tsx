@@ -41,6 +41,7 @@ import {
 } from '../../store/slices/bookingsSlice';
 import { Booking, BookingStatus } from '../../types';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 type BookingFilter = 'all' | 'upcoming' | 'past' | 'cancelled';
 
@@ -305,7 +306,9 @@ export function BookingsListScreen(): JSX.Element {
   // Show not authenticated state
   if (!isAuthenticated || !user) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <View style={styles.emptyState}>
           <Ionicons name="log-in-outline" size={64} color={colors.inkFaint} />
           <Text style={styles.emptyTitle}>Not Logged In</Text>
@@ -448,7 +451,9 @@ export function BookingsListScreen(): JSX.Element {
 
   if (error && filteredBookings.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ErrorDisplay message={error} onRetry={() => loadBookings()} />
       </View>
     );
@@ -536,7 +541,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
   },
   activeFilterTabText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontFamily: fonts.headingSemi,
   },
   emptyContainer: {
@@ -576,7 +581,7 @@ const styles = StyleSheet.create({
   browseButtonText: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   footer: {
     paddingVertical: Spacing.lg,

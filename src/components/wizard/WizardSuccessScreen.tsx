@@ -1,7 +1,14 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface SuccessCTA {
   label: string;
@@ -96,7 +103,10 @@ export function WizardSuccessScreen({
           {summaryRows.map((row, i) => (
             <View
               key={i}
-              style={[styles.summaryRow, i < summaryRows.length - 1 && styles.summaryRowBorder]}
+              style={[
+                styles.summaryRow,
+                i < summaryRows.length - 1 && styles.summaryRowBorder,
+              ]}
             >
               <Text style={styles.summaryLabel}>{row.label}</Text>
               <Text style={styles.summaryValue}>{row.value}</Text>
@@ -112,7 +122,10 @@ export function WizardSuccessScreen({
           return (
             <TouchableOpacity
               key={i}
-              style={[styles.actionBtn, isPrimary ? styles.actionPrimary : styles.actionSecondary]}
+              style={[
+                styles.actionBtn,
+                isPrimary ? styles.actionPrimary : styles.actionSecondary,
+              ]}
               onPress={action.onPress}
               activeOpacity={0.7}
             >
@@ -120,10 +133,17 @@ export function WizardSuccessScreen({
                 <Ionicons
                   name={action.icon}
                   size={18}
-                  color={isPrimary ? '#FFFFFF' : colors.primary}
+                  color={isPrimary ? tokenColors.white : colors.primary}
                 />
               )}
-              <Text style={[styles.actionText, isPrimary ? styles.actionTextPrimary : styles.actionTextSecondary]}>
+              <Text
+                style={[
+                  styles.actionText,
+                  isPrimary
+                    ? styles.actionTextPrimary
+                    : styles.actionTextSecondary,
+                ]}
+              >
                 {action.label}
               </Text>
             </TouchableOpacity>
@@ -223,7 +243,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   actionTextPrimary: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   actionTextSecondary: {
     color: colors.primary,

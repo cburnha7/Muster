@@ -8,7 +8,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, typeScale, Spacing, ComponentStyles } from '../../theme';
+import {
+  colors,
+  fonts,
+  typeScale,
+  Spacing,
+  ComponentStyles,
+} from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { formatTime12 } from '../../utils/calendarUtils';
 
 export interface ConflictSlot {
@@ -41,11 +48,20 @@ export function BookingConflictModal({
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Unknown';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return d.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <View style={styles.modal}>
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -55,22 +71,34 @@ export function BookingConflictModal({
               </View>
               <Text style={styles.title}>Some Slots Unavailable</Text>
               <Text style={styles.subtitle}>
-                {conflicts.length} slot{conflicts.length !== 1 ? 's' : ''} became unavailable since you selected {conflicts.length !== 1 ? 'them' : 'it'}.
+                {conflicts.length} slot{conflicts.length !== 1 ? 's' : ''}{' '}
+                became unavailable since you selected{' '}
+                {conflicts.length !== 1 ? 'them' : 'it'}.
               </Text>
             </View>
 
             <View style={styles.body}>
-              {conflicts.map((c) => (
+              {conflicts.map(c => (
                 <View key={c.slotId} style={styles.conflictRow}>
-                  <Ionicons name="close-circle" size={18} color={colors.heart} />
+                  <Ionicons
+                    name="close-circle"
+                    size={18}
+                    color={colors.heart}
+                  />
                   <View style={styles.conflictInfo}>
                     <Text style={styles.conflictCourt}>{c.courtName}</Text>
                     <Text style={styles.conflictDetail}>
                       {formatDate(c.date)}
-                      {c.startTime && c.endTime ? ` · ${formatTime12(c.startTime)} – ${formatTime12(c.endTime)}` : ''}
+                      {c.startTime && c.endTime
+                        ? ` · ${formatTime12(c.startTime)} – ${formatTime12(c.endTime)}`
+                        : ''}
                     </Text>
                     <Text style={styles.conflictReason}>
-                      {c.reason === 'rented' ? 'Already rented' : c.reason === 'blocked' ? 'Blocked' : c.reason}
+                      {c.reason === 'rented'
+                        ? 'Already rented'
+                        : c.reason === 'blocked'
+                          ? 'Blocked'
+                          : c.reason}
                     </Text>
                   </View>
                 </View>
@@ -79,15 +107,24 @@ export function BookingConflictModal({
 
             {availableCount > 0 && (
               <View style={styles.availableNote}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.cobalt} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={colors.cobalt}
+                />
                 <Text style={styles.availableText}>
-                  {availableCount} slot{availableCount !== 1 ? 's are' : ' is'} still available
+                  {availableCount} slot{availableCount !== 1 ? 's are' : ' is'}{' '}
+                  still available
                 </Text>
               </View>
             )}
 
             <View style={styles.buttons}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={loading}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={onClose}
+                disabled={loading}
+              >
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               {availableCount > 0 && (
@@ -97,7 +134,9 @@ export function BookingConflictModal({
                   disabled={loading}
                 >
                   <Text style={styles.bookBtnText}>
-                    {loading ? 'Booking...' : `Book ${availableCount} Available`}
+                    {loading
+                      ? 'Booking...'
+                      : `Book ${availableCount} Available`}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -110,7 +149,11 @@ export function BookingConflictModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
   modal: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
@@ -118,31 +161,91 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     paddingBottom: Spacing.xl,
   },
-  header: { alignItems: 'center', padding: Spacing.xl, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  header: {
+    alignItems: 'center',
+    padding: Spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: tokenColors.border,
+  },
   iconWrap: {
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: `${colors.gold}15`, alignItems: 'center', justifyContent: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: `${colors.gold}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  title: { fontFamily: fonts.heading, ...typeScale.h2, color: colors.ink, marginTop: Spacing.sm },
-  subtitle: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint, marginTop: 4, textAlign: 'center' },
+  title: {
+    fontFamily: fonts.heading,
+    ...typeScale.h2,
+    color: colors.ink,
+    marginTop: Spacing.sm,
+  },
+  subtitle: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+    marginTop: 4,
+    textAlign: 'center',
+  },
   body: { padding: Spacing.lg, gap: Spacing.sm },
-  conflictRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 6 },
-  conflictInfo: { flex: 1 },
-  conflictCourt: { fontFamily: fonts.semibold, ...typeScale.body, color: colors.ink },
-  conflictDetail: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.inkFaint, marginTop: 1 },
-  conflictReason: { fontFamily: fonts.label, fontSize: 10, color: colors.heart, textTransform: 'uppercase', marginTop: 2 },
-  availableNote: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: Spacing.lg, marginBottom: Spacing.lg,
-    padding: Spacing.sm, backgroundColor: `${colors.cobalt}10`, borderRadius: 8,
+  conflictRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 6,
   },
-  availableText: { fontFamily: fonts.body, ...typeScale.bodySm, color: colors.cobalt },
-  buttons: { flexDirection: 'row', gap: Spacing.md, paddingHorizontal: Spacing.lg },
-  cancelBtn: { flex: 1, ...ComponentStyles.button.secondary, alignItems: 'center', justifyContent: 'center' },
+  conflictInfo: { flex: 1 },
+  conflictCourt: {
+    fontFamily: fonts.semibold,
+    ...typeScale.body,
+    color: colors.ink,
+  },
+  conflictDetail: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.inkFaint,
+    marginTop: 1,
+  },
+  conflictReason: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    color: colors.heart,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  availableNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    padding: Spacing.sm,
+    backgroundColor: `${colors.cobalt}10`,
+    borderRadius: 8,
+  },
+  availableText: {
+    fontFamily: fonts.body,
+    ...typeScale.bodySm,
+    color: colors.cobalt,
+  },
+  buttons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  cancelBtn: {
+    flex: 1,
+    ...ComponentStyles.button.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.cobalt },
   bookBtn: {
-    flex: 2, ...ComponentStyles.button.primary,
-    alignItems: 'center', justifyContent: 'center',
+    flex: 2,
+    ...ComponentStyles.button.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bookBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.surface },
 });

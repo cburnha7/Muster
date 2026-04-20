@@ -15,6 +15,7 @@ import { useCreateEvent } from './CreateEventContext';
 import { ALL_DAYS } from './types';
 import { computeSeriesDates, dateMatchesDays } from './seriesUtils';
 import { colors, fonts, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 
 const FREQUENCY_OPTIONS: SelectOption[] = [
   { label: 'Weekly', value: 'weekly' },
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 8,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,

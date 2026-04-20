@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { API_BASE_URL } from '../../services/api/config';
 
 interface PastReservation {
@@ -36,7 +32,9 @@ interface PurchaseHistorySectionProps {
   userId: string;
 }
 
-export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) {
+export function PurchaseHistorySection({
+  userId,
+}: PurchaseHistorySectionProps) {
   const [purchases, setPurchases] = useState<PastReservation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,11 +58,19 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
 
       // Filter to past or cancelled/used reservations
       const now = new Date();
-      const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      const todayUTC = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate()
+      );
 
-      const past = data.filter((r) => {
+      const past = data.filter(r => {
         const slotDate = new Date(r.timeSlot.date);
-        const slotUTC = Date.UTC(slotDate.getUTCFullYear(), slotDate.getUTCMonth(), slotDate.getUTCDate());
+        const slotUTC = Date.UTC(
+          slotDate.getUTCFullYear(),
+          slotDate.getUTCMonth(),
+          slotDate.getUTCDate()
+        );
         const isPast = slotUTC < todayUTC;
         const isCancelled = r.status === 'cancelled';
         const isUsed = !!r.usedForEventId;
@@ -72,7 +78,11 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
       });
 
       // Sort newest first
-      past.sort((a, b) => new Date(b.timeSlot.date).getTime() - new Date(a.timeSlot.date).getTime());
+      past.sort(
+        (a, b) =>
+          new Date(b.timeSlot.date).getTime() -
+          new Date(a.timeSlot.date).getTime()
+      );
       setPurchases(past);
     } catch (error) {
       console.error('Load purchase history error:', error);
@@ -83,7 +93,11 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   const formatTime = (time: string) => {
@@ -94,17 +108,35 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
     return `${hour % 12 || 12}:${minutes} ${ampm}`;
   };
 
-  const getStatusInfo = (r: PastReservation): { label: string; color: string; icon: keyof typeof Ionicons.glyphMap } => {
+  const getStatusInfo = (
+    r: PastReservation
+  ): { label: string; color: string; icon: keyof typeof Ionicons.glyphMap } => {
     if (r.status === 'cancelled' || r.cancellationStatus === 'approved') {
-      return { label: 'Cancelled', color: '#FF3B30', icon: 'close-circle' };
+      return {
+        label: 'Cancelled',
+        color: tokenColors.error,
+        icon: 'close-circle',
+      };
     }
     if (r.cancellationStatus === 'pending_cancellation') {
-      return { label: 'Pending Cancellation', color: '#E8A030', icon: 'time-outline' };
+      return {
+        label: 'Pending Cancellation',
+        color: tokenColors.warning,
+        icon: 'time-outline',
+      };
     }
     if (r.usedForEventId) {
-      return { label: 'Used for Event', color: colors.cobalt, icon: 'checkmark-circle' };
+      return {
+        label: 'Used for Event',
+        color: colors.cobalt,
+        icon: 'checkmark-circle',
+      };
     }
-    return { label: 'Completed', color: colors.ink, icon: 'checkmark-done-circle' };
+    return {
+      label: 'Completed',
+      color: colors.ink,
+      icon: 'checkmark-done-circle',
+    };
   };
 
   if (loading) {
@@ -119,9 +151,13 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
 
   return (
     <View>
-      <CollapsibleSection title="Purchase History" count={purchases.length} defaultExpanded={false}>
+      <CollapsibleSection
+        title="Purchase History"
+        count={purchases.length}
+        defaultExpanded={false}
+      >
         <View style={styles.sectionInner}>
-          {purchases.map((purchase) => {
+          {purchases.map(purchase => {
             const status = getStatusInfo(purchase);
             return (
               <View key={purchase.id} style={styles.card}>
@@ -129,17 +165,28 @@ export function PurchaseHistorySection({ userId }: PurchaseHistorySectionProps) 
                   <Text style={styles.facilityName} numberOfLines={1}>
                     {purchase.timeSlot.court.facility.name}
                   </Text>
-                  <Text style={styles.price}>${purchase.totalPrice.toFixed(2)}</Text>
+                  <Text style={styles.price}>
+                    ${purchase.totalPrice.toFixed(2)}
+                  </Text>
                 </View>
                 <Text style={styles.courtName}>
-                  {purchase.timeSlot.court.name} · {formatDate(purchase.timeSlot.date)}
+                  {purchase.timeSlot.court.name} ·{' '}
+                  {formatDate(purchase.timeSlot.date)}
                 </Text>
                 <Text style={styles.timeText}>
-                  {formatTime(purchase.timeSlot.startTime)} – {formatTime(purchase.timeSlot.endTime)}
+                  {formatTime(purchase.timeSlot.startTime)} –{' '}
+                  {formatTime(purchase.timeSlot.endTime)}
                 </Text>
-                <View style={[styles.statusBadge, { backgroundColor: status.color + '15' }]}>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: status.color + '15' },
+                  ]}
+                >
                   <Ionicons name={status.icon} size={14} color={status.color} />
-                  <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+                  <Text style={[styles.statusText, { color: status.color }]}>
+                    {status.label}
+                  </Text>
                 </View>
               </View>
             );
@@ -160,7 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: 14,
     shadowColor: colors.ink,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { ALL_SPORTS, SportDefinition } from '../../constants/sports';
 
 const COLS = 3;
@@ -21,11 +22,13 @@ export function SportIconGrid({
   sports,
 }: SportIconGridProps) {
   const options = sports || ALL_SPORTS;
-  const selectedSet = new Set(Array.isArray(selected) ? selected : selected ? [selected] : []);
+  const selectedSet = new Set(
+    Array.isArray(selected) ? selected : selected ? [selected] : []
+  );
 
   return (
     <View style={styles.grid}>
-      {options.map((sport) => {
+      {options.map(sport => {
         const isSelected = selectedSet.has(sport.key);
         return (
           <View key={sport.key} style={styles.cellWrapper}>
@@ -65,7 +68,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 4,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -84,7 +87,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   labelSelected: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontFamily: fonts.ui,
   },
 });

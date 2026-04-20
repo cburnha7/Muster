@@ -15,6 +15,7 @@ import {
   Spacing,
   ComponentStyles,
 } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { formatTime12 } from '../../utils/calendarUtils';
 
 export interface CartSlot {
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: tokenColors.border,
   },
   title: {
     fontFamily: fonts.heading,

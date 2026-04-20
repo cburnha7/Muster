@@ -14,7 +14,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 import { formatSportType } from '../../utils/formatters';
 import { SportType, SkillLevel } from '../../types';
 
@@ -101,11 +108,16 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
       <View style={[styles.container, style]}>
         <View style={styles.searchContainer}>
           <View style={styles.inputContainer}>
-            <Ionicons name="search-outline" size={20} color={colors.inkSoft} />
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color={tokenColors.inkSecondary}
+            />
             <TextInput
               ref={inputRef}
               style={styles.input}
               placeholder={placeholder}
+              placeholderTextColor={tokenColors.inkSecondary}
               value={value}
               onChangeText={onChangeText}
               onSubmitEditing={handleSearch}
@@ -119,7 +131,7 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                 <Ionicons
                   name="close-circle"
                   size={20}
-                  color={colors.inkSoft}
+                  color={tokenColors.inkSecondary}
                 />
               </TouchableOpacity>
             )}
@@ -136,7 +148,11 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
               <Ionicons
                 name="filter-outline"
                 size={20}
-                color={activeFiltersCount > 0 ? colors.white : colors.inkSoft}
+                color={
+                  activeFiltersCount > 0
+                    ? tokenColors.white
+                    : tokenColors.inkSecondary
+                }
               />
               {activeFiltersCount > 0 && (
                 <View style={styles.filterBadge}>
@@ -255,8 +271,8 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
-    marginVertical: 8,
+    marginHorizontal: tokenSpacing.lg,
+    marginVertical: tokenSpacing.sm,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -266,42 +282,38 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    marginRight: 8,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.md,
+    paddingHorizontal: tokenSpacing.lg,
+    paddingVertical: tokenSpacing.md,
+    marginRight: tokenSpacing.sm,
     borderWidth: 1.5,
-    borderColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    borderColor: tokenColors.border,
+    ...tokenShadow.card,
   },
   input: {
     flex: 1,
-    fontSize: 17,
-    color: colors.ink,
-    marginLeft: 10,
+    ...tokenType.body,
+    color: tokenColors.ink,
+    marginLeft: tokenSpacing.sm,
   },
   clearButton: {
-    padding: 4,
+    padding: tokenSpacing.xs,
   },
   filterButton: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.md,
+    padding: tokenSpacing.md,
     position: 'relative',
   },
   filterButtonActive: {
-    backgroundColor: colors.cobalt,
+    backgroundColor: tokenColors.cobalt,
   },
   filterBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: colors.heart,
+    backgroundColor: tokenColors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -309,89 +321,86 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterBadgeText: {
-    color: colors.white,
+    color: tokenColors.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: tokenFontFamily.uiSemiBold,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: tokenColors.background,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: tokenSpacing.lg,
+    paddingVertical: tokenSpacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
+    borderBottomColor: tokenColors.border,
   },
   cancelText: {
-    fontSize: 16,
-    color: colors.cobalt,
+    ...tokenType.button,
+    color: tokenColors.cobalt,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.ink,
+    ...tokenType.modalTitle,
+    color: tokenColors.ink,
   },
   resetText: {
-    fontSize: 16,
-    color: colors.heart,
+    ...tokenType.button,
+    color: tokenColors.error,
   },
   modalContent: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: tokenSpacing.lg,
   },
   filterSection: {
-    marginVertical: 16,
+    marginVertical: tokenSpacing.lg,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.ink,
-    marginBottom: 12,
+    ...tokenType.fieldLabel,
+    color: tokenColors.ink,
+    marginBottom: tokenSpacing.md,
   },
   optionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: tokenSpacing.sm,
   },
   optionButton: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: tokenColors.surface,
+    paddingHorizontal: tokenSpacing.md,
+    paddingVertical: tokenSpacing.sm,
+    borderRadius: tokenRadius.pill,
+    borderWidth: 1.5,
+    borderColor: tokenColors.border,
   },
   optionButtonActive: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
+    backgroundColor: tokenColors.cobalt,
+    borderColor: tokenColors.cobalt,
   },
   optionText: {
-    fontSize: 14,
-    color: colors.inkSoft,
+    ...tokenType.chip,
+    color: tokenColors.ink,
   },
   optionTextActive: {
-    color: colors.white,
-    fontWeight: '500',
+    ...tokenType.chipSelected,
+    color: tokenColors.white,
   },
   modalFooter: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: tokenSpacing.lg,
+    paddingVertical: tokenSpacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.surface,
+    borderTopColor: tokenColors.border,
   },
   applyButton: {
-    backgroundColor: colors.cobalt,
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: tokenColors.cobalt,
+    borderRadius: tokenRadius.lg,
+    paddingVertical: tokenSpacing.lg,
     alignItems: 'center',
   },
   applyText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
+    ...tokenType.button,
+    color: tokenColors.white,
   },
 });

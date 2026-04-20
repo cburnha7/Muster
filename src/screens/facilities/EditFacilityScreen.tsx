@@ -41,6 +41,7 @@ import {
   FacilityPhoto,
 } from '../../types';
 import { colors, fonts, Spacing, TextStyles, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 import { getSurfaceName } from '../../utils/getSurfaceName';
 import { getSportLabel } from '../../constants/sports';
@@ -1856,7 +1857,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,

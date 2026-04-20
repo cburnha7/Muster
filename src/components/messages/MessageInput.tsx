@@ -1,7 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface MessageInputProps {
   onSend: (text: string) => void;
@@ -22,7 +30,9 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
   const hasText = text.trim().length > 0;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.container}>
         <TextInput
           ref={inputRef}
@@ -44,7 +54,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
             disabled={disabled}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-up" size={18} color="#FFFFFF" />
+            <Ionicons name="arrow-up" size={18} color={tokenColors.white} />
           </TouchableOpacity>
         )}
       </View>

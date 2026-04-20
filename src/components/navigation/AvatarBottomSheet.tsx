@@ -23,6 +23,7 @@ import {
   setActiveUser,
 } from '../../store/slices/contextSlice';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { PERSON_COLORS } from '../../types/eventsCalendar';
 import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import type { DependentSummary } from '../../types/dependent';
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 20,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   identityText: {
     flex: 1,
@@ -453,7 +454,7 @@ const styles = StyleSheet.create({
   personInitial: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   personInfo: {
     flex: 1,
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
   upgradeBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // ── Log Out ───────────────────────────

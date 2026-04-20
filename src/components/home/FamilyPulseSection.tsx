@@ -1,8 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { selectDependents } from '../../store/slices/contextSlice';
 
 const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
@@ -29,24 +36,35 @@ export function FamilyPulseSection() {
           const color = DEPENDENT_COLORS[i % DEPENDENT_COLORS.length]!;
           const initial = dep.firstName?.charAt(0)?.toUpperCase() ?? '?';
           const age = Math.floor(
-            (Date.now() - new Date(dep.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+            (Date.now() - new Date(dep.dateOfBirth).getTime()) /
+              (365.25 * 24 * 60 * 60 * 1000)
           );
 
           return (
             <TouchableOpacity
               key={dep.id}
               style={styles.card}
-              onPress={() => (navigation as any).navigate('DependentProfile', { dependentId: dep.id })}
+              onPress={() =>
+                (navigation as any).navigate('DependentProfile', {
+                  dependentId: dep.id,
+                })
+              }
               activeOpacity={0.8}
             >
               <View style={[styles.depAvatar, { backgroundColor: color }]}>
                 <Text style={styles.depInitial}>{initial}</Text>
               </View>
-              <Text style={styles.depName} numberOfLines={1}>{dep.firstName}</Text>
+              <Text style={styles.depName} numberOfLines={1}>
+                {dep.firstName}
+              </Text>
               <Text style={styles.depAge}>Age {age}</Text>
               <TouchableOpacity
                 style={styles.findGameCta}
-                onPress={() => (navigation as any).getParent()?.navigate('Home', { screen: 'HomeScreen' })}
+                onPress={() =>
+                  (navigation as any)
+                    .getParent()
+                    ?.navigate('Home', { screen: 'HomeScreen' })
+                }
               >
                 <Text style={styles.findGameText}>Find game →</Text>
               </TouchableOpacity>
@@ -74,7 +92,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 14,
     padding: 14,
     width: 120,
@@ -91,7 +109,7 @@ const styles = StyleSheet.create({
   depInitial: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   depName: {
     fontFamily: fonts.headingSemi,

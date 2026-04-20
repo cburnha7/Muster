@@ -1,7 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 
 interface EmptyStateProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -18,23 +25,24 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onAction,
 }) => {
-  const { colors, type, spacing, radius, shadow } = useTheme();
-
   return (
     <View
       style={{
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.xxxl,
-        paddingHorizontal: spacing.xl,
+        paddingVertical: tokenSpacing.xxxl,
+        paddingHorizontal: tokenSpacing.xl,
       }}
     >
-      <Ionicons name={icon} size={48} color={colors.textMuted} />
+      <Ionicons name={icon} size={48} color={tokenColors.inkSecondary} />
       <Text
         style={{
-          ...type.headingSm,
-          color: colors.textPrimary,
-          marginTop: spacing.base,
+          fontFamily: tokenFontFamily.display,
+          fontSize: 18,
+          lineHeight: 24,
+          color: tokenColors.ink,
+          marginTop: tokenSpacing.lg,
           textAlign: 'center',
         }}
       >
@@ -43,11 +51,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {subtitle ? (
         <Text
           style={{
-            ...type.body,
-            color: colors.textSecondary,
-            marginTop: spacing.sm,
+            ...tokenType.body,
+            color: tokenColors.inkSecondary,
+            marginTop: tokenSpacing.sm,
             textAlign: 'center',
-            lineHeight: 22,
           }}
         >
           {subtitle}
@@ -56,17 +63,17 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {actionLabel && onAction ? (
         <TouchableOpacity
           style={{
-            marginTop: spacing.lg,
-            backgroundColor: colors.cobalt,
-            paddingHorizontal: spacing.xl,
-            paddingVertical: spacing.md,
-            borderRadius: radius.full,
-            ...shadow.cta,
+            marginTop: tokenSpacing.xl,
+            backgroundColor: tokenColors.cobalt,
+            paddingHorizontal: tokenSpacing.xl,
+            paddingVertical: tokenSpacing.md,
+            borderRadius: tokenRadius.lg,
+            ...tokenShadow.fab,
           }}
           onPress={onAction}
           activeOpacity={0.75}
         >
-          <Text style={{ ...type.ui, color: colors.textInverse }}>
+          <Text style={{ ...tokenType.button, color: tokenColors.white }}>
             {actionLabel}
           </Text>
         </TouchableOpacity>

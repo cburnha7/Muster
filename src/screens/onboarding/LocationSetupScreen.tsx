@@ -16,6 +16,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
@@ -190,12 +191,15 @@ export const LocationSetupScreen: React.FC = () => {
                     activeOpacity={0.85}
                   >
                     {locationLoading ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <ActivityIndicator
+                        size="small"
+                        color={tokenColors.white}
+                      />
                     ) : (
                       <Ionicons
                         name="location"
                         size={22}
-                        color="#FFFFFF"
+                        color={tokenColors.white}
                         style={styles.locationButtonIcon}
                       />
                     )}
@@ -364,7 +368,7 @@ const styles = StyleSheet.create({
   locationButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: -0.1,
   },
   errorText: {
@@ -460,7 +464,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: -0.1,
   },
   skipLink: {

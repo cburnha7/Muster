@@ -18,6 +18,7 @@ import { matchService } from '../../../services/api/MatchService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { Match, MatchStatus, Season } from '../../../types';
 import { colors, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 import { LeaguesStackParamList } from '../../../navigation/types';
 
 interface MatchesTabProps {
@@ -186,7 +187,11 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="calendar-outline" size={64} color="#CCC" />
+        <Ionicons
+          name="calendar-outline"
+          size={64}
+          color={tokenColors.inkMuted}
+        />
         <Text style={styles.emptyText}>No matches found</Text>
         <Text style={styles.emptySubtext}>
           {statusFilter !== 'all'
@@ -271,7 +276,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({
               style={styles.createButton}
               onPress={handleCreateMatch}
             >
-              <Ionicons name="add-circle" size={20} color="#FFFFFF" />
+              <Ionicons name="add-circle" size={20} color={tokenColors.white} />
               <Text style={styles.createButtonText}>Create Match</Text>
             </TouchableOpacity>
           )}
@@ -310,9 +315,9 @@ const styles = StyleSheet.create({
   controls: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: tokenColors.border,
     gap: 12,
   },
   filtersRow: {
@@ -335,7 +340,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.cobalt,
@@ -359,7 +364,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   listContent: {
     paddingVertical: 8,
@@ -379,13 +384,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: tokenColors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -394,7 +399,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: colors.cobalt,

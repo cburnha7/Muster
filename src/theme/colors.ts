@@ -1,201 +1,87 @@
 // ─────────────────────────────────────────────────────────────
-// Muster colour palette — v3 (Bright & Sharp)
+// Muster colour palette — v4 (Token-based)
+// All values derive from src/theme/tokens.ts
 // Never import this directly in components.
 // Use useTheme() from src/theme/ThemeContext.tsx instead.
 // ─────────────────────────────────────────────────────────────
 
-// Brand accent colours — identical in both modes
+import {
+  tokenColors,
+  tokenStatus,
+  tokenSport,
+  avatarColors as _avatarColors,
+  getAvatarColor as _getAvatarColor,
+  SportKey as _SportKey,
+} from './tokens';
+
+// Re-export token-based values
+export type SportKey = _SportKey;
+export const getAvatarColor = _getAvatarColor;
+export const avatarColors = _avatarColors;
+
+// Brand accent colours
 export const brand = {
-  cobalt: '#2563EB',
-  cobaltLight: '#3B82F6',
-  cobaltMid: '#60A5FA',
-  cobaltSoft: '#DBEAFE',
+  cobalt: tokenColors.cobalt,
+  cobaltLight: tokenColors.cobaltMid,
+  cobaltMid: tokenColors.cobaltMid,
+  cobaltSoft: tokenColors.cobaltLight,
 
-  pine: '#059669',
-  pineSoft: '#D1FAE5',
+  pine: tokenColors.success,
+  pineSoft: tokenColors.successLight,
 
-  gold: '#D97706',
-  goldSoft: '#FEF3C7',
+  gold: tokenColors.gold,
+  goldSoft: tokenColors.goldLight,
 
-  heart: '#DC2626',
-  heartSoft: '#FEE2E2',
+  heart: tokenColors.error,
+  heartSoft: tokenColors.errorLight,
 } as const;
 
 // Status badge token pairs
-export const statusTokens = {
-  open: { bg: '#059669', text: '#FFFFFF' },
-  few: { bg: '#D97706', text: '#FFFFFF' },
-  full: { bg: '#DC2626', text: '#FFFFFF' },
-  closed: { bg: '#475569', text: '#FFFFFF' },
-  league: { bg: '#2563EB', text: '#FFFFFF' },
-} as const;
+export const statusTokens = tokenStatus;
 
 // Sport colour pairs
-export const sportTokens = {
-  soccer: {
-    solid: '#16A34A',
-    solidText: '#FFFFFF',
-    soft: '#DCFCE7',
-    softText: '#14532D',
-  },
-  basketball: {
-    solid: '#EA580C',
-    solidText: '#FFFFFF',
-    soft: '#FFEDD5',
-    softText: '#7C2D12',
-  },
-  hockey: {
-    solid: '#0284C7',
-    solidText: '#FFFFFF',
-    soft: '#E0F2FE',
-    softText: '#0C4A6E',
-  },
-  tennis: {
-    solid: '#CA8A04',
-    solidText: '#FFFFFF',
-    soft: '#FEF9C3',
-    softText: '#713F12',
-  },
-  volleyball: {
-    solid: '#7C3AED',
-    solidText: '#FFFFFF',
-    soft: '#EDE9FE',
-    softText: '#4C1D95',
-  },
-  rugby: {
-    solid: '#BE123C',
-    solidText: '#FFFFFF',
-    soft: '#FFE4E6',
-    softText: '#881337',
-  },
-  pickleball: {
-    solid: '#0891B2',
-    solidText: '#FFFFFF',
-    soft: '#CFFAFE',
-    softText: '#155E75',
-  },
-  softball: {
-    solid: '#CA8A04',
-    solidText: '#FFFFFF',
-    soft: '#FEF9C3',
-    softText: '#713F12',
-  },
-  baseball: {
-    solid: '#DC2626',
-    solidText: '#FFFFFF',
-    soft: '#FEE2E2',
-    softText: '#991B1B',
-  },
-  flag_football: {
-    solid: '#EA580C',
-    solidText: '#FFFFFF',
-    soft: '#FFEDD5',
-    softText: '#7C2D12',
-  },
-  kickball: {
-    solid: '#BE123C',
-    solidText: '#FFFFFF',
-    soft: '#FFE4E6',
-    softText: '#881337',
-  },
-  other: {
-    solid: '#475569',
-    solidText: '#FFFFFF',
-    soft: '#F1F5F9',
-    softText: '#1E293B',
-  },
-} as const;
-
-export type SportKey = keyof typeof sportTokens;
-
-// Avatar colour pool
-const AVATAR_POOL = [
-  '#2563EB',
-  '#059669',
-  '#7C3AED',
-  '#0284C7',
-  '#EA580C',
-  '#BE123C',
-  '#D97706',
-  '#0F766E',
-] as const;
-
-export const getAvatarColor = (userId: string): string => {
-  let h = 0;
-  for (let i = 0; i < userId.length; i++)
-    h = userId.charCodeAt(i) + ((h << 5) - h);
-  return AVATAR_POOL[Math.abs(h) % AVATAR_POOL.length];
-};
+export const sportTokens = tokenSport;
 
 // ─── Semantic token maps ─────────────────────────────────────
 export const lightTokens = {
-  bgScreen: '#F8FAFF',
-  bgCard: '#FFFFFF',
-  bgInput: '#FFFFFF',
-  bgInputFocus: '#EFF6FF',
-  bgInputError: '#FFF5F5',
+  bgScreen: tokenColors.background,
+  bgCard: tokenColors.surface,
+  bgInput: tokenColors.surface,
+  bgInputFocus: tokenColors.cobaltLight,
+  bgInputError: tokenColors.errorLight,
   bgSubtle: '#F1F5F9',
 
-  border: '#E2E8F0',
+  border: tokenColors.border,
   borderStrong: '#CBD5E1',
-  borderFocus: '#2563EB',
-  borderError: '#DC2626',
+  borderFocus: tokenColors.cobalt,
+  borderError: tokenColors.error,
 
-  textPrimary: '#0F172A',
-  textSecondary: '#475569',
-  textMuted: '#94A3B8',
-  textInverse: '#FFFFFF',
+  textPrimary: tokenColors.ink,
+  textSecondary: tokenColors.inkSecondary,
+  textMuted: tokenColors.inkMuted,
+  textInverse: tokenColors.white,
 
-  cobaltTint: '#DBEAFE',
-  pineTint: '#D1FAE5',
-  goldTint: '#FEF3C7',
-  heartTint: '#FEE2E2',
+  cobaltTint: tokenColors.cobaltLight,
+  pineTint: tokenColors.successLight,
+  goldTint: tokenColors.goldLight,
+  heartTint: tokenColors.errorLight,
 
-  tabBar: '#FFFFFF',
-  tabBarBorder: '#E2E8F0',
-  header: '#FFFFFF',
-  headerBorder: '#E2E8F0',
+  tabBar: tokenColors.surface,
+  tabBarBorder: tokenColors.border,
+  header: tokenColors.surface,
+  headerBorder: tokenColors.border,
 } as const;
 
-export const darkTokens = {
-  bgScreen: '#0A0F1E',
-  bgCard: '#131929',
-  bgInput: '#1A2238',
-  bgInputFocus: '#1A2B4A',
-  bgInputError: '#2A1215',
-  bgSubtle: '#1A2238',
-
-  border: '#1E2D45',
-  borderStrong: '#2A3D5C',
-  borderFocus: '#3B82F6',
-  borderError: '#EF4444',
-
-  textPrimary: '#F0F4FF',
-  textSecondary: '#8BA3C7',
-  textMuted: '#4A6080',
-  textInverse: '#FFFFFF',
-
-  cobaltTint: '#1A2B4A',
-  pineTint: '#0F2E1F',
-  goldTint: '#2A1F08',
-  heartTint: '#2A1215',
-
-  tabBar: '#0F1623',
-  tabBarBorder: '#1E2D45',
-  header: '#0F1623',
-  headerBorder: '#1E2D45',
-} as const;
+export const darkTokens = lightTokens; // Muster is light-mode only
 
 export type ThemeTokens = typeof lightTokens;
 
-// ─── Backward-compatible aliases ─────────────────────────────
-// Existing components reference old token names. These aliases
-// prevent mass breakage while we migrate screen by screen.
+// ─── Backward-compatible `colors` export ─────────────────────
 export const colors = {
   ...brand,
   ...lightTokens,
-  // Old names → new values
-  cobaltDark: '#1D4ED8',
+  // Direct token aliases
+  cobaltDark: tokenColors.cobaltDark,
   cobaltTint: lightTokens.cobaltTint,
   pineTint: lightTokens.pineTint,
   pineLight: '#34D399',
@@ -203,14 +89,15 @@ export const colors = {
   goldTint: lightTokens.goldTint,
   vermillion: '#EA580C',
   heartTint: lightTokens.heartTint,
-  white: '#FFFFFF',
-  surface: '#F8FAFF',
-  border: lightTokens.border,
-  ink: lightTokens.textPrimary,
-  inkSoft: lightTokens.textSecondary,
-  inkFaint: lightTokens.textMuted,
-  overlay: 'rgba(37, 99, 235, 0.6)',
-  scrim: 'rgba(15, 23, 42, 0.4)',
+  white: tokenColors.white,
+  surface: tokenColors.surface,
+  background: tokenColors.background,
+  border: tokenColors.border,
+  ink: tokenColors.ink,
+  inkSoft: tokenColors.inkSecondary,
+  inkFaint: tokenColors.inkMuted,
+  overlay: tokenColors.overlay,
+  scrim: tokenColors.scrim,
   // Sport badge colors (old format)
   sportSoccer: '#16A34A',
   sportBasket: '#EA580C',
@@ -220,60 +107,58 @@ export const colors = {
   sportRugby: '#BE123C',
   sportOther: '#475569',
   // Avatar colors
-  avatar1: '#2563EB',
-  avatar2: '#059669',
-  avatar3: '#DC2626',
+  avatar1: '#2040E0',
+  avatar2: '#2A7F4F',
+  avatar3: '#D0362A',
   avatar4: '#7C3AED',
   avatar5: '#0284C7',
   avatar6: '#EA580C',
   avatar7: '#BE123C',
   avatar8: '#0284C7',
   // Status tokens (old format)
-  statusOpen: '#D1FAE5',
-  statusOpenText: '#059669',
-  statusFull: '#FEE2E2',
-  statusFullText: '#DC2626',
-  statusFew: '#FEF3C7',
-  statusFewText: '#D97706',
+  statusOpen: tokenColors.successLight,
+  statusOpenText: tokenColors.success,
+  statusFull: tokenColors.errorLight,
+  statusFullText: tokenColors.error,
+  statusFew: tokenColors.warningLight,
+  statusFewText: tokenColors.warning,
   statusClosed: '#F1F5F9',
-  statusClosedText: '#475569',
-  statusLeague: '#DBEAFE',
-  statusLeagueText: '#2563EB',
+  statusClosedText: tokenColors.inkSecondary,
+  statusLeague: tokenColors.cobaltLight,
+  statusLeagueText: tokenColors.cobalt,
 } as const;
 
-// Backward-compatible aliases for Material Design 3 tokens
-(colors as any).primary = brand.cobalt;
-(colors as any).primaryContainer = brand.cobaltLight;
-(colors as any).primaryFixed = brand.cobaltSoft;
-(colors as any).onPrimary = '#FFFFFF';
-(colors as any).onPrimaryContainer = brand.cobalt;
-(colors as any).secondary = brand.pine;
-(colors as any).secondaryContainer = brand.pineSoft;
-(colors as any).onSecondary = '#FFFFFF';
-(colors as any).onSecondaryContainer = brand.pine;
-(colors as any).tertiary = brand.gold;
-(colors as any).tertiaryContainer = brand.goldSoft;
-(colors as any).error = brand.heart;
-(colors as any).errorContainer = brand.heartSoft;
-(colors as any).onError = '#FFFFFF';
-(colors as any).onErrorContainer = brand.heart;
-(colors as any).background = '#F8FAFF';
-(colors as any).onBackground = lightTokens.textPrimary;
-(colors as any).onSurface = lightTokens.textPrimary;
-(colors as any).onSurfaceVariant = lightTokens.textSecondary;
-(colors as any).surfaceContainerLowest = '#FFFFFF';
-(colors as any).surfaceContainerLow = '#F8FAFF';
+// Material Design 3 backward-compat aliases
+(colors as any).primary = tokenColors.cobalt;
+(colors as any).primaryContainer = tokenColors.cobaltMid;
+(colors as any).primaryFixed = tokenColors.cobaltLight;
+(colors as any).onPrimary = tokenColors.white;
+(colors as any).onPrimaryContainer = tokenColors.cobalt;
+(colors as any).secondary = tokenColors.success;
+(colors as any).secondaryContainer = tokenColors.successLight;
+(colors as any).onSecondary = tokenColors.white;
+(colors as any).onSecondaryContainer = tokenColors.success;
+(colors as any).tertiary = tokenColors.gold;
+(colors as any).tertiaryContainer = tokenColors.goldLight;
+(colors as any).error = tokenColors.error;
+(colors as any).errorContainer = tokenColors.errorLight;
+(colors as any).onError = tokenColors.white;
+(colors as any).onErrorContainer = tokenColors.error;
+(colors as any).background = tokenColors.background;
+(colors as any).onBackground = tokenColors.ink;
+(colors as any).onSurface = tokenColors.ink;
+(colors as any).onSurfaceVariant = tokenColors.inkSecondary;
+(colors as any).surfaceContainerLowest = tokenColors.surface;
+(colors as any).surfaceContainerLow = tokenColors.background;
 (colors as any).surfaceContainer = '#F1F5F9';
-(colors as any).surfaceContainerHigh = lightTokens.border;
-(colors as any).outline = lightTokens.textSecondary;
-(colors as any).outlineVariant = lightTokens.border;
-(colors as any).textPrimary = lightTokens.textPrimary;
-(colors as any).textSecondary = lightTokens.textSecondary;
-(colors as any).textTertiary = lightTokens.textMuted;
+(colors as any).surfaceContainerHigh = tokenColors.border;
+(colors as any).outline = tokenColors.inkSecondary;
+(colors as any).outlineVariant = tokenColors.border;
+(colors as any).textPrimary = tokenColors.ink;
+(colors as any).textSecondary = tokenColors.inkSecondary;
+(colors as any).textTertiary = tokenColors.inkMuted;
 
 export type ColorKey = keyof typeof colors;
-
-export const avatarColors = AVATAR_POOL as unknown as string[];
 
 export const sportColors: Record<string, { bg: string; text: string }> = {
   soccer: { bg: '#DCFCE7', text: '#16A34A' },

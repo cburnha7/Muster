@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useGetEscrowTransactionsQuery } from '../../store/api/insuranceDocumentsApi';
 
 export interface EscrowTransactionLogProps {
@@ -25,12 +26,35 @@ interface EscrowTransaction {
   createdAt: string;
 }
 
-const TYPE_CONFIG: Record<TransactionType, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  authorization: { label: 'Authorization', icon: 'card-outline', color: colors.ink },
-  capture: { label: 'Capture', icon: 'checkmark-circle-outline', color: colors.cobalt },
-  surplus_payout: { label: 'Surplus Payout', icon: 'arrow-up-outline', color: colors.cobalt },
-  shortfall_charge: { label: 'Shortfall Charge', icon: 'arrow-down-outline', color: colors.heart },
-  refund: { label: 'Refund', icon: 'return-down-back-outline', color: colors.gold },
+const TYPE_CONFIG: Record<
+  TransactionType,
+  { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }
+> = {
+  authorization: {
+    label: 'Authorization',
+    icon: 'card-outline',
+    color: colors.ink,
+  },
+  capture: {
+    label: 'Capture',
+    icon: 'checkmark-circle-outline',
+    color: colors.cobalt,
+  },
+  surplus_payout: {
+    label: 'Surplus Payout',
+    icon: 'arrow-up-outline',
+    color: colors.cobalt,
+  },
+  shortfall_charge: {
+    label: 'Shortfall Charge',
+    icon: 'arrow-down-outline',
+    color: colors.heart,
+  },
+  refund: {
+    label: 'Refund',
+    icon: 'return-down-back-outline',
+    color: colors.gold,
+  },
 };
 
 const STATUS_COLOR: Record<TransactionStatus, string> = {
@@ -46,7 +70,20 @@ function formatCents(cents: number): string {
 
 function formatTimestamp(iso: string): string {
   const d = new Date(iso);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const month = months[d.getMonth()];
   const day = d.getDate();
   const year = d.getFullYear();
@@ -59,14 +96,20 @@ function formatTimestamp(iso: string): string {
 }
 
 export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
-  const { data: transactions = [], isLoading } = useGetEscrowTransactionsQuery({ rentalId });
+  const { data: transactions = [], isLoading } = useGetEscrowTransactionsQuery({
+    rentalId,
+  });
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Escrow Transactions</Text>
 
       {isLoading ? (
-        <ActivityIndicator size="small" color={colors.cobalt} style={styles.loader} />
+        <ActivityIndicator
+          size="small"
+          color={colors.cobalt}
+          style={styles.loader}
+        />
       ) : transactions.length === 0 ? (
         <Text style={styles.emptyText}>No transactions</Text>
       ) : (
@@ -81,18 +124,30 @@ export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
               accessibilityRole="summary"
               accessibilityLabel={`${config.label}, ${formatCents(tx.amount)}, ${tx.status}`}
             >
-              <View style={[styles.iconCircle, { backgroundColor: config.color + '1A' }]}>
+              <View
+                style={[
+                  styles.iconCircle,
+                  { backgroundColor: config.color + '1A' },
+                ]}
+              >
                 <Ionicons name={config.icon} size={20} color={config.color} />
               </View>
 
               <View style={styles.rowContent}>
                 <Text style={styles.typeLabel}>{config.label}</Text>
-                <Text style={styles.timestamp}>{formatTimestamp(tx.createdAt)}</Text>
+                <Text style={styles.timestamp}>
+                  {formatTimestamp(tx.createdAt)}
+                </Text>
               </View>
 
               <View style={styles.rowRight}>
                 <Text style={styles.amount}>{formatCents(tx.amount)}</Text>
-                <View style={[styles.badge, { backgroundColor: statusColor + '1A' }]}>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: statusColor + '1A' },
+                  ]}
+                >
                   <Text style={[styles.badgeText, { color: statusColor }]}>
                     {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                   </Text>
@@ -133,7 +188,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     marginBottom: Spacing.sm,

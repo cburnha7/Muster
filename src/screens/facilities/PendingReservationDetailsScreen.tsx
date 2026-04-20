@@ -12,6 +12,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import {
   useApproveReservationMutation,
   useDenyReservationMutation,
@@ -306,7 +307,7 @@ export function PendingReservationDetailsScreen() {
               disabled={isBusy}
             >
               {isApproving ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={tokenColors.white} />
               ) : (
                 <Text style={styles.actionBtnText}>Approve</Text>
               )}
@@ -317,7 +318,7 @@ export function PendingReservationDetailsScreen() {
               disabled={isBusy}
             >
               {isDenying ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={tokenColors.white} />
               ) : (
                 <Text style={styles.actionBtnText}>Deny</Text>
               )}
@@ -354,11 +355,11 @@ const styles = StyleSheet.create({
   contentContainer: { padding: 16, paddingBottom: 40 },
   statusRow: { alignItems: 'flex-start', marginBottom: 20 },
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
-  pendingBadge: { backgroundColor: '#FFF3CD' },
-  confirmedBadge: { backgroundColor: '#D4EDDA' },
+  pendingBadge: { backgroundColor: tokenColors.warningLight },
+  confirmedBadge: { backgroundColor: tokenColors.successLight },
   statusText: { fontFamily: fonts.label, fontSize: 13, color: colors.ink },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -413,5 +414,9 @@ const styles = StyleSheet.create({
   },
   approveBtn: { backgroundColor: colors.cobalt },
   denyBtn: { backgroundColor: colors.heart },
-  actionBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
+  actionBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 15,
+    color: tokenColors.white,
+  },
 });

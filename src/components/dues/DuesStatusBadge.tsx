@@ -9,6 +9,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export type DuesStatus = 'paid' | 'pending' | 'unpaid';
 
@@ -17,10 +18,13 @@ interface DuesStatusBadgeProps {
   compact?: boolean;
 }
 
-const statusConfig: Record<DuesStatus, { label: string; bg: string; color: string; icon: string }> = {
+const statusConfig: Record<
+  DuesStatus,
+  { label: string; bg: string; color: string; icon: string }
+> = {
   paid: {
     label: 'Paid',
-    bg: '#EDF7F0',
+    bg: tokenColors.successLight,
     color: colors.pine,
     icon: 'checkmark-circle',
   },
@@ -43,8 +47,16 @@ export function DuesStatusBadge({ status, compact }: DuesStatusBadgeProps) {
 
   return (
     <View style={[styles.badge, { backgroundColor: config.bg }]}>
-      <Ionicons name={config.icon as any} size={compact ? 12 : 14} color={config.color} />
-      {!compact && <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>}
+      <Ionicons
+        name={config.icon as any}
+        size={compact ? 12 : 14}
+        color={config.color}
+      />
+      {!compact && (
+        <Text style={[styles.label, { color: config.color }]}>
+          {config.label}
+        </Text>
+      )}
     </View>
   );
 }

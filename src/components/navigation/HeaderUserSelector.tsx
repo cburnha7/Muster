@@ -8,6 +8,7 @@ import {
   selectDependents,
 } from '../../store/slices/contextSlice';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { PERSON_COLORS } from '../../types/eventsCalendar';
 import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import type { RootState } from '../../store/store';
@@ -92,7 +93,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitial: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
+  avatarInitial: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: tokenColors.white,
+  },
   notifDot: {
     position: 'absolute',
     top: 0,

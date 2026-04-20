@@ -12,6 +12,7 @@ import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
 import { DocumentType } from '../../types';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface DocumentUploadFormProps {
   onSubmit: (file: File, documentType: DocumentType) => Promise<void>;
@@ -147,7 +148,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           <Ionicons
             name={selectedFile ? 'document' : 'cloud-upload-outline'}
             size={48}
-            color={selectedFile ? colors.cobalt : '#999'}
+            color={selectedFile ? colors.cobalt : tokenColors.inkMuted}
           />
           {selectedFile ? (
             <View style={styles.fileInfo}>
@@ -168,11 +169,19 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
         <View style={styles.requirements}>
           <Text style={styles.requirementsTitle}>Requirements:</Text>
           <View style={styles.requirementItem}>
-            <Ionicons name="checkmark-circle-outline" size={16} color="#666" />
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={16}
+              color={tokenColors.inkSecondary}
+            />
             <Text style={styles.requirementText}>PDF format only</Text>
           </View>
           <View style={styles.requirementItem}>
-            <Ionicons name="checkmark-circle-outline" size={16} color="#666" />
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={16}
+              color={tokenColors.inkSecondary}
+            />
             <Text style={styles.requirementText}>Maximum file size: 10MB</Text>
           </View>
         </View>
@@ -202,7 +211,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   section: {
     padding: 16,
@@ -210,17 +219,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 4,
   },
   sectionDescription: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 16,
   },
   fileSelector: {
     borderWidth: 2,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
     borderStyle: 'dashed',
     borderRadius: 12,
     padding: 32,
@@ -228,11 +237,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 16,
     marginBottom: 8,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokenColors.background,
   },
   fileSelectorText: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginTop: 12,
   },
   fileInfo: {
@@ -242,28 +251,28 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 4,
   },
   fileSize: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
   },
   errorText: {
     fontSize: 14,
-    color: '#FF3B30',
+    color: tokenColors.error,
     marginTop: 4,
   },
   requirements: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderRadius: 8,
   },
   requirementsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 8,
   },
   requirementItem: {
@@ -273,7 +282,7 @@ const styles = StyleSheet.create({
   },
   requirementText: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginLeft: 8,
   },
   actions: {
@@ -281,7 +290,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: tokenColors.border,
   },
   actionButton: {
     flex: 1,

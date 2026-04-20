@@ -22,6 +22,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { MessageBubble } from '../../components/messages/MessageBubble';
 import { SystemMessage } from '../../components/messages/SystemMessage';
 import { MessageInput } from '../../components/messages/MessageInput';
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,

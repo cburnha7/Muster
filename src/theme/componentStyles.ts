@@ -1,102 +1,94 @@
 /**
- * Component styles — Kinetic Anchor design system
+ * Component styles — Muster design system
  *
- * Rules:
- * - NO 1px solid borders. Separation via background shifts only.
- * - Pill shapes for buttons (borderRadius: full).
- * - Cards use lg radius (24) with tonal layering.
- * - Depth via ambient shadows, not structural lines.
+ * All values derive from tokens.ts.
  */
 
-import { colors } from './colors';
-import { BorderRadius } from './borderRadius';
-import { Spacing } from './spacing';
-import { Shadows } from './shadows';
+import { tokenColors, tokenSpacing, tokenRadius, tokenShadow } from './tokens';
 
 export const ComponentStyles = {
   button: {
     primary: {
-      backgroundColor: colors.primaryContainer,
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.xl,
-      borderRadius: BorderRadius.full,
+      backgroundColor: tokenColors.cobalt,
+      paddingVertical: tokenSpacing.md,
+      paddingHorizontal: tokenSpacing.xl,
+      borderRadius: tokenRadius.lg,
     },
     secondary: {
-      backgroundColor: colors.surfaceContainerLowest,
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.xl,
-      borderRadius: BorderRadius.full,
+      backgroundColor: tokenColors.transparent,
+      borderWidth: 1.5,
+      borderColor: tokenColors.border,
+      paddingVertical: tokenSpacing.md,
+      paddingHorizontal: tokenSpacing.xl,
+      borderRadius: tokenRadius.lg,
     },
   },
 
-  /** Interactive card — surface_container_lowest on surface_container_low */
   card: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.sm,
-    padding: Spacing.xl,
-    marginBottom: Spacing.md,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
+    ...tokenShadow.card,
+    padding: tokenSpacing.lg,
+    marginBottom: tokenSpacing.md,
   },
 
-  /** Read-only card — slightly elevated from background */
   cardReadOnly: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.xl,
-    marginBottom: Spacing.md,
+    backgroundColor: tokenColors.background,
+    borderRadius: tokenRadius.lg,
+    padding: tokenSpacing.lg,
+    marginBottom: tokenSpacing.md,
   },
 
-  /** Input field — carved-out area, no box borders */
   input: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: tokenColors.surface,
+    borderWidth: 1.5,
+    borderColor: tokenColors.border,
+    borderRadius: tokenRadius.md,
+    paddingVertical: tokenSpacing.md,
+    paddingHorizontal: tokenSpacing.lg,
   },
 
-  /** Chip — selection state */
   chipSelected: {
-    backgroundColor: colors.primaryFixedDim,
-    borderRadius: BorderRadius.full,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: tokenColors.cobalt,
+    borderRadius: tokenRadius.pill,
+    paddingVertical: tokenSpacing.sm,
+    paddingHorizontal: tokenSpacing.md,
   },
 
-  /** Chip — default state */
   chip: {
-    backgroundColor: colors.surfaceContainerHigh,
-    borderRadius: BorderRadius.full,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: tokenColors.surface,
+    borderWidth: 1.5,
+    borderColor: tokenColors.border,
+    borderRadius: tokenRadius.pill,
+    paddingVertical: tokenSpacing.sm,
+    paddingHorizontal: tokenSpacing.md,
   },
 
-  /** Live indicator chip */
   chipLive: {
-    backgroundColor: colors.secondary,
-    borderRadius: BorderRadius.full,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: tokenColors.success,
+    borderRadius: tokenRadius.pill,
+    paddingVertical: tokenSpacing.sm,
+    paddingHorizontal: tokenSpacing.md,
   },
 
-  /** Global app background */
   screenBackground: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tokenColors.background,
   },
 
   // Legacy aliases
   propertyCard: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.sm,
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
+    ...tokenShadow.card,
+    padding: tokenSpacing.lg,
+    marginBottom: tokenSpacing.sm,
   },
   propertyCardReadOnly: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: BorderRadius.lg,
-    ...Shadows.sm,
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
+    backgroundColor: tokenColors.background,
+    borderRadius: tokenRadius.lg,
+    ...tokenShadow.card,
+    padding: tokenSpacing.lg,
+    marginBottom: tokenSpacing.sm,
   },
 } as const;

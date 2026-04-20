@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 type DateTimePickerEvent = { type: string };
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface TimePickerInputProps {
   label: string;
@@ -89,7 +96,10 @@ export function TimePickerInput({
             onChange={handleChange}
           />
           {Platform.OS === 'ios' && (
-            <TouchableOpacity style={styles.doneButton} onPress={handleConfirmIOS}>
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={handleConfirmIOS}
+            >
               <Text style={styles.doneText}>Done</Text>
             </TouchableOpacity>
           )}
@@ -98,7 +108,6 @@ export function TimePickerInput({
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -116,7 +125,7 @@ const styles = StyleSheet.create({
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.inkFaint + '40',

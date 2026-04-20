@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 const EMOJIS = ['👍', '🔥', '😂', '❤️', '💪', '🎯', '👏', '😤'] as const;
 
@@ -11,13 +12,20 @@ interface ReactionPickerProps {
 
 export function ReactionPicker({ onSelect, onDismiss }: ReactionPickerProps) {
   return (
-    <TouchableOpacity style={styles.overlay} onPress={onDismiss} activeOpacity={1}>
+    <TouchableOpacity
+      style={styles.overlay}
+      onPress={onDismiss}
+      activeOpacity={1}
+    >
       <View style={styles.picker}>
-        {EMOJIS.map((emoji) => (
+        {EMOJIS.map(emoji => (
           <TouchableOpacity
             key={emoji}
             style={styles.emojiBtn}
-            onPress={() => { onSelect(emoji); onDismiss(); }}
+            onPress={() => {
+              onSelect(emoji);
+              onDismiss();
+            }}
           >
             <Text style={styles.emoji}>{emoji}</Text>
           </TouchableOpacity>
@@ -30,7 +38,10 @@ export function ReactionPicker({ onSelect, onDismiss }: ReactionPickerProps) {
 const styles = StyleSheet.create({
   overlay: {
     position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 100,
     justifyContent: 'center',
     alignItems: 'center',
@@ -42,7 +53,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     padding: 6,
     gap: 4,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,

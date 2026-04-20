@@ -1,7 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  StyleSheet,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import type { Message } from '../../types/messaging';
 
 interface MessageBubbleProps {
@@ -18,7 +25,7 @@ interface MessageBubbleProps {
 
 function groupReactions(
   reactions: Message['reactions'],
-  currentUserId?: string,
+  currentUserId?: string
 ): Array<{ emoji: string; count: number; hasMe: boolean; userIds: string[] }> {
   const map = new Map<string, { count: number; userIds: string[] }>();
   for (const r of reactions) {
@@ -38,7 +45,11 @@ function groupReactions(
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 export function MessageBubble({
@@ -58,8 +69,8 @@ export function MessageBubble({
     <TouchableWithoutFeedback onLongPress={() => onLongPress(message)}>
       <View style={[styles.row, isOwn && styles.rowOwn]}>
         {/* Avatar or spacer for other users */}
-        {!isOwn && (
-          showAvatar ? (
+        {!isOwn &&
+          (showAvatar ? (
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarInitial}>
                 {message.sender?.firstName?.charAt(0) ?? '?'}
@@ -67,8 +78,7 @@ export function MessageBubble({
             </View>
           ) : (
             <View style={styles.avatarSpacer} />
-          )
-        )}
+          ))}
 
         <View style={[styles.column, isOwn && styles.columnOwn]}>
           {showSender && !isOwn && message.sender && (
@@ -83,29 +93,43 @@ export function MessageBubble({
               <Text style={styles.replyName} numberOfLines={1}>
                 {message.replyTo.sender?.firstName ?? 'Message'}
               </Text>
-              <Text style={styles.replyText} numberOfLines={2}>{message.replyTo.content}</Text>
+              <Text style={styles.replyText} numberOfLines={2}>
+                {message.replyTo.content}
+              </Text>
             </View>
           )}
 
-          <View style={[
-            styles.bubble,
-            isOwn ? styles.bubbleOwn : styles.bubbleOther,
-            message.sendError && styles.bubbleError,
-            message.priority === 'URGENT' && styles.bubbleAnnouncement,
-          ]}>
+          <View
+            style={[
+              styles.bubble,
+              isOwn ? styles.bubbleOwn : styles.bubbleOther,
+              message.sendError && styles.bubbleError,
+              message.priority === 'URGENT' && styles.bubbleAnnouncement,
+            ]}
+          >
             {message.priority === 'URGENT' && (
               <View style={styles.announceHeader}>
                 <Ionicons name="megaphone" size={12} color={colors.tertiary} />
                 <Text style={styles.announceLabel}>Announcement</Text>
               </View>
             )}
-            <Text style={[styles.content, isOwn && styles.contentOwn]}>{message.content}</Text>
+            <Text style={[styles.content, isOwn && styles.contentOwn]}>
+              {message.content}
+            </Text>
             {(showTimestamp || message.isSending || message.sendError) && (
               <View style={styles.metaRow}>
-                {message.isSending && <Text style={[styles.status, isOwn && styles.statusOwn]}>Sending...</Text>}
-                {message.sendError && <Text style={styles.statusError}>Failed</Text>}
+                {message.isSending && (
+                  <Text style={[styles.status, isOwn && styles.statusOwn]}>
+                    Sending...
+                  </Text>
+                )}
+                {message.sendError && (
+                  <Text style={styles.statusError}>Failed</Text>
+                )}
                 {showTimestamp && !message.isSending && !message.sendError && (
-                  <Text style={[styles.time, isOwn && styles.timeOwn]}>{formatTime(message.createdAt)}</Text>
+                  <Text style={[styles.time, isOwn && styles.timeOwn]}>
+                    {formatTime(message.createdAt)}
+                  </Text>
                 )}
               </View>
             )}
@@ -114,22 +138,38 @@ export function MessageBubble({
           {/* Read receipt */}
           {showReadReceipt && (
             <Text style={[styles.readReceipt, isOwn && styles.readReceiptOwn]}>
-              {showReadReceipt === 'sending' ? 'Sending...' : showReadReceipt === 'read' ? 'Read' : 'Sent'}
+              {showReadReceipt === 'sending'
+                ? 'Sending...'
+                : showReadReceipt === 'read'
+                  ? 'Read'
+                  : 'Sent'}
             </Text>
           )}
 
           {/* Reactions */}
           {grouped.length > 0 && (
             <View style={[styles.reactions, isOwn && styles.reactionsOwn]}>
-              {grouped.map((g) => (
+              {grouped.map(g => (
                 <TouchableOpacity
                   key={g.emoji}
-                  style={[styles.reactionPill, g.hasMe && styles.reactionPillMine]}
-                  onPress={() => onToggleReaction?.(message.id, g.emoji, g.hasMe)}
+                  style={[
+                    styles.reactionPill,
+                    g.hasMe && styles.reactionPillMine,
+                  ]}
+                  onPress={() =>
+                    onToggleReaction?.(message.id, g.emoji, g.hasMe)
+                  }
                   activeOpacity={0.7}
                 >
                   <Text style={styles.reactionEmoji}>{g.emoji}</Text>
-                  <Text style={[styles.reactionCount, g.hasMe && styles.reactionCountMine]}>{g.count}</Text>
+                  <Text
+                    style={[
+                      styles.reactionCount,
+                      g.hasMe && styles.reactionCountMine,
+                    ]}
+                  >
+                    {g.count}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -187,7 +227,11 @@ const styles = StyleSheet.create({
   },
   replyQuoteOwn: { borderLeftColor: 'rgba(255,255,255,0.5)' },
   replyName: { fontFamily: fonts.label, fontSize: 11, color: colors.primary },
-  replyText: { fontFamily: fonts.body, fontSize: 12, color: colors.onSurfaceVariant },
+  replyText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+  },
   bubble: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -225,11 +269,24 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     lineHeight: 21,
   },
-  contentOwn: { color: '#FFFFFF' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
-  time: { fontFamily: fonts.body, fontSize: 11, color: colors.onSurfaceVariant },
+  contentOwn: { color: tokenColors.white },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    justifyContent: 'flex-end',
+  },
+  time: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+  },
   timeOwn: { color: 'rgba(255,255,255,0.7)' },
-  status: { fontFamily: fonts.body, fontSize: 11, color: colors.onSurfaceVariant },
+  status: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
+  },
   statusOwn: { color: 'rgba(255,255,255,0.7)' },
   statusError: { fontFamily: fonts.body, fontSize: 11, color: colors.error },
   readReceipt: {
@@ -257,6 +314,10 @@ const styles = StyleSheet.create({
     borderColor: colors.primary + '40',
   },
   reactionEmoji: { fontSize: 14 },
-  reactionCount: { fontFamily: fonts.label, fontSize: 12, color: colors.onSurface },
+  reactionCount: {
+    fontFamily: fonts.label,
+    fontSize: 12,
+    color: colors.onSurface,
+  },
   reactionCountMine: { color: colors.primary },
 });

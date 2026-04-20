@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { PersonFilter } from '../../types/eventsCalendar';
 
 interface DependentToggleProps {
@@ -80,7 +81,7 @@ export function DependentToggle({
         </TouchableOpacity>
 
         {/* Dependent pills */}
-        {dependents.map((dep) => (
+        {dependents.map(dep => (
           <TouchableOpacity
             key={dep.id}
             style={[
@@ -132,6 +133,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   pillTextActive: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

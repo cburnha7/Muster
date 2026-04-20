@@ -7,6 +7,7 @@ import {
   Animated,
 } from 'react-native';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { getSportEmoji } from '../../constants/sports';
 import type { Booking } from '../../types';
 
@@ -82,20 +83,20 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: tokenColors.errorLight,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 12,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: tokenColors.error,
   },
   liveLabel: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#DC2626',
+    backgroundColor: tokenColors.error,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -104,12 +105,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   liveText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: 1,
   },
   info: {

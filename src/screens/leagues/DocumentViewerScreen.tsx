@@ -12,6 +12,7 @@ import {
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { leagueService } from '../../services/api/LeagueService';
 import { performanceMonitoringService } from '../../services/monitoring/PerformanceMonitoringService';
 
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,

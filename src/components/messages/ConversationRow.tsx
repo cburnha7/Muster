@@ -9,6 +9,7 @@ import {
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors, tokenSport } from '../../theme/tokens';
 import type { Conversation } from '../../types/messaging';
 
 interface ConversationRowProps {
@@ -38,11 +39,11 @@ function getConversationColor(type: Conversation['type']): string {
     case 'TEAM_CHAT':
       return colors.primary;
     case 'GAME_THREAD':
-      return '#E86825';
+      return tokenSport.basketball.solid;
     case 'LEAGUE_CHANNEL':
-      return '#C4A017';
+      return tokenColors.warning;
     case 'DIRECT_MESSAGE':
-      return '#8B5CF6';
+      return tokenSport.volleyball.solid;
   }
 }
 
@@ -115,7 +116,7 @@ function ConversationRowInner({
           <Ionicons
             name={isMuted ? 'volume-high' : 'volume-mute'}
             size={22}
-            color="#FFFFFF"
+            color={tokenColors.white}
           />
           <Text style={styles.swipeActionText}>
             {isMuted ? 'Unmute' : 'Mute'}
@@ -146,7 +147,7 @@ function ConversationRowInner({
         <Animated.View
           style={[styles.swipeActionContent, { transform: [{ scale }] }]}
         >
-          <Ionicons name="pin" size={22} color="#FFFFFF" />
+          <Ionicons name="pin" size={22} color={tokenColors.white} />
           <Text style={styles.swipeActionText}>Pin</Text>
         </Animated.View>
       </TouchableOpacity>
@@ -334,7 +335,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontFamily: fonts.label, fontSize: 11, color: '#FFFFFF' },
+  badgeText: {
+    fontFamily: fonts.label,
+    fontSize: 11,
+    color: tokenColors.white,
+  },
   swipeActionLeft: {
     backgroundColor: colors.onSurfaceVariant,
     justifyContent: 'center',
@@ -356,6 +361,6 @@ const styles = StyleSheet.create({
   swipeActionText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

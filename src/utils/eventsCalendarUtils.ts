@@ -15,10 +15,11 @@ import {
   PERSON_COLORS,
 } from '../types/eventsCalendar';
 import { formatDateForCalendar } from './calendarUtils';
+import { tokenColors } from '../theme/tokens';
 
-// Hex values used directly to avoid circular dependency with theme
-const NEUTRAL_DOT_COLOR = '#73777F'; // colors.outline
-const SELECTED_DATE_COLOR = '#2D5F3F'; // colors.pine
+// Use tokens instead of hardcoded hex values
+const NEUTRAL_DOT_COLOR = tokenColors.inkSecondary;
+const SELECTED_DATE_COLOR = tokenColors.cobalt;
 
 /**
  * Assign a distinct color to each family member.

@@ -2,7 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
-import { RosterInvitation, LeagueInvitation, EventInvitation, ReadyToScheduleLeague } from '../../services/api/UserService';
+import { tokenColors } from '../../theme/tokens';
+import {
+  RosterInvitation,
+  LeagueInvitation,
+  EventInvitation,
+  ReadyToScheduleLeague,
+} from '../../services/api/UserService';
 import { Booking } from '../../types';
 
 interface InboxItem {
@@ -45,34 +51,71 @@ export function InboxSection({
 }: InboxSectionProps) {
   const items: InboxItem[] = [];
 
-  rosterInvitations.forEach((inv) => {
-    items.push({ id: `r-${inv.id}`, task: 'Join Team', name: inv.rosterName, onPress: () => onRosterInvitationPress(inv) });
+  rosterInvitations.forEach(inv => {
+    items.push({
+      id: `r-${inv.id}`,
+      task: 'Join Team',
+      name: inv.rosterName,
+      onPress: () => onRosterInvitationPress(inv),
+    });
   });
-  leagueInvitations.forEach((inv) => {
-    items.push({ id: `l-${inv.id}`, task: 'Join League', name: inv.leagueName, onPress: () => onLeagueInvitationPress(inv) });
+  leagueInvitations.forEach(inv => {
+    items.push({
+      id: `l-${inv.id}`,
+      task: 'Join League',
+      name: inv.leagueName,
+      onPress: () => onLeagueInvitationPress(inv),
+    });
   });
-  eventInvitations.forEach((inv) => {
-    items.push({ id: `e-${inv.id}`, task: 'Join Event', name: inv.eventTitle, onPress: () => onEventInvitationPress(inv) });
+  eventInvitations.forEach(inv => {
+    items.push({
+      id: `e-${inv.id}`,
+      task: 'Join Event',
+      name: inv.eventTitle,
+      onPress: () => onEventInvitationPress(inv),
+    });
   });
-  readyToScheduleLeagues.forEach((league) => {
-    items.push({ id: `s-${league.id}`, task: 'Schedule League', name: league.name, onPress: () => onScheduleLeaguePress(league) });
+  readyToScheduleLeagues.forEach(league => {
+    items.push({
+      id: `s-${league.id}`,
+      task: 'Schedule League',
+      name: league.name,
+      onPress: () => onScheduleLeaguePress(league),
+    });
   });
-  debriefEvents.forEach((booking) => {
-    items.push({ id: `d-${booking.id}`, task: 'Debrief', name: booking.event?.title || 'Event', onPress: () => onDebriefPress(booking) });
+  debriefEvents.forEach(booking => {
+    items.push({
+      id: `d-${booking.id}`,
+      task: 'Debrief',
+      name: booking.event?.title || 'Event',
+      onPress: () => onDebriefPress(booking),
+    });
   });
   cancelRequests.forEach((req: any) => {
-    items.push({ id: `c-${req.id}`, task: 'Confirm Cancellation', name: req.event?.title || req.eventTitle || 'Event', onPress: () => onApproveCancelRequest(req.id) });
+    items.push({
+      id: `c-${req.id}`,
+      task: 'Confirm Cancellation',
+      name: req.event?.title || req.eventTitle || 'Event',
+      onPress: () => onApproveCancelRequest(req.id),
+    });
   });
 
   if (items.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      {items.map((item) => (
-        <TouchableOpacity key={item.id} style={styles.card} onPress={item.onPress} activeOpacity={0.7}>
+      {items.map(item => (
+        <TouchableOpacity
+          key={item.id}
+          style={styles.card}
+          onPress={item.onPress}
+          activeOpacity={0.7}
+        >
           <View style={styles.cardBody}>
             <Text style={styles.task}>{item.task}</Text>
-            <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+            <Text style={styles.name} numberOfLines={1}>
+              {item.name}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.inkFaint} />
         </TouchableOpacity>
@@ -89,7 +132,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,

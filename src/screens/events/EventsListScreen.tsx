@@ -18,6 +18,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { formatSportType } from '../../utils/formatters';
 
 import { eventService } from '../../services/api/EventService';
@@ -386,12 +387,12 @@ const styles = StyleSheet.create({
   },
   mapContainer: { height: 400 },
   eventCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
@@ -412,7 +413,11 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     marginRight: 12,
   },
-  numberText: { fontSize: 16, color: '#FFFFFF', fontFamily: fonts.heading },
+  numberText: {
+    fontSize: 16,
+    color: tokenColors.white,
+    fontFamily: fonts.heading,
+  },
   eventName: {
     fontFamily: fonts.label,
     fontSize: 18,
@@ -469,7 +474,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    shadowColor: '#2563EB',
+    shadowColor: tokenColors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

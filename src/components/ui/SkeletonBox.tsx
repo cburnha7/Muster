@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { colors } from '../../theme';
+import { tokenColors, tokenSpacing, tokenRadius } from '../../theme/tokens';
 
 interface SkeletonBoxProps {
   width?: number | string;
@@ -9,14 +9,10 @@ interface SkeletonBoxProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/**
- * A shimmer-animated skeleton placeholder.
- * Pulses between two shades of gray on a 1.5s loop.
- */
 export function SkeletonBox({
   width = '100%',
   height = 16,
-  borderRadius = 8,
+  borderRadius = tokenRadius.sm,
   style,
 }: SkeletonBoxProps) {
   const pulseAnim = useRef(new Animated.Value(0)).current;
@@ -42,7 +38,7 @@ export function SkeletonBox({
 
   const backgroundColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.surfaceContainer, colors.surfaceContainerHigh],
+    outputRange: [tokenColors.border, tokenColors.inkMuted],
   });
 
   return (
@@ -60,12 +56,10 @@ export function SkeletonBox({
   );
 }
 
-/** Common skeleton layouts composed from SkeletonBox */
-
 export function SkeletonCard({ style }: { style?: StyleProp<ViewStyle> }) {
   return (
     <View style={[skeletonStyles.card, style]}>
-      <SkeletonBox height={140} borderRadius={14} />
+      <SkeletonBox height={140} borderRadius={tokenRadius.lg} />
       <View style={skeletonStyles.cardBody}>
         <SkeletonBox width="70%" height={14} />
         <SkeletonBox width="45%" height={12} />
@@ -78,7 +72,7 @@ export function SkeletonCard({ style }: { style?: StyleProp<ViewStyle> }) {
 export function SkeletonRow({ style }: { style?: StyleProp<ViewStyle> }) {
   return (
     <View style={[skeletonStyles.row, style]}>
-      <SkeletonBox width={48} height={48} borderRadius={14} />
+      <SkeletonBox width={48} height={48} borderRadius={tokenRadius.lg} />
       <View style={skeletonStyles.rowBody}>
         <SkeletonBox width="60%" height={14} />
         <SkeletonBox width="80%" height={12} />
@@ -87,10 +81,14 @@ export function SkeletonRow({ style }: { style?: StyleProp<ViewStyle> }) {
   );
 }
 
-export function SkeletonConversationRow({ style }: { style?: StyleProp<ViewStyle> }) {
+export function SkeletonConversationRow({
+  style,
+}: {
+  style?: StyleProp<ViewStyle>;
+}) {
   return (
     <View style={[skeletonStyles.row, style]}>
-      <SkeletonBox width={48} height={48} borderRadius={14} />
+      <SkeletonBox width={48} height={48} borderRadius={tokenRadius.lg} />
       <View style={skeletonStyles.rowBody}>
         <View style={skeletonStyles.rowTopLine}>
           <SkeletonBox width="50%" height={14} />
@@ -113,7 +111,11 @@ export function SkeletonDetailHero() {
           <SkeletonBox width={100} height={14} />
           <SkeletonBox width={80} height={14} />
         </View>
-        <SkeletonBox height={44} borderRadius={22} style={{ marginTop: 12 }} />
+        <SkeletonBox
+          height={44}
+          borderRadius={tokenRadius.lg}
+          style={{ marginTop: tokenSpacing.md }}
+        />
       </View>
     </View>
   );
@@ -121,25 +123,25 @@ export function SkeletonDetailHero() {
 
 const skeletonStyles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 14,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
     overflow: 'hidden',
     gap: 0,
   },
   cardBody: {
-    padding: 14,
-    gap: 8,
+    padding: tokenSpacing.lg,
+    gap: tokenSpacing.sm,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: tokenSpacing.lg,
+    paddingVertical: tokenSpacing.md,
+    gap: tokenSpacing.md,
   },
   rowBody: {
     flex: 1,
-    gap: 6,
+    gap: tokenSpacing.sm,
   },
   rowTopLine: {
     flexDirection: 'row',
@@ -150,12 +152,12 @@ const skeletonStyles = StyleSheet.create({
     gap: 0,
   },
   heroBody: {
-    padding: 20,
-    gap: 10,
+    padding: tokenSpacing.xl,
+    gap: tokenSpacing.sm,
   },
   heroMeta: {
     flexDirection: 'row',
-    gap: 16,
-    marginTop: 4,
+    gap: tokenSpacing.lg,
+    marginTop: tokenSpacing.xs,
   },
 });

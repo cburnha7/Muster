@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useUploadInsuranceDocumentMutation } from '../../store/api/insuranceDocumentsApi';
 
 /**
@@ -367,10 +368,14 @@ export function InsuranceDocumentForm({
             accessibilityLabel="Upload document"
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={tokenColors.white} />
             ) : (
               <>
-                <Ionicons name="cloud-upload" size={20} color="#FFFFFF" />
+                <Ionicons
+                  name="cloud-upload"
+                  size={20}
+                  color={tokenColors.white}
+                />
                 <Text style={styles.submitButtonText}>Upload Document</Text>
               </>
             )}
@@ -498,7 +503,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     marginLeft: Spacing.sm,
   },
 });

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Provider } from 'react-redux';
 import { store, persistor } from './store';
+import { tokenColors } from '../theme/tokens';
 
 interface ReduxProviderProps {
   children: React.ReactNode;
@@ -46,7 +47,11 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
 
   return (
     <Provider store={store}>
-      {isReady ? children : <View style={{ flex: 1, backgroundColor: '#F7F9FB' }} />}
+      {isReady ? (
+        children
+      ) : (
+        <View style={{ flex: 1, backgroundColor: tokenColors.background }} />
+      )}
     </Provider>
   );
 };

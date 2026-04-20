@@ -15,6 +15,7 @@ import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { League, LeagueDocument } from '../../../types/league';
 import { colors, Spacing, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 
 interface InfoTabProps {
   league: League;
@@ -202,7 +203,11 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
       {/* Empty State */}
       {!league.description && documents.length === 0 && (
         <View style={styles.emptyState}>
-          <Ionicons name="information-circle-outline" size={64} color="#CCC" />
+          <Ionicons
+            name="information-circle-outline"
+            size={64}
+            color={tokenColors.inkMuted}
+          />
           <Text style={styles.emptyText}>
             No additional information available
           </Text>
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
     color: colors.mid,
   },
   pointsContainer: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderRadius: 12,
     padding: Spacing.lg,
   },
@@ -262,7 +267,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderRadius: 12,
     padding: Spacing.md,
     marginBottom: Spacing.md,
@@ -302,7 +307,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.cobalt,
@@ -322,7 +327,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },

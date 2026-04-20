@@ -6,6 +6,7 @@ import { useCreateLeague } from './CreateLeagueContext';
 import { DayOfWeek, getSeasonFromDate } from './types';
 import { getSportLabel } from '../../../constants/sports';
 import { colors, fonts, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 
 const DAY_TO_INDEX: Record<DayOfWeek, number> = {
   Sun: 0,
@@ -446,7 +447,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E6EFF8',
+    backgroundColor: tokenColors.cobaltLight,
     borderRadius: 8,
     padding: 8,
     marginBottom: 8,

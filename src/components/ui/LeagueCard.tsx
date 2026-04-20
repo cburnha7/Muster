@@ -3,7 +3,14 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 // Types imported as needed by consuming components
-import { colors, fonts, useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 import { getSportIcon, formatSport } from '../../utils/sportUtils';
 import { getSportColor } from '../../constants/sportColors';
 
@@ -20,13 +27,12 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
   isOwner,
   style,
 }) => {
-  const { colors: themeColors } = useTheme();
   const seasonName = league.seasonName || league.name;
   const sportColor = getSportColor(league.sportType);
 
   return (
     <PressableCard
-      style={[styles.card, { backgroundColor: themeColors.bgCard }, style]}
+      style={[styles.card, style]}
       onPress={() => onPress?.(league)}
     >
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
@@ -39,10 +45,7 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
 
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text
-            style={[styles.name, { color: themeColors.textPrimary }]}
-            numberOfLines={1}
-          >
+          <Text style={styles.name} numberOfLines={1}>
             {seasonName}
           </Text>
           {isOwner && (
@@ -51,12 +54,10 @@ const LeagueCardInner: React.FC<LeagueCardProps> = ({
             </View>
           )}
         </View>
-        <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
-          {formatSport(league.sportType)}
-        </Text>
+        <Text style={styles.meta}>{formatSport(league.sportType)}</Text>
       </View>
 
-      <Ionicons name="chevron-forward" size={16} color={themeColors.border} />
+      <Ionicons name="chevron-forward" size={16} color={tokenColors.border} />
     </PressableCard>
   );
 };
@@ -67,17 +68,17 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 16,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    marginBottom: 8,
-    gap: 12,
+    marginBottom: tokenSpacing.sm,
+    gap: tokenSpacing.md,
   },
   iconCircle: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: tokenRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -88,32 +89,32 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: tokenSpacing.sm,
   },
   name: {
-    fontFamily: fonts.headingSemi,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 15,
-    color: colors.onSurface,
+    color: tokenColors.ink,
     flexShrink: 1,
   },
   // Commissioner badge — cobalt tint (leadership role, distinct from Manager)
   commissionerBadge: {
-    backgroundColor: colors.cobaltTint,
-    paddingHorizontal: 8,
+    backgroundColor: tokenColors.cobaltLight,
+    paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 2,
-    borderRadius: 9999,
+    borderRadius: tokenRadius.pill,
     borderWidth: 1,
-    borderColor: colors.cobalt,
+    borderColor: tokenColors.cobalt,
   },
   commissionerText: {
-    color: colors.cobalt,
+    color: tokenColors.cobalt,
     fontSize: 10,
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     letterSpacing: 0.4,
   },
   meta: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
   },
 });

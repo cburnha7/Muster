@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { WizardProgressDots } from './WizardProgressDots';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -154,7 +155,7 @@ export function CreationWizard({
             activeOpacity={0.7}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
+              <ActivityIndicator color={tokenColors.white} size="small" />
             ) : (
               <Text style={styles.continueBtnText}>
                 {isLastStep ? submitLabel : 'Continue'}
@@ -238,6 +239,6 @@ const styles = StyleSheet.create({
   continueBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

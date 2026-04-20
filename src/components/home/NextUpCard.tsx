@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { Booking } from '../../types';
 
 interface NextUpCardProps {
@@ -20,23 +21,34 @@ function getRelativeTime(date: Date): string {
   if (diff < 0) return 'Happening now';
   if (mins < 1) return 'Starting now';
   if (mins < 60) return `In ${mins} min`;
-  if (hours < 24) return `In ${hours}h ${mins % 60 > 0 ? `${mins % 60}m` : ''}`.trim();
+  if (hours < 24)
+    return `In ${hours}h ${mins % 60 > 0 ? `${mins % 60}m` : ''}`.trim();
   if (days === 1) return 'Tomorrow';
   if (days < 7) {
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
     return dayName;
   }
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 function getTimeString(date: Date): string {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 function isLive(booking: Booking): boolean {
   if (!booking.event?.startTime || !booking.event?.endTime) return false;
   const now = new Date();
-  return new Date(booking.event.startTime) <= now && now <= new Date(booking.event.endTime);
+  return (
+    new Date(booking.event.startTime) <= now &&
+    now <= new Date(booking.event.endTime)
+  );
 }
 
 export function NextUpCard({ booking, onPress }: NextUpCardProps) {
@@ -52,7 +64,11 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
   return (
     <TouchableOpacity onPress={() => onPress(booking)} activeOpacity={0.9}>
       <LinearGradient
-        colors={live ? [colors.secondary, '#004D23'] : [colors.primary, colors.primaryContainer]}
+        colors={
+          live
+            ? [colors.secondary, '#004D23']
+            : [colors.primary, colors.primaryContainer]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
@@ -61,26 +77,36 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
         <View style={styles.topRow}>
           <View style={styles.badge}>
             {live && <View style={styles.liveDot} />}
-            <Text style={styles.badgeText}>
-              {live ? 'LIVE' : 'NEXT UP'}
-            </Text>
+            <Text style={styles.badgeText}>{live ? 'LIVE' : 'NEXT UP'}</Text>
           </View>
           <Text style={styles.relativeTime}>{relativeTime}</Text>
         </View>
 
         {/* Title */}
-        <Text style={styles.title} numberOfLines={2}>{event.title}</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {event.title}
+        </Text>
 
         {/* Details row */}
         <View style={styles.detailsRow}>
           {(event.facility?.name || event.locationName) && (
             <View style={styles.detail}>
-              <Ionicons name="location-outline" size={15} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.detailText} numberOfLines={1}>{event.facility?.name || event.locationName}</Text>
+              <Ionicons
+                name="location-outline"
+                size={15}
+                color="rgba(255,255,255,0.7)"
+              />
+              <Text style={styles.detailText} numberOfLines={1}>
+                {event.facility?.name || event.locationName}
+              </Text>
             </View>
           )}
           <View style={styles.detail}>
-            <Ionicons name="time-outline" size={15} color="rgba(255,255,255,0.7)" />
+            <Ionicons
+              name="time-outline"
+              size={15}
+              color="rgba(255,255,255,0.7)"
+            />
             <Text style={styles.detailText}>{timeStr}</Text>
           </View>
         </View>
@@ -89,7 +115,11 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
         <View style={styles.bottomRow}>
           <View style={styles.participantCol}>
             <View style={styles.participantInfo}>
-              <Ionicons name="people-outline" size={15} color="rgba(255,255,255,0.7)" />
+              <Ionicons
+                name="people-outline"
+                size={15}
+                color="rgba(255,255,255,0.7)"
+              />
               <Text style={styles.participantText}>
                 {event.currentParticipants}/{event.maxParticipants} players
               </Text>
@@ -98,27 +128,51 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
             {event.participants && event.participants.length > 0 && (
               <View style={styles.avatarRow}>
                 {event.participants.slice(0, 4).map((p, i) => (
-                  <View key={p.userId} style={[styles.avatarCircle, i > 0 && { marginLeft: -6 }]}>
+                  <View
+                    key={p.userId}
+                    style={[styles.avatarCircle, i > 0 && { marginLeft: -6 }]}
+                  >
                     {p.user?.profileImage ? (
-                      <Image source={{ uri: p.user.profileImage }} style={styles.avatarImg} />
+                      <Image
+                        source={{ uri: p.user.profileImage }}
+                        style={styles.avatarImg}
+                      />
                     ) : (
-                      <Text style={styles.avatarInitial}>{p.user?.firstName?.charAt(0) ?? '?'}</Text>
+                      <Text style={styles.avatarInitial}>
+                        {p.user?.firstName?.charAt(0) ?? '?'}
+                      </Text>
                     )}
                   </View>
                 ))}
                 {event.participants.length > 4 && (
-                  <View style={[styles.avatarCircle, { marginLeft: -6, backgroundColor: 'rgba(255,255,255,0.3)' }]}>
-                    <Text style={styles.avatarInitial}>+{event.participants.length - 4}</Text>
+                  <View
+                    style={[
+                      styles.avatarCircle,
+                      {
+                        marginLeft: -6,
+                        backgroundColor: 'rgba(255,255,255,0.3)',
+                      },
+                    ]}
+                  >
+                    <Text style={styles.avatarInitial}>
+                      +{event.participants.length - 4}
+                    </Text>
                   </View>
                 )}
               </View>
             )}
             {spotsLeft > 0 && spotsLeft <= 3 && (
-              <Text style={styles.fillingFast}>Filling fast — {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</Text>
+              <Text style={styles.fillingFast}>
+                Filling fast — {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
+              </Text>
             )}
           </View>
           <View style={styles.arrowCircle}>
-            <Ionicons name="arrow-forward" size={16} color={live ? colors.secondary : colors.primary} />
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={live ? colors.secondary : colors.primary}
+            />
           </View>
         </View>
       </LinearGradient>
@@ -157,7 +211,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: 1.2,
   },
   relativeTime: {
@@ -170,7 +224,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: -0.3,
   },
 
@@ -236,7 +290,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.label,
     fontSize: 9,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   fillingFast: {
     fontFamily: fonts.label,
@@ -248,7 +302,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

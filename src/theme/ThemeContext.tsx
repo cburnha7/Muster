@@ -1,26 +1,35 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import {
-  brand,
-  statusTokens,
-  sportTokens,
-  lightTokens,
-  darkTokens,
-  ThemeTokens,
+  tokenColors,
+  tokenStatus,
+  tokenSport,
+  tokenSpacing,
+  tokenRadius,
+  tokenShadow,
+  tokenType,
   getAvatarColor,
-} from './colors';
+} from './tokens';
+import { brand, lightTokens, ThemeTokens } from './colors';
 import { typeScale, TypeKey } from './typography';
-import { spacing, radius, makeShadow } from './spacing';
 
 export interface Theme {
   isDark: boolean;
   colors: ThemeTokens & typeof brand;
-  status: typeof statusTokens;
-  sport: typeof sportTokens;
+  status: typeof tokenStatus;
+  sport: typeof tokenSport;
   type: typeof typeScale;
-  spacing: typeof spacing;
-  radius: typeof radius;
-  shadow: ReturnType<typeof makeShadow>;
+  spacing: typeof tokenSpacing;
+  radius: typeof tokenRadius;
+  shadow: typeof tokenShadow;
   getAvatarColor: typeof getAvatarColor;
+  /** New token-based accessors */
+  token: {
+    colors: typeof tokenColors;
+    spacing: typeof tokenSpacing;
+    radius: typeof tokenRadius;
+    shadow: typeof tokenShadow;
+    type: typeof tokenType;
+  };
 }
 
 const ThemeContext = createContext<Theme | null>(null);
@@ -30,17 +39,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const isDark = false;
 
   const theme = useMemo<Theme>(() => {
-    const semantic = isDark ? darkTokens : lightTokens;
     return {
       isDark,
-      colors: { ...brand, ...semantic },
-      status: statusTokens,
-      sport: sportTokens,
+      colors: { ...brand, ...lightTokens },
+      status: tokenStatus,
+      sport: tokenSport,
       type: typeScale,
-      spacing,
-      radius,
-      shadow: makeShadow(isDark),
+      spacing: tokenSpacing,
+      radius: tokenRadius,
+      shadow: tokenShadow,
       getAvatarColor,
+      token: {
+        colors: tokenColors,
+        spacing: tokenSpacing,
+        radius: tokenRadius,
+        shadow: tokenShadow,
+        type: tokenType,
+      },
     };
   }, [isDark]);
 

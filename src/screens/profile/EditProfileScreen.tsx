@@ -27,6 +27,7 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { loggingService } from '../../services/LoggingService';
 import { validateEmail, validatePhoneNumber } from '../../utils/validation';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { SportType } from '../../types';
 
 const SPORT_OPTIONS: SelectOption[] = [
@@ -543,14 +544,14 @@ export function EditProfileScreen(): JSX.Element {
                       <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color="#FFFFFF"
+                        color={tokenColors.white}
                       />
                     )}
                     <Text
                       style={{
                         fontFamily: fonts.ui,
                         fontSize: 14,
-                        color: selected ? '#FFFFFF' : colors.ink,
+                        color: selected ? tokenColors.white : colors.ink,
                       }}
                     >
                       {opt.label}
@@ -648,7 +649,7 @@ export function EditProfileScreen(): JSX.Element {
                 {addressSuggestions.length > 0 && (
                   <View
                     style={{
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: tokenColors.surface,
                       borderRadius: 10,
                       borderWidth: 1,
                       borderColor: colors.outlineVariant,
@@ -760,10 +761,10 @@ const styles = StyleSheet.create({
   imageSection: {
     alignItems: 'center',
     marginBottom: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     padding: 24,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -789,7 +790,7 @@ const styles = StyleSheet.create({
   profileImagePlaceholderText: {
     fontSize: 64,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -797,7 +798,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: tokenColors.overlay,
     borderRadius: 90,
     justifyContent: 'center',
     alignItems: 'center',
@@ -813,7 +814,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   imageButtonText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -821,13 +822,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   removeButtonText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   formSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,

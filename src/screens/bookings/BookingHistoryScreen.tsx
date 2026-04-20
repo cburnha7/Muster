@@ -10,6 +10,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -164,7 +165,7 @@ export function BookingHistoryScreen(): JSX.Element {
   // Render empty state
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="time-outline" size={64} color="#CCC" />
+      <Ionicons name="time-outline" size={64} color={tokenColors.inkMuted} />
       <Text style={styles.emptyTitle}>
         {searchQuery ? 'No Matching Bookings' : 'No Booking History'}
       </Text>
@@ -201,7 +202,11 @@ export function BookingHistoryScreen(): JSX.Element {
           style={styles.clearButton}
           onPress={() => setSearchQuery('')}
         >
-          <Ionicons name="close-circle" size={20} color="#666" />
+          <Ionicons
+            name="close-circle"
+            size={20}
+            color={tokenColors.inkSecondary}
+          />
         </TouchableOpacity>
       )}
     </View>
@@ -209,7 +214,9 @@ export function BookingHistoryScreen(): JSX.Element {
 
   if (error && bookings.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Booking History"
           showBack={true}
@@ -246,7 +253,7 @@ export function BookingHistoryScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#007AFF']}
+              colors={[tokenColors.cobalt]}
             />
           }
           onEndReached={loadMoreBookings}
@@ -299,9 +306,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: tokenColors.border,
   },
   searchInput: {
     flex: 1,
@@ -323,13 +330,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     textAlign: 'center',
   },
   footer: {
@@ -338,10 +345,10 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: tokenColors.border,
   },
   statItem: {
     flex: 1,
@@ -350,12 +357,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#007AFF',
+    color: tokenColors.cobalt,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     textAlign: 'center',
   },
 });

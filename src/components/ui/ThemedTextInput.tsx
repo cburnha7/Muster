@@ -6,46 +6,50 @@ import {
   TextInputProps,
   ViewStyle,
 } from 'react-native';
-import { useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenFontFamily,
+} from '../../theme/tokens';
 
 interface Props extends TextInputProps {
   label?: string;
   error?: string;
+  required?: boolean;
   containerStyle?: ViewStyle;
 }
 
 export function ThemedTextInput({
   label,
   error,
+  required,
   containerStyle,
   ...rest
 }: Props) {
-  const { colors, type, spacing, radius, isDark } = useTheme();
   const [focused, setFocused] = useState(false);
 
   const borderColor = error
-    ? colors.borderError
+    ? tokenColors.error
     : focused
-      ? colors.borderFocus
-      : colors.borderStrong;
-  const bg = error
-    ? colors.bgInputError
-    : focused
-      ? colors.bgInputFocus
-      : colors.bgInput;
-  const borderWidth = focused || error ? 2 : 1.5;
+      ? tokenColors.cobalt
+      : tokenColors.border;
+  const bg = tokenColors.surface;
+  const borderWidth = 1.5;
 
   return (
     <View style={containerStyle}>
       {label && (
         <Text
           style={{
-            ...type.label,
-            color: error ? colors.heart : colors.textSecondary,
-            marginBottom: spacing.xs,
+            ...tokenType.fieldLabel,
+            color: tokenColors.ink,
+            marginBottom: tokenSpacing.sm,
           }}
         >
           {label}
+          {required && <Text style={{ color: tokenColors.error }}> *</Text>}
         </Text>
       )}
       <RNInput
@@ -58,27 +62,31 @@ export function ThemedTextInput({
           setFocused(false);
           rest.onBlur?.(e);
         }}
-        placeholderTextColor={colors.textMuted}
-        keyboardAppearance={isDark ? 'dark' : 'light'}
+        placeholderTextColor={tokenColors.inkSecondary}
+        keyboardAppearance="light"
         style={[
           {
-            height: 50,
-            borderRadius: radius.md,
+            borderRadius: tokenRadius.md,
             borderWidth,
             borderColor,
             backgroundColor: bg,
-            paddingHorizontal: spacing.md,
-            ...type.body,
-            color: colors.textPrimary,
+            paddingVertical: tokenSpacing.md,
+            paddingHorizontal: tokenSpacing.lg,
+            ...tokenType.input,
+            color: tokenColors.ink,
           },
           rest.style,
         ]}
       />
       {error && (
         <Text
-          style={{ ...type.bodySm, color: colors.heart, marginTop: spacing.xs }}
+          style={{
+            ...tokenType.error,
+            color: tokenColors.error,
+            marginTop: tokenSpacing.xs,
+          }}
         >
-          {error}
+          ⚠ {error}
         </Text>
       )}
     </View>

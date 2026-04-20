@@ -64,6 +64,7 @@ import {
 
 // Theme
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 // Types
 import { Booking, Event, Team, EventStatus } from '../../types';
@@ -874,7 +875,7 @@ export function HomeScreen() {
         accessibilityRole="button"
         accessibilityLabel="Host an event"
       >
-        <Ionicons name="add" size={26} color="#FFFFFF" />
+        <Ionicons name="add" size={26} color={tokenColors.white} />
       </TouchableOpacity>
 
       <StepOutModal
@@ -959,7 +960,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -986,7 +987,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 20,
     padding: 8,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
@@ -1087,7 +1088,7 @@ const styles = StyleSheet.create({
   hostFirstBtnText: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // ── Upcoming section ───────────────────
@@ -1106,7 +1107,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2563EB',
+    shadowColor: tokenColors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -1116,7 +1117,7 @@ const styles = StyleSheet.create({
   // ── Inbox modal ─────────────────────────
   inboxBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(25, 28, 30, 0.4)',
+    backgroundColor: tokenColors.overlay,
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingBottom: 70,
@@ -1126,7 +1127,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     maxHeight: '80%',
     overflow: 'hidden',
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 32,

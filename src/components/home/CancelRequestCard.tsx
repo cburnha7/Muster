@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { colors, fonts, Spacing, Shadows } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface CancelRequestData {
   id: string;
@@ -45,11 +46,21 @@ export interface CancelRequestCardProps {
 function formatBookingDateTime(
   dateStr: string,
   startTime: string,
-  endTime: string,
+  endTime: string
 ): string {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   // Parse the date (expected format: "YYYY-MM-DD")
@@ -61,7 +72,9 @@ function formatBookingDateTime(
     const [h, m] = time.split(':').map(Number);
     const period = h >= 12 ? 'PM' : 'AM';
     const hour12 = h % 12 || 12;
-    return m === 0 ? `${hour12}:00 ${period}` : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+    return m === 0
+      ? `${hour12}:00 ${period}`
+      : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
   };
 
   return `${datePart} • ${formatTime(startTime)} – ${formatTime(endTime)}`;
@@ -86,7 +99,11 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
       </Text>
 
       <Text style={styles.dateTime}>
-        {formatBookingDateTime(timeSlot.date, timeSlot.startTime, timeSlot.endTime)}
+        {formatBookingDateTime(
+          timeSlot.date,
+          timeSlot.startTime,
+          timeSlot.endTime
+        )}
       </Text>
 
       <View style={styles.buttonRow}>
@@ -98,7 +115,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
           accessibilityRole="button"
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={tokenColors.white} />
           ) : (
             <Text style={styles.buttonText}>Approve</Text>
           )}
@@ -112,7 +129,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
           accessibilityRole="button"
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={tokenColors.white} />
           ) : (
             <Text style={styles.buttonText}>Deny</Text>
           )}
@@ -122,10 +139,9 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
   );
 };
 
-
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: Spacing.md,
     ...Shadows.sm,
@@ -168,6 +184,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

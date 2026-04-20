@@ -50,6 +50,7 @@ import {
   Shadows,
   useTheme,
 } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 // Generate a simple client-side ID
 const generateClientId = (): string =>
@@ -368,7 +369,9 @@ export default function SchedulingScreen({
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Schedule"
           leftIcon="arrow-back"
@@ -384,7 +387,9 @@ export default function SchedulingScreen({
   // Load error state
   if (loadError || !league) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      >
         <ScreenHeader
           title="Schedule"
           leftIcon="arrow-back"
@@ -410,7 +415,9 @@ export default function SchedulingScreen({
   const hasEvents = events.length > 0;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+    >
       <ScreenHeader
         title={league.name}
         leftIcon="arrow-back"
@@ -420,7 +427,11 @@ export default function SchedulingScreen({
       {/* Error banner */}
       {scheduleError && (
         <View style={styles.errorBanner}>
-          <Ionicons name="warning-outline" size={18} color="#FFFFFF" />
+          <Ionicons
+            name="warning-outline"
+            size={18}
+            color={tokenColors.white}
+          />
           <Text style={styles.errorBannerText}>{scheduleError}</Text>
           <TouchableOpacity
             onPress={() => {
@@ -431,7 +442,7 @@ export default function SchedulingScreen({
             accessibilityRole="button"
             accessibilityLabel="Retry"
           >
-            <Ionicons name="refresh" size={18} color="#FFFFFF" />
+            <Ionicons name="refresh" size={18} color={tokenColors.white} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => dispatch(setError(null))}
@@ -439,7 +450,7 @@ export default function SchedulingScreen({
             accessibilityRole="button"
             accessibilityLabel="Dismiss error"
           >
-            <Ionicons name="close" size={18} color="#FFFFFF" />
+            <Ionicons name="close" size={18} color={tokenColors.white} />
           </TouchableOpacity>
         </View>
       )}
@@ -457,9 +468,13 @@ export default function SchedulingScreen({
           accessibilityLabel="Auto Generate Schedule"
         >
           {isGenerating ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={tokenColors.white} />
           ) : (
-            <Ionicons name="flash-outline" size={20} color="#FFFFFF" />
+            <Ionicons
+              name="flash-outline"
+              size={20}
+              color={tokenColors.white}
+            />
           )}
           <Text style={styles.generateButtonText}>
             {isGenerating ? 'Generating...' : 'Auto Generate Schedule'}
@@ -505,7 +520,7 @@ export default function SchedulingScreen({
           accessibilityLabel="Confirm Schedule"
         >
           {isConfirming ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={tokenColors.white} />
           ) : (
             <Text style={styles.confirmButtonText}>Confirm Schedule</Text>
           )}
@@ -560,7 +575,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // Error banner
@@ -576,7 +591,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // Generate section
@@ -601,7 +616,7 @@ const styles = StyleSheet.create({
   generateButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // List
@@ -638,7 +653,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     ...Shadows.sm,
@@ -701,8 +716,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: tokenColors.border,
+    backgroundColor: tokenColors.surface,
     gap: Spacing.md,
   },
   addGameButton: {
@@ -735,6 +750,6 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

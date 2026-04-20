@@ -5,6 +5,7 @@ import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
 import { TimePickerInput } from '../forms/TimePickerInput';
 import { CreateMatchData, Team, Event } from '../../types';
+import { tokenColors } from '../../theme/tokens';
 
 interface MatchFormProps {
   leagueId: string;
@@ -82,7 +83,10 @@ export const MatchForm: React.FC<MatchFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validate()) {
-      Alert.alert('Validation Error', 'Please fix the errors before submitting');
+      Alert.alert(
+        'Validation Error',
+        'Please fix the errors before submitting'
+      );
       return;
     }
 
@@ -101,7 +105,10 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     try {
       await onSubmit(formData);
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to create match');
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to create match'
+      );
     }
   };
 
@@ -109,13 +116,13 @@ export const MatchForm: React.FC<MatchFormProps> = ({
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Match Details</Text>
-        
+
         <FormSelect
           label="Home Roster *"
           placeholder="Select home roster"
           value={homeTeamId}
           options={teamOptions}
-          onSelect={(option) => setHomeTeamId(option.value as string)}
+          onSelect={option => setHomeTeamId(option.value as string)}
           error={errors.homeTeamId}
         />
 
@@ -124,14 +131,14 @@ export const MatchForm: React.FC<MatchFormProps> = ({
           placeholder="Select away roster"
           value={awayTeamId}
           options={teamOptions}
-          onSelect={(option) => setAwayTeamId(option.value as string)}
+          onSelect={option => setAwayTeamId(option.value as string)}
           error={errors.awayTeamId}
         />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Schedule</Text>
-        
+
         <FormInput
           label="Match Date *"
           placeholder="YYYY-MM-DD"
@@ -151,13 +158,13 @@ export const MatchForm: React.FC<MatchFormProps> = ({
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Optional Information</Text>
-        
+
         <FormSelect
           label="Link to Event"
           placeholder="Select an event (optional)"
           value={eventId}
           options={eventOptions}
-          onSelect={(option) => setEventId(option.value as string)}
+          onSelect={option => setEventId(option.value as string)}
         />
 
         <FormInput
@@ -195,17 +202,17 @@ export const MatchForm: React.FC<MatchFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokenColors.background,
   },
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     padding: 16,
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 16,
   },
   actions: {

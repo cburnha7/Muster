@@ -22,6 +22,7 @@ import {
   ComponentStyles,
   useTheme,
 } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
   calendarTheme,
@@ -1115,7 +1116,7 @@ const styles = StyleSheet.create({
   header: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: tokenColors.border,
   },
   facilityName: { ...TextStyles.h2, color: colors.ink },
   subtitle: {
@@ -1143,12 +1144,12 @@ const styles = StyleSheet.create({
   },
   courtList: { flexDirection: 'row' },
   courtCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: Spacing.md,
     marginRight: Spacing.md,
     borderWidth: 2,
-    borderColor: '#EEE',
+    borderColor: tokenColors.border,
     minWidth: 140,
   },
   courtCardSelected: {
@@ -1172,7 +1173,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  courtBadgeText: { fontFamily: fonts.label, fontSize: 10, color: '#FFF' },
+  courtBadgeText: {
+    fontFamily: fonts.label,
+    fontSize: 10,
+    color: tokenColors.white,
+  },
   courtSportType: {
     ...TextStyles.caption,
     color: colors.inkFaint,
@@ -1186,7 +1191,7 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: tokenColors.white,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -1202,10 +1207,10 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: '#FFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#EEE',
+    borderColor: tokenColors.border,
   },
   toggleLabel: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   toggleText: {
@@ -1232,7 +1237,7 @@ const styles = StyleSheet.create({
   // Legend
   legend: {
     padding: Spacing.lg,
-    backgroundColor: '#FFF',
+    backgroundColor: tokenColors.white,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
     borderRadius: 12,
@@ -1255,7 +1260,7 @@ const styles = StyleSheet.create({
     right: 0,
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#EEE',
+    borderTopColor: tokenColors.border,
     backgroundColor: colors.white,
   },
   footerSummary: {

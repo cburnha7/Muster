@@ -1,21 +1,30 @@
+import { tokenSport, tokenColors } from '../theme/tokens';
+
+/**
+ * Sport Colors — re-exported from design tokens.
+ *
+ * Use `tokenSport[key].solid` for the primary sport color.
+ * This file exists for backward compatibility; prefer importing
+ * directly from `src/theme/tokens` in new code.
+ */
 export const SPORT_COLORS: Record<string, string> = {
-  basketball:    '#FF6B35',
-  soccer:        '#22C55E',
-  tennis:        '#EAB308',
-  pickleball:    '#14B8A6',
-  volleyball:    '#3B82F6',
-  badminton:     '#8B5CF6',
-  flag_football: '#EF4444',
-  baseball:      '#EF4444',
-  softball:      '#F59E0B',
-  kickball:      '#F97316',
-  other:         '#6B7280',
+  basketball: tokenSport.basketball.solid,
+  soccer: tokenSport.soccer.solid,
+  tennis: tokenSport.tennis.solid,
+  pickleball: tokenSport.pickleball.solid,
+  volleyball: tokenSport.volleyball.solid,
+  badminton: tokenSport.other.solid,
+  flag_football: tokenSport.flag_football.solid,
+  baseball: tokenSport.baseball.solid,
+  softball: tokenSport.softball.solid,
+  kickball: tokenSport.kickball.solid,
+  other: tokenSport.other.solid,
 };
 
 export function getSportColor(sport?: string | null): string {
-  if (!sport) return '#0052FF';
+  if (!sport) return tokenColors.cobalt;
   const key = sport.toLowerCase().replace(/ /g, '_');
-  return SPORT_COLORS[key] ?? '#0052FF';
+  return SPORT_COLORS[key] ?? tokenColors.cobalt;
 }
 
 /** Returns the sport color at ~10% opacity as a hex string */

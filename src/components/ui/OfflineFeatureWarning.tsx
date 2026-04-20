@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNetworkState } from '../../services/network/NetworkService';
+import { tokenColors } from '../../theme/tokens';
 
 interface OfflineFeatureWarningProps {
   featureName: string;
@@ -22,7 +23,11 @@ export const OfflineFeatureWarning: React.FC<OfflineFeatureWarningProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <Ionicons name="alert-circle-outline" size={20} color="#FF9500" />
+      <Ionicons
+        name="alert-circle-outline"
+        size={20}
+        color={tokenColors.warning}
+      />
       <View style={styles.textContainer}>
         <Text style={styles.title}>{featureName} unavailable offline</Text>
         {message && <Text style={styles.message}>{message}</Text>}
@@ -35,12 +40,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFF3CD',
+    backgroundColor: tokenColors.warningLight,
     borderRadius: 8,
     padding: 12,
     marginVertical: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9500',
+    borderLeftColor: tokenColors.warning,
   },
   textContainer: {
     flex: 1,
@@ -49,12 +54,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#856404',
+    color: tokenColors.warning,
     marginBottom: 4,
   },
   message: {
     fontSize: 12,
-    color: '#856404',
+    color: tokenColors.warning,
     lineHeight: 18,
   },
 });

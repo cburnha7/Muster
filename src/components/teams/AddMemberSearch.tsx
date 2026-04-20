@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { User } from '../../types';
 
 interface AddMemberSearchProps {
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -228,11 +229,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokenColors.border,
     marginBottom: 8,
   },
   userInfo: {
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
   userAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   userDetails: {
     flex: 1,

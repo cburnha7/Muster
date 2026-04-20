@@ -5,6 +5,7 @@ import { userService } from '../../services/api/UserService';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { formatSport } from '../../utils/sportUtils';
 
 interface UserStats {
@@ -86,7 +87,11 @@ export function UserStatsScreen(): JSX.Element {
           <Text style={styles.statLabel}>Organized</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="people-outline" size={24} color="#8B5CF6" />
+          <Ionicons
+            name="people-outline"
+            size={24}
+            color={tokenColors.cobalt}
+          />
           <Text style={styles.statValue}>{stats.totalTeams}</Text>
           <Text style={styles.statLabel}>Teams</Text>
         </View>
@@ -233,7 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -253,7 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     gap: 6,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,

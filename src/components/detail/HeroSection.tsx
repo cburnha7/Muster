@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface HeroBadge {
   label: string;
@@ -17,11 +18,11 @@ export interface HeroBadge {
 
 interface HeroSectionProps {
   title: string;
-  sportColor?: string;   // hex color for the tint wash
+  sportColor?: string; // hex color for the tint wash
   emoji?: string;
   badges?: HeroBadge[];
-  headline?: string;     // date/time or primary stat line
-  subline?: string;      // location or secondary info
+  headline?: string; // date/time or primary stat line
+  subline?: string; // location or secondary info
   onSublinePress?: () => void;
   style?: ViewStyle;
   children?: React.ReactNode;
@@ -29,7 +30,7 @@ interface HeroSectionProps {
 
 export function HeroSection({
   title,
-  sportColor = '#0052FF',
+  sportColor = tokenColors.cobalt,
   emoji,
   badges = [],
   headline,
@@ -43,8 +44,16 @@ export function HeroSection({
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -54,15 +63,19 @@ export function HeroSection({
     <Animated.View
       style={[
         styles.container,
-        { backgroundColor: tintColor, opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+        {
+          backgroundColor: tintColor,
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
         style,
       ]}
     >
-      {emoji ? (
-        <Text style={styles.emoji}>{emoji}</Text>
-      ) : null}
+      {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
 
-      <Text style={styles.title} numberOfLines={3}>{title}</Text>
+      <Text style={styles.title} numberOfLines={3}>
+        {title}
+      </Text>
 
       {badges.length > 0 && (
         <View style={styles.badgeRow}>
@@ -74,7 +87,9 @@ export function HeroSection({
                 { backgroundColor: b.bgColor ?? sportColor + '28' },
               ]}
             >
-              <Text style={[styles.badgeText, { color: b.textColor ?? sportColor }]}>
+              <Text
+                style={[styles.badgeText, { color: b.textColor ?? sportColor }]}
+              >
                 {b.label}
               </Text>
             </View>
@@ -82,14 +97,14 @@ export function HeroSection({
         </View>
       )}
 
-      {headline ? (
-        <Text style={styles.headline}>{headline}</Text>
-      ) : null}
+      {headline ? <Text style={styles.headline}>{headline}</Text> : null}
 
       {subline ? (
         onSublinePress ? (
           <TouchableOpacity onPress={onSublinePress} activeOpacity={0.7}>
-            <Text style={[styles.subline, styles.sublineTappable]}>{subline}</Text>
+            <Text style={[styles.subline, styles.sublineTappable]}>
+              {subline}
+            </Text>
           </TouchableOpacity>
         ) : (
           <Text style={styles.subline}>{subline}</Text>

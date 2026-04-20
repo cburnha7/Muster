@@ -3,7 +3,14 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Team } from '../../types';
-import { colors, fonts, useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 import { getSportIcon, formatSport } from '../../utils/sportUtils';
 import { getSportColor } from '../../constants/sportColors';
 
@@ -21,7 +28,6 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
   style,
   currentUserId,
 }) => {
-  const { colors: themeColors } = useTheme();
   const sport = team.sportTypes?.[0] || team.sportType;
   const availableSlots = team.maxMembers - team.members.length;
   const isFull = availableSlots <= 0;
@@ -38,10 +44,7 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
       ));
 
   return (
-    <PressableCard
-      style={[styles.card, { backgroundColor: themeColors.bgCard }, style]}
-      onPress={() => onPress?.(team)}
-    >
+    <PressableCard style={[styles.card, style]} onPress={() => onPress?.(team)}>
       {/* Sport icon with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
         <Ionicons
@@ -54,10 +57,7 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
       {/* Team info */}
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text
-            style={[styles.name, { color: themeColors.textPrimary }]}
-            numberOfLines={1}
-          >
+          <Text style={styles.name} numberOfLines={1}>
             {team.name}
           </Text>
           {isManager && (
@@ -66,11 +66,8 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
             </View>
           )}
         </View>
-        <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
-          {formatSport(sport)}{' '}
-          <Text style={[styles.metaDot, { color: themeColors.border }]}>
-            &middot;
-          </Text>{' '}
+        <Text style={styles.meta}>
+          {formatSport(sport)} <Text style={styles.metaDot}>&middot;</Text>{' '}
           {isFull ? (
             <Text style={styles.metaFull}>Full</Text>
           ) : (
@@ -81,7 +78,7 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
         </Text>
       </View>
 
-      <Ionicons name="chevron-forward" size={16} color={themeColors.border} />
+      <Ionicons name="chevron-forward" size={16} color={tokenColors.border} />
     </PressableCard>
   );
 };
@@ -92,17 +89,17 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 16,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    marginBottom: 8,
-    gap: 12,
+    marginBottom: tokenSpacing.sm,
+    gap: tokenSpacing.md,
   },
   iconCircle: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: tokenRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -113,36 +110,36 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: tokenSpacing.sm,
   },
   name: {
-    fontFamily: fonts.headingSemi,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 15,
-    color: colors.onSurface,
+    color: tokenColors.ink,
     flexShrink: 1,
   },
   // Manager badge — pine green (positive role)
   managerBadge: {
-    backgroundColor: colors.pine,
-    paddingHorizontal: 8,
+    backgroundColor: tokenColors.success,
+    paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 2,
-    borderRadius: 9999,
+    borderRadius: tokenRadius.pill,
   },
   managerText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 10,
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     letterSpacing: 0.4,
   },
   meta: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
   },
   metaDot: {
-    color: colors.outlineVariant,
+    color: tokenColors.border,
   },
   metaFull: {
-    color: colors.error,
+    color: tokenColors.error,
   },
 });

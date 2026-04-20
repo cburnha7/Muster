@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface CheckboxProps {
   label: string | React.ReactNode;
@@ -31,7 +32,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       <TouchableOpacity
         style={[styles.checkboxContainer, { minHeight: minSize }]}
         onPress={onToggle}
-        accessibilityLabel={accessibilityLabel || (typeof label === 'string' ? label : 'Checkbox')}
+        accessibilityLabel={
+          accessibilityLabel || (typeof label === 'string' ? label : 'Checkbox')
+        }
         accessibilityRole="checkbox"
         accessibilityState={{ checked }}
         activeOpacity={0.7}
@@ -44,7 +47,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           ]}
         >
           {checked && (
-            <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+            <Ionicons name="checkmark" size={14} color={tokenColors.white} />
           )}
         </View>
         <View style={styles.labelContainer}>

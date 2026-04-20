@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { SportType } from '../../types';
 import { searchEventBus } from '../../utils/searchEventBus';
 
@@ -235,7 +236,11 @@ export function TabSearchModal({
           onPress={onCreatePress}
           activeOpacity={0.85}
         >
-          <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+          <Ionicons
+            name="add-circle-outline"
+            size={20}
+            color={tokenColors.white}
+          />
           <Text style={styles.createBtnText}>{createLabel}</Text>
         </TouchableOpacity>
       )}
@@ -268,7 +273,7 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
@@ -276,8 +281,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
-    shadowColor: '#000',
+    borderColor: tokenColors.border,
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -297,7 +302,7 @@ const styles = StyleSheet.create({
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     marginHorizontal: Spacing.lg,
     marginBottom: 6,
     borderRadius: 10,
@@ -341,6 +346,6 @@ const styles = StyleSheet.create({
   createBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

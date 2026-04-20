@@ -3,12 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../../navigation/types';
+import { tokenColors, tokenShadow } from '../../theme/tokens';
 
 // Import stack navigators for each tab
 import { HomeStackNavigator } from '../../navigation/stacks/HomeStackNavigator';
 import { FacilitiesStackNavigator } from '../../navigation/stacks/FacilitiesStackNavigator';
 import { TeamsStackNavigator } from '../../navigation/stacks/TeamsStackNavigator';
-
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -42,8 +42,8 @@ interface CustomTabNavigatorProps {
   };
 }
 
-export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({ 
-  badges = {} 
+export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
+  badges = {},
 }) => {
   const getTabBarIcon = (
     route: { name: keyof MainTabParamList },
@@ -81,16 +81,16 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: tokenColors.cobalt,
+        tabBarInactiveTintColor: tokenColors.inkMuted,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: tokenColors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#E5E5EA',
+          borderTopColor: tokenColors.border,
           paddingBottom: 5,
           paddingTop: 5,
           height: 60,
-          shadowColor: '#000',
+          shadowColor: tokenColors.black,
           shadowOffset: {
             width: 0,
             height: -2,
@@ -108,22 +108,22 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         },
       })}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeStackNavigator}
         options={{
           tabBarLabel: 'Home',
         }}
       />
-      <Tab.Screen 
-        name="Facilities" 
+      <Tab.Screen
+        name="Facilities"
         component={FacilitiesStackNavigator}
         options={{
           tabBarLabel: 'Facilities',
         }}
       />
-      <Tab.Screen 
-        name="Teams" 
+      <Tab.Screen
+        name="Teams"
         component={TeamsStackNavigator}
         options={{
           tabBarLabel: 'Rosters',
@@ -143,17 +143,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -10,
-    backgroundColor: '#FF3B30',
+    backgroundColor: tokenColors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: tokenColors.white,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 12,
     fontWeight: '600',
     paddingHorizontal: 4,
@@ -162,6 +162,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF3B30',
+    backgroundColor: tokenColors.error,
   },
 });

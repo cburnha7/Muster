@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, fonts, Spacing, BorderRadius } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface CancellationPolicyPickerProps {
   value: number | null;
@@ -30,7 +31,7 @@ export function CancellationPolicyPicker({
       <Text style={styles.sectionLabel}>CANCELLATION POLICY</Text>
 
       <View style={styles.optionsRow}>
-        {POLICY_OPTIONS.map((option) => {
+        {POLICY_OPTIONS.map(option => {
           const isSelected = value === option.value;
           return (
             <TouchableOpacity
@@ -42,7 +43,9 @@ export function CancellationPolicyPicker({
               accessibilityLabel={`Cancellation policy: ${option.label}`}
               activeOpacity={0.7}
             >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+              <Text
+                style={[styles.chipText, isSelected && styles.chipTextSelected]}
+              >
                 {option.label}
               </Text>
             </TouchableOpacity>
@@ -51,7 +54,8 @@ export function CancellationPolicyPicker({
       </View>
 
       <Text style={styles.helperText}>
-        How far before the booking start time should cancellations require your approval?
+        How far before the booking start time should cancellations require your
+        approval?
       </Text>
     </View>
   );
@@ -80,7 +84,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: tokenColors.border,
   },
   chipSelected: {
     backgroundColor: colors.cobalt,
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   helperText: {
     fontFamily: fonts.body,

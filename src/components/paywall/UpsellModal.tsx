@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { SubscriptionPlan, PLAN_INFO } from '../../types/subscription';
 
 interface UpsellModalProps {
@@ -48,7 +49,11 @@ export function UpsellModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="lock-open-outline" size={28} color={colors.gold} />
+              <Ionicons
+                name="lock-open-outline"
+                size={28}
+                color={colors.gold}
+              />
             </View>
             <Text style={styles.title}>Upgrade to {planInfo.label}</Text>
             <Text style={styles.price}>{planInfo.price}</Text>
@@ -58,7 +63,11 @@ export function UpsellModal({
           <ScrollView style={styles.featuresList} bounces={false}>
             {planInfo.features.map((feature, i) => (
               <View key={i} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.cobalt} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={colors.cobalt}
+                />
                 <Text style={styles.featureText}>{feature}</Text>
               </View>
             ))}
@@ -150,7 +159,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   dismissButton: {
     paddingVertical: 12,

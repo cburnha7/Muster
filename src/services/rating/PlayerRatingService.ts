@@ -1,6 +1,8 @@
+import { tokenColors } from '../../theme/tokens';
+
 /**
  * Player Rating Service
- * 
+ *
  * Implements the rating system:
  * - game_rating = 1 + mean(rating of all participants)
  * - vote_share = votes_received / votes_actually_cast
@@ -27,7 +29,9 @@ export class PlayerRatingService {
       return 1.0;
     }
 
-    const meanRating = participantRatings.reduce((sum, rating) => sum + rating, 0) / participantRatings.length;
+    const meanRating =
+      participantRatings.reduce((sum, rating) => sum + rating, 0) /
+      participantRatings.length;
     return 1 + meanRating;
   }
 
@@ -35,7 +39,10 @@ export class PlayerRatingService {
    * Calculate vote share for a player
    * Formula: votes_received / votes_actually_cast
    */
-  static calculateVoteShare(votesReceived: number, totalVotesCast: number): number {
+  static calculateVoteShare(
+    votesReceived: number,
+    totalVotesCast: number
+  ): number {
     if (totalVotesCast === 0) {
       return 0;
     }
@@ -64,7 +71,9 @@ export class PlayerRatingService {
     }
 
     // Filter by event type
-    const relevantGames = gameParticipations.filter(gp => gp.eventType === eventType);
+    const relevantGames = gameParticipations.filter(
+      gp => gp.eventType === eventType
+    );
 
     if (relevantGames.length === 0) {
       return RATING_CONSTANTS.DEFAULT_RATING;
@@ -77,12 +86,16 @@ export class PlayerRatingService {
 
     // For pickup: take last 20 games
     // For league: take all games from current season (filtered by seasonId)
-    const gamesToConsider = eventType === 'pickup'
-      ? sortedGames.slice(0, RATING_CONSTANTS.PICKUP_GAMES_WINDOW)
-      : sortedGames;
+    const gamesToConsider =
+      eventType === 'pickup'
+        ? sortedGames.slice(0, RATING_CONSTANTS.PICKUP_GAMES_WINDOW)
+        : sortedGames;
 
     // Calculate mean of game scores
-    const totalScore = gamesToConsider.reduce((sum, gp) => sum + gp.gameScore, 0);
+    const totalScore = gamesToConsider.reduce(
+      (sum, gp) => sum + gp.gameScore,
+      0
+    );
     const rating = totalScore / gamesToConsider.length;
 
     // Clamp rating between min and max
@@ -120,19 +133,21 @@ export class PlayerRatingService {
 
     // Step 4: Calculate game score for each participant
     const participantScores = new Map<string, number>();
-    
+
     participants.forEach(participant => {
       const votesReceived = votesPerPlayer.get(participant.userId) || 0;
       const voteShare = this.calculateVoteShare(votesReceived, totalVotesCast);
       const gameScore = this.calculateGameScore(voteShare, gameRating);
-      
+
       participantScores.set(participant.userId, gameScore);
     });
 
     return {
       eventId,
       gameRating,
-      participantRatings: new Map(participants.map(p => [p.userId, p.currentRating])),
+      participantRatings: new Map(
+        participants.map(p => [p.userId, p.currentRating])
+      ),
       totalVotesCast,
       votesPerPlayer,
     };
@@ -158,10 +173,17 @@ export class PlayerRatingService {
     });
 
     return participants.map(participant => {
-      const votesReceived = calculation.votesPerPlayer.get(participant.userId) || 0;
+      const votesReceived =
+        calculation.votesPerPlayer.get(participant.userId) || 0;
       const votesCast = votesCastByPlayer.get(participant.userId) || 0;
-      const voteShare = this.calculateVoteShare(votesReceived, calculation.totalVotesCast);
-      const gameScore = this.calculateGameScore(voteShare, calculation.gameRating);
+      const voteShare = this.calculateVoteShare(
+        votesReceived,
+        calculation.totalVotesCast
+      );
+      const gameScore = this.calculateGameScore(
+        voteShare,
+        calculation.gameRating
+      );
 
       return {
         userId: participant.userId,
@@ -185,28 +207,43 @@ export class PlayerRatingService {
     userId: string,
     allGameParticipations: GameParticipation[]
   ): PlayerRating {
-    const pickupGames = allGameParticipations.filter(gp => gp.eventType === 'pickup');
-    const gameEvents = allGameParticipations.filter(gp => gp.eventType === 'game');
-    const practiceEvents = allGameParticipations.filter(gp => gp.eventType === 'practice');
+    const pickupGames = allGameParticipations.filter(
+      gp => gp.eventType === 'pickup'
+    );
+    const gameEvents = allGameParticipations.filter(
+      gp => gp.eventType === 'game'
+    );
+    const practiceEvents = allGameParticipations.filter(
+      gp => gp.eventType === 'practice'
+    );
 
     const pickupRating = this.calculatePlayerRating(pickupGames, 'pickup');
     const gameRating = this.calculatePlayerRating(gameEvents, 'game');
-    const practiceRating = this.calculatePlayerRating(practiceEvents, 'practice');
+    const practiceRating = this.calculatePlayerRating(
+      practiceEvents,
+      'practice'
+    );
 
     // Current rating is the weighted average of all event types
     // Pickup and games count more than practice
     let currentRating: number;
     const totalGames = pickupGames.length + gameEvents.length;
     const totalPractices = practiceEvents.length;
-    
+
     if (totalGames > 0 && totalPractices > 0) {
       // Weight games/pickup 2x more than practice
-      currentRating = ((pickupRating * pickupGames.length) + (gameRating * gameEvents.length) * 2 + (practiceRating * totalPractices)) / 
-                      (pickupGames.length + gameEvents.length * 2 + totalPractices);
+      currentRating =
+        (pickupRating * pickupGames.length +
+          gameRating * gameEvents.length * 2 +
+          practiceRating * totalPractices) /
+        (pickupGames.length + gameEvents.length * 2 + totalPractices);
     } else if (totalGames > 0) {
-      currentRating = pickupGames.length > 0 && gameEvents.length > 0
-        ? (pickupRating + gameRating) / 2
-        : pickupGames.length > 0 ? pickupRating : gameRating;
+      currentRating =
+        pickupGames.length > 0 && gameEvents.length > 0
+          ? (pickupRating + gameRating) / 2
+          : pickupGames.length > 0
+            ? pickupRating
+            : gameRating;
     } else if (totalPractices > 0) {
       currentRating = practiceRating;
     } else {
@@ -242,19 +279,19 @@ export class PlayerRatingService {
 
     if (rating >= 4.0) {
       label = 'Elite';
-      color = '#FFD700'; // Gold
+      color = tokenColors.gold; // Gold
     } else if (rating >= 3.0) {
       label = 'Advanced';
-      color = '#FF6B35'; // Orange
+      color = tokenColors.warning; // Orange
     } else if (rating >= 2.0) {
       label = 'Intermediate';
-      color = '#4CAF50'; // Green
+      color = tokenColors.success; // Green
     } else if (rating >= 1.0) {
       label = 'Developing';
-      color = '#2196F3'; // Blue
+      color = tokenColors.cobalt; // Blue
     } else {
       label = 'New Player';
-      color = '#9E9E9E'; // Gray
+      color = tokenColors.inkMuted; // Gray
     }
 
     return {
@@ -292,8 +329,12 @@ export class PlayerRatingService {
     const recentWindow = sorted.slice(0, windowSize);
     const previousWindow = sorted.slice(windowSize, windowSize * 2);
 
-    const recentAvg = recentWindow.reduce((sum, gp) => sum + gp.gameScore, 0) / recentWindow.length;
-    const previousAvg = previousWindow.reduce((sum, gp) => sum + gp.gameScore, 0) / previousWindow.length;
+    const recentAvg =
+      recentWindow.reduce((sum, gp) => sum + gp.gameScore, 0) /
+      recentWindow.length;
+    const previousAvg =
+      previousWindow.reduce((sum, gp) => sum + gp.gameScore, 0) /
+      previousWindow.length;
 
     const difference = recentAvg - previousAvg;
     const threshold = 0.1; // 10% change threshold
@@ -314,7 +355,12 @@ export class PlayerRatingService {
     players: PlayerRating[],
     type: 'overall' | 'pickup' | 'league' = 'overall'
   ): Array<PlayerRating & { rank: number }> {
-    const ratingKey = type === 'pickup' ? 'pickupRating' : type === 'league' ? 'leagueRating' : 'currentRating';
+    const ratingKey =
+      type === 'pickup'
+        ? 'pickupRating'
+        : type === 'league'
+          ? 'leagueRating'
+          : 'currentRating';
 
     // Sort by rating (highest first)
     const sorted = [...players].sort((a, b) => b[ratingKey] - a[ratingKey]);

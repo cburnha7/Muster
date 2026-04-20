@@ -46,9 +46,10 @@ export default function App() {
         const inter = require('@expo-google-fonts/inter');
         const fraunces = require('@expo-google-fonts/fraunces');
         const dmSans = require('@expo-google-fonts/dm-sans');
+        const nunito = require('@expo-google-fonts/nunito');
         await Promise.race([
           Font.loadAsync({
-            // Old fonts (backward compat during migration)
+            // Legacy fonts (backward compat during migration)
             PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
             PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
             PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
@@ -58,14 +59,18 @@ export default function App() {
             Inter_500Medium: inter.Inter_500Medium,
             Inter_600SemiBold: inter.Inter_600SemiBold,
             Inter_700Bold: inter.Inter_700Bold,
-            // New design system fonts
-            Fraunces_700Bold: fraunces.Fraunces_700Bold,
-            Fraunces_700Bold_Italic: fraunces.Fraunces_700Bold_Italic,
-            Fraunces_900Black: fraunces.Fraunces_900Black,
             DMSans_400Regular: dmSans.DMSans_400Regular,
             DMSans_500Medium: dmSans.DMSans_500Medium,
             DMSans_600SemiBold: dmSans.DMSans_600SemiBold,
             DMSans_700Bold: dmSans.DMSans_700Bold,
+            // Design system fonts
+            Fraunces_700Bold: fraunces.Fraunces_700Bold,
+            Fraunces_700Bold_Italic: fraunces.Fraunces_700Bold_Italic,
+            Fraunces_900Black: fraunces.Fraunces_900Black,
+            Nunito_400Regular: nunito.Nunito_400Regular,
+            Nunito_500Medium: nunito.Nunito_500Medium,
+            Nunito_600SemiBold: nunito.Nunito_600SemiBold,
+            Nunito_700Bold: nunito.Nunito_700Bold,
           }),
           new Promise(r => setTimeout(r, 5000)),
         ]);

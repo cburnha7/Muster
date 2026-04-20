@@ -15,6 +15,7 @@ import {
 import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, typeScale } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export type RecurringFrequency = 'weekly' | 'monthly';
 
@@ -47,7 +48,11 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
   };
 
   const formatDate = (date: Date) =>
-    date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
 
   const maxEndDate = new Date(minEndDate);
   maxEndDate.setFullYear(maxEndDate.getFullYear() + 1);
@@ -62,7 +67,10 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
         <Switch
           value={value.enabled}
           onValueChange={handleToggle}
-          trackColor={{ false: `${colors.inkFaint}40`, true: `${colors.cobalt}60` }}
+          trackColor={{
+            false: `${colors.inkFaint}40`,
+            true: `${colors.cobalt}60`,
+          }}
           thumbColor={value.enabled ? colors.cobalt : colors.surface}
         />
       </View>
@@ -73,20 +81,36 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
           <Text style={styles.fieldLabel}>Frequency</Text>
           <View style={styles.frequencyRow}>
             <TouchableOpacity
-              style={[styles.freqButton, value.frequency === 'weekly' && styles.freqButtonActive]}
+              style={[
+                styles.freqButton,
+                value.frequency === 'weekly' && styles.freqButtonActive,
+              ]}
               onPress={() => handleFrequency('weekly')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.freqText, value.frequency === 'weekly' && styles.freqTextActive]}>
+              <Text
+                style={[
+                  styles.freqText,
+                  value.frequency === 'weekly' && styles.freqTextActive,
+                ]}
+              >
                 Weekly
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.freqButton, value.frequency === 'monthly' && styles.freqButtonActive]}
+              style={[
+                styles.freqButton,
+                value.frequency === 'monthly' && styles.freqButtonActive,
+              ]}
               onPress={() => handleFrequency('monthly')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.freqText, value.frequency === 'monthly' && styles.freqTextActive]}>
+              <Text
+                style={[
+                  styles.freqText,
+                  value.frequency === 'monthly' && styles.freqTextActive,
+                ]}
+              >
                 Monthly
               </Text>
             </TouchableOpacity>
@@ -99,7 +123,11 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
             onPress={() => setShowDatePicker(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="calendar-outline" size={18} color={colors.inkFaint} />
+            <Ionicons
+              name="calendar-outline"
+              size={18}
+              color={colors.inkFaint}
+            />
             <Text style={styles.dateText}>
               {value.endDate ? formatDate(value.endDate) : 'Select end date'}
             </Text>
@@ -123,7 +151,7 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: 16,
     marginTop: 12,

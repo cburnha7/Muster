@@ -12,6 +12,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { EventCard } from '../../components/ui/EventCard';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useLazySearchEventsQuery } from '../../store/api/eventsApi';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
@@ -132,7 +133,7 @@ export function EventSearchResultsScreen() {
         accessibilityRole="button"
         accessibilityLabel="Host an event"
       >
-        <Ionicons name="add" size={24} color="#FFFFFF" />
+        <Ionicons name="add" size={24} color={tokenColors.white} />
       </TouchableOpacity>
     </View>
   );
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   listContent: {
     paddingBottom: Spacing.xxxl + 80,

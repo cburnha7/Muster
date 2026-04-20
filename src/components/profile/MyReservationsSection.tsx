@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { CancelReservationModal } from '../facilities/CancelReservationModal';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { API_BASE_URL } from '../../services/api/config';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -52,12 +53,17 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [selectedReservation, setSelectedReservation] =
+    useState<Reservation | null>(null);
 
-  useEffect(() => { loadReservations(); }, [userId]);
+  useEffect(() => {
+    loadReservations();
+  }, [userId]);
 
   useFocusEffect(
-    React.useCallback(() => { loadReservations(); }, [userId])
+    React.useCallback(() => {
+      loadReservations();
+    }, [userId])
   );
 
   const loadReservations = async () => {
@@ -120,7 +126,10 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
         throw new Error(errorData.error || 'Failed to request cancellation');
       }
       await loadReservations();
-      Alert.alert('Cancellation Requested', 'Your cancellation request has been submitted to the facility owner for approval.');
+      Alert.alert(
+        'Cancellation Requested',
+        'Your cancellation request has been submitted to the facility owner for approval.'
+      );
     } catch (error) {
       console.error('Cancel reservation error:', error);
       throw error;
@@ -130,7 +139,12 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
   };
 
   const formatTime = (time: string | undefined) => {
@@ -144,7 +158,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
 
   // Filter to upcoming confirmed reservations (include used ones for event link)
   const upcomingReservations = reservations
-    .filter((r) => {
+    .filter(r => {
       if (r.status !== 'confirmed') return false;
 
       // Parse the slot date as local (YYYY-MM-DD → year, month, day)
@@ -182,14 +196,21 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
     });
 
   // Group by facility
-  const facilityGroups = new Map<string, { name: string; id: string; items: Reservation[] }>();
+  const facilityGroups = new Map<
+    string,
+    { name: string; id: string; items: Reservation[] }
+  >();
   for (const r of upcomingReservations) {
     const fId = r.timeSlot.court.facility.id;
     const existing = facilityGroups.get(fId);
     if (existing) {
       existing.items.push(r);
     } else {
-      facilityGroups.set(fId, { name: r.timeSlot.court.facility.name, id: fId, items: [r] });
+      facilityGroups.set(fId, {
+        name: r.timeSlot.court.facility.name,
+        id: fId,
+        items: [r],
+      });
     }
   }
 
@@ -205,29 +226,50 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
 
   return (
     <View>
-      <CollapsibleSection title="My Reservations" count={upcomingReservations.length}>
+      <CollapsibleSection
+        title="My Reservations"
+        count={upcomingReservations.length}
+      >
         <View style={styles.sectionInner}>
-          {Array.from(facilityGroups.values()).map((group) => (
+          {Array.from(facilityGroups.values()).map(group => (
             <View key={group.id} style={styles.facilityGroup}>
               <TouchableOpacity
                 style={styles.facilityHeader}
-                onPress={() => (navigation as any).navigate('FacilityDetails', { facilityId: group.id })}
+                onPress={() =>
+                  (navigation as any).navigate('FacilityDetails', {
+                    facilityId: group.id,
+                  })
+                }
                 activeOpacity={0.7}
               >
-                <Text style={styles.facilityName} numberOfLines={1}>{group.name}</Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
+                <Text style={styles.facilityName} numberOfLines={1}>
+                  {group.name}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={colors.inkFaint}
+                />
               </TouchableOpacity>
-              {group.items.map((r) => (
+              {group.items.map(r => (
                 <View key={r.id} style={styles.slotRow}>
                   <View style={styles.slotInfo}>
-                    <Text style={styles.slotCourt}>{r.timeSlot.court.name}</Text>
+                    <Text style={styles.slotCourt}>
+                      {r.timeSlot.court.name}
+                    </Text>
                     <Text style={styles.slotDateTime}>
-                      {formatDate(r.timeSlot.date)} · {formatTime(r.timeSlot.startTime)} – {formatTime(r.timeSlot.endTime)}
+                      {formatDate(r.timeSlot.date)} ·{' '}
+                      {formatTime(r.timeSlot.startTime)} –{' '}
+                      {formatTime(r.timeSlot.endTime)}
                     </Text>
                   </View>
                   {r.cancellationStatus === 'pending_cancellation' ? (
                     <View style={styles.pendingBadge}>
-                      <Ionicons name="time-outline" size={14} color="#E8A030" />
+                      <Ionicons
+                        name="time-outline"
+                        size={14}
+                        color={tokenColors.warning}
+                      />
                       <Text style={styles.pendingText}>Pending</Text>
                     </View>
                   ) : r.usedForEventId ? (
@@ -241,12 +283,30 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.slotActions}>
-                      <TouchableOpacity style={styles.createButton} onPress={() => handleCreateEvent(r)} activeOpacity={0.7}>
-                        <Ionicons name="add-circle" size={16} color={colors.cobalt} />
-                        <Text style={styles.createButtonText}>Create Event</Text>
+                      <TouchableOpacity
+                        style={styles.createButton}
+                        onPress={() => handleCreateEvent(r)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name="add-circle"
+                          size={16}
+                          color={colors.cobalt}
+                        />
+                        <Text style={styles.createButtonText}>
+                          Create Event
+                        </Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelReservation(r)} activeOpacity={0.7}>
-                        <Ionicons name="close-circle" size={16} color={colors.heart} />
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => handleCancelReservation(r)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={16}
+                          color={colors.heart}
+                        />
                         <Text style={styles.cancelButtonText}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
@@ -260,7 +320,10 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
 
       <CancelReservationModal
         visible={showCancelModal}
-        onClose={() => { setShowCancelModal(false); setSelectedReservation(null); }}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSelectedReservation(null);
+        }}
         onConfirm={handleConfirmCancellation}
         reservationDetails={
           selectedReservation
@@ -287,7 +350,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   facilityGroup: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
@@ -385,13 +448,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: '#E8A03015',
+    backgroundColor: `${tokenColors.warning}15`,
     borderRadius: 6,
     gap: 4,
   },
   pendingText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: '#E8A030',
+    color: tokenColors.warning,
   },
 });

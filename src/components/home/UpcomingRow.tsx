@@ -1,7 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { Booking } from '../../types';
 
 interface UpcomingRowProps {
@@ -9,7 +16,12 @@ interface UpcomingRowProps {
   onPress: (booking: Booking) => void;
 }
 
-function formatDay(date: Date): { day: string; weekday: string; isToday: boolean; isTomorrow: boolean } {
+function formatDay(date: Date): {
+  day: string;
+  weekday: string;
+  isToday: boolean;
+  isTomorrow: boolean;
+} {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -17,14 +29,22 @@ function formatDay(date: Date): { day: string; weekday: string; isToday: boolean
 
   return {
     day: date.getDate().toString(),
-    weekday: diffDays === 0 ? 'Today' : diffDays === 1 ? 'Tmrw' : date.toLocaleDateString('en-US', { weekday: 'short' }),
+    weekday:
+      diffDays === 0
+        ? 'Today'
+        : diffDays === 1
+          ? 'Tmrw'
+          : date.toLocaleDateString('en-US', { weekday: 'short' }),
     isToday: diffDays === 0,
     isTomorrow: diffDays === 1,
   };
 }
 
 function formatTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
@@ -38,7 +58,7 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {bookings.map((booking) => {
+        {bookings.map(booking => {
           const event = booking.event;
           if (!event) return null;
           const startDate = new Date(event.startTime);
@@ -53,24 +73,42 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
             >
               {/* Date chip */}
               <View style={[styles.dateChip, isToday && styles.dateChipToday]}>
-                <Text style={[styles.dateWeekday, isToday && styles.dateTextToday]}>{weekday}</Text>
-                <Text style={[styles.dateDay, isToday && styles.dateTextToday]}>{day}</Text>
+                <Text
+                  style={[styles.dateWeekday, isToday && styles.dateTextToday]}
+                >
+                  {weekday}
+                </Text>
+                <Text style={[styles.dateDay, isToday && styles.dateTextToday]}>
+                  {day}
+                </Text>
               </View>
 
               {/* Event info */}
-              <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
+              <Text style={styles.eventTitle} numberOfLines={2}>
+                {event.title}
+              </Text>
               <Text style={styles.eventTime}>{formatTime(startDate)}</Text>
 
               {(event.facility?.name || event.locationName) && (
                 <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={12} color={colors.outline} />
-                  <Text style={styles.locationText} numberOfLines={1}>{event.facility?.name || event.locationName}</Text>
+                  <Ionicons
+                    name="location-outline"
+                    size={12}
+                    color={colors.outline}
+                  />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {event.facility?.name || event.locationName}
+                  </Text>
                 </View>
               )}
 
               {/* You're in badge */}
               <View style={styles.youreInBadge}>
-                <Ionicons name="checkmark-circle" size={12} color={colors.secondary} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={12}
+                  color={colors.secondary}
+                />
                 <Text style={styles.youreInText}>You're in</Text>
               </View>
             </TouchableOpacity>
@@ -102,7 +140,7 @@ const styles = StyleSheet.create({
     padding: 14,
     width: 150,
     gap: 8,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -135,7 +173,7 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   dateTextToday: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   eventTitle: {
     fontFamily: fonts.headingSemi,

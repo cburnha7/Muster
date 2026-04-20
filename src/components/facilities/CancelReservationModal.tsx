@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { FormButton } from '../forms/FormButton';
 
 interface CancelReservationModalProps {
@@ -37,7 +38,10 @@ export function CancelReservationModal({
 
   const handleConfirm = async () => {
     if (reason.trim().length < 10) {
-      Alert.alert('Invalid Reason', 'Please provide a reason (minimum 10 characters)');
+      Alert.alert(
+        'Invalid Reason',
+        'Please provide a reason (minimum 10 characters)'
+      );
       return;
     }
 
@@ -47,7 +51,8 @@ export function CancelReservationModal({
       setReason('');
       onClose();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel reservation';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to cancel reservation';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -77,7 +82,7 @@ export function CancelReservationModal({
           activeOpacity={1}
           onPress={handleClose}
         />
-        
+
         <View style={styles.modal}>
           <View style={styles.header}>
             <View style={styles.iconContainer}>
@@ -97,7 +102,8 @@ export function CancelReservationModal({
             <View style={styles.detailsContainer}>
               <Text style={styles.detailsTitle}>Reservation Details:</Text>
               <Text style={styles.detailsText}>
-                {reservationDetails.facilityName} - {reservationDetails.courtName}
+                {reservationDetails.facilityName} -{' '}
+                {reservationDetails.courtName}
               </Text>
               <Text style={styles.detailsText}>
                 {reservationDetails.date} at {reservationDetails.time}
@@ -107,8 +113,9 @@ export function CancelReservationModal({
 
           <View style={styles.content}>
             <Text style={styles.warningText}>
-              Your cancellation request will be sent to the facility owner for approval. 
-              Once approved, you will receive a refund according to the cancellation policy.
+              Your cancellation request will be sent to the facility owner for
+              approval. Once approved, you will receive a refund according to
+              the cancellation policy.
             </Text>
 
             <Text style={styles.label}>
@@ -170,7 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,

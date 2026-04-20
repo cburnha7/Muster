@@ -21,6 +21,7 @@ import {
   TabSearchResult,
 } from '../../components/search/TabSearchModal';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { leagueService } from '../../services/api/LeagueService';
 import { userService } from '../../services/api/UserService';
 import { selectUser } from '../../store/slices/authSlice';
@@ -364,7 +365,7 @@ export function LeaguesBrowserScreen() {
       {/* FAB */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateLeague}>
-          <Ionicons name="add" size={26} color={'#FFFFFF'} />
+          <Ionicons name="add" size={26} color={tokenColors.white} />
         </TouchableOpacity>
       )}
 
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   sectionTitle: {
     fontFamily: fonts.heading,
@@ -457,7 +458,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    shadowColor: tokenColors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

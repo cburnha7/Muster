@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent } from '../../store/slices/scheduleSlice';
 import { RosterInfo } from '../../types/scheduling';
 import { colors, fonts, Spacing, BorderRadius } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface ScheduleEventEditorProps {
   event?: ScheduleEvent; // undefined for new game
@@ -31,7 +32,9 @@ const generateId = (): string =>
 /** Parse "YYYY-MM-DD" into a Date (UTC). */
 const parseDateString = (str: string): Date => {
   const parts = str.split('-').map(Number);
-  return new Date(Date.UTC(parts[0] ?? 2000, (parts[1] ?? 1) - 1, parts[2] ?? 1));
+  return new Date(
+    Date.UTC(parts[0] ?? 2000, (parts[1] ?? 1) - 1, parts[2] ?? 1)
+  );
 };
 
 /** Parse "HH:MM" into a Date for the time picker (UTC). */
@@ -114,8 +117,8 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
   }, [event]);
 
   // Derived
-  const homeRoster = rosters.find((r) => r.id === homeRosterId);
-  const awayRoster = rosters.find((r) => r.id === awayRosterId);
+  const homeRoster = rosters.find(r => r.id === homeRosterId);
+  const awayRoster = rosters.find(r => r.id === awayRosterId);
   const allFilled =
     homeRosterId !== '' &&
     awayRosterId !== '' &&
@@ -163,7 +166,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
     selectedId: string,
     onSelect: (roster: RosterInfo) => void,
     onClose: () => void,
-    excludeId?: string,
+    excludeId?: string
   ) => (
     <Modal
       visible={visible}
@@ -181,7 +184,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
         </View>
         <FlatList
           data={rosters}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={({ item }) => {
             const isExcluded = item.id === excludeId;
             const isSelected = item.id === selectedId;
@@ -234,9 +237,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           <TouchableOpacity onPress={onCancel} accessibilityRole="button">
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>
-            {isEdit ? 'Edit Game' : 'Add Game'}
-          </Text>
+          <Text style={styles.title}>{isEdit ? 'Edit Game' : 'Add Game'}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -384,23 +385,22 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
           showHomePicker,
           'Home Roster',
           homeRosterId,
-          (r) => setHomeRosterId(r.id),
+          r => setHomeRosterId(r.id),
           () => setShowHomePicker(false),
-          awayRosterId || undefined,
+          awayRosterId || undefined
         )}
         {renderRosterPicker(
           showAwayPicker,
           'Away Roster',
           awayRosterId,
-          (r) => setAwayRosterId(r.id),
+          r => setAwayRosterId(r.id),
           () => setShowAwayPicker(false),
-          homeRosterId || undefined,
+          homeRosterId || undefined
         )}
       </SafeAreaView>
     </Modal>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.inkFaint + '20',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   cancelText: {
     fontFamily: fonts.ui,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   fieldTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: colors.inkFaint + '40',
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderTopWidth: 1,
     borderTopColor: colors.inkFaint + '20',
   },
@@ -504,15 +504,15 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   saveButtonTextDisabled: {
-    color: '#FFFFFF80',
+    color: tokenColors.white + '80',
   },
   // Roster picker modal styles
   pickerModal: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   pickerHeader: {
     flexDirection: 'row',

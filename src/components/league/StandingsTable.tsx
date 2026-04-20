@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TeamStanding, MatchOutcome } from '../../types';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface StandingsTableProps {
   standings: TeamStanding[];
@@ -12,20 +19,20 @@ interface StandingsTableProps {
 
 type SortColumn = 'rank' | 'points' | 'goalDifference' | 'goalsFor';
 
-export const StandingsTable: React.FC<StandingsTableProps> = ({ 
-  standings, 
+export const StandingsTable: React.FC<StandingsTableProps> = ({
+  standings,
   onTeamPress,
-  style 
+  style,
 }) => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('rank');
   const [sortAscending, setSortAscending] = useState(false);
 
   const sortedStandings = React.useMemo(() => {
     const sorted = [...standings];
-    
+
     sorted.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortColumn) {
         case 'rank':
           comparison = a.rank - b.rank;
@@ -34,16 +41,17 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           comparison = b.membership.points - a.membership.points;
           break;
         case 'goalDifference':
-          comparison = b.membership.goalDifference - a.membership.goalDifference;
+          comparison =
+            b.membership.goalDifference - a.membership.goalDifference;
           break;
         case 'goalsFor':
           comparison = b.membership.goalsFor - a.membership.goalsFor;
           break;
       }
-      
+
       return sortAscending ? -comparison : comparison;
     });
-    
+
     return sorted;
   }, [standings, sortColumn, sortAscending]);
 
@@ -58,39 +66,48 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
 
   const renderSortIcon = (column: SortColumn) => {
     if (sortColumn !== column) {
-      return <Ionicons name="swap-vertical-outline" size={14} color="#999" />;
+      return (
+        <Ionicons
+          name="swap-vertical-outline"
+          size={14}
+          color={tokenColors.inkMuted}
+        />
+      );
     }
     return (
-      <Ionicons 
-        name={sortAscending ? 'arrow-up' : 'arrow-down'} 
-        size={14} 
-        color={colors.cobalt} 
+      <Ionicons
+        name={sortAscending ? 'arrow-up' : 'arrow-down'}
+        size={14}
+        color={colors.cobalt}
       />
     );
   };
 
   const renderFormIndicator = (form: MatchOutcome[]) => {
     if (!form || form.length === 0) return null;
-    
+
     return (
       <View style={styles.formContainer}>
         {form.slice(-5).map((outcome, index) => {
-          let color = '#999';
+          let color = tokenColors.inkMuted;
           let label = 'D';
-          
+
           if (outcome === 'home_win' || outcome === 'away_win') {
             color = colors.cobalt;
             label = 'W';
           } else if (outcome === 'draw') {
-            color = '#FF9500';
+            color = tokenColors.warning;
             label = 'D';
           } else {
-            color = '#FF3B30';
+            color = tokenColors.error;
             label = 'L';
           }
-          
+
           return (
-            <View key={index} style={[styles.formDot, { backgroundColor: color }]}>
+            <View
+              key={index}
+              style={[styles.formDot, { backgroundColor: color }]}
+            >
               <Text style={styles.formText}>{label}</Text>
             </View>
           );
@@ -105,62 +122,62 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
         <View style={styles.table}>
           {/* Header */}
           <View style={styles.headerRow}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.headerCell, styles.rankCell]}
               onPress={() => handleSort('rank')}
             >
               <Text style={styles.headerText}>#</Text>
               {renderSortIcon('rank')}
             </TouchableOpacity>
-            
+
             <View style={[styles.headerCell, styles.teamCell]}>
               <Text style={styles.headerText}>Roster</Text>
             </View>
-            
+
             <View style={[styles.headerCell, styles.statCell]}>
               <Text style={styles.headerText}>P</Text>
             </View>
-            
+
             <View style={[styles.headerCell, styles.statCell]}>
               <Text style={styles.headerText}>W</Text>
             </View>
-            
+
             <View style={[styles.headerCell, styles.statCell]}>
               <Text style={styles.headerText}>D</Text>
             </View>
-            
+
             <View style={[styles.headerCell, styles.statCell]}>
               <Text style={styles.headerText}>L</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.headerCell, styles.statCell]}
               onPress={() => handleSort('points')}
             >
               <Text style={styles.headerText}>Pts</Text>
               {renderSortIcon('points')}
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.headerCell, styles.statCell]}
               onPress={() => handleSort('goalsFor')}
             >
               <Text style={styles.headerText}>GF</Text>
               {renderSortIcon('goalsFor')}
             </TouchableOpacity>
-            
+
             <View style={[styles.headerCell, styles.statCell]}>
               <Text style={styles.headerText}>GA</Text>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={[styles.headerCell, styles.statCell]}
               onPress={() => handleSort('goalDifference')}
             >
               <Text style={styles.headerText}>GD</Text>
               {renderSortIcon('goalDifference')}
             </TouchableOpacity>
-            
+
             <View style={[styles.headerCell, styles.formHeaderCell]}>
               <Text style={styles.headerText}>Form</Text>
             </View>
@@ -170,64 +187,67 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           {sortedStandings.map((standing, index) => (
             <TouchableOpacity
               key={standing.team.id}
-              style={[
-                styles.row,
-                index % 2 === 0 && styles.evenRow,
-              ]}
+              style={[styles.row, index % 2 === 0 && styles.evenRow]}
               onPress={() => onTeamPress?.(standing.team.id)}
               activeOpacity={0.7}
             >
               <View style={[styles.cell, styles.rankCell]}>
                 <Text style={styles.rankText}>{standing.rank}</Text>
               </View>
-              
+
               <View style={[styles.cell, styles.teamCell]}>
                 <Text style={styles.teamText} numberOfLines={1}>
                   {standing.team.name}
                 </Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
-                <Text style={styles.statText}>{standing.stats.matchesPlayed}</Text>
+                <Text style={styles.statText}>
+                  {standing.stats.matchesPlayed}
+                </Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
                 <Text style={styles.statText}>{standing.stats.wins}</Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
                 <Text style={styles.statText}>{standing.stats.draws}</Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
                 <Text style={styles.statText}>{standing.stats.losses}</Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
                 <Text style={[styles.statText, styles.pointsText]}>
                   {standing.stats.points}
                 </Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
                 <Text style={styles.statText}>{standing.stats.goalsFor}</Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
-                <Text style={styles.statText}>{standing.stats.goalsAgainst}</Text>
+                <Text style={styles.statText}>
+                  {standing.stats.goalsAgainst}
+                </Text>
               </View>
-              
+
               <View style={[styles.cell, styles.statCell]}>
-                <Text style={[
-                  styles.statText,
-                  standing.stats.goalDifference > 0 && styles.positiveGD,
-                  standing.stats.goalDifference < 0 && styles.negativeGD,
-                ]}>
+                <Text
+                  style={[
+                    styles.statText,
+                    standing.stats.goalDifference > 0 && styles.positiveGD,
+                    standing.stats.goalDifference < 0 && styles.negativeGD,
+                  ]}
+                >
                   {standing.stats.goalDifference > 0 ? '+' : ''}
                   {standing.stats.goalDifference}
                 </Text>
               </View>
-              
+
               <View style={[styles.cell, styles.formCell]}>
                 {renderFormIndicator(standing.stats.form)}
               </View>
@@ -256,24 +276,24 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   table: {
     minWidth: '100%',
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderBottomWidth: 2,
     borderBottomColor: colors.cobalt,
   },
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: tokenColors.border,
   },
   evenRow: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokenColors.background,
   },
   headerCell: {
     flexDirection: 'row',
@@ -308,21 +328,21 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#333',
+    color: tokenColors.ink,
   },
   rankText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
   },
   teamText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: tokenColors.ink,
   },
   statText: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
   },
   pointsText: {
     fontWeight: '700',
@@ -333,7 +353,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   negativeGD: {
-    color: '#FF3B30',
+    color: tokenColors.error,
     fontWeight: '600',
   },
   formContainer: {
@@ -350,18 +370,18 @@ const styles = StyleSheet.create({
   formText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   legend: {
     padding: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: tokenColors.border,
   },
   legendTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 6,
   },
   legendItems: {
@@ -371,6 +391,6 @@ const styles = StyleSheet.create({
   },
   legendItem: {
     fontSize: 11,
-    color: '#999',
+    color: tokenColors.inkMuted,
   },
 });

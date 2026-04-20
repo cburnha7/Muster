@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../forms/TextInput';
 import { Button } from '../forms/Button';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { ErrorMessages } from '../../constants/errorMessages';
 
 interface AccountLinkingModalProps {
@@ -68,13 +69,20 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
             <View
               style={[
                 styles.iconCircle,
-                { backgroundColor: provider === 'apple' ? '#000000' : '#FFFFFF' },
+                {
+                  backgroundColor:
+                    provider === 'apple'
+                      ? tokenColors.black
+                      : tokenColors.white,
+                },
               ]}
             >
               <Ionicons
                 name={getProviderIcon()}
                 size={40}
-                color={provider === 'apple' ? '#FFFFFF' : '#000000'}
+                color={
+                  provider === 'apple' ? tokenColors.white : tokenColors.black
+                }
               />
             </View>
           </View>
@@ -84,8 +92,8 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
 
           {/* Explanation */}
           <Text style={styles.explanation}>
-            An account with <Text style={styles.email}>{email}</Text> already exists.
-            Would you like to link your {getProviderName()} account?
+            An account with <Text style={styles.email}>{email}</Text> already
+            exists. Would you like to link your {getProviderName()} account?
           </Text>
 
           {/* Password Input */}
@@ -132,9 +140,14 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
 
           {/* Security Note */}
           <View style={styles.securityNote}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.ink} />
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={16}
+              color={colors.ink}
+            />
             <Text style={styles.securityText}>
-              Your password is required to verify your identity and link your accounts securely.
+              Your password is required to verify your identity and link your
+              accounts securely.
             </Text>
           </View>
         </View>
@@ -159,7 +172,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: tokenColors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

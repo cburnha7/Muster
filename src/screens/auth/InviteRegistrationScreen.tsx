@@ -33,6 +33,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { SSOButton } from '../../components/auth/SSOButton';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import {
@@ -501,7 +502,7 @@ export function InviteRegistrationScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background || '#F9FAFB',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 24,
@@ -521,18 +522,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: tokenColors.border,
   },
   progressDotActive: {
     width: 24,
-    backgroundColor: colors.cobalt || '#2D5F3F',
+    backgroundColor: colors.cobalt || tokenColors.cobalt,
   },
 
   // Team banner
   teamBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: (colors.gold || '#B8976A') + '18',
+    backgroundColor: colors.gold + '18',
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -541,23 +542,23 @@ const styles = StyleSheet.create({
   teamBannerText: {
     flex: 1,
     fontSize: 14,
-    color: '#4B5563',
+    color: tokenColors.inkSecondary,
     lineHeight: 20,
   },
   teamBannerName: {
     fontWeight: '700',
-    color: '#1F2937',
+    color: tokenColors.ink,
   },
 
   // Step content
   stepTitle: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#1F2937',
+    color: tokenColors.ink,
   },
   stepSubtitle: {
     fontSize: 15,
-    color: '#6B7280',
+    color: tokenColors.inkSecondary,
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
   },
   ssoText: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: tokenColors.inkMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -595,11 +596,11 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: tokenColors.inkSecondary,
   },
   loginLinkBold: {
     fontWeight: '700',
-    color: colors.cobalt || '#2D5F3F',
+    color: colors.cobalt || tokenColors.cobalt,
   },
 
   // Toggle
@@ -609,17 +610,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     marginVertical: 8,
   },
   toggleLabel: {
     fontSize: 15,
-    color: '#9CA3AF',
+    color: tokenColors.inkMuted,
     fontWeight: '500',
   },
   toggleLabelActive: {
-    color: '#1F2937',
+    color: tokenColors.ink,
     fontWeight: '700',
   },
 
@@ -634,13 +635,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     padding: 14,
-    backgroundColor: (colors.cobalt || '#2D5F3F') + '10',
+    backgroundColor: colors.cobalt + '10',
     borderRadius: 10,
   },
   selfNoteText: {
     flex: 1,
     fontSize: 14,
-    color: '#4B5563',
+    color: tokenColors.inkSecondary,
     lineHeight: 20,
   },
 
@@ -655,7 +656,7 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 15,
-    color: '#6B7280',
+    color: tokenColors.inkSecondary,
     fontWeight: '500',
   },
 });

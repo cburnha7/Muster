@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Facility, SportType } from '../../types';
+import { tokenColors, tokenSport } from '../../theme/tokens';
 
 // Only import MapView on native platforms
 let MapView: any = null;
@@ -47,7 +48,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
   if (Platform.OS === 'web') {
     return (
       <View style={[styles.container, style, styles.webPlaceholder]}>
-        <Ionicons name="map" size={48} color="#666" />
+        <Ionicons name="map" size={48} color={tokenColors.inkSecondary} />
         <Text style={styles.webPlaceholderText}>
           Map view not available on web
         </Text>
@@ -113,22 +114,22 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
     const primarySport = facility.sportTypes[0];
     switch (primarySport) {
       case SportType.BASKETBALL:
-        return '#FF6B35';
+        return tokenSport.basketball.solid;
       case SportType.SOCCER:
       case SportType.KICKBALL:
-        return '#4ECDC4';
+        return tokenSport.soccer.solid;
       case SportType.TENNIS:
       case SportType.PICKLEBALL:
-        return '#FFD93D';
+        return tokenSport.tennis.solid;
       case SportType.VOLLEYBALL:
-        return '#95E1D3';
+        return tokenSport.volleyball.solid;
       case SportType.SOFTBALL:
       case SportType.BASEBALL:
-        return '#E8A030';
+        return tokenColors.warning;
       case SportType.FLAG_FOOTBALL:
-        return '#FF6B35';
+        return tokenSport.flag_football.solid;
       default:
-        return '#007AFF';
+        return tokenColors.cobalt;
     }
   };
 
@@ -184,7 +185,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
                   {facility.name}
                 </Text>
                 <View style={styles.calloutRating}>
-                  <Ionicons name="star" size={14} color="#FFD700" />
+                  <Ionicons name="star" size={14} color={tokenColors.gold} />
                   <Text style={styles.calloutRatingText}>
                     {facility.rating.toFixed(1)} ({facility.reviewCount})
                   </Text>
@@ -195,7 +196,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
                       <Ionicons
                         name={getSportIcon(sport) as any}
                         size={12}
-                        color="#007AFF"
+                        color={tokenColors.cobalt}
                       />
                     </View>
                   ))}
@@ -227,7 +228,11 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
                 onPress={() => setSelectedFacility(null)}
                 activeOpacity={0.75}
               >
-                <Ionicons name="close" size={24} color="#666" />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={tokenColors.inkSecondary}
+                />
               </TouchableOpacity>
             </View>
             <Text style={styles.cardAddress} numberOfLines={1}>
@@ -235,7 +240,7 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
             </Text>
             <View style={styles.cardFooter}>
               <View style={styles.cardRating}>
-                <Ionicons name="star" size={16} color="#FFD700" />
+                <Ionicons name="star" size={16} color={tokenColors.gold} />
                 <Text style={styles.cardRatingText}>
                   {selectedFacility.rating.toFixed(1)}
                 </Text>
@@ -245,7 +250,11 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
                 onPress={() => centerOnFacility(selectedFacility)}
                 activeOpacity={0.75}
               >
-                <Ionicons name="navigate" size={16} color="#007AFF" />
+                <Ionicons
+                  name="navigate"
+                  size={16}
+                  color={tokenColors.cobalt}
+                />
                 <Text style={styles.directionsText}>Center</Text>
               </TouchableOpacity>
             </View>
@@ -267,23 +276,23 @@ const styles = StyleSheet.create({
   webPlaceholder: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: tokenColors.background,
   },
   webPlaceholderText: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginTop: 12,
   },
   webPlaceholderSubtext: {
     fontSize: 14,
-    color: '#999',
+    color: tokenColors.inkMuted,
     marginTop: 4,
   },
   callout: {
     width: 200,
   },
   calloutContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 8,
     padding: 12,
     minWidth: 180,
@@ -291,7 +300,7 @@ const styles = StyleSheet.create({
   calloutTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 4,
   },
   calloutRating: {
@@ -301,7 +310,7 @@ const styles = StyleSheet.create({
   },
   calloutRatingText: {
     fontSize: 12,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginLeft: 4,
   },
   calloutSports: {
@@ -312,7 +321,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: tokenColors.cobaltLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 4,
@@ -320,12 +329,12 @@ const styles = StyleSheet.create({
   calloutPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#007AFF',
+    color: tokenColors.cobalt,
     marginBottom: 4,
   },
   calloutTap: {
     fontSize: 11,
-    color: '#999',
+    color: tokenColors.inkMuted,
     fontStyle: 'italic',
   },
   selectedFacilityCard: {
@@ -333,9 +342,9 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: '#FFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -356,13 +365,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     flex: 1,
     marginRight: 8,
   },
   cardAddress: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 12,
   },
   cardFooter: {
@@ -377,7 +386,7 @@ const styles = StyleSheet.create({
   cardRatingText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginLeft: 4,
   },
   directionsButton: {
@@ -385,12 +394,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: tokenColors.cobaltLight,
     borderRadius: 16,
   },
   directionsText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: tokenColors.cobalt,
     fontWeight: '500',
     marginLeft: 4,
   },

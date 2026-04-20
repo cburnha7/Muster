@@ -4,6 +4,7 @@ import { FormInput } from '../forms/FormInput';
 import { FormButton } from '../forms/FormButton';
 import { Match, RecordMatchResultData } from '../../types';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface MatchResultFormProps {
   match: Match;
@@ -53,12 +54,15 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validate()) {
-      Alert.alert('Validation Error', 'Please fix the errors before submitting');
+      Alert.alert(
+        'Validation Error',
+        'Please fix the errors before submitting'
+      );
       return;
     }
 
     const outcome = getOutcome();
-    
+
     Alert.alert(
       'Confirm Result',
       `Are you sure you want to record this result?\n\n${match.homeTeam?.name}: ${homeScore}\n${match.awayTeam?.name}: ${awayScore}\n\nOutcome: ${outcome}`,
@@ -75,7 +79,12 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
             try {
               await onSubmit(resultData);
             } catch (error) {
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to record result');
+              Alert.alert(
+                'Error',
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to record result'
+              );
             }
           },
         },
@@ -165,7 +174,7 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     padding: 16,
   },
   matchInfo: {
@@ -175,12 +184,12 @@ const styles = StyleSheet.create({
   matchTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 8,
   },
   matchDate: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
   },
   scoresContainer: {
     flexDirection: 'row',
@@ -193,14 +202,14 @@ const styles = StyleSheet.create({
   teamLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#999',
+    color: tokenColors.inkMuted,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 12,
   },
   scoreInput: {
@@ -213,10 +222,10 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#999',
+    color: tokenColors.inkMuted,
   },
   outcomeContainer: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -225,7 +234,7 @@ const styles = StyleSheet.create({
   outcomeLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 8,
   },
   outcomeText: {

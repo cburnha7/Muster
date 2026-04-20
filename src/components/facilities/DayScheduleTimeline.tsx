@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface ScheduleSlot {
   time: string; // "HH:MM"
@@ -166,11 +167,11 @@ export function DayScheduleTimeline({
             let label = '';
 
             if (slot.status === 'blocked' || slot.status === 'rented') {
-              bg = '#ECECEC';
+              bg = tokenColors.border;
               textColor = colors.inkFaint;
               label = 'Booked';
             } else if (slot.status === 'own_rental') {
-              bg = '#E6EFF8';
+              bg = tokenColors.cobaltLight;
               textColor = colors.sportHockey;
               label = 'Your Reservation';
             }

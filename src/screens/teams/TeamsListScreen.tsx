@@ -12,6 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
@@ -377,7 +378,7 @@ export function TeamsListScreen() {
           onPress={handleCreateTeam}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={26} color="#FFFFFF" />
+          <Ionicons name="add" size={26} color={tokenColors.white} />
         </TouchableOpacity>
       )}
 
@@ -428,7 +429,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // ── Section titles ──────────────────────
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    shadowColor: tokenColors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

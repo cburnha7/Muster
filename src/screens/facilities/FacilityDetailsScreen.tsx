@@ -32,6 +32,7 @@ import {
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { FixedBottomCTA } from '../../components/detail';
@@ -835,11 +836,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                       <Ionicons
                         name="expand-outline"
                         size={18}
-                        color="#FFFFFF"
+                        color={tokenColors.white}
                       />
                       <Text
                         style={{
-                          color: '#FFFFFF',
+                          color: tokenColors.white,
                           fontSize: 13,
                           fontWeight: '600',
                         }}
@@ -1102,7 +1103,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,

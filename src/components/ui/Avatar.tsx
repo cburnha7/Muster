@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, ViewStyle } from 'react-native';
-import { useTheme } from '../../theme';
+import { tokenColors, tokenType, getAvatarColor } from '../../theme/tokens';
 
 interface Props {
   userId: string;
@@ -17,7 +17,6 @@ export function Avatar({
   size = 40,
   style,
 }: Props) {
-  const { getAvatarColor, colors, type } = useTheme();
   const bg = getAvatarColor(userId);
   return (
     <View
@@ -28,7 +27,7 @@ export function Avatar({
           borderRadius: size / 2,
           backgroundColor: bg,
           borderWidth: 2,
-          borderColor: colors.cobalt,
+          borderColor: tokenColors.cobalt,
           alignItems: 'center' as const,
           justifyContent: 'center' as const,
           overflow: 'hidden' as const,
@@ -42,7 +41,13 @@ export function Avatar({
           style={{ width: size, height: size }}
         />
       ) : (
-        <Text style={{ ...type.uiSm, color: '#FFFFFF', fontSize: size * 0.35 }}>
+        <Text
+          style={{
+            ...tokenType.buttonSm,
+            color: tokenColors.white,
+            fontSize: size * 0.35,
+          }}
+        >
           {initials}
         </Text>
       )}

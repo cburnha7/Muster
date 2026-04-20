@@ -8,6 +8,7 @@ import { leagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { PlayerRanking, Season } from '../../../types';
 import { colors, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 
 interface PlayersTabProps {
   leagueId: string;
@@ -204,14 +205,14 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
 const rankingsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
   },
   controls: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: tokenColors.border,
   },
   filtersRow: {
     flexDirection: 'row',

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface CancelEventModalProps {
   visible: boolean;
@@ -140,7 +141,7 @@ export function CancelEventModal({
                 disabled={isSubmitting || reason.trim().length < MIN_CHARS}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={tokenColors.white} />
                 ) : (
                   <Text style={styles.buttonDangerText}>Cancel Event</Text>
                 )}
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border || '#E5E5EA',
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
@@ -240,9 +241,9 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   buttonSecondary: {
-    backgroundColor: colors.surface || '#F2F2F7',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border || '#E5E5EA',
+    borderColor: colors.border,
   },
   buttonSecondaryText: {
     fontSize: 16,
@@ -258,6 +259,6 @@ const styles = StyleSheet.create({
   buttonDangerText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

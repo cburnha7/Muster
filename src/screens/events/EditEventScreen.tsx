@@ -29,6 +29,7 @@ import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
 import { updateEvent } from '../../store/slices/eventsSlice';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -766,7 +767,11 @@ export function EditEventScreen(): JSX.Element {
                     />
                   ) : (
                     <View style={styles.playerAvatarFallback}>
-                      <Ionicons name="person" size={16} color="#FFFFFF" />
+                      <Ionicons
+                        name="person"
+                        size={16}
+                        color={tokenColors.white}
+                      />
                     </View>
                   )}
                   <Text style={styles.playerName}>
@@ -901,7 +906,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   eventInfo: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     padding: 12,
     borderRadius: 8,
     marginTop: 16,
@@ -916,16 +921,16 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 4,
   },
   actions: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: tokenColors.border,
     shadowColor: colors.ink,
     shadowOffset: {
       width: 0,

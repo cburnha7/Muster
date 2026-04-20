@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface ScheduleBlock {
   startTime: string; // HH:MM
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: tokenColors.border,
     justifyContent: 'center',
     paddingLeft: 12,
   },
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: '#E6EFF8',
+    backgroundColor: tokenColors.cobaltLight,
     justifyContent: 'center',
     paddingLeft: 12,
     borderWidth: 1,

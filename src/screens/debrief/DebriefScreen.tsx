@@ -13,6 +13,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { salute as saluteConstants } from '../../theme/brand';
 import {
   debriefService,
@@ -298,7 +299,7 @@ export function DebriefScreen() {
             }
           >
             {submitting ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={tokenColors.white} />
             ) : (
               <Text style={styles.submitButtonText}>
                 {canSubmit ? 'Submit Debrief' : `Salute ${salutesNeeded} more`}
@@ -379,7 +380,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarInitials: { fontFamily: fonts.ui, fontSize: 18, color: '#FFFFFF' },
+  avatarInitials: {
+    fontFamily: fonts.ui,
+    fontSize: 18,
+    color: tokenColors.white,
+  },
   participantName: {
     fontFamily: fonts.body,
     fontSize: 13,
@@ -413,5 +418,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonDisabled: { backgroundColor: colors.inkFaint },
-  submitButtonText: { fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' },
+  submitButtonText: {
+    fontFamily: fonts.ui,
+    fontSize: 16,
+    color: tokenColors.white,
+  },
 });

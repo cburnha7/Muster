@@ -164,9 +164,9 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   buttonSecondary: {
-    backgroundColor: colors.surface || '#F2F2F7',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border || '#E5E5EA',
+    borderColor: colors.border,
   },
   buttonSecondaryText: {
     fontSize: 16,

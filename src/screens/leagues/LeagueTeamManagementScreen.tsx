@@ -28,6 +28,7 @@ import { selectUser } from '../../store/slices/authSlice';
 import { isCoachRole } from '../../utils/teamRoles';
 import { LeagueMembership } from '../../types/league';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface TeamWithCoach {
   membership: LeagueMembership;
@@ -531,9 +532,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
                 activeOpacity={0.75}
               >
                 {isSearchingCoach ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color={tokenColors.white} />
                 ) : (
-                  <Ionicons name="search" size={18} color="#FFFFFF" />
+                  <Ionicons name="search" size={18} color={tokenColors.white} />
                 )}
               </TouchableOpacity>
             </View>
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
-    shadowColor: '#191C1E',
+    shadowColor: tokenColors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -676,7 +677,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusDotGreen: {
-    backgroundColor: '#34C759',
+    backgroundColor: tokenColors.success,
   },
   coachText: {
     fontSize: 13,

@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { cacheImage } from '../../utils/imageOptimization';
+import { tokenColors } from '../../theme/tokens';
 
 interface OptimizedImageProps extends Omit<ImageProps, 'source'> {
   source: { uri: string } | number;
@@ -32,7 +33,9 @@ export function OptimizedImage({
   resizeMode = 'cover',
   ...props
 }: OptimizedImageProps): JSX.Element {
-  const [imageSource, setImageSource] = useState<{ uri: string } | number>(source);
+  const [imageSource, setImageSource] = useState<{ uri: string } | number>(
+    source
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -100,7 +103,9 @@ export function OptimizedImage({
       />
       {isLoading && (
         <View style={styles.loadingContainer}>
-          {placeholder || <ActivityIndicator size="small" color="#007AFF" />}
+          {placeholder || (
+            <ActivityIndicator size="small" color={tokenColors.cobalt} />
+          )}
         </View>
       )}
     </View>
@@ -120,6 +125,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: tokenColors.background,
   },
 });

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 type SSOProvider = 'apple' | 'google';
 
@@ -31,16 +32,16 @@ export const SSOButton: React.FC<SSOButtonProps> = ({
     switch (provider) {
       case 'apple':
         return {
-          backgroundColor: '#000000',
-          textColor: '#FFFFFF',
+          backgroundColor: tokenColors.black,
+          textColor: tokenColors.white,
           icon: 'logo-apple' as keyof typeof Ionicons.glyphMap,
           label: 'Sign in with Apple',
           accessibilityLabel: 'Sign in with Apple',
         };
       case 'google':
         return {
-          backgroundColor: '#FFFFFF',
-          textColor: '#000000',
+          backgroundColor: tokenColors.white,
+          textColor: tokenColors.black,
           icon: 'logo-google' as keyof typeof Ionicons.glyphMap,
           label: 'Sign in with Google',
           accessibilityLabel: 'Sign in with Google',
@@ -70,10 +71,7 @@ export const SSOButton: React.FC<SSOButtonProps> = ({
       accessibilityState={{ disabled: isDisabled, busy: isLoading }}
     >
       {isLoading ? (
-        <ActivityIndicator
-          color={config.textColor}
-          size="small"
-        />
+        <ActivityIndicator color={config.textColor} size="small" />
       ) : (
         <View style={styles.content}>
           <Ionicons
@@ -101,7 +99,7 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.xs,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: tokenColors.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,

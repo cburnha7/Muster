@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { TimePickerInput } from '../forms/TimePickerInput';
 
 interface DayHours {
@@ -238,7 +239,7 @@ export function HoursOfOperationSection({
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     padding: Spacing.lg,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: tokenColors.border,
   },
   dayName: {
     ...TextStyles.body,
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: tokenColors.border,
   },
   modalTitle: {
     ...TextStyles.h3,
@@ -329,7 +330,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: tokenColors.border,
     padding: 2,
     justifyContent: 'center',
   },
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
   modalActions: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: tokenColors.border,
   },
   doneButton: {
     backgroundColor: colors.cobalt,

@@ -16,6 +16,7 @@ import { matchService } from '../../services/api/MatchService';
 import { courtService } from '../../services/api/CourtService';
 import { selectUser } from '../../store/slices/authSlice';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { Match } from '../../types';
 
 /** Extended rental type matching the actual API response (court includes nested facility) */
@@ -294,7 +295,7 @@ export const AssignFacilityScreen: React.FC = () => {
           accessibilityState={{ disabled: !selectedRentalId || assigning }}
         >
           {assigning ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={tokenColors.white} />
           ) : (
             <Text style={styles.assignButtonText}>Assign Facility</Text>
           )}
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   scrollView: {
     flex: 1,
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   matchInfo: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl,
   },
   rentalCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -449,8 +450,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: tokenColors.border,
+    backgroundColor: tokenColors.white,
   },
   cancelButton: {
     flex: 1,
@@ -481,6 +482,6 @@ const styles = StyleSheet.create({
   assignButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

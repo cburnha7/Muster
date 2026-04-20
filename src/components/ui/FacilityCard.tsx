@@ -3,7 +3,14 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Facility, SportType } from '../../types';
-import { colors, fonts } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 import { formatSportType } from '../../utils/formatters';
 
 interface FacilityCardProps {
@@ -49,12 +56,17 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <Ionicons key={i} name="star" size={14} color={colors.gold} />
+        <Ionicons key={i} name="star" size={14} color={tokenColors.gold} />
       );
     }
     if (hasHalfStar) {
       stars.push(
-        <Ionicons key="half" name="star-half" size={14} color={colors.gold} />
+        <Ionicons
+          key="half"
+          name="star-half"
+          size={14}
+          color={tokenColors.gold}
+        />
       );
     }
     const emptyStars = 5 - Math.ceil(rating);
@@ -64,7 +76,7 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
           key={`empty-${i}`}
           name="star-outline"
           size={14}
-          color={colors.gold}
+          color={tokenColors.gold}
         />
       );
     }
@@ -109,7 +121,7 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
             <Ionicons
               name="location-outline"
               size={16}
-              color={colors.onSurfaceVariant}
+              color={tokenColors.inkSecondary}
             />
             <Text style={styles.detailText} numberOfLines={1}>
               {formatAddress()}
@@ -124,7 +136,7 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
                 <Ionicons
                   name={getSportIcon(sport) as any}
                   size={14}
-                  color={colors.primary}
+                  color={tokenColors.cobalt}
                 />
                 <Text style={styles.sportText}>{formatSportType(sport)}</Text>
               </View>
@@ -159,10 +171,10 @@ export const FacilityCard = React.memo(FacilityCardInner);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 16,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
     marginVertical: 6,
-    marginHorizontal: 16,
+    marginHorizontal: tokenSpacing.lg,
     overflow: 'hidden',
   },
   image: {
@@ -170,20 +182,20 @@ const styles = StyleSheet.create({
     height: 160,
   },
   content: {
-    padding: 16,
+    padding: tokenSpacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   name: {
-    fontFamily: fonts.headingSemi,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 17,
-    color: colors.onSurface,
+    color: tokenColors.ink,
     flex: 1,
-    marginRight: 8,
+    marginRight: tokenSpacing.sm,
   },
   rating: {
     alignItems: 'flex-end',
@@ -193,37 +205,37 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   ratingText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
   },
   description: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: tokenSpacing.md,
   },
   details: {
-    marginBottom: 12,
+    marginBottom: tokenSpacing.md,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: tokenSpacing.xs,
   },
   detailText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
-    marginLeft: 8,
+    color: tokenColors.inkSecondary,
+    marginLeft: tokenSpacing.sm,
     flex: 1,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   sportsContainer: {
     flexDirection: 'row',
@@ -235,42 +247,42 @@ const styles = StyleSheet.create({
   sportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobaltTint,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 9999,
-    gap: 4,
+    backgroundColor: tokenColors.cobaltLight,
+    paddingHorizontal: tokenSpacing.sm,
+    paddingVertical: tokenSpacing.xs,
+    borderRadius: tokenRadius.pill,
+    gap: tokenSpacing.xs,
   },
   sportText: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 10,
-    color: colors.cobalt,
+    color: tokenColors.cobalt,
   },
   moreText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
     fontStyle: 'italic',
   },
   price: {
-    fontFamily: fonts.heading,
+    fontFamily: tokenFontFamily.heading,
     fontSize: 16,
-    color: colors.primary,
+    color: tokenColors.cobalt,
   },
   amenities: {
     borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
-    paddingTop: 8,
+    borderTopColor: tokenColors.border,
+    paddingTop: tokenSpacing.sm,
   },
   amenitiesTitle: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 12,
-    color: colors.onSurface,
-    marginBottom: 4,
+    color: tokenColors.ink,
+    marginBottom: tokenSpacing.xs,
   },
   amenitiesText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
   },
 });

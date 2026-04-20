@@ -4,7 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Event, SportType, SkillLevel } from '../../types';
 import { EventEligibilityService } from '../../services/events/EventEligibilityService';
-import { colors, fonts, useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenType,
+  tokenShadow,
+  tokenFontFamily,
+} from '../../theme/tokens';
 
 interface EventCardProps {
   event: Event;
@@ -23,7 +30,6 @@ const EventCardInner: React.FC<EventCardProps> = ({
   isHost,
   colorIndicator,
 }) => {
-  const { colors: themeColors } = useTheme();
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -66,20 +72,20 @@ const EventCardInner: React.FC<EventCardProps> = ({
   const getSkillLevelColor = (skillLevel: SkillLevel) => {
     switch (skillLevel) {
       case SkillLevel.BEGINNER:
-        return '#34C759';
+        return tokenColors.success;
       case SkillLevel.INTERMEDIATE:
-        return colors.gold;
+        return tokenColors.gold;
       case SkillLevel.ADVANCED:
-        return colors.error;
+        return tokenColors.error;
       default:
-        return colors.primary;
+        return tokenColors.cobalt;
     }
   };
 
   const getRatingBadgeColor = (rating: number) => {
-    if (rating >= 80) return colors.heart;
-    if (rating >= 50) return colors.gold;
-    return colors.primary;
+    if (rating >= 80) return tokenColors.error;
+    if (rating >= 50) return tokenColors.gold;
+    return tokenColors.cobalt;
   };
 
   const availableSpots = event.maxParticipants - event.currentParticipants;
@@ -93,7 +99,6 @@ const EventCardInner: React.FC<EventCardProps> = ({
     <PressableCard
       style={[
         styles.container,
-        { backgroundColor: themeColors.bgCard },
         colorIndicator ? styles.containerWithIndicator : undefined,
         style,
       ]}
@@ -111,19 +116,19 @@ const EventCardInner: React.FC<EventCardProps> = ({
       <View style={styles.bubbleStack}>
         {event.scheduledStatus === 'unscheduled' && (
           <View style={styles.pendingBadge}>
-            <Ionicons name="time-outline" size={10} color={colors.gold} />
+            <Ionicons name="time-outline" size={10} color={tokenColors.gold} />
             <Text style={styles.pendingBadgeText}>Pending</Text>
           </View>
         )}
         {isHost && (
           <View style={styles.hostBadge}>
-            <Ionicons name="star" size={10} color="#FFFFFF" />
+            <Ionicons name="star" size={10} color={tokenColors.white} />
             <Text style={styles.hostBadgeText}>Host</Text>
           </View>
         )}
         {isInviteOnly && (
           <View style={styles.inviteOnlyBadge}>
-            <Ionicons name="lock-closed" size={12} color={colors.gold} />
+            <Ionicons name="lock-closed" size={12} color={tokenColors.gold} />
             <Text style={styles.inviteOnlyText}>Invite Only</Text>
           </View>
         )}
@@ -146,12 +151,9 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name={getSportIcon(event.sportType) as any}
             size={24}
-            color={themeColors.textSecondary}
+            color={tokenColors.inkSecondary}
           />
-          <Text
-            style={[styles.title, { color: themeColors.textPrimary }]}
-            numberOfLines={1}
-          >
+          <Text style={styles.title} numberOfLines={1}>
             {event.title}
           </Text>
         </View>
@@ -161,15 +163,15 @@ const EventCardInner: React.FC<EventCardProps> = ({
         style={[
           styles.participantsTracker,
           isFullyBooked && {
-            backgroundColor: colors.error + '15',
-            borderColor: colors.error + '30',
+            backgroundColor: tokenColors.error + '15',
+            borderColor: tokenColors.error + '30',
           },
         ]}
       >
         <Ionicons
           name="people"
           size={16}
-          color={isFullyBooked ? colors.error : colors.primary}
+          color={isFullyBooked ? tokenColors.error : tokenColors.cobalt}
         />
         <Text
           style={[
@@ -181,10 +183,7 @@ const EventCardInner: React.FC<EventCardProps> = ({
         </Text>
       </View>
 
-      <Text
-        style={[styles.description, { color: themeColors.textSecondary }]}
-        numberOfLines={2}
-      >
+      <Text style={styles.description} numberOfLines={2}>
         {event.description}
       </Text>
 
@@ -193,11 +192,9 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name="calendar-outline"
             size={16}
-            color={themeColors.textSecondary}
+            color={tokenColors.inkSecondary}
           />
-          <Text
-            style={[styles.detailText, { color: themeColors.textSecondary }]}
-          >
+          <Text style={styles.detailText}>
             {formatDate(event.startTime)} at {formatTime(event.startTime)}
           </Text>
         </View>
@@ -206,11 +203,9 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name="hourglass-outline"
             size={16}
-            color={themeColors.textSecondary}
+            color={tokenColors.inkSecondary}
           />
-          <Text
-            style={[styles.detailText, { color: themeColors.textSecondary }]}
-          >
+          <Text style={styles.detailText}>
             {(() => {
               const ms =
                 new Date(event.endTime).getTime() -
@@ -229,19 +224,16 @@ const EventCardInner: React.FC<EventCardProps> = ({
           <Ionicons
             name="location-outline"
             size={16}
-            color={themeColors.textSecondary}
+            color={tokenColors.inkSecondary}
           />
-          <Text
-            style={[styles.detailText, { color: themeColors.textSecondary }]}
-            numberOfLines={1}
-          >
+          <Text style={styles.detailText} numberOfLines={1}>
             {event.facility?.name || event.locationName || 'Location TBD'}
           </Text>
         </View>
 
         {event.rental && (
           <View style={styles.rentalIndicator}>
-            <Ionicons name="calendar" size={14} color={colors.primary} />
+            <Ionicons name="calendar" size={14} color={tokenColors.cobalt} />
             <Text style={styles.rentalText} numberOfLines={1}>
               {event.rental.timeSlot.court.name}
             </Text>
@@ -253,7 +245,7 @@ const EventCardInner: React.FC<EventCardProps> = ({
             <Ionicons
               name="shield-checkmark-outline"
               size={16}
-              color={colors.gold}
+              color={tokenColors.gold}
             />
             <Text style={styles.eligibilityText} numberOfLines={1}>
               {EventEligibilityService.getEligibilitySummary(
@@ -267,7 +259,7 @@ const EventCardInner: React.FC<EventCardProps> = ({
 
       <View style={styles.footer}>
         <Text style={styles.price}>
-          {event.price > 0 ? `$${event.price.toFixed(2)}` : 'Free'}
+          {event.price > 0 ? `${event.price.toFixed(2)}` : 'Free'}
         </Text>
         <View style={[styles.statusBadge, isFullyBooked && styles.fullBadge]}>
           <Text
@@ -279,20 +271,13 @@ const EventCardInner: React.FC<EventCardProps> = ({
       </View>
 
       {wasAutoOpened && (
-        <View
-          style={[
-            styles.autoOpenedBanner,
-            { backgroundColor: themeColors.bgSubtle },
-          ]}
-        >
+        <View style={styles.autoOpenedBanner}>
           <Ionicons
             name="megaphone-outline"
             size={14}
-            color={themeColors.textPrimary}
+            color={tokenColors.ink}
           />
-          <Text
-            style={[styles.autoOpenedText, { color: themeColors.textPrimary }]}
-          >
+          <Text style={styles.autoOpenedText}>
             Now open to public - was invite-only
           </Text>
         </View>
@@ -305,12 +290,12 @@ export const EventCard = React.memo(EventCardInner);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: tokenColors.surface,
+    borderRadius: tokenRadius.lg,
+    padding: tokenSpacing.lg,
     paddingRight: 90,
     marginVertical: 6,
-    marginHorizontal: 16,
+    marginHorizontal: tokenSpacing.lg,
     position: 'relative' as const,
   },
   containerWithIndicator: {
@@ -322,22 +307,22 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    borderTopLeftRadius: tokenRadius.lg,
+    borderBottomLeftRadius: tokenRadius.lg,
   },
   bubbleStack: {
     position: 'absolute' as const,
-    top: 12,
-    right: 12,
+    top: tokenSpacing.md,
+    right: tokenSpacing.md,
     alignItems: 'flex-end' as const,
-    gap: 4,
+    gap: tokenSpacing.xs,
     zIndex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   sportInfo: {
     flexDirection: 'row',
@@ -345,79 +330,79 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontFamily: fonts.headingSemi,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 17,
-    color: colors.onSurface,
-    marginLeft: 8,
+    color: tokenColors.ink,
+    marginLeft: tokenSpacing.sm,
     flex: 1,
   },
   participantsTracker: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobaltTint,
+    backgroundColor: tokenColors.cobaltLight,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: tokenRadius.sm,
     alignSelf: 'flex-start',
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
     borderWidth: 1,
-    borderColor: colors.cobalt + '40',
+    borderColor: tokenColors.cobalt + '40',
   },
   participantsText: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 13,
-    color: colors.cobalt,
+    color: tokenColors.cobalt,
     marginLeft: 6,
   },
   participantsFullText: {
-    color: colors.error,
+    color: tokenColors.error,
   },
   inviteOnlyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: colors.gold + '20',
+    paddingHorizontal: tokenSpacing.sm,
+    paddingVertical: tokenSpacing.xs,
+    borderRadius: tokenRadius.md,
+    backgroundColor: tokenColors.gold + '20',
     borderWidth: 1,
-    borderColor: colors.gold,
+    borderColor: tokenColors.gold,
   },
   inviteOnlyText: {
-    color: colors.gold,
-    fontFamily: fonts.label,
+    color: tokenColors.gold,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 10,
-    marginLeft: 4,
+    marginLeft: tokenSpacing.xs,
   },
   skillBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: tokenSpacing.sm,
+    paddingVertical: tokenSpacing.xs,
+    borderRadius: tokenRadius.md,
   },
   skillText: {
-    color: '#FFFFFF',
-    fontFamily: fonts.label,
+    color: tokenColors.white,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 10,
   },
   description: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
+    color: tokenColors.inkSecondary,
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: tokenSpacing.md,
   },
   details: {
-    marginBottom: 12,
+    marginBottom: tokenSpacing.md,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: tokenSpacing.xs,
   },
   detailText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
-    marginLeft: 8,
+    color: tokenColors.inkSecondary,
+    marginLeft: tokenSpacing.sm,
     flex: 1,
   },
   footer: {
@@ -426,95 +411,95 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
-    fontFamily: fonts.heading,
+    fontFamily: tokenFontFamily.heading,
     fontSize: 18,
-    color: colors.primary,
+    color: tokenColors.cobalt,
   },
   statusBadge: {
-    backgroundColor: colors.pineTint,
-    paddingHorizontal: 12,
+    backgroundColor: tokenColors.successLight,
+    paddingHorizontal: tokenSpacing.md,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: tokenRadius.lg,
   },
   fullBadge: {
-    backgroundColor: colors.heartTint,
+    backgroundColor: tokenColors.errorLight,
   },
   statusText: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 12,
-    color: colors.pine,
+    color: tokenColors.success,
   },
   fullStatusText: {
-    color: colors.error,
+    color: tokenColors.error,
   },
   eligibilityText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 13,
-    color: colors.gold,
-    marginLeft: 8,
+    color: tokenColors.gold,
+    marginLeft: tokenSpacing.sm,
     flex: 1,
   },
   rentalIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary + '10',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginTop: 4,
+    backgroundColor: tokenColors.cobalt + '10',
+    paddingHorizontal: tokenSpacing.sm,
+    paddingVertical: tokenSpacing.xs,
+    borderRadius: tokenRadius.sm,
+    marginTop: tokenSpacing.xs,
     borderWidth: 1,
-    borderColor: colors.primary + '30',
+    borderColor: tokenColors.cobalt + '30',
     alignSelf: 'flex-start',
   },
   rentalText: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 12,
-    color: colors.primary,
+    color: tokenColors.cobalt,
     marginLeft: 6,
   },
   autoOpenedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
-    paddingHorizontal: 12,
+    backgroundColor: tokenColors.background,
+    paddingHorizontal: tokenSpacing.md,
     paddingVertical: 6,
-    borderRadius: 8,
-    marginTop: 8,
+    borderRadius: tokenRadius.sm,
+    marginTop: tokenSpacing.sm,
   },
   autoOpenedText: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: colors.onSurface,
+    color: tokenColors.ink,
     marginLeft: 6,
   },
   hostBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pine,
-    paddingHorizontal: 8,
+    backgroundColor: tokenColors.success,
+    paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 3,
-    borderRadius: 9999,
-    gap: 4,
+    borderRadius: tokenRadius.pill,
+    gap: tokenSpacing.xs,
   },
   hostBadgeText: {
-    color: '#FFFFFF',
-    fontFamily: fonts.label,
+    color: tokenColors.white,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 10,
   },
   pendingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.goldTint,
-    paddingHorizontal: 8,
+    backgroundColor: tokenColors.goldLight,
+    paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 3,
-    borderRadius: 9999,
+    borderRadius: tokenRadius.pill,
     borderWidth: 1,
-    borderColor: colors.gold,
-    gap: 4,
+    borderColor: tokenColors.gold,
+    gap: tokenSpacing.xs,
   },
   pendingBadgeText: {
-    color: colors.gold,
-    fontFamily: fonts.label,
+    color: tokenColors.gold,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 10,
   },
 });

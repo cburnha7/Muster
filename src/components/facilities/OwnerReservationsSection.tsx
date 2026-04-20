@@ -10,6 +10,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { API_BASE_URL } from '../../services/api/config';
 
 interface OwnerRental {
@@ -39,7 +40,9 @@ interface OwnerReservationsSectionProps {
   facilityId: string;
 }
 
-export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectionProps) {
+export function OwnerReservationsSection({
+  facilityId,
+}: OwnerReservationsSectionProps) {
   const navigation = useNavigation();
   const [rentals, setRentals] = useState<OwnerRental[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,19 +58,24 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
 
       // Filter to truly upcoming (today's past slots excluded)
       const now = new Date();
-      const upcoming = data.filter((r) => {
+      const upcoming = data.filter(r => {
         const parts = r.timeSlot.date.split('T')[0]!.split('-');
         const slotYear = parseInt(parts[0]!, 10);
         const slotMonth = parseInt(parts[1]!, 10) - 1;
         const slotDay = parseInt(parts[2]!, 10);
 
-        const todayNum = now.getFullYear() * 10000 + now.getMonth() * 100 + now.getDate();
+        const todayNum =
+          now.getFullYear() * 10000 + now.getMonth() * 100 + now.getDate();
         const slotNum = slotYear * 10000 + slotMonth * 100 + slotDay;
 
         if (slotNum < todayNum) return false;
         if (slotNum === todayNum && r.timeSlot.endTime) {
           const [h, m] = r.timeSlot.endTime.split(':').map(Number);
-          if ((h || 0) * 60 + (m || 0) <= now.getHours() * 60 + now.getMinutes()) return false;
+          if (
+            (h || 0) * 60 + (m || 0) <=
+            now.getHours() * 60 + now.getMinutes()
+          )
+            return false;
         }
         return true;
       });
@@ -87,12 +95,23 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
     }
   };
 
-  useEffect(() => { loadRentals(); }, [facilityId]);
-  useFocusEffect(React.useCallback(() => { loadRentals(); }, [facilityId]));
+  useEffect(() => {
+    loadRentals();
+  }, [facilityId]);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadRentals();
+    }, [facilityId])
+  );
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
   };
 
   const formatTime = (time: string) => {
@@ -124,7 +143,7 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
     <View style={styles.wrapper}>
       <CollapsibleSection title="Upcoming Reservations" count={rentals.length}>
         <View style={styles.sectionInner}>
-          {rentals.map((r) => (
+          {rentals.map(r => (
             <View key={r.id} style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.courtName} numberOfLines={1}>
@@ -133,7 +152,9 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
                 <Text style={styles.price}>${r.totalPrice.toFixed(2)}</Text>
               </View>
               <Text style={styles.dateTime}>
-                {formatDate(r.timeSlot.date)} · {formatTime(r.timeSlot.startTime)} – {formatTime(r.timeSlot.endTime)}
+                {formatDate(r.timeSlot.date)} ·{' '}
+                {formatTime(r.timeSlot.startTime)} –{' '}
+                {formatTime(r.timeSlot.endTime)}
               </Text>
               <Text style={styles.playerName}>
                 {r.user.firstName} {r.user.lastName}
@@ -149,7 +170,11 @@ export function OwnerReservationsSection({ facilityId }: OwnerReservationsSectio
                 </TouchableOpacity>
               ) : (
                 <View style={styles.noEventBadge}>
-                  <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={14}
+                    color={colors.inkFaint}
+                  />
                   <Text style={styles.noEventBadgeText}>No Event</Text>
                 </View>
               )}
@@ -175,7 +200,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: 14,
     shadowColor: colors.ink,

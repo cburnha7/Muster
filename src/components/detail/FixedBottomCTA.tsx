@@ -9,6 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 type Variant = 'primary' | 'confirmed' | 'secondary' | 'danger' | 'disabled';
 
@@ -66,7 +67,7 @@ export function FixedBottomCTA({
       >
         {loading ? (
           <ActivityIndicator
-            color={variant === 'secondary' ? colors.primary : '#FFFFFF'}
+            color={variant === 'secondary' ? colors.primary : tokenColors.white}
             size="small"
           />
         ) : (
@@ -75,7 +76,9 @@ export function FixedBottomCTA({
               <Ionicons
                 name={icon}
                 size={18}
-                color={variant === 'secondary' ? colors.primary : '#FFFFFF'}
+                color={
+                  variant === 'secondary' ? colors.primary : tokenColors.white
+                }
                 style={styles.icon}
               />
             )}
@@ -141,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   labelLight: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   labelPrimary: {
     color: colors.primary,

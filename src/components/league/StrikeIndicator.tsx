@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 const STRIKE_THRESHOLD = 3;
 
@@ -23,16 +24,21 @@ export const StrikeIndicator: React.FC<StrikeIndicatorProps> = ({
   return (
     <View style={styles.container}>
       <View
-        style={[styles.badge, isAtThreshold ? styles.badgeDanger : styles.badgeWarning]}
+        style={[
+          styles.badge,
+          isAtThreshold ? styles.badgeDanger : styles.badgeWarning,
+        ]}
         accessibilityRole="text"
         accessibilityLabel={`${rosterName} has ${strikeCount} ${strikeCount === 1 ? 'strike' : 'strikes'}`}
       >
         <Ionicons
           name="warning"
           size={12}
-          color={isAtThreshold ? '#FFFFFF' : colors.ink}
+          color={isAtThreshold ? tokenColors.white : colors.ink}
         />
-        <Text style={[styles.badgeText, isAtThreshold && styles.badgeTextDanger]}>
+        <Text
+          style={[styles.badgeText, isAtThreshold && styles.badgeTextDanger]}
+        >
           {strikeCount} {strikeCount === 1 ? 'strike' : 'strikes'}
         </Text>
       </View>
@@ -79,7 +85,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   badgeTextDanger: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   removeButton: {
     backgroundColor: colors.heart,
@@ -90,6 +96,6 @@ const styles = StyleSheet.create({
   removeButtonText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

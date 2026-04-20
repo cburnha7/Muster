@@ -50,6 +50,7 @@ import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -872,7 +873,7 @@ export function EventDetailsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadEvent(true)}
-            colors={['#007AFF']}
+            colors={[tokenColors.cobalt]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -1164,7 +1165,11 @@ export function EventDetailsScreen() {
                           </Text>
                         ) : (
                           <>
-                            <Ionicons name="send" size={20} color="#FFFFFF" />
+                            <Ionicons
+                              name="send"
+                              size={20}
+                              color={tokenColors.white}
+                            />
                             <Text style={styles.submitSalutesButtonText}>
                               Submit {salutedParticipants.size} Salute
                               {salutedParticipants.size > 1 ? 's' : ''}
@@ -1253,7 +1258,7 @@ export function EventDetailsScreen() {
                     <Ionicons
                       name="checkmark-circle-outline"
                       size={16}
-                      color="#34C759"
+                      color={tokenColors.success}
                     />
                     <Text style={styles.equipmentText}>{item}</Text>
                   </View>
@@ -1454,7 +1459,7 @@ export function EventDetailsScreen() {
         >
           <View
             style={{
-              backgroundColor: '#FFFFFF',
+              backgroundColor: tokenColors.white,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               maxHeight: '85%',
@@ -1552,7 +1557,11 @@ export function EventDetailsScreen() {
               }}
             >
               <Text
-                style={{ fontFamily: fonts.ui, fontSize: 16, color: '#FFFFFF' }}
+                style={{
+                  fontFamily: fonts.ui,
+                  fontSize: 16,
+                  color: tokenColors.white,
+                }}
               >
                 {signingWaiver ? 'Signing...' : 'Sign & Continue'}
               </Text>
@@ -1858,7 +1867,7 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   ownerJoinBtn: {
     flexDirection: 'row',
@@ -1917,7 +1926,7 @@ const styles = StyleSheet.create({
   },
   saluteInstructions: {
     fontSize: 14,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginBottom: 16,
   },
   participantsGrid: {
@@ -1955,7 +1964,7 @@ const styles = StyleSheet.create({
   participantCard: {
     width: '30%',
     aspectRatio: 0.75,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokenColors.background,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -1988,12 +1997,12 @@ const styles = StyleSheet.create({
   participantAvatarText: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   participantCardName: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#333',
+    color: tokenColors.ink,
     textAlign: 'center',
   },
   saluteBadge: {
@@ -2021,7 +2030,7 @@ const styles = StyleSheet.create({
   youBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   submittedBadge: {
     flexDirection: 'row',
@@ -2055,11 +2064,11 @@ const styles = StyleSheet.create({
   submitSalutesButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   submitSalutesHint: {
     fontSize: 13,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -2076,7 +2085,7 @@ const styles = StyleSheet.create({
   },
   salutesSubmittedDescription: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -2089,7 +2098,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 20,
     padding: 24,
     width: '100%',
@@ -2114,12 +2123,12 @@ const styles = StyleSheet.create({
   modalAvatarText: {
     fontSize: 40,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   modalName: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#333',
+    color: tokenColors.ink,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -2137,7 +2146,7 @@ const styles = StyleSheet.create({
   },
   modalDescription: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
@@ -2154,10 +2163,10 @@ const styles = StyleSheet.create({
   modalButtonPrimaryText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   modalButtonSecondary: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokenColors.background,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -2165,19 +2174,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: tokenColors.border,
   },
   modalButtonSecondaryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
   },
   modalButtonClose: {
     paddingVertical: 12,
   },
   modalButtonCloseText: {
     fontSize: 16,
-    color: '#666',
+    color: tokenColors.inkSecondary,
   },
   chatBtn: {
     flexDirection: 'row',

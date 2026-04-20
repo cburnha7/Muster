@@ -27,6 +27,7 @@ import {
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService, Rental } from '../../services/api/CourtService';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { searchEventBus } from '../../utils/searchEventBus';
 import {
   setFacilities,
@@ -312,7 +313,7 @@ export function FacilitiesListScreen() {
         {/* Owner badge — top right */}
         {item.ownerId === currentUser?.id && (
           <View style={styles.ownerBadge}>
-            <Ionicons name="star" size={10} color="#FFFFFF" />
+            <Ionicons name="star" size={10} color={tokenColors.white} />
             <Text style={styles.ownerText}>Owner</Text>
           </View>
         )}
@@ -655,7 +656,7 @@ export function FacilitiesListScreen() {
       {/* FAB — hidden for dependents */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
-          <Ionicons name="add" size={28} color="#FFFFFF" />
+          <Ionicons name="add" size={28} color={tokenColors.white} />
         </TouchableOpacity>
       )}
 
@@ -702,7 +703,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   scrollView: {
@@ -792,7 +793,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontWeight: '700',
   },
   facilityTitleContainer: {
@@ -819,7 +820,7 @@ const styles = StyleSheet.create({
   },
   ownerText: {
     fontSize: 10,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontFamily: fonts.label,
   },
   facilityInfo: {
@@ -903,7 +904,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2563EB',
+    shadowColor: tokenColors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -964,7 +965,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   sportChipTextSelected: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   modalActions: {
     flexDirection: 'row',
@@ -994,7 +995,7 @@ const styles = StyleSheet.create({
   applyButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   reservationsBtn: {
     flexDirection: 'row',

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { getAvatarColor } from '../../theme/colors';
 
 export interface ProfileOption {
@@ -171,7 +172,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitial: { fontFamily: fonts.ui, fontSize: 18, color: '#FFFFFF' },
+  avatarInitial: {
+    fontFamily: fonts.ui,
+    fontSize: 18,
+    color: tokenColors.white,
+  },
   profileName: {
     flex: 1,
     fontFamily: fonts.headingSemi || fonts.heading,
@@ -196,5 +201,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pine,
   },
   confirmBtnDisabled: { backgroundColor: colors.inkFaint },
-  confirmBtnText: { fontFamily: fonts.ui, fontSize: 15, color: '#FFFFFF' },
+  confirmBtnText: {
+    fontFamily: fonts.ui,
+    fontSize: 15,
+    color: tokenColors.white,
+  },
 });

@@ -5,9 +5,21 @@ import {
   ActivityIndicator,
   ViewStyle,
 } from 'react-native';
-import { useTheme } from '../../theme';
+import {
+  tokenColors,
+  tokenRadius,
+  tokenSpacing,
+  tokenType,
+  tokenShadow,
+} from '../../theme/tokens';
 
-type Variant = 'primary' | 'secondary' | 'destructive' | 'salute' | 'neutral';
+type Variant =
+  | 'primary'
+  | 'secondary'
+  | 'ghost'
+  | 'destructive'
+  | 'salute'
+  | 'neutral';
 type Size = 'md' | 'sm';
 
 interface Props {
@@ -29,73 +41,105 @@ export function Button({
   loading,
   style,
 }: Props) {
-  const { colors, shadow, radius, type } = useTheme();
-
   const height = size === 'md' ? 52 : 36;
-  const px = size === 'md' ? 24 : 14;
-  const txtStyle = size === 'md' ? type.ui : type.uiSm;
+  const px = size === 'md' ? tokenSpacing.xl : tokenSpacing.lg;
 
   const variants = {
     primary: {
-      bg: colors.cobalt,
-      border: 'transparent',
-      text: colors.textInverse,
-      shadow: shadow.cta,
+      bg: tokenColors.cobalt,
+      borderWidth: 0,
+      borderColor: tokenColors.transparent,
+      text: tokenColors.white,
+      shadow: tokenShadow.fab,
+      disabledBg: tokenColors.border,
+      disabledText: tokenColors.inkSecondary,
     },
     secondary: {
-      bg: 'transparent',
-      border: colors.cobalt,
-      text: colors.cobalt,
+      bg: tokenColors.transparent,
+      borderWidth: 1.5,
+      borderColor: tokenColors.border,
+      text: tokenColors.ink,
       shadow: undefined,
+      disabledBg: tokenColors.transparent,
+      disabledText: tokenColors.inkSecondary,
+    },
+    ghost: {
+      bg: tokenColors.transparent,
+      borderWidth: 0,
+      borderColor: tokenColors.transparent,
+      text: tokenColors.cobalt,
+      shadow: undefined,
+      disabledBg: tokenColors.transparent,
+      disabledText: tokenColors.inkSecondary,
     },
     destructive: {
-      bg: colors.heartTint,
-      border: colors.heart,
-      text: colors.heart,
+      bg: tokenColors.error,
+      borderWidth: 0,
+      borderColor: tokenColors.transparent,
+      text: tokenColors.white,
       shadow: undefined,
+      disabledBg: tokenColors.border,
+      disabledText: tokenColors.inkSecondary,
     },
     salute: {
-      bg: colors.goldTint,
-      border: colors.gold,
-      text: colors.gold,
+      bg: tokenColors.goldLight,
+      borderWidth: 1.5,
+      borderColor: tokenColors.gold,
+      text: tokenColors.gold,
       shadow: undefined,
+      disabledBg: tokenColors.border,
+      disabledText: tokenColors.inkSecondary,
     },
     neutral: {
-      bg: colors.bgSubtle,
-      border: colors.border,
-      text: colors.textSecondary,
+      bg: tokenColors.background,
+      borderWidth: 1.5,
+      borderColor: tokenColors.border,
+      text: tokenColors.inkSecondary,
       shadow: undefined,
+      disabledBg: tokenColors.border,
+      disabledText: tokenColors.inkSecondary,
     },
   };
   const v = variants[variant];
 
+  const isDisabled = disabled || loading;
+  const bgColor = isDisabled ? v.disabledBg : v.bg;
+  const textColor = isDisabled ? v.disabledText : v.text;
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled || loading}
+      disabled={isDisabled}
       activeOpacity={0.75}
       style={[
         {
           height,
-          borderRadius: radius.lg,
-          borderWidth: 2,
-          borderColor: v.border,
-          backgroundColor: v.bg,
+          borderRadius: tokenRadius.lg,
+          borderWidth: v.borderWidth,
+          borderColor: v.borderColor,
+          backgroundColor: bgColor,
           paddingHorizontal: px,
+          paddingVertical: tokenSpacing.md,
           alignItems: 'center' as const,
           justifyContent: 'center' as const,
           flexDirection: 'row' as const,
-          gap: 8,
-          opacity: disabled ? 0.5 : 1,
+          gap: tokenSpacing.sm,
         },
-        v.shadow,
+        !isDisabled && v.shadow ? v.shadow : undefined,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={v.text} size="small" />
+        <ActivityIndicator color={textColor} size="small" />
       ) : (
-        <Text style={{ ...txtStyle, color: v.text }}>{label}</Text>
+        <Text
+          style={{
+            ...tokenType.button,
+            color: textColor,
+          }}
+        >
+          {label}
+        </Text>
       )}
     </TouchableOpacity>
   );

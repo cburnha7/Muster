@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocumentsApi';
 
 /**
@@ -31,7 +32,9 @@ export function InsuranceDocumentsSection({
   userId,
   onAddDocument,
 }: InsuranceDocumentsSectionProps) {
-  const { data: documents, isLoading } = useGetInsuranceDocumentsQuery({ userId });
+  const { data: documents, isLoading } = useGetInsuranceDocumentsQuery({
+    userId,
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -51,71 +54,84 @@ export function InsuranceDocumentsSection({
   }
 
   return (
-    <CollapsibleSection title="Insurance Documents" count={documents?.length || 0}>
+    <CollapsibleSection
+      title="Insurance Documents"
+      count={documents?.length || 0}
+    >
       <View style={styles.container}>
-
-      {(!documents || documents.length === 0) ? (
-        <View style={styles.emptyCard}>
-          <Ionicons name="document-text-outline" size={32} color={colors.inkFaint} />
-          <Text style={styles.emptyText}>
-            No insurance documents yet. Add one to attach to court reservations.
-          </Text>
-        </View>
-      ) : (
-        documents.map((doc: any) => {
-          const isExpired = doc.status === 'expired';
-          return (
-            <View
-              key={doc.id}
-              style={[styles.documentCard, isExpired && styles.documentCardExpired]}
-              accessibilityLabel={`${doc.policyName}, expires ${formatDate(doc.expiryDate)}, ${isExpired ? 'expired' : 'active'}`}
-            >
-              <View style={styles.documentInfo}>
-                <Text
-                  style={[styles.policyName, isExpired && styles.textExpired]}
-                  numberOfLines={1}
-                >
-                  {doc.policyName}
-                </Text>
-                <Text style={[styles.expiryDate, isExpired && styles.textExpired]}>
-                  Expires {formatDate(doc.expiryDate)}
-                </Text>
-              </View>
+        {!documents || documents.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Ionicons
+              name="document-text-outline"
+              size={32}
+              color={colors.inkFaint}
+            />
+            <Text style={styles.emptyText}>
+              No insurance documents yet. Add one to attach to court
+              reservations.
+            </Text>
+          </View>
+        ) : (
+          documents.map((doc: any) => {
+            const isExpired = doc.status === 'expired';
+            return (
               <View
+                key={doc.id}
                 style={[
-                  styles.badge,
-                  isExpired ? styles.badgeExpired : styles.badgeActive,
+                  styles.documentCard,
+                  isExpired && styles.documentCardExpired,
                 ]}
+                accessibilityLabel={`${doc.policyName}, expires ${formatDate(doc.expiryDate)}, ${isExpired ? 'expired' : 'active'}`}
               >
-                <Text
+                <View style={styles.documentInfo}>
+                  <Text
+                    style={[styles.policyName, isExpired && styles.textExpired]}
+                    numberOfLines={1}
+                  >
+                    {doc.policyName}
+                  </Text>
+                  <Text
+                    style={[styles.expiryDate, isExpired && styles.textExpired]}
+                  >
+                    Expires {formatDate(doc.expiryDate)}
+                  </Text>
+                </View>
+                <View
                   style={[
-                    styles.badgeText,
-                    isExpired ? styles.badgeTextExpired : styles.badgeTextActive,
+                    styles.badge,
+                    isExpired ? styles.badgeExpired : styles.badgeActive,
                   ]}
                 >
-                  {isExpired ? 'Expired' : 'Active'}
-                </Text>
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      isExpired
+                        ? styles.badgeTextExpired
+                        : styles.badgeTextActive,
+                    ]}
+                  >
+                    {isExpired ? 'Expired' : 'Active'}
+                  </Text>
+                </View>
               </View>
-            </View>
-          );
-        })
-      )}
+            );
+          })
+        )}
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={onAddDocument}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="Add Insurance Document"
-      >
-        <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
-        <Text style={styles.addButtonText}>Add Insurance Document</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={onAddDocument}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Add Insurance Document"
+        >
+          <Ionicons name="add-circle-outline" size={20} color={colors.cobalt} />
+          <Text style={styles.addButtonText}>Add Insurance Document</Text>
+        </TouchableOpacity>
       </View>
     </CollapsibleSection>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -126,7 +142,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -137,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,

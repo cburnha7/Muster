@@ -11,6 +11,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { selectUser } from '../../store/slices/authSlice';
 import { API_BASE_URL } from '../../services/api/config';
 
@@ -229,7 +230,7 @@ const st = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 12,
     padding: 14,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 6,

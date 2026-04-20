@@ -23,6 +23,7 @@ import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { formatSportType } from '../../utils/formatters';
 import { DependentProfile } from '../../types/dependent';
 
@@ -481,7 +482,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   sectionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 14,
     overflow: 'hidden',
   },

@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, typeScale, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
@@ -35,25 +36,34 @@ type OnboardingStatus = 'active' | 'pending' | 'not_set_up';
 
 function getOnboardingStatus(account: ConnectAccount): OnboardingStatus {
   if (!account.accountId || !account.status) return 'not_set_up';
-  if (account.status.chargesEnabled && account.status.payoutsEnabled) return 'active';
+  if (account.status.chargesEnabled && account.status.payoutsEnabled)
+    return 'active';
   if (account.status.detailsSubmitted) return 'pending';
   return 'not_set_up';
 }
 
 function getEntityLabel(entityType: string): string {
   switch (entityType) {
-    case 'roster': return 'Roster';
-    case 'facility': return 'Facility';
-    case 'league': return 'League';
-    default: return entityType;
+    case 'roster':
+      return 'Roster';
+    case 'facility':
+      return 'Facility';
+    case 'league':
+      return 'League';
+    default:
+      return entityType;
   }
 }
 
-export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) {
+export function ConnectAccountsSection({
+  userId,
+}: ConnectAccountsSectionProps) {
   const { token } = useAuth();
   const [accounts, setAccounts] = useState<ConnectAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [onboardingEntityId, setOnboardingEntityId] = useState<string | null>(null);
+  const [onboardingEntityId, setOnboardingEntityId] = useState<string | null>(
+    null
+  );
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -100,9 +110,8 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
       }
       headers['x-user-id'] = userId;
 
-      const currentUrl = Platform.OS === 'web'
-        ? window.location.href
-        : 'muster://profile';
+      const currentUrl =
+        Platform.OS === 'web' ? window.location.href : 'muster://profile';
 
       const response = await fetch(url, {
         method: 'POST',
@@ -140,44 +149,54 @@ export function ConnectAccountsSection({ userId }: ConnectAccountsSectionProps) 
     <CollapsibleSection title="Stripe Connect" count={accounts.length}>
       <View style={styles.body}>
         {accounts.length === 0 ? (
-            <Text style={styles.emptyText}>
-              You don't manage any rosters, facilities, or leagues yet.
-            </Text>
-          ) : (
-            accounts.map((account) => {
-              const status = getOnboardingStatus(account);
-              const isOnboarding = onboardingEntityId === account.entityId;
+          <Text style={styles.emptyText}>
+            You don't manage any rosters, facilities, or leagues yet.
+          </Text>
+        ) : (
+          accounts.map(account => {
+            const status = getOnboardingStatus(account);
+            const isOnboarding = onboardingEntityId === account.entityId;
 
-              return (
-                <View key={`${account.entityType}-${account.entityId}`} style={styles.entityRow}>
-                  <View style={styles.entityInfo}>
-                    <Text style={styles.entityName}>{account.entityName}</Text>
-                    <Text style={styles.entityType}>{getEntityLabel(account.entityType)}</Text>
-                  </View>
-                  <View style={styles.entityActions}>
-                    <StatusBadge status={status} />
-                    {status !== 'active' && (
-                      <TouchableOpacity
-                        style={styles.onboardButton}
-                        onPress={() => handleOnboard(account.entityType, account.entityId)}
-                        disabled={isOnboarding}
-                        activeOpacity={0.7}
-                      >
-                        {isOnboarding ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <Text style={styles.onboardButtonText}>
-                            {status === 'pending' ? 'Resume' : 'Set Up'}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    )}
-                  </View>
+            return (
+              <View
+                key={`${account.entityType}-${account.entityId}`}
+                style={styles.entityRow}
+              >
+                <View style={styles.entityInfo}>
+                  <Text style={styles.entityName}>{account.entityName}</Text>
+                  <Text style={styles.entityType}>
+                    {getEntityLabel(account.entityType)}
+                  </Text>
                 </View>
-              );
-            })
-          )}
-        </View>
+                <View style={styles.entityActions}>
+                  <StatusBadge status={status} />
+                  {status !== 'active' && (
+                    <TouchableOpacity
+                      style={styles.onboardButton}
+                      onPress={() =>
+                        handleOnboard(account.entityType, account.entityId)
+                      }
+                      disabled={isOnboarding}
+                      activeOpacity={0.7}
+                    >
+                      {isOnboarding ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={tokenColors.white}
+                        />
+                      ) : (
+                        <Text style={styles.onboardButtonText}>
+                          {status === 'pending' ? 'Resume' : 'Set Up'}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
     </CollapsibleSection>
   );
 }
@@ -186,12 +205,18 @@ function StatusBadge({ status }: { status: OnboardingStatus }) {
   const config = {
     active: { label: 'Active', bg: `${colors.cobalt}20`, color: colors.cobalt },
     pending: { label: 'Pending', bg: `${colors.gold}20`, color: colors.gold },
-    not_set_up: { label: 'Not Set Up', bg: `${colors.inkFaint}20`, color: colors.inkFaint },
+    not_set_up: {
+      label: 'Not Set Up',
+      bg: `${colors.inkFaint}20`,
+      color: colors.inkFaint,
+    },
   }[status];
 
   return (
     <View style={[styles.badge, { backgroundColor: config.bg }]}>
-      <Text style={[styles.badgeText, { color: config.color }]}>{config.label}</Text>
+      <Text style={[styles.badgeText, { color: config.color }]}>
+        {config.label}
+      </Text>
     </View>
   );
 }
@@ -257,6 +282,6 @@ const styles = StyleSheet.create({
   onboardButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 });

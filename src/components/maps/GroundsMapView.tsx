@@ -13,6 +13,7 @@ import {
 import { GroundMapPreview } from './GroundMapPreview';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { colors } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface GroundsMapViewProps {
   grounds: Facility[];
@@ -163,8 +164,8 @@ const markerStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
+    borderColor: tokenColors.white,
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -177,7 +178,7 @@ const markerStyles = StyleSheet.create({
     borderRadius: 19,
   },
   pinText: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
     fontSize: 14,
     fontWeight: '700',
   },

@@ -16,6 +16,7 @@ import {
   NotificationItem,
 } from '../../hooks/useNotifications';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   roster_invitation: 'people-outline',
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     maxHeight: 420,
     width: 320,
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,

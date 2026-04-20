@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent } from '../../store/slices/scheduleSlice';
 import { RosterInfo } from '../../types/scheduling';
 import { colors, fonts, Spacing, Shadows } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 export interface ScheduleEventCardProps {
   event: ScheduleEvent;
@@ -68,11 +69,15 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
       <View style={styles.dateTimeRow}>
         <View style={styles.dateTimeItem}>
           <Ionicons name="calendar-outline" size={14} color={colors.inkFaint} />
-          <Text style={styles.dateTimeText}>{formatDate(event.scheduledAt)}</Text>
+          <Text style={styles.dateTimeText}>
+            {formatDate(event.scheduledAt)}
+          </Text>
         </View>
         <View style={styles.dateTimeItem}>
           <Ionicons name="time-outline" size={14} color={colors.inkFaint} />
-          <Text style={styles.dateTimeText}>{formatTime(event.scheduledAt)}</Text>
+          <Text style={styles.dateTimeText}>
+            {formatTime(event.scheduledAt)}
+          </Text>
         </View>
       </View>
 
@@ -90,10 +95,9 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginVertical: Spacing.sm,
@@ -111,7 +115,7 @@ const styles = StyleSheet.create({
   flagText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },

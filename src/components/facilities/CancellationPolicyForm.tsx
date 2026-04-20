@@ -16,6 +16,7 @@ import { FormButton } from '../forms/FormButton';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { facilityService } from '../../services/api/FacilityService';
 import { colors, fonts, Spacing } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import type { PenaltyDestination } from '../../types';
 
 interface CancellationPolicyFormProps {
@@ -35,10 +36,15 @@ const PENALTY_DESTINATION_OPTIONS = [
   { label: 'Split between facility and opposing roster', value: 'split' },
 ];
 
-export function CancellationPolicyForm({ facilityId, onSaved }: CancellationPolicyFormProps) {
+export function CancellationPolicyForm({
+  facilityId,
+  onSaved,
+}: CancellationPolicyFormProps) {
   const [noticeWindowHours, setNoticeWindowHours] = useState('');
   const [teamPenaltyPct, setTeamPenaltyPct] = useState('');
-  const [penaltyDestination, setPenaltyDestination] = useState<PenaltyDestination | ''>('');
+  const [penaltyDestination, setPenaltyDestination] = useState<
+    PenaltyDestination | ''
+  >('');
   const [policyVersion, setPolicyVersion] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(true);
@@ -99,17 +105,26 @@ export function CancellationPolicyForm({ facilityId, onSaved }: CancellationPoli
 
     try {
       setSaving(true);
-      const result = await facilityService.updateCancellationPolicy(facilityId, {
-        noticeWindowHours: parseInt(noticeWindowHours, 10),
-        teamPenaltyPct: parseInt(teamPenaltyPct, 10),
-        penaltyDestination: penaltyDestination as PenaltyDestination,
-      });
+      const result = await facilityService.updateCancellationPolicy(
+        facilityId,
+        {
+          noticeWindowHours: parseInt(noticeWindowHours, 10),
+          teamPenaltyPct: parseInt(teamPenaltyPct, 10),
+          penaltyDestination: penaltyDestination as PenaltyDestination,
+        }
+      );
       setPolicyVersion(result.policyVersion);
-      Alert.alert('Saved', 'Cancellation policy updated. This applies to future bookings only.');
+      Alert.alert(
+        'Saved',
+        'Cancellation policy updated. This applies to future bookings only.'
+      );
       onSaved?.();
     } catch (error) {
       console.error('Failed to save cancellation policy:', error);
-      Alert.alert('Error', 'Failed to save cancellation policy. Please try again.');
+      Alert.alert(
+        'Error',
+        'Failed to save cancellation policy. Please try again.'
+      );
     } finally {
       setSaving(false);
     }
@@ -135,10 +150,14 @@ export function CancellationPolicyForm({ facilityId, onSaved }: CancellationPoli
       >
         {/* Info banner */}
         <View style={styles.infoBanner}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
+          <Ionicons
+            name="information-circle-outline"
+            size={20}
+            color={colors.ink}
+          />
           <Text style={styles.infoText}>
-            Your cancellation policy is required before your facility can appear in booking flows.
-            Changes only apply to future bookings.
+            Your cancellation policy is required before your facility can appear
+            in booking flows. Changes only apply to future bookings.
           </Text>
         </View>
 
@@ -165,7 +184,8 @@ export function CancellationPolicyForm({ facilityId, onSaved }: CancellationPoli
           required
         />
         <Text style={styles.fieldHint}>
-          Percentage (0–100) of the cancelling roster's escrow that is forfeited for late cancellations.
+          Percentage (0–100) of the cancelling roster's escrow that is forfeited
+          for late cancellations.
         </Text>
 
         <FormSelect
@@ -173,7 +193,9 @@ export function CancellationPolicyForm({ facilityId, onSaved }: CancellationPoli
           placeholder="Where does the penalty go?"
           value={penaltyDestination}
           options={PENALTY_DESTINATION_OPTIONS}
-          onValueChange={(val) => setPenaltyDestination(val as PenaltyDestination)}
+          onValueChange={val =>
+            setPenaltyDestination(val as PenaltyDestination)
+          }
           error={errors.penaltyDestination}
           required
         />
@@ -220,7 +242,7 @@ const styles = StyleSheet.create({
   },
   infoBanner: {
     flexDirection: 'row',
-    backgroundColor: '#EBF5FF',
+    backgroundColor: tokenColors.cobaltLight,
     borderRadius: 8,
     padding: Spacing.md,
     marginBottom: Spacing.xl,

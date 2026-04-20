@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 import type { OnboardingIntent } from '../../navigation/types';
 
 const TOTAL_STEPS = 5;
@@ -150,7 +151,7 @@ export const IntentSelectionScreen: React.FC = () => {
                       <Ionicons
                         name={option.icon}
                         size={24}
-                        color={isSelected ? '#FFFFFF' : colors.primary}
+                        color={isSelected ? tokenColors.white : colors.primary}
                       />
                     </View>
                     <View style={styles.cardTextContainer}>
@@ -178,7 +179,11 @@ export const IntentSelectionScreen: React.FC = () => {
                       ]}
                     >
                       {isSelected && (
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                        <Ionicons
+                          name="checkmark"
+                          size={16}
+                          color={tokenColors.white}
+                        />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -301,7 +306,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   cardTitleSelected: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   cardSubtitle: {
     fontSize: 13,
@@ -342,7 +347,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: -0.1,
   },
 });

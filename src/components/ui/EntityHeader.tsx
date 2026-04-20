@@ -8,7 +8,12 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import {
+  tokenColors,
+  tokenSpacing,
+  tokenRadius,
+  tokenFontFamily,
+} from '../../theme/tokens';
 
 export interface EntityTag {
   label: string;
@@ -21,9 +26,7 @@ interface EntityHeaderProps {
   coverImageUrl?: string | null;
   tags?: EntityTag[];
   subtitle?: string;
-  /** Tint color for the fallback background (no cover image). Defaults to cobalt. */
   tintColor?: string;
-  /** Show camera icon for cover photo management. Only visible when defined. */
   onCameraPress?: () => void;
 }
 
@@ -32,10 +35,10 @@ export function EntityHeader({
   coverImageUrl,
   tags = [],
   subtitle,
-  tintColor = colors.cobalt,
+  tintColor = tokenColors.cobalt,
   onCameraPress,
 }: EntityHeaderProps) {
-  const fallbackBg = tintColor + '18'; // 9% opacity tint
+  const fallbackBg = tintColor + '18';
 
   const content = (
     <View style={styles.content}>
@@ -67,7 +70,9 @@ export function EntityHeader({
                 style={[
                   styles.tagText,
                   {
-                    color: coverImageUrl ? '#FFFFFF' : (tag.color ?? tintColor),
+                    color: coverImageUrl
+                      ? tokenColors.white
+                      : (tag.color ?? tintColor),
                   },
                 ]}
               >
@@ -111,7 +116,11 @@ export function EntityHeader({
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="camera-outline" size={22} color="#FFFFFF" />
+              <Ionicons
+                name="camera-outline"
+                size={22}
+                color={tokenColors.white}
+              />
             </TouchableOpacity>
           )}
         </LinearGradient>
@@ -147,40 +156,40 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: tokenSpacing.xl,
     paddingTop: 40,
-    paddingBottom: 20,
+    paddingBottom: tokenSpacing.xl,
   },
   title: {
-    fontFamily: fonts.heading,
+    fontFamily: tokenFontFamily.heading,
     fontSize: 28,
     letterSpacing: -0.5,
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   titleOnImage: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
   titleOnTint: {
-    color: colors.ink,
+    color: tokenColors.ink,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    marginBottom: 8,
+    marginBottom: tokenSpacing.sm,
   },
   tag: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    paddingVertical: tokenSpacing.xs,
+    borderRadius: tokenRadius.pill,
   },
   tagText: {
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 12,
     letterSpacing: 0.2,
   },
   subtitle: {
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
     marginTop: 2,
   },
@@ -188,16 +197,16 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
   },
   subtitleOnTint: {
-    color: colors.inkSoft,
+    color: tokenColors.inkSecondary,
   },
   cameraBtn: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    top: tokenSpacing.md,
+    right: tokenSpacing.md,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: tokenColors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
   },

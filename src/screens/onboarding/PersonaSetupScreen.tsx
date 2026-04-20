@@ -12,6 +12,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   skillChipTextSelected: {
-    color: '#FFFFFF',
+    color: tokenColors.white,
   },
 
   // Persona actions
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: -0.1,
   },
   laterButton: {
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: '#FFFFFF',
+    color: tokenColors.white,
     letterSpacing: -0.1,
   },
   skipLink: {

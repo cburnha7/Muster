@@ -17,6 +17,7 @@ import { seasonService } from '../../../services/api/SeasonService';
 import { TeamStanding, Season } from '../../../types';
 import { useNavigation } from '@react-navigation/native';
 import { colors, useTheme } from '../../../theme';
+import { tokenColors } from '../../../theme/tokens';
 
 interface StandingsTabProps {
   leagueId: string;
@@ -121,7 +122,11 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="trophy-outline" size={64} color="#CCC" />
+        <Ionicons
+          name="trophy-outline"
+          size={64}
+          color={tokenColors.inkMuted}
+        />
         <Text style={styles.emptyText}>No standings available</Text>
         <Text style={styles.emptySubtext}>
           Standings will appear once matches are recorded
@@ -184,9 +189,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: tokenColors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: tokenColors.border,
     gap: 12,
   },
   seasonSelector: {
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokenColors.white,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.cobalt,
@@ -224,13 +229,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    color: tokenColors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: tokenColors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },

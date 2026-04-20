@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../theme';
+import { tokenColors } from '../../theme/tokens';
 
 interface AddressResult {
   street: string;
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginTop: 4,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
