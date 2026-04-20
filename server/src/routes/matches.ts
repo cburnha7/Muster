@@ -339,18 +339,29 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-// PUT /api/matches/:id - Update match
+// PUT /api/matches/:id - Update match (commissioner or home team admin)
 router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const { scheduledAt, status, notes } = req.body;
+    const { scheduledAt, startTime, endTime, status, notes, location } =
+      req.body;
     const userId = req.user!.userId;
 
-    // Check if match exists
     const existingMatch = await prisma.match.findUnique({
       where: { id },
       include: {
-        league: true,
+        league: { select: { organizerId: true } },
+        homeTeam: {
+          select: {
+            members: {
+              where: {
+                role: { in: ['captain', 'co_captain'] },
+                status: 'active',
+              },
+              select: { userId: true },
+            },
+          },
+        },
       },
     });
 
@@ -358,43 +369,31 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Match not found' });
     }
 
-    // Check if user is league operator
-    if (userId && existingMatch.league.organizerId !== userId) {
-      return res
-        .status(403)
-        .json({ error: 'Only the league operator can update matches' });
+    // Authorization: commissioner can edit any match, home team admin can edit their home matches
+    const isCommissioner = existingMatch.league.organizerId === userId;
+    const isHomeAdmin =
+      existingMatch.homeTeam?.members.some(m => m.userId === userId) ?? false;
+
+    if (!isCommissioner && !isHomeAdmin) {
+      return res.status(403).json({
+        error:
+          'Only the league commissioner or home team admin can update this match',
+      });
     }
 
-    // Update match
+    // Build update data
+    const updateData: Record<string, unknown> = {};
+    if (scheduledAt) updateData.scheduledAt = new Date(scheduledAt);
+    if (status) updateData.status = status;
+    if (notes !== undefined) updateData.notes = notes;
+
     const match = await prisma.match.update({
       where: { id },
-      data: {
-        ...(scheduledAt && { scheduledAt: new Date(scheduledAt) }),
-        ...(status && { status }),
-        ...(notes !== undefined && { notes }),
-      },
+      data: updateData as any,
       include: {
-        league: {
-          select: {
-            id: true,
-            name: true,
-            sportType: true,
-          },
-        },
-        homeTeam: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-          },
-        },
-        awayTeam: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-          },
-        },
+        league: { select: { id: true, name: true, sportType: true } },
+        homeTeam: { select: { id: true, name: true, imageUrl: true } },
+        awayTeam: { select: { id: true, name: true, imageUrl: true } },
       },
     });
 

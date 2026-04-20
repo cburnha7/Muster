@@ -5,6 +5,53 @@ import { ServiceError } from '../utils/ServiceError';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+/**
+ * Assign a roster to the next unfilled match slot in round order.
+ * Called when a roster's membership is activated (approved or invitation accepted).
+ * If both slots in a match are filled, updates status to 'scheduled'.
+ */
+async function assignRosterToMatchSlots(
+  leagueId: string,
+  rosterId: string
+): Promise<void> {
+  // Find all pending matches for this league, ordered by round
+  const pendingMatches = await prisma.match.findMany({
+    where: {
+      leagueId,
+      status: 'pending',
+      OR: [{ homeTeamId: null }, { awayTeamId: null }],
+    },
+    orderBy: { bracketRound: 'asc' },
+  });
+
+  for (const match of pendingMatches) {
+    // Try to fill home slot first, then away
+    if (!match.homeTeamId) {
+      const updated = await prisma.match.update({
+        where: { id: match.id },
+        data: {
+          homeTeamId: rosterId,
+          // If away is also now filled, mark as scheduled
+          ...(match.awayTeamId ? { status: 'scheduled' } : {}),
+        },
+      });
+      return; // Assigned to one slot per activation
+    }
+
+    if (!match.awayTeamId && match.homeTeamId !== rosterId) {
+      await prisma.match.update({
+        where: { id: match.id },
+        data: {
+          awayTeamId: rosterId,
+          status: 'scheduled', // Both slots now filled
+        },
+      });
+      return;
+    }
+  }
+  // No unfilled slots — roster joined after all matches were filled
+}
+
 async function addTeamToLeagueChannel(leagueId: string, teamId: string) {
   try {
     const { MessagingService } = await import('./MessagingService');
@@ -205,6 +252,7 @@ export async function processJoinRequest(
       checkLeagueReady(leagueId).catch(() => {});
       if (membership.team) {
         addTeamToLeagueChannel(leagueId, membership.team.id);
+        assignRosterToMatchSlots(leagueId, membership.team.id).catch(err => console.error('Failed to assign roster to match slots:', err));
       }
 
       return result;
@@ -229,6 +277,7 @@ export async function processJoinRequest(
     checkLeagueReady(leagueId).catch(() => {});
     if (membership.team) {
       addTeamToLeagueChannel(leagueId, membership.team.id);
+        assignRosterToMatchSlots(leagueId, membership.team.id).catch(err => console.error('Failed to assign roster to match slots:', err));
     }
 
     return updatedMembership;
@@ -421,6 +470,7 @@ export async function respondToInvitation(
       checkLeagueReady(leagueId).catch(() => {});
       if (membership.team) {
         addTeamToLeagueChannel(leagueId, membership.team.id);
+        assignRosterToMatchSlots(leagueId, membership.team.id).catch(err => console.error('Failed to assign roster to match slots:', err));
       }
 
       return result;
@@ -451,6 +501,7 @@ export async function respondToInvitation(
     checkLeagueReady(leagueId).catch(() => {});
     if (membership.team) {
       addTeamToLeagueChannel(leagueId, membership.team.id);
+        assignRosterToMatchSlots(leagueId, membership.team.id).catch(err => console.error('Failed to assign roster to match slots:', err));
     }
 
     return updatedMembership;
@@ -645,3 +696,4 @@ export async function removeMembership(
     rosterId: membership.memberId,
   };
 }
+

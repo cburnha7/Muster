@@ -72,30 +72,28 @@ export interface TournamentEvent extends SchedulePreviewEvent {
 
 export class ScheduleGeneratorService {
   /**
-   * Generate round-robin shell events for a league.
-   * Creates Event + Match records in a transaction.
+   * Generate shell matches for a league.
+   * Creates Match records with null team slots, null dates, and suggestedDays.
+   * Teams are assigned as rosters confirm membership.
+   * Dates/times/locations are set by commissioner or home team admin later.
    */
-  static async generateRoundRobin(
+  static async generateShellMatches(
     leagueId: string
-  ): Promise<{ eventsCreated: number }> {
+  ): Promise<{ matchesCreated: number }> {
     const league = await prisma.league.findUnique({
       where: { id: leagueId },
-      include: {
-        memberships: {
-          where: { status: 'active', memberType: 'roster' },
-          include: {
-            team: {
-              select: {
-                id: true,
-                name: true,
-                members: {
-                  where: { status: 'active' },
-                  select: { userId: true },
-                },
-              },
-            },
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        sportType: true,
+        skillLevel: true,
+        organizerId: true,
+        seasonId: true,
+        seasonGameCount: true,
+        preferredGameDays: true,
+        gameFrequency: true,
+        scheduleGenerated: true,
+        leagueFormat: true,
       },
     });
 
@@ -103,116 +101,43 @@ export class ScheduleGeneratorService {
     if (league.scheduleGenerated)
       throw new Error('Schedule already generated for this league');
 
-    const rosters: RosterInfo[] = league.memberships
-      .filter(m => m.team)
-      .map(m => ({ id: m.team!.id, name: m.team!.name }));
-
-    if (rosters.length < 2) {
-      throw new Error(
-        'At least 2 active rosters required to generate a schedule'
-      );
+    if (!league.seasonGameCount || league.seasonGameCount <= 0) {
+      throw new Error('seasonGameCount must be greater than 0');
     }
 
-    if (!league.preferredGameDays?.length || !league.seasonGameCount) {
-      throw new Error(
-        'Schedule configuration incomplete: preferredGameDays and seasonGameCount are required'
-      );
-    }
-
-    const matchupsResult = fairGenerateSchedule({
-      scheduleType: 'season',
-      frequency:
-        (league.gameFrequency as 'all_at_once' | 'weekly' | 'monthly') ||
-        'weekly',
-      startDate: league.registrationCloseDate
-        ? new Date(
-            new Date(league.registrationCloseDate).getTime() +
-              7 * 24 * 60 * 60 * 1000
-          )
-        : league.startDate
-          ? new Date(league.startDate)
-          : new Date(),
-      endDate: league.endDate ? new Date(league.endDate) : null,
-      teams: rosters,
-      regularSeasonGamesPerTeam: league.seasonGameCount || 0,
-      allowedDaysOfWeek: league.preferredGameDays || [],
-      gameTimeWindowStart: league.preferredTimeWindowStart || '09:00',
-      gameTimeWindowEnd: league.preferredTimeWindowEnd || '17:00',
-    });
-
-    if (!matchupsResult.isValid) {
-      throw new Error(matchupsResult.warnings.join(' '));
-    }
-
-    const shellEvents: ShellEvent[] = matchupsResult.regularSeasonGames.map(
-      g => ({
-        homeRoster: g.homeTeam,
-        awayRoster: g.awayTeam,
-        scheduledAt: g.scheduledAt,
-        round: g.round,
-      })
+    // Map numeric day-of-week to day abbreviations for suggestedDays
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const suggestedDays = (league.preferredGameDays || []).map(
+      d => DAY_NAMES[d] || `Day${d}`
     );
 
-    // Build roster → player IDs map for populating invitedUserIds
-    const rosterPlayerMap = new Map<string, string[]>();
-    for (const membership of league.memberships) {
-      if (membership.team) {
-        rosterPlayerMap.set(
-          membership.team.id,
-          membership.team.members.map(m => m.userId)
-        );
-      }
-    }
+    const totalMatches = league.seasonGameCount;
 
-    // Create all events and matches in a transaction
+    // Distribute matches across rounds
+    // For now, simple distribution: each round has 1 match
+    // (rosters will be assigned as they join)
     const result = await prisma.$transaction(async tx => {
-      const createdEvents: string[] = [];
+      const matchIds: string[] = [];
 
-      for (const shell of shellEvents) {
-        // Collect player IDs from both rosters for invitations
-        const homePlayerIds = rosterPlayerMap.get(shell.homeRoster.id) || [];
-        const awayPlayerIds = rosterPlayerMap.get(shell.awayRoster.id) || [];
-        const invitedUserIds = [
-          ...new Set([...homePlayerIds, ...awayPlayerIds]),
-        ];
+      for (let i = 0; i < totalMatches; i++) {
+        const roundNumber = i + 1;
 
-        const event = await tx.event.create({
-          data: {
-            title: `${shell.homeRoster.name} vs ${shell.awayRoster.name}`,
-            description: `League match: ${league.name} — Round ${shell.round}`,
-            sportType: league.sportType,
-            skillLevel: league.skillLevel,
-            eventType: 'game',
-            status: 'active',
-            startTime: shell.scheduledAt,
-            endTime: new Date(shell.scheduledAt.getTime() + 2 * 60 * 60 * 1000), // 2hr default
-            maxParticipants: 50,
-            price: 0,
-            organizerId: league.organizerId,
-            facilityId: null,
-            scheduledStatus: 'unscheduled',
-            eligibilityRestrictedToLeagues: [leagueId],
-            eligibilityRestrictedToTeams: [
-              shell.homeRoster.id,
-              shell.awayRoster.id,
-            ],
-            invitedUserIds,
-          },
-        });
-
-        await tx.match.create({
+        const match = await tx.match.create({
           data: {
             leagueId,
-            homeTeamId: shell.homeRoster.id,
-            awayTeamId: shell.awayRoster.id,
-            scheduledAt: shell.scheduledAt,
-            status: 'scheduled',
-            eventId: event.id,
             seasonId: league.seasonId || undefined,
+            homeTeamId: null,
+            awayTeamId: null,
+            scheduledAt: null,
+            status: 'pending',
+            suggestedDays,
+            placeholderHome: `Team ${((i * 2) % 8) + 1}`,
+            placeholderAway: `Team ${((i * 2 + 1) % 8) + 1}`,
+            bracketRound: roundNumber,
           },
         });
 
-        createdEvents.push(event.id);
+        matchIds.push(match.id);
       }
 
       // Mark schedule as generated
@@ -221,10 +146,22 @@ export class ScheduleGeneratorService {
         data: { scheduleGenerated: true },
       });
 
-      return createdEvents;
+      return matchIds;
     });
 
-    return { eventsCreated: result.length };
+    return { matchesCreated: result.length };
+  }
+
+  /**
+   * Legacy method — kept for backward compat.
+   * Delegates to generateShellMatches.
+   */
+  static async generateRoundRobin(
+    leagueId: string
+  ): Promise<{ eventsCreated: number }> {
+    const result =
+      await ScheduleGeneratorService.generateShellMatches(leagueId);
+    return { eventsCreated: result.matchesCreated };
   }
 
   /**

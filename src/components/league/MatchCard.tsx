@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Match, MatchStatus } from '../../types';
 import { useTheme } from '../../theme';
+import { tokenFontFamily, tokenSpacing, tokenRadius } from '../../theme/tokens';
 
 interface MatchCardProps {
   match: Match;
@@ -16,7 +17,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   style,
 }) => {
   const { colors } = useTheme();
-  const formatDate = (date: Date) => {
+
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return null;
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -25,7 +28,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     });
   };
 
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | string | null | undefined) => {
+    if (!date) return null;
     return new Date(date).toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -34,14 +38,16 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     });
   };
 
-  const getStatusColor = (status: MatchStatus) => {
+  const getStatusColor = (status: MatchStatus | string) => {
     switch (status) {
       case 'scheduled':
-        return colors.ink;
+        return colors.cobalt;
+      case 'pending':
+        return colors.warning;
       case 'in_progress':
         return colors.warning;
       case 'completed':
-        return colors.cobalt;
+        return colors.success;
       case 'cancelled':
         return colors.error;
       default:
@@ -49,10 +55,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     }
   };
 
-  const getStatusText = (status: MatchStatus) => {
+  const getStatusText = (status: MatchStatus | string) => {
     switch (status) {
       case 'scheduled':
         return 'Scheduled';
+      case 'pending':
+        return 'Pending';
       case 'in_progress':
         return 'In Progress';
       case 'completed':
@@ -65,15 +73,39 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   };
 
   const isCompleted = match.status === 'completed';
+  const isPending = match.status === 'pending';
   const hasScores =
     match.homeScore !== null &&
     match.homeScore !== undefined &&
     match.awayScore !== null &&
     match.awayScore !== undefined;
 
+  // Team names — use real names or placeholders
+  const homeName =
+    match.homeTeam?.name ?? (match as any).placeholderHome ?? 'Team TBD';
+  const awayName =
+    match.awayTeam?.name ?? (match as any).placeholderAway ?? 'Team TBD';
+  const homeIsPlaceholder = !match.homeTeam?.name;
+  const awayIsPlaceholder = !match.awayTeam?.name;
+
+  // Suggested days
+  const suggestedDays: string[] = (match as any).suggestedDays ?? [];
+
+  // Date and time
+  const dateStr = formatDate(match.scheduledAt);
+  const timeStr = formatTime(match.scheduledAt);
+
+  // Location
+  const locationName =
+    match.event?.facility?.name ?? (match.event as any)?.locationName ?? null;
+
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: colors.white, shadowColor: colors.black }, style]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.surface, shadowColor: colors.black },
+        style,
+      ]}
       onPress={() => onPress?.(match)}
       activeOpacity={0.7}
     >
@@ -84,143 +116,128 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           { backgroundColor: getStatusColor(match.status) },
         ]}
       >
-        <Text style={[styles.statusText, { color: colors.white }]}>{getStatusText(match.status)}</Text>
+        <Text style={styles.statusText}>{getStatusText(match.status)}</Text>
       </View>
 
-      {/* Match Details */}
-      <View style={styles.matchInfo}>
-        {/* Date and Time */}
-        <View style={styles.dateTimeContainer}>
-          <View style={styles.dateTimeRow}>
+      {/* Round indicator */}
+      {(match as any).bracketRound && (
+        <Text style={[styles.roundLabel, { color: colors.inkMuted }]}>
+          Round {(match as any).bracketRound}
+        </Text>
+      )}
+
+      {/* Teams */}
+      <View style={styles.teamsContainer}>
+        <View style={styles.teamRow}>
+          <View style={styles.teamInfo}>
+            <Ionicons
+              name="home-outline"
+              size={16}
+              color={colors.inkSecondary}
+            />
+            <Text
+              style={[
+                styles.teamName,
+                { color: homeIsPlaceholder ? colors.inkMuted : colors.ink },
+                homeIsPlaceholder && styles.placeholderText,
+              ]}
+              numberOfLines={1}
+            >
+              {homeName}
+            </Text>
+          </View>
+          {hasScores && (
+            <Text style={[styles.score, { color: colors.ink }]}>
+              {match.homeScore}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.divider}>
+          <Text style={[styles.vsText, { color: colors.inkMuted }]}>vs</Text>
+        </View>
+
+        <View style={styles.teamRow}>
+          <View style={styles.teamInfo}>
+            <Ionicons
+              name="airplane-outline"
+              size={16}
+              color={colors.inkSecondary}
+            />
+            <Text
+              style={[
+                styles.teamName,
+                { color: awayIsPlaceholder ? colors.inkMuted : colors.ink },
+                awayIsPlaceholder && styles.placeholderText,
+              ]}
+              numberOfLines={1}
+            >
+              {awayName}
+            </Text>
+          </View>
+          {hasScores && (
+            <Text style={[styles.score, { color: colors.ink }]}>
+              {match.awayScore}
+            </Text>
+          )}
+        </View>
+      </View>
+
+      {/* Meta row: suggested days, date, location */}
+      <View style={styles.metaRow}>
+        {suggestedDays.length > 0 && (
+          <View style={styles.metaItem}>
             <Ionicons
               name="calendar-outline"
               size={14}
               color={colors.inkSecondary}
             />
-            <Text style={[styles.dateTimeText, { color: colors.inkSecondary }]}>
-              {formatDate(match.scheduledAt)}
+            <Text style={[styles.metaText, { color: colors.inkSecondary }]}>
+              {suggestedDays.join(' / ')}
             </Text>
           </View>
-          <View style={styles.dateTimeRow}>
-            <Ionicons
-              name="time-outline"
-              size={14}
-              color={colors.inkSecondary}
-            />
-            <Text style={[styles.dateTimeText, { color: colors.inkSecondary }]}>
-              {formatTime(match.scheduledAt)}
-            </Text>
-          </View>
+        )}
+
+        <View style={styles.metaItem}>
+          <Ionicons name="time-outline" size={14} color={colors.inkSecondary} />
+          <Text style={[styles.metaText, { color: colors.inkSecondary }]}>
+            {dateStr ?? 'Date TBD'}
+            {timeStr ? ` at ${timeStr}` : ''}
+          </Text>
         </View>
 
-        {/* Teams and Scores */}
-        <View style={styles.teamsContainer}>
-          {/* Home Team */}
-          <View style={styles.teamRow}>
-            <View style={styles.teamInfo}>
-              <Ionicons
-                name="home-outline"
-                size={16}
-                color={colors.inkSecondary}
-              />
-              <Text style={[styles.teamName, { color: colors.ink }]} numberOfLines={1}>
-                {match.homeTeam?.name || 'Home Team'}
-              </Text>
-            </View>
-            {hasScores && (
-              <Text
-                style={[
-                  styles.score, { color: colors.inkSecondary },
-                  isCompleted &&
-                    match.outcome === 'home_win' &&
-                    styles.winningScore]}
-              >
-                {match.homeScore}
-              </Text>
-            )}
-          </View>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <Text style={[styles.vsText, { color: colors.inkMuted }]}>vs</Text>
-          </View>
-
-          {/* Away Team */}
-          <View style={styles.teamRow}>
-            <View style={styles.teamInfo}>
-              <Ionicons
-                name="airplane-outline"
-                size={16}
-                color={colors.inkSecondary}
-              />
-              <Text style={[styles.teamName, { color: colors.ink }]} numberOfLines={1}>
-                {match.awayTeam?.name || 'Away Team'}
-              </Text>
-            </View>
-            {hasScores && (
-              <Text
-                style={[
-                  styles.score, { color: colors.inkSecondary },
-                  isCompleted &&
-                    match.outcome === 'away_win' &&
-                    styles.winningScore]}
-              >
-                {match.awayScore}
-              </Text>
-            )}
-          </View>
+        <View style={styles.metaItem}>
+          <Ionicons
+            name="location-outline"
+            size={14}
+            color={colors.inkSecondary}
+          />
+          <Text style={[styles.metaText, { color: colors.inkSecondary }]}>
+            {locationName ?? 'Location TBD'}
+          </Text>
         </View>
-
-        {/* Event Link */}
-        {match.event && (
-          <View style={[styles.eventLink, { borderTopColor: colors.border }]}>
-            <Ionicons name="link-outline" size={14} color={colors.cobalt} />
-            <Text style={[styles.eventText, { color: colors.cobalt }]} numberOfLines={1}>
-              Linked to event: {match.event.title}
-            </Text>
-          </View>
-        )}
-
-        {/* Location */}
-        {(match.event?.facility?.name || match.event?.locationName) && (
-          <View style={styles.locationRow}>
-            <Ionicons
-              name="location-outline"
-              size={14}
-              color={colors.inkSecondary}
-            />
-            <Text style={[styles.locationText, { color: colors.inkSecondary }]} numberOfLines={1}>
-              {match.event?.facility?.name ||
-                match.event?.locationName ||
-                'TBD'}
-            </Text>
-          </View>
-        )}
-
-        {/* Notes */}
-        {match.notes && (
-          <View style={[styles.notesContainer, { backgroundColor: colors.background }]}>
-            <Ionicons
-              name="document-text-outline"
-              size={14}
-              color={colors.inkSecondary}
-            />
-            <Text style={[styles.notesText, { color: colors.inkSecondary }]} numberOfLines={2}>
-              {match.notes}
-            </Text>
-          </View>
-        )}
       </View>
 
-      {/* Outcome Badge (for completed matches) */}
+      {/* Outcome Badge */}
       {isCompleted && match.outcome && (
-        <View style={[styles.outcomeContainer, { borderTopColor: colors.border }]}>
+        <View
+          style={[styles.outcomeContainer, { borderTopColor: colors.border }]}
+        >
           {match.outcome === 'draw' ? (
-            <View style={[styles.drawBadge, { backgroundColor: colors.border }]}>
-              <Text style={[styles.drawText, { color: colors.inkSecondary }]}>Draw</Text>
+            <View
+              style={[styles.drawBadge, { backgroundColor: colors.border }]}
+            >
+              <Text style={[styles.drawText, { color: colors.inkSecondary }]}>
+                Draw
+              </Text>
             </View>
           ) : (
-            <View style={[styles.winnerBadge, { backgroundColor: colors.warningLight }]}>
+            <View
+              style={[
+                styles.winnerBadge,
+                { backgroundColor: colors.warningLight },
+              ]}
+            >
               <Ionicons name="trophy" size={14} color={colors.gold} />
               <Text style={[styles.winnerText, { color: colors.gold }]}>
                 {match.outcome === 'home_win'
@@ -238,46 +255,37 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    borderRadius: tokenRadius.md,
+    padding: tokenSpacing.lg,
+    marginVertical: tokenSpacing.sm,
+    marginHorizontal: tokenSpacing.lg,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
+    paddingHorizontal: tokenSpacing.md,
+    paddingVertical: tokenSpacing.xs,
+    borderRadius: tokenRadius.md,
+    marginBottom: tokenSpacing.sm,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: tokenFontFamily.uiSemiBold,
+    color: '#FFFFFF',
   },
-  matchInfo: {
-    gap: 12,
-  },
-  dateTimeContainer: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  dateTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dateTimeText: {
-    fontSize: 13,
+  roundLabel: {
+    fontSize: 11,
+    fontFamily: tokenFontFamily.uiSemiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: tokenSpacing.sm,
   },
   teamsContainer: {
-    gap: 8,
+    gap: tokenSpacing.sm,
+    marginBottom: tokenSpacing.md,
   },
   teamRow: {
     flexDirection: 'row',
@@ -287,88 +295,69 @@ const styles = StyleSheet.create({
   teamInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: tokenSpacing.sm,
     flex: 1,
   },
   teamName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: tokenFontFamily.uiSemiBold,
     flex: 1,
+  },
+  placeholderText: {
+    fontStyle: 'italic',
   },
   score: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: tokenFontFamily.uiBold,
     minWidth: 40,
     textAlign: 'center',
   },
-  winningScore: {},
   divider: {
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   vsText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: tokenFontFamily.uiSemiBold,
   },
-  eventLink: {
+  metaRow: {
+    gap: tokenSpacing.xs,
+  },
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingTop: 8,
-    borderTopWidth: 1,
+    gap: tokenSpacing.sm,
   },
-  eventText: {
+  metaText: {
     fontSize: 13,
-    fontWeight: '500',
-    flex: 1,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  locationText: {
-    fontSize: 13,
-    flex: 1,
-  },
-  notesContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    padding: 8,
-    borderRadius: 8,
-  },
-  notesText: {
-    fontSize: 13,
-    flex: 1,
-    lineHeight: 18,
+    fontFamily: tokenFontFamily.uiRegular,
   },
   outcomeContainer: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: tokenSpacing.md,
+    paddingTop: tokenSpacing.md,
     borderTopWidth: 1,
   },
   winnerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: tokenSpacing.md,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: tokenRadius.lg,
     alignSelf: 'flex-start',
   },
   winnerText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: tokenFontFamily.uiSemiBold,
   },
   drawBadge: {
-    paddingHorizontal: 12,
+    paddingHorizontal: tokenSpacing.md,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: tokenRadius.lg,
     alignSelf: 'flex-start',
   },
   drawText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: tokenFontFamily.uiSemiBold,
   },
 });
