@@ -30,6 +30,7 @@ export function HoursOfOperationSection({
   hours,
   onChange,
 }: HoursOfOperationSectionProps): JSX.Element {
+  const { colors } = useTheme();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingDay, setEditingDay] = useState<number | null>(null);
 
@@ -47,7 +48,6 @@ export function HoursOfOperationSection({
   };
 
   const handleEditDay = (dayOfWeek: number) => {
-  const { colors } = useTheme();
     setEditingDay(dayOfWeek);
     setShowEditModal(true);
   };
@@ -103,9 +103,16 @@ export function HoursOfOperationSection({
     editingDay !== null ? getHoursForDay(editingDay) : null;
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.white, shadowColor: colors.ink }]}>
+    <View
+      style={[
+        styles.section,
+        { backgroundColor: colors.white, shadowColor: colors.ink },
+      ]}
+    >
       <View style={styles.sectionHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Hours of Operation</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          Hours of Operation
+        </Text>
         <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
           Set when your ground is available for booking
         </Text>
@@ -120,9 +127,13 @@ export function HoursOfOperationSection({
             onPress={() => handleEditDay(index)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.dayName, { color: colors.textPrimary }]}>{day}</Text>
+            <Text style={[styles.dayName, { color: colors.textPrimary }]}>
+              {day}
+            </Text>
             {dayHours.isClosed ? (
-              <Text style={[styles.closedText, { color: colors.textTertiary }]}>Closed</Text>
+              <Text style={[styles.closedText, { color: colors.textTertiary }]}>
+                Closed
+              </Text>
             ) : (
               <Text style={[styles.hoursText, { color: colors.textSecondary }]}>
                 {formatTimeDisplay(dayHours.startTime)} -{' '}
@@ -148,9 +159,15 @@ export function HoursOfOperationSection({
           setEditingDay(null);
         }}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.modalContent, { backgroundColor: colors.white }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+        <View
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
+        >
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.white }]}
+          >
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
                 {editingDay !== null ? DAYS[editingDay] : ''}
               </Text>
@@ -171,16 +188,30 @@ export function HoursOfOperationSection({
                 onPress={handleToggleClosed}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.closedToggleLabel, { color: colors.textPrimary }]}>Closed</Text>
+                <Text
+                  style={[
+                    styles.closedToggleLabel,
+                    { color: colors.textPrimary },
+                  ]}
+                >
+                  Closed
+                </Text>
                 <View
                   style={[
-                    styles.toggle, { backgroundColor: colors.border },
-                    currentDayHours?.isClosed && styles.toggleActive, currentDayHours?.isClosed && { backgroundColor: colors.cobalt }]}
+                    styles.toggle,
+                    { backgroundColor: colors.border },
+                    currentDayHours?.isClosed && styles.toggleActive,
+                    currentDayHours?.isClosed && {
+                      backgroundColor: colors.cobalt,
+                    },
+                  ]}
                 >
                   <View
                     style={[
-                      styles.toggleThumb, { backgroundColor: colors.white },
-                      currentDayHours?.isClosed && styles.toggleThumbActive]}
+                      styles.toggleThumb,
+                      { backgroundColor: colors.white },
+                      currentDayHours?.isClosed && styles.toggleThumbActive,
+                    ]}
                   />
                 </View>
               </TouchableOpacity>
@@ -203,7 +234,10 @@ export function HoursOfOperationSection({
 
                   {/* Apply to All Days */}
                   <TouchableOpacity
-                    style={[styles.applyAllButton, { borderColor: colors.border }]}
+                    style={[
+                      styles.applyAllButton,
+                      { borderColor: colors.border },
+                    ]}
                     onPress={handleApplyToAll}
                   >
                     <Ionicons
@@ -211,13 +245,19 @@ export function HoursOfOperationSection({
                       size={20}
                       color={colors.cobalt}
                     />
-                    <Text style={[styles.applyAllText, { color: colors.cobalt }]}>Apply to all days</Text>
+                    <Text
+                      style={[styles.applyAllText, { color: colors.cobalt }]}
+                    >
+                      Apply to all days
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
             </View>
 
-            <View style={[styles.modalActions, { borderTopColor: colors.border }]}>
+            <View
+              style={[styles.modalActions, { borderTopColor: colors.border }]}
+            >
               <TouchableOpacity
                 style={[styles.doneButton, { backgroundColor: colors.cobalt }]}
                 onPress={() => {
@@ -225,7 +265,11 @@ export function HoursOfOperationSection({
                   setEditingDay(null);
                 }}
               >
-                <Text style={[styles.doneButtonText, { color: colors.textInverse }]}>Done</Text>
+                <Text
+                  style={[styles.doneButtonText, { color: colors.textInverse }]}
+                >
+                  Done
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

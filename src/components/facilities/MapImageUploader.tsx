@@ -94,10 +94,10 @@ export function MapImageUploader({
   placeholderText = 'Tap to select an image from your device',
   showInstructions = true,
 }: MapImageUploaderProps): JSX.Element {
+  const { colors } = useTheme();
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
-  const { colors } = useTheme();
     requestImagePermissions();
   }, []);
 
@@ -181,16 +181,28 @@ export function MapImageUploader({
     <View style={styles.container}>
       {/* Instructions */}
       {showInstructions && (
-        <View style={[styles.instructionsCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.instructionsCard,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
+        >
           <View style={styles.instructionHeader}>
             <Ionicons name="information-circle" size={24} color={colors.ink} />
-            <Text style={[styles.instructionTitle, { color: colors.ink }]}>Upload Facility Map</Text>
+            <Text style={[styles.instructionTitle, { color: colors.ink }]}>
+              Upload Facility Map
+            </Text>
           </View>
           <Text style={[styles.instructionText, { color: colors.mid }]}>
             Upload a clear image showing the layout of your facility. This will
             help users understand the location of courts and fields.
           </Text>
-          <View style={[styles.requirementsList, { backgroundColor: colors.surface }]}>
+          <View
+            style={[
+              styles.requirementsList,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>
               â€¢ Minimum size: {minDimensions.width}x{minDimensions.height}{' '}
               pixels
@@ -202,41 +214,71 @@ export function MapImageUploader({
             <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>
               â€¢ Maximum file size: 10MB
             </Text>
-            <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>â€¢ Formats: JPEG, PNG</Text>
+            <Text style={[styles.requirementItem, { color: colors.inkFaint }]}>
+              â€¢ Formats: JPEG, PNG
+            </Text>
           </View>
         </View>
       )}
 
       {/* Image Preview or Upload Placeholder */}
       {imageUri ? (
-        <View style={[styles.imageContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.imageContainer,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
+        >
           <Image
             source={{ uri: imageUri }}
             style={[styles.mapImage, { backgroundColor: colors.surface }]}
             resizeMode="contain"
           />
-          <View style={[styles.imageOverlay, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+          <View
+            style={[
+              styles.imageOverlay,
+              {
+                backgroundColor: colors.background,
+                borderTopColor: colors.border,
+              },
+            ]}
+          >
             <TouchableOpacity
-              style={[styles.imageButton, styles.changeButton, { backgroundColor: colors.surface, borderColor: colors.cobalt }]}
+              style={[
+                styles.imageButton,
+                styles.changeButton,
+                { backgroundColor: colors.surface, borderColor: colors.cobalt },
+              ]}
               onPress={handlePickImage}
               disabled={disabled}
             >
               <Ionicons name="images" size={20} color={colors.cobalt} />
-              <Text style={[styles.changeButtonText, { color: colors.cobalt }]}>Change</Text>
+              <Text style={[styles.changeButtonText, { color: colors.cobalt }]}>
+                Change
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.imageButton, styles.removeButton, { backgroundColor: colors.surface, borderColor: colors.heart }]}
+              style={[
+                styles.imageButton,
+                styles.removeButton,
+                { backgroundColor: colors.surface, borderColor: colors.heart },
+              ]}
               onPress={handleRemoveImage}
               disabled={disabled}
             >
               <Ionicons name="trash" size={20} color={colors.heart} />
-              <Text style={[styles.removeButtonText, { color: colors.heart }]}>Remove</Text>
+              <Text style={[styles.removeButtonText, { color: colors.heart }]}>
+                Remove
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         <TouchableOpacity
-          style={[styles.uploadPlaceholder, { backgroundColor: colors.background, borderColor: colors.border }]}
+          style={[
+            styles.uploadPlaceholder,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
           onPress={handlePickImage}
           disabled={disabled}
         >
@@ -245,8 +287,14 @@ export function MapImageUploader({
             size={48}
             color={colors.inkFaint}
           />
-          <Text style={[styles.uploadPlaceholderTitle, { color: colors.ink }]}>Upload Facility Map</Text>
-          <Text style={[styles.uploadPlaceholderText, { color: colors.inkFaint }]}>{placeholderText}</Text>
+          <Text style={[styles.uploadPlaceholderTitle, { color: colors.ink }]}>
+            Upload Facility Map
+          </Text>
+          <Text
+            style={[styles.uploadPlaceholderText, { color: colors.inkFaint }]}
+          >
+            {placeholderText}
+          </Text>
         </TouchableOpacity>
       )}
     </View>

@@ -24,7 +24,6 @@ function getRelativeTime(date: Date): string {
     return `In ${hours}h ${mins % 60 > 0 ? `${mins % 60}m` : ''}`.trim();
   if (days === 1) return 'Tomorrow';
   if (days < 7) {
-  const { colors } = useTheme();
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
     return dayName;
   }
@@ -65,9 +64,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
     <TouchableOpacity onPress={() => onPress(booking)} activeOpacity={0.9}>
       <LinearGradient
         colors={
-          live
-            ? [colors.pine, '#004D23']
-            : [colors.cobalt, colors.cobaltMid]
+          live ? [colors.pine, '#004D23'] : [colors.cobalt, colors.cobaltMid]
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -76,8 +73,17 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
         {/* Top row: badge + relative time */}
         <View style={styles.topRow}>
           <View style={styles.badge}>
-            {live && <View style={[styles.liveDot, { backgroundColor: colors.successLight }]} />}
-            <Text style={[styles.badgeText, { color: colors.white }]}>{live ? 'LIVE' : 'NEXT UP'}</Text>
+            {live && (
+              <View
+                style={[
+                  styles.liveDot,
+                  { backgroundColor: colors.successLight },
+                ]}
+              />
+            )}
+            <Text style={[styles.badgeText, { color: colors.white }]}>
+              {live ? 'LIVE' : 'NEXT UP'}
+            </Text>
           </View>
           <Text style={styles.relativeTime}>{relativeTime}</Text>
         </View>
@@ -138,7 +144,9 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
                         style={styles.avatarImg}
                       />
                     ) : (
-                      <Text style={[styles.avatarInitial, { color: colors.white }]}>
+                      <Text
+                        style={[styles.avatarInitial, { color: colors.white }]}
+                      >
                         {p.user?.firstName?.charAt(0) ?? '?'}
                       </Text>
                     )}
@@ -154,7 +162,9 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
                       },
                     ]}
                   >
-                    <Text style={[styles.avatarInitial, { color: colors.white }]}>
+                    <Text
+                      style={[styles.avatarInitial, { color: colors.white }]}
+                    >
                       +{event.participants.length - 4}
                     </Text>
                   </View>
@@ -163,7 +173,8 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
             )}
             {spotsLeft > 0 && spotsLeft <= 3 && (
               <Text style={styles.fillingFast}>
-                Filling fast Ã¢â‚¬â€ {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
+                Filling fast Ã¢â‚¬â€ {spotsLeft} spot
+                {spotsLeft !== 1 ? 's' : ''} left
               </Text>
             )}
           </View>

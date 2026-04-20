@@ -28,7 +28,6 @@ function groupReactions(
 ): Array<{ emoji: string; count: number; hasMe: boolean; userIds: string[] }> {
   const map = new Map<string, { count: number; userIds: string[] }>();
   for (const r of reactions) {
-  const { colors } = useTheme();
     const existing = map.get(r.emoji);
     if (existing) {
       existing.count += 1;
@@ -71,7 +70,12 @@ export function MessageBubble({
         {/* Avatar or spacer for other users */}
         {!isOwn &&
           (showAvatar ? (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: colors.cobalt + '20' }]}>
+            <View
+              style={[
+                styles.avatarPlaceholder,
+                { backgroundColor: colors.cobalt + '20' },
+              ]}
+            >
               <Text style={[styles.avatarInitial, { color: colors.cobalt }]}>
                 {message.sender?.firstName?.charAt(0) ?? '?'}
               </Text>
@@ -89,11 +93,26 @@ export function MessageBubble({
 
           {/* Quoted reply */}
           {message.replyTo && (
-            <View style={[styles.replyQuote, { backgroundColor: colors.bgSubtle, borderLeftColor: colors.cobalt }, isOwn && styles.replyQuoteOwn]}>
-              <Text style={[styles.replyName, { color: colors.cobalt }]} numberOfLines={1}>
+            <View
+              style={[
+                styles.replyQuote,
+                {
+                  backgroundColor: colors.bgSubtle,
+                  borderLeftColor: colors.cobalt,
+                },
+                isOwn && styles.replyQuoteOwn,
+              ]}
+            >
+              <Text
+                style={[styles.replyName, { color: colors.cobalt }]}
+                numberOfLines={1}
+              >
                 {message.replyTo.sender?.firstName ?? 'Message'}
               </Text>
-              <Text style={[styles.replyText, { color: colors.inkSecondary }]} numberOfLines={2}>
+              <Text
+                style={[styles.replyText, { color: colors.inkSecondary }]}
+                numberOfLines={2}
+              >
                 {message.replyTo.content}
               </Text>
             </View>
@@ -102,31 +121,57 @@ export function MessageBubble({
           <View
             style={[
               styles.bubble,
-              isOwn ? styles.bubbleOwn : styles.bubbleOther, isOwn ? { backgroundColor: colors.cobalt } : {},
+              isOwn ? styles.bubbleOwn : styles.bubbleOther,
+              isOwn ? { backgroundColor: colors.cobalt } : {},
               message.sendError && styles.bubbleError,
-              message.priority === 'URGENT' && styles.bubbleAnnouncement, message.priority === 'URGENT' && { borderLeftColor: colors.gold }]}
+              message.priority === 'URGENT' && styles.bubbleAnnouncement,
+              message.priority === 'URGENT' && { borderLeftColor: colors.gold },
+            ]}
           >
             {message.priority === 'URGENT' && (
               <View style={styles.announceHeader}>
                 <Ionicons name="megaphone" size={12} color={colors.gold} />
-                <Text style={[styles.announceLabel, { color: colors.gold }]}>Announcement</Text>
+                <Text style={[styles.announceLabel, { color: colors.gold }]}>
+                  Announcement
+                </Text>
               </View>
             )}
-            <Text style={[styles.content, { color: colors.ink }, isOwn && styles.contentOwn, isOwn && { color: colors.white }]}>
+            <Text
+              style={[
+                styles.content,
+                { color: colors.ink },
+                isOwn && styles.contentOwn,
+                isOwn && { color: colors.white },
+              ]}
+            >
               {message.content}
             </Text>
             {(showTimestamp || message.isSending || message.sendError) && (
               <View style={styles.metaRow}>
                 {message.isSending && (
-                  <Text style={[styles.status, { color: colors.inkSecondary }, isOwn && styles.statusOwn]}>
+                  <Text
+                    style={[
+                      styles.status,
+                      { color: colors.inkSecondary },
+                      isOwn && styles.statusOwn,
+                    ]}
+                  >
                     Sending...
                   </Text>
                 )}
                 {message.sendError && (
-                  <Text style={[styles.statusError, { color: colors.error }]}>Failed</Text>
+                  <Text style={[styles.statusError, { color: colors.error }]}>
+                    Failed
+                  </Text>
                 )}
                 {showTimestamp && !message.isSending && !message.sendError && (
-                  <Text style={[styles.time, { color: colors.inkSecondary }, isOwn && styles.timeOwn]}>
+                  <Text
+                    style={[
+                      styles.time,
+                      { color: colors.inkSecondary },
+                      isOwn && styles.timeOwn,
+                    ]}
+                  >
                     {formatTime(message.createdAt)}
                   </Text>
                 )}
@@ -136,7 +181,13 @@ export function MessageBubble({
 
           {/* Read receipt */}
           {showReadReceipt && (
-            <Text style={[styles.readReceipt, { color: colors.inkSecondary }, isOwn && styles.readReceiptOwn]}>
+            <Text
+              style={[
+                styles.readReceipt,
+                { color: colors.inkSecondary },
+                isOwn && styles.readReceiptOwn,
+              ]}
+            >
               {showReadReceipt === 'sending'
                 ? 'Sending...'
                 : showReadReceipt === 'read'
@@ -152,8 +203,14 @@ export function MessageBubble({
                 <TouchableOpacity
                   key={g.emoji}
                   style={[
-                    styles.reactionPill, { backgroundColor: colors.bgSubtle },
-                    g.hasMe && styles.reactionPillMine, g.hasMe && { backgroundColor: colors.cobalt + '15', borderColor: colors.cobalt + '40' }]}
+                    styles.reactionPill,
+                    { backgroundColor: colors.bgSubtle },
+                    g.hasMe && styles.reactionPillMine,
+                    g.hasMe && {
+                      backgroundColor: colors.cobalt + '15',
+                      borderColor: colors.cobalt + '40',
+                    },
+                  ]}
                   onPress={() =>
                     onToggleReaction?.(message.id, g.emoji, g.hasMe)
                   }
@@ -162,8 +219,11 @@ export function MessageBubble({
                   <Text style={styles.reactionEmoji}>{g.emoji}</Text>
                   <Text
                     style={[
-                      styles.reactionCount, { color: colors.ink },
-                      g.hasMe && styles.reactionCountMine, g.hasMe && { color: colors.cobalt }]}
+                      styles.reactionCount,
+                      { color: colors.ink },
+                      g.hasMe && styles.reactionCountMine,
+                      g.hasMe && { color: colors.cobalt },
+                    ]}
                   >
                     {g.count}
                   </Text>

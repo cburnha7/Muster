@@ -29,6 +29,7 @@ export function CancelEventModal({
   onCancel,
   onConfirm,
 }: CancelEventModalProps): JSX.Element {
+  const { colors } = useTheme();
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +37,6 @@ export function CancelEventModal({
   const MIN_CHARS = 5;
 
   const handleConfirm = async () => {
-  const { colors } = useTheme();
     Keyboard.dismiss();
 
     if (reason.trim().length < MIN_CHARS) {
@@ -85,13 +85,19 @@ export function CancelEventModal({
           keyboardShouldPersistTaps="handled"
           bounces={false}
         >
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.surface }]}
+          >
             <View style={styles.header}>
               <Ionicons name="warning" size={32} color={colors.heart} />
-              <Text style={[styles.title, { color: colors.ink }]}>Step Out of Event</Text>
+              <Text style={[styles.title, { color: colors.ink }]}>
+                Step Out of Event
+              </Text>
             </View>
 
-            <Text style={[styles.eventTitle, { color: colors.ink }]}>{eventTitle}</Text>
+            <Text style={[styles.eventTitle, { color: colors.ink }]}>
+              {eventTitle}
+            </Text>
 
             <Text style={[styles.description, { color: colors.inkFaint }]}>
               This will cancel the event and notify all participants. Please
@@ -99,9 +105,16 @@ export function CancelEventModal({
             </Text>
 
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.ink }]}>Cancellation Reason *</Text>
+              <Text style={[styles.label, { color: colors.ink }]}>
+                Cancellation Reason *
+              </Text>
               <TextInput
-                style={[styles.input, { borderColor: colors.border, color: colors.ink }, error ? styles.inputError : null, error ? { borderColor: colors.heart } : {}]}
+                style={[
+                  styles.input,
+                  { borderColor: colors.border, color: colors.ink },
+                  error ? styles.inputError : null,
+                  error ? { borderColor: colors.heart } : {},
+                ]}
                 placeholder="e.g., Bad weather, facility unavailable, etc."
                 value={reason}
                 onChangeText={text => {
@@ -118,31 +131,52 @@ export function CancelEventModal({
                 {reason.length}/500
                 {reason.trim().length < MIN_CHARS ? ` (min ${MIN_CHARS})` : ''}
               </Text>
-              {error ? <Text style={[styles.errorText, { color: colors.heart }]}>{error}</Text> : null}
+              {error ? (
+                <Text style={[styles.errorText, { color: colors.heart }]}>
+                  {error}
+                </Text>
+              ) : null}
             </View>
 
             <View style={styles.actions}>
               <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                style={[
+                  styles.button,
+                  styles.buttonSecondary,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
                 onPress={handleCancel}
                 disabled={isSubmitting}
               >
-                <Text style={[styles.buttonSecondaryText, { color: colors.ink }]}>Keep Event</Text>
+                <Text
+                  style={[styles.buttonSecondaryText, { color: colors.ink }]}
+                >
+                  Keep Event
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.button,
-                  styles.buttonDanger, { backgroundColor: colors.heart },
+                  styles.buttonDanger,
+                  { backgroundColor: colors.heart },
                   (isSubmitting || reason.trim().length < MIN_CHARS) &&
-                    styles.buttonDisabled]}
+                    styles.buttonDisabled,
+                ]}
                 onPress={handleConfirm}
                 disabled={isSubmitting || reason.trim().length < MIN_CHARS}
               >
                 {isSubmitting ? (
                   <ActivityIndicator color={colors.white} />
                 ) : (
-                  <Text style={[styles.buttonDangerText, { color: colors.white }]}>Cancel Event</Text>
+                  <Text
+                    style={[styles.buttonDangerText, { color: colors.white }]}
+                  >
+                    Cancel Event
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>

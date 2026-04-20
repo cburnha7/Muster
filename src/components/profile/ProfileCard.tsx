@@ -33,7 +33,6 @@ function calculateAge(dateOfBirth: string): number | null {
     monthDiff < 0 ||
     (monthDiff === 0 && today.getUTCDate() < dob.getUTCDate())
   ) {
-  const { colors } = useTheme();
     age--;
   }
   return age;
@@ -74,7 +73,12 @@ export function ProfileCard({
   const bornFormatted = dateOfBirth ? formatDate(dateOfBirth) : null;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.black }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.surface, shadowColor: colors.black },
+      ]}
+    >
       {/* Sport Rankings */}
       <SportRatingsSection userId={userId} />
 
@@ -83,7 +87,13 @@ export function ProfileCard({
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.avatar} />
         ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.border }]}>
+          <View
+            style={[
+              styles.avatar,
+              styles.avatarPlaceholder,
+              { backgroundColor: colors.border },
+            ]}
+          >
             <Ionicons name="person" size={56} color={colors.inkSecondary} />
           </View>
         )}
@@ -107,28 +117,36 @@ export function ProfileCard({
         {bornFormatted && (
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={16} color={colors.cobalt} />
-            <Text style={[styles.infoText, { color: colors.inkSoft }]}>Born {bornFormatted}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>
+              Born {bornFormatted}
+            </Text>
           </View>
         )}
 
         {email ? (
           <View style={styles.infoRow}>
             <Ionicons name="mail-outline" size={16} color={colors.cobalt} />
-            <Text style={[styles.infoText, { color: colors.inkSoft }]}>{email}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>
+              {email}
+            </Text>
           </View>
         ) : null}
 
         {phone ? (
           <View style={styles.infoRow}>
             <Ionicons name="call-outline" size={16} color={colors.cobalt} />
-            <Text style={[styles.infoText, { color: colors.inkSoft }]}>{phone}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>
+              {phone}
+            </Text>
           </View>
         ) : null}
 
         {address ? (
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={16} color={colors.cobalt} />
-            <Text style={[styles.infoText, { color: colors.inkSoft }]}>{address}</Text>
+            <Text style={[styles.infoText, { color: colors.inkSoft }]}>
+              {address}
+            </Text>
           </View>
         ) : null}
       </View>
