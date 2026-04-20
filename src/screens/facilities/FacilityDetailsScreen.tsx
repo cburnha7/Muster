@@ -32,7 +32,6 @@ import {
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { FixedBottomCTA } from '../../components/detail';
@@ -112,7 +111,7 @@ function TabBar({
 /* ─── Main Screen ─────────────────────────────────────────────────────────── */
 
 export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { facilityId, ...restParams } = (route.params as any) ?? {};
   const navigation = useNavigation();
@@ -325,7 +324,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
     <View
       style={[
         s.container,
-        { backgroundColor: themeColors.bgScreen, paddingTop: insets.top },
+        { backgroundColor: colors.bgScreen, paddingTop: insets.top },
       ]}
     >
       <ContextualReturnButton />
@@ -836,11 +835,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                       <Ionicons
                         name="expand-outline"
                         size={18}
-                        color={tokenColors.white}
+                        color={colors.white}
                       />
                       <Text
                         style={{
-                          color: tokenColors.white,
+                          color: colors.white,
                           fontSize: 13,
                           fontWeight: '600',
                         }}
@@ -1103,7 +1102,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,

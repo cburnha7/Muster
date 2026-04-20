@@ -10,12 +10,8 @@ import {
   UIManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 if (
   Platform.OS === 'android' &&
@@ -39,6 +35,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   defaultExpanded = true,
   children,
 }) => {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const rotation = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
 
@@ -68,16 +65,19 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         accessibilityLabel={`${title} section, ${expanded ? 'expanded' : 'collapsed'}`}
       >
         <Animated.View style={{ transform: [{ rotateZ }] }}>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={tokenColors.inkMuted}
-          />
+          <Ionicons name="chevron-forward" size={20} color={colors.inkMuted} />
         </Animated.View>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
         {count !== undefined && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{count}</Text>
+          <View
+            style={[
+              styles.countBadge,
+              { backgroundColor: colors.cobalt + '20' },
+            ]}
+          >
+            <Text style={[styles.countBadgeText, { color: colors.cobalt }]}>
+              {count}
+            </Text>
           </View>
         )}
         {rightElement}
@@ -99,11 +99,9 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: tokenFontFamily.heading,
     fontSize: 24,
-    color: tokenColors.ink,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: tokenColors.cobalt + '20',
     paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 2,
     borderRadius: tokenRadius.md,
@@ -111,6 +109,5 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 11,
-    color: tokenColors.cobalt,
   },
 });

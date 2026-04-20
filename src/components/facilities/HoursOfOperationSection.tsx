@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import { TimePickerInput } from '../forms/TimePickerInput';
 
 interface DayHours {
@@ -48,6 +47,7 @@ export function HoursOfOperationSection({
   };
 
   const handleEditDay = (dayOfWeek: number) => {
+  const { colors } = useTheme();
     setEditingDay(dayOfWeek);
     setShowEditModal(true);
   };
@@ -239,7 +239,7 @@ export function HoursOfOperationSection({
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     padding: Spacing.lg,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.md,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   dayName: {
     ...TextStyles.body,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     ...TextStyles.h3,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 30,
     borderRadius: 15,
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
     padding: 2,
     justifyContent: 'center',
   },
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   modalActions: {
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   doneButton: {
     backgroundColor: colors.cobalt,

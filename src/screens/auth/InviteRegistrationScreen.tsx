@@ -33,7 +33,6 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { SSOButton } from '../../components/auth/SSOButton';
 import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import {
@@ -522,11 +521,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
   },
   progressDotActive: {
     width: 24,
-    backgroundColor: colors.cobalt || tokenColors.cobalt,
+    backgroundColor: colors.cobalt || colors.cobalt,
   },
 
   // Team banner
@@ -542,23 +541,23 @@ const styles = StyleSheet.create({
   teamBannerText: {
     flex: 1,
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     lineHeight: 20,
   },
   teamBannerName: {
     fontWeight: '700',
-    color: tokenColors.ink,
+    color: colors.ink,
   },
 
   // Step content
   stepTitle: {
     fontSize: 26,
     fontWeight: '700',
-    color: tokenColors.ink,
+    color: colors.ink,
   },
   stepSubtitle: {
     fontSize: 15,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -580,7 +579,7 @@ const styles = StyleSheet.create({
   },
   ssoText: {
     fontSize: 13,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -596,11 +595,11 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   loginLinkBold: {
     fontWeight: '700',
-    color: colors.cobalt || tokenColors.cobalt,
+    color: colors.cobalt || colors.cobalt,
   },
 
   // Toggle
@@ -610,17 +609,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     paddingVertical: 16,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     marginVertical: 8,
   },
   toggleLabel: {
     fontSize: 15,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
     fontWeight: '500',
   },
   toggleLabelActive: {
-    color: tokenColors.ink,
+    color: colors.ink,
     fontWeight: '700',
   },
 
@@ -641,7 +640,7 @@ const styles = StyleSheet.create({
   selfNoteText: {
     flex: 1,
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     lineHeight: 20,
   },
 
@@ -656,7 +655,7 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 15,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     fontWeight: '500',
   },
 });

@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Match, MatchStatus } from '../../types';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface MatchCardProps {
   match: Match;
@@ -16,6 +15,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   onPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -39,13 +39,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({
       case 'scheduled':
         return colors.ink;
       case 'in_progress':
-        return tokenColors.warning;
+        return colors.warning;
       case 'completed':
         return colors.cobalt;
       case 'cancelled':
-        return tokenColors.error;
+        return colors.error;
       default:
-        return tokenColors.inkMuted;
+        return colors.inkMuted;
     }
   };
 
@@ -95,7 +95,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             <Ionicons
               name="calendar-outline"
               size={14}
-              color={tokenColors.inkSecondary}
+              color={colors.inkSecondary}
             />
             <Text style={styles.dateTimeText}>
               {formatDate(match.scheduledAt)}
@@ -105,7 +105,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             <Ionicons
               name="time-outline"
               size={14}
-              color={tokenColors.inkSecondary}
+              color={colors.inkSecondary}
             />
             <Text style={styles.dateTimeText}>
               {formatTime(match.scheduledAt)}
@@ -121,7 +121,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               <Ionicons
                 name="home-outline"
                 size={16}
-                color={tokenColors.inkSecondary}
+                color={colors.inkSecondary}
               />
               <Text style={styles.teamName} numberOfLines={1}>
                 {match.homeTeam?.name || 'Home Team'}
@@ -152,7 +152,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
               <Ionicons
                 name="airplane-outline"
                 size={16}
-                color={tokenColors.inkSecondary}
+                color={colors.inkSecondary}
               />
               <Text style={styles.teamName} numberOfLines={1}>
                 {match.awayTeam?.name || 'Away Team'}
@@ -189,7 +189,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             <Ionicons
               name="location-outline"
               size={14}
-              color={tokenColors.inkSecondary}
+              color={colors.inkSecondary}
             />
             <Text style={styles.locationText} numberOfLines={1}>
               {match.event?.facility?.name ||
@@ -205,7 +205,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             <Ionicons
               name="document-text-outline"
               size={14}
-              color={tokenColors.inkSecondary}
+              color={colors.inkSecondary}
             />
             <Text style={styles.notesText} numberOfLines={2}>
               {match.notes}
@@ -240,12 +240,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: tokenColors.white,
+    color: colors.white,
   },
   matchInfo: {
     gap: 12,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 13,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   teamsContainer: {
     gap: 8,
@@ -299,13 +299,13 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
     flex: 1,
   },
   score: {
     fontSize: 24,
     fontWeight: '700',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     minWidth: 40,
     textAlign: 'center',
   },
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 12,
     fontWeight: '600',
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
   },
   eventLink: {
     flexDirection: 'row',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   eventText: {
     fontSize: 13,
@@ -342,20 +342,20 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 13,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     flex: 1,
   },
   notesContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 6,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     padding: 8,
     borderRadius: 8,
   },
   notesText: {
     fontSize: 13,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     flex: 1,
     lineHeight: 18,
   },
@@ -363,13 +363,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   winnerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: tokenColors.warningLight,
+    backgroundColor: colors.warningLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     color: colors.gold,
   },
   drawBadge: {
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -390,6 +390,6 @@ const styles = StyleSheet.create({
   drawText: {
     fontSize: 13,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
 });

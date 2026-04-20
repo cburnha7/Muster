@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, typeScale } from '../../theme';
+import { fonts, typeScale, useTheme } from '../../theme';
 import { FormButton } from '../forms/FormButton';
 
 interface Conflict {
@@ -36,6 +36,7 @@ export function RecurringConflictsModal({
   onSkipAndConfirm,
   onCancel,
 }: Props) {
+  const { colors } = useTheme();
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + 'T00:00:00Z');
     return d.toLocaleDateString('en-US', {
@@ -48,18 +49,32 @@ export function RecurringConflictsModal({
 
   const reasonLabel = (reason: string) => {
     switch (reason) {
-      case 'rented': return 'Already rented';
-      case 'already_rented': return 'Already rented';
-      case 'blocked': return 'Blocked';
-      case 'no_slot': return 'No slot available';
-      default: return 'Unavailable';
+      case 'rented':
+        return 'Already rented';
+      case 'already_rented':
+        return 'Already rented';
+      case 'blocked':
+        return 'Blocked';
+      case 'no_slot':
+        return 'No slot available';
+      default:
+        return 'Unavailable';
     }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
       <View style={styles.overlay}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onCancel} />
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={onCancel}
+        />
         <View style={styles.card}>
           <View style={styles.header}>
             <Ionicons name="alert-circle" size={28} color={colors.gold} />
@@ -67,7 +82,8 @@ export function RecurringConflictsModal({
           </View>
 
           <Text style={styles.summary}>
-            {conflicts.length} of {conflicts.length + availableCount} dates have conflicts.
+            {conflicts.length} of {conflicts.length + availableCount} dates have
+            conflicts.
             {availableCount > 0
               ? ` You can skip them and confirm the remaining ${availableCount}.`
               : ' No dates are available.'}
@@ -78,13 +94,20 @@ export function RecurringConflictsModal({
               <View key={i} style={styles.conflictRow}>
                 <Ionicons name="close-circle" size={16} color={colors.heart} />
                 <Text style={styles.conflictDate}>{formatDate(c.date)}</Text>
-                <Text style={styles.conflictReason}>{reasonLabel(c.reason)}</Text>
+                <Text style={styles.conflictReason}>
+                  {reasonLabel(c.reason)}
+                </Text>
               </View>
             ))}
           </ScrollView>
 
           <View style={styles.actions}>
-            <FormButton title="Cancel" variant="outline" onPress={onCancel} style={styles.btn} />
+            <FormButton
+              title="Cancel"
+              variant="outline"
+              onPress={onCancel}
+              style={styles.btn}
+            />
             {availableCount > 0 && (
               <FormButton
                 title={`Confirm ${availableCount} Dates`}

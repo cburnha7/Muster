@@ -16,7 +16,6 @@ import { matchService } from '../../services/api/MatchService';
 import { courtService } from '../../services/api/CourtService';
 import { selectUser } from '../../store/slices/authSlice';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { Match } from '../../types';
 
 /** Extended rental type matching the actual API response (court includes nested facility) */
@@ -50,7 +49,7 @@ type AssignFacilityRouteProp = RouteProp<
 >;
 
 export const AssignFacilityScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<AssignFacilityRouteProp>();
   const user = useSelector(selectUser);
@@ -141,9 +140,7 @@ export const AssignFacilityScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Assign Facility"
           leftIcon="arrow-back"
@@ -159,9 +156,7 @@ export const AssignFacilityScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Assign Facility"
           leftIcon="arrow-back"
@@ -178,7 +173,7 @@ export const AssignFacilityScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Assign Facility"
         leftIcon="arrow-back"
@@ -295,7 +290,7 @@ export const AssignFacilityScreen: React.FC = () => {
           accessibilityState={{ disabled: !selectedRentalId || assigning }}
         >
           {assigning ? (
-            <ActivityIndicator size="small" color={tokenColors.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.assignButtonText}>Assign Facility</Text>
           )}
@@ -338,7 +333,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -348,7 +343,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   matchInfo: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
@@ -391,7 +386,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl,
   },
   rentalCard: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -450,8 +445,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
-    backgroundColor: tokenColors.white,
+    borderTopColor: colors.border,
+    backgroundColor: colors.white,
   },
   cancelButton: {
     flex: 1,
@@ -482,6 +477,6 @@ const styles = StyleSheet.create({
   assignButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

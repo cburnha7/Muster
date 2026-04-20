@@ -11,8 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface FormButtonProps {
   title: string;
@@ -45,7 +44,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
   textStyle,
 }) => {
   const isDisabled = disabled || loading;
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -72,7 +71,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
     switch (variant) {
       case 'primary':
       case 'danger':
-        return tokenColors.white;
+        return colors.white;
       case 'secondary':
         return colors.onSurface;
       case 'outline':
@@ -80,7 +79,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
       case 'muted':
         return colors.onSurface;
       default:
-        return tokenColors.white;
+        return colors.white;
     }
   };
 
@@ -135,12 +134,12 @@ export const FormButton: React.FC<FormButtonProps> = ({
           variant === 'primary' && styles.primaryText,
           variant === 'secondary' && [
             styles.secondaryText,
-            { color: themeColors.textPrimary },
+            { color: colors.textPrimary },
           ],
           variant === 'outline' && styles.outlineText,
           variant === 'muted' && [
             styles.mutedText,
-            { color: themeColors.textSecondary },
+            { color: colors.textSecondary },
           ],
           variant === 'danger' && styles.dangerText,
           isDisabled && styles.disabledText,
@@ -198,11 +197,11 @@ export const FormButton: React.FC<FormButtonProps> = ({
           variant === 'primary' && styles.primaryFlat,
           variant === 'secondary' && [
             styles.secondary,
-            { backgroundColor: themeColors.bgSubtle },
+            { backgroundColor: colors.bgSubtle },
           ],
           variant === 'outline' && [
             styles.outline,
-            { borderColor: themeColors.border },
+            { borderColor: colors.border },
           ],
           variant === 'muted' && styles.muted,
           variant === 'danger' && styles.danger,
@@ -262,7 +261,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerHigh,
   },
   primaryText: {
-    color: tokenColors.white,
+    color: colors.white,
   },
 
   secondary: {
@@ -292,7 +291,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   dangerText: {
-    color: tokenColors.white,
+    color: colors.white,
   },
 
   // Disabled

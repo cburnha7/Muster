@@ -13,10 +13,10 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { facilityService } from '../../../services/api/FacilityService';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 export function Step3Ground() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const { user } = useAuth();
   const navigation = useNavigation<any>();
@@ -114,7 +114,7 @@ export function Step3Ground() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
       <Text style={styles.heading}>Where's the game?</Text>

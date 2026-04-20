@@ -18,7 +18,6 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { formatSportType } from '../../utils/formatters';
 
 import { eventService } from '../../services/api/EventService';
@@ -30,7 +29,7 @@ import { Event, SportType, EventStatus } from '../../types';
 import { useDependentContext } from '../../hooks/useDependentContext';
 
 export function EventsListScreen(): React.JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const { isDependent } = useDependentContext();
 
@@ -202,7 +201,7 @@ export function EventsListScreen(): React.JSX.Element {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -387,12 +386,12 @@ const styles = StyleSheet.create({
   },
   mapContainer: { height: 400 },
   eventCard: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
@@ -415,7 +414,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
     fontFamily: fonts.heading,
   },
   eventName: {
@@ -474,7 +473,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    shadowColor: tokenColors.cobalt,
+    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

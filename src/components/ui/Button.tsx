@@ -5,13 +5,8 @@ import {
   ActivityIndicator,
   ViewStyle,
 } from 'react-native';
-import {
-  tokenColors,
-  tokenRadius,
-  tokenSpacing,
-  tokenType,
-  tokenShadow,
-} from '../../theme/tokens';
+import { tokenRadius, tokenSpacing, tokenType } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 type Variant =
   | 'primary'
@@ -41,63 +36,64 @@ export function Button({
   loading,
   style,
 }: Props) {
+  const { colors, shadow } = useTheme();
   const height = size === 'md' ? 52 : 36;
   const px = size === 'md' ? tokenSpacing.xl : tokenSpacing.lg;
 
   const variants = {
     primary: {
-      bg: tokenColors.cobalt,
+      bg: colors.cobalt,
       borderWidth: 0,
-      borderColor: tokenColors.transparent,
-      text: tokenColors.white,
-      shadow: tokenShadow.fab,
-      disabledBg: tokenColors.border,
-      disabledText: tokenColors.inkSecondary,
+      borderColor: colors.transparent,
+      text: colors.white,
+      shadow: shadow.fab,
+      disabledBg: colors.border,
+      disabledText: colors.inkSecondary,
     },
     secondary: {
-      bg: tokenColors.transparent,
+      bg: colors.transparent,
       borderWidth: 1.5,
-      borderColor: tokenColors.border,
-      text: tokenColors.ink,
+      borderColor: colors.border,
+      text: colors.ink,
       shadow: undefined,
-      disabledBg: tokenColors.transparent,
-      disabledText: tokenColors.inkSecondary,
+      disabledBg: colors.transparent,
+      disabledText: colors.inkSecondary,
     },
     ghost: {
-      bg: tokenColors.transparent,
+      bg: colors.transparent,
       borderWidth: 0,
-      borderColor: tokenColors.transparent,
-      text: tokenColors.cobalt,
+      borderColor: colors.transparent,
+      text: colors.cobalt,
       shadow: undefined,
-      disabledBg: tokenColors.transparent,
-      disabledText: tokenColors.inkSecondary,
+      disabledBg: colors.transparent,
+      disabledText: colors.inkSecondary,
     },
     destructive: {
-      bg: tokenColors.error,
+      bg: colors.error,
       borderWidth: 0,
-      borderColor: tokenColors.transparent,
-      text: tokenColors.white,
+      borderColor: colors.transparent,
+      text: colors.white,
       shadow: undefined,
-      disabledBg: tokenColors.border,
-      disabledText: tokenColors.inkSecondary,
+      disabledBg: colors.border,
+      disabledText: colors.inkSecondary,
     },
     salute: {
-      bg: tokenColors.goldLight,
+      bg: colors.goldLight,
       borderWidth: 1.5,
-      borderColor: tokenColors.gold,
-      text: tokenColors.gold,
+      borderColor: colors.gold,
+      text: colors.gold,
       shadow: undefined,
-      disabledBg: tokenColors.border,
-      disabledText: tokenColors.inkSecondary,
+      disabledBg: colors.border,
+      disabledText: colors.inkSecondary,
     },
     neutral: {
-      bg: tokenColors.background,
+      bg: colors.background,
       borderWidth: 1.5,
-      borderColor: tokenColors.border,
-      text: tokenColors.inkSecondary,
+      borderColor: colors.border,
+      text: colors.inkSecondary,
       shadow: undefined,
-      disabledBg: tokenColors.border,
-      disabledText: tokenColors.inkSecondary,
+      disabledBg: colors.border,
+      disabledText: colors.inkSecondary,
     },
   };
   const v = variants[variant];

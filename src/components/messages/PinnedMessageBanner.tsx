@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface PinnedMessageBannerProps {
   content: string;
 }
 
 export function PinnedMessageBanner({ content }: PinnedMessageBannerProps) {
+  const { colors } = useTheme();
   const [expanded, setExpanded] = useState(false);
 
   return (

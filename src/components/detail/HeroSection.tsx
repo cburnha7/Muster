@@ -7,8 +7,7 @@ import {
   Animated,
   ViewStyle,
 } from 'react-native';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 export interface HeroBadge {
   label: string;
@@ -30,7 +29,7 @@ interface HeroSectionProps {
 
 export function HeroSection({
   title,
-  sportColor = tokenColors.cobalt,
+  sportColor = colors.cobalt,
   emoji,
   badges = [],
   headline,
@@ -39,6 +38,7 @@ export function HeroSection({
   style,
   children,
 }: HeroSectionProps) {
+  const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(8)).current;
 

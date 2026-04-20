@@ -43,7 +43,7 @@ import {
   Event,
   User,
 } from '../../types';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import {
   DuesStatusBadge,
   DuesStatus,
@@ -88,7 +88,7 @@ const skillLevelOptions = [
 ];
 
 export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { teamId, readOnly } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -720,7 +720,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+    <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"

@@ -20,7 +20,6 @@ import { userService } from '../../services/api/UserService';
 import { API_BASE_URL } from '../../services/api/config';
 import { authService } from '../../services/auth/AuthService';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 // ── Types ──
 
@@ -109,7 +108,7 @@ function parseTextContent(text: string): ImportedEvent[] {
 // ── Component ──
 
 export function AvailabilityCalendarScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { userId } = (route.params as { userId: string }) || {};
@@ -340,9 +339,7 @@ export function AvailabilityCalendarScreen() {
   const eventsForDay = events.filter(e => e.date === selectedDate);
 
   return (
-    <SafeAreaView
-      style={[styles.screen, { backgroundColor: themeColors.bgScreen }]}
-    >
+    <SafeAreaView style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Availability</Text>
       </View>
@@ -590,7 +587,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -705,7 +702,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 16,
     padding: 14,
-    backgroundColor: tokenColors.errorLight,
+    backgroundColor: colors.errorLight,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.heart,

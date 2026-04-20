@@ -23,8 +23,7 @@ import {
   Team,
 } from '../../types';
 import { teamService } from '../../services/api/TeamService';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, typeScale, Spacing, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
 interface AddedRoster {
@@ -56,6 +55,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
   initialRosters = [],
   initialInvitedRosters = [],
 }) => {
+  const { colors } = useTheme();
   const [leagueFormat, setLeagueFormat] = useState<
     'season' | 'season_with_playoffs' | 'tournament' | ''
   >((initialData as any)?.leagueFormat || '');
@@ -255,7 +255,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     { label: 'Double Elimination', value: 'double_elimination' },
   ];
 
-  // ── Calendar helpers ────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Calendar helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const getDaysInMonth = (year: number, month: number) =>
     new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) =>
@@ -376,7 +376,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     year: 'numeric',
   });
 
-  // ── Projected end date ──────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Projected end date Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const projectedEndDate = (() => {
     if (!startDate) return '';
     // For "all at once", show the user-selected end date
@@ -416,7 +416,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     });
   })();
 
-  // ── Day chips ───────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Day chips Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const toggleGameDay = (day: number) => {
@@ -425,7 +425,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // ── Format change handler ──────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Format change handler Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const handleFormatChange = (format: string) => {
     setLeagueFormat(format as any);
     // Clear format-specific fields but retain shared fields
@@ -438,7 +438,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
   };
 
-  // ── Roster search (debounced, like player search) ─────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Roster search (debounced, like player search) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     const query = rosterSearchQuery.trim();
     if (query.length < 2) {
@@ -493,7 +493,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     setInvitedRosters(prev => prev.filter(r => r.id !== rosterId));
   };
 
-  // ── Validation ──────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Validation Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -640,7 +640,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     }
   };
 
-  // ── Calendar renderer ───────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Calendar renderer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const renderCalendar = () => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
@@ -727,7 +727,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // ── Cutoff Calendar renderer ────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Cutoff Calendar renderer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const renderCutoffCalendar = () => {
     const year = cutoffCalendarMonth.getFullYear();
     const month = cutoffCalendarMonth.getMonth();
@@ -816,7 +816,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
     );
   };
 
-  // ── End Date Calendar renderer ─────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ End Date Calendar renderer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const renderEndCalendar = () => {
     const year = endCalendarMonth.getFullYear();
     const month = endCalendarMonth.getMonth();
@@ -913,7 +913,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.form}>
-          {/* League Format Selector — required before other fields */}
+          {/* League Format Selector Ã¢â‚¬â€ required before other fields */}
           <FormSelect
             label="League Format *"
             placeholder="Select league format"
@@ -1001,12 +1001,12 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                         backgroundColor:
                           genderRestriction === opt.value
                             ? colors.cobalt
-                            : tokenColors.background,
+                            : colors.background,
                         borderWidth: 1,
                         borderColor:
                           genderRestriction === opt.value
                             ? colors.cobalt
-                            : tokenColors.border,
+                            : colors.border,
                       }}
                       onPress={() => setGenderRestriction(opt.value)}
                     >
@@ -1016,7 +1016,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           fontWeight: '600',
                           color:
                             genderRestriction === opt.value
-                              ? tokenColors.white
+                              ? colors.white
                               : colors.inkFaint,
                         }}
                       >
@@ -1056,9 +1056,9 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
               </TouchableOpacity>
               {showCalendar && renderCalendar()}
 
-              {/* ── Format-specific fields ── */}
+              {/* Ã¢â€â‚¬Ã¢â€â‚¬ Format-specific fields Ã¢â€â‚¬Ã¢â€â‚¬ */}
 
-              {/* Game Frequency — all formats */}
+              {/* Game Frequency Ã¢â‚¬â€ all formats */}
               <FormSelect
                 label="Game Frequency"
                 placeholder="Select frequency"
@@ -1075,7 +1075,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 }}
               />
 
-              {/* End Date picker — visible for "All at Once" frequency */}
+              {/* End Date picker Ã¢â‚¬â€ visible for "All at Once" frequency */}
               {gameFrequency === 'all_at_once' && (
                 <>
                   <Text style={styles.fieldLabel}>End Date</Text>
@@ -1123,7 +1123,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </>
               )}
 
-              {/* Season Length — Season and Season with Playoffs only, hidden for All at Once */}
+              {/* Season Length Ã¢â‚¬â€ Season and Season with Playoffs only, hidden for All at Once */}
               {(leagueFormat === 'season' ||
                 leagueFormat === 'season_with_playoffs') &&
                 gameFrequency !== 'all_at_once' && (
@@ -1138,7 +1138,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                   />
                 )}
 
-              {/* Number of Games per Roster — Season and Season with Playoffs only */}
+              {/* Number of Games per Roster Ã¢â‚¬â€ Season and Season with Playoffs only */}
               {(leagueFormat === 'season' ||
                 leagueFormat === 'season_with_playoffs') && (
                 <FormInput
@@ -1151,7 +1151,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
               )}
 
-              {/* Playoff fields — Season with Playoffs only */}
+              {/* Playoff fields Ã¢â‚¬â€ Season with Playoffs only */}
               {leagueFormat === 'season_with_playoffs' && (
                 <>
                   <FormInput
@@ -1186,7 +1186,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 />
               )}
 
-              {/* Projected End Date — read-only */}
+              {/* Projected End Date Ã¢â‚¬â€ read-only */}
               <View style={styles.projectedEndRow}>
                 <Text style={styles.fieldLabel}>Projected End Date</Text>
                 <Text style={styles.projectedEndValue}>
@@ -1209,7 +1209,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 error={errors.suggestedRosterSize}
               />
 
-              {/* Game Day — hidden for "All at Once" frequency */}
+              {/* Game Day Ã¢â‚¬â€ hidden for "All at Once" frequency */}
               {gameFrequency !== 'all_at_once' && (
                 <>
                   <Text style={styles.fieldLabel}>Game Day</Text>
@@ -1255,7 +1255,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 error={errors.timeWindowEnd}
               />
 
-              {/* Confirmed Rosters — displayed outside the invite card */}
+              {/* Confirmed Rosters Ã¢â‚¬â€ displayed outside the invite card */}
               {addedRosters.length > 0 && (
                 <View style={styles.confirmedRostersSection}>
                   <Text style={styles.confirmedRostersTitle}>
@@ -1268,7 +1268,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           <Ionicons
                             name="shield-outline"
                             size={18}
-                            color={tokenColors.white}
+                            color={colors.white}
                           />
                         </View>
                         <View style={styles.addedRosterDetails}>
@@ -1277,7 +1277,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                           </Text>
                           {item.sportType && (
                             <Text style={styles.addedRosterMeta}>
-                              {item.sportType} • {item.memberCount ?? 0} players
+                              {item.sportType} Ã¢â‚¬Â¢ {item.memberCount ?? 0} players
                             </Text>
                           )}
                         </View>
@@ -1299,7 +1299,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </View>
               )}
 
-              {/* Invite Rosters — card with invited list and search */}
+              {/* Invite Rosters Ã¢â‚¬â€ card with invited list and search */}
               <View style={styles.addRostersSection}>
                 <View style={styles.addRostersHeader}>
                   <Text style={styles.addRostersTitle}>Invite Rosters</Text>
@@ -1325,7 +1325,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             <Ionicons
                               name="time-outline"
                               size={18}
-                              color={tokenColors.white}
+                              color={colors.white}
                             />
                           </View>
                           <View style={styles.addedRosterDetails}>
@@ -1429,7 +1429,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             <Ionicons
                               name="shield-outline"
                               size={16}
-                              color={tokenColors.white}
+                              color={colors.white}
                             />
                           </View>
                           <View style={styles.rosterResultDetails}>
@@ -1438,7 +1438,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                             </Text>
                             {r.sportType && (
                               <Text style={styles.rosterResultMeta}>
-                                {r.sportType} • {r.memberCount ?? 0} players
+                                {r.sportType} Ã¢â‚¬Â¢ {r.memberCount ?? 0} players
                               </Text>
                             )}
                           </View>
@@ -1521,7 +1521,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </TouchableOpacity>
               )}
 
-              {/* Track Standings Toggle — hidden for tournament format */}
+              {/* Track Standings Toggle Ã¢â‚¬â€ hidden for tournament format */}
               {leagueFormat !== 'tournament' && (
                 <View style={styles.toggleCard}>
                   <View style={styles.toggleRow}>
@@ -1553,7 +1553,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
                 </View>
               )}
 
-              {/* Points Configuration — only when tracking standings */}
+              {/* Points Configuration Ã¢â‚¬â€ only when tracking standings */}
               {trackStandings && (
                 <View style={styles.pointsSection}>
                   <FormInput
@@ -1585,7 +1585,7 @@ export const LeagueForm: React.FC<LeagueFormProps> = ({
             </>
           )}
 
-          {/* Buttons — vertically stacked, matching Roster edit screen */}
+          {/* Buttons Ã¢â‚¬â€ vertically stacked, matching Roster edit screen */}
           <View style={styles.buttonStack}>
             <FormButton
               title={isEdit ? 'Update League' : 'Create League'}
@@ -1650,11 +1650,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     marginBottom: Spacing.md,
     gap: 10,
   },
@@ -1668,10 +1668,10 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   calendar: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
     padding: 12,
     marginBottom: Spacing.lg,
   },
@@ -1715,7 +1715,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
   },
   calendarDayToday: {
-    backgroundColor: tokenColors.successLight,
+    backgroundColor: colors.successLight,
   },
   calendarDayText: {
     fontFamily: fonts.body,
@@ -1723,7 +1723,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   calendarDayTextSelected: {
-    color: tokenColors.white,
+    color: colors.white,
     fontFamily: fonts.semibold,
   },
   calendarDayTextToday: {
@@ -1742,13 +1742,13 @@ const styles = StyleSheet.create({
   },
   // Toggle card
   toggleCard: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -1774,7 +1774,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 28,
     borderRadius: 14,
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
@@ -1785,7 +1785,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
@@ -1825,9 +1825,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   dayChipSelected: {
     backgroundColor: colors.cobalt,
@@ -1840,9 +1840,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dayChipTextSelected: {
-    color: tokenColors.white,
+    color: colors.white,
   },
-  // Confirmed Rosters section — displayed above the invite card
+  // Confirmed Rosters section Ã¢â‚¬â€ displayed above the invite card
   confirmedRostersSection: {
     gap: 8,
     marginBottom: Spacing.md,
@@ -1853,15 +1853,15 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginBottom: 4,
   },
-  // Add Rosters section — matches Create Roster's Add Players pattern
+  // Add Rosters section Ã¢â‚¬â€ matches Create Roster's Add Players pattern
   addRostersSection: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     gap: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   addRostersHeader: {
     flexDirection: 'row',
@@ -1885,7 +1885,7 @@ const styles = StyleSheet.create({
   rosterCountBadgeText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: tokenColors.white,
+    color: colors.white,
   },
   addRostersDescription: {
     fontFamily: fonts.body,
@@ -1952,7 +1952,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: tokenColors.warningLight,
+    backgroundColor: colors.warningLight,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
@@ -1987,7 +1987,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -2008,7 +2008,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: tokenColors.errorLight,
+    backgroundColor: colors.errorLight,
     borderRadius: 8,
     gap: 6,
   },
@@ -2030,11 +2030,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   rosterResultInfo: {
     flexDirection: 'row',
@@ -2080,7 +2080,7 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     textAlign: 'center',
   },
-  // Vertically stacked buttons — matching Roster edit screen
+  // Vertically stacked buttons Ã¢â‚¬â€ matching Roster edit screen
   buttonStack: {
     marginTop: Spacing.lg,
     gap: 12,

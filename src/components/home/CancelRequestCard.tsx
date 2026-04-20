@@ -6,8 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { colors, fonts, Spacing, Shadows } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, Shadows, useTheme } from '../../theme';
 
 export interface CancelRequestData {
   id: string;
@@ -41,7 +40,7 @@ export interface CancelRequestCardProps {
 
 /**
  * Formats a date string and time range for display.
- * e.g. "Jan 20, 2024 • 2:00 PM – 3:00 PM"
+ * e.g. "Jan 20, 2024 Ã¢â‚¬Â¢ 2:00 PM Ã¢â‚¬â€œ 3:00 PM"
  */
 function formatBookingDateTime(
   dateStr: string,
@@ -77,7 +76,7 @@ function formatBookingDateTime(
       : `${hour12}:${String(m).padStart(2, '0')} ${period}`;
   };
 
-  return `${datePart} • ${formatTime(startTime)} – ${formatTime(endTime)}`;
+  return `${datePart} Ã¢â‚¬Â¢ ${formatTime(startTime)} Ã¢â‚¬â€œ ${formatTime(endTime)}`;
 }
 
 export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
@@ -86,6 +85,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
   onDeny,
   isLoading = false,
 }) => {
+  const { colors } = useTheme();
   const { user, reservation } = cancelRequest;
   const { timeSlot } = reservation;
   const userName = `${user.firstName} ${user.lastName}`;
@@ -95,7 +95,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
       <Text style={styles.userName}>{userName}</Text>
 
       <Text style={styles.courtName}>
-        {timeSlot.court.name} — {timeSlot.court.facility.name}
+        {timeSlot.court.name} Ã¢â‚¬â€ {timeSlot.court.facility.name}
       </Text>
 
       <Text style={styles.dateTime}>
@@ -115,7 +115,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
           accessibilityRole="button"
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color={tokenColors.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.buttonText}>Approve</Text>
           )}
@@ -129,7 +129,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
           accessibilityRole="button"
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color={tokenColors.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.buttonText}>Deny</Text>
           )}
@@ -141,7 +141,7 @@ export const CancelRequestCard: React.FC<CancelRequestCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.md,
     ...Shadows.sm,
@@ -184,6 +184,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

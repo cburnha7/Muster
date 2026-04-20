@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 
 interface PastReservation {
@@ -35,6 +34,7 @@ interface PurchaseHistorySectionProps {
 export function PurchaseHistorySection({
   userId,
 }: PurchaseHistorySectionProps) {
+  const { colors } = useTheme();
   const [purchases, setPurchases] = useState<PastReservation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -114,14 +114,14 @@ export function PurchaseHistorySection({
     if (r.status === 'cancelled' || r.cancellationStatus === 'approved') {
       return {
         label: 'Cancelled',
-        color: tokenColors.error,
+        color: colors.error,
         icon: 'close-circle',
       };
     }
     if (r.cancellationStatus === 'pending_cancellation') {
       return {
         label: 'Pending Cancellation',
-        color: tokenColors.warning,
+        color: colors.warning,
         icon: 'time-outline',
       };
     }
@@ -170,11 +170,11 @@ export function PurchaseHistorySection({
                   </Text>
                 </View>
                 <Text style={styles.courtName}>
-                  {purchase.timeSlot.court.name} ·{' '}
+                  {purchase.timeSlot.court.name} Ã‚Â·{' '}
                   {formatDate(purchase.timeSlot.date)}
                 </Text>
                 <Text style={styles.timeText}>
-                  {formatTime(purchase.timeSlot.startTime)} –{' '}
+                  {formatTime(purchase.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
                   {formatTime(purchase.timeSlot.endTime)}
                 </Text>
                 <View
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     shadowColor: colors.ink,

@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { WizardProgressDots } from '../../../components/wizard/WizardProgressDots';
 import { useCreateRoster } from './CreateRosterContext';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -33,7 +33,7 @@ function canContinue(state: any, step: number): boolean {
 }
 
 export function RosterFlowContainer({ children, onSubmit }: Props) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateRoster();
   const navigation = useNavigation();
   const { currentStep } = state;
@@ -53,9 +53,7 @@ export function RosterFlowContainer({ children, onSubmit }: Props) {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.root, { backgroundColor: themeColors.bgScreen }]}
-    >
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.headerRow}>
         <TouchableOpacity
           onPress={handleBack}

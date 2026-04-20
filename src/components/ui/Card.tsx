@@ -1,11 +1,7 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
-import {
-  tokenColors,
-  tokenRadius,
-  tokenSpacing,
-  tokenShadow,
-} from '../../theme/tokens';
+import { tokenRadius, tokenSpacing } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -14,15 +10,16 @@ interface Props {
 }
 
 export function Card({ children, style, padded = true }: Props) {
+  const { colors, shadow } = useTheme();
   return (
     <View
       style={[
         {
-          backgroundColor: tokenColors.surface,
+          backgroundColor: colors.surface,
           borderRadius: tokenRadius.lg,
           overflow: 'hidden' as const,
           ...(padded ? { padding: tokenSpacing.lg } : {}),
-          ...tokenShadow.card,
+          ...shadow.card,
         },
         style,
       ]}

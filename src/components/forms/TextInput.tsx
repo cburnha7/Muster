@@ -9,7 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import { shake } from '../../utils/animations';
 
 interface TextInputProps extends Omit<RNTextInputProps, 'onChangeText'> {
@@ -38,6 +38,7 @@ export const TextInput: React.FC<TextInputProps> = ({
   accessibilityLabel,
   ...rest
 }) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const shakeAnim = useRef(new Animated.Value(0)).current;

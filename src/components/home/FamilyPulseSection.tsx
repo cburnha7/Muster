@@ -8,8 +8,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { selectDependents } from '../../store/slices/contextSlice';
 
 const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
@@ -19,6 +18,7 @@ const DEPENDENT_COLORS = ['#E8720C', '#8B5CF6', '#0D9488', '#DC2626'];
  * Displays on the Home screen so parents can see their family at a glance.
  */
 export function FamilyPulseSection() {
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dependents = useSelector(selectDependents);
 
@@ -66,7 +66,7 @@ export function FamilyPulseSection() {
                     ?.navigate('Home', { screen: 'HomeScreen' })
                 }
               >
-                <Text style={styles.findGameText}>Find game →</Text>
+                <Text style={styles.findGameText}>Find game Ã¢â€ â€™</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           );
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   card: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 14,
     padding: 14,
     width: 120,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   depInitial: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   depName: {
     fontFamily: fonts.headingSemi,

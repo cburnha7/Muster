@@ -14,8 +14,7 @@ import * as Location from 'expo-location';
 import { EventCard } from '../ui/EventCard';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { EventsMapViewWrapper } from '../maps/EventsMapViewWrapper';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { Event, SportType, EventType, EventStatus } from '../../types';
 import { eventService } from '../../services/api/EventService';
 import { searchEventBus } from '../../utils/searchEventBus';
@@ -58,7 +57,7 @@ export function EventSearchPanel({
   onEventPress,
 }: EventSearchPanelProps) {
   const [query, setQuery] = useState('');
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const [sportFilter, setSportFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
@@ -232,7 +231,7 @@ export function EventSearchPanel({
   if (!visible) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
@@ -355,7 +354,7 @@ export function EventSearchPanel({
         <Ionicons
           name="add-circle-outline"
           size={20}
-          color={tokenColors.white}
+          color={colors.white}
         />
         <Text style={styles.createBtnText}>Create Event</Text>
       </TouchableOpacity>
@@ -388,7 +387,7 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
@@ -396,8 +395,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: tokenColors.border,
-    shadowColor: tokenColors.black,
+    borderColor: colors.border,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -414,7 +413,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
@@ -429,7 +428,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   gpsBtn: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
@@ -474,6 +473,6 @@ const styles = StyleSheet.create({
   createBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

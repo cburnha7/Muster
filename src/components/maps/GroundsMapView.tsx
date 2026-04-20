@@ -12,8 +12,7 @@ import {
 } from '../../services/location/LocationService';
 import { GroundMapPreview } from './GroundMapPreview';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface GroundsMapViewProps {
   grounds: Facility[];
@@ -24,6 +23,7 @@ export function GroundsMapView({
   grounds,
   onGroundPress,
 }: GroundsMapViewProps) {
+  const { colors } = useTheme();
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [selectedGround, setSelectedGround] = useState<Facility | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,8 +164,8 @@ const markerStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: tokenColors.white,
-    shadowColor: tokenColors.black,
+    borderColor: colors.white,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -178,7 +178,7 @@ const markerStyles = StyleSheet.create({
     borderRadius: 19,
   },
   pinText: {
-    color: tokenColors.white,
+    color: colors.white,
     fontSize: 14,
     fontWeight: '700',
   },

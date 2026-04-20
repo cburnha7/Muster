@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { WizardProgressDots } from '../../../components/wizard/WizardProgressDots';
 import { useCreateEvent } from './CreateEventContext';
 import { canContinue } from './validation';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 interface EventFlowContainerProps {
   children: React.ReactNode;
@@ -24,7 +24,7 @@ export function EventFlowContainer({
   children,
   onSubmit,
 }: EventFlowContainerProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const navigation = useNavigation();
   const { currentStep } = state;
@@ -46,9 +46,7 @@ export function EventFlowContainer({
   };
 
   return (
-    <SafeAreaView
-      style={[styles.root, { backgroundColor: themeColors.bgScreen }]}
-    >
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.headerRow}>
         <TouchableOpacity
           onPress={handleBack}

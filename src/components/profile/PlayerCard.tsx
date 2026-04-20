@@ -9,8 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { SportRatingsSection } from './SportRatingsSection';
 
 export interface PlayerCardProps {
@@ -42,6 +41,7 @@ export function PlayerCard({
   dateOfBirth,
   gender,
 }: PlayerCardProps) {
+  const { colors } = useTheme();
   const age = dateOfBirth ? calculateAge(dateOfBirth) : null;
 
   return (
@@ -87,7 +87,7 @@ export function PlayerCard({
           {(age !== null || gender) && (
             <Text style={styles.detail}>
               {age !== null ? `${age} years old` : ''}
-              {age !== null && gender ? '  ·  ' : ''}
+              {age !== null && gender ? '  Ã‚Â·  ' : ''}
               {gender || ''}
             </Text>
           )}
@@ -100,7 +100,7 @@ export function PlayerCard({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: tokenColors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '100%',
     maxWidth: 320,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,

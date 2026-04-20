@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { SportIconGrid } from '../../components/wizard/SportIconGrid';
 import type { OnboardingIntent } from '../../navigation/types';
 
@@ -19,7 +19,7 @@ const TOTAL_STEPS = 5;
 const HORIZONTAL_PAD = 24;
 
 export const SportSelectionScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -55,7 +55,7 @@ export const SportSelectionScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       <View style={styles.content}>
         {/* Top bar */}

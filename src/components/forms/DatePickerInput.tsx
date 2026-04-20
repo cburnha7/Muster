@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import DateTimePicker from '../ui/CrossPlatformDateTimePicker';
 type DateTimePickerEvent = { type: string };
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface DatePickerInputProps {
   label: string;
@@ -18,7 +18,7 @@ interface DatePickerInputProps {
 }
 
 /**
- * Native date picker input — replaces free-text date fields.
+ * Native date picker input â€” replaces free-text date fields.
  * Accepts and emits date as "YYYY-MM-DD" string.
  * Shows a tappable field that opens the platform date picker.
  */
@@ -32,6 +32,7 @@ export function DatePickerInput({
   maximumDate,
   containerStyle,
 }: DatePickerInputProps) {
+  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
 
   const parseDate = (dateStr: string): Date => {

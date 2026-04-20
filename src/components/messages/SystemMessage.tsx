@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import type { MessagePriority } from '../../types/messaging';
 
 interface SystemMessageProps {
@@ -10,6 +9,7 @@ interface SystemMessageProps {
 }
 
 export function SystemMessage({ content, priority }: SystemMessageProps) {
+  const { colors } = useTheme();
   const isUrgent = priority === 'URGENT';
 
   return (
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.outlineVariant,
   },
   lineUrgent: {
-    backgroundColor: tokenColors.warning + '60',
+    backgroundColor: colors.warning + '60',
   },
   text: {
     fontFamily: fonts.body,
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   textUrgent: {
-    color: tokenColors.warning,
+    color: colors.warning,
     fontFamily: fonts.label,
   },
 });

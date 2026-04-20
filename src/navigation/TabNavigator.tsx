@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
 import { RootState } from '../store/store';
 import { useTheme } from '../theme';
-import { tokenColors } from '../theme/tokens';
 import { HeaderSearchPill } from '../components/navigation/HeaderSearchPill';
 import { HeaderUserSelector } from '../components/navigation/HeaderUserSelector';
 import { NotificationBell } from '../components/navigation/NotificationBell';
@@ -253,5 +252,5 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
   },
-  badgeText: { color: tokenColors.white, paddingHorizontal: 4 },
+  badgeText: { color: '#FFFFFF', paddingHorizontal: 4 },
 });

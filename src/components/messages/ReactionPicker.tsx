@@ -1,9 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
-const EMOJIS = ['👍', '🔥', '😂', '❤️', '💪', '🎯', '👏', '😤'] as const;
+const EMOJIS = ['ðŸ‘', 'ðŸ”¥', 'ðŸ˜‚', 'â¤ï¸', 'ðŸ’ª', 'ðŸŽ¯', 'ðŸ‘', 'ðŸ˜¤'] as const;
 
 interface ReactionPickerProps {
   onSelect: (emoji: string) => void;
@@ -11,6 +10,7 @@ interface ReactionPickerProps {
 }
 
 export function ReactionPicker({ onSelect, onDismiss }: ReactionPickerProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       style={styles.overlay}
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     padding: 6,
     gap: 4,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,

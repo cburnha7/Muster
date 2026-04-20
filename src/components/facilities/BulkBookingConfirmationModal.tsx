@@ -9,13 +9,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  colors,
   fonts,
   typeScale,
   Spacing,
   ComponentStyles,
+  useTheme,
 } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { formatTime12 } from '../../utils/calendarUtils';
 
 export interface CartSlot {
@@ -52,6 +51,7 @@ export function BulkBookingConfirmationModal({
   confirmDisabled = false,
   confirmLabel,
 }: BulkBookingConfirmationModalProps) {
+  const { colors } = useTheme();
   // Group by court, then by date
   const grouped = new Map<string, Map<string, CartSlot[]>>();
   for (const slot of cartSlots) {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   title: {
     fontFamily: fonts.heading,

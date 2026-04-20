@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { WizardProgressDots } from '../../../components/wizard/WizardProgressDots';
 import { useCreateLeague } from './CreateLeagueContext';
 import { LeagueWizardState } from './types';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -70,7 +70,7 @@ function canContinue(state: LeagueWizardState, step: number): boolean {
 }
 
 export function LeagueFlowContainer({ children, onSubmit }: Props) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateLeague();
   const navigation = useNavigation();
   const { currentStep } = state;
@@ -90,9 +90,7 @@ export function LeagueFlowContainer({ children, onSubmit }: Props) {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.root, { backgroundColor: themeColors.bgScreen }]}
-    >
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.headerRow}>
         <TouchableOpacity
           onPress={handleBack}

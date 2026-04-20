@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
-import { colors, fonts, Spacing, BorderRadius, Shadows } from '../../theme';
+import { fonts, Spacing, BorderRadius, Shadows, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import {
   selectActiveUserId,
@@ -25,6 +25,7 @@ import {
  * Tapping opens a dropdown to switch between guardian and dependents.
  */
 export function ContextIndicator() {
+  const { colors } = useTheme();
   const { user: guardian } = useAuth();
   const dispatch = useDispatch();
   const activeUserId = useSelector(selectActiveUserId);

@@ -6,25 +6,23 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
-} from 'react-native';
+  Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import {
   playerDuesService,
-  DuesStatusResponse,
-} from '../../services/api/PlayerDuesService';
+  DuesStatusResponse } from '../../services/api/PlayerDuesService';
 import { TeamsStackParamList } from '../../navigation/types';
 
 type PayPlayerDuesRouteProp = RouteProp<TeamsStackParamList, 'PayPlayerDues'>;
 
 export const PayPlayerDuesScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<PayPlayerDuesRouteProp>();
   const user = useSelector(selectUser);
@@ -66,8 +64,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
       const result = await playerDuesService.createPayment({
         playerId: user.id,
         rosterId,
-        seasonId,
-      });
+        seasonId });
 
       // In a full implementation, the clientSecret would be passed to
       // Stripe's confirmPayment SDK. For now, we confirm immediately
@@ -89,7 +86,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Season Dues"
           leftIcon="""
@@ -105,7 +102,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Season Dues"
           leftIcon="""
@@ -128,7 +125,7 @@ export const PayPlayerDuesScreen: React.FC = () => {
     : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Season Dues"
         leftIcon="""
@@ -213,123 +210,101 @@ export const PayPlayerDuesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
-  },
+    backgroundColor: colors.white },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xxl,
-  },
+    padding: Spacing.xxl },
   loadingText: {
     marginTop: Spacing.md,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkFaint,
-  },
+    color: colors.inkFaint },
   errorText: {
     marginTop: Spacing.md,
     fontFamily: fonts.body,
     fontSize: 17,
     color: colors.heart,
-    textAlign: 'center',
-  },
+    textAlign: 'center' },
   retryButton: {
     marginTop: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: 8,
-    backgroundColor: colors.cobalt,
-  },
+    backgroundColor: colors.cobalt },
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
-  },
+    color: colors.white },
   scrollView: {
-    flex: 1,
-  },
+    flex: 1 },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: 120,
-  },
+    paddingBottom: 120 },
   card: {
     backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
+    marginBottom: Spacing.md },
   cardTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
     color: colors.ink,
-    marginBottom: Spacing.md,
-  },
+    marginBottom: Spacing.md },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-  },
+    borderBottomColor: colors.surface },
   detailLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
     letterSpacing: 1.6,
     color: colors.inkFaint,
-    textTransform: 'uppercase',
-  },
+    textTransform: 'uppercase' },
   detailValue: {
     fontFamily: fonts.ui,
     fontSize: 17,
     color: colors.ink,
-    textAlign: 'right',
-  },
+    textAlign: 'right' },
   statusBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
-    borderRadius: 6,
-  },
+    borderRadius: 6 },
   statusPaid: {
-    backgroundColor: colors.pineTint,
-  },
+    backgroundColor: colors.pineTint },
   statusUnpaid: {
-    backgroundColor: colors.goldTint,
-  },
+    backgroundColor: colors.goldTint },
   statusText: {
     fontFamily: fonts.label,
-    fontSize: 12,
-  },
+    fontSize: 12 },
   statusTextPaid: {
-    color: colors.pine,
-  },
+    color: colors.pine },
   statusTextUnpaid: {
-    color: colors.gold,
-  },
+    color: colors.gold },
   successCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
+    marginBottom: Spacing.md },
   successText: {
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
-    lineHeight: 20,
-  },
+    lineHeight: 20 },
   bottomBar: {
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    backgroundColor: colors.white,
-  },
+    backgroundColor: colors.white },
   cancelButton: {
     flex: 1,
     alignItems: 'center',
@@ -338,41 +313,33 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
-  },
+    borderColor: colors.inkFaint },
   cancelButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.ink,
-  },
+    color: colors.ink },
   payButton: {
     flex: 2,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     borderRadius: 8,
-    backgroundColor: colors.cobalt,
-  },
+    backgroundColor: colors.cobalt },
   payButtonDisabled: {
-    opacity: 0.5,
-  },
+    opacity: 0.5 },
   payButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
-  },
+    color: colors.white },
   dependentNotice: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
-  },
+    paddingVertical: Spacing.sm },
   dependentNoticeText: {
     fontFamily: fonts.body,
     fontSize: 14,
     color: colors.ink,
     marginLeft: Spacing.sm,
     flex: 1,
-    lineHeight: 20,
-  },
-});
+    lineHeight: 20 } });

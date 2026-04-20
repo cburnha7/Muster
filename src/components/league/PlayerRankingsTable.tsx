@@ -8,8 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PlayerRanking } from '../../types';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface PlayerRankingsTableProps {
   rankings: PlayerRanking[];
@@ -34,6 +33,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
   loading = false,
   style,
 }) => {
+  const { colors } = useTheme();
   const [sortMetric, setSortMetric] = useState<SortMetric>('rank');
   const [sortAscending, setSortAscending] = useState(false);
 
@@ -79,7 +79,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
         <Ionicons
           name="swap-vertical-outline"
           size={14}
-          color={tokenColors.inkMuted}
+          color={colors.inkMuted}
         />
       );
     }
@@ -158,7 +158,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
     return (
       <View style={badgeStyle}>
         {rank <= 3 && (
-          <Ionicons name={iconName} size={12} color={tokenColors.white} />
+          <Ionicons name={iconName} size={12} color={colors.white} />
         )}
         <Text style={styles.rankText}>{rank}</Text>
       </View>
@@ -241,7 +241,7 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
 
   const renderEmpty = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="people-outline" size={48} color={tokenColors.inkMuted} />
+      <Ionicons name="people-outline" size={48} color={colors.inkMuted} />
       <Text style={styles.emptyText}>No player rankings yet</Text>
       <Text style={styles.emptySubtext}>
         Rankings will appear after matches are played
@@ -278,22 +278,22 @@ export const PlayerRankingsTable: React.FC<PlayerRankingsTableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     flex: 1,
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 2,
     borderBottomColor: colors.cobalt,
   },
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   evenRow: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
   },
   headerCell: {
     flexDirection: 'row',
@@ -326,13 +326,13 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: tokenColors.ink,
+    color: colors.ink,
   },
   rankBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -340,31 +340,31 @@ const styles = StyleSheet.create({
     minWidth: 36,
   },
   goldBadge: {
-    backgroundColor: tokenColors.gold,
+    backgroundColor: colors.gold,
   },
   silverBadge: {
-    backgroundColor: tokenColors.inkMuted,
+    backgroundColor: colors.inkMuted,
   },
   bronzeBadge: {
-    backgroundColor: tokenColors.warning,
+    backgroundColor: colors.warning,
   },
   rankText: {
     fontSize: 13,
     fontWeight: '700',
-    color: tokenColors.white,
+    color: colors.white,
   },
   playerName: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
   },
   teamText: {
     fontSize: 13,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   statText: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -401,25 +401,25 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },
   legend: {
     padding: 12,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   legendTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginBottom: 6,
   },
   legendItems: {
@@ -429,6 +429,6 @@ const styles = StyleSheet.create({
   },
   legendItem: {
     fontSize: 11,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
   },
 });

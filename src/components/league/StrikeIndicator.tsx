@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 const STRIKE_THRESHOLD = 3;
 
@@ -17,6 +16,7 @@ export const StrikeIndicator: React.FC<StrikeIndicatorProps> = ({
   rosterName,
   onRemoveRoster,
 }) => {
+  const { colors } = useTheme();
   if (strikeCount === 0) return null;
 
   const isAtThreshold = strikeCount >= STRIKE_THRESHOLD;
@@ -34,7 +34,7 @@ export const StrikeIndicator: React.FC<StrikeIndicatorProps> = ({
         <Ionicons
           name="warning"
           size={12}
-          color={isAtThreshold ? tokenColors.white : colors.ink}
+          color={isAtThreshold ? colors.white : colors.ink}
         />
         <Text
           style={[styles.badgeText, isAtThreshold && styles.badgeTextDanger]}
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   badgeTextDanger: {
-    color: tokenColors.white,
+    color: colors.white,
   },
   removeButton: {
     backgroundColor: colors.heart,
@@ -96,6 +96,6 @@ const styles = StyleSheet.create({
   removeButtonText: {
     fontFamily: fonts.ui,
     fontSize: 12,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

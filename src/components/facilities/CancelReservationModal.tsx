@@ -11,8 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import { FormButton } from '../forms/FormButton';
 
 interface CancelReservationModalProps {
@@ -33,6 +32,7 @@ export function CancelReservationModal({
   onConfirm,
   reservationDetails,
 }: CancelReservationModalProps) {
+  const { colors } = useTheme();
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     elevation: 5,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,

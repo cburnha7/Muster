@@ -14,13 +14,13 @@ import { useCreateEvent } from './CreateEventContext';
 import { AvailabilityIndicator } from '../../../components/ui/AvailabilityIndicator';
 import { useAvailabilityCheck } from '../../../hooks/useAvailabilityCheck';
 import { InviteToMusterModal } from '../../../components/invite/InviteToMusterModal';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 import { EventType } from '../../../types';
 import { InviteItem } from './types';
 import { API_BASE_URL } from '../../../services/api/config';
 
 export function Step5Invite() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,7 +170,7 @@ export function Step5Invite() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
       <Text style={styles.heading}>Who's invited?</Text>

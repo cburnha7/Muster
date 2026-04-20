@@ -6,13 +6,8 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenShadow,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -32,6 +27,7 @@ export function MilestoneOverlay({
   milestone,
   onDismiss,
 }: MilestoneOverlayProps) {
+  const { colors, shadow } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,22 +53,35 @@ export function MilestoneOverlay({
   return (
     <Animated.View style={[styles.overlay, { opacity: opacityAnim }]}>
       <TouchableOpacity
-        style={styles.backdrop}
+        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
         onPress={onDismiss}
         activeOpacity={1}
       />
       <Animated.View
-        style={[styles.card, { transform: [{ scale: scaleAnim }] }]}
+        style={[
+          styles.card,
+          {
+            backgroundColor: colors.surface,
+            ...shadow.modal,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
       >
         <Text style={styles.emoji}>{milestone.emoji}</Text>
-        <Text style={styles.title}>{milestone.title}</Text>
-        <Text style={styles.subtitle}>{milestone.subtitle}</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>
+          {milestone.title}
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
+          {milestone.subtitle}
+        </Text>
         <TouchableOpacity
-          style={styles.dismissBtn}
+          style={[styles.dismissBtn, { backgroundColor: colors.cobalt }]}
           onPress={onDismiss}
           activeOpacity={0.8}
         >
-          <Text style={styles.dismissText}>Awesome</Text>
+          <Text style={[styles.dismissText, { color: colors.white }]}>
+            Awesome
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>
@@ -88,16 +97,13 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: tokenColors.overlay,
   },
   card: {
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.xl,
     paddingVertical: tokenSpacing.xxl,
     paddingHorizontal: tokenSpacing.xl,
     alignItems: 'center',
     width: SCREEN_WIDTH * 0.78,
-    ...tokenShadow.modal,
     gap: tokenSpacing.sm,
   },
   emoji: {
@@ -107,20 +113,17 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: tokenFontFamily.heading,
     fontSize: 20,
-    color: tokenColors.ink,
     textAlign: 'center',
     letterSpacing: -0.3,
   },
   subtitle: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 15,
-    color: tokenColors.inkSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   dismissBtn: {
     marginTop: tokenSpacing.md,
-    backgroundColor: tokenColors.cobalt,
     borderRadius: tokenRadius.pill,
     paddingHorizontal: tokenSpacing.xl,
     paddingVertical: tokenSpacing.md,
@@ -128,6 +131,5 @@ const styles = StyleSheet.create({
   dismissText: {
     fontFamily: tokenFontFamily.uiBold,
     fontSize: 15,
-    color: tokenColors.white,
   },
 });

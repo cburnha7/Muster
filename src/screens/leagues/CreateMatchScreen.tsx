@@ -10,7 +10,7 @@ import { addMatch } from '../../store/slices/matchesSlice';
 import { selectUser } from '../../store/slices/authSlice';
 import { CreateMatchData, Match, Team, Event } from '../../types';
 import { League } from '../../types/league';
-import { colors, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 
 type CreateMatchScreenRouteProp = RouteProp<
   { CreateMatch: { leagueId: string; seasonId?: string } },
@@ -18,7 +18,7 @@ type CreateMatchScreenRouteProp = RouteProp<
 >;
 
 export const CreateMatchScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<CreateMatchScreenRouteProp>();
   const dispatch = useDispatch();
@@ -109,9 +109,7 @@ export const CreateMatchScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Create Match"
           leftIcon="arrow-back"
@@ -126,7 +124,7 @@ export const CreateMatchScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Create Match"
         leftIcon="arrow-back"

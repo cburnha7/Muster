@@ -9,7 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { Court, courtService } from '../../services/api/CourtService';
-import { colors, Spacing } from '../../theme';
+import { Spacing, useTheme } from '../../theme';
 
 interface CourtListManagerProps {
   courts: Court[];
@@ -26,6 +26,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
   onEditCourt,
   onAddCourt,
 }) => {
+  const { colors } = useTheme();
   const handleDeleteCourt = (court: Court) => {
     Alert.alert(
       'Delete Court',
@@ -89,7 +90,7 @@ export const CourtListManager: React.FC<CourtListManagerProps> = ({
             <View style={styles.courtInfo}>
               <Text style={styles.courtName}>{court.name}</Text>
               <Text style={styles.courtDetails}>
-                {court.sportType} • {court.isIndoor ? 'Indoor' : 'Outdoor'} • Capacity: {court.capacity}
+                {court.sportType} â€¢ {court.isIndoor ? 'Indoor' : 'Outdoor'} â€¢ Capacity: {court.capacity}
               </Text>
               {court.pricePerHour && (
                 <Text style={styles.courtPrice}>${court.pricePerHour}/hour</Text>

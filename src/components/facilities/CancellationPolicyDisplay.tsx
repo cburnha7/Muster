@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import type { PenaltyDestination } from '../../types';
 
 export interface CancellationPolicyDisplayProps {
@@ -11,6 +11,7 @@ export interface CancellationPolicyDisplayProps {
 }
 
 function formatPenaltyDestination(destination: PenaltyDestination): string {
+  const { colors } = useTheme();
   switch (destination) {
     case 'facility':
       return 'the facility';

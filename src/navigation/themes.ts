@@ -1,18 +1,27 @@
-import { DefaultTheme, Theme as NavTheme } from '@react-navigation/native';
-import { tokenColors } from '../theme/tokens';
+import {
+  DefaultTheme,
+  DarkTheme,
+  Theme as NavTheme,
+} from '@react-navigation/native';
+import { lightColors, darkColors, SemanticColors } from '../theme/tokens';
 
-export const MusterLightTheme: NavTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: tokenColors.cobalt,
-    background: tokenColors.background,
-    card: tokenColors.surface,
-    text: tokenColors.ink,
-    border: tokenColors.border,
-    notification: tokenColors.error,
-  },
-};
+function buildNavTheme(
+  base: typeof DefaultTheme,
+  colors: SemanticColors
+): NavTheme {
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: colors.cobalt,
+      background: colors.background,
+      card: colors.surface,
+      text: colors.ink,
+      border: colors.border,
+      notification: colors.error,
+    },
+  };
+}
 
-// Muster is light-mode only — alias for backward compat
-export const MusterDarkTheme = MusterLightTheme;
+export const MusterLightTheme = buildNavTheme(DefaultTheme, lightColors);
+export const MusterDarkTheme = buildNavTheme(DarkTheme, darkColors);

@@ -6,8 +6,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 export interface ScheduleSlot {
   time: string; // "HH:MM"
@@ -55,6 +54,7 @@ export function DayScheduleTimeline({
   minimumMinutes = 60,
   incrementMinutes = 30,
 }: DayScheduleTimelineProps) {
+  const { colors } = useTheme();
   const handleSlotTap = useCallback(
     (slot: ScheduleSlot) => {
       if (slot.status === 'blocked' || slot.status === 'rented') return;
@@ -167,11 +167,11 @@ export function DayScheduleTimeline({
             let label = '';
 
             if (slot.status === 'blocked' || slot.status === 'rented') {
-              bg = tokenColors.border;
+              bg = colors.border;
               textColor = colors.inkFaint;
               label = 'Booked';
             } else if (slot.status === 'own_rental') {
-              bg = tokenColors.cobaltLight;
+              bg = colors.cobaltLight;
               textColor = colors.sportHockey;
               label = 'Your Reservation';
             }
@@ -222,7 +222,7 @@ export function DayScheduleTimeline({
               tooShort && styles.durationTextWarning,
             ]}
           >
-            {fmt12(selectedStart!)} – {fmt12(selectedEnd!)} · {durationLabel}
+            {fmt12(selectedStart!)} Ã¢â‚¬â€œ {fmt12(selectedEnd!)} Ã‚Â· {durationLabel}
           </Text>
           {tooShort && (
             <Text style={styles.warningText}>

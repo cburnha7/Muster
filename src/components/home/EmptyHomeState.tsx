@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FormButton } from '../forms/FormButton';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface EmptyHomeStateProps {
   userName?: string;
@@ -10,6 +10,7 @@ interface EmptyHomeStateProps {
 }
 
 export function EmptyHomeState({ userName, onCreateEvent }: EmptyHomeStateProps) {
+  const { colors } = useTheme();
   const greeting = getGreeting();
   const firstName = userName || 'there';
 

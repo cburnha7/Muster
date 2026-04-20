@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateRoster } from './CreateRosterContext';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 const GENDER_OPTIONS: SelectOption[] = [
   { label: 'All', value: '' },
@@ -11,14 +11,14 @@ const GENDER_OPTIONS: SelectOption[] = [
 ];
 
 export function RosterStep2Details() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateRoster();
   const set = (field: string) => (value: string) =>
     dispatch({ type: 'SET_FIELD', field, value });
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >

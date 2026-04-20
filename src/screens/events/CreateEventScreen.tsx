@@ -21,7 +21,7 @@ import { EventType, SkillLevel } from '../../types';
 import { useTheme } from '../../theme';
 
 function CreateEventInner() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
@@ -188,7 +188,7 @@ function CreateEventInner() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+    <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
       <EventFlowContainer onSubmit={handleSubmit}>
         <Step1Sport />
         <Step2Details />

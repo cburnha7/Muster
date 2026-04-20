@@ -2,15 +2,15 @@ import React from 'react';
 import { ScrollView, Text, StyleSheet } from 'react-native';
 import { SportIconGrid } from '../../../components/wizard/SportIconGrid';
 import { useCreateRoster } from './CreateRosterContext';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 import { SportType } from '../../../types';
 
 export function RosterStep1Sport() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { dispatch } = useCreateRoster();
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >

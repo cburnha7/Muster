@@ -15,8 +15,7 @@ import { FormSelect } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { facilityService } from '../../services/api/FacilityService';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import type { PenaltyDestination } from '../../types';
 
 interface CancellationPolicyFormProps {
@@ -40,6 +39,7 @@ export function CancellationPolicyForm({
   facilityId,
   onSaved,
 }: CancellationPolicyFormProps) {
+  const { colors } = useTheme();
   const [noticeWindowHours, setNoticeWindowHours] = useState('');
   const [teamPenaltyPct, setTeamPenaltyPct] = useState('');
   const [penaltyDestination, setPenaltyDestination] = useState<
@@ -184,7 +184,7 @@ export function CancellationPolicyForm({
           required
         />
         <Text style={styles.fieldHint}>
-          Percentage (0–100) of the cancelling roster's escrow that is forfeited
+          Percentage (0Ã¢â‚¬â€œ100) of the cancelling roster's escrow that is forfeited
           for late cancellations.
         </Text>
 
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   infoBanner: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.cobaltLight,
+    backgroundColor: colors.cobaltLight,
     borderRadius: 8,
     padding: Spacing.md,
     marginBottom: Spacing.xl,

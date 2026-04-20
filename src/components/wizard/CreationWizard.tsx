@@ -12,8 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { WizardProgressDots } from './WizardProgressDots';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -47,6 +46,7 @@ export function CreationWizard({
   showSuccess,
   successScreen,
 }: CreationWizardProps) {
+  const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -155,7 +155,7 @@ export function CreationWizard({
             activeOpacity={0.7}
           >
             {isSubmitting ? (
-              <ActivityIndicator color={tokenColors.white} size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
               <Text style={styles.continueBtnText}>
                 {isLastStep ? submitLabel : 'Continue'}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Top bar ───────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Top bar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // ── Step content ──────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Step content Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   stepContainer: {
     flex: 1,
     paddingHorizontal: 24,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-  // ── Bottom bar ────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Bottom bar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   bottomBar: {
     paddingHorizontal: 24,
     paddingBottom: Platform.OS === 'ios' ? 8 : 20,
@@ -239,6 +239,6 @@ const styles = StyleSheet.create({
   continueBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

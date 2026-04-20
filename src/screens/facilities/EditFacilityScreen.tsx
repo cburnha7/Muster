@@ -41,7 +41,6 @@ import {
   FacilityPhoto,
 } from '../../types';
 import { colors, fonts, Spacing, TextStyles, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 import { getSurfaceName } from '../../utils/getSurfaceName';
 import { getSportLabel } from '../../constants/sports';
@@ -119,7 +118,7 @@ interface EditFacilityScreenProps {
 export function EditFacilityScreen({
   route,
 }: EditFacilityScreenProps): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { facilityId } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -615,13 +614,13 @@ export function EditFacilityScreen({
 
   if (isLoading)
     return (
-      <View style={[s.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View style={[s.container, { backgroundColor: colors.bgScreen }]}>
         <LoadingSpinner />
       </View>
     );
   if (error)
     return (
-      <View style={[s.container, { backgroundColor: themeColors.bgScreen }]}>
+      <View style={[s.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay message={error} onRetry={loadFacilityData} />
       </View>
     );
@@ -633,7 +632,7 @@ export function EditFacilityScreen({
 
   return (
     <KeyboardAvoidingView
-      style={[s.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[s.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <TabBar activeIndex={activeTab} onPress={handleTabPress} />
@@ -1857,7 +1856,7 @@ const s = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,

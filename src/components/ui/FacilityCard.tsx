@@ -3,14 +3,8 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Facility, SportType } from '../../types';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenType,
-  tokenShadow,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 import { formatSportType } from '../../utils/formatters';
 
 interface FacilityCardProps {
@@ -26,6 +20,8 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
   style,
   compact = false,
 }) => {
+  const { colors } = useTheme();
+
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
       case SportType.BASKETBALL:
@@ -56,17 +52,12 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <Ionicons key={i} name="star" size={14} color={tokenColors.gold} />
+        <Ionicons key={i} name="star" size={14} color={colors.gold} />
       );
     }
     if (hasHalfStar) {
       stars.push(
-        <Ionicons
-          key="half"
-          name="star-half"
-          size={14}
-          color={tokenColors.gold}
-        />
+        <Ionicons key="half" name="star-half" size={14} color={colors.gold} />
       );
     }
     const emptyStars = 5 - Math.ceil(rating);
@@ -76,7 +67,7 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
           key={`empty-${i}`}
           name="star-outline"
           size={14}
-          color={tokenColors.gold}
+          color={colors.gold}
         />
       );
     }
@@ -88,7 +79,7 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
 
   return (
     <PressableCard
-      style={[styles.container, style]}
+      style={[styles.container, { backgroundColor: colors.surface }, style]}
       onPress={() => onPress?.(facility)}
     >
       {facility.imageUrl && (
@@ -101,18 +92,21 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
             {facility.name}
           </Text>
           <View style={styles.rating}>
             <View style={styles.stars}>{renderStars(facility.rating)}</View>
-            <Text style={styles.ratingText}>
+            <Text style={[styles.ratingText, { color: colors.inkSecondary }]}>
               {facility.rating.toFixed(1)} ({facility.reviewCount || 0})
             </Text>
           </View>
         </View>
 
-        <Text style={styles.description} numberOfLines={2}>
+        <Text
+          style={[styles.description, { color: colors.inkSecondary }]}
+          numberOfLines={2}
+        >
           {facility.description}
         </Text>
 
@@ -121,9 +115,12 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
             <Ionicons
               name="location-outline"
               size={16}
-              color={tokenColors.inkSecondary}
+              color={colors.inkSecondary}
             />
-            <Text style={styles.detailText} numberOfLines={1}>
+            <Text
+              style={[styles.detailText, { color: colors.inkSecondary }]}
+              numberOfLines={1}
+            >
               {formatAddress()}
             </Text>
           </View>
@@ -132,31 +129,46 @@ const FacilityCardInner: React.FC<FacilityCardProps> = ({
         <View style={styles.footer}>
           <View style={styles.sportsContainer}>
             {facility.sportTypes.slice(0, 3).map(sport => (
-              <View key={sport} style={styles.sportBadge}>
+              <View
+                key={sport}
+                style={[
+                  styles.sportBadge,
+                  { backgroundColor: colors.cobaltLight },
+                ]}
+              >
                 <Ionicons
                   name={getSportIcon(sport) as any}
                   size={14}
-                  color={tokenColors.cobalt}
+                  color={colors.cobalt}
                 />
-                <Text style={styles.sportText}>{formatSportType(sport)}</Text>
+                <Text style={[styles.sportText, { color: colors.cobalt }]}>
+                  {formatSportType(sport)}
+                </Text>
               </View>
             ))}
             {facility.sportTypes.length > 3 && (
-              <Text style={styles.moreText}>
+              <Text style={[styles.moreText, { color: colors.inkSecondary }]}>
                 +{facility.sportTypes.length - 3} more
               </Text>
             )}
           </View>
 
           {facility.pricePerHour && (
-            <Text style={styles.price}>${facility.pricePerHour}/hr</Text>
+            <Text style={[styles.price, { color: colors.cobalt }]}>
+              ${facility.pricePerHour}/hr
+            </Text>
           )}
         </View>
 
         {facility.amenities && facility.amenities.length > 0 && (
-          <View style={styles.amenities}>
-            <Text style={styles.amenitiesTitle}>Amenities</Text>
-            <Text style={styles.amenitiesText} numberOfLines={1}>
+          <View style={[styles.amenities, { borderTopColor: colors.border }]}>
+            <Text style={[styles.amenitiesTitle, { color: colors.ink }]}>
+              Amenities
+            </Text>
+            <Text
+              style={[styles.amenitiesText, { color: colors.inkSecondary }]}
+              numberOfLines={1}
+            >
               {facility.amenities.slice(0, 3).join(', ')}
               {facility.amenities.length > 3 && '...'}
             </Text>
@@ -171,7 +183,6 @@ export const FacilityCard = React.memo(FacilityCardInner);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.lg,
     marginVertical: 6,
     marginHorizontal: tokenSpacing.lg,
@@ -193,7 +204,6 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 17,
-    color: tokenColors.ink,
     flex: 1,
     marginRight: tokenSpacing.sm,
   },
@@ -207,12 +217,10 @@ const styles = StyleSheet.create({
   ratingText: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: tokenColors.inkSecondary,
   },
   description: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: tokenColors.inkSecondary,
     lineHeight: 20,
     marginBottom: tokenSpacing.md,
   },
@@ -227,7 +235,6 @@ const styles = StyleSheet.create({
   detailText: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: tokenColors.inkSecondary,
     marginLeft: tokenSpacing.sm,
     flex: 1,
   },
@@ -247,7 +254,6 @@ const styles = StyleSheet.create({
   sportBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.cobaltLight,
     paddingHorizontal: tokenSpacing.sm,
     paddingVertical: tokenSpacing.xs,
     borderRadius: tokenRadius.pill,
@@ -256,33 +262,27 @@ const styles = StyleSheet.create({
   sportText: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 10,
-    color: tokenColors.cobalt,
   },
   moreText: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: tokenColors.inkSecondary,
     fontStyle: 'italic',
   },
   price: {
     fontFamily: tokenFontFamily.heading,
     fontSize: 16,
-    color: tokenColors.cobalt,
   },
   amenities: {
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
     paddingTop: tokenSpacing.sm,
   },
   amenitiesTitle: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 12,
-    color: tokenColors.ink,
     marginBottom: tokenSpacing.xs,
   },
   amenitiesText: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 12,
-    color: tokenColors.inkSecondary,
   },
 });

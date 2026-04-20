@@ -9,8 +9,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 
 interface OwnerRental {
@@ -43,6 +42,7 @@ interface OwnerReservationsSectionProps {
 export function OwnerReservationsSection({
   facilityId,
 }: OwnerReservationsSectionProps) {
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const [rentals, setRentals] = useState<OwnerRental[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,8 +152,8 @@ export function OwnerReservationsSection({
                 <Text style={styles.price}>${r.totalPrice.toFixed(2)}</Text>
               </View>
               <Text style={styles.dateTime}>
-                {formatDate(r.timeSlot.date)} ·{' '}
-                {formatTime(r.timeSlot.startTime)} –{' '}
+                {formatDate(r.timeSlot.date)} Ã‚Â·{' '}
+                {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
                 {formatTime(r.timeSlot.endTime)}
               </Text>
               <Text style={styles.playerName}>
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     shadowColor: colors.ink,

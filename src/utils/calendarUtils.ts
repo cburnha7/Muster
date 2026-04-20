@@ -1,5 +1,4 @@
 import { colors, fonts } from '../theme';
-import { tokenColors } from '../theme/tokens';
 
 /**
  * Calendar theme configuration for react-native-calendars
@@ -10,12 +9,12 @@ export const calendarTheme = {
   calendarBackground: 'transparent',
   textSectionTitleColor: colors.onSurfaceVariant,
   selectedDayBackgroundColor: colors.pine,
-  selectedDayTextColor: tokenColors.white,
+  selectedDayTextColor: '#FFFFFF',
   todayTextColor: colors.pine,
   dayTextColor: colors.onSurface,
   textDisabledColor: colors.outlineVariant,
   dotColor: colors.pine,
-  selectedDotColor: tokenColors.white,
+  selectedDotColor: '#FFFFFF',
   arrowColor: colors.ink,
   monthTextColor: colors.onSurface,
   indicatorColor: colors.pine,

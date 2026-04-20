@@ -1,4 +1,4 @@
-import { tokenColors } from '../../theme/tokens';
+import { lightColors } from '../../theme/tokens';
 
 /**
  * Player Rating Service
@@ -279,19 +279,19 @@ export class PlayerRatingService {
 
     if (rating >= 4.0) {
       label = 'Elite';
-      color = tokenColors.gold; // Gold
+      color = lightColors.gold; // Gold
     } else if (rating >= 3.0) {
       label = 'Advanced';
-      color = tokenColors.warning; // Orange
+      color = lightColors.warning; // Orange
     } else if (rating >= 2.0) {
       label = 'Intermediate';
-      color = tokenColors.success; // Green
+      color = lightColors.success; // Green
     } else if (rating >= 1.0) {
       label = 'Developing';
-      color = tokenColors.cobalt; // Blue
+      color = lightColors.cobalt; // Blue
     } else {
       label = 'New Player';
-      color = tokenColors.inkMuted; // Gray
+      color = lightColors.inkMuted; // Gray
     }
 
     return {

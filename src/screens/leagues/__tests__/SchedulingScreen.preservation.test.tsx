@@ -35,7 +35,10 @@ let mockGenerateSchedule: jest.Mock;
 let mockConfirmSchedule: jest.Mock;
 
 jest.mock('../../../store/api', () => ({
-  useGenerateScheduleMutation: () => [mockGenerateSchedule, { isLoading: false }],
+  useGenerateScheduleMutation: () => [
+    mockGenerateSchedule,
+    { isLoading: false },
+  ],
   useConfirmScheduleMutation: () => [mockConfirmSchedule, { isLoading: false }],
 }));
 
@@ -81,7 +84,7 @@ function createTestStore() {
 /** Non-empty trimmed string for roster names */
 const rosterNameArb = fc
   .string({ minLength: 1, maxLength: 30 })
-  .filter((s) => s.trim().length > 0);
+  .filter(s => s.trim().length > 0);
 
 /** Generate a SchedulePreviewEvent with random roster names and dates */
 const previewEventArb: fc.Arbitrary<SchedulePreviewEvent> = fc.record({
@@ -89,12 +92,15 @@ const previewEventArb: fc.Arbitrary<SchedulePreviewEvent> = fc.record({
   awayRoster: fc.record({ id: fc.uuid(), name: rosterNameArb }),
   scheduledAt: fc
     .date({ min: new Date('2024-01-01'), max: new Date('2025-12-31') })
-    .map((d) => d.toISOString()),
+    .map(d => d.toISOString()),
   round: fc.integer({ min: 1, max: 20 }),
 });
 
 /** Generate 1-10 preview events for auto-generate response */
-const previewEventsArb = fc.array(previewEventArb, { minLength: 1, maxLength: 10 });
+const previewEventsArb = fc.array(previewEventArb, {
+  minLength: 1,
+  maxLength: 10,
+});
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -107,8 +113,12 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
     jest.clearAllMocks();
 
     leagueServiceProto = LeagueService.prototype;
-    leagueServiceProto.getLeagueById = jest.fn().mockResolvedValue(makeMockLeague());
-    leagueServiceProto.getMembers = jest.fn().mockResolvedValue(makeMockMembersResponse());
+    leagueServiceProto.getLeagueById = jest
+      .fn()
+      .mockResolvedValue(makeMockLeague());
+    leagueServiceProto.getMembers = jest
+      .fn()
+      .mockResolvedValue(makeMockMembersResponse());
 
     // Default mutation stubs — overridden per test
     mockGenerateSchedule = jest.fn();
@@ -121,7 +131,7 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
   // -------------------------------------------------------------------------
   it('Property 2a: tapping "Auto Generate Schedule" calls generateSchedule and populates events from preview response', async () => {
     await fc.assert(
-      fc.asyncProperty(previewEventsArb, async (previewEvents) => {
+      fc.asyncProperty(previewEventsArb, async previewEvents => {
         // Arrange — mock generateSchedule to return the generated preview events
         mockGenerateSchedule.mockReturnValue({
           unwrap: () => Promise.resolve({ events: previewEvents }),
@@ -132,13 +142,16 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
         const { getByText, queryAllByText, unmount } = render(
           <Provider store={store}>
             <SchedulingScreen route={mockRoute} navigation={mockNavigation} />
-          </Provider>,
+          </Provider>
         );
 
         // Wait for loading to finish
-        await waitFor(() => {
-          expect(leagueServiceProto.getLeagueById).toHaveBeenCalled();
-        }, { timeout: 3000 });
+        await waitFor(
+          () => {
+            expect(leagueServiceProto.getLeagueById).toHaveBeenCalled();
+          },
+          { timeout: 3000 }
+        );
 
         // Act — tap "Auto Generate Schedule"
         const generateButton = getByText('Auto Generate Schedule');
@@ -147,7 +160,9 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
         });
 
         // Assert — generateSchedule was called with the leagueId
-        expect(mockGenerateSchedule).toHaveBeenCalledWith({ leagueId: TEST_LEAGUE_ID });
+        expect(mockGenerateSchedule).toHaveBeenCalledWith({
+          leagueId: TEST_LEAGUE_ID,
+        });
 
         // Assert — events from the preview response appear in the rendered output
         // Each preview event's roster names should be visible
@@ -165,7 +180,7 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
 
         unmount();
       }),
-      { numRuns: 10, verbose: true },
+      { numRuns: 10, verbose: true }
     );
   });
 
@@ -175,7 +190,7 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
   // -------------------------------------------------------------------------
   it('Property 2b: tapping "Confirm Schedule" calls confirmSchedule with correct payload, shows success alert, navigates back', async () => {
     await fc.assert(
-      fc.asyncProperty(previewEventsArb, async (previewEvents) => {
+      fc.asyncProperty(previewEventsArb, async previewEvents => {
         // Reset mocks between property iterations to avoid accumulated call counts
         mockGenerateSchedule.mockReset();
         mockConfirmSchedule.mockReset();
@@ -186,7 +201,8 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
           unwrap: () => Promise.resolve({ events: previewEvents }),
         });
         mockConfirmSchedule.mockReturnValue({
-          unwrap: () => Promise.resolve({ eventsCreated: previewEvents.length }),
+          unwrap: () =>
+            Promise.resolve({ eventsCreated: previewEvents.length }),
         });
 
         const store = createTestStore();
@@ -194,13 +210,16 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
         const { getByText, unmount } = render(
           <Provider store={store}>
             <SchedulingScreen route={mockRoute} navigation={mockNavigation} />
-          </Provider>,
+          </Provider>
         );
 
         // Wait for loading to finish
-        await waitFor(() => {
-          expect(leagueServiceProto.getLeagueById).toHaveBeenCalled();
-        }, { timeout: 3000 });
+        await waitFor(
+          () => {
+            expect(leagueServiceProto.getLeagueById).toHaveBeenCalled();
+          },
+          { timeout: 3000 }
+        );
 
         // First, auto-generate to populate events
         await act(async () => {
@@ -237,13 +256,13 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
           expect(Alert.alert).toHaveBeenCalledWith(
             'Success',
             'Schedule confirmed and published.',
-            expect.any(Array),
+            expect.any(Array)
           );
         }
 
         unmount();
       }),
-      { numRuns: 10, verbose: true },
+      { numRuns: 10, verbose: true }
     );
   });
 
@@ -256,7 +275,7 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
     // But we use fast-check to verify across multiple random league names
     // that the empty state text always appears when there are no events.
     await fc.assert(
-      fc.asyncProperty(rosterNameArb, async (leagueName) => {
+      fc.asyncProperty(rosterNameArb, async leagueName => {
         leagueServiceProto.getLeagueById = jest.fn().mockResolvedValue({
           ...makeMockLeague(),
           name: leagueName,
@@ -267,13 +286,16 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
         const { getByText, unmount } = render(
           <Provider store={store}>
             <SchedulingScreen route={mockRoute} navigation={mockNavigation} />
-          </Provider>,
+          </Provider>
         );
 
         // Wait for loading to finish
-        await waitFor(() => {
-          expect(leagueServiceProto.getLeagueById).toHaveBeenCalled();
-        }, { timeout: 3000 });
+        await waitFor(
+          () => {
+            expect(leagueServiceProto.getLeagueById).toHaveBeenCalled();
+          },
+          { timeout: 3000 }
+        );
 
         // Assert — empty state text is visible
         await waitFor(() => {
@@ -282,7 +304,7 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
 
         unmount();
       }),
-      { numRuns: 10, verbose: true },
+      { numRuns: 10, verbose: true }
     );
   });
 
@@ -294,7 +316,10 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
     // Make loadLeagueData hang so we can observe the loading state
     let resolveLeagueData: (value: any) => void;
     leagueServiceProto.getLeagueById = jest.fn().mockImplementation(
-      () => new Promise((resolve) => { resolveLeagueData = resolve; }),
+      () =>
+        new Promise(resolve => {
+          resolveLeagueData = resolve;
+        })
     );
 
     const store = createTestStore();
@@ -302,7 +327,7 @@ describe('SchedulingScreen — Preservation Property Tests', () => {
     const { getByTestId, queryByTestId, queryByText, unmount } = render(
       <Provider store={store}>
         <SchedulingScreen route={mockRoute} navigation={mockNavigation} />
-      </Provider>,
+      </Provider>
     );
 
     // Assert — while loading, the ActivityIndicator should be present

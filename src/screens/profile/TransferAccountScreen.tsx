@@ -18,7 +18,7 @@ import { FormButton } from '../../components/forms/FormButton';
 import { useAuth } from '../../context/AuthContext';
 import { resetContext } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 
 /**
  * TransferAccountScreen
@@ -41,7 +41,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
 export function TransferAccountScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { user: authUser } = useAuth();
@@ -134,7 +134,7 @@ export function TransferAccountScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader title="Transfer Account" />
       <KeyboardAvoidingView
         style={styles.flex}

@@ -5,7 +5,7 @@ import { Event } from '../../types';
 import { LocationService, Coordinates } from '../../services/location/LocationService';
 import { EventMapPreview } from './EventMapPreview';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface EventsMapViewProps {
   events: Event[];
@@ -14,6 +14,7 @@ interface EventsMapViewProps {
 }
 
 export function EventsMapView({ events, userBookedEventIds, onEventPress }: EventsMapViewProps) {
+  const { colors } = useTheme();
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);

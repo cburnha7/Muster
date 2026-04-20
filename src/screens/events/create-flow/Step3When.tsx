@@ -15,7 +15,6 @@ import { useCreateEvent } from './CreateEventContext';
 import { ALL_DAYS } from './types';
 import { computeSeriesDates, dateMatchesDays } from './seriesUtils';
 import { colors, fonts, useTheme } from '../../../theme';
-import { tokenColors } from '../../../theme/tokens';
 
 const FREQUENCY_OPTIONS: SelectOption[] = [
   { label: 'Weekly', value: 'weekly' },
@@ -28,7 +27,7 @@ function formatDateStr(d: Date): string {
 }
 
 export function Step3When() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
 
   const startDate = state.startDate ?? new Date();
@@ -129,7 +128,7 @@ export function Step3When() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
       <Text style={styles.heading}>When's it happening?</Text>
@@ -281,7 +280,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 8,
     elevation: 2,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,

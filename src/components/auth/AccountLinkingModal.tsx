@@ -10,8 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../forms/TextInput';
 import { Button } from '../forms/Button';
-import { colors, Spacing, TextStyles } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import { ErrorMessages } from '../../constants/errorMessages';
 
 interface AccountLinkingModalProps {
@@ -33,6 +32,7 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
   isLoading,
   error,
 }) => {
+  const { colors } = useTheme();
   const [password, setPassword] = useState('');
 
   const handleConfirm = async () => {
@@ -72,8 +72,8 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
                 {
                   backgroundColor:
                     provider === 'apple'
-                      ? tokenColors.black
-                      : tokenColors.white,
+                      ? colors.black
+                      : colors.white,
                 },
               ]}
             >
@@ -81,7 +81,7 @@ export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({
                 name={getProviderIcon()}
                 size={40}
                 color={
-                  provider === 'apple' ? tokenColors.white : tokenColors.black
+                  provider === 'apple' ? colors.white : colors.black
                 }
               />
             </View>
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     ...Platform.select({
       ios: {
-        shadowColor: tokenColors.black,
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

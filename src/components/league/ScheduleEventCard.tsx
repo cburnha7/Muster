@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent } from '../../store/slices/scheduleSlice';
 import { RosterInfo } from '../../types/scheduling';
-import { colors, fonts, Spacing, Shadows } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, Shadows, useTheme } from '../../theme';
 
 export interface ScheduleEventCardProps {
   event: ScheduleEvent;
@@ -37,6 +36,7 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
   onEdit,
   onRemove,
 }) => {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       style={styles.container}
@@ -97,7 +97,7 @@ export const ScheduleEventCard: React.FC<ScheduleEventCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginVertical: Spacing.sm,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   flagText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: tokenColors.white,
+    color: colors.white,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },

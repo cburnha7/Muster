@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { Booking } from '../../types';
 
 interface NextUpCardProps {
@@ -25,6 +24,7 @@ function getRelativeTime(date: Date): string {
     return `In ${hours}h ${mins % 60 > 0 ? `${mins % 60}m` : ''}`.trim();
   if (days === 1) return 'Tomorrow';
   if (days < 7) {
+  const { colors } = useTheme();
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
     return dayName;
   }
@@ -163,7 +163,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
             )}
             {spotsLeft > 0 && spotsLeft <= 3 && (
               <Text style={styles.fillingFast}>
-                Filling fast — {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
+                Filling fast Ã¢â‚¬â€ {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
               </Text>
             )}
           </View>
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: 1.2,
   },
   relativeTime: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: -0.3,
   },
 
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.label,
     fontSize: 9,
-    color: tokenColors.white,
+    color: colors.white,
   },
   fillingFast: {
     fontFamily: fonts.label,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

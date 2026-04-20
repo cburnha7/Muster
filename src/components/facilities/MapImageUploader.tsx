@@ -11,7 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors, Spacing, BorderRadius } from '../../theme';
+import { Spacing, BorderRadius, useTheme } from '../../theme';
 
 export interface MapImageUploaderProps {
   /**
@@ -97,6 +97,7 @@ export function MapImageUploader({
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
+  const { colors } = useTheme();
     requestImagePermissions();
   }, []);
 
@@ -191,17 +192,17 @@ export function MapImageUploader({
           </Text>
           <View style={styles.requirementsList}>
             <Text style={styles.requirementItem}>
-              • Minimum size: {minDimensions.width}x{minDimensions.height}{' '}
+              â€¢ Minimum size: {minDimensions.width}x{minDimensions.height}{' '}
               pixels
             </Text>
             <Text style={styles.requirementItem}>
-              • Maximum size: {maxDimensions.width}x{maxDimensions.height}{' '}
+              â€¢ Maximum size: {maxDimensions.width}x{maxDimensions.height}{' '}
               pixels
             </Text>
             <Text style={styles.requirementItem}>
-              • Maximum file size: 10MB
+              â€¢ Maximum file size: 10MB
             </Text>
-            <Text style={styles.requirementItem}>• Formats: JPEG, PNG</Text>
+            <Text style={styles.requirementItem}>â€¢ Formats: JPEG, PNG</Text>
           </View>
         </View>
       )}

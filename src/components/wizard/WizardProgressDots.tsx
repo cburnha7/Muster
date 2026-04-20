@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface WizardProgressDotsProps {
   total: number;
@@ -8,6 +8,7 @@ interface WizardProgressDotsProps {
 }
 
 export function WizardProgressDots({ total, current }: WizardProgressDotsProps) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
       {Array.from({ length: total }).map((_, i) => (

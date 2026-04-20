@@ -20,7 +20,7 @@ import {
   getOptimalBatchSize,
   getOptimalWindowSize,
 } from '../../utils/performance';
-import { colors, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface SearchResultsScreenProps {
   route: {
@@ -45,7 +45,7 @@ export function SearchResultsScreen({
     searchType = 'all',
   } = route.params ?? {};
 
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<UnifiedSearchFilters>(
     initialFilters || {}
@@ -313,7 +313,7 @@ export function SearchResultsScreen({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <SearchBar
         value={query}
         onChangeText={setQuery}

@@ -2,13 +2,12 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  tokenColors,
   tokenSpacing,
   tokenRadius,
   tokenType,
-  tokenShadow,
   tokenFontFamily,
 } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface EmptyStateProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -25,6 +24,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onAction,
 }) => {
+  const { colors, shadow } = useTheme();
+
   return (
     <View
       style={{
@@ -35,13 +36,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         paddingHorizontal: tokenSpacing.xl,
       }}
     >
-      <Ionicons name={icon} size={48} color={tokenColors.inkSecondary} />
+      <Ionicons name={icon} size={48} color={colors.inkSecondary} />
       <Text
         style={{
           fontFamily: tokenFontFamily.display,
           fontSize: 18,
           lineHeight: 24,
-          color: tokenColors.ink,
+          color: colors.ink,
           marginTop: tokenSpacing.lg,
           textAlign: 'center',
         }}
@@ -52,7 +53,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <Text
           style={{
             ...tokenType.body,
-            color: tokenColors.inkSecondary,
+            color: colors.inkSecondary,
             marginTop: tokenSpacing.sm,
             textAlign: 'center',
           }}
@@ -64,16 +65,16 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <TouchableOpacity
           style={{
             marginTop: tokenSpacing.xl,
-            backgroundColor: tokenColors.cobalt,
+            backgroundColor: colors.cobalt,
             paddingHorizontal: tokenSpacing.xl,
             paddingVertical: tokenSpacing.md,
             borderRadius: tokenRadius.lg,
-            ...tokenShadow.fab,
+            ...shadow.fab,
           }}
           onPress={onAction}
           activeOpacity={0.75}
         >
-          <Text style={{ ...tokenType.button, color: tokenColors.white }}>
+          <Text style={{ ...tokenType.button, color: colors.white }}>
             {actionLabel}
           </Text>
         </TouchableOpacity>

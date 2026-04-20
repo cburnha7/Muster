@@ -8,7 +8,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { FormButton } from '../../components/forms/FormButton';
 import { MapImageUploader } from '../../components/facilities/MapImageUploader';
 import { facilityService } from '../../services/api/FacilityService';
-import { colors, Spacing, BorderRadius, useTheme } from '../../theme';
+import { Spacing, BorderRadius, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 
 type FacilityMapEditorScreenNavigationProp = NativeStackNavigationProp<
@@ -21,7 +21,7 @@ type FacilityMapEditorScreenRouteProp = RouteProp<
 >;
 
 export function FacilityMapEditorScreen(): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<FacilityMapEditorScreenNavigationProp>();
   const route = useRoute<FacilityMapEditorScreenRouteProp>();
   const { facilityId, currentMapUrl } = route.params ?? {};
@@ -112,7 +112,7 @@ export function FacilityMapEditorScreen(): JSX.Element {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Facility Map"
         leftIcon="arrow-back"

@@ -27,7 +27,6 @@ import {
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService, Rental } from '../../services/api/CourtService';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { searchEventBus } from '../../utils/searchEventBus';
 import {
   setFacilities,
@@ -61,7 +60,7 @@ const SPORT_CHIP_OPTIONS = [
 ];
 
 export function FacilitiesListScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const route = useRoute();
@@ -306,14 +305,14 @@ export function FacilitiesListScreen() {
     return (
       <TouchableOpacity
         key={item.id}
-        style={[styles.facilityCard, { backgroundColor: themeColors.bgCard }]}
+        style={[styles.facilityCard, { backgroundColor: colors.bgCard }]}
         onPress={() => handleFacilityPress(item)}
         activeOpacity={0.7}
       >
         {/* Owner badge — top right */}
         {item.ownerId === currentUser?.id && (
           <View style={styles.ownerBadge}>
-            <Ionicons name="star" size={10} color={tokenColors.white} />
+            <Ionicons name="star" size={10} color={colors.white} />
             <Text style={styles.ownerText}>Owner</Text>
           </View>
         )}
@@ -324,10 +323,7 @@ export function FacilitiesListScreen() {
             </View>
             <View style={styles.facilityTitleContainer}>
               <Text
-                style={[
-                  styles.facilityName,
-                  { color: themeColors.textPrimary },
-                ]}
+                style={[styles.facilityName, { color: colors.textPrimary }]}
                 numberOfLines={1}
               >
                 {item.name}
@@ -522,16 +518,11 @@ export function FacilitiesListScreen() {
               size={48}
               color={colors.outlineVariant}
             />
-            <Text
-              style={[styles.emptyTitle, { color: themeColors.textPrimary }]}
-            >
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
               No grounds found
             </Text>
             <Text
-              style={[
-                styles.emptySubtitle,
-                { color: themeColors.textSecondary },
-              ]}
+              style={[styles.emptySubtitle, { color: colors.textSecondary }]}
             >
               Try adjusting your filters or search
             </Text>
@@ -656,7 +647,7 @@ export function FacilitiesListScreen() {
       {/* FAB — hidden for dependents */}
       {!isDependent && (
         <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
-          <Ionicons name="add" size={28} color={tokenColors.white} />
+          <Ionicons name="add" size={28} color={colors.white} />
         </TouchableOpacity>
       )}
 
@@ -703,7 +694,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   chipTextActive: {
-    color: tokenColors.white,
+    color: colors.white,
   },
 
   scrollView: {
@@ -793,7 +784,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
     fontWeight: '700',
   },
   facilityTitleContainer: {
@@ -820,7 +811,7 @@ const styles = StyleSheet.create({
   },
   ownerText: {
     fontSize: 10,
-    color: tokenColors.white,
+    color: colors.white,
     fontFamily: fonts.label,
   },
   facilityInfo: {
@@ -904,7 +895,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: tokenColors.cobalt,
+    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -965,7 +956,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   sportChipTextSelected: {
-    color: tokenColors.white,
+    color: colors.white,
   },
   modalActions: {
     flexDirection: 'row',
@@ -995,7 +986,7 @@ const styles = StyleSheet.create({
   applyButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   reservationsBtn: {
     flexDirection: 'row',

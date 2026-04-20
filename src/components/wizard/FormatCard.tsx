@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface FormatCardProps {
   emoji: string;
@@ -18,6 +17,7 @@ export function FormatCard({
   selected,
   onPress,
 }: FormatCardProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       style={[styles.card, selected && styles.cardSelected]}
@@ -33,7 +33,7 @@ export function FormatCard({
       </View>
       {selected && (
         <View style={styles.checkCircle}>
-          <Text style={styles.checkmark}>✓</Text>
+          <Text style={styles.checkmark}>Ã¢Å“â€œ</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   checkmark: {
-    color: tokenColors.white,
+    color: colors.white,
     fontSize: 14,
     fontWeight: '700',
   },

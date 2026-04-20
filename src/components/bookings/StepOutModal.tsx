@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface StepOutModalProps {
   visible: boolean;
@@ -24,7 +24,7 @@ export function StepOutModal({
   onConfirm,
 }: StepOutModalProps): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
 
   const handleConfirm = async () => {
     try {
@@ -49,25 +49,25 @@ export function StepOutModal({
           onPress={onCancel}
         />
         <View
-          style={[styles.modalContent, { backgroundColor: themeColors.bgCard }]}
+          style={[styles.modalContent, { backgroundColor: colors.bgCard }]}
         >
           <View style={styles.header}>
             <Ionicons
               name="exit-outline"
               size={32}
-              color={themeColors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
               Leave
             </Text>
           </View>
 
-          <Text style={[styles.eventTitle, { color: themeColors.textPrimary }]}>
+          <Text style={[styles.eventTitle, { color: colors.textPrimary }]}>
             {eventTitle}
           </Text>
 
           <Text
-            style={[styles.description, { color: themeColors.textSecondary }]}
+            style={[styles.description, { color: colors.textSecondary }]}
           >
             Are you sure you want to leave this event? You will be removed as a
             participant.
@@ -78,7 +78,7 @@ export function StepOutModal({
               style={[
                 styles.button,
                 styles.buttonSecondary,
-                { borderColor: themeColors.border },
+                { borderColor: colors.border },
               ]}
               onPress={onCancel}
               disabled={isSubmitting}
@@ -86,7 +86,7 @@ export function StepOutModal({
               <Text
                 style={[
                   styles.buttonSecondaryText,
-                  { color: themeColors.textPrimary },
+                  { color: colors.textPrimary },
                 ]}
               >
                 Cancel

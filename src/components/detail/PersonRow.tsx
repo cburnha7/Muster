@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 const AVATAR_PALETTE = [
   { bg: '#DDE1FF', text: '#001A5C' },
@@ -19,6 +19,7 @@ const AVATAR_PALETTE = [
 ];
 
 function avatarColors(name: string) {
+  const { colors } = useTheme();
   const idx = (name.charCodeAt(0) + (name.charCodeAt(1) || 0)) % AVATAR_PALETTE.length;
   return AVATAR_PALETTE[idx] ?? AVATAR_PALETTE[0]!;
 }

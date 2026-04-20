@@ -16,13 +16,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
 
 export const LocationSetupScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -109,7 +108,7 @@ export const LocationSetupScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       <KeyboardAvoidingView
         style={styles.flex}
@@ -191,15 +190,12 @@ export const LocationSetupScreen: React.FC = () => {
                     activeOpacity={0.85}
                   >
                     {locationLoading ? (
-                      <ActivityIndicator
-                        size="small"
-                        color={tokenColors.white}
-                      />
+                      <ActivityIndicator size="small" color={colors.white} />
                     ) : (
                       <Ionicons
                         name="location"
                         size={22}
-                        color={tokenColors.white}
+                        color={colors.white}
                         style={styles.locationButtonIcon}
                       />
                     )}
@@ -368,7 +364,7 @@ const styles = StyleSheet.create({
   locationButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: -0.1,
   },
   errorText: {
@@ -464,7 +460,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: -0.1,
   },
   skipLink: {

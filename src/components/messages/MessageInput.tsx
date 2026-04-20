@@ -8,8 +8,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface MessageInputProps {
   onSend: (text: string) => void;
@@ -17,6 +16,7 @@ interface MessageInputProps {
 }
 
 export function MessageInput({ onSend, disabled }: MessageInputProps) {
+  const { colors } = useTheme();
   const [text, setText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
@@ -54,7 +54,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
             disabled={disabled}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-up" size={18} color={tokenColors.white} />
+            <Ionicons name="arrow-up" size={18} color={colors.white} />
           </TouchableOpacity>
         )}
       </View>

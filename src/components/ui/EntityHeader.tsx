@@ -8,12 +8,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 export interface EntityTag {
   label: string;
@@ -35,17 +31,19 @@ export function EntityHeader({
   coverImageUrl,
   tags = [],
   subtitle,
-  tintColor = tokenColors.cobalt,
+  tintColor,
   onCameraPress,
 }: EntityHeaderProps) {
-  const fallbackBg = tintColor + '18';
+  const { colors } = useTheme();
+  const resolvedTintColor = tintColor ?? colors.cobalt;
+  const fallbackBg = resolvedTintColor + '18';
 
   const content = (
     <View style={styles.content}>
       <Text
         style={[
           styles.title,
-          coverImageUrl ? styles.titleOnImage : styles.titleOnTint,
+          coverImageUrl ? { color: colors.white } : { color: colors.ink },
         ]}
         numberOfLines={3}
       >
@@ -62,7 +60,7 @@ export function EntityHeader({
                 {
                   backgroundColor: coverImageUrl
                     ? 'rgba(255,255,255,0.2)'
-                    : (tag.bgColor ?? tintColor + '28'),
+                    : (tag.bgColor ?? resolvedTintColor + '28'),
                 },
               ]}
             >
@@ -71,8 +69,8 @@ export function EntityHeader({
                   styles.tagText,
                   {
                     color: coverImageUrl
-                      ? tokenColors.white
-                      : (tag.color ?? tintColor),
+                      ? colors.white
+                      : (tag.color ?? resolvedTintColor),
                   },
                 ]}
               >
@@ -87,7 +85,9 @@ export function EntityHeader({
         <Text
           style={[
             styles.subtitle,
-            coverImageUrl ? styles.subtitleOnImage : styles.subtitleOnTint,
+            coverImageUrl
+              ? { color: 'rgba(255,255,255,0.85)' }
+              : { color: colors.inkSecondary },
           ]}
           numberOfLines={2}
         >
@@ -111,16 +111,12 @@ export function EntityHeader({
           {content}
           {onCameraPress && (
             <TouchableOpacity
-              style={styles.cameraBtn}
+              style={[styles.cameraBtn, { backgroundColor: colors.overlay }]}
               onPress={onCameraPress}
               activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons
-                name="camera-outline"
-                size={22}
-                color={tokenColors.white}
-              />
+              <Ionicons name="camera-outline" size={22} color={colors.white} />
             </TouchableOpacity>
           )}
         </LinearGradient>
@@ -133,12 +129,15 @@ export function EntityHeader({
       {content}
       {onCameraPress && (
         <TouchableOpacity
-          style={[styles.cameraBtn, { backgroundColor: tintColor + '20' }]}
+          style={[
+            styles.cameraBtn,
+            { backgroundColor: resolvedTintColor + '20' },
+          ]}
           onPress={onCameraPress}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="camera-outline" size={22} color={tintColor} />
+          <Ionicons name="camera-outline" size={22} color={resolvedTintColor} />
         </TouchableOpacity>
       )}
     </View>
@@ -166,12 +165,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: tokenSpacing.sm,
   },
-  titleOnImage: {
-    color: tokenColors.white,
-  },
-  titleOnTint: {
-    color: tokenColors.ink,
-  },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -193,12 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
-  subtitleOnImage: {
-    color: 'rgba(255,255,255,0.85)',
-  },
-  subtitleOnTint: {
-    color: tokenColors.inkSecondary,
-  },
   cameraBtn: {
     position: 'absolute',
     top: tokenSpacing.md,
@@ -206,7 +193,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: tokenColors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
   },

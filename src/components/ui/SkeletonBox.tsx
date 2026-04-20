@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { tokenColors, tokenSpacing, tokenRadius } from '../../theme/tokens';
+import { tokenSpacing, tokenRadius } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface SkeletonBoxProps {
   width?: number | string;
@@ -15,6 +16,7 @@ export function SkeletonBox({
   borderRadius = tokenRadius.sm,
   style,
 }: SkeletonBoxProps) {
+  const { colors } = useTheme();
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export function SkeletonBox({
 
   const backgroundColor = pulseAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [tokenColors.border, tokenColors.inkMuted],
+    outputRange: [colors.border, colors.inkMuted],
   });
 
   return (
@@ -57,8 +59,11 @@ export function SkeletonBox({
 }
 
 export function SkeletonCard({ style }: { style?: StyleProp<ViewStyle> }) {
+  const { colors } = useTheme();
   return (
-    <View style={[skeletonStyles.card, style]}>
+    <View
+      style={[skeletonStyles.card, { backgroundColor: colors.surface }, style]}
+    >
       <SkeletonBox height={140} borderRadius={tokenRadius.lg} />
       <View style={skeletonStyles.cardBody}>
         <SkeletonBox width="70%" height={14} />
@@ -123,7 +128,6 @@ export function SkeletonDetailHero() {
 
 const skeletonStyles = StyleSheet.create({
   card: {
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.lg,
     overflow: 'hidden',
     gap: 0,

@@ -8,8 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 
 type SSOProvider = 'apple' | 'google';
 
@@ -26,22 +25,23 @@ export const SSOButton: React.FC<SSOButtonProps> = ({
   isLoading = false,
   disabled = false,
 }) => {
+  const { colors } = useTheme();
   const isDisabled = disabled || isLoading;
 
   const getProviderConfig = () => {
     switch (provider) {
       case 'apple':
         return {
-          backgroundColor: tokenColors.black,
-          textColor: tokenColors.white,
+          backgroundColor: colors.black,
+          textColor: colors.white,
           icon: 'logo-apple' as keyof typeof Ionicons.glyphMap,
           label: 'Sign in with Apple',
           accessibilityLabel: 'Sign in with Apple',
         };
       case 'google':
         return {
-          backgroundColor: tokenColors.white,
-          textColor: tokenColors.black,
+          backgroundColor: colors.white,
+          textColor: colors.black,
           icon: 'logo-google' as keyof typeof Ionicons.glyphMap,
           label: 'Sign in with Google',
           accessibilityLabel: 'Sign in with Google',
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.xs,
     ...Platform.select({
       ios: {
-        shadowColor: tokenColors.black,
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,

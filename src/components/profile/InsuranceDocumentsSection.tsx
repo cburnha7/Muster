@@ -8,15 +8,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocumentsApi';
 
 /**
  * InsuranceDocumentsSection
  *
  * Displays the user's insurance documents on the ProfileScreen.
- * Lists all documents with status badges — expired documents are
+ * Lists all documents with status badges Ã¢â‚¬â€ expired documents are
  * grayed out with an "Expired" label, active ones show a green badge.
  * Provides an "Add Insurance Document" button.
  *
@@ -32,6 +31,7 @@ export function InsuranceDocumentsSection({
   userId,
   onAddDocument,
 }: InsuranceDocumentsSectionProps) {
+  const { colors } = useTheme();
   const { data: documents, isLoading } = useGetInsuranceDocumentsQuery({
     userId,
   });
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: Spacing.xxl,
     alignItems: 'center',
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,

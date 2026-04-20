@@ -9,8 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface ScreenHeaderProps {
   title: string;
@@ -47,6 +46,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   onBackPress,
   rightComponent,
 }) => {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   // If showBack is true, use back arrow as left icon
@@ -68,7 +68,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       <StatusBar
         barStyle={
           backgroundColor === colors.background ||
-          backgroundColor === tokenColors.white
+          backgroundColor === colors.white
             ? 'dark-content'
             : 'light-content'
         }
@@ -141,7 +141,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     borderBottomColor: colors.outlineVariant,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: 1,

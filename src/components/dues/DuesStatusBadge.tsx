@@ -8,8 +8,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 export type DuesStatus = 'paid' | 'pending' | 'unpaid';
 
@@ -24,7 +23,7 @@ const statusConfig: Record<
 > = {
   paid: {
     label: 'Paid',
-    bg: tokenColors.successLight,
+    bg: colors.successLight,
     color: colors.pine,
     icon: 'checkmark-circle',
   },
@@ -43,6 +42,7 @@ const statusConfig: Record<
 };
 
 export function DuesStatusBadge({ status, compact }: DuesStatusBadgeProps) {
+  const { colors } = useTheme();
   const config = statusConfig[status];
 
   return (

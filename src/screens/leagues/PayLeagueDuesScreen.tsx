@@ -15,7 +15,6 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import {
   leagueDuesService,
   LeagueDuesStatusResponse,
@@ -25,7 +24,7 @@ import { LeaguesStackParamList } from '../../navigation/types';
 type PayLeagueDuesRouteProp = RouteProp<LeaguesStackParamList, 'PayLeagueDues'>;
 
 export const PayLeagueDuesScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<PayLeagueDuesRouteProp>();
   const user = useSelector(selectUser);
@@ -101,9 +100,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="League Dues"
           leftIcon="arrow-back"
@@ -119,9 +116,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="League Dues"
           leftIcon="arrow-back"
@@ -148,7 +143,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
     : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="League Dues"
         leftIcon="arrow-back"
@@ -241,7 +236,7 @@ export const PayLeagueDuesScreen: React.FC = () => {
             accessibilityState={{ disabled: paying }}
           >
             {paying ? (
-              <ActivityIndicator size="small" color={tokenColors.white} />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <Text style={styles.payButtonText}>
                 Pay {formatCurrency(duesAmountCents)}
@@ -303,7 +298,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -313,7 +308,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   card: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -352,10 +347,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusPaid: {
-    backgroundColor: tokenColors.successLight,
+    backgroundColor: colors.successLight,
   },
   statusUnpaid: {
-    backgroundColor: tokenColors.warningLight,
+    backgroundColor: colors.warningLight,
   },
   statusText: {
     fontFamily: fonts.label,
@@ -370,7 +365,7 @@ const styles = StyleSheet.create({
   successCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -386,7 +381,7 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -403,8 +398,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
-    backgroundColor: tokenColors.surface,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
   },
   cancelButton: {
     flex: 1,
@@ -435,7 +430,7 @@ const styles = StyleSheet.create({
   payButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
   dependentNotice: {
     flex: 1,

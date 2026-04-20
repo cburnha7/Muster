@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, typeScale, Spacing, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
@@ -29,6 +28,7 @@ interface UserConnectSectionProps {
 }
 
 export function UserConnectSection({ userId }: UserConnectSectionProps) {
+  const { colors } = useTheme();
   const { token } = useAuth();
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -138,7 +138,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
               activeOpacity={0.7}
             >
               {onboarding ? (
-                <ActivityIndicator size="small" color={tokenColors.white} />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.buttonText}>Resume</Text>
               )}
@@ -157,7 +157,7 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
               activeOpacity={0.7}
             >
               {onboarding ? (
-                <ActivityIndicator size="small" color={tokenColors.white} />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.buttonText}>Set Up Payments</Text>
               )}
@@ -208,6 +208,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

@@ -5,7 +5,6 @@ import { userService } from '../../services/api/UserService';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { formatSport } from '../../utils/sportUtils';
 
 interface UserStats {
@@ -30,7 +29,7 @@ interface Achievement {
 }
 
 export function UserStatsScreen(): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +69,7 @@ export function UserStatsScreen(): JSX.Element {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
       {/* Overview Stats */}
@@ -87,11 +86,7 @@ export function UserStatsScreen(): JSX.Element {
           <Text style={styles.statLabel}>Organized</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons
-            name="people-outline"
-            size={24}
-            color={tokenColors.cobalt}
-          />
+          <Ionicons name="people-outline" size={24} color={colors.cobalt} />
           <Text style={styles.statValue}>{stats.totalTeams}</Text>
           <Text style={styles.statLabel}>Teams</Text>
         </View>
@@ -238,7 +233,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -258,7 +253,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'center',
     gap: 6,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,

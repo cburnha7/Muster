@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { MyCrewRow } from '../../components/home/MyCrewRow';
 import { useCrewSelector } from '../../hooks/useCrewSelector';
 import { SkeletonConversationRow } from '../../components/ui/SkeletonBox';
@@ -97,7 +97,7 @@ const EMPTY_STATES: Record<
 type Nav = NativeStackNavigationProp<MessagesStackParamList>;
 
 export function ConversationListScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch();
   const conversations = useSelector(
@@ -204,12 +204,10 @@ export function ConversationListScreen() {
           size={56}
           color={colors.outlineVariant}
         />
-        <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
+        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
           {emptyState.title}
         </Text>
-        <Text
-          style={[styles.emptySubtitle, { color: themeColors.textSecondary }]}
-        >
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
           {emptyState.subtitle}
         </Text>
         {emptyState.actionLabel && (
@@ -236,7 +234,7 @@ export function ConversationListScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Family crew selector */}
       {hasDependents && (
         <MyCrewRow
@@ -259,7 +257,7 @@ export function ConversationListScreen() {
             style={[
               styles.chip,
               activeFilter === f.key && styles.chipActive,
-              activeFilter !== f.key && { backgroundColor: themeColors.bgCard },
+              activeFilter !== f.key && { backgroundColor: colors.bgCard },
             ]}
             onPress={() => setActiveFilter(f.key)}
             activeOpacity={0.75}

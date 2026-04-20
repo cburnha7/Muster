@@ -22,7 +22,6 @@ import type { RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { MessageBubble } from '../../components/messages/MessageBubble';
 import { SystemMessage } from '../../components/messages/SystemMessage';
 import { MessageInput } from '../../components/messages/MessageInput';
@@ -64,7 +63,7 @@ function isSameDay(a: string, b: string): boolean {
 }
 
 export function ChatScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { conversationId, title, type } = route.params ?? {};
@@ -440,7 +439,7 @@ export function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
@@ -553,7 +552,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,

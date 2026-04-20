@@ -7,8 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import type { Message } from '../../types/messaging';
 
 interface MessageBubbleProps {
@@ -29,6 +28,7 @@ function groupReactions(
 ): Array<{ emoji: string; count: number; hasMe: boolean; userIds: string[] }> {
   const map = new Map<string, { count: number; userIds: string[] }>();
   for (const r of reactions) {
+  const { colors } = useTheme();
     const existing = map.get(r.emoji);
     if (existing) {
       existing.count += 1;
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     lineHeight: 21,
   },
-  contentOwn: { color: tokenColors.white },
+  contentOwn: { color: colors.white },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',

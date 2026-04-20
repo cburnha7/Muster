@@ -81,7 +81,7 @@ const matchStatusArb = fc.constantFrom(
   'scheduled' as const,
   'in_progress' as const,
   'completed' as const,
-  'cancelled' as const,
+  'cancelled' as const
 );
 
 const arbitraryMatch: fc.Arbitrary<Match> = fc.record({
@@ -91,15 +91,19 @@ const arbitraryMatch: fc.Arbitrary<Match> = fc.record({
   awayTeamId: fc.uuid(),
   homeTeam: fc.record({
     id: fc.uuid(),
-    name: fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0),
+    name: fc
+      .string({ minLength: 1, maxLength: 30 })
+      .filter(s => s.trim().length > 0),
   }) as fc.Arbitrary<any>,
   awayTeam: fc.record({
     id: fc.uuid(),
-    name: fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0),
+    name: fc
+      .string({ minLength: 1, maxLength: 30 })
+      .filter(s => s.trim().length > 0),
   }) as fc.Arbitrary<any>,
-  scheduledAt: fc.date({ min: new Date('2024-01-01'), max: new Date('2025-12-31') }).map(
-    (d) => d.toISOString(),
-  ),
+  scheduledAt: fc
+    .date({ min: new Date('2024-01-01'), max: new Date('2025-12-31') })
+    .map(d => d.toISOString()),
   status: matchStatusArb,
   round: fc.integer({ min: 1, max: 20 }),
   createdAt: fc.constant(new Date().toISOString()),
@@ -109,15 +113,15 @@ const arbitraryMatch: fc.Arbitrary<Match> = fc.record({
 /** Generate 1-20 matches with unique IDs to avoid FlatList key collisions */
 const arbitraryMatchArray = fc
   .array(arbitraryMatch, { minLength: 1, maxLength: 20 })
-  .map((matches) => {
+  .map(matches => {
     const seen = new Set<string>();
-    return matches.filter((m) => {
+    return matches.filter(m => {
       if (seen.has(m.id)) return false;
       seen.add(m.id);
       return true;
     });
   })
-  .filter((matches) => matches.length > 0);
+  .filter(matches => matches.length > 0);
 
 // ---------------------------------------------------------------------------
 // Test
@@ -134,8 +138,12 @@ describe('SchedulingScreen — Bug Condition Exploration', () => {
     matchServiceProto = MatchService.prototype;
 
     // loadLeagueData succeeds with a valid league + empty rosters
-    leagueServiceProto.getLeagueById = jest.fn().mockResolvedValue(makeMockLeague());
-    leagueServiceProto.getMembers = jest.fn().mockResolvedValue(makeMockMembersResponse());
+    leagueServiceProto.getLeagueById = jest
+      .fn()
+      .mockResolvedValue(makeMockLeague());
+    leagueServiceProto.getMembers = jest
+      .fn()
+      .mockResolvedValue(makeMockMembersResponse());
   });
 
   it('Property 1: for any league with N>0 backend matches, the screen should display N event cards with correct roster names', async () => {
@@ -150,12 +158,16 @@ describe('SchedulingScreen — Bug Condition Exploration', () => {
      *  5. Assert each match's roster names appear in the output
      */
     await fc.assert(
-      fc.asyncProperty(arbitraryMatchArray, async (matches) => {
+      fc.asyncProperty(arbitraryMatchArray, async matches => {
         jest.clearAllMocks();
 
         // Re-setup league mocks (cleared above)
-        leagueServiceProto.getLeagueById = jest.fn().mockResolvedValue(makeMockLeague());
-        leagueServiceProto.getMembers = jest.fn().mockResolvedValue(makeMockMembersResponse());
+        leagueServiceProto.getLeagueById = jest
+          .fn()
+          .mockResolvedValue(makeMockLeague());
+        leagueServiceProto.getMembers = jest
+          .fn()
+          .mockResolvedValue(makeMockMembersResponse());
 
         // Arrange — mock the match service to return generated matches
         const paginatedResponse: PaginatedResponse<Match> = {
@@ -177,7 +189,7 @@ describe('SchedulingScreen — Bug Condition Exploration', () => {
         const { queryAllByText, unmount } = render(
           <Provider store={store}>
             <SchedulingScreen route={mockRoute} navigation={mockNavigation} />
-          </Provider>,
+          </Provider>
         );
 
         // Wait for mount effects to settle — wait for match data to be rendered
@@ -187,15 +199,17 @@ describe('SchedulingScreen — Bug Condition Exploration', () => {
             expect(matchServiceProto.getLeagueMatches).toHaveBeenCalledWith(
               TEST_LEAGUE_ID,
               expect.anything(),
-              expect.anything(),
+              expect.anything()
             );
             // Verify at least the first match's home roster name is rendered
             const firstName = matches[0]?.homeTeam?.name;
             if (firstName) {
-              expect(queryAllByText(firstName).length).toBeGreaterThanOrEqual(1);
+              expect(queryAllByText(firstName).length).toBeGreaterThanOrEqual(
+                1
+              );
             }
           },
-          { timeout: 5000 },
+          { timeout: 5000 }
         );
 
         // Assert — each match's roster names should appear in the rendered output
@@ -215,7 +229,7 @@ describe('SchedulingScreen — Bug Condition Exploration', () => {
         // Cleanup to avoid leaking state between property iterations
         unmount();
       }),
-      { numRuns: 5, verbose: true },
+      { numRuns: 5, verbose: true }
     );
   }, 30000);
 });

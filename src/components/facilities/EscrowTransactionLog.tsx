@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { useGetEscrowTransactionsQuery } from '../../store/api/insuranceDocumentsApi';
 
 export interface EscrowTransactionLogProps {
@@ -92,10 +91,11 @@ function formatTimestamp(iso: string): string {
   const period = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 || 12;
   const mins = String(m).padStart(2, '0');
-  return `${month} ${day}, ${year} • ${hour12}:${mins} ${period}`;
+  return `${month} ${day}, ${year} Ã¢â‚¬Â¢ ${hour12}:${mins} ${period}`;
 }
 
 export function EscrowTransactionLog({ rentalId }: EscrowTransactionLogProps) {
+  const { colors } = useTheme();
   const { data: transactions = [], isLoading } = useGetEscrowTransactionsQuery({
     rentalId,
   });
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     marginBottom: Spacing.sm,

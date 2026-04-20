@@ -13,8 +13,8 @@ import { AuthProvider } from './src/context/AuthContext';
 import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
-import { ThemeProvider } from './src/theme';
-import { MusterLightTheme } from './src/navigation/themes';
+import { ThemeProvider, useTheme } from './src/theme';
+import { MusterLightTheme, MusterDarkTheme } from './src/navigation/themes';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -77,13 +77,8 @@ export default function App() {
             <AuthProvider>
               <NotificationProvider>
                 <GestureHandlerRootView style={styles.root}>
-                  <NavigationContainer
-                    linking={linking as any}
-                    theme={MusterLightTheme}
-                  >
-                    <RootNavigator />
-                  </NavigationContainer>
-                  <StatusBar style="dark" />
+                  <AppNavigation />
+                  <StatusBar style="auto" />
                 </GestureHandlerRootView>
               </NotificationProvider>
             </AuthProvider>
@@ -91,6 +86,19 @@ export default function App() {
         </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
+  );
+}
+
+/** Inner component that reads theme context for NavigationContainer */
+function AppNavigation() {
+  const { isDark } = useTheme();
+  return (
+    <NavigationContainer
+      linking={linking as any}
+      theme={isDark ? MusterDarkTheme : MusterLightTheme}
+    >
+      <RootNavigator />
+    </NavigationContainer>
   );
 }
 

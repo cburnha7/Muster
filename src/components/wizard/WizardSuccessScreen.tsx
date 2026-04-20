@@ -7,8 +7,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface SuccessCTA {
   label: string;
@@ -32,6 +31,7 @@ export function WizardSuccessScreen({
   summaryRows,
   actions,
 }: WizardSuccessScreenProps) {
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const cardAnim = useRef(new Animated.Value(0)).current;
@@ -133,7 +133,7 @@ export function WizardSuccessScreen({
                 <Ionicons
                   name={action.icon}
                   size={18}
-                  color={isPrimary ? tokenColors.white : colors.primary}
+                  color={isPrimary ? colors.white : colors.primary}
                 />
               )}
               <Text
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   actionTextPrimary: {
-    color: tokenColors.white,
+    color: colors.white,
   },
   actionTextSecondary: {
     color: colors.primary,

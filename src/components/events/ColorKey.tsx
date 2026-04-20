@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, Spacing } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { ColorKeyEntry } from '../../types/eventsCalendar';
 
 interface ColorKeyProps {
@@ -14,6 +14,7 @@ interface ColorKeyProps {
  * Requirements: 4.6, 4.7
  */
 export function ColorKey({ entries }: ColorKeyProps) {
+  const { colors } = useTheme();
   // Requirement 4.7: Not rendered when entries array is empty
   if (entries.length === 0) {
     return null;

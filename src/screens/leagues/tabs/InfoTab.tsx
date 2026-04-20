@@ -15,14 +15,13 @@ import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { League, LeagueDocument } from '../../../types/league';
 import { colors, Spacing, useTheme } from '../../../theme';
-import { tokenColors } from '../../../theme/tokens';
 
 interface InfoTabProps {
   league: League;
 }
 
 export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [documents, setDocuments] = useState<LeagueDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,7 +91,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
   return (
     <ScrollView
       testID="info-tab-scroll-view"
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl
@@ -206,7 +205,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({ league }) => {
           <Ionicons
             name="information-circle-outline"
             size={64}
-            color={tokenColors.inkMuted}
+            color={colors.inkMuted}
           />
           <Text style={styles.emptyText}>
             No additional information available
@@ -241,7 +240,7 @@ const styles = StyleSheet.create({
     color: colors.mid,
   },
   pointsContainer: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: Spacing.lg,
   },
@@ -267,7 +266,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: Spacing.md,
     marginBottom: Spacing.md,
@@ -307,7 +306,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.cobalt,
@@ -327,7 +326,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },

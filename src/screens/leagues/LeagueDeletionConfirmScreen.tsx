@@ -14,10 +14,9 @@ import {
 } from '../../services/api/LeagueService';
 import { selectUser } from '../../store/slices/authSlice';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 export const LeagueDeletionConfirmScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId } = (route.params as any) || {};
@@ -101,9 +100,7 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Delete League"
           leftIcon="arrow-back"
@@ -116,9 +113,7 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
 
   if (error || !preview) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Delete League"
           leftIcon="arrow-back"
@@ -138,7 +133,7 @@ export const LeagueDeletionConfirmScreen: React.FC = () => {
   const hasRentals = preview.rentalCount > 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Delete League"
         leftIcon="arrow-back"
@@ -277,7 +272,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   impactCard: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,

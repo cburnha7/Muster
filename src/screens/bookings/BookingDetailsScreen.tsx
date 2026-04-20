@@ -16,7 +16,6 @@ import {
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormButton } from '../../components/forms/FormButton';
@@ -45,7 +44,7 @@ interface BookingDetailsScreenProps {
 }
 
 export function BookingDetailsScreen(): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -262,7 +261,7 @@ export function BookingDetailsScreen(): JSX.Element {
       case BookingStatus.COMPLETED:
         return colors.primary;
       case BookingStatus.NO_SHOW:
-        return tokenColors.warning;
+        return colors.warning;
       default:
         return colors.onSurfaceVariant;
     }
@@ -274,7 +273,7 @@ export function BookingDetailsScreen(): JSX.Element {
       case PaymentStatus.PAID:
         return colors.secondary;
       case PaymentStatus.PENDING:
-        return tokenColors.warning;
+        return colors.warning;
       case PaymentStatus.FAILED:
         return colors.error;
       case PaymentStatus.REFUNDED:
@@ -286,9 +285,7 @@ export function BookingDetailsScreen(): JSX.Element {
 
   if (isLoading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Booking Details"
           showBack={false}
@@ -301,9 +298,7 @@ export function BookingDetailsScreen(): JSX.Element {
 
   if (error || !booking) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Booking Details"
           showBack={false}
@@ -325,7 +320,7 @@ export function BookingDetailsScreen(): JSX.Element {
     new Date(event.startTime) > new Date();
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Booking Details"
         showBack={false}
@@ -610,7 +605,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   section: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 16,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
@@ -639,7 +634,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   statusText: {
-    color: tokenColors.white,
+    color: colors.white,
     fontSize: 12,
     fontFamily: fonts.headingSemi,
   },
@@ -698,7 +693,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   paymentStatusText: {
-    color: tokenColors.white,
+    color: colors.white,
     fontSize: 12,
     fontFamily: fonts.headingSemi,
   },
@@ -706,7 +701,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceContainerLow,
   },

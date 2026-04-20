@@ -8,8 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { TeamStanding, MatchOutcome } from '../../types';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface StandingsTableProps {
   standings: TeamStanding[];
@@ -24,6 +23,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   onTeamPress,
   style,
 }) => {
+  const { colors } = useTheme();
   const [sortColumn, setSortColumn] = useState<SortColumn>('rank');
   const [sortAscending, setSortAscending] = useState(false);
 
@@ -70,7 +70,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
         <Ionicons
           name="swap-vertical-outline"
           size={14}
-          color={tokenColors.inkMuted}
+          color={colors.inkMuted}
         />
       );
     }
@@ -89,17 +89,17 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
     return (
       <View style={styles.formContainer}>
         {form.slice(-5).map((outcome, index) => {
-          let color = tokenColors.inkMuted;
+          let color = colors.inkMuted;
           let label = 'D';
 
           if (outcome === 'home_win' || outcome === 'away_win') {
             color = colors.cobalt;
             label = 'W';
           } else if (outcome === 'draw') {
-            color = tokenColors.warning;
+            color = colors.warning;
             label = 'D';
           } else {
-            color = tokenColors.error;
+            color = colors.error;
             label = 'L';
           }
 
@@ -276,24 +276,24 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
   },
   table: {
     minWidth: '100%',
   },
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 2,
     borderBottomColor: colors.cobalt,
   },
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   evenRow: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
   },
   headerCell: {
     flexDirection: 'row',
@@ -328,21 +328,21 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 13,
     fontWeight: '700',
-    color: tokenColors.ink,
+    color: colors.ink,
   },
   rankText: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   teamText: {
     fontSize: 14,
     fontWeight: '500',
-    color: tokenColors.ink,
+    color: colors.ink,
   },
   statText: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   pointsText: {
     fontWeight: '700',
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   negativeGD: {
-    color: tokenColors.error,
+    color: colors.error,
     fontWeight: '600',
   },
   formContainer: {
@@ -370,18 +370,18 @@ const styles = StyleSheet.create({
   formText: {
     fontSize: 10,
     fontWeight: '700',
-    color: tokenColors.white,
+    color: colors.white,
   },
   legend: {
     padding: 12,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   legendTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginBottom: 6,
   },
   legendItems: {
@@ -391,6 +391,6 @@ const styles = StyleSheet.create({
   },
   legendItem: {
     fontSize: 11,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
   },
 });

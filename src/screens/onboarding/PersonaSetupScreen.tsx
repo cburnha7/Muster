@@ -12,7 +12,6 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 // Types imported from navigation/types
 
 const TOTAL_STEPS = 5;
@@ -63,7 +62,7 @@ const PERSONA_CONFIGS: Record<string, PersonaConfig> = {
 };
 
 export const PersonaSetupScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -131,7 +130,7 @@ export const PersonaSetupScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       <View style={styles.content}>
         {/* Top bar */}
@@ -334,7 +333,7 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   skillChipTextSelected: {
-    color: tokenColors.white,
+    color: colors.white,
   },
 
   // Persona actions
@@ -353,7 +352,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: -0.1,
   },
   laterButton: {
@@ -392,7 +391,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: -0.1,
   },
   skipLink: {

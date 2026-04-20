@@ -2,14 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Booking, BookingStatus, PaymentStatus } from '../../types';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenType,
-  tokenShadow,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 import { PressableCard } from './PressableCard';
 
 interface BookingCardProps {
@@ -27,6 +21,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   hidePrice = false,
   style,
 }) => {
+  const { colors, shadow } = useTheme();
+
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -76,9 +72,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     <PressableCard
       style={[
         styles.container,
-        isCancelled && styles.containerCancelled,
-        isLive && styles.containerLive,
-        isPast && styles.containerPast,
+        { backgroundColor: colors.surface, ...shadow.card },
+        isCancelled && { backgroundColor: colors.errorLight },
+        isLive && { backgroundColor: colors.goldLight },
+        isPast && { backgroundColor: colors.surface },
         style,
       ]}
       onPress={() => onPress?.(booking)}
@@ -87,25 +84,37 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       {/* Bubble stack — top-right, vertical */}
       <View style={styles.bubbleStack}>
         {isCancelled && (
-          <View style={styles.cancelledBadge}>
-            <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+          <View
+            style={[styles.cancelledBadge, { backgroundColor: colors.error }]}
+          >
+            <Text style={[styles.cancelledBadgeText, { color: colors.white }]}>
+              Cancelled
+            </Text>
           </View>
         )}
         {isLive && (
-          <View style={styles.liveBadgePill}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveBadgePillText}>Live</Text>
+          <View
+            style={[styles.liveBadgePill, { backgroundColor: colors.gold }]}
+          >
+            <View style={[styles.liveDot, { backgroundColor: colors.white }]} />
+            <Text style={[styles.liveBadgePillText, { color: colors.white }]}>
+              Live
+            </Text>
           </View>
         )}
         {isPast && (
-          <View style={styles.pastBadge}>
-            <Text style={styles.pastBadgeText}>Past</Text>
+          <View style={[styles.pastBadge, { backgroundColor: colors.ink }]}>
+            <Text style={[styles.pastBadgeText, { color: colors.white }]}>
+              Past
+            </Text>
           </View>
         )}
         {booking.status === BookingStatus.PENDING_APPROVAL && (
           <View style={styles.pendingApprovalBadge}>
-            <Ionicons name="time-outline" size={11} color={tokenColors.gold} />
-            <Text style={styles.pendingApprovalText}>PENDING</Text>
+            <Ionicons name="time-outline" size={11} color={colors.gold} />
+            <Text style={[styles.pendingApprovalText, { color: colors.gold }]}>
+              PENDING
+            </Text>
           </View>
         )}
       </View>
@@ -113,7 +122,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       {/* Header: title + location */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Text style={styles.eventTitle} numberOfLines={1}>
+          <Text
+            style={[styles.eventTitle, { color: colors.ink }]}
+            numberOfLines={1}
+          >
             {booking.event?.title || 'Event Details'}
           </Text>
         </View>
@@ -121,12 +133,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
       <View style={styles.details}>
         <View style={styles.detailRow}>
-          <Ionicons
-            name="location-outline"
-            size={16}
-            color={tokenColors.inkMuted}
-          />
-          <Text style={styles.detailText} numberOfLines={1}>
+          <Ionicons name="location-outline" size={16} color={colors.inkMuted} />
+          <Text
+            style={[styles.detailText, { color: colors.inkMuted }]}
+            numberOfLines={1}
+          >
             {booking.event?.facility?.name || 'Location TBD'}
           </Text>
         </View>
@@ -136,9 +147,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <Ionicons
               name="calendar-outline"
               size={16}
-              color={tokenColors.inkMuted}
+              color={colors.inkMuted}
             />
-            <Text style={styles.detailText}>
+            <Text style={[styles.detailText, { color: colors.inkMuted }]}>
               {formatDate(booking.event.startTime)} at{' '}
               {formatTime(booking.event.startTime)}
             </Text>
@@ -150,9 +161,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <Ionicons
               name="hourglass-outline"
               size={16}
-              color={tokenColors.inkMuted}
+              color={colors.inkMuted}
             />
-            <Text style={styles.detailText}>
+            <Text style={[styles.detailText, { color: colors.inkMuted }]}>
               {(() => {
                 const ms =
                   new Date(booking.event.endTime).getTime() -
@@ -170,12 +181,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
         {booking.team && (
           <View style={styles.detailRow}>
-            <Ionicons
-              name="people-outline"
-              size={16}
-              color={tokenColors.inkMuted}
-            />
-            <Text style={styles.detailText}>Roster: {booking.team.name}</Text>
+            <Ionicons name="people-outline" size={16} color={colors.inkMuted} />
+            <Text style={[styles.detailText, { color: colors.inkMuted }]}>
+              Roster: {booking.team.name}
+            </Text>
           </View>
         )}
       </View>
@@ -184,13 +193,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
           {booking.event && (
-            <Text style={styles.participants}>
+            <Text style={[styles.participants, { color: colors.inkMuted }]}>
               {booking.event.currentParticipants}/
               {booking.event.maxParticipants} players
             </Text>
           )}
           {!hidePrice && (
-            <Text style={styles.price}>
+            <Text style={[styles.price, { color: colors.ink }]}>
               {booking.event?.price != null && booking.event.price > 0
                 ? `${booking.event.price.toFixed(2)}`
                 : 'Free'}
@@ -200,19 +209,26 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             booking.event?.price != null &&
             booking.event.price > 0 &&
             booking.paymentStatus === PaymentStatus.PENDING && (
-              <Text style={styles.pendingLabel}>Pending</Text>
+              <Text style={[styles.pendingLabel, { color: colors.inkMuted }]}>
+                Pending
+              </Text>
             )}
         </View>
 
         {canCancel && onCancel && (
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[
+              styles.cancelButton,
+              { borderColor: colors.gold, backgroundColor: colors.goldLight },
+            ]}
             onPress={() => {
               onCancel(booking);
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.cancelText}>Leave</Text>
+            <Text style={[styles.cancelText, { color: colors.gold }]}>
+              Leave
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -222,23 +238,12 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.lg,
     padding: tokenSpacing.lg,
     paddingRight: 90,
     marginVertical: tokenSpacing.sm,
     marginHorizontal: tokenSpacing.lg,
-    ...tokenShadow.card,
     position: 'relative' as const,
-  },
-  containerCancelled: {
-    backgroundColor: tokenColors.errorLight,
-  },
-  containerLive: {
-    backgroundColor: tokenColors.goldLight,
-  },
-  containerPast: {
-    backgroundColor: tokenColors.surface,
   },
   bubbleStack: {
     position: 'absolute' as const,
@@ -260,13 +265,11 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 18,
     fontFamily: tokenFontFamily.uiSemiBold,
-    color: tokenColors.ink,
     flex: 1,
   },
   liveBadgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.gold,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
@@ -276,16 +279,13 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: tokenColors.white,
   },
   liveBadgePillText: {
     fontSize: 11,
     fontFamily: tokenFontFamily.display,
-    color: tokenColors.white,
     letterSpacing: 0.5,
   },
   cancelledBadge: {
-    backgroundColor: tokenColors.error,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
@@ -293,11 +293,9 @@ const styles = StyleSheet.create({
   cancelledBadgeText: {
     fontSize: 11,
     fontFamily: tokenFontFamily.display,
-    color: tokenColors.white,
     letterSpacing: 0.5,
   },
   pastBadge: {
-    backgroundColor: tokenColors.ink,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 10,
@@ -305,7 +303,6 @@ const styles = StyleSheet.create({
   pastBadgeText: {
     fontSize: 11,
     fontFamily: tokenFontFamily.display,
-    color: tokenColors.white,
     letterSpacing: 0.5,
   },
   details: {
@@ -319,7 +316,6 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 14,
     fontFamily: tokenFontFamily.uiRegular,
-    color: tokenColors.inkMuted,
     marginLeft: tokenSpacing.sm,
     flex: 1,
   },
@@ -336,17 +332,14 @@ const styles = StyleSheet.create({
   participants: {
     fontSize: 13,
     fontFamily: tokenFontFamily.uiRegular,
-    color: tokenColors.inkMuted,
   },
   price: {
     fontSize: 15,
     fontFamily: tokenFontFamily.uiSemiBold,
-    color: tokenColors.ink,
   },
   pendingLabel: {
     fontSize: 12,
     fontFamily: tokenFontFamily.uiRegular,
-    color: tokenColors.inkMuted,
     fontStyle: 'italic',
   },
   cancelButton: {
@@ -354,29 +347,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: tokenColors.gold,
-    backgroundColor: tokenColors.goldLight,
   },
   cancelText: {
     fontFamily: tokenFontFamily.uiBold,
-    color: tokenColors.gold,
     fontSize: 13,
   },
   bookingInfo: {
     borderTopWidth: 1,
-    borderTopColor: tokenColors.surface,
     paddingTop: tokenSpacing.sm,
     marginTop: tokenSpacing.md,
   },
   bookingDate: {
     fontSize: 12,
     fontFamily: tokenFontFamily.uiRegular,
-    color: tokenColors.inkMuted,
-  },
-  cancelledDate: {
-    fontSize: 12,
-    fontFamily: tokenFontFamily.uiRegular,
-    color: tokenColors.error,
   },
   pendingApprovalBadge: {
     flexDirection: 'row',
@@ -390,7 +373,6 @@ const styles = StyleSheet.create({
   pendingApprovalText: {
     fontSize: 11,
     fontFamily: tokenFontFamily.display,
-    color: tokenColors.gold,
     letterSpacing: 0.5,
   },
 });

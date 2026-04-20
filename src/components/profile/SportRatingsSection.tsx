@@ -6,7 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
 import { formatSportType } from '../../utils/formatters';
@@ -36,6 +36,7 @@ const formatSportName = (sportType: string): string =>
   formatSportType(sportType);
 
 export function SportRatingsSection({ userId }: SportRatingsSectionProps) {
+  const { colors } = useTheme();
   const [ratings, setRatings] = useState<SportRating[]>([]);
   const [loading, setLoading] = useState(true);
 

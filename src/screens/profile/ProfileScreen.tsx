@@ -16,7 +16,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ProfileCard } from '../../components/profile/ProfileCard';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDispatch } from 'react-redux';
 import { setUser as setReduxUser } from '../../store/slices/authSlice';
@@ -35,7 +35,7 @@ function formatEventDate(iso: string): string {
 // ── Screen ──
 
 export function ProfileScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user: authUser, logout } = useAuth();
@@ -151,7 +151,7 @@ export function ProfileScreen() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={[
         styles.content,
         contentMaxWidth

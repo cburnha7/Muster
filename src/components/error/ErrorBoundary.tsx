@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -34,6 +34,7 @@ export class ErrorBoundary extends Component<
   ErrorBoundaryState
 > {
   constructor(props: ErrorBoundaryProps) {
+  const { colors } = useTheme();
     super(props);
     this.state = {
       hasError: false,
@@ -90,7 +91,7 @@ export class ErrorBoundary extends Component<
       return (
         <View style={styles.container}>
           <View style={styles.content}>
-            <Ionicons name="alert-circle" size={64} color={tokenColors.error} />
+            <Ionicons name="alert-circle" size={64} color={colors.error} />
             <Text style={styles.title}>Oops! Something went wrong</Text>
             <Text style={styles.message}>
               We're sorry for the inconvenience. The app encountered an
@@ -134,7 +135,7 @@ export class ErrorBoundary extends Component<
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -146,14 +147,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
   errorDetails: {
     width: '100%',
     maxHeight: 200,
-    backgroundColor: tokenColors.errorLight,
+    backgroundColor: colors.errorLight,
     borderRadius: 8,
     padding: 12,
     marginBottom: 24,
@@ -169,30 +170,30 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.error,
+    color: colors.error,
     marginBottom: 8,
   },
   errorText: {
     fontSize: 12,
-    color: tokenColors.error,
+    color: colors.error,
     fontFamily: 'monospace',
     marginBottom: 12,
   },
   button: {
-    backgroundColor: tokenColors.cobalt,
+    backgroundColor: colors.cobalt,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 16,
   },
   buttonText: {
-    color: tokenColors.white,
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },
   helpText: {
     fontSize: 14,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
     textAlign: 'center',
   },
 });

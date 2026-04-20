@@ -63,8 +63,7 @@ import {
 } from '../../store/api/cancelRequestsApi';
 
 // Theme
-import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 
 // Types
 import { Booking, Event, Team, EventStatus } from '../../types';
@@ -90,7 +89,7 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 export function HomeScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { isLoading: authLoading, user: currentUser } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
@@ -738,10 +737,7 @@ export function HomeScreen() {
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
             <View
-              style={[
-                styles.calendarCard,
-                { backgroundColor: themeColors.bgCard },
-              ]}
+              style={[styles.calendarCard, { backgroundColor: colors.bgCard }]}
             >
               <Calendar
                 current={selectedDate}
@@ -765,9 +761,7 @@ export function HomeScreen() {
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text
-              style={[styles.sectionTitle, { color: themeColors.textPrimary }]}
-            >
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
               Games near you
             </Text>
             <TouchableOpacity
@@ -789,7 +783,7 @@ export function HomeScreen() {
                 key={event.id}
                 style={[
                   styles.discoverCard,
-                  { backgroundColor: themeColors.bgCard },
+                  { backgroundColor: colors.bgCard },
                 ]}
                 onPress={() =>
                   navigation.navigate('EventDetails', { eventId: event.id })
@@ -799,7 +793,7 @@ export function HomeScreen() {
                 <View
                   style={[
                     styles.discoverIcon,
-                    { backgroundColor: themeColors.bgSubtle },
+                    { backgroundColor: colors.bgSubtle },
                   ]}
                 >
                   <Text style={{ fontSize: 20 }}>
@@ -810,7 +804,7 @@ export function HomeScreen() {
                   <Text
                     style={[
                       styles.discoverTitle,
-                      { color: themeColors.textPrimary },
+                      { color: colors.textPrimary },
                     ]}
                     numberOfLines={1}
                   >
@@ -819,7 +813,7 @@ export function HomeScreen() {
                   <Text
                     style={[
                       styles.discoverMeta,
-                      { color: themeColors.textSecondary },
+                      { color: colors.textSecondary },
                     ]}
                     numberOfLines={1}
                   >
@@ -838,7 +832,7 @@ export function HomeScreen() {
                   <Text
                     style={[
                       styles.joinBtnText,
-                      { color: themeColors.textSecondary },
+                      { color: colors.textSecondary },
                     ]}
                   >
                     Join
@@ -848,10 +842,7 @@ export function HomeScreen() {
             ))
           ) : (
             <View
-              style={[
-                styles.discoverEmpty,
-                { backgroundColor: themeColors.bgCard },
-              ]}
+              style={[styles.discoverEmpty, { backgroundColor: colors.bgCard }]}
             >
               <Text style={styles.discoverEmptyText}>
                 No games near you yet
@@ -875,7 +866,7 @@ export function HomeScreen() {
         accessibilityRole="button"
         accessibilityLabel="Host an event"
       >
-        <Ionicons name="add" size={26} color={tokenColors.white} />
+        <Ionicons name="add" size={26} color={colors.white} />
       </TouchableOpacity>
 
       <StepOutModal
@@ -960,7 +951,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     gap: 10,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -987,7 +978,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 20,
     padding: 8,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
@@ -1088,7 +1079,7 @@ const styles = StyleSheet.create({
   hostFirstBtnText: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: tokenColors.white,
+    color: colors.white,
   },
 
   // ── Upcoming section ───────────────────
@@ -1107,7 +1098,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: tokenColors.cobalt,
+    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -1117,7 +1108,7 @@ const styles = StyleSheet.create({
   // ── Inbox modal ─────────────────────────
   inboxBackdrop: {
     flex: 1,
-    backgroundColor: tokenColors.overlay,
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingBottom: 70,
@@ -1127,7 +1118,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     maxHeight: '80%',
     overflow: 'hidden',
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 32,

@@ -15,13 +15,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  tokenColors,
   tokenSpacing,
   tokenRadius,
   tokenType,
-  tokenShadow,
   tokenFontFamily,
 } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 import { formatSportType } from '../../utils/formatters';
 import { SportType, SkillLevel } from '../../types';
 
@@ -67,6 +66,7 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
     },
     ref
   ) => {
+    const { colors, shadow } = useTheme();
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [localFilters, setLocalFilters] = useState<SearchFilters>(
       filters || {}
@@ -107,17 +107,26 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
     return (
       <View style={[styles.container, style]}>
         <View style={styles.searchContainer}>
-          <View style={styles.inputContainer}>
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                ...shadow.card,
+              },
+            ]}
+          >
             <Ionicons
               name="search-outline"
               size={20}
-              color={tokenColors.inkSecondary}
+              color={colors.inkSecondary}
             />
             <TextInput
               ref={inputRef}
-              style={styles.input}
+              style={[styles.input, { color: colors.ink }]}
               placeholder={placeholder}
-              placeholderTextColor={tokenColors.inkSecondary}
+              placeholderTextColor={colors.inkSecondary}
               value={value}
               onChangeText={onChangeText}
               onSubmitEditing={handleSearch}
@@ -131,7 +140,7 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                 <Ionicons
                   name="close-circle"
                   size={20}
-                  color={tokenColors.inkSecondary}
+                  color={colors.inkSecondary}
                 />
               </TouchableOpacity>
             )}
@@ -141,7 +150,8 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                activeFiltersCount > 0 && styles.filterButtonActive,
+                { backgroundColor: colors.surface },
+                activeFiltersCount > 0 && { backgroundColor: colors.cobalt },
               ]}
               onPress={() => setShowFilterModal(true)}
             >
@@ -149,14 +159,19 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                 name="filter-outline"
                 size={20}
                 color={
-                  activeFiltersCount > 0
-                    ? tokenColors.white
-                    : tokenColors.inkSecondary
+                  activeFiltersCount > 0 ? colors.white : colors.inkSecondary
                 }
               />
               {activeFiltersCount > 0 && (
-                <View style={styles.filterBadge}>
-                  <Text style={styles.filterBadgeText}>
+                <View
+                  style={[
+                    styles.filterBadge,
+                    { backgroundColor: colors.error },
+                  ]}
+                >
+                  <Text
+                    style={[styles.filterBadgeText, { color: colors.white }]}
+                  >
                     {activeFiltersCount}
                   </Text>
                 </View>
@@ -171,28 +186,49 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
           presentationStyle="pageSheet"
           onRequestClose={() => setShowFilterModal(false)}
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: colors.background },
+            ]}
+          >
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
               <TouchableOpacity onPress={() => setShowFilterModal(false)}>
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text style={[styles.cancelText, { color: colors.cobalt }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Filters</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
+                Filters
+              </Text>
               <TouchableOpacity onPress={handleFilterReset}>
-                <Text style={styles.resetText}>Reset</Text>
+                <Text style={[styles.resetText, { color: colors.error }]}>
+                  Reset
+                </Text>
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalContent}>
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>Sport Type</Text>
+                <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+                  Sport Type
+                </Text>
                 <View style={styles.optionsContainer}>
                   {Object.values(SportType).map(sport => (
                     <TouchableOpacity
                       key={sport}
                       style={[
                         styles.optionButton,
-                        localFilters.sportType === sport &&
-                          styles.optionButtonActive,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                        localFilters.sportType === sport && {
+                          backgroundColor: colors.cobalt,
+                          borderColor: colors.cobalt,
+                        },
                       ]}
                       onPress={() =>
                         setLocalFilters({
@@ -207,8 +243,11 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                       <Text
                         style={[
                           styles.optionText,
-                          localFilters.sportType === sport &&
-                            styles.optionTextActive,
+                          { color: colors.ink },
+                          localFilters.sportType === sport && {
+                            ...tokenType.chipSelected,
+                            color: colors.white,
+                          },
                         ]}
                       >
                         {formatSportType(sport)}
@@ -219,15 +258,23 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
               </View>
 
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>Skill Level</Text>
+                <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+                  Skill Level
+                </Text>
                 <View style={styles.optionsContainer}>
                   {Object.values(SkillLevel).map(level => (
                     <TouchableOpacity
                       key={level}
                       style={[
                         styles.optionButton,
-                        localFilters.skillLevel === level &&
-                          styles.optionButtonActive,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                        localFilters.skillLevel === level && {
+                          backgroundColor: colors.cobalt,
+                          borderColor: colors.cobalt,
+                        },
                       ]}
                       onPress={() =>
                         setLocalFilters({
@@ -242,8 +289,11 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
                       <Text
                         style={[
                           styles.optionText,
-                          localFilters.skillLevel === level &&
-                            styles.optionTextActive,
+                          { color: colors.ink },
+                          localFilters.skillLevel === level && {
+                            ...tokenType.chipSelected,
+                            color: colors.white,
+                          },
                         ]}
                       >
                         {level.replace('_', ' ').toUpperCase()}
@@ -254,12 +304,16 @@ export const SearchBar = forwardRef<SearchBarHandle, SearchBarProps>(
               </View>
             </ScrollView>
 
-            <View style={styles.modalFooter}>
+            <View
+              style={[styles.modalFooter, { borderTopColor: colors.border }]}
+            >
               <TouchableOpacity
-                style={styles.applyButton}
+                style={[styles.applyButton, { backgroundColor: colors.cobalt }]}
                 onPress={handleFilterApply}
               >
-                <Text style={styles.applyText}>Apply Filters</Text>
+                <Text style={[styles.applyText, { color: colors.white }]}>
+                  Apply Filters
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -282,38 +336,29 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.md,
     paddingHorizontal: tokenSpacing.lg,
     paddingVertical: tokenSpacing.md,
     marginRight: tokenSpacing.sm,
     borderWidth: 1.5,
-    borderColor: tokenColors.border,
-    ...tokenShadow.card,
   },
   input: {
     flex: 1,
     ...tokenType.body,
-    color: tokenColors.ink,
     marginLeft: tokenSpacing.sm,
   },
   clearButton: {
     padding: tokenSpacing.xs,
   },
   filterButton: {
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.md,
     padding: tokenSpacing.md,
     position: 'relative',
-  },
-  filterButtonActive: {
-    backgroundColor: tokenColors.cobalt,
   },
   filterBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: tokenColors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -321,13 +366,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterBadgeText: {
-    color: tokenColors.white,
     fontSize: 12,
     fontFamily: tokenFontFamily.uiSemiBold,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: tokenColors.background,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -336,19 +379,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokenSpacing.lg,
     paddingVertical: tokenSpacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
   },
   cancelText: {
     ...tokenType.button,
-    color: tokenColors.cobalt,
   },
   modalTitle: {
     ...tokenType.modalTitle,
-    color: tokenColors.ink,
   },
   resetText: {
     ...tokenType.button,
-    color: tokenColors.error,
   },
   modalContent: {
     flex: 1,
@@ -359,7 +398,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...tokenType.fieldLabel,
-    color: tokenColors.ink,
     marginBottom: tokenSpacing.md,
   },
   optionsContainer: {
@@ -368,39 +406,25 @@ const styles = StyleSheet.create({
     gap: tokenSpacing.sm,
   },
   optionButton: {
-    backgroundColor: tokenColors.surface,
     paddingHorizontal: tokenSpacing.md,
     paddingVertical: tokenSpacing.sm,
     borderRadius: tokenRadius.pill,
     borderWidth: 1.5,
-    borderColor: tokenColors.border,
-  },
-  optionButtonActive: {
-    backgroundColor: tokenColors.cobalt,
-    borderColor: tokenColors.cobalt,
   },
   optionText: {
     ...tokenType.chip,
-    color: tokenColors.ink,
-  },
-  optionTextActive: {
-    ...tokenType.chipSelected,
-    color: tokenColors.white,
   },
   modalFooter: {
     paddingHorizontal: tokenSpacing.lg,
     paddingVertical: tokenSpacing.lg,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
   },
   applyButton: {
-    backgroundColor: tokenColors.cobalt,
     borderRadius: tokenRadius.lg,
     paddingVertical: tokenSpacing.lg,
     alignItems: 'center',
   },
   applyText: {
     ...tokenType.button,
-    color: tokenColors.white,
   },
 });

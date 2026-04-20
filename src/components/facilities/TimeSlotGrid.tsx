@@ -1,7 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing } from '../../theme';
+import { Spacing, useTheme } from '../../theme';
 import { formatTime12 } from '../../utils/calendarUtils';
 
 export interface TimeSlot {
@@ -35,11 +41,12 @@ export function TimeSlotGrid({
   showCourtName = false,
   currentUserId,
 }: TimeSlotGridProps) {
+  const { colors } = useTheme();
   const getSlotColor = (slot: TimeSlot, isSelected: boolean): string => {
     if (isSelected) {
       return colors.gold;
     }
-    
+
     switch (slot.status) {
       case 'available':
         return colors.cobalt;
@@ -144,22 +151,31 @@ export function TimeSlotGrid({
                 <View style={styles.slotTime}>
                   <Ionicons name="time-outline" size={16} color={colors.ink} />
                   <Text style={styles.slotTimeText}>
-                    {formatTime12(slot.startTime)} - {formatTime12(slot.endTime)}
+                    {formatTime12(slot.startTime)} -{' '}
+                    {formatTime12(slot.endTime)}
                   </Text>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: slotColor }]}>
+                <View
+                  style={[styles.statusBadge, { backgroundColor: slotColor }]}
+                >
                   <Ionicons
                     name={getSlotIcon(slot)}
                     size={12}
                     color={colors.surface}
                   />
-                  <Text style={styles.statusBadgeText}>{getSlotLabel(slot)}</Text>
+                  <Text style={styles.statusBadgeText}>
+                    {getSlotLabel(slot)}
+                  </Text>
                 </View>
               </View>
 
               {showCourtName && slot.courtName && (
                 <View style={styles.courtInfo}>
-                  <Ionicons name="location-outline" size={14} color={colors.inkFaint} />
+                  <Ionicons
+                    name="location-outline"
+                    size={14}
+                    color={colors.inkFaint}
+                  />
                   <Text style={styles.courtName}>{slot.courtName}</Text>
                 </View>
               )}
@@ -179,7 +195,11 @@ export function TimeSlotGrid({
 
               {isSelected && (
                 <View style={styles.selectedIndicator}>
-                  <Ionicons name="checkmark-circle" size={20} color={colors.gold} />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color={colors.gold}
+                  />
                 </View>
               )}
             </TouchableOpacity>

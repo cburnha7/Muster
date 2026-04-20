@@ -8,7 +8,6 @@ import { leagueService } from '../../../services/api/LeagueService';
 import { seasonService } from '../../../services/api/SeasonService';
 import { PlayerRanking, Season } from '../../../types';
 import { colors, useTheme } from '../../../theme';
-import { tokenColors } from '../../../theme/tokens';
 
 interface PlayersTabProps {
   leagueId: string;
@@ -20,7 +19,7 @@ export const PlayersTab: React.FC<PlayersTabProps> = ({ leagueId }) => {
 
 // ── Player rankings view ──
 const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const [rankings, setRankings] = useState<PlayerRanking[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
@@ -147,10 +146,7 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
 
   return (
     <View
-      style={[
-        rankingsStyles.container,
-        { backgroundColor: themeColors.bgScreen },
-      ]}
+      style={[rankingsStyles.container, { backgroundColor: colors.bgScreen }]}
     >
       {/* Controls Section */}
       <View style={rankingsStyles.controls}>
@@ -205,14 +201,14 @@ const PlayerRankingsView: React.FC<{ leagueId: string }> = ({ leagueId }) => {
 const rankingsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
   },
   controls: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   filtersRow: {
     flexDirection: 'row',

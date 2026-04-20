@@ -22,8 +22,7 @@ import {
   selectDependents,
   setActiveUser,
 } from '../../store/slices/contextSlice';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { PERSON_COLORS } from '../../types/eventsCalendar';
 import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import type { DependentSummary } from '../../types/dependent';
@@ -36,6 +35,7 @@ function getAge(dateOfBirth: string): number {
 }
 
 export function AvatarBottomSheet() {
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheet>(null);
   const { registerSheet } = useAvatarSheet();
   const navigation = useNavigation();
@@ -398,7 +398,6 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 20,
-    color: tokenColors.white,
   },
   identityText: {
     flex: 1,
@@ -454,7 +453,6 @@ const styles = StyleSheet.create({
   personInitial: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
   },
   personInfo: {
     flex: 1,
@@ -535,7 +533,6 @@ const styles = StyleSheet.create({
   upgradeBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: tokenColors.white,
   },
 
   // ── Log Out ───────────────────────────

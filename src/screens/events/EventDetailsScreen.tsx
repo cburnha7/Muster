@@ -50,7 +50,6 @@ import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -90,7 +89,7 @@ function formatEventType(eventType: string): string {
 }
 
 export function EventDetailsScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -864,7 +863,7 @@ export function EventDetailsScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+    <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
       <ContextualReturnButton />
       <ScrollView
         style={{ flex: 1 }}
@@ -873,7 +872,7 @@ export function EventDetailsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadEvent(true)}
-            colors={[tokenColors.cobalt]}
+            colors={[colors.cobalt]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -1168,7 +1167,7 @@ export function EventDetailsScreen() {
                             <Ionicons
                               name="send"
                               size={20}
-                              color={tokenColors.white}
+                              color={colors.white}
                             />
                             <Text style={styles.submitSalutesButtonText}>
                               Submit {salutedParticipants.size} Salute
@@ -1258,7 +1257,7 @@ export function EventDetailsScreen() {
                     <Ionicons
                       name="checkmark-circle-outline"
                       size={16}
-                      color={tokenColors.success}
+                      color={colors.success}
                     />
                     <Text style={styles.equipmentText}>{item}</Text>
                   </View>
@@ -1459,7 +1458,7 @@ export function EventDetailsScreen() {
         >
           <View
             style={{
-              backgroundColor: tokenColors.white,
+              backgroundColor: colors.white,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               maxHeight: '85%',
@@ -1560,7 +1559,7 @@ export function EventDetailsScreen() {
                 style={{
                   fontFamily: fonts.ui,
                   fontSize: 16,
-                  color: tokenColors.white,
+                  color: colors.white,
                 }}
               >
                 {signingWaiver ? 'Signing...' : 'Sign & Continue'}
@@ -1867,7 +1866,7 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   ownerJoinBtn: {
     flexDirection: 'row',
@@ -1926,7 +1925,7 @@ const styles = StyleSheet.create({
   },
   saluteInstructions: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginBottom: 16,
   },
   participantsGrid: {
@@ -1964,7 +1963,7 @@ const styles = StyleSheet.create({
   participantCard: {
     width: '30%',
     aspectRatio: 0.75,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -1997,12 +1996,12 @@ const styles = StyleSheet.create({
   participantAvatarText: {
     fontSize: 24,
     fontWeight: '700',
-    color: tokenColors.white,
+    color: colors.white,
   },
   participantCardName: {
     fontSize: 13,
     fontWeight: '500',
-    color: tokenColors.ink,
+    color: colors.ink,
     textAlign: 'center',
   },
   saluteBadge: {
@@ -2030,7 +2029,7 @@ const styles = StyleSheet.create({
   youBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: tokenColors.white,
+    color: colors.white,
   },
   submittedBadge: {
     flexDirection: 'row',
@@ -2064,11 +2063,11 @@ const styles = StyleSheet.create({
   submitSalutesButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: tokenColors.white,
+    color: colors.white,
   },
   submitSalutesHint: {
     fontSize: 13,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -2085,7 +2084,7 @@ const styles = StyleSheet.create({
   },
   salutesSubmittedDescription: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -2098,7 +2097,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 20,
     padding: 24,
     width: '100%',
@@ -2123,12 +2122,12 @@ const styles = StyleSheet.create({
   modalAvatarText: {
     fontSize: 40,
     fontWeight: '700',
-    color: tokenColors.white,
+    color: colors.white,
   },
   modalName: {
     fontSize: 22,
     fontWeight: '700',
-    color: tokenColors.ink,
+    color: colors.ink,
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -2146,7 +2145,7 @@ const styles = StyleSheet.create({
   },
   modalDescription: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
@@ -2163,10 +2162,10 @@ const styles = StyleSheet.create({
   modalButtonPrimaryText: {
     fontSize: 18,
     fontWeight: '600',
-    color: tokenColors.white,
+    color: colors.white,
   },
   modalButtonSecondary: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -2174,19 +2173,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   modalButtonSecondaryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   modalButtonClose: {
     paddingVertical: 12,
   },
   modalButtonCloseText: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   chatBtn: {
     flexDirection: 'row',

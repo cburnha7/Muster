@@ -13,7 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, typeScale, useTheme } from '../../theme';
+import { fonts, typeScale, useTheme } from '../../theme';
 import {
   useValidatePromoCodeMutation,
   useRedeemPromoCodeMutation,
@@ -42,7 +42,7 @@ const TIERS = [
 ];
 
 export function RedeemCodeScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [code, setCode] = useState('');
@@ -100,7 +100,7 @@ export function RedeemCodeScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.flex, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView

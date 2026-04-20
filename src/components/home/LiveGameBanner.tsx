@@ -6,8 +6,7 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { getSportEmoji } from '../../constants/sports';
 import type { Booking } from '../../types';
 
@@ -21,7 +20,7 @@ function minutesAgo(startTime: Date): number {
 }
 
 export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const pulseAnim = useRef(new Animated.Value(0.3)).current;
   const event = booking.event;
 
@@ -61,20 +60,20 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
       </View>
       <View style={styles.info}>
         <Text
-          style={[styles.title, { color: themeColors.textPrimary }]}
+          style={[styles.title, { color: colors.textPrimary }]}
           numberOfLines={1}
         >
           {emoji} {event.title}
         </Text>
         <Text
-          style={[styles.meta, { color: themeColors.textSecondary }]}
+          style={[styles.meta, { color: colors.textSecondary }]}
           numberOfLines={1}
         >
-          {event.facility?.name || event.locationName || 'Game'} · Started{' '}
+          {event.facility?.name || event.locationName || 'Game'} Â· Started{' '}
           {mins}m ago
         </Text>
       </View>
-      <Text style={styles.arrow}>→</Text>
+      <Text style={styles.arrow}>â†’</Text>
     </TouchableOpacity>
   );
 }
@@ -83,20 +82,20 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.errorLight,
+    backgroundColor: colors.errorLight,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 12,
     gap: 10,
     borderWidth: 1,
-    borderColor: tokenColors.error,
+    borderColor: colors.error,
   },
   liveLabel: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: tokenColors.error,
+    backgroundColor: colors.error,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -105,12 +104,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
   },
   liveText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: 1,
   },
   info: {

@@ -2,7 +2,6 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet, Animated, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 interface FloatingActionButtonProps {
   icon: string;
@@ -22,8 +21,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   icon,
   onPress,
   size = 56,
-  backgroundColor = tokenColors.cobalt,
-  iconColor = tokenColors.white,
+  backgroundColor = colors.cobalt,
+  iconColor = colors.white,
   position = 'bottom-right',
   bottom = 20,
   right = 20,
@@ -31,7 +30,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   disabled = false,
   style,
 }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const getPositionStyle = () => {
     const baseStyle = {
       position: 'absolute' as const,
@@ -58,7 +57,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: disabled ? tokenColors.inkMuted : backgroundColor,
+          backgroundColor: disabled ? colors.inkMuted : backgroundColor,
         },
         getPositionStyle(),
         style,
@@ -71,7 +70,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         <Ionicons
           name={icon as any}
           size={size * 0.4}
-          color={disabled ? tokenColors.inkMuted : iconColor}
+          color={disabled ? colors.inkMuted : iconColor}
         />
       </View>
     </TouchableOpacity>
@@ -82,7 +81,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 4,

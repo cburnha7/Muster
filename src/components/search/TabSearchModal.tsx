@@ -11,8 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FormSelect, SelectOption } from '../forms/FormSelect';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { SportType } from '../../types';
 import { searchEventBus } from '../../utils/searchEventBus';
 
@@ -68,7 +67,7 @@ export function TabSearchModal({
   onCreatePress,
 }: TabSearchModalProps) {
   const [query, setQuery] = useState('');
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const [selectedSport, setSelectedSport] = useState<SportType | null>(null);
   const [selectedGender, setSelectedGender] = useState('');
   const [minAgeFilter, setMinAgeFilter] = useState('');
@@ -94,7 +93,7 @@ export function TabSearchModal({
     }
   }, [visible]);
 
-  // Search — runs on every filter change and on open
+  // Search â€” runs on every filter change and on open
   useEffect(() => {
     if (!visible) return;
     const timer = setTimeout(async () => {
@@ -124,7 +123,7 @@ export function TabSearchModal({
   if (!visible) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Filters */}
       <View style={styles.filterRow}>
         <View style={{ flex: 1 }}>
@@ -187,7 +186,7 @@ export function TabSearchModal({
             <TouchableOpacity
               style={[
                 styles.resultRow,
-                { backgroundColor: themeColors.bgCard },
+                { backgroundColor: colors.bgCard },
               ]}
               onPress={() => {
                 onResultPress(item);
@@ -199,7 +198,7 @@ export function TabSearchModal({
                 <Text
                   style={[
                     styles.resultName,
-                    { color: themeColors.textPrimary },
+                    { color: colors.textPrimary },
                   ]}
                   numberOfLines={1}
                 >
@@ -209,7 +208,7 @@ export function TabSearchModal({
                   <Text
                     style={[
                       styles.resultSub,
-                      { color: themeColors.textSecondary },
+                      { color: colors.textSecondary },
                     ]}
                     numberOfLines={1}
                   >
@@ -239,7 +238,7 @@ export function TabSearchModal({
           <Ionicons
             name="add-circle-outline"
             size={20}
-            color={tokenColors.white}
+            color={colors.white}
           />
           <Text style={styles.createBtnText}>{createLabel}</Text>
         </TouchableOpacity>
@@ -273,7 +272,7 @@ const styles = StyleSheet.create({
   },
   ageInput: {
     flex: 1,
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
@@ -281,8 +280,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.ink,
     borderWidth: 1,
-    borderColor: tokenColors.border,
-    shadowColor: tokenColors.black,
+    borderColor: colors.border,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     marginHorizontal: Spacing.lg,
     marginBottom: 6,
     borderRadius: 10,
@@ -346,6 +345,6 @@ const styles = StyleSheet.create({
   createBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

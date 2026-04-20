@@ -17,7 +17,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { CourtListManager } from '../../components/facilities/CourtListManager';
 import { EditCourtModal } from '../../components/facilities/EditCourtModal';
 import { courtService, Court } from '../../services/api/CourtService';
-import { colors, Spacing, useTheme } from '../../theme';
+import { Spacing, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 
 type ManageGroundScreenNavigationProp = NativeStackNavigationProp<
@@ -30,7 +30,7 @@ type ManageGroundScreenRouteProp = RouteProp<
 >;
 
 export function ManageGroundScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<ManageGroundScreenNavigationProp>();
   const route = useRoute<ManageGroundScreenRouteProp>();
   const { facilityId, facilityName } = route.params ?? {};
@@ -121,9 +121,7 @@ export function ManageGroundScreen() {
 
   if (loading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Manage Ground"
           leftIcon="arrow-back"
@@ -135,7 +133,7 @@ export function ManageGroundScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title={facilityName}
         leftIcon="arrow-back"

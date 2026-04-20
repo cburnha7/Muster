@@ -1,10 +1,10 @@
 import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { useCreateFacility } from './CreateFacilityContext';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 export function Step2Location() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateFacility();
 
   const setField = (field: string, value: string) =>
@@ -12,7 +12,7 @@ export function Step2Location() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}

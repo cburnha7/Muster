@@ -33,10 +33,9 @@ import {
 } from '../../types/league';
 import { Team } from '../../types';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 export const ManageLeagueScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId } = (route.params as any) || {};
@@ -268,9 +267,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (isLoading && !league) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -283,9 +280,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (error && !league) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -298,9 +293,7 @@ export const ManageLeagueScreen: React.FC = () => {
 
   if (!league) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -314,9 +307,7 @@ export const ManageLeagueScreen: React.FC = () => {
   // Check if user is the operator
   if (user?.id && league.organizerId !== user.id) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Update League"
           leftIcon="arrow-back"
@@ -331,7 +322,7 @@ export const ManageLeagueScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Update League"
         leftIcon="arrow-back"
@@ -526,13 +517,9 @@ export const ManageLeagueScreen: React.FC = () => {
                   accessibilityLabel="Search"
                 >
                   {isSearchingRosters ? (
-                    <ActivityIndicator size="small" color={tokenColors.white} />
+                    <ActivityIndicator size="small" color={colors.white} />
                   ) : (
-                    <Ionicons
-                      name="search"
-                      size={20}
-                      color={tokenColors.white}
-                    />
+                    <Ionicons name="search" size={20} color={colors.white} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -615,7 +602,7 @@ export const ManageLeagueScreen: React.FC = () => {
                             {isInviting ? (
                               <ActivityIndicator
                                 size="small"
-                                color={tokenColors.white}
+                                color={colors.white}
                               />
                             ) : (
                               <Text style={styles.inviteButtonText}>
@@ -727,7 +714,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 16,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -850,7 +837,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: tokenColors.successLight,
+    backgroundColor: colors.successLight,
     borderRadius: 8,
   },
   inviteSuccessText: {
@@ -865,7 +852,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: tokenColors.errorLight,
+    backgroundColor: colors.errorLight,
     borderRadius: 8,
   },
   inviteErrorText: {
@@ -918,7 +905,7 @@ const styles = StyleSheet.create({
   inviteButtonText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: tokenColors.white,
+    color: colors.white,
   },
   statusBadgePending: {
     backgroundColor: colors.goldLight,
@@ -927,13 +914,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   statusBadgeActive: {
-    backgroundColor: tokenColors.successLight,
+    backgroundColor: colors.successLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   statusBadgeDeclined: {
-    backgroundColor: tokenColors.errorLight,
+    backgroundColor: colors.errorLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,

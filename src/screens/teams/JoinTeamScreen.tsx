@@ -21,7 +21,7 @@ import { joinTeam } from '../../store/slices/teamsSlice';
 import { selectDependents } from '../../store/slices/contextSlice';
 import { useAuth } from '../../context/AuthContext';
 import { DependentSummary } from '../../types/dependent';
-import { colors, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface JoinTeamScreenProps {
   route: {
@@ -32,7 +32,7 @@ interface JoinTeamScreenProps {
 }
 
 export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { inviteCode: initialInviteCode } = route.params || {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -184,7 +184,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader title="Join Roster" />

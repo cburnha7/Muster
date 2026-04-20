@@ -10,7 +10,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface InviteToMusterModalProps {
   visible: boolean;
@@ -21,6 +21,7 @@ interface InviteToMusterModalProps {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function InviteToMusterModal({ visible, onClose, onInvite }: InviteToMusterModalProps) {
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [nameError, setNameError] = useState('');

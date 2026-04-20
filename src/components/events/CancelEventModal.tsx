@@ -14,8 +14,7 @@ import {
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface CancelEventModalProps {
   visible: boolean;
@@ -37,6 +36,7 @@ export function CancelEventModal({
   const MIN_CHARS = 5;
 
   const handleConfirm = async () => {
+  const { colors } = useTheme();
     Keyboard.dismiss();
 
     if (reason.trim().length < MIN_CHARS) {
@@ -74,7 +74,7 @@ export function CancelEventModal({
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Tapping the backdrop dismisses keyboard only — does NOT close modal */}
+        {/* Tapping the backdrop dismisses keyboard only â€” does NOT close modal */}
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={() => Keyboard.dismiss()}
@@ -141,7 +141,7 @@ export function CancelEventModal({
                 disabled={isSubmitting || reason.trim().length < MIN_CHARS}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator color={tokenColors.white} />
+                  <ActivityIndicator color={colors.white} />
                 ) : (
                   <Text style={styles.buttonDangerText}>Cancel Event</Text>
                 )}
@@ -259,6 +259,6 @@ const styles = StyleSheet.create({
   buttonDangerText: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

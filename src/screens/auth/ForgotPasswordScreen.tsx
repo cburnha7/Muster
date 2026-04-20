@@ -13,7 +13,7 @@ import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from '../../components/forms/TextInput';
 import { Button } from '../../components/forms/Button';
-import { colors, Spacing, TextStyles, useTheme } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import { requestPasswordReset } from '../../store/slices/authSlice';
 
@@ -28,7 +28,7 @@ interface ForgotPasswordState {
 }
 
 export const ForgotPasswordScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
@@ -109,9 +109,7 @@ export const ForgotPasswordScreen: React.FC = () => {
 
   if (state.isSuccess) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <View style={styles.successContainer}>
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={80} color={colors.cobalt} />
@@ -142,7 +140,7 @@ export const ForgotPasswordScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView

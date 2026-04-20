@@ -6,7 +6,6 @@ import { useCreateLeague } from './CreateLeagueContext';
 import { DayOfWeek, getSeasonFromDate } from './types';
 import { getSportLabel } from '../../../constants/sports';
 import { colors, fonts, useTheme } from '../../../theme';
-import { tokenColors } from '../../../theme/tokens';
 
 const DAY_TO_INDEX: Record<DayOfWeek, number> = {
   Sun: 0,
@@ -188,7 +187,7 @@ function fmtDate(d: Date): string {
 }
 
 export function Step4Preview() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateLeague();
 
   const sportLabel = state.sport ? getSportLabel(state.sport) : '';
@@ -267,7 +266,7 @@ export function Step4Preview() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
       <Text style={styles.heading}>Schedule Preview</Text>
@@ -447,7 +446,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: tokenColors.cobaltLight,
+    backgroundColor: colors.cobaltLight,
     borderRadius: 8,
     padding: 8,
     marginBottom: 8,

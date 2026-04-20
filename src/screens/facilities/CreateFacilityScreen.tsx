@@ -24,7 +24,7 @@ import { UpsellModal } from '../../components/paywall/UpsellModal';
 import { getSportEmoji } from '../../constants/sports';
 import { Facility } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 
 import {
   CreateFacilityProvider,
@@ -42,7 +42,7 @@ import { Step5Policies } from './create-flow/Step5Policies';
 let isCreatingFacility = false;
 
 function CreateFacilityInner() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const reduxDispatch = useDispatch();
   const { user } = useAuth();
@@ -306,7 +306,7 @@ function CreateFacilityInner() {
 
   return (
     <>
-      <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+      <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
         <FacilityFlowContainer onSubmit={handleSubmit}>
           <Step1NameSports />
           <Step2Location />

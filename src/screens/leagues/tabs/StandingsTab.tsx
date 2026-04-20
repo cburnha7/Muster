@@ -17,14 +17,13 @@ import { seasonService } from '../../../services/api/SeasonService';
 import { TeamStanding, Season } from '../../../types';
 import { useNavigation } from '@react-navigation/native';
 import { colors, useTheme } from '../../../theme';
-import { tokenColors } from '../../../theme/tokens';
 
 interface StandingsTabProps {
   leagueId: string;
 }
 
 export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const [standings, setStandings] = useState<TeamStanding[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
@@ -122,11 +121,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
 
     return (
       <View style={styles.emptyState}>
-        <Ionicons
-          name="trophy-outline"
-          size={64}
-          color={tokenColors.inkMuted}
-        />
+        <Ionicons name="trophy-outline" size={64} color={colors.inkMuted} />
         <Text style={styles.emptyText}>No standings available</Text>
         <Text style={styles.emptySubtext}>
           Standings will appear once matches are recorded
@@ -136,7 +131,7 @@ export const StandingsTab: React.FC<StandingsTabProps> = ({ leagueId }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Controls Section */}
       <View style={styles.controls}>
         {seasons.length > 0 && (
@@ -189,9 +184,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   seasonSelector: {
@@ -205,7 +200,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.cobalt,
@@ -229,13 +224,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginTop: 16,
     textAlign: 'center',
   },
   emptySubtext: {
     fontSize: 14,
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
   },

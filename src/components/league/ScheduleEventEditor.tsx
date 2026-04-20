@@ -15,8 +15,7 @@ type DateTimePickerEvent = { type: string };
 import { Ionicons } from '@expo/vector-icons';
 import { ScheduleEvent } from '../../store/slices/scheduleSlice';
 import { RosterInfo } from '../../types/scheduling';
-import { colors, fonts, Spacing, BorderRadius } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, BorderRadius, useTheme } from '../../theme';
 
 export interface ScheduleEventEditorProps {
   event?: ScheduleEvent; // undefined for new game
@@ -91,6 +90,7 @@ export const ScheduleEventEditor: React.FC<ScheduleEventEditorProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { colors } = useTheme();
   const isEdit = !!event;
 
   // Form state
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.inkFaint + '20',
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
   },
   cancelText: {
     fontFamily: fonts.ui,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   fieldTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     borderColor: colors.inkFaint + '40',
@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.inkFaint + '20',
   },
@@ -504,15 +504,15 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   saveButtonTextDisabled: {
-    color: tokenColors.white + '80',
+    color: colors.white + '80',
   },
   // Roster picker modal styles
   pickerModal: {
     flex: 1,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
   },
   pickerHeader: {
     flexDirection: 'row',

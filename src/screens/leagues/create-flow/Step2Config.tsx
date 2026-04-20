@@ -11,7 +11,7 @@ import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import CrossPlatformDateTimePicker from '../../../components/ui/CrossPlatformDateTimePicker';
 import { useCreateLeague } from './CreateLeagueContext';
 import { ALL_DAYS } from './types';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 
 const FORMAT_OPTIONS: SelectOption[] = [
   { label: 'Season', value: 'season' },
@@ -47,7 +47,7 @@ function gamesPerPeriodLabel(freq: string | null): string {
 }
 
 export function Step2Config() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateLeague();
   const set = (field: string) => (value: string) =>
     dispatch({ type: 'SET_FIELD', field, value });
@@ -88,7 +88,7 @@ export function Step2Config() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >

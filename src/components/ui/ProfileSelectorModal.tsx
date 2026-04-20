@@ -9,8 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts } from '../../theme';
+import { useTheme } from '../../theme';
 import { getAvatarColor } from '../../theme/colors';
 
 export interface ProfileOption {
@@ -33,6 +33,7 @@ export function ProfileSelectorModal({
   onSelect,
   onCancel,
 }: ProfileSelectorModalProps) {
+  const { colors } = useTheme();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const handleConfirm = () => {
@@ -54,9 +55,17 @@ export function ProfileSelectorModal({
       animationType="fade"
       onRequestClose={handleCancel}
     >
-      <Pressable style={styles.backdrop} onPress={handleCancel}>
-        <View style={styles.modal} onStartShouldSetResponder={() => true}>
-          <Text style={styles.title}>Who's joining?</Text>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
+        onPress={handleCancel}
+      >
+        <View
+          style={[styles.modal, { backgroundColor: colors.white }]}
+          onStartShouldSetResponder={() => true}
+        >
+          <Text style={[styles.title, { color: colors.ink }]}>
+            Who's joining?
+          </Text>
 
           {profiles.map(p => {
             const active = selectedId === p.id;
@@ -65,7 +74,14 @@ export function ProfileSelectorModal({
             return (
               <TouchableOpacity
                 key={p.id}
-                style={[styles.profileRow, active && styles.profileRowActive]}
+                style={[
+                  styles.profileRow,
+                  { backgroundColor: colors.surface },
+                  active && {
+                    borderColor: colors.pine,
+                    backgroundColor: colors.pineTint,
+                  },
+                ]}
                 onPress={() => setSelectedId(p.id)}
                 activeOpacity={0.7}
               >
@@ -81,13 +97,18 @@ export function ProfileSelectorModal({
                       { backgroundColor: avatarBg },
                     ]}
                   >
-                    <Text style={styles.avatarInitial}>{initial}</Text>
+                    <Text
+                      style={[styles.avatarInitial, { color: colors.white }]}
+                    >
+                      {initial}
+                    </Text>
                   </View>
                 )}
                 <Text
                   style={[
                     styles.profileName,
-                    active && styles.profileNameActive,
+                    { color: colors.ink },
+                    active && { color: colors.pine },
                   ]}
                 >
                   {p.firstName}
@@ -106,22 +127,27 @@ export function ProfileSelectorModal({
 
           <View style={styles.actions}>
             <TouchableOpacity
-              style={styles.cancelBtn}
+              style={[styles.cancelBtn, { backgroundColor: colors.surface }]}
               onPress={handleCancel}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={[styles.cancelBtnText, { color: colors.ink }]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.confirmBtn,
-                !selectedId && styles.confirmBtnDisabled,
+                { backgroundColor: colors.pine },
+                !selectedId && { backgroundColor: colors.inkFaint },
               ]}
               onPress={handleConfirm}
               disabled={!selectedId}
               activeOpacity={0.7}
             >
-              <Text style={styles.confirmBtnText}>Confirm</Text>
+              <Text style={[styles.confirmBtnText, { color: colors.white }]}>
+                Confirm
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -133,19 +159,16 @@ export function ProfileSelectorModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 31, 61, 0.4)',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
   modal: {
-    backgroundColor: colors.white,
     borderRadius: 20,
     padding: 24,
   },
   title: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.ink,
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -156,13 +179,8 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 14,
     marginBottom: 8,
-    backgroundColor: colors.surface,
     borderWidth: 2,
     borderColor: 'transparent',
-  },
-  profileRowActive: {
-    borderColor: colors.pine,
-    backgroundColor: colors.pineTint,
   },
   avatar: { width: 44, height: 44, borderRadius: 22 },
   avatarPlaceholder: {
@@ -175,35 +193,28 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: tokenColors.white,
   },
   profileName: {
     flex: 1,
     fontFamily: fonts.headingSemi || fonts.heading,
     fontSize: 16,
-    color: colors.ink,
   },
-  profileNameActive: { color: colors.pine },
   actions: { flexDirection: 'row', gap: 12, marginTop: 16 },
   cancelBtn: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.surface,
   },
-  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.ink },
+  cancelBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   confirmBtn: {
     flex: 2,
     alignItems: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.pine,
   },
-  confirmBtnDisabled: { backgroundColor: colors.inkFaint },
   confirmBtnText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
   },
 });

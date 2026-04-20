@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { SportRatingsSection } from './SportRatingsSection';
 
 export interface ProfileCardProps {
@@ -34,6 +33,7 @@ function calculateAge(dateOfBirth: string): number | null {
     monthDiff < 0 ||
     (monthDiff === 0 && today.getUTCDate() < dob.getUTCDate())
   ) {
+  const { colors } = useTheme();
     age--;
   }
   return age;
@@ -89,7 +89,7 @@ export function ProfileCard({
         )}
       </View>
 
-      {/* Name — removed, shown in header */}
+      {/* Name Ã¢â‚¬â€ removed, shown in header */}
 
       {/* Info Rows */}
       <View style={styles.infoSection}>
@@ -98,7 +98,7 @@ export function ProfileCard({
             <Ionicons name="person-outline" size={16} color={colors.cobalt} />
             <Text style={styles.infoText}>
               {age !== null ? `${age} years old` : ''}
-              {age !== null && gender ? '  ·  ' : ''}
+              {age !== null && gender ? '  Ã‚Â·  ' : ''}
               {gender || ''}
             </Text>
           </View>
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,

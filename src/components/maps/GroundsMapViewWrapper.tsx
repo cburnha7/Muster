@@ -2,7 +2,7 @@ import React from 'react';
 import { Platform, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Facility } from '../../types';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface GroundsMapViewWrapperProps {
   grounds: Facility[];
@@ -11,6 +11,7 @@ interface GroundsMapViewWrapperProps {
 
 // Web fallback component
 function WebFallback() {
+  const { colors } = useTheme();
   return (
     <View style={styles.webFallback}>
       <Ionicons name="map-outline" size={64} color={colors.inkFaint} />

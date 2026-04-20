@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 export interface StatItem {
   label: string;
@@ -16,6 +16,7 @@ interface QuickStatsRowProps {
 }
 
 export function QuickStatsRow({ stats }: QuickStatsRowProps) {
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       {stats.map((stat, i) => (

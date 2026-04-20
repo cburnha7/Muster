@@ -7,7 +7,7 @@ import {
   Animated,
   ViewStyle,
 } from 'react-native';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface DetailCardProps {
   title?: string;
@@ -20,6 +20,7 @@ interface DetailCardProps {
 }
 
 export function DetailCard({ title, children, action, style, delay = 0 }: DetailCardProps) {
+  const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(10)).current;
 

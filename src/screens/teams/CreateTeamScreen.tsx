@@ -26,7 +26,7 @@ import { getSportEmoji } from '../../constants/sports';
 import { useTheme } from '../../theme';
 
 function CreateTeamInner() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateRoster();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
@@ -131,7 +131,7 @@ function CreateTeamInner() {
 
   return (
     <>
-      <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+      <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
         <RosterFlowContainer onSubmit={handleSubmit}>
           <RosterStep1Sport />
           <RosterStep2Details />

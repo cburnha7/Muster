@@ -14,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 interface FormInputProps extends TextInputProps {
   label?: string;
@@ -52,7 +52,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
       focus: () => inputRef.current?.focus(),
     }));
     const [isSecure, setIsSecure] = useState(secureTextEntry);
-    const { colors: themeColors } = useTheme();
+    const { colors } = useTheme();
     const [isFocused, setIsFocused] = useState(false);
 
     const handleToggleSecure = () => {
@@ -67,7 +67,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
           <Text
             style={[
               styles.label,
-              { color: themeColors.textPrimary },
+              { color: colors.textPrimary },
               labelStyle,
             ]}
           >
@@ -79,10 +79,10 @@ export const FormInput = forwardRef<any, FormInputProps>(
         <View
           style={[
             styles.inputContainer,
-            { backgroundColor: themeColors.bgInput },
+            { backgroundColor: colors.bgInput },
             isFocused && [
               styles.inputContainerFocused,
-              { backgroundColor: themeColors.bgCard },
+              { backgroundColor: colors.bgCard },
             ],
             error && styles.inputContainerError,
           ]}
@@ -106,7 +106,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
             ref={inputRef}
             style={[
               styles.input,
-              { color: themeColors.textPrimary },
+              { color: colors.textPrimary },
               leftIcon && styles.inputWithLeftIcon,
               (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
               Platform.OS === 'web' && { outlineStyle: 'none' as any },
@@ -118,9 +118,9 @@ export const FormInput = forwardRef<any, FormInputProps>(
               setIsFocused(false);
               textInputProps.onBlur?.(undefined as any);
             }}
-            placeholderTextColor={themeColors.textMuted}
+            placeholderTextColor={colors.textMuted}
             keyboardAppearance={
-              themeColors.bgScreen === '#0A0F1E' ? 'dark' : 'light'
+              colors.bgScreen === '#0A0F1E' ? 'dark' : 'light'
             }
             {...textInputProps}
           />

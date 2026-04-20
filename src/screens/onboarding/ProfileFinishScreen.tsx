@@ -12,7 +12,7 @@ import {
 import { useRoute } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { formatSportType } from '../../utils/formatters';
 import { completeOnboarding } from '../../store/slices/authSlice';
 import type { OnboardingData } from '../../types/auth';
@@ -20,7 +20,7 @@ import type { OnboardingData } from '../../types/auth';
 const TOTAL_STEPS = 5;
 
 export const ProfileFinishScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const route = useRoute<any>();
   const dispatch = useDispatch();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -105,7 +105,7 @@ export const ProfileFinishScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       <View style={styles.content}>
         {/* Top bar */}

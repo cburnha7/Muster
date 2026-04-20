@@ -29,7 +29,6 @@ import { cacheService } from '../../services/api/CacheService';
 import { Team, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { LeagueLedger } from '../../components/league/LeagueLedger';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
@@ -98,7 +97,7 @@ function buildSeasonSummary(league: League): string {
 }
 
 export function LeagueDetailsScreen(): React.ReactElement {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId, readOnly } = (route.params as any) || {};
@@ -587,11 +586,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
             accessibilityRole="button"
             accessibilityLabel="Schedule"
           >
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={tokenColors.white}
-            />
+            <Ionicons name="calendar-outline" size={20} color={colors.white} />
             <Text style={styles.scheduleBtnText}>Schedule</Text>
           </TouchableOpacity>
 
@@ -790,7 +785,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -1022,9 +1017,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   scrollView: { flex: 1 },
   ledgerSection: { paddingHorizontal: 16, paddingBottom: 24 },
-  formSection: { backgroundColor: tokenColors.surface, marginBottom: 12 },
+  formSection: { backgroundColor: colors.surface, marginBottom: 12 },
   section: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     marginBottom: 12,
     paddingBottom: 12,
   },
@@ -1064,7 +1059,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: tokenColors.white,
+    color: colors.white,
   },
   emptyState: { alignItems: 'center', padding: 24 },
   emptyText: {
@@ -1094,7 +1089,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   requestInfo: { flex: 1, marginRight: 12 },
   requestName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
@@ -1129,7 +1124,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   memberInfo: { flex: 1, marginRight: 12 },
   memberName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
@@ -1141,7 +1136,7 @@ const styles = StyleSheet.create({
   },
   memberStats: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint },
   statusBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  statusActive: { backgroundColor: tokenColors.successLight },
+  statusActive: { backgroundColor: colors.successLight },
   statusPending: { backgroundColor: colors.goldLight },
   statusText: {
     fontFamily: fonts.label,
@@ -1164,7 +1159,7 @@ const styles = StyleSheet.create({
   confirmBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: tokenColors.white,
+    color: colors.white,
   },
   declineBtnSmall: {
     borderWidth: 1,
@@ -1194,7 +1189,7 @@ const styles = StyleSheet.create({
   generateBtnText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
   matchupList: { paddingHorizontal: 16 },
   matchupLabel: {
@@ -1209,7 +1204,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: tokenColors.warningLight,
+    backgroundColor: colors.warningLight,
     borderRadius: 10,
     padding: 14,
     marginBottom: 8,
@@ -1275,7 +1270,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   eventDateCol: { marginRight: 14, alignItems: 'center', minWidth: 60 },
   eventDay: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
@@ -1301,7 +1296,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   addRosterName: {
     fontFamily: fonts.semibold,
@@ -1311,9 +1306,9 @@ const styles = StyleSheet.create({
   // Tab bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
     marginBottom: 2,
   },
   tab: {
@@ -1334,11 +1329,11 @@ const styles = StyleSheet.create({
   tabLabelActive: { color: colors.cobalt },
   // Action bar (bottom) — kept for backwards compat
   actionBar: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   joinBtn: {
     backgroundColor: colors.cobalt,
@@ -1346,7 +1341,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: tokenColors.white },
+  joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.white },
   stepOutBtn: {
     borderWidth: 2,
     borderColor: colors.inkFaint,
@@ -1371,7 +1366,7 @@ const styles = StyleSheet.create({
   scheduleBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   commissionerActions: {
     paddingHorizontal: 16,
@@ -1405,7 +1400,7 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   ownerDeleteBtn: {
     borderWidth: 2,
@@ -1421,7 +1416,7 @@ const styles = StyleSheet.create({
   },
   // Read-only league header
   leagueHeader: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: 12,
@@ -1431,7 +1426,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: tokenColors.successLight,
+    backgroundColor: colors.successLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -1468,7 +1463,7 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
     marginTop: 2,
   },
-  statDivider: { width: 1, height: 28, backgroundColor: tokenColors.border },
+  statDivider: { width: 1, height: 28, backgroundColor: colors.border },
   headerDates: {
     fontFamily: fonts.body,
     fontSize: 13,
@@ -1479,7 +1474,7 @@ const styles = StyleSheet.create({
   // Invitation banner
   invitationBanner: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.warningLight,
+    backgroundColor: colors.warningLight,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 12,
@@ -1488,7 +1483,7 @@ const styles = StyleSheet.create({
   },
   commissionerInviteBanner: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.warningLight,
+    backgroundColor: colors.warningLight,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 12,
@@ -1512,7 +1507,7 @@ const styles = StyleSheet.create({
   invitationActions: { flexDirection: 'row', gap: 8 },
   // Roster list sections (non-commissioner view)
   rosterListSection: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 12,
@@ -1542,7 +1537,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   rosterListIcon: {
     width: 36,
@@ -1600,7 +1595,7 @@ const styles = StyleSheet.create({
   joinRosterRow: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   joinRosterName: {
     fontFamily: fonts.semibold,

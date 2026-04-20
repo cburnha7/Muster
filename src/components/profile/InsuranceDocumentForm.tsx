@@ -14,15 +14,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { useUploadInsuranceDocumentMutation } from '../../store/api/insuranceDocumentsApi';
 
 /**
  * InsuranceDocumentForm
  *
  * Modal form for uploading a new insurance document.
- * Includes file picker (PDF/JPEG/PNG, ≤10 MB), policy name input,
+ * Includes file picker (PDF/JPEG/PNG, Ã¢â€°Â¤10 MB), policy name input,
  * and expiry date input with client-side validation.
  *
  * Requirements: 1.2, 1.4, 1.5, 1.6
@@ -54,6 +53,7 @@ export function InsuranceDocumentForm({
   userId,
   onClose,
 }: InsuranceDocumentFormProps) {
+  const { colors } = useTheme();
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [policyName, setPolicyName] = useState('');
   const [expiryDateText, setExpiryDateText] = useState('');
@@ -292,7 +292,7 @@ export function InsuranceDocumentForm({
                     Tap to select a file
                   </Text>
                   <Text style={styles.fileHint}>
-                    PDF, JPEG, or PNG — 10 MB max
+                    PDF, JPEG, or PNG Ã¢â‚¬â€ 10 MB max
                   </Text>
                 </View>
               )}
@@ -368,13 +368,13 @@ export function InsuranceDocumentForm({
             accessibilityLabel="Upload document"
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color={tokenColors.white} />
+              <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <>
                 <Ionicons
                   name="cloud-upload"
                   size={20}
-                  color={tokenColors.white}
+                  color={colors.white}
                 />
                 <Text style={styles.submitButtonText}>Upload Document</Text>
               </>
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
     marginLeft: Spacing.sm,
   },
 });

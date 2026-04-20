@@ -10,14 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenType,
-  tokenShadow,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 import { formatRatingDisplay, LOVE_LABEL } from '../../utils/ratingDisplay';
 import { formatSportType } from '../../utils/formatters';
@@ -64,6 +58,7 @@ interface PlayerCardProps {
 const formatSport = (s: string) => formatSportType(s);
 
 export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
+  const { colors, shadow } = useTheme();
   const [ratings, setRatings] = useState<SportRating[]>([]);
   const [leagueHistory, setLeagueHistory] = useState<LeagueRatingRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -116,8 +111,16 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <View style={styles.card}>
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
+        onPress={onClose}
+      >
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.white, ...shadow.modal },
+          ]}
+        >
           {/* Photo + Info */}
           <View style={styles.header}>
             {player.profileImage ? (
@@ -126,18 +129,30 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                 style={styles.avatar}
               />
             ) : (
-              <View style={[styles.avatar, styles.avatarFallback]}>
-                <Text style={styles.avatarInitial}>{initial}</Text>
+              <View
+                style={[
+                  styles.avatar,
+                  styles.avatarFallback,
+                  { backgroundColor: colors.cobalt },
+                ]}
+              >
+                <Text style={[styles.avatarInitial, { color: colors.white }]}>
+                  {initial}
+                </Text>
               </View>
             )}
             <View style={styles.info}>
-              <Text style={styles.name}>
+              <Text style={[styles.name, { color: colors.ink }]}>
                 {player.firstName} {player.lastName}
               </Text>
               <View style={styles.metaRow}>
-                {age != null && <Text style={styles.meta}>{age} yrs</Text>}
+                {age != null && (
+                  <Text style={[styles.meta, { color: colors.inkSecondary }]}>
+                    {age} yrs
+                  </Text>
+                )}
                 {player.gender && (
-                  <Text style={styles.meta}>
+                  <Text style={[styles.meta, { color: colors.inkSecondary }]}>
                     {player.gender === 'male'
                       ? 'Male'
                       : player.gender === 'female'
@@ -151,11 +166,16 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
 
           {/* Toggle */}
           {ratings.length > 0 && (
-            <View style={styles.toggleRow}>
+            <View
+              style={[styles.toggleRow, { backgroundColor: colors.surface }]}
+            >
               <TouchableOpacity
                 style={[
                   styles.toggleBtn,
-                  mode === 'open' && styles.toggleBtnActive,
+                  mode === 'open' && [
+                    styles.toggleBtnActive,
+                    { backgroundColor: colors.white, ...shadow.card },
+                  ],
                 ]}
                 onPress={() => setMode('open')}
                 activeOpacity={0.75}
@@ -163,7 +183,8 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                 <Text
                   style={[
                     styles.toggleText,
-                    mode === 'open' && styles.toggleTextActive,
+                    { color: colors.inkMuted },
+                    mode === 'open' && { color: colors.ink },
                   ]}
                 >
                   Open
@@ -172,7 +193,10 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
               <TouchableOpacity
                 style={[
                   styles.toggleBtn,
-                  mode === 'age' && styles.toggleBtnActive,
+                  mode === 'age' && [
+                    styles.toggleBtnActive,
+                    { backgroundColor: colors.white, ...shadow.card },
+                  ],
                 ]}
                 onPress={() => setMode('age')}
                 activeOpacity={0.75}
@@ -180,7 +204,8 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                 <Text
                   style={[
                     styles.toggleText,
-                    mode === 'age' && styles.toggleTextActive,
+                    { color: colors.inkMuted },
+                    mode === 'age' && { color: colors.ink },
                   ]}
                 >
                   Age Restricted
@@ -192,11 +217,13 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
           {/* Ratings */}
           {loading ? (
             <ActivityIndicator
-              color={tokenColors.cobalt}
+              color={colors.cobalt}
               style={{ marginVertical: tokenSpacing.lg }}
             />
           ) : ratings.length === 0 ? (
-            <Text style={styles.noRatings}>No sport ratings yet</Text>
+            <Text style={[styles.noRatings, { color: colors.inkMuted }]}>
+              No sport ratings yet
+            </Text>
           ) : (
             <View style={styles.ratingsList}>
               {ratings.map(r => {
@@ -213,17 +240,39 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                 const display = formatRatingDisplay(pct, games, rating);
                 const isLove = display === LOVE_LABEL;
                 return (
-                  <View key={r.sportType} style={styles.ratingRow}>
+                  <View
+                    key={r.sportType}
+                    style={[
+                      styles.ratingRow,
+                      { borderBottomColor: colors.border },
+                    ]}
+                  >
                     <View>
-                      <Text style={styles.sportName}>
+                      <Text style={[styles.sportName, { color: colors.ink }]}>
                         {formatSport(r.sportType)}
                       </Text>
                       {mode === 'age' && r.ageBracket && (
-                        <Text style={styles.bracketLabel}>{r.ageBracket}</Text>
+                        <Text
+                          style={[
+                            styles.bracketLabel,
+                            { color: colors.inkMuted },
+                          ]}
+                        >
+                          {r.ageBracket}
+                        </Text>
                       )}
                     </View>
                     <Text
-                      style={[styles.percentile, isLove && styles.loveLabel]}
+                      style={[
+                        styles.percentile,
+                        { color: colors.cobalt },
+                        isLove && {
+                          fontFamily: tokenFontFamily.uiRegular,
+                          fontSize: 12,
+                          color: colors.inkMuted,
+                          fontStyle: 'italic',
+                        },
+                      ]}
                     >
                       {display}
                     </Text>
@@ -235,8 +284,14 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
 
           {/* Past Seasons — league rating history */}
           {leagueHistory.length > 0 && (
-            <View style={styles.leagueSection}>
-              <Text style={styles.leagueSectionTitle}>Past Seasons</Text>
+            <View
+              style={[styles.leagueSection, { borderTopColor: colors.border }]}
+            >
+              <Text
+                style={[styles.leagueSectionTitle, { color: colors.success }]}
+              >
+                Past Seasons
+              </Text>
               {leagueHistory
                 .filter(l => l.archivedAt !== null)
                 .map(l => {
@@ -247,17 +302,40 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
                   );
                   const isLove = display === LOVE_LABEL;
                   return (
-                    <View key={l.leagueId} style={styles.leagueRow}>
+                    <View
+                      key={l.leagueId}
+                      style={[
+                        styles.leagueRow,
+                        { borderBottomColor: colors.border },
+                      ]}
+                    >
                       <View style={styles.leagueInfo}>
-                        <Text style={styles.leagueName} numberOfLines={1}>
+                        <Text
+                          style={[styles.leagueName, { color: colors.ink }]}
+                          numberOfLines={1}
+                        >
                           {l.leagueName}
                         </Text>
-                        <Text style={styles.leagueMeta}>
+                        <Text
+                          style={[
+                            styles.leagueMeta,
+                            { color: colors.inkMuted },
+                          ]}
+                        >
                           {formatSport(l.sportType)} · {l.gamesPlayed} games
                         </Text>
                       </View>
                       <Text
-                        style={[styles.percentile, isLove && styles.loveLabel]}
+                        style={[
+                          styles.percentile,
+                          { color: colors.cobalt },
+                          isLove && {
+                            fontFamily: tokenFontFamily.uiRegular,
+                            fontSize: 12,
+                            color: colors.inkMuted,
+                            fontStyle: 'italic',
+                          },
+                        ]}
                       >
                         {display}
                       </Text>
@@ -275,18 +353,15 @@ export function PlayerCard({ visible, onClose, player }: PlayerCardProps) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: tokenColors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: tokenSpacing.xl,
   },
   card: {
-    backgroundColor: tokenColors.white,
     borderRadius: tokenRadius.lg,
     width: '100%',
     maxWidth: 360,
     padding: tokenSpacing.xl,
-    ...tokenShadow.modal,
   },
   header: {
     flexDirection: 'row',
@@ -299,14 +374,12 @@ const styles = StyleSheet.create({
     borderRadius: 36,
   },
   avatarFallback: {
-    backgroundColor: tokenColors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitial: {
     fontFamily: tokenFontFamily.uiBold,
     fontSize: 28,
-    color: tokenColors.white,
   },
   info: {
     flex: 1,
@@ -315,7 +388,6 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: tokenFontFamily.heading,
     fontSize: 20,
-    color: tokenColors.ink,
   },
   metaRow: {
     flexDirection: 'row',
@@ -325,11 +397,9 @@ const styles = StyleSheet.create({
   meta: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: tokenColors.inkSecondary,
   },
   toggleRow: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.surface,
     borderRadius: 10,
     padding: 3,
     marginBottom: 14,
@@ -340,22 +410,14 @@ const styles = StyleSheet.create({
     borderRadius: tokenRadius.sm,
     alignItems: 'center',
   },
-  toggleBtnActive: {
-    backgroundColor: tokenColors.white,
-    ...tokenShadow.card,
-  },
+  toggleBtnActive: {},
   toggleText: {
     fontFamily: tokenFontFamily.uiBold,
     fontSize: 13,
-    color: tokenColors.inkMuted,
-  },
-  toggleTextActive: {
-    color: tokenColors.ink,
   },
   noRatings: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 14,
-    color: tokenColors.inkMuted,
     textAlign: 'center',
     paddingVertical: tokenSpacing.md,
   },
@@ -368,41 +430,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: tokenSpacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
   },
   sportName: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 13,
-    color: tokenColors.ink,
     textTransform: 'uppercase',
   },
   bracketLabel: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 11,
-    color: tokenColors.inkMuted,
     marginTop: 1,
   },
   percentile: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 14,
-    color: tokenColors.cobalt,
-  },
-  loveLabel: {
-    fontFamily: tokenFontFamily.uiRegular,
-    fontSize: 12,
-    color: tokenColors.inkMuted,
-    fontStyle: 'italic',
   },
   leagueSection: {
     marginTop: tokenSpacing.lg,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
     paddingTop: tokenSpacing.md,
   },
   leagueSectionTitle: {
     fontFamily: tokenFontFamily.heading,
     fontSize: 13,
-    color: tokenColors.success,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: tokenSpacing.sm,
@@ -413,7 +463,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
   },
   leagueInfo: {
     flex: 1,
@@ -422,12 +471,10 @@ const styles = StyleSheet.create({
   leagueName: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 13,
-    color: tokenColors.ink,
   },
   leagueMeta: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 11,
-    color: tokenColors.inkMuted,
     marginTop: 1,
   },
 });

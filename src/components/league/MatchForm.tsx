@@ -5,7 +5,7 @@ import { FormSelect, SelectOption } from '../forms/FormSelect';
 import { FormButton } from '../forms/FormButton';
 import { TimePickerInput } from '../forms/TimePickerInput';
 import { CreateMatchData, Team, Event } from '../../types';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface MatchFormProps {
   leagueId: string;
@@ -26,6 +26,7 @@ export const MatchForm: React.FC<MatchFormProps> = ({
   onCancel,
   loading = false,
 }) => {
+  const { colors } = useTheme();
   const [homeTeamId, setHomeTeamId] = useState('');
   const [awayTeamId, setAwayTeamId] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
@@ -202,17 +203,17 @@ export const MatchForm: React.FC<MatchFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
   },
   section: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     padding: 16,
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
     marginBottom: 16,
   },
   actions: {

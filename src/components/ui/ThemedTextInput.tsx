@@ -6,13 +6,8 @@ import {
   TextInputProps,
   ViewStyle,
 } from 'react-native';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenType,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenType } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -28,14 +23,15 @@ export function ThemedTextInput({
   containerStyle,
   ...rest
 }: Props) {
+  const { colors, isDark } = useTheme();
   const [focused, setFocused] = useState(false);
 
   const borderColor = error
-    ? tokenColors.error
+    ? colors.error
     : focused
-      ? tokenColors.cobalt
-      : tokenColors.border;
-  const bg = tokenColors.surface;
+      ? colors.cobalt
+      : colors.border;
+  const bg = colors.surface;
   const borderWidth = 1.5;
 
   return (
@@ -44,12 +40,12 @@ export function ThemedTextInput({
         <Text
           style={{
             ...tokenType.fieldLabel,
-            color: tokenColors.ink,
+            color: colors.ink,
             marginBottom: tokenSpacing.sm,
           }}
         >
           {label}
-          {required && <Text style={{ color: tokenColors.error }}> *</Text>}
+          {required && <Text style={{ color: colors.error }}> *</Text>}
         </Text>
       )}
       <RNInput
@@ -62,8 +58,8 @@ export function ThemedTextInput({
           setFocused(false);
           rest.onBlur?.(e);
         }}
-        placeholderTextColor={tokenColors.inkSecondary}
-        keyboardAppearance="light"
+        placeholderTextColor={colors.inkSecondary}
+        keyboardAppearance={isDark ? 'dark' : 'light'}
         style={[
           {
             borderRadius: tokenRadius.md,
@@ -73,7 +69,7 @@ export function ThemedTextInput({
             paddingVertical: tokenSpacing.md,
             paddingHorizontal: tokenSpacing.lg,
             ...tokenType.input,
-            color: tokenColors.ink,
+            color: colors.ink,
           },
           rest.style,
         ]}
@@ -82,7 +78,7 @@ export function ThemedTextInput({
         <Text
           style={{
             ...tokenType.error,
-            color: tokenColors.error,
+            color: colors.error,
             marginTop: tokenSpacing.xs,
           }}
         >

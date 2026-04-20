@@ -7,14 +7,13 @@ import {
   selectActiveUserId,
   selectDependents,
 } from '../../store/slices/contextSlice';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { PERSON_COLORS } from '../../types/eventsCalendar';
 import { assignPersonColors } from '../../utils/eventsCalendarUtils';
 import type { RootState } from '../../store/store';
 
 export function HeaderUserSelector() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { user: guardian } = useAuth();
   const { open } = useAvatarSheet();
   const activeUserId = useSelector(selectActiveUserId);
@@ -70,7 +69,7 @@ export function HeaderUserSelector() {
       </TouchableOpacity>
       {unreadCount > 0 && (
         <View
-          style={[styles.notifDot, { borderColor: themeColors.bgScreen }]}
+          style={[styles.notifDot, { borderColor: colors.bgScreen }]}
         />
       )}
     </View>
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
   notifDot: {
     position: 'absolute',

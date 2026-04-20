@@ -7,8 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { Booking } from '../../types';
 
 interface UpcomingRowProps {
@@ -48,6 +47,7 @@ function formatTime(date: Date): string {
 }
 
 export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
+  const { colors } = useTheme();
   if (bookings.length === 0) return null;
 
   return (
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     padding: 14,
     width: 150,
     gap: 8,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   dateTextToday: {
-    color: tokenColors.white,
+    color: colors.white,
   },
   eventTitle: {
     fontFamily: fonts.headingSemi,

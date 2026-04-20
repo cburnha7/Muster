@@ -1,61 +1,56 @@
 import React, { createContext, useContext, useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 import {
-  tokenColors,
+  lightColors,
+  darkColors,
+  SemanticColors,
   tokenStatus,
   tokenSport,
   tokenSpacing,
   tokenRadius,
-  tokenShadow,
   tokenType,
+  tokenFontFamily,
+  makeShadows,
   getAvatarColor,
 } from './tokens';
-import { brand, lightTokens, ThemeTokens } from './colors';
 import { typeScale, TypeKey } from './typography';
+
+// ─── Theme shape ─────────────────────────────────────────────
 
 export interface Theme {
   isDark: boolean;
-  colors: ThemeTokens & typeof brand;
+  colors: SemanticColors;
   status: typeof tokenStatus;
   sport: typeof tokenSport;
   type: typeof typeScale;
   spacing: typeof tokenSpacing;
   radius: typeof tokenRadius;
-  shadow: typeof tokenShadow;
+  shadow: ReturnType<typeof makeShadows>;
+  fonts: typeof tokenFontFamily;
   getAvatarColor: typeof getAvatarColor;
-  /** New token-based accessors */
-  token: {
-    colors: typeof tokenColors;
-    spacing: typeof tokenSpacing;
-    radius: typeof tokenRadius;
-    shadow: typeof tokenShadow;
-    type: typeof tokenType;
-  };
 }
+
+// ─── Context ─────────────────────────────────────────────────
 
 const ThemeContext = createContext<Theme | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Muster is a light-mode-only app — always use light tokens
-  const isDark = false;
+  const systemScheme = useColorScheme(); // 'light' | 'dark' | null
+  const isDark = systemScheme === 'dark';
 
   const theme = useMemo<Theme>(() => {
+    const colors = isDark ? darkColors : lightColors;
     return {
       isDark,
-      colors: { ...brand, ...lightTokens },
+      colors,
       status: tokenStatus,
       sport: tokenSport,
       type: typeScale,
       spacing: tokenSpacing,
       radius: tokenRadius,
-      shadow: tokenShadow,
+      shadow: makeShadows(isDark),
+      fonts: tokenFontFamily,
       getAvatarColor,
-      token: {
-        colors: tokenColors,
-        spacing: tokenSpacing,
-        radius: tokenRadius,
-        shadow: tokenShadow,
-        type: tokenType,
-      },
     };
   }, [isDark]);
 
@@ -70,6 +65,7 @@ export function useTheme(): Theme {
   return ctx;
 }
 
+/** Shorthand: merge a type style with a color */
 export function t(theme: Theme, key: TypeKey, color?: string) {
   return { ...theme.type[key], color: color ?? theme.colors.textPrimary };
 }

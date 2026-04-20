@@ -10,8 +10,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { selectUser } from '../../store/slices/authSlice';
 import { API_BASE_URL } from '../../services/api/config';
 
@@ -41,6 +40,7 @@ export function UserReservationsTab({
   facilityId,
   facilityName,
 }: UserReservationsTabProps) {
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const currentUser = useSelector(selectUser);
   const [rentals, setRentals] = useState<UserRental[]>([]);
@@ -174,7 +174,7 @@ export function UserReservationsTab({
             </Text>
             <Text style={st.dateTime}>{formatDate(r.timeSlot.date)}</Text>
             <Text style={st.timeRange}>
-              {formatTime(r.timeSlot.startTime)} –{' '}
+              {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
               {formatTime(r.timeSlot.endTime)}
             </Text>
           </View>
@@ -230,7 +230,7 @@ const st = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 12,
     padding: 14,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 6,

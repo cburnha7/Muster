@@ -28,7 +28,6 @@ import { selectUser } from '../../store/slices/authSlice';
 import { isCoachRole } from '../../utils/teamRoles';
 import { LeagueMembership } from '../../types/league';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 interface TeamWithCoach {
   membership: LeagueMembership;
@@ -42,7 +41,7 @@ interface TeamWithCoach {
 }
 
 export const LeagueTeamManagementScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { leagueId } = (route.params as any) || {};
@@ -343,9 +342,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Manage Rosters"
           leftIcon="arrow-back"
@@ -358,9 +355,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Manage Rosters"
           leftIcon="arrow-back"
@@ -372,7 +367,7 @@ export const LeagueTeamManagementScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Manage Rosters"
         leftIcon="arrow-back"
@@ -532,9 +527,9 @@ export const LeagueTeamManagementScreen: React.FC = () => {
                 activeOpacity={0.75}
               >
                 {isSearchingCoach ? (
-                  <ActivityIndicator size="small" color={tokenColors.white} />
+                  <ActivityIndicator size="small" color={colors.white} />
                 ) : (
-                  <Ionicons name="search" size={18} color={tokenColors.white} />
+                  <Ionicons name="search" size={18} color={colors.white} />
                 )}
               </TouchableOpacity>
             </View>
@@ -637,7 +632,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -677,7 +672,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusDotGreen: {
-    backgroundColor: tokenColors.success,
+    backgroundColor: colors.success,
   },
   coachText: {
     fontSize: 13,

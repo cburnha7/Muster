@@ -11,10 +11,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { CancellationPolicyPicker } from '../../../components/facilities/CancellationPolicyPicker';
 import { useCreateFacility } from './CreateFacilityContext';
-import { colors, fonts, Spacing, useTheme } from '../../../theme';
+import { fonts, Spacing, useTheme } from '../../../theme';
 
 export function Step5Policies() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateFacility();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -46,7 +46,7 @@ export function Step5Policies() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}

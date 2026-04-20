@@ -15,8 +15,7 @@ import {
   useNotifications,
   NotificationItem,
 } from '../../hooks/useNotifications';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   roster_invitation: 'people-outline',
@@ -29,7 +28,7 @@ const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export function NotificationBell() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { items, count } = useNotifications();
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation<any>();
@@ -83,7 +82,7 @@ export function NotificationBell() {
         <Ionicons
           name="notifications-outline"
           size={24}
-          color={themeColors.textPrimary}
+          color={colors.textPrimary}
         />
         {count > 0 && (
           <View style={styles.badge}>
@@ -102,20 +101,20 @@ export function NotificationBell() {
       >
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <Pressable
-            style={[styles.panel, { backgroundColor: themeColors.bgCard }]}
+            style={[styles.panel, { backgroundColor: colors.bgCard }]}
             onPress={e => e.stopPropagation()}
           >
             <SafeAreaView>
               <View
                 style={[
                   styles.panelHeader,
-                  { borderBottomColor: themeColors.border },
+                  { borderBottomColor: colors.border },
                 ]}
               >
                 <Text
                   style={[
                     styles.panelTitle,
-                    { color: themeColors.textPrimary },
+                    { color: colors.textPrimary },
                   ]}
                 >
                   Notifications
@@ -124,7 +123,7 @@ export function NotificationBell() {
                   <Ionicons
                     name="close"
                     size={22}
-                    color={themeColors.textPrimary}
+                    color={colors.textPrimary}
                   />
                 </TouchableOpacity>
               </View>
@@ -139,7 +138,7 @@ export function NotificationBell() {
                   <Text
                     style={[
                       styles.emptyText,
-                      { color: themeColors.textSecondary },
+                      { color: colors.textSecondary },
                     ]}
                   >
                     You're all caught up.
@@ -155,7 +154,7 @@ export function NotificationBell() {
                       key={item.id}
                       style={[
                         styles.notifRow,
-                        { borderBottomColor: themeColors.border },
+                        { borderBottomColor: colors.border },
                       ]}
                       onPress={() => handleItemPress(item)}
                       activeOpacity={0.7}
@@ -163,7 +162,7 @@ export function NotificationBell() {
                       <View
                         style={[
                           styles.notifIcon,
-                          { backgroundColor: themeColors.bgScreen },
+                          { backgroundColor: colors.bgScreen },
                         ]}
                       >
                         <Ionicons
@@ -176,7 +175,7 @@ export function NotificationBell() {
                         <Text
                           style={[
                             styles.notifTitle,
-                            { color: themeColors.textPrimary },
+                            { color: colors.textPrimary },
                           ]}
                         >
                           {item.title}
@@ -184,7 +183,7 @@ export function NotificationBell() {
                         <Text
                           style={[
                             styles.notifSubtitle,
-                            { color: themeColors.textSecondary },
+                            { color: colors.textSecondary },
                           ]}
                           numberOfLines={1}
                         >
@@ -242,7 +241,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     maxHeight: 420,
     width: 320,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,

@@ -16,7 +16,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { Checkbox } from '../../components/forms/Checkbox';
 import { SSOButton } from '../../components/auth/SSOButton';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import ValidationService from '../../services/auth/ValidationService';
 import SSOService from '../../services/auth/SSOService';
 import { registerUser, registerWithSSO } from '../../store/slices/authSlice';
@@ -25,7 +25,7 @@ import { loggingService } from '../../services/LoggingService';
 const TOTAL_STEPS = 3;
 
 export const RegistrationScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -241,7 +241,7 @@ export const RegistrationScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>

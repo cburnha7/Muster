@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Facility, SportType } from '../../types';
-import { tokenColors, tokenSport } from '../../theme/tokens';
+import { tokenSport } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 // Only import MapView on native platforms
 let MapView: any = null;
@@ -44,15 +45,28 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
   showUserLocation = true,
   style,
 }) => {
+  const { colors } = useTheme();
+
   // Return placeholder on web
   if (Platform.OS === 'web') {
     return (
-      <View style={[styles.container, style, styles.webPlaceholder]}>
-        <Ionicons name="map" size={48} color={tokenColors.inkSecondary} />
-        <Text style={styles.webPlaceholderText}>
+      <View
+        style={[
+          styles.container,
+          style,
+          styles.webPlaceholder,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Ionicons name="map" size={48} color={colors.inkSecondary} />
+        <Text
+          style={[styles.webPlaceholderText, { color: colors.inkSecondary }]}
+        >
           Map view not available on web
         </Text>
-        <Text style={styles.webPlaceholderSubtext}>
+        <Text
+          style={[styles.webPlaceholderSubtext, { color: colors.inkMuted }]}
+        >
           {facilities.length} facilities available
         </Text>
       </View>
@@ -125,11 +139,11 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
         return tokenSport.volleyball.solid;
       case SportType.SOFTBALL:
       case SportType.BASEBALL:
-        return tokenColors.warning;
+        return colors.warning;
       case SportType.FLAG_FOOTBALL:
         return tokenSport.flag_football.solid;
       default:
-        return tokenColors.cobalt;
+        return colors.cobalt;
     }
   };
 
@@ -180,33 +194,54 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
               onPress={() => handleCalloutPress(facility)}
               style={styles.callout}
             >
-              <View style={styles.calloutContent}>
-                <Text style={styles.calloutTitle} numberOfLines={1}>
+              <View
+                style={[
+                  styles.calloutContent,
+                  { backgroundColor: colors.white },
+                ]}
+              >
+                <Text
+                  style={[styles.calloutTitle, { color: colors.ink }]}
+                  numberOfLines={1}
+                >
                   {facility.name}
                 </Text>
                 <View style={styles.calloutRating}>
-                  <Ionicons name="star" size={14} color={tokenColors.gold} />
-                  <Text style={styles.calloutRatingText}>
+                  <Ionicons name="star" size={14} color={colors.gold} />
+                  <Text
+                    style={[
+                      styles.calloutRatingText,
+                      { color: colors.inkSecondary },
+                    ]}
+                  >
                     {facility.rating.toFixed(1)} ({facility.reviewCount})
                   </Text>
                 </View>
                 <View style={styles.calloutSports}>
                   {facility.sportTypes.slice(0, 3).map(sport => (
-                    <View key={sport} style={styles.calloutSportBadge}>
+                    <View
+                      key={sport}
+                      style={[
+                        styles.calloutSportBadge,
+                        { backgroundColor: colors.cobaltLight },
+                      ]}
+                    >
                       <Ionicons
                         name={getSportIcon(sport) as any}
                         size={12}
-                        color={tokenColors.cobalt}
+                        color={colors.cobalt}
                       />
                     </View>
                   ))}
                 </View>
                 {facility.pricePerHour && (
-                  <Text style={styles.calloutPrice}>
+                  <Text style={[styles.calloutPrice, { color: colors.cobalt }]}>
                     ${facility.pricePerHour}/hr
                   </Text>
                 )}
-                <Text style={styles.calloutTap}>Tap for details</Text>
+                <Text style={[styles.calloutTap, { color: colors.inkMuted }]}>
+                  Tap for details
+                </Text>
               </View>
             </Callout>
           </Marker>
@@ -214,48 +249,56 @@ export const FacilityMapView: React.FC<FacilityMapViewProps> = ({
       </MapView>
 
       {selectedFacility && (
-        <View style={styles.selectedFacilityCard}>
+        <View
+          style={[
+            styles.selectedFacilityCard,
+            { backgroundColor: colors.white, shadowColor: colors.black },
+          ]}
+        >
           <TouchableOpacity
             style={styles.cardContent}
             onPress={() => handleCalloutPress(selectedFacility)}
             activeOpacity={0.75}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle} numberOfLines={1}>
+              <Text
+                style={[styles.cardTitle, { color: colors.ink }]}
+                numberOfLines={1}
+              >
                 {selectedFacility.name}
               </Text>
               <TouchableOpacity
                 onPress={() => setSelectedFacility(null)}
                 activeOpacity={0.75}
               >
-                <Ionicons
-                  name="close"
-                  size={24}
-                  color={tokenColors.inkSecondary}
-                />
+                <Ionicons name="close" size={24} color={colors.inkSecondary} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.cardAddress} numberOfLines={1}>
+            <Text
+              style={[styles.cardAddress, { color: colors.inkSecondary }]}
+              numberOfLines={1}
+            >
               {selectedFacility.street}, {selectedFacility.city}
             </Text>
             <View style={styles.cardFooter}>
               <View style={styles.cardRating}>
-                <Ionicons name="star" size={16} color={tokenColors.gold} />
-                <Text style={styles.cardRatingText}>
+                <Ionicons name="star" size={16} color={colors.gold} />
+                <Text style={[styles.cardRatingText, { color: colors.ink }]}>
                   {selectedFacility.rating.toFixed(1)}
                 </Text>
               </View>
               <TouchableOpacity
-                style={styles.directionsButton}
+                style={[
+                  styles.directionsButton,
+                  { backgroundColor: colors.cobaltLight },
+                ]}
                 onPress={() => centerOnFacility(selectedFacility)}
                 activeOpacity={0.75}
               >
-                <Ionicons
-                  name="navigate"
-                  size={16}
-                  color={tokenColors.cobalt}
-                />
-                <Text style={styles.directionsText}>Center</Text>
+                <Ionicons name="navigate" size={16} color={colors.cobalt} />
+                <Text style={[styles.directionsText, { color: colors.cobalt }]}>
+                  Center
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -276,23 +319,19 @@ const styles = StyleSheet.create({
   webPlaceholder: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: tokenColors.background,
   },
   webPlaceholderText: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
     marginTop: 12,
   },
   webPlaceholderSubtext: {
     fontSize: 14,
-    color: tokenColors.inkMuted,
     marginTop: 4,
   },
   callout: {
     width: 200,
   },
   calloutContent: {
-    backgroundColor: tokenColors.white,
     borderRadius: 8,
     padding: 12,
     minWidth: 180,
@@ -300,7 +339,6 @@ const styles = StyleSheet.create({
   calloutTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.ink,
     marginBottom: 4,
   },
   calloutRating: {
@@ -310,7 +348,6 @@ const styles = StyleSheet.create({
   },
   calloutRatingText: {
     fontSize: 12,
-    color: tokenColors.inkSecondary,
     marginLeft: 4,
   },
   calloutSports: {
@@ -321,7 +358,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: tokenColors.cobaltLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 4,
@@ -329,12 +365,10 @@ const styles = StyleSheet.create({
   calloutPrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.cobalt,
     marginBottom: 4,
   },
   calloutTap: {
     fontSize: 11,
-    color: tokenColors.inkMuted,
     fontStyle: 'italic',
   },
   selectedFacilityCard: {
@@ -342,9 +376,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: tokenColors.white,
     borderRadius: 12,
-    shadowColor: tokenColors.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -365,13 +397,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: tokenColors.ink,
     flex: 1,
     marginRight: 8,
   },
   cardAddress: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
     marginBottom: 12,
   },
   cardFooter: {
@@ -386,7 +416,6 @@ const styles = StyleSheet.create({
   cardRatingText: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.ink,
     marginLeft: 4,
   },
   directionsButton: {
@@ -394,12 +423,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: tokenColors.cobaltLight,
     borderRadius: 16,
   },
   directionsText: {
     fontSize: 14,
-    color: tokenColors.cobalt,
     fontWeight: '500',
     marginLeft: 4,
   },

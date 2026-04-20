@@ -22,7 +22,6 @@ import {
   ComponentStyles,
   useTheme,
 } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import {
   calendarTheme,
@@ -92,7 +91,7 @@ function toMinHelper(t: string): number {
 }
 
 export function CourtAvailabilityScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<CourtAvailabilityScreenNavigationProp>();
   const route = useRoute<CourtAvailabilityScreenRouteProp>();
   const { user } = useAuth();
@@ -710,7 +709,7 @@ export function CourtAvailabilityScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ContextualReturnButton />
       <ScrollView
         style={styles.scrollView}
@@ -1116,7 +1115,7 @@ const styles = StyleSheet.create({
   header: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   facilityName: { ...TextStyles.h2, color: colors.ink },
   subtitle: {
@@ -1144,12 +1143,12 @@ const styles = StyleSheet.create({
   },
   courtList: { flexDirection: 'row' },
   courtCard: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.md,
     marginRight: Spacing.md,
     borderWidth: 2,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
     minWidth: 140,
   },
   courtCardSelected: {
@@ -1176,7 +1175,7 @@ const styles = StyleSheet.create({
   courtBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: tokenColors.white,
+    color: colors.white,
   },
   courtSportType: {
     ...TextStyles.caption,
@@ -1191,7 +1190,7 @@ const styles = StyleSheet.create({
   },
   calendar: {
     borderRadius: 12,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -1207,10 +1206,10 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   toggleLabel: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   toggleText: {
@@ -1237,7 +1236,7 @@ const styles = StyleSheet.create({
   // Legend
   legend: {
     padding: Spacing.lg,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
     borderRadius: 12,
@@ -1260,7 +1259,7 @@ const styles = StyleSheet.create({
     right: 0,
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
     backgroundColor: colors.white,
   },
   footerSummary: {

@@ -9,9 +9,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { syncManager } from '../../services/offline';
 import { useNetworkState } from '../../services/network/NetworkService';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 export const SyncStatusCard: React.FC = () => {
+  const { colors } = useTheme();
   const networkState = useNetworkState();
   const [syncStatus, setSyncStatus] = useState({
     isOnline: false,
@@ -45,10 +46,10 @@ export const SyncStatusCard: React.FC = () => {
   };
 
   const getStatusColor = () => {
-    if (!networkState.isConnected) return tokenColors.error;
-    if (syncStatus.isSyncing) return tokenColors.warning;
-    if (syncStatus.queueSize > 0) return tokenColors.warning;
-    return tokenColors.success;
+    if (!networkState.isConnected) return colors.error;
+    if (syncStatus.isSyncing) return colors.warning;
+    if (syncStatus.queueSize > 0) return colors.warning;
+    return colors.success;
   };
 
   const getStatusText = () => {
@@ -66,25 +67,32 @@ export const SyncStatusCard: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.white, shadowColor: colors.black },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.statusRow}>
           <View
             style={[styles.statusDot, { backgroundColor: getStatusColor() }]}
           />
-          <Text style={styles.statusText}>{getStatusText()}</Text>
+          <Text style={[styles.statusText, { color: colors.ink }]}>
+            {getStatusText()}
+          </Text>
         </View>
         <Ionicons name={getStatusIcon()} size={24} color={getStatusColor()} />
       </View>
 
       {lastSyncTime && (
-        <Text style={styles.lastSyncText}>
+        <Text style={[styles.lastSyncText, { color: colors.inkMuted }]}>
           Last synced: {lastSyncTime.toLocaleTimeString()}
         </Text>
       )}
 
       {syncStatus.queueSize > 0 && (
-        <Text style={styles.queueText}>
+        <Text style={[styles.queueText, { color: colors.inkMuted }]}>
           {syncStatus.queueSize}{' '}
           {syncStatus.queueSize === 1 ? 'action' : 'actions'} waiting to sync
         </Text>
@@ -93,24 +101,28 @@ export const SyncStatusCard: React.FC = () => {
       <TouchableOpacity
         style={[
           styles.syncButton,
-          (!networkState.isConnected || syncStatus.isSyncing) &&
-            styles.syncButtonDisabled,
+          { backgroundColor: colors.cobalt },
+          (!networkState.isConnected || syncStatus.isSyncing) && {
+            backgroundColor: colors.inkMuted,
+          },
         ]}
         onPress={handleManualSync}
         disabled={!networkState.isConnected || syncStatus.isSyncing}
       >
         {syncStatus.isSyncing ? (
-          <ActivityIndicator size="small" color={tokenColors.white} />
+          <ActivityIndicator size="small" color={colors.white} />
         ) : (
           <>
-            <Ionicons name="sync-outline" size={18} color={tokenColors.white} />
-            <Text style={styles.syncButtonText}>Sync Now</Text>
+            <Ionicons name="sync-outline" size={18} color={colors.white} />
+            <Text style={[styles.syncButtonText, { color: colors.white }]}>
+              Sync Now
+            </Text>
           </>
         )}
       </TouchableOpacity>
 
       {!networkState.isConnected && (
-        <Text style={styles.offlineNote}>
+        <Text style={[styles.offlineNote, { color: colors.inkMuted }]}>
           Connect to the internet to sync your data
         </Text>
       )}
@@ -120,11 +132,9 @@ export const SyncStatusCard: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.white,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: tokenColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -149,20 +159,16 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.ink,
   },
   lastSyncText: {
     fontSize: 12,
-    color: tokenColors.inkMuted,
     marginBottom: 8,
   },
   queueText: {
     fontSize: 14,
-    color: tokenColors.inkMuted,
     marginBottom: 12,
   },
   syncButton: {
-    backgroundColor: tokenColors.cobalt,
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -170,18 +176,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  syncButtonDisabled: {
-    backgroundColor: tokenColors.inkMuted,
-  },
   syncButtonText: {
-    color: tokenColors.white,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
   offlineNote: {
     fontSize: 12,
-    color: tokenColors.inkMuted,
     marginTop: 8,
     textAlign: 'center',
     fontStyle: 'italic',

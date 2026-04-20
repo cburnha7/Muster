@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { PersonFilter } from '../../types/eventsCalendar';
 
 interface DependentToggleProps {
@@ -31,6 +30,7 @@ export function DependentToggle({
   onFilterChange,
   personColors,
 }: DependentToggleProps) {
+  const { colors } = useTheme();
   // Requirement 3.3: Render nothing when guardian has no dependents
   if (dependents.length === 0) {
     return null;
@@ -133,6 +133,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   pillTextActive: {
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

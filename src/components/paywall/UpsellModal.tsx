@@ -1,5 +1,5 @@
 /**
- * UpsellModal — shown when a user hits a feature gate.
+ * UpsellModal â€” shown when a user hits a feature gate.
  * Displays the required plan, what it unlocks, and a single CTA.
  */
 
@@ -13,8 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, typeScale, Spacing, useTheme } from '../../theme';
 import { SubscriptionPlan, PLAN_INFO } from '../../types/subscription';
 
 interface UpsellModalProps {
@@ -30,6 +29,7 @@ export function UpsellModal({
   onClose,
   onUpgrade,
 }: UpsellModalProps): JSX.Element {
+  const { colors } = useTheme();
   const planInfo = PLAN_INFO[requiredPlan];
 
   return (
@@ -80,7 +80,7 @@ export function UpsellModal({
             activeOpacity={0.8}
           >
             <Text style={styles.upgradeButtonText}>
-              Upgrade to {planInfo.label} — {planInfo.price}
+              Upgrade to {planInfo.label} â€” {planInfo.price}
             </Text>
           </TouchableOpacity>
 
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
   dismissButton: {
     paddingVertical: 12,

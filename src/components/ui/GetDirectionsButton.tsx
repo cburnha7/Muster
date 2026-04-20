@@ -9,7 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { fonts } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface GetDirectionsButtonProps {
   latitude?: number | null;
@@ -82,6 +83,8 @@ export function GetDirectionsButton({
   label = 'Get Directions',
   variant = 'button',
 }: GetDirectionsButtonProps) {
+  const { colors } = useTheme();
+
   if (!latitude && !longitude && !address) return null;
 
   const handlePress = () => openDirections(latitude, longitude, address);
@@ -94,7 +97,7 @@ export function GetDirectionsButton({
         activeOpacity={0.7}
       >
         <Ionicons name="navigate-outline" size={14} color={colors.cobalt} />
-        <Text style={styles.linkText}>{label}</Text>
+        <Text style={[styles.linkText, { color: colors.cobalt }]}>{label}</Text>
       </TouchableOpacity>
     );
   }
@@ -102,15 +105,18 @@ export function GetDirectionsButton({
   return (
     <TouchableOpacity
       onPress={handlePress}
-      style={styles.buttonContainer}
+      style={[
+        styles.buttonContainer,
+        { backgroundColor: colors.cobalt + '10' },
+      ]}
       activeOpacity={0.7}
     >
       <Ionicons name="navigate-outline" size={18} color={colors.cobalt} />
-      <Text style={styles.buttonText}>{label}</Text>
+      <Text style={[styles.buttonText, { color: colors.cobalt }]}>{label}</Text>
       <Ionicons
         name="open-outline"
         size={14}
-        color={colors.inkSoft}
+        color={colors.inkSecondary}
         style={styles.externalIcon}
       />
     </TouchableOpacity>
@@ -124,14 +130,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: colors.cobalt + '10',
     gap: 8,
   },
   buttonText: {
     flex: 1,
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
   },
   externalIcon: {
     opacity: 0.6,
@@ -145,6 +149,5 @@ const styles = StyleSheet.create({
   linkText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.cobalt,
   },
 });

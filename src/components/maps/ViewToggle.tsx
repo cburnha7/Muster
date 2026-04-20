@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface ViewToggleProps {
   viewMode: 'list' | 'map';
@@ -9,6 +9,7 @@ interface ViewToggleProps {
 }
 
 export function ViewToggle({ viewMode, onToggle }: ViewToggleProps) {
+  const { colors } = useTheme();
   // Hide map toggle on web since maps are not supported
   if (Platform.OS === 'web') {
     return null;

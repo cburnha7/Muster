@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors, fonts, typeScale, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, typeScale, Spacing, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
@@ -58,6 +57,7 @@ function getEntityLabel(entityType: string): string {
 export function ConnectAccountsSection({
   userId,
 }: ConnectAccountsSectionProps) {
+  const { colors } = useTheme();
   const { token } = useAuth();
   const [accounts, setAccounts] = useState<ConnectAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,10 +180,7 @@ export function ConnectAccountsSection({
                       activeOpacity={0.7}
                     >
                       {isOnboarding ? (
-                        <ActivityIndicator
-                          size="small"
-                          color={tokenColors.white}
-                        />
+                        <ActivityIndicator size="small" color={colors.white} />
                       ) : (
                         <Text style={styles.onboardButtonText}>
                           {status === 'pending' ? 'Resume' : 'Set Up'}
@@ -282,6 +279,6 @@ const styles = StyleSheet.create({
   onboardButtonText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

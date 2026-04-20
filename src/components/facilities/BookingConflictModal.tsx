@@ -9,13 +9,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  colors,
   fonts,
   typeScale,
   Spacing,
   ComponentStyles,
+  useTheme,
 } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { formatTime12 } from '../../utils/calendarUtils';
 
 export interface ConflictSlot {
@@ -45,6 +44,7 @@ export function BookingConflictModal({
   availableCount,
   loading = false,
 }: BookingConflictModalProps) {
+  const { colors } = useTheme();
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Unknown';
     const d = new Date(dateStr);
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   iconWrap: {
     width: 56,

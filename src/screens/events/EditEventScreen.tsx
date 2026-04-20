@@ -29,7 +29,6 @@ import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
 import { updateEvent } from '../../store/slices/eventsSlice';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -88,7 +87,7 @@ interface InvitedPlayer {
 }
 
 export function EditEventScreen(): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -571,7 +570,7 @@ export function EditEventScreen(): JSX.Element {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScreenHeader
@@ -767,11 +766,7 @@ export function EditEventScreen(): JSX.Element {
                     />
                   ) : (
                     <View style={styles.playerAvatarFallback}>
-                      <Ionicons
-                        name="person"
-                        size={16}
-                        color={tokenColors.white}
-                      />
+                      <Ionicons name="person" size={16} color={colors.white} />
                     </View>
                   )}
                   <Text style={styles.playerName}>
@@ -906,7 +901,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   eventInfo: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     padding: 12,
     borderRadius: 8,
     marginTop: 16,
@@ -921,16 +916,16 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginBottom: 4,
   },
   actions: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
     shadowColor: colors.ink,
     shadowOffset: {
       width: 0,

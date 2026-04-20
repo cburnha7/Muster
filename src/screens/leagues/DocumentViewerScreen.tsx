@@ -12,7 +12,6 @@ import {
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { leagueService } from '../../services/api/LeagueService';
 import { performanceMonitoringService } from '../../services/monitoring/PerformanceMonitoringService';
 
@@ -31,7 +30,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   route,
   navigation,
 }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { leagueId, documentId, documentName } = route.params ?? {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,10 +144,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (loading) {
     return (
       <View
-        style={[
-          styles.centerContainer,
-          { backgroundColor: themeColors.bgScreen },
-        ]}
+        style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading document...</Text>
@@ -159,10 +155,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (error || !documentUrl) {
     return (
       <View
-        style={[
-          styles.centerContainer,
-          { backgroundColor: themeColors.bgScreen },
-        ]}
+        style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}
       >
         <Ionicons
           name="document-text-outline"
@@ -191,9 +184,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   if (Platform.OS === 'web') {
     // Web: Use iframe for native browser PDF viewer
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <iframe
           src={documentUrl}
           style={{
@@ -212,7 +203,7 @@ export const DocumentViewerScreen: React.FC<DocumentViewerScreenProps> = ({
   const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(documentUrl)}&embedded=true`;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <WebView
         source={{ uri: viewerUrl }}
         style={styles.webview}
@@ -331,7 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,

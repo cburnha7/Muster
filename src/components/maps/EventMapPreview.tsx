@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Event, SportType } from '../../types';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 
 interface EventMapPreviewProps {
   event: Event;
@@ -11,6 +11,7 @@ interface EventMapPreviewProps {
 }
 
 export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProps) {
+  const { colors } = useTheme();
   const getSportIcon = (sportType: SportType) => {
     switch (sportType) {
       case SportType.BASKETBALL:
@@ -85,7 +86,7 @@ export function EventMapPreview({ event, onPress, onClose }: EventMapPreviewProp
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.viewButton}>View Details →</Text>
+          <Text style={styles.viewButton}>View Details â†’</Text>
         </View>
       </TouchableOpacity>
     </View>

@@ -17,7 +17,7 @@ import { leagueService } from '../../services/api/LeagueService';
 import { recordResult } from '../../store/slices/matchesSlice';
 import { selectUser } from '../../store/slices/authSlice';
 import { RecordMatchResultData, Match, TeamStanding } from '../../types';
-import { colors, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 
 type RecordMatchResultScreenRouteProp = RouteProp<
   { RecordMatchResult: { matchId: string } },
@@ -25,7 +25,7 @@ type RecordMatchResultScreenRouteProp = RouteProp<
 >;
 
 export const RecordMatchResultScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<RecordMatchResultScreenRouteProp>();
   const dispatch = useDispatch();
@@ -155,9 +155,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (loadingData) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -173,9 +171,7 @@ export const RecordMatchResultScreen: React.FC = () => {
 
   if (!match) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Record Match Result"
           leftIcon="arrow-back"
@@ -189,7 +185,7 @@ export const RecordMatchResultScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Record Match Result"
         leftIcon="arrow-back"

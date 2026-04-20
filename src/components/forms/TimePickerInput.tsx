@@ -9,8 +9,7 @@ import {
 import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 type DateTimePickerEvent = { type: string };
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface TimePickerInputProps {
   label: string;
@@ -22,7 +21,7 @@ interface TimePickerInputProps {
 }
 
 /**
- * Native time picker input — replaces free-text time fields.
+ * Native time picker input Ã¢â‚¬â€ replaces free-text time fields.
  * Accepts and emits time as "HH:MM" (24-hour) string.
  */
 export function TimePickerInput({
@@ -33,6 +32,7 @@ export function TimePickerInput({
   required,
   containerStyle,
 }: TimePickerInputProps) {
+  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
 
   // Parse "HH:MM" into a Date for the picker
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.inkFaint + '40',

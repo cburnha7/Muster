@@ -12,7 +12,6 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { EventCard } from '../../components/ui/EventCard';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { useLazySearchEventsQuery } from '../../store/api/eventsApi';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../store/slices/authSlice';
@@ -26,7 +25,7 @@ type NavProp = NativeStackNavigationProp<
 type RoutePropType = RouteProp<HomeStackParamList, 'EventSearchResults'>;
 
 export function EventSearchResultsScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<NavProp>();
   const route = useRoute<RoutePropType>();
   const user = useSelector(selectUser);
@@ -82,7 +81,7 @@ export function EventSearchResultsScreen() {
   }, [sportTypes, locationQuery, latitude, radiusMiles]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
@@ -133,7 +132,7 @@ export function EventSearchResultsScreen() {
         accessibilityRole="button"
         accessibilityLabel="Host an event"
       >
-        <Ionicons name="add" size={24} color={tokenColors.white} />
+        <Ionicons name="add" size={24} color={colors.white} />
       </TouchableOpacity>
     </View>
   );
@@ -202,7 +201,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
   listContent: {
     paddingBottom: Spacing.xxxl + 80,

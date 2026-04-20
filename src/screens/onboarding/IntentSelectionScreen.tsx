@@ -12,7 +12,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import type { OnboardingIntent } from '../../navigation/types';
 
 const TOTAL_STEPS = 5;
@@ -58,7 +57,7 @@ const INTENT_OPTIONS: IntentOption[] = [
 ];
 
 export const IntentSelectionScreen: React.FC = () => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [selected, setSelected] = useState<OnboardingIntent[]>([]);
@@ -90,7 +89,7 @@ export const IntentSelectionScreen: React.FC = () => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       <View style={styles.content}>
         {/* Top bar */}
@@ -151,7 +150,7 @@ export const IntentSelectionScreen: React.FC = () => {
                       <Ionicons
                         name={option.icon}
                         size={24}
-                        color={isSelected ? tokenColors.white : colors.primary}
+                        color={isSelected ? colors.white : colors.primary}
                       />
                     </View>
                     <View style={styles.cardTextContainer}>
@@ -182,7 +181,7 @@ export const IntentSelectionScreen: React.FC = () => {
                         <Ionicons
                           name="checkmark"
                           size={16}
-                          color={tokenColors.white}
+                          color={colors.white}
                         />
                       )}
                     </View>
@@ -306,7 +305,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   cardTitleSelected: {
-    color: tokenColors.white,
+    color: colors.white,
   },
   cardSubtitle: {
     fontSize: 13,
@@ -347,7 +346,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: tokenColors.white,
+    color: colors.white,
     letterSpacing: -0.1,
   },
 });

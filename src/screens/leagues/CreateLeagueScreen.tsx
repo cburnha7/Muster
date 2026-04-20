@@ -25,7 +25,7 @@ import { getSeasonFromDate } from './create-flow/types';
 import { useTheme } from '../../theme';
 
 function CreateLeagueInner() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateLeague();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
@@ -173,7 +173,7 @@ function CreateLeagueInner() {
 
   return (
     <>
-      <View style={{ flex: 1, backgroundColor: themeColors.bgScreen }}>
+      <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
         <LeagueFlowContainer onSubmit={handleSubmit}>
           <Step1Sport />
           <Step2Config />

@@ -16,14 +16,13 @@ import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { leagueService } from '../../../services/api/LeagueService';
 import { LeagueMembership, Team } from '../../../types';
 import { colors, fonts, useTheme } from '../../../theme';
-import { tokenColors } from '../../../theme/tokens';
 
 interface TeamsTabProps {
   leagueId: string;
 }
 
 export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [memberships, setMemberships] = useState<LeagueMembership[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -171,7 +170,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ leagueId }) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <FlatList
         data={activeRosterMemberships}
         renderItem={renderRosterRow}
@@ -206,7 +205,7 @@ const styles = StyleSheet.create({
   rosterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginVertical: 4,
     paddingHorizontal: 14,

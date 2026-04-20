@@ -12,7 +12,6 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { TeamCard } from '../../components/ui/TeamCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
@@ -62,7 +61,7 @@ const SPORTS: { label: string; value: string; icon: string }[] = [
 ];
 
 export function TeamsListScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { user } = useAuth();
@@ -268,7 +267,7 @@ export function TeamsListScreen() {
 
       {/* My Teams section */}
       {myTeams.length > 0 && (
-        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           My Rosters
         </Text>
       )}
@@ -283,7 +282,7 @@ export function TeamsListScreen() {
           <Text
             style={[
               styles.sectionTitle,
-              { marginTop: 24, color: themeColors.textPrimary },
+              { marginTop: 24, color: colors.textPrimary },
             ]}
           >
             Discover
@@ -301,7 +300,7 @@ export function TeamsListScreen() {
 
       {/* Join with code */}
       <TouchableOpacity
-        style={[styles.joinBtn, { backgroundColor: themeColors.cobaltTint }]}
+        style={[styles.joinBtn, { backgroundColor: colors.cobaltTint }]}
         onPress={handleJoinTeam}
         activeOpacity={0.85}
       >
@@ -356,14 +355,10 @@ export function TeamsListScreen() {
                 size={36}
                 color={colors.outlineVariant}
               />
-              <Text
-                style={[styles.emptyTitle, { color: themeColors.textPrimary }]}
-              >
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
                 No rosters yet
               </Text>
-              <Text
-                style={[styles.emptyText, { color: themeColors.textSecondary }]}
-              >
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 Create a roster or join one with a code
               </Text>
             </View>
@@ -378,7 +373,7 @@ export function TeamsListScreen() {
           onPress={handleCreateTeam}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={26} color={tokenColors.white} />
+          <Ionicons name="add" size={26} color={colors.white} />
         </TouchableOpacity>
       )}
 
@@ -429,7 +424,7 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   chipTextActive: {
-    color: tokenColors.white,
+    color: colors.white,
   },
 
   // ── Section titles ──────────────────────
@@ -491,7 +486,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: tokenColors.cobalt,
+    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,

@@ -1,12 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenType,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenType } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface ErrorDisplayProps {
   title?: string;
@@ -23,22 +19,24 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   retryText = 'Try Again',
   style,
 }) => {
+  const { colors } = useTheme();
+
   return (
     <View style={[styles.container, style]}>
-      <Ionicons
-        name="alert-circle-outline"
-        size={48}
-        color={tokenColors.error}
-      />
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+      <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+      <Text style={[styles.message, { color: colors.inkSecondary }]}>
+        {message}
+      </Text>
       {onRetry && (
         <TouchableOpacity
-          style={styles.retryButton}
+          style={[styles.retryButton, { backgroundColor: colors.cobalt }]}
           onPress={onRetry}
           activeOpacity={0.75}
         >
-          <Text style={styles.retryText}>{retryText}</Text>
+          <Text style={[styles.retryText, { color: colors.white }]}>
+            {retryText}
+          </Text>
         </TouchableOpacity>
       )}
     </View>
@@ -54,25 +52,21 @@ const styles = StyleSheet.create({
   },
   title: {
     ...tokenType.subheading,
-    color: tokenColors.ink,
     marginTop: tokenSpacing.lg,
     marginBottom: tokenSpacing.sm,
     textAlign: 'center',
   },
   message: {
     ...tokenType.body,
-    color: tokenColors.inkSecondary,
     textAlign: 'center',
     marginBottom: tokenSpacing.xl,
   },
   retryButton: {
-    backgroundColor: tokenColors.cobalt,
     paddingHorizontal: tokenSpacing.xl,
     paddingVertical: tokenSpacing.md,
     borderRadius: tokenRadius.lg,
   },
   retryText: {
     ...tokenType.button,
-    color: tokenColors.white,
   },
 });

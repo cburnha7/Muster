@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Provider } from 'react-redux';
 import { store, persistor } from './store';
-import { tokenColors } from '../theme/tokens';
+import { useTheme } from '../theme';
 
 interface ReduxProviderProps {
   children: React.ReactNode;
@@ -10,6 +10,7 @@ interface ReduxProviderProps {
 
 export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
   const [isReady, setIsReady] = useState(false);
+  const { colors } = useTheme();
 
   useEffect(() => {
     let settled = false;
@@ -50,7 +51,7 @@ export const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
       {isReady ? (
         children
       ) : (
-        <View style={{ flex: 1, backgroundColor: tokenColors.background }} />
+        <View style={{ flex: 1, backgroundColor: colors.background }} />
       )}
     </Provider>
   );

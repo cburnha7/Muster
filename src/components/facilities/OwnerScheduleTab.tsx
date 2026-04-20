@@ -10,7 +10,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar, DateData } from 'react-native-calendars';
-import { colors, fonts, Spacing } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 import { VisualDaySchedule, ScheduleBlock } from './VisualDaySchedule';
 import {
@@ -30,6 +30,7 @@ interface OwnerScheduleTabProps {
 }
 
 export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
+  const { colors } = useTheme();
   const [selectedDate, setSelectedDate] = useState(
     formatDateForCalendar(new Date())
   );
@@ -180,7 +181,7 @@ export function OwnerScheduleTab({ facilityId }: OwnerScheduleTabProps) {
             month: 'long',
             day: 'numeric',
           })}
-          {selectedCourt ? ` · ${selectedCourt.name}` : ''}
+          {selectedCourt ? ` Â· ${selectedCourt.name}` : ''}
         </Text>
 
         {loadingSchedule ? (

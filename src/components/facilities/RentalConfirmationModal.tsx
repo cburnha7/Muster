@@ -9,10 +9,15 @@ import {
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles, ComponentStyles } from '../../theme';
+import { Spacing, TextStyles, ComponentStyles, useTheme } from '../../theme';
 import { CancellationPolicyDisplay } from './CancellationPolicyDisplay';
 import type { PenaltyDestination } from '../../types';
-import { formatTime12, parseCalendarDate, calculateDuration, formatDuration } from '../../utils/calendarUtils';
+import {
+  formatTime12,
+  parseCalendarDate,
+  calculateDuration,
+  formatDuration,
+} from '../../utils/calendarUtils';
 
 interface RentalConfirmationModalProps {
   visible: boolean;
@@ -45,6 +50,7 @@ export function RentalConfirmationModal({
   slotCount = 1,
   cancellationPolicy,
 }: RentalConfirmationModalProps) {
+  const { colors } = useTheme();
   const dateObj = parseCalendarDate(date);
   const formattedDate = dateObj.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -83,12 +89,18 @@ export function RentalConfirmationModal({
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Ionicons name="calendar-outline" size={32} color={colors.cobalt} />
+                <Ionicons
+                  name="calendar-outline"
+                  size={32}
+                  color={colors.cobalt}
+                />
               </View>
               <Text style={styles.title}>
                 Confirm {slotCount > 1 ? `${slotCount} Rentals` : 'Rental'}
               </Text>
-              <Text style={styles.subtitle}>Please review your booking details</Text>
+              <Text style={styles.subtitle}>
+                Please review your booking details
+              </Text>
             </View>
 
             {/* Booking Details */}
@@ -118,7 +130,11 @@ export function RentalConfirmationModal({
               {/* Date */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color={colors.cobalt}
+                  />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date</Text>
@@ -129,7 +145,11 @@ export function RentalConfirmationModal({
               {/* Time */}
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="time-outline" size={20} color={colors.cobalt} />
+                  <Ionicons
+                    name="time-outline"
+                    size={20}
+                    color={colors.cobalt}
+                  />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Time</Text>
@@ -137,22 +157,28 @@ export function RentalConfirmationModal({
                     {formatTime12(startTime)} - {formatTime12(endTime)}
                   </Text>
                   {slotCount > 1 && (
-                    <Text style={styles.detailSubvalue}>{slotCount} consecutive time slots</Text>
+                    <Text style={styles.detailSubvalue}>
+                      {slotCount} consecutive time slots
+                    </Text>
                   )}
-                  <Text style={styles.detailSubvalue}>Duration: {formattedDuration}</Text>
+                  <Text style={styles.detailSubvalue}>
+                    Duration: {formattedDuration}
+                  </Text>
                 </View>
               </View>
 
               {/* Price */}
               <View style={[styles.detailRow, styles.priceRow]}>
                 <View style={styles.detailIcon}>
-                  <Ionicons name="cash-outline" size={20} color={colors.cobalt} />
+                  <Ionicons
+                    name="cash-outline"
+                    size={20}
+                    color={colors.cobalt}
+                  />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Total Price</Text>
-                  <Text style={styles.priceValue}>
-                    ${price.toFixed(2)}
-                  </Text>
+                  <Text style={styles.priceValue}>${price.toFixed(2)}</Text>
                 </View>
               </View>
             </View>
@@ -182,7 +208,11 @@ export function RentalConfirmationModal({
                     ]}
                   >
                     {policyAcknowledged && (
-                      <Ionicons name="checkmark" size={14} color={colors.surface} />
+                      <Ionicons
+                        name="checkmark"
+                        size={14}
+                        color={colors.surface}
+                      />
                     )}
                   </View>
                   <Text style={styles.acknowledgementText}>
@@ -192,19 +222,21 @@ export function RentalConfirmationModal({
               </View>
             ) : (
               <View style={styles.noticeContainer}>
-                <Ionicons name="information-circle" size={20} color={colors.gold} />
+                <Ionicons
+                  name="information-circle"
+                  size={20}
+                  color={colors.gold}
+                />
                 <Text style={styles.noticeText}>
-                  Cancellations must be made at least 2 hours before the start time for a full refund.
+                  Cancellations must be made at least 2 hours before the start
+                  time for a full refund.
                 </Text>
               </View>
             )}
 
             {/* Action Buttons */}
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={onClose}
-              >
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
 

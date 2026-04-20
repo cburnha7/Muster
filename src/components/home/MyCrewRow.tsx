@@ -8,8 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 export interface CrewMember {
   id: string;
@@ -26,12 +25,12 @@ interface MyCrewRowProps {
 }
 
 export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const allActive = selectedId === null;
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>
         The Family
       </Text>
       <ScrollView
@@ -82,8 +81,8 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
                   active && styles.nameActive,
                   {
                     color: active
-                      ? themeColors.textPrimary
-                      : themeColors.textSecondary,
+                      ? colors.textPrimary
+                      : colors.textSecondary,
                   },
                 ]}
                 numberOfLines={1}
@@ -103,25 +102,25 @@ export function MyCrewRow({ members, selectedId, onSelect }: MyCrewRowProps) {
           <View
             style={[
               styles.ring,
-              allActive && { borderColor: themeColors.textPrimary },
+              allActive && { borderColor: colors.textPrimary },
             ]}
           >
             <View
               style={[
                 styles.circle,
-                { backgroundColor: themeColors.textPrimary },
+                { backgroundColor: colors.textPrimary },
               ]}
             >
-              <Ionicons name="people" size={20} color={tokenColors.white} />
+              <Ionicons name="people" size={20} color={colors.white} />
             </View>
           </View>
           <Text
             style={[
               styles.name,
-              { color: themeColors.textSecondary },
+              { color: colors.textSecondary },
               allActive && {
                 fontFamily: fonts.label,
-                color: themeColors.textPrimary,
+                color: colors.textPrimary,
               },
             ]}
             numberOfLines={1}
@@ -166,7 +165,7 @@ const styles = StyleSheet.create({
   initial: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: tokenColors.white,
+    color: colors.white,
   },
   name: {
     fontFamily: fonts.body,

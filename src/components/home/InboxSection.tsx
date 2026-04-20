@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import {
   RosterInvitation,
   LeagueInvitation,
@@ -49,6 +48,7 @@ export function InboxSection({
   onDebriefPress,
   onApproveCancelRequest,
 }: InboxSectionProps) {
+  const { colors } = useTheme();
   const items: InboxItem[] = [];
 
   rosterInvitations.forEach(inv => {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,

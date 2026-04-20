@@ -9,8 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 export interface SelectOption {
   label: string;
@@ -58,7 +57,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   footerOption,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -79,7 +78,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
     <TouchableOpacity
       style={[
         styles.option,
-        { borderBottomColor: themeColors.border },
+        { borderBottomColor: colors.border },
         item.disabled && styles.optionDisabled,
         item.value === value && styles.optionSelected,
       ]}
@@ -89,7 +88,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       <Text
         style={[
           styles.optionText,
-          { color: themeColors.textPrimary },
+          { color: colors.textPrimary },
           item.disabled && styles.optionTextDisabled,
           item.value === value && styles.optionTextSelected,
         ]}
@@ -106,7 +105,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && (
         <Text
-          style={[styles.label, { color: themeColors.textPrimary }, labelStyle]}
+          style={[styles.label, { color: colors.textPrimary }, labelStyle]}
         >
           {label}
           {required && <Text style={styles.required}> *</Text>}
@@ -117,8 +116,8 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         style={[
           styles.select,
           {
-            backgroundColor: themeColors.bgCard,
-            borderColor: themeColors.border,
+            backgroundColor: colors.bgCard,
+            borderColor: colors.border,
           },
           error && styles.selectError,
           disabled && styles.selectDisabled,
@@ -130,7 +129,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         <Text
           style={[
             styles.selectText,
-            { color: themeColors.textPrimary },
+            { color: colors.textPrimary },
             !selectedOption && styles.placeholderText,
             disabled && styles.selectTextDisabled,
           ]}
@@ -145,7 +144,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
               ? colors.outline
               : error
                 ? colors.error
-                : themeColors.textSecondary
+                : colors.textSecondary
           }
         />
       </TouchableOpacity>
@@ -161,20 +160,20 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         <SafeAreaView
           style={[
             styles.modalContainer,
-            { backgroundColor: themeColors.bgScreen },
+            { backgroundColor: colors.bgScreen },
           ]}
         >
           <View
             style={[
               styles.modalHeader,
-              { borderBottomColor: themeColors.border },
+              { borderBottomColor: colors.border },
             ]}
           >
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
             <Text
-              style={[styles.modalTitle, { color: themeColors.textPrimary }]}
+              style={[styles.modalTitle, { color: colors.textPrimary }]}
             >
               {label || 'Select Option'}
             </Text>
@@ -246,7 +245,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 48,
-    shadowColor: tokenColors.ink,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,

@@ -3,14 +3,8 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PressableCard } from './PressableCard';
 import { Team } from '../../types';
-import {
-  tokenColors,
-  tokenSpacing,
-  tokenRadius,
-  tokenType,
-  tokenShadow,
-  tokenFontFamily,
-} from '../../theme/tokens';
+import { tokenSpacing, tokenRadius, tokenFontFamily } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 import { getSportIcon, formatSport } from '../../utils/sportUtils';
 import { getSportColor } from '../../constants/sportColors';
 
@@ -28,6 +22,7 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
   style,
   currentUserId,
 }) => {
+  const { colors } = useTheme();
   const sport = team.sportTypes?.[0] || team.sportType;
   const availableSlots = team.maxMembers - team.members.length;
   const isFull = availableSlots <= 0;
@@ -44,7 +39,10 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
       ));
 
   return (
-    <PressableCard style={[styles.card, style]} onPress={() => onPress?.(team)}>
+    <PressableCard
+      style={[styles.card, { backgroundColor: colors.surface }, style]}
+      onPress={() => onPress?.(team)}
+    >
       {/* Sport icon with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: sportColor + '14' }]}>
         <Ionicons
@@ -57,19 +55,24 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
       {/* Team info */}
       <View style={styles.body}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
             {team.name}
           </Text>
           {isManager && (
-            <View style={styles.managerBadge}>
-              <Text style={styles.managerText}>Manager</Text>
+            <View
+              style={[styles.managerBadge, { backgroundColor: colors.success }]}
+            >
+              <Text style={[styles.managerText, { color: colors.white }]}>
+                Manager
+              </Text>
             </View>
           )}
         </View>
-        <Text style={styles.meta}>
-          {formatSport(sport)} <Text style={styles.metaDot}>&middot;</Text>{' '}
+        <Text style={[styles.meta, { color: colors.inkSecondary }]}>
+          {formatSport(sport)}{' '}
+          <Text style={{ color: colors.border }}>&middot;</Text>{' '}
           {isFull ? (
-            <Text style={styles.metaFull}>Full</Text>
+            <Text style={{ color: colors.error }}>Full</Text>
           ) : (
             <Text>
               {team.members.length}/{team.maxMembers} players
@@ -78,7 +81,7 @@ const TeamCardInner: React.FC<TeamCardProps> = ({
         </Text>
       </View>
 
-      <Ionicons name="chevron-forward" size={16} color={tokenColors.border} />
+      <Ionicons name="chevron-forward" size={16} color={colors.border} />
     </PressableCard>
   );
 };
@@ -89,7 +92,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tokenColors.surface,
     borderRadius: tokenRadius.lg,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -115,18 +117,14 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: tokenFontFamily.uiSemiBold,
     fontSize: 15,
-    color: tokenColors.ink,
     flexShrink: 1,
   },
-  // Manager badge — pine green (positive role)
   managerBadge: {
-    backgroundColor: tokenColors.success,
     paddingHorizontal: tokenSpacing.sm,
     paddingVertical: 2,
     borderRadius: tokenRadius.pill,
   },
   managerText: {
-    color: tokenColors.white,
     fontSize: 10,
     fontFamily: tokenFontFamily.uiSemiBold,
     letterSpacing: 0.4,
@@ -134,12 +132,5 @@ const styles = StyleSheet.create({
   meta: {
     fontFamily: tokenFontFamily.uiRegular,
     fontSize: 13,
-    color: tokenColors.inkSecondary,
-  },
-  metaDot: {
-    color: tokenColors.border,
-  },
-  metaFull: {
-    color: tokenColors.error,
   },
 });

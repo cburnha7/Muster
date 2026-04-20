@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../../navigation/types';
-import { tokenColors, tokenShadow } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 // Import stack navigators for each tab
 import { HomeStackNavigator } from '../../navigation/stacks/HomeStackNavigator';
@@ -17,21 +17,27 @@ interface TabBadgeProps {
   showDot?: boolean;
 }
 
-const TabBadge: React.FC<TabBadgeProps> = ({ count, showDot }) => {
+function TabBadgeInner({ count, showDot }: TabBadgeProps) {
+  const { colors } = useTheme();
   if (!count && !showDot) return null;
 
   return (
-    <View style={styles.badge}>
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: colors.error, borderColor: colors.white },
+      ]}
+    >
       {count ? (
-        <Text style={styles.badgeText}>
+        <Text style={[styles.badgeText, { color: colors.white }]}>
           {count > 99 ? '99+' : count.toString()}
         </Text>
       ) : (
-        <View style={styles.badgeDot} />
+        <View style={[styles.badgeDot, { backgroundColor: colors.error }]} />
       )}
     </View>
   );
-};
+}
 
 interface CustomTabNavigatorProps {
   badges?: {
@@ -45,6 +51,8 @@ interface CustomTabNavigatorProps {
 export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
   badges = {},
 }) => {
+  const { colors, shadow } = useTheme();
+
   const getTabBarIcon = (
     route: { name: keyof MainTabParamList },
     focused: boolean,
@@ -70,7 +78,7 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
     return (
       <View style={styles.tabIconContainer}>
         <Ionicons name={iconName} size={size} color={color} />
-        <TabBadge {...badges[route.name]} />
+        <TabBadgeInner {...badges[route.name]} />
       </View>
     );
   };
@@ -81,16 +89,16 @@ export const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({
         headerShown: false,
         tabBarIcon: ({ focused, color, size }) =>
           getTabBarIcon(route, focused, color, size),
-        tabBarActiveTintColor: tokenColors.cobalt,
-        tabBarInactiveTintColor: tokenColors.inkMuted,
+        tabBarActiveTintColor: colors.cobalt,
+        tabBarInactiveTintColor: colors.inkMuted,
         tabBarStyle: {
-          backgroundColor: tokenColors.surface,
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: tokenColors.border,
+          borderTopColor: colors.border,
           paddingBottom: 5,
           paddingTop: 5,
           height: 60,
-          shadowColor: tokenColors.black,
+          shadowColor: colors.black,
           shadowOffset: {
             width: 0,
             height: -2,
@@ -143,17 +151,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -10,
-    backgroundColor: tokenColors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: tokenColors.white,
   },
   badgeText: {
-    color: tokenColors.white,
     fontSize: 12,
     fontWeight: '600',
     paddingHorizontal: 4,
@@ -162,6 +167,5 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: tokenColors.error,
   },
 });

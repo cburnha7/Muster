@@ -9,7 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'destructive';
 
@@ -32,6 +32,7 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   accessibilityLabel,
 }) => {
+  const { colors } = useTheme();
   const isDisabled = disabled || isLoading;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 

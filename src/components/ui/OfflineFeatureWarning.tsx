@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNetworkState } from '../../services/network/NetworkService';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface OfflineFeatureWarningProps {
   featureName: string;
@@ -15,6 +15,7 @@ export const OfflineFeatureWarning: React.FC<OfflineFeatureWarningProps> = ({
   message,
   style,
 }) => {
+  const { colors } = useTheme();
   const networkState = useNetworkState();
 
   if (networkState.isConnected) {
@@ -22,15 +23,26 @@ export const OfflineFeatureWarning: React.FC<OfflineFeatureWarningProps> = ({
   }
 
   return (
-    <View style={[styles.container, style]}>
-      <Ionicons
-        name="alert-circle-outline"
-        size={20}
-        color={tokenColors.warning}
-      />
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.warningLight,
+          borderLeftColor: colors.warning,
+        },
+        style,
+      ]}
+    >
+      <Ionicons name="alert-circle-outline" size={20} color={colors.warning} />
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{featureName} unavailable offline</Text>
-        {message && <Text style={styles.message}>{message}</Text>}
+        <Text style={[styles.title, { color: colors.warning }]}>
+          {featureName} unavailable offline
+        </Text>
+        {message && (
+          <Text style={[styles.message, { color: colors.warning }]}>
+            {message}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -40,12 +52,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: tokenColors.warningLight,
     borderRadius: 8,
     padding: 12,
     marginVertical: 8,
     borderLeftWidth: 4,
-    borderLeftColor: tokenColors.warning,
   },
   textContainer: {
     flex: 1,
@@ -54,12 +64,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.warning,
     marginBottom: 4,
   },
   message: {
     fontSize: 12,
-    color: tokenColors.warning,
     lineHeight: 18,
   },
 });

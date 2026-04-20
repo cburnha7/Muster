@@ -12,7 +12,6 @@ import {
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, Spacing, TextStyles, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { courtService, TimeSlot, Court } from '../../services/api/CourtService';
 import {
   calendarTheme,
@@ -39,7 +38,7 @@ export function GroundAvailabilityScreen({
   route,
   navigation,
 }: GroundAvailabilityScreenProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { facilityId, facilityName } = route.params ?? {};
 
   const [selectedDate, setSelectedDate] = useState<string>(
@@ -197,10 +196,7 @@ export function GroundAvailabilityScreen({
   if (loading) {
     return (
       <View
-        style={[
-          styles.loadingContainer,
-          { backgroundColor: themeColors.bgScreen },
-        ]}
+        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading availability...</Text>
@@ -209,7 +205,7 @@ export function GroundAvailabilityScreen({
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -408,7 +404,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   calendarContainer: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     marginBottom: Spacing.md,
     borderRadius: 12,
     marginHorizontal: Spacing.lg,

@@ -12,7 +12,6 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, Spacing, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import {
   useApproveReservationMutation,
   useDenyReservationMutation,
@@ -56,7 +55,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function PendingReservationDetailsScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute<ScreenRouteProp>();
   const { rentalId } = route.params ?? {};
@@ -138,9 +137,7 @@ export function PendingReservationDetailsScreen() {
 
   if (loading) {
     return (
-      <View
-        style={[styles.centered, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.centered, { backgroundColor: colors.bgScreen }]}>
         <ActivityIndicator size="large" color={colors.cobalt} />
       </View>
     );
@@ -155,7 +152,7 @@ export function PendingReservationDetailsScreen() {
   const insuranceDoc = rental.attachedInsuranceDocument;
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -307,7 +304,7 @@ export function PendingReservationDetailsScreen() {
               disabled={isBusy}
             >
               {isApproving ? (
-                <ActivityIndicator size="small" color={tokenColors.white} />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.actionBtnText}>Approve</Text>
               )}
@@ -318,7 +315,7 @@ export function PendingReservationDetailsScreen() {
               disabled={isBusy}
             >
               {isDenying ? (
-                <ActivityIndicator size="small" color={tokenColors.white} />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.actionBtnText}>Deny</Text>
               )}
@@ -355,11 +352,11 @@ const styles = StyleSheet.create({
   contentContainer: { padding: 16, paddingBottom: 40 },
   statusRow: { alignItems: 'flex-start', marginBottom: 20 },
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
-  pendingBadge: { backgroundColor: tokenColors.warningLight },
-  confirmedBadge: { backgroundColor: tokenColors.successLight },
+  pendingBadge: { backgroundColor: colors.warningLight },
+  confirmedBadge: { backgroundColor: colors.successLight },
   statusText: { fontFamily: fonts.label, fontSize: 13, color: colors.ink },
   section: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -417,6 +414,6 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

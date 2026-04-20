@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 export function ScheduleWizardScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <Text style={styles.heading}>Schedule Wizard</Text>
       <Text style={styles.body}>Coming soon.</Text>
     </View>

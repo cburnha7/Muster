@@ -21,7 +21,7 @@ import {
   UpdateCourtData,
 } from '../../services/api/CourtService';
 import { SportType } from '../../types';
-import { colors, Spacing } from '../../theme';
+import { Spacing, useTheme } from '../../theme';
 
 interface EditCourtModalProps {
   visible: boolean;
@@ -38,6 +38,7 @@ export function EditCourtModal({
   onClose,
   onSuccess,
 }: EditCourtModalProps): JSX.Element {
+  const { colors } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     sportType: '',

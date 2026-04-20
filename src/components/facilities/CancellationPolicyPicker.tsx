@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, fonts, Spacing, BorderRadius } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, BorderRadius, useTheme } from '../../theme';
 
 export interface CancellationPolicyPickerProps {
   value: number | null;
@@ -26,6 +25,7 @@ export function CancellationPolicyPicker({
   value,
   onChange,
 }: CancellationPolicyPickerProps) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
       <Text style={styles.sectionLabel}>CANCELLATION POLICY</Text>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
   },
   chipSelected: {
     backgroundColor: colors.cobalt,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     fontFamily: fonts.ui,
-    color: tokenColors.white,
+    color: colors.white,
   },
   helperText: {
     fontFamily: fonts.body,

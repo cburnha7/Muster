@@ -7,8 +7,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 import { searchEventBus } from '../../utils';
 
 const PLACEHOLDERS: Record<string, string> = {
@@ -26,7 +25,7 @@ interface HeaderSearchPillProps {
 export function HeaderSearchPill({
   routeName = 'Home',
 }: HeaderSearchPillProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const placeholder = PLACEHOLDERS[routeName] || 'Search...';
   const isHome = routeName === 'Home' || routeName === 'Profile';
   const [active, setActive] = useState(false);
@@ -65,14 +64,14 @@ export function HeaderSearchPill({
   if (active) {
     return (
       <View
-        style={[styles.pillActive, { backgroundColor: themeColors.bgCard }]}
+        style={[styles.pillActive, { backgroundColor: colors.bgCard }]}
       >
-        <Ionicons name="search" size={20} color={themeColors.textSecondary} />
+        <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           ref={inputRef}
-          style={[styles.activeInput, { color: themeColors.textPrimary }]}
+          style={[styles.activeInput, { color: colors.textPrimary }]}
           placeholder={placeholder}
-          placeholderTextColor={themeColors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={handleChangeText}
           autoFocus
@@ -92,15 +91,15 @@ export function HeaderSearchPill({
 
   return (
     <TouchableOpacity
-      style={[styles.pill, { backgroundColor: themeColors.bgInput }]}
+      style={[styles.pill, { backgroundColor: colors.bgInput }]}
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={placeholder}
     >
-      <Ionicons name="search" size={20} color={themeColors.textSecondary} />
+      <Ionicons name="search" size={20} color={colors.textSecondary} />
       <Text
-        style={[styles.text, { color: themeColors.textSecondary }]}
+        style={[styles.text, { color: colors.textSecondary }]}
         numberOfLines={1}
       >
         {placeholder}
@@ -121,7 +120,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1.5,
     borderColor: colors.outlineVariant,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,

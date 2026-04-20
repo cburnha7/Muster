@@ -1,5 +1,7 @@
-// ─── New token system (preferred imports) ────────────────────
+// ─── Token system ────────────────────────────────────────────
 export {
+  lightColors,
+  darkColors,
   tokenColors,
   tokenSpacing,
   tokenRadius,
@@ -8,10 +10,12 @@ export {
   tokenFontFamily,
   tokenStatus,
   tokenSport,
+  makeShadows,
   avatarColors as tokenAvatarColors,
   getAvatarColor as tokenGetAvatarColor,
 } from './tokens';
 export type {
+  SemanticColors,
   SpacingKey,
   RadiusKey,
   ShadowKey,
@@ -36,7 +40,7 @@ export type { ColorKey, ThemeTokens } from './colors';
 export { fonts, fontFamilies, typeScale, TextStyles } from './typography';
 export type { FontKey, TypeKey, TypeScaleKey } from './typography';
 
-export { spacing, radius, makeShadow, Spacing } from './spacing';
+export { spacing, radius, Spacing } from './spacing';
 
 export { BorderRadius, getBorderRadius } from './borderRadius';
 export type { BorderRadiusKey } from './borderRadius';

@@ -1,5 +1,5 @@
 /**
- * RecurringBookingToggle — Repeat Booking toggle with frequency + end date pickers.
+ * RecurringBookingToggle Ã¢â‚¬â€ Repeat Booking toggle with frequency + end date pickers.
  * Shown below the time slot selector in the court booking flow.
  */
 
@@ -14,8 +14,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, typeScale } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, typeScale, useTheme } from '../../theme';
 
 export type RecurringFrequency = 'weekly' | 'monthly';
 
@@ -32,6 +31,7 @@ interface Props {
 }
 
 export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
+  const { colors } = useTheme();
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleToggle = (enabled: boolean) => {
@@ -151,7 +151,7 @@ export function RecurringBookingToggle({ value, onChange, minEndDate }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginTop: 12,

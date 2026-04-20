@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '../../components/ui/CrossPlatformDateTimePicker';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, Spacing } from '../../theme';
+import { Spacing, useTheme } from '../../theme';
 import { formatTime24, formatTime12 } from '../../utils/calendarUtils';
 import { API_BASE_URL } from '../../services/api/config';
 
@@ -35,6 +35,7 @@ export function BlockTimeSlotModal({
   onClose,
   onSuccess,
 }: BlockTimeSlotModalProps) {
+  const { colors } = useTheme();
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
   const [blockReason, setBlockReason] = useState('');

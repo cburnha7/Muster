@@ -13,11 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCreateRoster } from './CreateRosterContext';
 import { RosterInviteItem } from './types';
 import { InviteToMusterModal } from '../../../components/invite/InviteToMusterModal';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 import { API_BASE_URL } from '../../../services/api/config';
 
 export function RosterStep3Invite() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateRoster();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<RosterInviteItem[]>([]);
@@ -93,7 +93,7 @@ export function RosterStep3Invite() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}

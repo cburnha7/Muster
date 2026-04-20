@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { colors, fonts, Spacing } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocumentsApi';
 
 /**
@@ -33,6 +33,7 @@ export function InsuranceDocumentSelector({
   onSelect,
   selectedDocumentId,
 }: InsuranceDocumentSelectorProps) {
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const { data: documents, isLoading } = useGetInsuranceDocumentsQuery({
     userId,

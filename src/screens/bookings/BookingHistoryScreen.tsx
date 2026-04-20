@@ -10,7 +10,6 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -22,7 +21,7 @@ import { userService } from '../../services/api/UserService';
 import { Booking, Event } from '../../types';
 
 export function BookingHistoryScreen(): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
 
   // State
@@ -165,7 +164,7 @@ export function BookingHistoryScreen(): JSX.Element {
   // Render empty state
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="time-outline" size={64} color={tokenColors.inkMuted} />
+      <Ionicons name="time-outline" size={64} color={colors.inkMuted} />
       <Text style={styles.emptyTitle}>
         {searchQuery ? 'No Matching Bookings' : 'No Booking History'}
       </Text>
@@ -202,11 +201,7 @@ export function BookingHistoryScreen(): JSX.Element {
           style={styles.clearButton}
           onPress={() => setSearchQuery('')}
         >
-          <Ionicons
-            name="close-circle"
-            size={20}
-            color={tokenColors.inkSecondary}
-          />
+          <Ionicons name="close-circle" size={20} color={colors.inkSecondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -214,9 +209,7 @@ export function BookingHistoryScreen(): JSX.Element {
 
   if (error && bookings.length === 0) {
     return (
-      <View
-        style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
-      >
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Booking History"
           showBack={true}
@@ -228,7 +221,7 @@ export function BookingHistoryScreen(): JSX.Element {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScreenHeader
         title="Booking History"
         showBack={true}
@@ -253,7 +246,7 @@ export function BookingHistoryScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[tokenColors.cobalt]}
+              colors={[colors.cobalt]}
             />
           }
           onEndReached={loadMoreBookings}
@@ -306,9 +299,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: tokenColors.border,
+    borderBottomColor: colors.border,
   },
   searchInput: {
     flex: 1,
@@ -330,13 +323,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     textAlign: 'center',
   },
   footer: {
@@ -345,10 +338,10 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: tokenColors.border,
+    borderTopColor: colors.border,
   },
   statItem: {
     flex: 1,
@@ -357,12 +350,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: tokenColors.cobalt,
+    color: colors.cobalt,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     textAlign: 'center',
   },
 });

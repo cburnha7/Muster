@@ -1,4 +1,5 @@
-import { tokenSport, tokenColors } from '../theme/tokens';
+import { tokenSport } from '../theme/tokens';
+import { lightColors } from '../theme/tokens';
 
 /**
  * Sport Colors — re-exported from design tokens.
@@ -22,9 +23,9 @@ export const SPORT_COLORS: Record<string, string> = {
 };
 
 export function getSportColor(sport?: string | null): string {
-  if (!sport) return tokenColors.cobalt;
+  if (!sport) return lightColors.cobalt;
   const key = sport.toLowerCase().replace(/ /g, '_');
-  return SPORT_COLORS[key] ?? tokenColors.cobalt;
+  return SPORT_COLORS[key] ?? lightColors.cobalt;
 }
 
 /** Returns the sport color at ~10% opacity as a hex string */

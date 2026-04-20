@@ -8,8 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 interface AddressResult {
   street: string;
@@ -36,6 +35,7 @@ export function AddressAutocomplete({
   placeholder = 'Start typing an address...',
   label = 'Address',
 }: AddressAutocompleteProps) {
+  const { colors } = useTheme();
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginTop: 4,
     overflow: 'hidden',
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,

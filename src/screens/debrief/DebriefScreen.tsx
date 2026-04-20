@@ -13,7 +13,6 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { salute as saluteConstants } from '../../theme/brand';
 import {
   debriefService,
@@ -26,7 +25,7 @@ import { eventService } from '../../services/api/EventService';
 import { notificationsEventBus } from '../../utils/notificationsEventBus';
 
 export function DebriefScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { user } = useAuth();
@@ -172,7 +171,7 @@ export function DebriefScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
     >
       {/* Header — event name only */}
       <View style={styles.header}>
@@ -299,7 +298,7 @@ export function DebriefScreen() {
             }
           >
             {submitting ? (
-              <ActivityIndicator color={tokenColors.white} />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.submitButtonText}>
                 {canSubmit ? 'Submit Debrief' : `Salute ${salutesNeeded} more`}
@@ -383,7 +382,7 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontFamily: fonts.ui,
     fontSize: 18,
-    color: tokenColors.white,
+    color: colors.white,
   },
   participantName: {
     fontFamily: fonts.body,
@@ -421,6 +420,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: tokenColors.white,
+    color: colors.white,
   },
 });

@@ -12,7 +12,7 @@ import { FormInput } from '../../../components/forms/FormInput';
 import { HoursOfOperationSection } from '../../../components/facilities/HoursOfOperationSection';
 import { useCreateFacility } from './CreateFacilityContext';
 import { CourtFormData } from './types';
-import { colors, fonts, Spacing, useTheme } from '../../../theme';
+import { fonts, Spacing, useTheme } from '../../../theme';
 import { formatSportType } from '../../../utils/formatters';
 
 const EMPTY_COURT: CourtFormData = {
@@ -25,7 +25,7 @@ const EMPTY_COURT: CourtFormData = {
 };
 
 export function Step4Courts() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateFacility();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export function Step4Courts() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}

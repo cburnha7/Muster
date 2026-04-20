@@ -7,8 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 
 interface CheckboxProps {
   label: string | React.ReactNode;
@@ -25,6 +24,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   error,
   accessibilityLabel,
 }) => {
+  const { colors } = useTheme();
   const minSize = Platform.OS === 'ios' ? 44 : 48;
 
   return (
@@ -47,7 +47,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           ]}
         >
           {checked && (
-            <Ionicons name="checkmark" size={14} color={tokenColors.white} />
+            <Ionicons name="checkmark" size={14} color={colors.white} />
           )}
         </View>
         <View style={styles.labelContainer}>

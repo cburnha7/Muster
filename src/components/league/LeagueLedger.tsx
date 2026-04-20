@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { leagueService } from '../../services/api/LeagueService';
 import { LeagueTransaction } from '../../types/league';
 
@@ -18,6 +18,7 @@ interface LeagueLedgerProps {
 }
 
 function getTypeLabel(type: string): string {
+  const { colors } = useTheme();
   switch (type) {
     case 'dues_received': return 'Dues Received';
     case 'court_cost': return 'Court Cost';

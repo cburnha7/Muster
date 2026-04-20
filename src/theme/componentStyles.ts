@@ -4,20 +4,20 @@
  * All values derive from tokens.ts.
  */
 
-import { tokenColors, tokenSpacing, tokenRadius, tokenShadow } from './tokens';
+import { lightColors, tokenSpacing, tokenRadius, tokenShadow } from './tokens';
 
 export const ComponentStyles = {
   button: {
     primary: {
-      backgroundColor: tokenColors.cobalt,
+      backgroundColor: lightColors.cobalt,
       paddingVertical: tokenSpacing.md,
       paddingHorizontal: tokenSpacing.xl,
       borderRadius: tokenRadius.lg,
     },
     secondary: {
-      backgroundColor: tokenColors.transparent,
+      backgroundColor: lightColors.transparent,
       borderWidth: 1.5,
-      borderColor: tokenColors.border,
+      borderColor: lightColors.border,
       paddingVertical: tokenSpacing.md,
       paddingHorizontal: tokenSpacing.xl,
       borderRadius: tokenRadius.lg,
@@ -25,7 +25,7 @@ export const ComponentStyles = {
   },
 
   card: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: lightColors.surface,
     borderRadius: tokenRadius.lg,
     ...tokenShadow.card,
     padding: tokenSpacing.lg,
@@ -33,39 +33,39 @@ export const ComponentStyles = {
   },
 
   cardReadOnly: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: lightColors.background,
     borderRadius: tokenRadius.lg,
     padding: tokenSpacing.lg,
     marginBottom: tokenSpacing.md,
   },
 
   input: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: lightColors.surface,
     borderWidth: 1.5,
-    borderColor: tokenColors.border,
+    borderColor: lightColors.border,
     borderRadius: tokenRadius.md,
     paddingVertical: tokenSpacing.md,
     paddingHorizontal: tokenSpacing.lg,
   },
 
   chipSelected: {
-    backgroundColor: tokenColors.cobalt,
+    backgroundColor: lightColors.cobalt,
     borderRadius: tokenRadius.pill,
     paddingVertical: tokenSpacing.sm,
     paddingHorizontal: tokenSpacing.md,
   },
 
   chip: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: lightColors.surface,
     borderWidth: 1.5,
-    borderColor: tokenColors.border,
+    borderColor: lightColors.border,
     borderRadius: tokenRadius.pill,
     paddingVertical: tokenSpacing.sm,
     paddingHorizontal: tokenSpacing.md,
   },
 
   chipLive: {
-    backgroundColor: tokenColors.success,
+    backgroundColor: lightColors.success,
     borderRadius: tokenRadius.pill,
     paddingVertical: tokenSpacing.sm,
     paddingHorizontal: tokenSpacing.md,
@@ -73,19 +73,19 @@ export const ComponentStyles = {
 
   screenBackground: {
     flex: 1,
-    backgroundColor: tokenColors.background,
+    backgroundColor: lightColors.background,
   },
 
   // Legacy aliases
   propertyCard: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: lightColors.surface,
     borderRadius: tokenRadius.lg,
     ...tokenShadow.card,
     padding: tokenSpacing.lg,
     marginBottom: tokenSpacing.sm,
   },
   propertyCardReadOnly: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: lightColors.background,
     borderRadius: tokenRadius.lg,
     ...tokenShadow.card,
     padding: tokenSpacing.lg,

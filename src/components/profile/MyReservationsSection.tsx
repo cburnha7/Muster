@@ -13,8 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
 import { CancelReservationModal } from '../facilities/CancelReservationModal';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
-import { colors, fonts, Spacing } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -49,6 +48,7 @@ interface MyReservationsSectionProps {
 }
 
 export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
+  const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +161,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
     .filter(r => {
       if (r.status !== 'confirmed') return false;
 
-      // Parse the slot date as local (YYYY-MM-DD → year, month, day)
+      // Parse the slot date as local (YYYY-MM-DD Ã¢â€ â€™ year, month, day)
       const parts = r.timeSlot.date.split('T')[0]!.split('-');
       const slotYear = parseInt(parts[0]!, 10);
       const slotMonth = parseInt(parts[1]!, 10) - 1;
@@ -258,8 +258,8 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       {r.timeSlot.court.name}
                     </Text>
                     <Text style={styles.slotDateTime}>
-                      {formatDate(r.timeSlot.date)} ·{' '}
-                      {formatTime(r.timeSlot.startTime)} –{' '}
+                      {formatDate(r.timeSlot.date)} Ã‚Â·{' '}
+                      {formatTime(r.timeSlot.startTime)} Ã¢â‚¬â€œ{' '}
                       {formatTime(r.timeSlot.endTime)}
                     </Text>
                   </View>
@@ -268,7 +268,7 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                       <Ionicons
                         name="time-outline"
                         size={14}
-                        color={tokenColors.warning}
+                        color={colors.warning}
                       />
                       <Text style={styles.pendingText}>Pending</Text>
                     </View>
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   facilityGroup: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
@@ -448,13 +448,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: `${tokenColors.warning}15`,
+    backgroundColor: `${colors.warning}15`,
     borderRadius: 6,
     gap: 4,
   },
   pendingText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: tokenColors.warning,
+    color: colors.warning,
   },
 });

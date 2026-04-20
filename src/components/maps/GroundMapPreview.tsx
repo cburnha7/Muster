@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Facility } from '../../types';
-import { colors, Spacing, TextStyles } from '../../theme';
+import { Spacing, TextStyles, useTheme } from '../../theme';
 
 interface GroundMapPreviewProps {
   ground: Facility;
@@ -11,6 +11,7 @@ interface GroundMapPreviewProps {
 }
 
 export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewProps) {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -43,7 +44,7 @@ export function GroundMapPreview({ ground, onPress, onClose }: GroundMapPreviewP
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.viewButton}>View Details →</Text>
+          <Text style={styles.viewButton}>View Details â†’</Text>
         </View>
       </TouchableOpacity>
     </View>

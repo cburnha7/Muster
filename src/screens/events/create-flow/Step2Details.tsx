@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
-import { colors, fonts, useTheme } from '../../../theme';
+import { fonts, useTheme } from '../../../theme';
 import { formatSportType } from '../../../utils/formatters';
 import { EventType, SkillLevel } from '../../../types';
 
@@ -45,7 +45,7 @@ export function buildEventName(
 }
 
 export function Step2Details(): React.JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
 
   const maxParticipantsLabel =
@@ -55,7 +55,7 @@ export function Step2Details(): React.JSX.Element {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: themeColors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
       <Text style={styles.heading}>How's it set up?</Text>

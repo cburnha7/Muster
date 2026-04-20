@@ -27,7 +27,6 @@ import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { loggingService } from '../../services/LoggingService';
 import { validateEmail, validatePhoneNumber } from '../../utils/validation';
 import { colors, fonts, useTheme } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
 import { SportType } from '../../types';
 
 const SPORT_OPTIONS: SelectOption[] = [
@@ -47,7 +46,7 @@ const SPORT_OPTIONS: SelectOption[] = [
 const GENDER_OPTIONS_UNUSED = null; // Gender now uses toggle buttons
 
 export function EditProfileScreen(): JSX.Element {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
@@ -393,7 +392,7 @@ export function EditProfileScreen(): JSX.Element {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: themeColors.bgScreen }}
+      style={{ flex: 1, backgroundColor: colors.bgScreen }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -507,7 +506,7 @@ export function EditProfileScreen(): JSX.Element {
                 fontFamily: fonts.body,
                 fontSize: 16,
                 fontWeight: '500',
-                color: themeColors.textPrimary,
+                color: colors.textPrimary,
                 marginBottom: 8,
                 marginTop: 8,
               }}
@@ -544,14 +543,14 @@ export function EditProfileScreen(): JSX.Element {
                       <Ionicons
                         name="checkmark-circle"
                         size={16}
-                        color={tokenColors.white}
+                        color={colors.white}
                       />
                     )}
                     <Text
                       style={{
                         fontFamily: fonts.ui,
                         fontSize: 14,
-                        color: selected ? tokenColors.white : colors.ink,
+                        color: selected ? colors.white : colors.ink,
                       }}
                     >
                       {opt.label}
@@ -567,7 +566,7 @@ export function EditProfileScreen(): JSX.Element {
                 fontFamily: fonts.body,
                 fontSize: 16,
                 fontWeight: '500',
-                color: themeColors.textPrimary,
+                color: colors.textPrimary,
                 marginBottom: 8,
                 marginTop: 8,
               }}
@@ -649,7 +648,7 @@ export function EditProfileScreen(): JSX.Element {
                 {addressSuggestions.length > 0 && (
                   <View
                     style={{
-                      backgroundColor: tokenColors.surface,
+                      backgroundColor: colors.surface,
                       borderRadius: 10,
                       borderWidth: 1,
                       borderColor: colors.outlineVariant,
@@ -694,7 +693,7 @@ export function EditProfileScreen(): JSX.Element {
                 fontFamily: fonts.body,
                 fontSize: 16,
                 fontWeight: '500',
-                color: themeColors.textPrimary,
+                color: colors.textPrimary,
                 marginBottom: 8,
                 marginTop: 16,
               }}
@@ -735,7 +734,7 @@ export function EditProfileScreen(): JSX.Element {
         style={{
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: themeColors.bgScreen,
+          backgroundColor: colors.bgScreen,
           borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.outlineVariant,
         }}
@@ -761,10 +760,10 @@ const styles = StyleSheet.create({
   imageSection: {
     alignItems: 'center',
     marginBottom: 24,
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     padding: 24,
     borderRadius: 12,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -790,7 +789,7 @@ const styles = StyleSheet.create({
   profileImagePlaceholderText: {
     fontSize: 64,
     fontWeight: 'bold',
-    color: tokenColors.white,
+    color: colors.white,
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -798,7 +797,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: tokenColors.overlay,
+    backgroundColor: colors.overlay,
     borderRadius: 90,
     justifyContent: 'center',
     alignItems: 'center',
@@ -814,7 +813,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   imageButtonText: {
-    color: tokenColors.white,
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -822,13 +821,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   removeButtonText: {
-    color: tokenColors.white,
+    color: colors.white,
   },
   formSection: {
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
-    shadowColor: tokenColors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,

@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, Spacing, TextStyles, useTheme } from '../../theme';
+import { fonts, Spacing, TextStyles, useTheme } from '../../theme';
 import { FacilitiesStackParamList } from '../../navigation/types';
 import { formatTime12 } from '../../utils/calendarUtils';
 import { API_BASE_URL } from '../../services/api/config';
@@ -55,7 +55,7 @@ interface Rental {
 }
 
 export function MyRentalsScreen() {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const navigation = useNavigation<MyRentalsScreenNavigationProp>();
 
   const [upcomingRentals, setUpcomingRentals] = useState<Rental[]>([]);
@@ -368,10 +368,7 @@ export function MyRentalsScreen() {
   if (loading) {
     return (
       <View
-        style={[
-          styles.loadingContainer,
-          { backgroundColor: themeColors.bgScreen },
-        ]}
+        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
       >
         <ActivityIndicator size="large" color={colors.cobalt} />
         <Text style={styles.loadingText}>Loading your rentals...</Text>
@@ -380,7 +377,7 @@ export function MyRentalsScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

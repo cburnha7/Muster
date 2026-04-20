@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { Booking } from '../../types';
 
 interface CrewEventCardProps {
@@ -45,7 +45,7 @@ function CrewEventCardInner({
   crewColor,
   onPress,
 }: CrewEventCardProps) {
-  const { colors: themeColors } = useTheme();
+  const { colors } = useTheme();
   const event = booking.event;
   if (!event) return null;
 
@@ -61,23 +61,23 @@ function CrewEventCardInner({
       <View style={styles.row}>
         <View style={styles.info}>
           <Text
-            style={[styles.title, { color: themeColors.textPrimary }]}
+            style={[styles.title, { color: colors.textPrimary }]}
             numberOfLines={1}
           >
             {event.title}
           </Text>
-          <Text style={[styles.meta, { color: themeColors.textSecondary }]}>
-            {formatDay(start)} · {formatTime(start)}
+          <Text style={[styles.meta, { color: colors.textSecondary }]}>
+            {formatDay(start)} Â· {formatTime(start)}
           </Text>
           {(event.facility?.name || event.locationName) && (
             <View style={styles.locRow}>
               <Ionicons
                 name="location-outline"
                 size={12}
-                color={themeColors.textSecondary}
+                color={colors.textSecondary}
               />
               <Text
-                style={[styles.locText, { color: themeColors.textSecondary }]}
+                style={[styles.locText, { color: colors.textSecondary }]}
                 numberOfLines={1}
               >
                 {event.facility?.name || event.locationName}

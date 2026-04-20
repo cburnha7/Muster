@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, Alert } from 'react-native';
 import { FormInput } from '../forms/FormInput';
 import { FormButton } from '../forms/FormButton';
 import { Match, RecordMatchResultData } from '../../types';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface MatchResultFormProps {
   match: Match;
@@ -19,6 +18,7 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
   onCancel,
   loading = false,
 }) => {
+  const { colors } = useTheme();
   const [homeScore, setHomeScore] = useState(match.homeScore?.toString() || '');
   const [awayScore, setAwayScore] = useState(match.awayScore?.toString() || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -174,7 +174,7 @@ export const MatchResultForm: React.FC<MatchResultFormProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: tokenColors.white,
+    backgroundColor: colors.white,
     padding: 16,
   },
   matchInfo: {
@@ -184,12 +184,12 @@ const styles = StyleSheet.create({
   matchTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
     marginBottom: 8,
   },
   matchDate: {
     fontSize: 14,
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
   },
   scoresContainer: {
     flexDirection: 'row',
@@ -202,14 +202,14 @@ const styles = StyleSheet.create({
   teamLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   teamName: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.ink,
+    color: colors.ink,
     marginBottom: 12,
   },
   scoreInput: {
@@ -222,10 +222,10 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 16,
     fontWeight: '700',
-    color: tokenColors.inkMuted,
+    color: colors.inkMuted,
   },
   outcomeContainer: {
-    backgroundColor: tokenColors.background,
+    backgroundColor: colors.background,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   outcomeLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: tokenColors.inkSecondary,
+    color: colors.inkSecondary,
     marginBottom: 8,
   },
   outcomeText: {

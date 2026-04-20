@@ -10,8 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 import { User } from '../../types';
 
 interface AddMemberSearchProps {
@@ -23,6 +22,7 @@ export const AddMemberSearch: React.FC<AddMemberSearchProps> = ({
   onAddMember,
   existingMemberIds,
 }) => {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -229,11 +229,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: tokenColors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: tokenColors.border,
+    borderColor: colors.border,
     marginBottom: 8,
   },
   userInfo: {
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   userAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: tokenColors.white,
+    color: colors.white,
   },
   userDetails: {
     flex: 1,

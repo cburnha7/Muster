@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts } from '../../theme';
-import { tokenColors } from '../../theme/tokens';
+import { fonts, useTheme } from '../../theme';
 
 export interface ScheduleBlock {
   startTime: string; // HH:MM
@@ -38,6 +37,7 @@ export function VisualDaySchedule({
   proposedEnd,
   slotIncrementMinutes,
 }: VisualDayScheduleProps) {
+  const { colors } = useTheme();
   if (schedule.length === 0) return null;
 
   const firstMin = toMin(schedule[0]!.startTime);
@@ -123,7 +123,7 @@ export function VisualDaySchedule({
               ]}
             >
               <Text style={styles.proposedLabel}>
-                {fmt12(proposedStart!)} – {fmt12(proposedEnd!)}
+                {fmt12(proposedStart!)} Ã¢â‚¬â€œ {fmt12(proposedEnd!)}
               </Text>
             </View>
           )}
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: tokenColors.border,
+    backgroundColor: colors.border,
     justifyContent: 'center',
     paddingLeft: 12,
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderRadius: 8,
-    backgroundColor: tokenColors.cobaltLight,
+    backgroundColor: colors.cobaltLight,
     justifyContent: 'center',
     paddingLeft: 12,
     borderWidth: 1,

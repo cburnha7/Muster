@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tokenColors, tokenSpacing } from '../../theme/tokens';
+import { tokenSpacing } from '../../theme/tokens';
+import { useTheme } from '../../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -9,14 +10,15 @@ interface Props {
 }
 
 export function BottomActionBar({ children, style }: Props) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View
       style={[
         {
-          backgroundColor: tokenColors.surface,
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: tokenColors.border,
+          borderTopColor: colors.border,
           paddingHorizontal: tokenSpacing.lg,
           paddingTop: tokenSpacing.md,
           paddingBottom: insets.bottom + tokenSpacing.lg,
