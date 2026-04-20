@@ -7,7 +7,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../theme';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -25,7 +24,7 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-/** Default error fallback UI — function component so it can use useTheme() */
+/** Default error fallback UI — uses hardcoded colors to avoid dependency on ThemeProvider */
 function DefaultErrorFallback({
   error,
   errorInfo,
@@ -35,7 +34,17 @@ function DefaultErrorFallback({
   errorInfo: ErrorInfo | null;
   onReset: () => void;
 }) {
-  const { colors } = useTheme();
+  // Use hardcoded light-mode colors so this works even if ThemeProvider is unavailable
+  const colors = {
+    background: '#F7F4EF',
+    ink: '#1C2320',
+    inkSecondary: '#6B7C76',
+    inkMuted: '#94A3B8',
+    error: '#D0362A',
+    errorLight: '#FDECEA',
+    cobalt: '#2040E0',
+    white: '#FFFFFF',
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

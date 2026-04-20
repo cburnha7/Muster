@@ -70,9 +70,9 @@ export default function App() {
   if (!ready) return null;
 
   return (
-    <ErrorBoundary>
-      <SafeAreaProvider>
-        <ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <ErrorBoundary>
           <ReduxProvider>
             <AuthProvider>
               <NotificationProvider>
@@ -83,9 +83,9 @@ export default function App() {
               </NotificationProvider>
             </AuthProvider>
           </ReduxProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </ErrorBoundary>
+        </ErrorBoundary>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 
