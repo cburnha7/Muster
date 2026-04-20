@@ -3,7 +3,6 @@ import { prisma } from '../lib/prisma';
 import { rateCalculator } from '../services/RateCalculator';
 import { availabilityService } from '../services/AvailabilityService';
 import { verificationService } from '../services/VerificationService';
-import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
 import {
   uploadMap,
   uploadPhoto,
@@ -25,7 +24,6 @@ import { sendError, ErrorCode, asyncHandler } from '../utils/errors';
 import * as FacilityCrudService from '../services/FacilityCrudService';
 
 const router = Router();
-const timeSlotGenerator = new TimeSlotGeneratorService();
 
 // ─── Error helper ───────────────────────────────────────────────────────────
 function sendServiceError(res: Response, error: any) {

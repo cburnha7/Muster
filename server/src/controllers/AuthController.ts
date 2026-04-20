@@ -117,9 +117,11 @@ class AuthController {
       }
 
       // Send welcome email (optional, don't block on failure)
-      EmailService.sendWelcomeEmail(user.email, user.firstName).catch(error => {
-        console.error('Failed to send welcome email:', error);
-      });
+      EmailService.sendWelcomeEmail(user.email!, user.firstName).catch(
+        error => {
+          console.error('Failed to send welcome email:', error);
+        }
+      );
 
       // Return success response
       const response: AuthResponse = {
@@ -227,9 +229,11 @@ class AuthController {
       }
 
       // Send welcome email (optional)
-      EmailService.sendWelcomeEmail(user.email, user.firstName).catch(error => {
-        console.error('Failed to send welcome email:', error);
-      });
+      EmailService.sendWelcomeEmail(user.email!, user.firstName).catch(
+        error => {
+          console.error('Failed to send welcome email:', error);
+        }
+      );
 
       // Return success response
       const response: AuthResponse = {
@@ -649,7 +653,7 @@ class AuthController {
       const providerName =
         body.provider.charAt(0).toUpperCase() + body.provider.slice(1);
       EmailService.sendAccountLinkedEmail(
-        updatedUser.email,
+        updatedUser.email!,
         providerName
       ).catch(error => {
         console.error('Failed to send account linked email:', error);
@@ -833,7 +837,7 @@ class AuthController {
         });
 
         // Send password reset email
-        await EmailService.sendPasswordResetEmail(user.email, resetToken);
+        await EmailService.sendPasswordResetEmail(user.email!, resetToken);
       }
 
       // Return success response (same for existing and non-existing emails)

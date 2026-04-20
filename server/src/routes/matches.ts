@@ -487,7 +487,8 @@ router.patch(
       }
 
       // Only the home roster manager can assign a rental in a free league
-      const homeManagerIds = existingMatch.homeTeam.members.map(m => m.userId);
+      const homeManagerIds =
+        existingMatch.homeTeam?.members.map(m => m.userId) ?? [];
       const isHomeManager = userId && homeManagerIds.includes(userId);
       const isCommissioner =
         userId && existingMatch.league.organizerId === userId;
@@ -601,7 +602,7 @@ router.patch(
           seasonId: existingMatch.seasonId,
           type: 'court_cost',
           amount: -courtCost,
-          description: `Court cost for ${match.homeTeam.name} vs ${match.awayTeam.name}`,
+          description: `Court cost for ${match.homeTeam?.name ?? 'Home'} vs ${match.awayTeam?.name ?? 'Away'}`,
           facilityId: facilityId ?? undefined,
           rentalId: rental.id,
           matchId: id as string,
@@ -687,9 +688,10 @@ router.patch(
       }
 
       // Verify the requesting user is the away roster manager (captain)
-      const awayManagerIds = existingMatch.awayTeam.members.map(
-        (m: { userId: string }) => m.userId
-      );
+      const awayManagerIds =
+        existingMatch.awayTeam?.members.map(
+          (m: { userId: string }) => m.userId
+        ) ?? [];
       if (!awayManagerIds.includes(userId)) {
         return res.status(403).json({
           error: 'Only the away roster manager can confirm this game',

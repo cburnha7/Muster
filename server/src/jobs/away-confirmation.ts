@@ -21,7 +21,7 @@ export interface AwayConfirmationMetrics {
 }
 
 export async function processExpiredConfirmations(
-  db: PrismaClient = prisma,
+  db: PrismaClient = prisma
 ): Promise<AwayConfirmationMetrics> {
   const startTime = Date.now();
   const metrics: AwayConfirmationMetrics = {
@@ -79,9 +79,27 @@ export async function processExpiredConfirmations(
           continue;
         }
 
+        if (!match.awayTeam) {
+          metrics.errors.push({
+            matchId: match.id,
+            error: 'Match has no away team',
+          });
+          continue;
+        }
+
+        if (!match.homeTeam) {
+          metrics.errors.push({
+            matchId: match.id,
+            error: 'Match has no home team',
+          });
+          continue;
+        }
+
         let newCount = 0;
 
-        await db.$transaction(async (tx) => {
+        const awayTeamId = match.awayTeam.id;
+
+        await db.$transaction(async tx => {
           // 1. Lapse the match
           await tx.match.update({
             where: { id: match.id },
@@ -91,7 +109,7 @@ export async function processExpiredConfirmations(
           // 2. Calculate running strike count for this roster in this season
           const existingStrikes = await tx.rosterStrike.count({
             where: {
-              rosterId: match.awayTeam.id,
+              rosterId: awayTeamId,
               seasonId,
             },
           });
@@ -100,7 +118,7 @@ export async function processExpiredConfirmations(
           // 3. Record a RosterStrike
           await tx.rosterStrike.create({
             data: {
-              rosterId: match.awayTeam.id,
+              rosterId: awayTeamId,
               seasonId,
               reason: 'failed_away_confirmation',
               matchId: match.id,
@@ -116,16 +134,16 @@ export async function processExpiredConfirmations(
         // 4. Notify commissioner (outside transaction — non-critical)
         console.log(
           `[away-confirmation] Notifying commissioner ${match.league.organizerId}: ` +
-            `${match.awayTeam.name} failed to confirm game ${match.id} in ${match.league.name}`,
+            `${match.awayTeam.name} failed to confirm game ${match.id} in ${match.league.name}`
         );
         metrics.notificationsSent++;
 
         // 5. Notify home roster manager (outside transaction — non-critical)
-        const homeManagerIds = match.homeTeam.members.map((m) => m.userId);
+        const homeManagerIds = match.homeTeam.members.map(m => m.userId);
         if (homeManagerIds.length > 0) {
           console.log(
             `[away-confirmation] Notifying home manager(s) ${homeManagerIds.join(', ')}: ` +
-              `game ${match.id} lapsed — ${match.awayTeam.name} did not confirm`,
+              `game ${match.id} lapsed — ${match.awayTeam.name} did not confirm`
           );
           metrics.notificationsSent++;
         }
@@ -133,17 +151,20 @@ export async function processExpiredConfirmations(
         // 6. If strike threshold reached (3+), notify commissioner with removal option
         if (newCount >= 3) {
           console.log(
-            `[away-confirmation] Roster ${match.awayTeam.name} reached ${newCount} strikes in season ${seasonId}`,
+            `[away-confirmation] Roster ${match.awayTeam.name} reached ${newCount} strikes in season ${seasonId}`
           );
           NotificationService.notifyCommissionerStrikeThreshold(
             match.awayTeam.id,
             seasonId,
-            newCount,
+            newCount
           );
           metrics.notificationsSent++;
         }
       } catch (err: any) {
-        console.error(`[away-confirmation] Failed to process match ${match.id}:`, err);
+        console.error(
+          `[away-confirmation] Failed to process match ${match.id}:`,
+          err
+        );
         metrics.errors.push({ matchId: match.id, error: err.message });
       }
     }

@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { prisma } from './lib/prisma';
+import { requestLogger } from './middleware/requestLogger';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -196,6 +197,9 @@ app.use('/api/rentals', writeLimiter);
 
 // Gzip compress all responses
 app.use(compression());
+
+// Structured request logging with correlation IDs
+app.use(requestLogger);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

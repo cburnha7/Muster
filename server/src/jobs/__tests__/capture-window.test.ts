@@ -20,18 +20,28 @@ const mockPaymentIntentsCreate = jest.fn();
 jest.mock('../../services/stripe-connect', () => ({
   stripe: {
     paymentIntents: {
-      cancel: function() { return mockPaymentIntentsCancel.apply(null, arguments); },
-      create: function() { return mockPaymentIntentsCreate.apply(null, arguments); },
+      cancel: function (...args: any[]) {
+        return mockPaymentIntentsCancel.apply(null, args);
+      },
+      create: function (...args: any[]) {
+        return mockPaymentIntentsCreate.apply(null, args);
+      },
     },
   },
-  calculatePlatformFee: function(amount) { return Math.floor(amount * 0.05); },
+  calculatePlatformFee: function (amount: number) {
+    return Math.floor(amount * 0.05);
+  },
 }));
 
 // ---------------------------------------------------------------------------
 // Idempotency mock
 // ---------------------------------------------------------------------------
 jest.mock('../../utils/idempotency', () => ({
-  generateIdempotencyKey: function(bookingId, role, action) {
+  generateIdempotencyKey: function (
+    bookingId: string,
+    role: string,
+    action: string
+  ) {
     return bookingId + ':' + role + ':' + action;
   },
   IdempotencyAction: {
@@ -49,7 +59,9 @@ jest.mock('../../utils/idempotency', () => ({
 const mockNotifyPaymentHold = jest.fn();
 jest.mock('../../services/NotificationService', () => ({
   NotificationService: {
-    notifyPaymentHold: function() { return mockNotifyPaymentHold.apply(null, arguments); },
+    notifyPaymentHold: function (...args: any[]) {
+      return mockNotifyPaymentHold.apply(null, args);
+    },
   },
 }));
 
@@ -165,17 +177,23 @@ describe('processCaptureWindowRenewals', () => {
           renewal: 'true',
         }),
       }),
-      { idempotencyKey: 'booking-1:home:renew' },
+      { idempotencyKey: 'booking-1:home:renew' }
     );
 
     // Verify participant records were updated
     expect(mockParticipantUpdate).toHaveBeenCalledWith({
       where: { id: 'participant-home' },
-      data: { stripePaymentIntentId: 'pi_new_home', paymentStatus: 'authorized' },
+      data: {
+        stripePaymentIntentId: 'pi_new_home',
+        paymentStatus: 'authorized',
+      },
     });
     expect(mockParticipantUpdate).toHaveBeenCalledWith({
       where: { id: 'participant-away' },
-      data: { stripePaymentIntentId: 'pi_new_away', paymentStatus: 'authorized' },
+      data: {
+        stripePaymentIntentId: 'pi_new_away',
+        paymentStatus: 'authorized',
+      },
     });
   });
 
@@ -198,14 +216,15 @@ describe('processCaptureWindowRenewals', () => {
 
     await processCaptureWindowRenewals(mockPrisma);
 
-    expect(mockPaymentIntentsCreate).toHaveBeenCalledWith(
-      expect.anything(),
-      { idempotencyKey: 'booking-1:host:renew' },
-    );
+    expect(mockPaymentIntentsCreate).toHaveBeenCalledWith(expect.anything(), {
+      idempotencyKey: 'booking-1:host:renew',
+    });
   });
 
   it('skips bookings without a facility Connect account', async () => {
-    const booking = buildBooking({ facility: { stripeConnectAccountId: null } });
+    const booking = buildBooking({
+      facility: { stripeConnectAccountId: null },
+    });
     mockBookingFindMany.mockResolvedValue([booking]);
 
     const metrics = await processCaptureWindowRenewals(mockPrisma);
@@ -233,7 +252,9 @@ describe('processCaptureWindowRenewals', () => {
     });
     mockBookingFindMany.mockResolvedValue([booking]);
     // Simulate Stripe error for already-cancelled intent
-    mockPaymentIntentsCancel.mockRejectedValue({ code: 'payment_intent_unexpected_state' });
+    mockPaymentIntentsCancel.mockRejectedValue({
+      code: 'payment_intent_unexpected_state',
+    });
     mockPaymentIntentsCreate.mockResolvedValue({ id: 'pi_new' });
 
     const metrics = await processCaptureWindowRenewals(mockPrisma);
@@ -276,7 +297,10 @@ describe('processCaptureWindowRenewals', () => {
     });
 
     // Verify notification was sent
-    expect(mockNotifyPaymentHold).toHaveBeenCalledWith('booking-1', 'roster-fail');
+    expect(mockNotifyPaymentHold).toHaveBeenCalledWith(
+      'booking-1',
+      'roster-fail'
+    );
   });
 
   it('stops processing remaining participants after a failure', async () => {

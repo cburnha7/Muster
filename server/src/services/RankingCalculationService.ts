@@ -52,24 +52,46 @@ export class RankingCalculationService {
             select: {
               id: true,
               name: true,
-              imageUrl: true
-            }
-          }
-        }
+              imageUrl: true,
+            },
+          },
+        },
       });
 
       // Sort by points DESC, goal difference DESC, goals scored DESC
       const sorted = memberships.sort((a, b) => {
         if (a.points !== b.points) return b.points - a.points;
-        if (a.goalDifference !== b.goalDifference) return b.goalDifference - a.goalDifference;
+        if (a.goalDifference !== b.goalDifference)
+          return b.goalDifference - a.goalDifference;
         return b.goalsFor - a.goalsFor;
       });
 
       // Get recent form for each team
       const standings: TeamStanding[] = await Promise.all(
         sorted.map(async (membership, index) => {
-          const form = await this.getRecentForm(leagueId, membership.teamId, seasonId);
-          
+          const form = await this.getRecentForm(
+            leagueId,
+            membership.teamId!,
+            seasonId
+          );
+
+          if (!membership.team) {
+            return {
+              rank: index + 1,
+              teamId: membership.teamId!,
+              teamName: 'Unknown',
+              matchesPlayed: membership.matchesPlayed,
+              wins: membership.wins,
+              losses: membership.losses,
+              draws: membership.draws,
+              points: membership.points,
+              goalsFor: membership.goalsFor,
+              goalsAgainst: membership.goalsAgainst,
+              goalDifference: membership.goalDifference,
+              form,
+            };
+          }
+
           return {
             rank: index + 1,
             teamId: membership.team.id,
@@ -83,7 +105,7 @@ export class RankingCalculationService {
             goalsFor: membership.goalsFor,
             goalsAgainst: membership.goalsAgainst,
             goalDifference: membership.goalDifference,
-            form
+            form,
           };
         })
       );
@@ -107,10 +129,7 @@ export class RankingCalculationService {
       const where: any = {
         leagueId,
         status: 'completed',
-        OR: [
-          { homeTeamId: teamId },
-          { awayTeamId: teamId }
-        ]
+        OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
       };
 
       if (seasonId) {
@@ -124,17 +143,18 @@ export class RankingCalculationService {
         select: {
           homeTeamId: true,
           awayTeamId: true,
-          outcome: true
-        }
+          outcome: true,
+        },
       });
 
       return matches.map(match => {
         if (match.outcome === 'draw') return 'D';
-        
+
         const isHome = match.homeTeamId === teamId;
-        const won = (isHome && match.outcome === 'home_win') || 
-                    (!isHome && match.outcome === 'away_win');
-        
+        const won =
+          (isHome && match.outcome === 'home_win') ||
+          (!isHome && match.outcome === 'away_win');
+
         return won ? 'W' : 'L';
       });
     } catch (error) {
@@ -159,7 +179,7 @@ export class RankingCalculationService {
 
       const matches = await prisma.match.findMany({
         where: matchWhere,
-        select: { eventId: true }
+        select: { eventId: true },
       });
 
       const eventIds = matches
@@ -173,7 +193,7 @@ export class RankingCalculationService {
       // Get game participations for these events
       const participations = await prisma.gameParticipation.findMany({
         where: {
-          eventId: { in: eventIds }
+          eventId: { in: eventIds },
         },
         include: {
           user: {
@@ -181,25 +201,28 @@ export class RankingCalculationService {
               id: true,
               firstName: true,
               lastName: true,
-              profileImage: true
-            }
-          }
-        }
+              profileImage: true,
+            },
+          },
+        },
       });
 
       // Aggregate by player
-      const playerStatsMap = new Map<string, {
-        player: any;
-        teamId?: string;
-        teamName?: string;
-        matchesPlayed: number;
-        totalGameScore: number;
-        totalVotes: number;
-      }>();
+      const playerStatsMap = new Map<
+        string,
+        {
+          player: any;
+          teamId?: string;
+          teamName?: string;
+          matchesPlayed: number;
+          totalGameScore: number;
+          totalVotes: number;
+        }
+      >();
 
       for (const p of participations) {
         const playerId = p.userId;
-        
+
         if (!playerStatsMap.has(playerId)) {
           // Get player's team (first team they're a member of)
           const teamMember = await prisma.teamMember.findFirst({
@@ -208,10 +231,10 @@ export class RankingCalculationService {
               team: {
                 select: {
                   id: true,
-                  name: true
-                }
-              }
-            }
+                  name: true,
+                },
+              },
+            },
           });
 
           playerStatsMap.set(playerId, {
@@ -220,7 +243,7 @@ export class RankingCalculationService {
             teamName: teamMember?.team.name,
             matchesPlayed: 0,
             totalGameScore: 0,
-            totalVotes: 0
+            totalVotes: 0,
           });
         }
 
@@ -231,28 +254,33 @@ export class RankingCalculationService {
       }
 
       // Calculate rankings
-      const rankings: PlayerRanking[] = Array.from(playerStatsMap.values()).map(stats => {
-        const averageRating = stats.matchesPlayed > 0 
-          ? stats.totalGameScore / stats.matchesPlayed 
-          : 0;
-        
-        const performanceScore = stats.matchesPlayed > 0
-          ? averageRating * 0.6 + (stats.totalVotes / stats.matchesPlayed) * 0.4
-          : 0;
+      const rankings: PlayerRanking[] = Array.from(playerStatsMap.values()).map(
+        stats => {
+          const averageRating =
+            stats.matchesPlayed > 0
+              ? stats.totalGameScore / stats.matchesPlayed
+              : 0;
 
-        return {
-          rank: 0, // Will be set after sorting
-          playerId: stats.player.id,
-          playerName: `${stats.player.firstName} ${stats.player.lastName}`,
-          playerImageUrl: stats.player.profileImage || undefined,
-          teamId: stats.teamId || '',
-          teamName: stats.teamName || 'No Team',
-          matchesPlayed: stats.matchesPlayed,
-          averageRating,
-          totalVotes: stats.totalVotes,
-          performanceScore
-        };
-      });
+          const performanceScore =
+            stats.matchesPlayed > 0
+              ? averageRating * 0.6 +
+                (stats.totalVotes / stats.matchesPlayed) * 0.4
+              : 0;
+
+          return {
+            rank: 0, // Will be set after sorting
+            playerId: stats.player.id,
+            playerName: `${stats.player.firstName} ${stats.player.lastName}`,
+            playerImageUrl: stats.player.profileImage || undefined,
+            teamId: stats.teamId || '',
+            teamName: stats.teamName || 'No Team',
+            matchesPlayed: stats.matchesPlayed,
+            averageRating,
+            totalVotes: stats.totalVotes,
+            performanceScore,
+          };
+        }
+      );
 
       // Sort by performance score DESC
       rankings.sort((a, b) => b.performanceScore - a.performanceScore);
@@ -288,8 +316,8 @@ export class RankingCalculationService {
         where: { id: matchId },
         select: {
           leagueId: true,
-          seasonId: true
-        }
+          seasonId: true,
+        },
       });
 
       if (!match) {
@@ -298,7 +326,7 @@ export class RankingCalculationService {
 
       // Standings are automatically updated by the match result endpoint
       // This method is here for future enhancements like caching
-      
+
       // Could implement caching here:
       // - Calculate standings
       // - Store in Redis with 5-second TTL

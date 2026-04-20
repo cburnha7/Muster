@@ -1,12 +1,9 @@
 import { prisma } from '../lib/prisma';
 import { ServiceError } from '../utils/ServiceError';
 import { isValidPolicyHours } from './cancellation-window';
-import { TimeSlotGeneratorService } from './TimeSlotGeneratorService';
 import fs from 'fs';
 import path from 'path';
 import { deleteImageFiles } from './ImageUploadService';
-
-const timeSlotGenerator = new TimeSlotGeneratorService();
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
@@ -20,8 +17,8 @@ export interface GetFacilitiesFilters {
 export async function getFacilities(filters: GetFacilitiesFilters) {
   const { sportType, ownerId, page = '1', limit = '10' } = filters;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-  const take = parseInt(limit);
+  const skip = (parseInt(page) - 1) * Math.min(parseInt(limit), 50);
+  const take = Math.min(parseInt(limit), 50);
 
   const where: any = { isActive: true };
   if (sportType) {
@@ -570,7 +567,7 @@ export async function createFacility(
   const facility = await prisma.facility.create({
     data: {
       name,
-      description,
+      description: description ?? '',
       sportTypes,
       amenities,
       imageUrl,
@@ -814,37 +811,8 @@ export async function updateFacility(
     });
   }
 
-  // Regenerate time slots if increment changed
-  if (incrementChanged) {
-    try {
-      const regenerateResult =
-        await timeSlotGenerator.regenerateSlotsAfterIncrementChange(
-          id,
-          slotIncrementMinutes!
-        );
-
-      return {
-        ...facility,
-        slotRegenerationResult: {
-          success: true,
-          ...regenerateResult,
-        },
-      };
-    } catch (regenerateError: any) {
-      console.error('❌ Slot regeneration failed:', regenerateError);
-
-      // Return facility update success but note regeneration failure
-      return {
-        ...facility,
-        slotRegenerationResult: {
-          success: false,
-          error: regenerateError.message,
-          message:
-            'Facility updated but slot regeneration failed. Please regenerate slots manually.',
-        },
-      };
-    }
-  }
+  // Slot increment change is now handled on-the-fly by AvailabilityCalculator
+  // No regeneration needed — availability is calculated from operating hours
 
   return facility;
 }

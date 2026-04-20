@@ -845,6 +845,7 @@ export class ScheduleGeneratorService {
     // Notify all players on both rosters
     if (event.matches.length > 0 && event.facility) {
       const match = event.matches[0];
+      if (!match.homeTeam || !match.awayTeam) return;
       const playerIds = [
         ...match.homeTeam.members.map(m => m.userId),
         ...match.awayTeam.members.map(m => m.userId),

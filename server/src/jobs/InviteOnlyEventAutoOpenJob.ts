@@ -82,7 +82,9 @@ export class InviteOnlyEventAutoOpenJob {
         },
       });
 
-      this.logger.info(`Found ${inviteOnlyEvents.length} invite-only events to check`);
+      this.logger.info(
+        `Found ${inviteOnlyEvents.length} invite-only events to check`
+      );
 
       for (const event of inviteOnlyEvents) {
         metrics.eventsChecked++;
@@ -131,7 +133,12 @@ export class InviteOnlyEventAutoOpenJob {
    */
   private async autoOpenEvent(
     eventId: string,
-    organizer: { id: string; email: string; firstName: string; lastName: string }
+    organizer: {
+      id: string;
+      email: string | null;
+      firstName: string;
+      lastName: string;
+    }
   ): Promise<void> {
     // Update the event to mark it as auto-opened and no longer invite-only
     await prisma.event.update({
@@ -146,7 +153,7 @@ export class InviteOnlyEventAutoOpenJob {
     // Send notification to organizer
     await this.notificationService.sendEventAutoOpenedNotification(
       organizer.id,
-      organizer.email,
+      organizer.email ?? '',
       eventId
     );
   }

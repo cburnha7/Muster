@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
-import { TimeSlotGeneratorService } from '../services/TimeSlotGeneratorService';
 import { authMiddleware } from '../middleware/auth';
+import {
+  getAvailableSlots,
+  getAvailableSlotsForRange,
+} from '../services/AvailabilityCalculator';
 
 const router = Router();
 
@@ -47,59 +50,15 @@ function isSlotInPast(
   return d.getTime() <= effectiveNow.getTime();
 }
 
-// In-memory map to track failed generations
-const failedGenerations = new Map<
-  string,
-  { courtId: string; failedAt: Date; error: string; retryCount: number }
->();
-
 /**
- * Track failed slot generation for retry by cron job
+ * Slot generation removed — availability is now calculated on-the-fly
+ * from FacilityCourtAvailability rules via AvailabilityCalculator.
  */
-async function trackFailedGeneration(
-  courtId: string,
-  error: Error
-): Promise<void> {
-  const existing = failedGenerations.get(courtId);
-  failedGenerations.set(courtId, {
-    courtId,
-    failedAt: new Date(),
-    error: error.message,
-    retryCount: (existing?.retryCount ?? 0) + 1,
-  });
-}
-
-/**
- * Queue async slot generation (non-blocking)
- */
-async function queueSlotGeneration(courtId: string): Promise<void> {
-  // Add small delay to ensure transaction is committed
-  await new Promise(resolve => setTimeout(resolve, 100));
-
-  const generator = new TimeSlotGeneratorService();
-
-  try {
-    const result = await generator.generateRollingWindow(courtId);
-    console.log('✅ Slot generation completed', {
-      courtId,
-      slotsGenerated: result.slotsGenerated,
-      duration: result.duration,
-    });
-  } catch (error: any) {
-    console.error('❌ Slot generation failed', {
-      courtId,
-      error: error.message,
-    });
-
-    // Track failure for retry by cron job
-    await trackFailedGeneration(courtId, error);
-  }
-}
 
 // Get all courts for a facility
 router.get('/facilities/:facilityId/courts', async (req, res) => {
   try {
-    const { facilityId } = req.params;
+    const { facilityId } = req.params as { facilityId: string };
 
     const courts = await prisma.facilityCourt.findMany({
       where: { facilityId },
@@ -116,7 +75,10 @@ router.get('/facilities/:facilityId/courts', async (req, res) => {
 // Get single court by ID
 router.get('/facilities/:facilityId/courts/:courtId', async (req, res) => {
   try {
-    const { facilityId, courtId } = req.params;
+    const { facilityId, courtId } = req.params as {
+      facilityId: string;
+      courtId: string;
+    };
 
     const court = await prisma.facilityCourt.findFirst({
       where: {
@@ -142,7 +104,7 @@ router.post(
   authMiddleware,
   async (req, res) => {
     try {
-      const { facilityId } = req.params;
+      const { facilityId } = req.params as { facilityId: string };
       const {
         name,
         sportType,
@@ -197,11 +159,7 @@ router.post(
         },
       });
 
-      // Queue async slot generation (non-blocking)
-      console.log(`🕐 Queueing slot generation for court: ${court.name}`);
-      queueSlotGeneration(court.id).catch(error => {
-        console.error('Async slot generation queue error:', error);
-      });
+      // Availability is calculated on-the-fly — no slot generation needed
 
       // Return immediately with court data
       res.status(201).json(court);
@@ -218,7 +176,10 @@ router.put(
   authMiddleware,
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
       const {
         name,
         sportType,
@@ -289,7 +250,10 @@ router.delete(
   authMiddleware,
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
 
       // TODO: Add authorization check - only facility owner can delete courts
 
@@ -340,7 +304,10 @@ router.get(
   '/facilities/:facilityId/courts/:courtId/schedule',
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
       const { date, userId } = req.query;
 
       if (!date)
@@ -498,52 +465,44 @@ router.get(
 
 export default router;
 
-// Get time slots for a court
+// Get time slots for a court — calculated on-the-fly from operating hours
 router.get(
   '/facilities/:facilityId/courts/:courtId/slots',
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
-      const { startDate, endDate, status, tzOffset } = req.query;
-      const clientTzOffset = tzOffset
-        ? parseInt(tzOffset as string, 10)
-        : undefined;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
+      const { startDate, endDate, status: statusFilter } = req.query;
 
       // Verify court exists and belongs to facility
       const court = await prisma.facilityCourt.findFirst({
-        where: {
-          id: courtId,
-          facilityId,
-        },
+        where: { id: courtId, facilityId },
       });
 
       if (!court) {
         return res.status(404).json({ error: 'Court not found' });
       }
 
-      const where: any = { courtId };
+      const today = new Date();
+      const start = startDate
+        ? (startDate as string)
+        : today.toISOString().split('T')[0]!;
+      const end = endDate
+        ? (endDate as string)
+        : new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0]!;
 
-      if (startDate) {
-        where.date = { gte: new Date(startDate as string) };
-      }
-      if (endDate) {
-        where.date = { ...where.date, lte: new Date(endDate as string) };
-      }
-      if (status) {
-        where.status = status;
-      }
+      const slots = await getAvailableSlotsForRange(courtId, start, end);
 
-      const timeSlots = await prisma.facilityTimeSlot.findMany({
-        where,
-        orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
-      });
+      // Apply status filter if provided
+      const filtered = statusFilter
+        ? slots.filter(s => s.status === statusFilter)
+        : slots;
 
-      // Filter out slots whose start time is in the past
-      const futureSlots = timeSlots.filter(
-        slot => !isSlotInPast(slot.date, slot.startTime, clientTzOffset)
-      );
-
-      res.json(futureSlots);
+      res.json(filtered);
     } catch (error) {
       console.error('Get time slots error:', error);
       res.status(500).json({ error: 'Failed to fetch time slots' });
@@ -557,7 +516,10 @@ router.post(
   authMiddleware,
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
       const { date, startTime, endTime, blockReason } = req.body;
 
       // TODO: Add authorization check - only facility owner can block slots
@@ -632,7 +594,11 @@ router.delete(
   authMiddleware,
   async (req, res) => {
     try {
-      const { facilityId, courtId, slotId } = req.params;
+      const { facilityId, courtId, slotId } = req.params as {
+        facilityId: string;
+        courtId: string;
+        slotId: string;
+      };
 
       // TODO: Add authorization check - only facility owner can unblock slots
 
@@ -683,7 +649,10 @@ router.get(
   '/facilities/:facilityId/courts/:courtId/availability',
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
       const { date, tzOffset: tzOffsetParam } = req.query;
       const clientTzOffset = tzOffsetParam
         ? parseInt(tzOffsetParam as string, 10)
@@ -769,7 +738,10 @@ router.get(
   '/facilities/:facilityId/courts/:courtId/slots-for-event',
   async (req, res) => {
     try {
-      const { facilityId, courtId } = req.params;
+      const { facilityId, courtId } = req.params as {
+        facilityId: string;
+        courtId: string;
+      };
       const {
         userId,
         startDate,

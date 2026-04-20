@@ -614,7 +614,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 // Remove a member from a roster
 router.delete('/:id/members/:userId', authMiddleware, async (req, res) => {
   try {
-    const { id, userId } = req.params;
+    const { id, userId } = req.params as { id: string; userId: string };
 
     const membership = await prisma.teamMember.findUnique({
       where: { userId_teamId: { userId, teamId: id } },

@@ -41,32 +41,15 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Load both old fonts (backward compat) and new design system fonts
-        const jakarta = require('@expo-google-fonts/plus-jakarta-sans');
-        const inter = require('@expo-google-fonts/inter');
         const fraunces = require('@expo-google-fonts/fraunces');
-        const dmSans = require('@expo-google-fonts/dm-sans');
         const nunito = require('@expo-google-fonts/nunito');
         await Promise.race([
           Font.loadAsync({
-            // Legacy fonts (backward compat during migration)
-            PlusJakartaSans_400Regular: jakarta.PlusJakartaSans_400Regular,
-            PlusJakartaSans_500Medium: jakarta.PlusJakartaSans_500Medium,
-            PlusJakartaSans_600SemiBold: jakarta.PlusJakartaSans_600SemiBold,
-            PlusJakartaSans_700Bold: jakarta.PlusJakartaSans_700Bold,
-            PlusJakartaSans_800ExtraBold: jakarta.PlusJakartaSans_800ExtraBold,
-            Inter_400Regular: inter.Inter_400Regular,
-            Inter_500Medium: inter.Inter_500Medium,
-            Inter_600SemiBold: inter.Inter_600SemiBold,
-            Inter_700Bold: inter.Inter_700Bold,
-            DMSans_400Regular: dmSans.DMSans_400Regular,
-            DMSans_500Medium: dmSans.DMSans_500Medium,
-            DMSans_600SemiBold: dmSans.DMSans_600SemiBold,
-            DMSans_700Bold: dmSans.DMSans_700Bold,
-            // Design system fonts
+            // Fraunces — headings and display text
             Fraunces_700Bold: fraunces.Fraunces_700Bold,
             Fraunces_700Bold_Italic: fraunces.Fraunces_700Bold_Italic,
             Fraunces_900Black: fraunces.Fraunces_900Black,
+            // Nunito — UI, body, buttons, labels
             Nunito_400Regular: nunito.Nunito_400Regular,
             Nunito_500Medium: nunito.Nunito_500Medium,
             Nunito_600SemiBold: nunito.Nunito_600SemiBold,

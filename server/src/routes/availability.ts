@@ -7,7 +7,7 @@ const router = Router();
 // GET /api/availability/:userId — get all availability blocks for a user
 router.get('/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
     const blocks = await prisma.availabilityBlock.findMany({
       where: { userId },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
@@ -26,7 +26,7 @@ router.get('/:userId', async (req, res) => {
 // POST /api/availability/:userId/batch — import a batch of blocks
 router.post('/:userId/batch', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
     const { batchName, events } = req.body;
 
     if (!Array.isArray(events) || events.length === 0) {
@@ -69,7 +69,10 @@ router.post('/:userId/batch', authMiddleware, async (req, res) => {
 // DELETE /api/availability/:userId/:blockId — delete a single block
 router.delete('/:userId/:blockId', authMiddleware, async (req, res) => {
   try {
-    const { userId, blockId } = req.params;
+    const { userId, blockId } = req.params as {
+      userId: string;
+      blockId: string;
+    };
     await prisma.availabilityBlock.deleteMany({
       where: { id: blockId, userId },
     });
@@ -83,7 +86,10 @@ router.delete('/:userId/:blockId', authMiddleware, async (req, res) => {
 // DELETE /api/availability/:userId/batch/:batchId — delete an entire batch
 router.delete('/:userId/batch/:batchId', authMiddleware, async (req, res) => {
   try {
-    const { userId, batchId } = req.params;
+    const { userId, batchId } = req.params as {
+      userId: string;
+      batchId: string;
+    };
     const result = await prisma.availabilityBlock.deleteMany({
       where: { userId, batchId },
     });

@@ -1,6 +1,6 @@
 /**
  * Authentication Type Definitions
- * 
+ *
  * This file contains all TypeScript interfaces and types used throughout
  * the authentication system for request/response handling and data transfer.
  */
@@ -132,8 +132,8 @@ export interface ResetPasswordRequest {
  */
 export interface TokenPayload {
   userId: string;
-  iat: number;  // Issued at timestamp
-  exp: number;  // Expiration timestamp
+  iat: number; // Issued at timestamp
+  exp: number; // Expiration timestamp
 }
 
 // ============================================================================
@@ -203,8 +203,8 @@ export function toUserResponse(user: User): UserResponse {
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
-    email: user.email,
-    username: user.username,
+    email: user.email ?? '',
+    username: user.username ?? '',
     role: user.role || 'user',
     membershipTier: user.membershipTier || 'standard',
     trialTier: user.trialTier || null,

@@ -44,7 +44,7 @@ export async function resolveEntity(
   prisma: PrismaClient,
   entityType: EntityType,
   entityId: string,
-  userId: string,
+  userId: string
 ): Promise<{ entity: EntityRecord | null; error: string | null }> {
   switch (entityType) {
     case 'roster': {
@@ -57,48 +57,76 @@ export async function resolveEntity(
         },
       });
       if (!membership) {
-        return { entity: null, error: 'You must be a manager or captain of this roster' };
+        return {
+          entity: null,
+          error: 'You must be a manager or captain of this roster',
+        };
       }
       const team = await prisma.team.findUnique({ where: { id: entityId } });
       if (!team) {
         return { entity: null, error: 'Roster not found' };
       }
       return {
-        entity: { id: team.id, name: team.name, connectAccountId: team.stripeAccountId },
+        entity: {
+          id: team.id,
+          name: team.name,
+          connectAccountId: team.stripeAccountId,
+        },
         error: null,
       };
     }
 
     case 'facility': {
-      const facility = await prisma.facility.findUnique({ where: { id: entityId } });
+      const facility = await prisma.facility.findUnique({
+        where: { id: entityId },
+      });
       if (!facility) {
         return { entity: null, error: 'Facility not found' };
       }
       if (facility.ownerId !== userId) {
-        return { entity: null, error: 'You must be the owner of this facility' };
+        return {
+          entity: null,
+          error: 'You must be the owner of this facility',
+        };
       }
       return {
-        entity: { id: facility.id, name: facility.name, connectAccountId: facility.stripeConnectAccountId },
+        entity: {
+          id: facility.id,
+          name: facility.name,
+          connectAccountId: facility.stripeConnectAccountId,
+        },
         error: null,
       };
     }
 
     case 'league': {
-      const league = await prisma.league.findUnique({ where: { id: entityId } });
+      const league = await prisma.league.findUnique({
+        where: { id: entityId },
+      });
       if (!league) {
         return { entity: null, error: 'League not found' };
       }
       if (league.organizerId !== userId) {
-        return { entity: null, error: 'You must be the organiser of this league' };
+        return {
+          entity: null,
+          error: 'You must be the organiser of this league',
+        };
       }
       return {
-        entity: { id: league.id, name: league.name, connectAccountId: league.stripeConnectAccountId },
+        entity: {
+          id: league.id,
+          name: league.name,
+          connectAccountId: league.stripeConnectAccountId,
+        },
         error: null,
       };
     }
 
     default:
-      return { entity: null, error: 'Invalid entity type. Must be roster, facility, or league' };
+      return {
+        entity: null,
+        error: 'Invalid entity type. Must be roster, facility, or league',
+      };
   }
 }
 
@@ -110,17 +138,26 @@ export async function storeConnectAccountId(
   prisma: PrismaClient,
   entityType: EntityType,
   entityId: string,
-  accountId: string,
+  accountId: string
 ): Promise<void> {
   switch (entityType) {
     case 'roster':
-      await prisma.team.update({ where: { id: entityId }, data: { stripeAccountId: accountId } });
+      await prisma.team.update({
+        where: { id: entityId },
+        data: { stripeAccountId: accountId },
+      });
       break;
     case 'facility':
-      await prisma.facility.update({ where: { id: entityId }, data: { stripeConnectAccountId: accountId } });
+      await prisma.facility.update({
+        where: { id: entityId },
+        data: { stripeConnectAccountId: accountId },
+      });
       break;
     case 'league':
-      await prisma.league.update({ where: { id: entityId }, data: { stripeConnectAccountId: accountId } });
+      await prisma.league.update({
+        where: { id: entityId },
+        data: { stripeConnectAccountId: accountId },
+      });
       break;
   }
 }
@@ -135,9 +172,14 @@ export async function startOnboarding(
   entityType: EntityType,
   entityId: string,
   refreshUrl: string,
-  returnUrl: string,
+  returnUrl: string
 ): Promise<{ url?: string; error?: string; status?: number }> {
-  const { entity, error } = await resolveEntity(prisma, entityType, entityId, userId);
+  const { entity, error } = await resolveEntity(
+    prisma,
+    entityType,
+    entityId,
+    userId
+  );
   if (error || !entity) {
     return { error: error!, status: 403 };
   }
@@ -149,12 +191,16 @@ export async function startOnboarding(
     if (!user) {
       return { error: 'User not found', status: 404 };
     }
-    const account = await createConnectAccount(user.email);
+    const account = await createConnectAccount(user.email ?? undefined);
     connectAccountId = account.id;
     await storeConnectAccountId(prisma, entityType, entityId, connectAccountId);
   }
 
-  const accountLink = await createConnectAccountLink(connectAccountId, refreshUrl, returnUrl);
+  const accountLink = await createConnectAccountLink(
+    connectAccountId,
+    refreshUrl,
+    returnUrl
+  );
   return { url: accountLink.url };
 }
 
@@ -166,9 +212,14 @@ export async function checkOnboardingStatus(
   prisma: PrismaClient,
   userId: string,
   entityType: EntityType,
-  entityId: string,
+  entityId: string
 ): Promise<{ data?: any; error?: string; status?: number }> {
-  const { entity, error } = await resolveEntity(prisma, entityType, entityId, userId);
+  const { entity, error } = await resolveEntity(
+    prisma,
+    entityType,
+    entityId,
+    userId
+  );
   if (error || !entity) {
     return { error: error!, status: 403 };
   }
@@ -187,7 +238,7 @@ export async function checkOnboardingStatus(
 
 export async function listConnectAccounts(
   prisma: PrismaClient,
-  userId: string,
+  userId: string
 ): Promise<ConnectAccountEntry[]> {
   const rosterMemberships = await prisma.teamMember.findMany({
     where: { userId, role: { in: ['manager', 'captain'] }, status: 'active' },
@@ -208,7 +259,11 @@ export async function listConnectAccounts(
     const accountId = m.team.stripeAccountId;
     let status: ConnectAccountStatus | null = null;
     if (accountId) {
-      try { status = await getConnectAccountStatus(accountId); } catch { /* noop */ }
+      try {
+        status = await getConnectAccountStatus(accountId);
+      } catch {
+        /* noop */
+      }
     }
     accounts.push({
       entityType: 'roster',
@@ -223,7 +278,11 @@ export async function listConnectAccounts(
     const accountId = f.stripeConnectAccountId;
     let status: ConnectAccountStatus | null = null;
     if (accountId) {
-      try { status = await getConnectAccountStatus(accountId); } catch { /* noop */ }
+      try {
+        status = await getConnectAccountStatus(accountId);
+      } catch {
+        /* noop */
+      }
     }
     accounts.push({
       entityType: 'facility',
@@ -238,7 +297,11 @@ export async function listConnectAccounts(
     const accountId = l.stripeConnectAccountId;
     let status: ConnectAccountStatus | null = null;
     if (accountId) {
-      try { status = await getConnectAccountStatus(accountId); } catch { /* noop */ }
+      try {
+        status = await getConnectAccountStatus(accountId);
+      } catch {
+        /* noop */
+      }
     }
     accounts.push({
       entityType: 'league',

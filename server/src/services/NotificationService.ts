@@ -19,38 +19,38 @@ export class NotificationService {
         include: {
           league: {
             select: {
-              name: true
-            }
+              name: true,
+            },
           },
           homeTeam: {
             select: {
               name: true,
               members: {
                 select: {
-                  userId: true
-                }
-              }
-            }
+                  userId: true,
+                },
+              },
+            },
           },
           awayTeam: {
             select: {
               name: true,
               members: {
                 select: {
-                  userId: true
-                }
-              }
-            }
-          }
-        }
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
       });
 
-      if (!match) return;
+      if (!match || !match.homeTeam || !match.awayTeam) return;
 
       // Get user IDs from both teams
       const userIds = [
         ...match.homeTeam.members.map(m => m.userId),
-        ...match.awayTeam.members.map(m => m.userId)
+        ...match.awayTeam.members.map(m => m.userId),
       ];
 
       const notification: NotificationTemplate = {
@@ -59,13 +59,17 @@ export class NotificationService {
         data: {
           type: 'match_scheduled',
           matchId: match.id,
-          leagueId: match.leagueId
-        }
+          leagueId: match.leagueId,
+        },
       };
 
       // TODO: Implement actual notification sending
       // For now, just log
-      console.log('Sending match scheduled notification to', userIds.length, 'users');
+      console.log(
+        'Sending match scheduled notification to',
+        userIds.length,
+        'users'
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending match scheduled notification:', error);
@@ -82,38 +86,45 @@ export class NotificationService {
         include: {
           league: {
             select: {
-              name: true
-            }
+              name: true,
+            },
           },
           homeTeam: {
             select: {
               name: true,
               members: {
                 select: {
-                  userId: true
-                }
-              }
-            }
+                  userId: true,
+                },
+              },
+            },
           },
           awayTeam: {
             select: {
               name: true,
               members: {
                 select: {
-                  userId: true
-                }
-              }
-            }
-          }
-        }
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
       });
 
-      if (!match || !match.homeScore === undefined || !match.awayScore === undefined) return;
+      if (
+        !match ||
+        !match.homeTeam ||
+        !match.awayTeam ||
+        match.homeScore === undefined ||
+        match.awayScore === undefined
+      )
+        return;
 
       // Get user IDs from both teams
       const userIds = [
         ...match.homeTeam.members.map(m => m.userId),
-        ...match.awayTeam.members.map(m => m.userId)
+        ...match.awayTeam.members.map(m => m.userId),
       ];
 
       const notification: NotificationTemplate = {
@@ -122,12 +133,16 @@ export class NotificationService {
         data: {
           type: 'match_result',
           matchId: match.id,
-          leagueId: match.leagueId
-        }
+          leagueId: match.leagueId,
+        },
       };
 
       // TODO: Implement actual notification sending
-      console.log('Sending match result notification to', userIds.length, 'users');
+      console.log(
+        'Sending match result notification to',
+        userIds.length,
+        'users'
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending match result notification:', error);
@@ -149,21 +164,21 @@ export class NotificationService {
                 select: {
                   members: {
                     select: {
-                      userId: true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      userId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!league) return;
 
       // Get all user IDs from all teams
-      const userIds = league.memberships.flatMap(m => 
-        m.team.members.map(member => member.userId)
+      const userIds = league.memberships.flatMap(m =>
+        m.team ? m.team.members.map(member => member.userId) : []
       );
 
       // Remove duplicates
@@ -174,12 +189,16 @@ export class NotificationService {
         body: `${league.name} has updated their rules`,
         data: {
           type: 'rules_updated',
-          leagueId: league.id
-        }
+          leagueId: league.id,
+        },
       };
 
       // TODO: Implement actual notification sending
-      console.log('Sending rules updated notification to', uniqueUserIds.length, 'users');
+      console.log(
+        'Sending rules updated notification to',
+        uniqueUserIds.length,
+        'users'
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending rules updated notification:', error);
@@ -201,21 +220,21 @@ export class NotificationService {
                 select: {
                   members: {
                     select: {
-                      userId: true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      userId: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!league) return;
 
       // Get all user IDs from all teams
-      const userIds = league.memberships.flatMap(m => 
-        m.team.members.map(member => member.userId)
+      const userIds = league.memberships.flatMap(m =>
+        m.team ? m.team.members.map(member => member.userId) : []
       );
 
       // Remove duplicates
@@ -226,12 +245,16 @@ export class NotificationService {
         body: `${league.name} is now a certified league`,
         data: {
           type: 'certification_achieved',
-          leagueId: league.id
-        }
+          leagueId: league.id,
+        },
       };
 
       // TODO: Implement actual notification sending
-      console.log('Sending certification notification to', uniqueUserIds.length, 'users');
+      console.log(
+        'Sending certification notification to',
+        uniqueUserIds.length,
+        'users'
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending certification notification:', error);
@@ -241,18 +264,21 @@ export class NotificationService {
   /**
    * Notify league owner when a roster requests to join a public Team League
    */
-  static async notifyJoinRequest(leagueId: string, rosterId: string): Promise<void> {
+  static async notifyJoinRequest(
+    leagueId: string,
+    rosterId: string
+  ): Promise<void> {
     try {
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
-        select: { name: true, organizerId: true }
+        select: { name: true, organizerId: true },
       });
 
       if (!league) return;
 
       const roster = await prisma.team.findUnique({
         where: { id: rosterId },
-        select: { name: true }
+        select: { name: true },
       });
 
       const notification: NotificationTemplate = {
@@ -261,11 +287,14 @@ export class NotificationService {
         data: {
           type: 'join_request',
           leagueId,
-          rosterId
-        }
+          rosterId,
+        },
       };
 
-      console.log('Sending join request notification to league owner', league.organizerId);
+      console.log(
+        'Sending join request notification to league owner',
+        league.organizerId
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending join request notification:', error);
@@ -283,7 +312,7 @@ export class NotificationService {
     try {
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
-        select: { name: true }
+        select: { name: true },
       });
 
       if (!league) return;
@@ -291,14 +320,14 @@ export class NotificationService {
       // Find the roster captain (owner)
       const captain = await prisma.teamMember.findFirst({
         where: { teamId: rosterId, role: 'captain', status: 'active' },
-        select: { userId: true }
+        select: { userId: true },
       });
 
       if (!captain) return;
 
       const roster = await prisma.team.findUnique({
         where: { id: rosterId },
-        select: { name: true }
+        select: { name: true },
       });
 
       const approved = action === 'approve';
@@ -310,11 +339,14 @@ export class NotificationService {
         data: {
           type: approved ? 'join_request_approved' : 'join_request_declined',
           leagueId,
-          rosterId
-        }
+          rosterId,
+        },
       };
 
-      console.log('Sending join request decision notification to roster owner', captain.userId);
+      console.log(
+        'Sending join request decision notification to roster owner',
+        captain.userId
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending join request decision notification:', error);
@@ -324,11 +356,14 @@ export class NotificationService {
   /**
    * Notify roster owner about an invitation to a private Team League
    */
-  static async notifyRosterInvitation(leagueId: string, rosterId: string): Promise<void> {
+  static async notifyRosterInvitation(
+    leagueId: string,
+    rosterId: string
+  ): Promise<void> {
     try {
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
-        select: { name: true }
+        select: { name: true },
       });
 
       if (!league) return;
@@ -336,7 +371,7 @@ export class NotificationService {
       // Find the roster captain (owner)
       const captain = await prisma.teamMember.findFirst({
         where: { teamId: rosterId, role: 'captain', status: 'active' },
-        select: { userId: true }
+        select: { userId: true },
       });
 
       if (!captain) return;
@@ -347,11 +382,14 @@ export class NotificationService {
         data: {
           type: 'league_invitation',
           leagueId,
-          rosterId
-        }
+          rosterId,
+        },
       };
 
-      console.log('Sending league invitation notification to roster owner', captain.userId);
+      console.log(
+        'Sending league invitation notification to roster owner',
+        captain.userId
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending roster invitation notification:', error);
@@ -369,7 +407,7 @@ export class NotificationService {
     try {
       const league = await prisma.league.findUnique({
         where: { id: leagueId },
-        select: { name: true }
+        select: { name: true },
       });
 
       if (!league) return;
@@ -378,9 +416,9 @@ export class NotificationService {
       const members = await prisma.teamMember.findMany({
         where: {
           teamId: { in: rosterIds },
-          status: 'active'
+          status: 'active',
         },
-        select: { userId: true }
+        select: { userId: true },
       });
 
       const uniqueUserIds = [...new Set(members.map(m => m.userId))];
@@ -390,14 +428,21 @@ export class NotificationService {
         body: `Your roster has been assigned to "${eventTitle}" in ${league.name}`,
         data: {
           type: 'event_roster_assignment',
-          leagueId
-        }
+          leagueId,
+        },
       };
 
-      console.log('Sending event assignment notification to', uniqueUserIds.length, 'players');
+      console.log(
+        'Sending event assignment notification to',
+        uniqueUserIds.length,
+        'players'
+      );
       console.log('Notification:', notification);
     } catch (error) {
-      console.error('Error sending event roster assignment notification:', error);
+      console.error(
+        'Error sending event roster assignment notification:',
+        error
+      );
     }
   }
 
@@ -414,7 +459,7 @@ export class NotificationService {
             select: {
               name: true,
               sportType: true,
-            }
+            },
           },
           homeTeam: {
             select: {
@@ -422,26 +467,28 @@ export class NotificationService {
               name: true,
               members: {
                 where: { role: 'captain', status: 'active' },
-                select: { userId: true }
-              }
-            }
+                select: { userId: true },
+              },
+            },
           },
           awayTeam: {
             select: {
               id: true,
               name: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
-      if (!match) return;
+      if (!match || !match.homeTeam || !match.awayTeam) return;
 
       // Find the home roster manager (captain)
       const homeManagerUserIds = match.homeTeam.members.map(m => m.userId);
 
       if (homeManagerUserIds.length === 0) {
-        console.warn(`No manager found for home roster ${match.homeTeam.id} — cannot send facility booking notification`);
+        console.warn(
+          `No manager found for home roster ${match.homeTeam.id} — cannot send facility booking notification`
+        );
         return;
       }
 
@@ -460,13 +507,19 @@ export class NotificationService {
           leagueId: match.leagueId,
           homeTeamId: match.homeTeam.id,
           awayTeamId: match.awayTeam.id,
-        }
+        },
       };
 
-      console.log('Sending facility booking notification to home roster manager(s)', homeManagerUserIds);
+      console.log(
+        'Sending facility booking notification to home roster manager(s)',
+        homeManagerUserIds
+      );
       console.log('Notification:', notification);
     } catch (error) {
-      console.error('Error sending home manager facility booking notification:', error);
+      console.error(
+        'Error sending home manager facility booking notification:',
+        error
+      );
     }
   }
 
@@ -493,13 +546,13 @@ export class NotificationService {
           league: {
             select: {
               name: true,
-            }
+            },
           },
           homeTeam: {
             select: {
               id: true,
               name: true,
-            }
+            },
           },
           awayTeam: {
             select: {
@@ -507,19 +560,21 @@ export class NotificationService {
               name: true,
               members: {
                 where: { role: 'captain', status: 'active' },
-                select: { userId: true }
-              }
-            }
-          }
-        }
+                select: { userId: true },
+              },
+            },
+          },
+        },
       });
 
-      if (!match) return;
+      if (!match || !match.homeTeam || !match.awayTeam) return;
 
       const awayManagerUserIds = match.awayTeam.members.map(m => m.userId);
 
       if (awayManagerUserIds.length === 0) {
-        console.warn(`No manager found for away roster ${match.awayTeam.id} — cannot send confirmation request`);
+        console.warn(
+          `No manager found for away roster ${match.awayTeam.id} — cannot send confirmation request`
+        );
         return;
       }
 
@@ -547,13 +602,19 @@ export class NotificationService {
           startTime: venueDetails.startTime,
           endTime: venueDetails.endTime,
           confirmationDeadline: confirmationDeadline.toISOString(),
-        }
+        },
       };
 
-      console.log('Sending away confirmation request to roster manager(s)', awayManagerUserIds);
+      console.log(
+        'Sending away confirmation request to roster manager(s)',
+        awayManagerUserIds
+      );
       console.log('Notification:', notification);
     } catch (error) {
-      console.error('Error sending away manager confirmation notification:', error);
+      console.error(
+        'Error sending away manager confirmation notification:',
+        error
+      );
     }
   }
 
@@ -607,14 +668,13 @@ export class NotificationService {
     }
   }
 
-
   /**
    * Notify the roster manager when their roster's balance status transitions to 'low'.
    * Sent as a push notification to prompt the manager to top up their account.
    */
   static async notifyLowBalance(
     rosterId: string,
-    rosterName: string,
+    rosterName: string
   ): Promise<void> {
     try {
       const captain = await prisma.teamMember.findFirst({
@@ -623,7 +683,9 @@ export class NotificationService {
       });
 
       if (!captain) {
-        console.warn(`No manager found for roster ${rosterId} — cannot send low balance notification`);
+        console.warn(
+          `No manager found for roster ${rosterId} — cannot send low balance notification`
+        );
         return;
       }
 
@@ -637,9 +699,14 @@ export class NotificationService {
         },
       };
 
-      await NotificationService.queueNotification([captain.userId], notification);
+      await NotificationService.queueNotification(
+        [captain.userId],
+        notification
+      );
 
-      console.log(`Sending low balance notification for roster ${rosterName} to manager ${captain.userId}`);
+      console.log(
+        `Sending low balance notification for roster ${rosterName} to manager ${captain.userId}`
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending low balance notification:', error);
@@ -653,7 +720,7 @@ export class NotificationService {
   static async notifyBlockedBalance(
     rosterId: string,
     rosterName: string,
-    topUpAmount: number,
+    topUpAmount: number
   ): Promise<void> {
     try {
       const captain = await prisma.teamMember.findFirst({
@@ -662,7 +729,9 @@ export class NotificationService {
       });
 
       if (!captain) {
-        console.warn(`No manager found for roster ${rosterId} — cannot send blocked balance notification`);
+        console.warn(
+          `No manager found for roster ${rosterId} — cannot send blocked balance notification`
+        );
         return;
       }
 
@@ -679,9 +748,14 @@ export class NotificationService {
         },
       };
 
-      await NotificationService.queueNotification([captain.userId], notification);
+      await NotificationService.queueNotification(
+        [captain.userId],
+        notification
+      );
 
-      console.log(`Sending blocked balance notification for roster ${rosterName} to manager ${captain.userId}`);
+      console.log(
+        `Sending blocked balance notification for roster ${rosterName} to manager ${captain.userId}`
+      );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending blocked balance notification:', error);
@@ -695,7 +769,7 @@ export class NotificationService {
    */
   static async notifyPaymentHold(
     bookingId: string,
-    failedParticipantRosterId: string,
+    failedParticipantRosterId: string
   ): Promise<void> {
     try {
       const booking = await prisma.booking.findUnique({
@@ -713,7 +787,7 @@ export class NotificationService {
       if (!booking) return;
 
       // Collect all roster manager user IDs from participants
-      const rosterIds = [...new Set(booking.participants.map((p) => p.rosterId))];
+      const rosterIds = [...new Set(booking.participants.map(p => p.rosterId))];
       const captains = await prisma.teamMember.findMany({
         where: {
           teamId: { in: rosterIds },
@@ -723,7 +797,7 @@ export class NotificationService {
         select: { userId: true, teamId: true },
       });
 
-      const managerUserIds = captains.map((c) => c.userId);
+      const managerUserIds = captains.map(c => c.userId);
 
       // Find the commissioner if this booking is linked to a league match
       let commissionerUserId: string | null = null;
@@ -754,22 +828,23 @@ export class NotificationService {
         },
       };
 
-      const allRecipients = [...new Set([
-        ...managerUserIds,
-        ...(commissionerUserId ? [commissionerUserId] : []),
-      ])];
+      const allRecipients = [
+        ...new Set([
+          ...managerUserIds,
+          ...(commissionerUserId ? [commissionerUserId] : []),
+        ]),
+      ];
 
       await NotificationService.queueNotification(allRecipients, notification);
 
       console.log(
-        `[payment-hold] Notifying ${allRecipients.length} user(s) about booking ${bookingId} payment hold`,
+        `[payment-hold] Notifying ${allRecipients.length} user(s) about booking ${bookingId} payment hold`
       );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending payment hold notification:', error);
     }
   }
-
 
   /**
    * Notify a guardian that their dependent has turned 18 and is eligible
@@ -779,7 +854,7 @@ export class NotificationService {
   static async notifyDependentTurned18(
     guardianId: string,
     dependentId: string,
-    dependentName: string,
+    dependentName: string
   ): Promise<void> {
     try {
       const notification: NotificationTemplate = {
@@ -794,7 +869,7 @@ export class NotificationService {
       await NotificationService.queueNotification([guardianId], notification);
 
       console.log(
-        `[age-check] Sending transfer notification for dependent ${dependentId} to guardian ${guardianId}`,
+        `[age-check] Sending transfer notification for dependent ${dependentId} to guardian ${guardianId}`
       );
       console.log('Notification:', notification);
     } catch (error) {
@@ -835,9 +910,11 @@ export class NotificationService {
       // TODO: Implement actual notification sending (push notification, email, etc.)
       console.log('Sending event auto-opened notification to user', userId);
       console.log('Notification:', notification);
-      
+
       // Log for monitoring
-      console.log(`Event ${eventId} auto-opened: ${event.currentParticipants}/${event.minimumPlayerCount} players`);
+      console.log(
+        `Event ${eventId} auto-opened: ${event.currentParticipants}/${event.minimumPlayerCount} players`
+      );
     } catch (error) {
       console.error('Error sending event auto-opened notification:', error);
     }
@@ -849,7 +926,7 @@ export class NotificationService {
   static async notifyTrialExpiring7d(
     userId: string,
     trialTier: string,
-    expiryDate: Date,
+    expiryDate: Date
   ): Promise<void> {
     try {
       const notification: NotificationTemplate = {
@@ -865,7 +942,7 @@ export class NotificationService {
       await NotificationService.queueNotification([userId], notification);
 
       console.log(
-        `[trial-expiry] Sending 7-day expiry notification for user ${userId} (tier: ${trialTier}, expires: ${expiryDate.toISOString()})`,
+        `[trial-expiry] Sending 7-day expiry notification for user ${userId} (tier: ${trialTier}, expires: ${expiryDate.toISOString()})`
       );
       console.log('Notification:', notification);
     } catch (error) {
@@ -879,7 +956,7 @@ export class NotificationService {
   static async notifyTrialExpiring1d(
     userId: string,
     trialTier: string,
-    expiryDate: Date,
+    expiryDate: Date
   ): Promise<void> {
     try {
       const notification: NotificationTemplate = {
@@ -895,14 +972,13 @@ export class NotificationService {
       await NotificationService.queueNotification([userId], notification);
 
       console.log(
-        `[trial-expiry] Sending 1-day expiry notification for user ${userId} (tier: ${trialTier}, expires: ${expiryDate.toISOString()})`,
+        `[trial-expiry] Sending 1-day expiry notification for user ${userId} (tier: ${trialTier}, expires: ${expiryDate.toISOString()})`
       );
       console.log('Notification:', notification);
     } catch (error) {
       console.error('Error sending trial expiring 1d notification:', error);
     }
   }
-
 
   /**
    * Send notification when an insurance document is approaching expiry (30-day warning).
@@ -914,7 +990,7 @@ export class NotificationService {
     date: string,
     startTime: string,
     rentalId: string,
-    facilityId: string,
+    facilityId: string
   ): Promise<void> {
     try {
       const notification: NotificationTemplate = {
@@ -930,7 +1006,7 @@ export class NotificationService {
       await NotificationService.queueNotification([renterId], notification);
 
       console.log(
-        `[reservation-approval] Approved notification sent to user ${renterId} for rental ${rentalId}`,
+        `[reservation-approval] Approved notification sent to user ${renterId} for rental ${rentalId}`
       );
     } catch (error) {
       console.error('Error sending reservation approved notification:', error);
@@ -944,7 +1020,7 @@ export class NotificationService {
     date: string,
     startTime: string,
     rentalId: string,
-    facilityId: string,
+    facilityId: string
   ): Promise<void> {
     try {
       const notification: NotificationTemplate = {
@@ -960,7 +1036,7 @@ export class NotificationService {
       await NotificationService.queueNotification([renterId], notification);
 
       console.log(
-        `[reservation-approval] Denied notification sent to user ${renterId} for rental ${rentalId}`,
+        `[reservation-approval] Denied notification sent to user ${renterId} for rental ${rentalId}`
       );
     } catch (error) {
       console.error('Error sending reservation denied notification:', error);
@@ -970,7 +1046,7 @@ export class NotificationService {
   static async notifyInsuranceDocumentExpiring(
     userId: string,
     policyName: string,
-    expiryDate: Date,
+    expiryDate: Date
   ): Promise<void> {
     try {
       const notification: NotificationTemplate = {
@@ -986,17 +1062,23 @@ export class NotificationService {
       await NotificationService.queueNotification([userId], notification);
 
       console.log(
-        `[insurance-expiry] Sending expiry warning for user ${userId} (policy: ${policyName}, expires: ${expiryDate.toISOString()})`,
+        `[insurance-expiry] Sending expiry warning for user ${userId} (policy: ${policyName}, expires: ${expiryDate.toISOString()})`
       );
     } catch (error) {
-      console.error('Error sending insurance document expiry notification:', error);
+      console.error(
+        'Error sending insurance document expiry notification:',
+        error
+      );
     }
   }
 
   /**
    * Check user notification preferences before sending
    */
-  private static async shouldSendNotification(userId: string, notificationType: string): Promise<boolean> {
+  private static async shouldSendNotification(
+    userId: string,
+    notificationType: string
+  ): Promise<boolean> {
     // TODO: Implement user notification preferences check
     // For now, always return true
     return true;

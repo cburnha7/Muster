@@ -64,7 +64,7 @@ router.get('/:eventId', optionalAuthMiddleware, async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const { eventId } = req.params;
+    const { eventId } = req.params as { eventId: string };
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -107,11 +107,21 @@ router.get('/:eventId', optionalAuthMiddleware, async (req, res) => {
 
     // Filter out current user from participants
     const participants = event.bookings
-      .filter(b => b.userId !== userId)
-      .map(b => ({
-        ...b.user,
-        saluted: salutedUserIds.includes(b.userId),
-      }));
+      .filter((b: { userId: string }) => b.userId !== userId)
+      .map(
+        (b: {
+          userId: string;
+          user: {
+            id: string;
+            firstName: string;
+            lastName: string;
+            profileImage: string | null;
+          };
+        }) => ({
+          ...b.user,
+          saluted: salutedUserIds.includes(b.userId),
+        })
+      );
 
     // Get user's facility rating for this event (if any)
     let userFacilityRating: number | null = null;
@@ -161,7 +171,7 @@ router.post('/:eventId/submit', authMiddleware, async (req, res) => {
   try {
     const userId = req.user!.userId;
 
-    const { eventId } = req.params;
+    const { eventId } = req.params as { eventId: string };
     const { salutedUserIds, facilityRating } = req.body;
 
     // Validate event exists and ended within 24 hours

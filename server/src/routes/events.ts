@@ -137,7 +137,7 @@ router.post('/:id/book', authMiddleware, async (req, res) => {
 // Cancel booking
 router.delete('/:id/book/:bookingId', authMiddleware, async (req, res) => {
   try {
-    const { id, bookingId } = req.params;
+    const { id, bookingId } = req.params as { id: string; bookingId: string };
     await EventCrudService.cancelBooking(id, bookingId);
     res.status(204).send();
   } catch (error: any) {

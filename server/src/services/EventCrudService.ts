@@ -34,8 +34,8 @@ export async function getEvents(filters: GetEventsFilters) {
     limit = '10',
   } = filters;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-  const take = parseInt(limit);
+  const skip = (parseInt(page) - 1) * Math.min(parseInt(limit), 50);
+  const take = Math.min(parseInt(limit), 50);
 
   const where: any = {
     // Only show upcoming events (not past events)

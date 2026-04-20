@@ -20,9 +20,9 @@
  * @throws Error if the booking already has a snapshotted policy
  */
 export async function snapshotPolicy(
-  bookingId,
-  facilityId,
-  prismaClient,
+  bookingId: string,
+  facilityId: string,
+  prismaClient: any
 ) {
   // 1. Fetch the facility's current cancellation policy fields
   const facility = await prismaClient.facility.findUnique({
@@ -47,7 +47,7 @@ export async function snapshotPolicy(
     !facility.policyVersion
   ) {
     throw new Error(
-      `Facility ${facilityId} does not have a complete cancellation policy`,
+      `Facility ${facilityId} does not have a complete cancellation policy`
     );
   }
 
@@ -74,7 +74,7 @@ export async function snapshotPolicy(
     booking.policyVersion != null
   ) {
     throw new Error(
-      `Booking ${bookingId} already has a snapshotted cancellation policy`,
+      `Booking ${bookingId} already has a snapshotted cancellation policy`
     );
   }
 

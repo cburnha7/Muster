@@ -1,14 +1,13 @@
 /**
  * Cron Job Scheduler
- * 
+ *
  * This file sets up scheduled background jobs for the application.
- * 
+ *
  * IMPORTANT: Before running, install node-cron:
  *   npm install node-cron @types/node-cron
  */
 
 import cron from 'node-cron';
-import { TimeSlotMaintenanceJob } from './TimeSlotMaintenanceJob';
 import { InviteOnlyEventAutoOpenJob } from './InviteOnlyEventAutoOpenJob';
 import { processExpiredConfirmations } from './away-confirmation';
 import { processEventCutoffs } from './event-cutoff';
@@ -25,279 +24,317 @@ import { processRentalFeeCharge } from './rental-fee-charge';
 export function initializeCronJobs() {
   console.log('🕐 Initializing cron jobs...');
 
-  // Time Slot Maintenance Job - Daily at 00:00 UTC
-  cron.schedule('0 0 * * *', async () => {
-    console.log('🔄 Starting time slot maintenance job');
-
-    try {
-      const job = new TimeSlotMaintenanceJob();
-      const metrics = await job.execute();
-
-      console.log('✅ Time slot maintenance completed', {
-        courtsProcessed: metrics.courtsProcessed,
-        slotsGenerated: metrics.slotsGenerated,
-        courtsWithErrors: metrics.courtsWithErrors,
-        duration: `${metrics.duration}ms`,
-      });
-
-      // Send alert if there were errors
-      if (metrics.courtsWithErrors > 0) {
-        console.warn('⚠️  Some courts had errors during maintenance', {
-          errorCount: metrics.courtsWithErrors,
-          errors: metrics.errors,
-        });
-        // TODO: Send alert to monitoring system
-      }
-    } catch (error: any) {
-      console.error('❌ Time slot maintenance failed', { error: error.message });
-      // TODO: Send alert to on-call engineer
-    }
-  }, {
-    timezone: 'UTC',
-  });
+  // Time slot generation removed — availability is calculated on-the-fly
 
   // Invite-Only Event Auto-Open Job - Every 6 hours
-  cron.schedule('0 */6 * * *', async () => {
-    console.log('🔄 Starting invite-only event auto-open job');
+  cron.schedule(
+    '0 */6 * * *',
+    async () => {
+      console.log('🔄 Starting invite-only event auto-open job');
 
-    try {
-      const job = new InviteOnlyEventAutoOpenJob();
-      const metrics = await job.execute();
+      try {
+        const job = new InviteOnlyEventAutoOpenJob();
+        const metrics = await job.execute();
 
-      console.log('✅ Invite-only auto-open completed', {
-        eventsChecked: metrics.eventsChecked,
-        eventsAutoOpened: metrics.eventsAutoOpened,
-        notificationsSent: metrics.notificationsSent,
-        duration: `${metrics.duration}ms`,
-      });
-
-      // Send alert if there were errors
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some events had errors during auto-open', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        console.log('✅ Invite-only auto-open completed', {
+          eventsChecked: metrics.eventsChecked,
+          eventsAutoOpened: metrics.eventsAutoOpened,
+          notificationsSent: metrics.notificationsSent,
+          duration: `${metrics.duration}ms`,
         });
-        // TODO: Send alert to monitoring system
+
+        // Send alert if there were errors
+        if (metrics.errors.length > 0) {
+          console.warn('⚠️  Some events had errors during auto-open', {
+            errorCount: metrics.errors.length,
+            errors: metrics.errors,
+          });
+          // TODO: Send alert to monitoring system
+        }
+      } catch (error: any) {
+        console.error('❌ Invite-only auto-open job failed', {
+          error: error.message,
+        });
+        // TODO: Send alert to on-call engineer
       }
-    } catch (error: any) {
-      console.error('❌ Invite-only auto-open job failed', { error: error.message });
-      // TODO: Send alert to on-call engineer
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Away Confirmation Expiry Job - Every hour
-  cron.schedule('0 * * * *', async () => {
-    console.log('🔄 Starting away confirmation expiry job');
+  cron.schedule(
+    '0 * * * *',
+    async () => {
+      console.log('🔄 Starting away confirmation expiry job');
 
-    try {
-      const metrics = await processExpiredConfirmations();
+      try {
+        const metrics = await processExpiredConfirmations();
 
-      console.log('✅ Away confirmation expiry completed', {
-        matchesChecked: metrics.matchesChecked,
-        matchesLapsed: metrics.matchesLapsed,
-        strikesRecorded: metrics.strikesRecorded,
-        notificationsSent: metrics.notificationsSent,
-        duration: `${metrics.duration}ms`,
-      });
+        console.log('✅ Away confirmation expiry completed', {
+          matchesChecked: metrics.matchesChecked,
+          matchesLapsed: metrics.matchesLapsed,
+          strikesRecorded: metrics.strikesRecorded,
+          notificationsSent: metrics.notificationsSent,
+          duration: `${metrics.duration}ms`,
+        });
 
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some matches had errors during away confirmation processing', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        if (metrics.errors.length > 0) {
+          console.warn(
+            '⚠️  Some matches had errors during away confirmation processing',
+            {
+              errorCount: metrics.errors.length,
+              errors: metrics.errors,
+            }
+          );
+        }
+      } catch (error: any) {
+        console.error('❌ Away confirmation expiry job failed', {
+          error: error.message,
         });
       }
-    } catch (error: any) {
-      console.error('❌ Away confirmation expiry job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Public Event Cutoff Job - Every 15 minutes
-  cron.schedule('*/15 * * * *', async () => {
-    console.log('🔄 Starting public event cutoff job');
+  cron.schedule(
+    '*/15 * * * *',
+    async () => {
+      console.log('🔄 Starting public event cutoff job');
 
-    try {
-      const metrics = await processEventCutoffs();
+      try {
+        const metrics = await processEventCutoffs();
 
-      console.log('✅ Public event cutoff completed', {
-        bookingsChecked: metrics.bookingsChecked,
-        bookingsCancelled: metrics.bookingsCancelled,
-        refundsIssued: metrics.refundsIssued,
-        intentsCancelled: metrics.intentsCancelled,
-        notificationsSent: metrics.notificationsSent,
-        duration: `${metrics.duration}ms`,
-      });
+        console.log('✅ Public event cutoff completed', {
+          bookingsChecked: metrics.bookingsChecked,
+          bookingsCancelled: metrics.bookingsCancelled,
+          refundsIssued: metrics.refundsIssued,
+          intentsCancelled: metrics.intentsCancelled,
+          notificationsSent: metrics.notificationsSent,
+          duration: `${metrics.duration}ms`,
+        });
 
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some bookings had errors during event cutoff processing', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        if (metrics.errors.length > 0) {
+          console.warn(
+            '⚠️  Some bookings had errors during event cutoff processing',
+            {
+              errorCount: metrics.errors.length,
+              errors: metrics.errors,
+            }
+          );
+        }
+      } catch (error: any) {
+        console.error('❌ Public event cutoff job failed', {
+          error: error.message,
         });
       }
-    } catch (error: any) {
-      console.error('❌ Public event cutoff job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Insurance Expiry Job - Daily at 01:00 UTC
   // Expires stale documents and sends 30-day warning notifications
-  cron.schedule('0 1 * * *', async () => {
-    console.log('🔄 Starting insurance expiry job');
+  cron.schedule(
+    '0 1 * * *',
+    async () => {
+      console.log('🔄 Starting insurance expiry job');
 
-    try {
-      const metrics = await processInsuranceExpiry();
+      try {
+        const metrics = await processInsuranceExpiry();
 
-      console.log('✅ Insurance expiry completed', {
-        expired: metrics.expired,
-        notified: metrics.notified,
-      });
-    } catch (error: any) {
-      console.error('❌ Insurance expiry job failed', { error: error.message });
+        console.log('✅ Insurance expiry completed', {
+          expired: metrics.expired,
+          notified: metrics.notified,
+        });
+      } catch (error: any) {
+        console.error('❌ Insurance expiry job failed', {
+          error: error.message,
+        });
+      }
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Rental Fee Charge Job - Every 15 minutes (offset)
   // Charges rental fees for confirmed rentals entering the cancellation window
-  cron.schedule('7,22,37,52 * * * *', async () => {
-    console.log('🔄 Starting rental fee charge job');
+  cron.schedule(
+    '7,22,37,52 * * * *',
+    async () => {
+      console.log('🔄 Starting rental fee charge job');
 
-    try {
-      const metrics = await processRentalFeeCharge();
+      try {
+        const metrics = await processRentalFeeCharge();
 
-      console.log('✅ Rental fee charge completed', {
-        rentalsChecked: metrics.rentalsChecked,
-        rentalsCharged: metrics.rentalsCharged,
-      });
+        console.log('✅ Rental fee charge completed', {
+          rentalsChecked: metrics.rentalsChecked,
+          rentalsCharged: metrics.rentalsCharged,
+        });
 
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some rentals had errors during fee charging', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        if (metrics.errors.length > 0) {
+          console.warn('⚠️  Some rentals had errors during fee charging', {
+            errorCount: metrics.errors.length,
+            errors: metrics.errors,
+          });
+        }
+      } catch (error: any) {
+        console.error('❌ Rental fee charge job failed', {
+          error: error.message,
         });
       }
-    } catch (error: any) {
-      console.error('❌ Rental fee charge job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Capture Window Renewal Job - Daily at 02:00 UTC
-  cron.schedule('0 2 * * *', async () => {
-    console.log('🔄 Starting capture window renewal job');
+  cron.schedule(
+    '0 2 * * *',
+    async () => {
+      console.log('🔄 Starting capture window renewal job');
 
-    try {
-      const metrics = await processCaptureWindowRenewals();
+      try {
+        const metrics = await processCaptureWindowRenewals();
 
-      console.log('✅ Capture window renewal completed', {
-        bookingsChecked: metrics.bookingsChecked,
-        intentsRenewed: metrics.intentsRenewed,
-        renewalsFailed: metrics.renewalsFailed,
-        duration: `${metrics.duration}ms`,
-      });
+        console.log('✅ Capture window renewal completed', {
+          bookingsChecked: metrics.bookingsChecked,
+          intentsRenewed: metrics.intentsRenewed,
+          renewalsFailed: metrics.renewalsFailed,
+          duration: `${metrics.duration}ms`,
+        });
 
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some bookings had errors during capture window renewal', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        if (metrics.errors.length > 0) {
+          console.warn(
+            '⚠️  Some bookings had errors during capture window renewal',
+            {
+              errorCount: metrics.errors.length,
+              errors: metrics.errors,
+            }
+          );
+        }
+      } catch (error: any) {
+        console.error('❌ Capture window renewal job failed', {
+          error: error.message,
         });
       }
-    } catch (error: any) {
-      console.error('❌ Capture window renewal job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Nightly Ratings Recalculation Job - Daily at 03:00 UTC (after debrief windows close)
-  cron.schedule('0 3 * * *', async () => {
-    console.log('🔄 Starting nightly ratings recalculation job');
+  cron.schedule(
+    '0 3 * * *',
+    async () => {
+      console.log('🔄 Starting nightly ratings recalculation job');
 
-    try {
-      const metrics = await processNightlyRatings();
+      try {
+        const metrics = await processNightlyRatings();
 
-      console.log('✅ Nightly ratings recalculation completed', {
-        usersProcessed: metrics.usersProcessed,
-        ratingsUpdated: metrics.ratingsUpdated,
-        percentilesUpdated: metrics.percentilesUpdated,
-        duration: `${metrics.duration}ms`,
-      });
+        console.log('✅ Nightly ratings recalculation completed', {
+          usersProcessed: metrics.usersProcessed,
+          ratingsUpdated: metrics.ratingsUpdated,
+          percentilesUpdated: metrics.percentilesUpdated,
+          duration: `${metrics.duration}ms`,
+        });
 
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some users had errors during rating recalculation', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        if (metrics.errors.length > 0) {
+          console.warn(
+            '⚠️  Some users had errors during rating recalculation',
+            {
+              errorCount: metrics.errors.length,
+              errors: metrics.errors,
+            }
+          );
+        }
+      } catch (error: any) {
+        console.error('❌ Nightly ratings recalculation job failed', {
+          error: error.message,
         });
       }
-    } catch (error: any) {
-      console.error('❌ Nightly ratings recalculation job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // Trial Expiry Job - Daily at 04:00 UTC
-  cron.schedule('0 4 * * *', async () => {
-    console.log('🔄 Starting trial expiry job');
+  cron.schedule(
+    '0 4 * * *',
+    async () => {
+      console.log('🔄 Starting trial expiry job');
 
-    try {
-      const metrics = await processTrialExpiry();
+      try {
+        const metrics = await processTrialExpiry();
 
-      console.log('✅ Trial expiry completed', {
-        usersChecked: metrics.usersChecked,
-        trialsExpired: metrics.trialsExpired,
-        notificationsSent7d: metrics.notificationsSent7d,
-        notificationsSent1d: metrics.notificationsSent1d,
-        duration: `${metrics.duration}ms`,
-      });
-
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some users had errors during trial expiry processing', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        console.log('✅ Trial expiry completed', {
+          usersChecked: metrics.usersChecked,
+          trialsExpired: metrics.trialsExpired,
+          notificationsSent7d: metrics.notificationsSent7d,
+          notificationsSent1d: metrics.notificationsSent1d,
+          duration: `${metrics.duration}ms`,
         });
+
+        if (metrics.errors.length > 0) {
+          console.warn(
+            '⚠️  Some users had errors during trial expiry processing',
+            {
+              errorCount: metrics.errors.length,
+              errors: metrics.errors,
+            }
+          );
+        }
+      } catch (error: any) {
+        console.error('❌ Trial expiry job failed', { error: error.message });
       }
-    } catch (error: any) {
-      console.error('❌ Trial expiry job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   // League Ready Check Job - Every hour
   // Checks if leagues are ready to schedule (registration closed or all rosters confirmed)
   // and sends a notification to the Commissioner (Requirements: 2.1, 2.2, 2.3, 2.7)
-  cron.schedule('30 * * * *', async () => {
-    console.log('🔄 Starting league ready check job');
+  cron.schedule(
+    '30 * * * *',
+    async () => {
+      console.log('🔄 Starting league ready check job');
 
-    try {
-      const metrics = await processLeagueReadyChecks();
+      try {
+        const metrics = await processLeagueReadyChecks();
 
-      console.log('✅ League ready check completed', {
-        leaguesChecked: metrics.leaguesChecked,
-        notificationsSent: metrics.notificationsSent,
-        duration: `${metrics.duration}ms`,
-      });
+        console.log('✅ League ready check completed', {
+          leaguesChecked: metrics.leaguesChecked,
+          notificationsSent: metrics.notificationsSent,
+          duration: `${metrics.duration}ms`,
+        });
 
-      if (metrics.errors.length > 0) {
-        console.warn('⚠️  Some leagues had errors during ready check', {
-          errorCount: metrics.errors.length,
-          errors: metrics.errors,
+        if (metrics.errors.length > 0) {
+          console.warn('⚠️  Some leagues had errors during ready check', {
+            errorCount: metrics.errors.length,
+            errors: metrics.errors,
+          });
+        }
+      } catch (error: any) {
+        console.error('❌ League ready check job failed', {
+          error: error.message,
         });
       }
-    } catch (error: any) {
-      console.error('❌ League ready check job failed', { error: error.message });
+    },
+    {
+      timezone: 'UTC',
     }
-  }, {
-    timezone: 'UTC',
-  });
+  );
 
   console.log('✅ Cron jobs initialized');
 }

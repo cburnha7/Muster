@@ -82,7 +82,7 @@ router.get('/pending', optionalAuthMiddleware, async (req, res) => {
 // ---------------------------------------------------------------------------
 router.post('/:id/approve', authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const ownerId = req.user!.userId;
 
     await approveCancelRequest(id, ownerId, prisma);
@@ -109,7 +109,7 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
 // ---------------------------------------------------------------------------
 router.post('/:id/deny', authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const ownerId = req.user!.userId;
 
     await denyCancelRequest(id, ownerId, prisma);

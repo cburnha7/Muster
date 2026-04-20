@@ -15,6 +15,105 @@ function resolveUserId(req: any): string | undefined {
   return req.user?.userId || (req.query.userId as string) || undefined;
 }
 
+// ─── Dashboard — single request for home screen ─────────────────────────────
+router.get('/dashboard', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+    const activeId = (req.headers['x-active-user-id'] as string) || userId;
+    const now = new Date();
+
+    // Gather all home screen data in parallel
+    const [
+      upcomingBookings,
+      upcomingEvents,
+      teamCount,
+      leagueCount,
+      invitationCount,
+    ] = await Promise.all([
+      // Next 5 upcoming bookings
+      prisma.booking.findMany({
+        where: {
+          userId: activeId,
+          status: { not: 'cancelled' },
+          event: { startTime: { gte: now }, status: { not: 'cancelled' } },
+        },
+        take: 5,
+        orderBy: { event: { startTime: 'asc' } },
+        include: {
+          event: {
+            select: {
+              id: true,
+              title: true,
+              sportType: true,
+              startTime: true,
+              endTime: true,
+              currentParticipants: true,
+              maxParticipants: true,
+              price: true,
+              facility: {
+                select: { id: true, name: true, city: true, state: true },
+              },
+            },
+          },
+        },
+      }),
+      // Next 3 events user organized
+      prisma.event.findMany({
+        where: {
+          organizerId: activeId,
+          startTime: { gte: now },
+          status: 'active',
+        },
+        take: 3,
+        orderBy: { startTime: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          sportType: true,
+          startTime: true,
+          endTime: true,
+          currentParticipants: true,
+          maxParticipants: true,
+          facility: { select: { id: true, name: true } },
+        },
+      }),
+      // Team count
+      prisma.teamMember.count({
+        where: { userId: activeId, status: 'active' },
+      }),
+      // League count (via team memberships)
+      prisma.leagueMembership.count({
+        where: {
+          OR: [
+            { userId: activeId, status: 'active' },
+            {
+              team: {
+                members: { some: { userId: activeId, status: 'active' } },
+              },
+              status: 'active',
+            },
+          ],
+        },
+      }),
+      // Pending invitation count
+      prisma.teamMember.count({
+        where: { userId: activeId, status: 'pending' },
+      }),
+    ]);
+
+    res.json({
+      upcomingBookings,
+      upcomingEvents,
+      teamCount,
+      leagueCount,
+      invitationCount,
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({ error: 'Failed to load dashboard' });
+  }
+});
+
 // Search users by name or email
 router.get('/search', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -226,7 +325,7 @@ router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
 // Get sport ratings for a user (own profile or another user's)
 router.get('/sport-ratings/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     const ratings = await prisma.playerSportRating.findMany({
       where: {
@@ -991,7 +1090,7 @@ router.put('/onboarding', optionalAuthMiddleware, async (req, res) => {
 // Get user profile by ID
 router.get('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -1084,7 +1183,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
 // Update user by ID
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { password, ...updateData } = req.body;
 
     const user = await prisma.user.update({
