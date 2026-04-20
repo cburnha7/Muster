@@ -67,17 +67,25 @@ export function Step4Courts() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>Courts and settings</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        Courts and settings
+      </Text>
 
       {/* Courts section */}
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.ink }]}>Courts / Fields</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Courts / Fields
+          </Text>
           <TouchableOpacity style={styles.addButton} onPress={openAdd}>
             <Ionicons
               name="add-circle"
@@ -85,7 +93,9 @@ export function Step4Courts() {
               color={colors.cobalt}
               style={{ marginRight: 4 }}
             />
-            <Text style={[styles.addButtonText, { color: colors.cobalt }]}>Add Court</Text>
+            <Text style={[styles.addButtonText, { color: colors.cobalt }]}>
+              Add Court
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -95,9 +105,17 @@ export function Step4Courts() {
           </Text>
         ) : (
           state.courts.map(court => (
-            <View key={court.id} style={[styles.courtCard, { backgroundColor: colors.white, borderColor: colors.border }]}>
+            <View
+              key={court.id}
+              style={[
+                styles.courtCard,
+                { backgroundColor: colors.white, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.courtInfo}>
-                <Text style={[styles.courtName, { color: colors.ink }]}>{court.name}</Text>
+                <Text style={[styles.courtName, { color: colors.ink }]}>
+                  {court.name}
+                </Text>
                 <Text style={[styles.courtDetails, { color: colors.inkSoft }]}>
                   {court.sportType.charAt(0).toUpperCase() +
                     court.sportType.slice(1)}{' '}
@@ -154,8 +172,12 @@ export function Step4Courts() {
         onRequestClose={closeModal}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, { backgroundColor: colors.white }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+          <View
+            style={[styles.modalContainer, { backgroundColor: colors.white }]}
+          >
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
               <Text style={[styles.modalTitle, { color: colors.ink }]}>
                 {editingId ? 'Edit Court/Field' : 'Add Court/Field'}
               </Text>
@@ -164,15 +186,26 @@ export function Step4Courts() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView
+              style={styles.modalBody}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Court Name */}
               <FormInput
                 label="Court Name *"
                 value={draft.name}
                 onChangeText={v => setDraft({ ...draft, name: v })}
                 placeholder="e.g., Court 1, Field A"
+                containerStyle={{ marginBottom: 0 }}
               />
 
-              <Text style={[styles.inputLabel, { color: colors.ink }]}>Sport Type *</Text>
+              <View style={{ height: 24 }} />
+
+              {/* Sport Type */}
+              <Text style={[styles.inputLabel, { color: colors.ink }]}>
+                Sport Type *
+              </Text>
+              <View style={{ height: 8 }} />
               <View style={styles.sportChipRow}>
                 {availableSports.map(sport => {
                   const isSelected = draft.sportType === sport;
@@ -180,14 +213,27 @@ export function Step4Courts() {
                     <TouchableOpacity
                       key={sport}
                       style={[
-                        styles.sportChip, { backgroundColor: colors.white, borderColor: colors.border },
-                        isSelected && styles.sportChipSelected, isSelected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                        styles.sportChip,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                        isSelected && {
+                          backgroundColor: colors.cobalt,
+                          borderColor: colors.cobalt,
+                        },
+                      ]}
                       onPress={() => setDraft({ ...draft, sportType: sport })}
                     >
                       <Text
                         style={[
-                          styles.sportChipText, { color: colors.inkSoft },
-                          isSelected && styles.sportChipTextSelected, isSelected && { color: colors.white }]}
+                          styles.sportChipText,
+                          { color: colors.inkSecondary },
+                          isSelected && {
+                            color: colors.white,
+                            fontFamily: fonts.ui,
+                          },
+                        ]}
                       >
                         {formatSportType(sport)}
                       </Text>
@@ -196,6 +242,9 @@ export function Step4Courts() {
                 })}
               </View>
 
+              <View style={{ height: 24 }} />
+
+              {/* Capacity */}
               <FormInput
                 label="Capacity"
                 value={draft.capacity.toString()}
@@ -204,26 +253,41 @@ export function Step4Courts() {
                 }
                 placeholder="10"
                 keyboardType="numeric"
+                containerStyle={{ marginBottom: 0 }}
               />
 
+              <View style={{ height: 16 }} />
+
+              {/* Indoor Court checkbox */}
               <TouchableOpacity
                 style={styles.checkboxRow}
                 onPress={() =>
                   setDraft({ ...draft, isIndoor: !draft.isIndoor })
                 }
+                activeOpacity={0.7}
               >
                 <View
                   style={[
-                    styles.checkbox, { borderColor: colors.inkSoft },
-                    draft.isIndoor && styles.checkboxChecked, draft.isIndoor && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                    styles.checkbox,
+                    { borderColor: colors.border },
+                    draft.isIndoor && {
+                      backgroundColor: colors.cobalt,
+                      borderColor: colors.cobalt,
+                    },
+                  ]}
                 >
                   {draft.isIndoor && (
-                    <Ionicons name="checkmark" size={16} color={colors.white} />
+                    <Ionicons name="checkmark" size={14} color={colors.white} />
                   )}
                 </View>
-                <Text style={[styles.checkboxLabel, { color: colors.ink }]}>Indoor Court</Text>
+                <Text style={[styles.checkboxLabel, { color: colors.ink }]}>
+                  Indoor Court
+                </Text>
               </TouchableOpacity>
 
+              <View style={{ height: 16 }} />
+
+              {/* Price Per Hour */}
               <FormInput
                 label="Price Per Hour ($)"
                 value={draft.pricePerHour.toString()}
@@ -232,21 +296,43 @@ export function Step4Courts() {
                 }
                 placeholder="0.00"
                 keyboardType="decimal-pad"
+                containerStyle={{ marginBottom: 0 }}
               />
+
+              <View style={{ height: 16 }} />
             </ScrollView>
 
-            <View style={[styles.modalActions, { borderTopColor: colors.border }]}>
+            <View
+              style={[styles.modalActions, { borderTopColor: colors.border }]}
+            >
               <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancel, { backgroundColor: colors.surface }]}
+                style={[
+                  styles.modalBtn,
+                  styles.modalBtnCancel,
+                  { borderColor: colors.border },
+                ]}
                 onPress={closeModal}
               >
-                <Text style={[styles.modalBtnCancelText, { color: colors.inkSoft }]}>Back</Text>
+                <Text
+                  style={[
+                    styles.modalBtnCancelText,
+                    { color: colors.inkSecondary },
+                  ]}
+                >
+                  Back
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: colors.cobalt }]}
+                style={[
+                  styles.modalBtn,
+                  styles.modalBtnPrimary,
+                  { backgroundColor: colors.cobalt },
+                ]}
                 onPress={handleSave}
               >
-                <Text style={[styles.modalBtnPrimaryText, { color: colors.white }]}>
+                <Text
+                  style={[styles.modalBtnPrimaryText, { color: colors.white }]}
+                >
                   {editingId ? 'Update Court' : 'Add Court'}
                 </Text>
               </TouchableOpacity>
@@ -334,64 +420,61 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   modalTitle: { fontFamily: fonts.heading, fontSize: 18 },
-  modalBody: { padding: Spacing.lg },
+  modalBody: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 0 },
   inputLabel: {
-    fontFamily: fonts.label,
-    fontSize: 14,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.md,
+    fontFamily: fonts.ui,
+    fontSize: 15,
   },
-  sportChipRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  sportChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   sportChip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
-    marginRight: Spacing.sm,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
-  sportChipSelected: {},
   sportChipText: {
     fontFamily: fonts.body,
     fontSize: 14,
   },
-  sportChipTextSelected: { fontFamily: fonts.ui },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Spacing.md,
+    gap: 10,
   },
   checkbox: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
     borderRadius: 4,
-    borderWidth: 2,
-    marginRight: Spacing.sm,
+    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: {},
-  checkboxLabel: { fontFamily: fonts.body, fontSize: 14 },
+  checkboxLabel: { fontFamily: fonts.bodyMedium, fontSize: 15 },
   modalActions: {
     flexDirection: 'row',
-    padding: Spacing.lg,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     borderTopWidth: 1,
+    gap: 8,
   },
   modalBtn: {
     flex: 1,
-    paddingVertical: Spacing.md,
-    borderRadius: 8,
+    height: 52,
+    borderRadius: 12,
     alignItems: 'center',
-    marginHorizontal: 4,
+    justifyContent: 'center',
   },
-  modalBtnCancel: {},
+  modalBtnCancel: {
+    borderWidth: 1.5,
+    backgroundColor: 'transparent',
+  },
   modalBtnCancelText: {
     fontFamily: fonts.ui,
-    fontSize: 14,
+    fontSize: 15,
   },
   modalBtnPrimary: {},
   modalBtnPrimaryText: {
     fontFamily: fonts.ui,
-    fontSize: 14,
+    fontSize: 15,
   },
 });
