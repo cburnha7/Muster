@@ -17,9 +17,6 @@ const baseQuery = fetchBaseQuery({
     }
 
     const userId = state.auth.user?.id;
-    if (userId) {
-      headers.set('X-User-Id', userId);
-    }
 
     const activeUserId = state.context?.activeUserId;
     if (activeUserId && activeUserId !== userId) {
@@ -54,16 +51,24 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         body: { refreshToken },
       },
       api,
-      extraOptions,
+      extraOptions
     );
 
     if (refreshResult.data) {
-      const tokenData = refreshResult.data as { accessToken: string; refreshToken: string };
-      await TokenStorage.storeTokens(tokenData.accessToken, tokenData.refreshToken);
-      api.dispatch(setTokens({
-        accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
-      }));
+      const tokenData = refreshResult.data as {
+        accessToken: string;
+        refreshToken: string;
+      };
+      await TokenStorage.storeTokens(
+        tokenData.accessToken,
+        tokenData.refreshToken
+      );
+      api.dispatch(
+        setTokens({
+          accessToken: tokenData.accessToken,
+          refreshToken: tokenData.refreshToken,
+        })
+      );
       result = await baseQuery(args, api, extraOptions);
     } else {
       await TokenStorage.clearAll();
@@ -78,9 +83,9 @@ export const cancelRequestsApi = createApi({
   reducerPath: 'cancelRequestsApi',
   baseQuery: baseQueryWithReauth,
   tagTypes: ['CancelRequests'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     getPendingCancelRequests: builder.query<CancelRequestData[], string>({
-      query: (userId) => ({
+      query: userId => ({
         url: '/cancel-requests/pending',
         params: { userId },
       }),

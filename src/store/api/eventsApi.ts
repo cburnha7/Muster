@@ -32,12 +32,8 @@ const baseQuery = fetchBaseQuery({
       headers.set('authorization', `Bearer ${token}`);
     }
 
-    // Send X-User-Id header as fallback authentication
-    // This allows the backend to identify the user even if the JWT is expired
+    // User identity is handled via JWT Bearer token only
     const userId = state.auth.user?.id;
-    if (userId) {
-      headers.set('X-User-Id', userId);
-    }
 
     // Attach X-Active-User-Id header when acting on behalf of a dependent
     const activeUserId = state.context?.activeUserId;

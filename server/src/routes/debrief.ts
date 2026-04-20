@@ -7,7 +7,7 @@ const router = Router();
 
 // Get debrief-eligible events for current user
 // Events that ended within last 24 hours where user hasn't submitted debrief
-router.get('/', optionalAuthMiddleware, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -57,7 +57,7 @@ router.get('/', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get debrief details for a specific event (participants list)
-router.get('/:eventId', optionalAuthMiddleware, async (req, res) => {
+router.get('/:eventId', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -326,3 +326,4 @@ router.post('/:eventId/submit', authMiddleware, async (req, res) => {
 });
 
 export default router;
+

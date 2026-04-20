@@ -7,12 +7,12 @@ const router = Router();
 /**
  * Resolve the effective user ID for the request.
  * If the guardian is acting on behalf of a dependent, X-Active-User-Id takes precedence.
- * Falls back to the authenticated user, then query param.
+ * Falls back to the authenticated user from JWT.
  */
 function resolveUserId(req: any): string | undefined {
   const activeId = req.headers['x-active-user-id'] as string | undefined;
   if (activeId) return activeId;
-  return req.user?.userId || (req.query.userId as string) || undefined;
+  return req.user?.userId;
 }
 
 // ─── Dashboard — single request for home screen ─────────────────────────────
@@ -171,7 +171,7 @@ router.get('/search', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get current user profile
-router.get('/profile', optionalAuthMiddleware, async (req, res) => {
+router.get('/profile', authMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
     if (!userId) {
@@ -262,7 +262,7 @@ router.delete('/profile/image', authMiddleware, async (req, res) => {
 });
 
 // Get current user stats
-router.get('/profile/stats', optionalAuthMiddleware, async (req, res) => {
+router.get('/profile/stats', authMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
     if (!userId) {
@@ -404,7 +404,7 @@ router.get('/sport-ratings/:userId', async (req, res) => {
 });
 
 // Get current user bookings
-router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
+router.get('/bookings', authMiddleware, async (req, res) => {
   try {
     // Get user ID — respects X-Active-User-Id for dependent context
     let userId = resolveUserId(req);
@@ -515,7 +515,7 @@ router.get('/bookings', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get current user's pending invitations (roster + league)
-router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
+router.get('/invitations', authMiddleware, async (req, res) => {
   try {
     let userId = resolveUserId(req);
     if (!userId) {
@@ -670,7 +670,7 @@ router.get('/invitations', optionalAuthMiddleware, async (req, res) => {
 // Get leagues ready to schedule for the current user (Commissioner only)
 router.get(
   '/leagues-ready-to-schedule',
-  optionalAuthMiddleware,
+  authMiddleware,
   async (req, res) => {
     try {
       let userId = resolveUserId(req);
@@ -708,7 +708,7 @@ router.get(
 );
 
 // Get current user's events (organized + confirmed participant)
-router.get('/events', optionalAuthMiddleware, async (req, res) => {
+router.get('/events', authMiddleware, async (req, res) => {
   try {
     let userId = req.user?.userId;
     if (!userId) {
@@ -792,7 +792,7 @@ router.get('/events', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get current user's teams (teams the user is an active member of)
-router.get('/teams', optionalAuthMiddleware, async (req, res) => {
+router.get('/teams', authMiddleware, async (req, res) => {
   try {
     let userId = resolveUserId(req);
     if (!userId) {
@@ -842,7 +842,7 @@ router.get('/teams', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get current user's leagues (leagues they organize or are a member of)
-router.get('/leagues', optionalAuthMiddleware, async (req, res) => {
+router.get('/leagues', authMiddleware, async (req, res) => {
   try {
     let userId = resolveUserId(req);
     if (!userId) {
@@ -1038,7 +1038,7 @@ router.put('/intents', authMiddleware, async (req, res) => {
 // ---------------------------------------------------------------------------
 // GET /onboarding — Check user onboarding status
 // ---------------------------------------------------------------------------
-router.get('/onboarding', optionalAuthMiddleware, async (req, res) => {
+router.get('/onboarding', authMiddleware, async (req, res) => {
   try {
     const userId = resolveUserId(req);
     if (!userId) {
@@ -1064,7 +1064,7 @@ router.get('/onboarding', optionalAuthMiddleware, async (req, res) => {
 // ---------------------------------------------------------------------------
 // PUT /onboarding — Mark user onboarding as complete
 // ---------------------------------------------------------------------------
-router.put('/onboarding', optionalAuthMiddleware, async (req, res) => {
+router.put('/onboarding', authMiddleware, async (req, res) => {
   try {
     const userId = resolveUserId(req) || req.body?.userId;
     if (!userId) {
@@ -1214,7 +1214,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // GET /users/open-ground-locations — fetch saved locations for the current user
 router.get(
   '/open-ground-locations',
-  optionalAuthMiddleware,
+  authMiddleware,
   async (req, res) => {
     try {
       const userId = req.user?.userId;
@@ -1266,3 +1266,4 @@ router.post('/open-ground-locations', authMiddleware, async (req, res) => {
 });
 
 export default router;
+

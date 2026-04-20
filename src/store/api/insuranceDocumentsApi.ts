@@ -16,9 +16,6 @@ const baseQuery = fetchBaseQuery({
     }
 
     const userId = state.auth.user?.id;
-    if (userId) {
-      headers.set('X-User-Id', userId);
-    }
 
     const activeUserId = state.context?.activeUserId;
     if (activeUserId && activeUserId !== userId) {
@@ -53,16 +50,24 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         body: { refreshToken },
       },
       api,
-      extraOptions,
+      extraOptions
     );
 
     if (refreshResult.data) {
-      const tokenData = refreshResult.data as { accessToken: string; refreshToken: string };
-      await TokenStorage.storeTokens(tokenData.accessToken, tokenData.refreshToken);
-      api.dispatch(setTokens({
-        accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
-      }));
+      const tokenData = refreshResult.data as {
+        accessToken: string;
+        refreshToken: string;
+      };
+      await TokenStorage.storeTokens(
+        tokenData.accessToken,
+        tokenData.refreshToken
+      );
+      api.dispatch(
+        setTokens({
+          accessToken: tokenData.accessToken,
+          refreshToken: tokenData.refreshToken,
+        })
+      );
       result = await baseQuery(args, api, extraOptions);
     } else {
       await TokenStorage.clearAll();
@@ -77,17 +82,23 @@ export const insuranceDocumentsApi = createApi({
   reducerPath: 'insuranceDocumentsApi',
   baseQuery: baseQueryWithReauth,
   tagTypes: ['InsuranceDocuments', 'PendingReservations', 'EscrowTransactions'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     // Get insurance documents for a user
-    getInsuranceDocuments: builder.query<any[], { userId: string; status?: string }>({
+    getInsuranceDocuments: builder.query<
+      any[],
+      { userId: string; status?: string }
+    >({
       query: ({ userId, status }) => ({
         url: '/insurance-documents',
         params: { userId, ...(status ? { status } : {}) },
       }),
-      providesTags: (result) =>
+      providesTags: result =>
         result
           ? [
-              ...result.map(({ id }: any) => ({ type: 'InsuranceDocuments' as const, id })),
+              ...result.map(({ id }: any) => ({
+                type: 'InsuranceDocuments' as const,
+                id,
+              })),
               { type: 'InsuranceDocuments', id: 'LIST' },
             ]
           : [{ type: 'InsuranceDocuments', id: 'LIST' }],
@@ -95,7 +106,7 @@ export const insuranceDocumentsApi = createApi({
 
     // Upload a new insurance document
     uploadInsuranceDocument: builder.mutation<any, FormData>({
-      query: (formData) => ({
+      query: formData => ({
         url: '/insurance-documents',
         method: 'POST',
         body: formData,
@@ -107,7 +118,7 @@ export const insuranceDocumentsApi = createApi({
 
     // Delete an insurance document
     deleteInsuranceDocument: builder.mutation<{ message: string }, string>({
-      query: (id) => ({
+      query: id => ({
         url: `/insurance-documents/${id}`,
         method: 'DELETE',
       }),
@@ -123,10 +134,13 @@ export const insuranceDocumentsApi = createApi({
         url: '/reservation-approvals',
         params: { ownerId },
       }),
-      providesTags: (result) =>
+      providesTags: result =>
         result
           ? [
-              ...result.map(({ id }: any) => ({ type: 'PendingReservations' as const, id })),
+              ...result.map(({ id }: any) => ({
+                type: 'PendingReservations' as const,
+                id,
+              })),
               { type: 'PendingReservations', id: 'LIST' },
             ]
           : [{ type: 'PendingReservations', id: 'LIST' }],

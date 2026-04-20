@@ -23,18 +23,7 @@ const baseQuery = fetchBaseQuery({
       headers.set('authorization', `Bearer ${token}`);
     }
 
-    // DEVELOPMENT: Send X-User-Id header for mock authentication
-    if (process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true') {
-      // Import authService to get current user
-      const { authService } = require('../services/auth/AuthService');
-      const currentUser = authService.getCurrentUser();
-      if (currentUser?.id) {
-        headers.set('X-User-Id', currentUser.id);
-        if (__DEV__) {
-          console.log('🔑 Setting X-User-Id header:', currentUser.id);
-        }
-      }
-    }
+    // DEVELOPMENT: Mock auth handled via JWT — no X-User-Id needed
 
     // Attach X-Active-User-Id header when acting on behalf of a dependent
     const activeUserId = state.context?.activeUserId;
