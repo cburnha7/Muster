@@ -116,7 +116,7 @@ export const ProfileFinishScreen: React.FC = () => {
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[styles.progressDot, { backgroundColor: colors.outlineVariant }, styles.progressDotActive, { backgroundColor: colors.primary }]}
+                style={[styles.progressDot, { backgroundColor: colors.border }, styles.progressDotActive, { backgroundColor: colors.cobalt }]}
               />
             ))}
           </View>
@@ -131,35 +131,35 @@ export const ProfileFinishScreen: React.FC = () => {
               <Ionicons
                 name="checkmark-circle"
                 size={64}
-                color={colors.secondary}
+                color={colors.pine}
               />
             </View>
-            <Text style={[styles.title, { color: colors.onSurface }]}>You're all set!</Text>
-            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+            <Text style={[styles.title, { color: colors.ink }]}>You're all set!</Text>
+            <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
               Here's a quick recap of your setup
             </Text>
           </View>
 
           {summaryItems.length > 0 && (
-            <View style={[styles.summaryCard, { backgroundColor: colors.surfaceContainerLowest }]}>
+            <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
               {summaryItems.map((item, index) => (
                 <View key={index} style={styles.summaryRow}>
-                  <View style={[styles.summaryIconCircle, { backgroundColor: colors.primaryFixed }]}>
+                  <View style={[styles.summaryIconCircle, { backgroundColor: colors.cobaltLight }]}>
                     <Ionicons
                       name={item.icon}
                       size={18}
-                      color={colors.primary}
+                      color={colors.cobalt}
                     />
                   </View>
-                  <Text style={[styles.summaryLabel, { color: colors.onSurface }]}>{item.label}</Text>
+                  <Text style={[styles.summaryLabel, { color: colors.ink }]}>{item.label}</Text>
                 </View>
               ))}
             </View>
           )}
 
           {error && (
-            <View style={[styles.errorContainer, { backgroundColor: colors.errorContainer }]}>
-              <Text style={[styles.errorText, { color: colors.onErrorContainer }]}>{error}</Text>
+            <View style={[styles.errorContainer, { backgroundColor: colors.errorLight }]}>
+              <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
             </View>
           )}
         </Animated.View>
@@ -167,7 +167,7 @@ export const ProfileFinishScreen: React.FC = () => {
         {/* Bottom CTA */}
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[styles.finishButton, { backgroundColor: colors.primary }, loading && styles.finishButtonLoading]}
+            style={[styles.finishButton, { backgroundColor: colors.cobalt }, loading && styles.finishButtonLoading]}
             onPress={handleFinish}
             disabled={loading}
             activeOpacity={0.85}

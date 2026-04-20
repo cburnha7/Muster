@@ -11,7 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { fonts, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
+import { tokenFontFamily } from '../../theme/tokens';
 
 interface FormButtonProps {
   title: string;
@@ -67,17 +68,17 @@ export const FormButton: React.FC<FormButtonProps> = ({
   }, [scaleAnim]);
 
   const getIconColor = () => {
-    if (isDisabled) return colors.outline;
+    if (isDisabled) return colors.inkMuted;
     switch (variant) {
       case 'primary':
       case 'danger':
         return colors.white;
       case 'secondary':
-        return colors.onSurface;
+        return colors.ink;
       case 'outline':
-        return colors.primary;
+        return colors.cobalt;
       case 'muted':
-        return colors.onSurface;
+        return colors.ink;
       default:
         return colors.white;
     }
@@ -131,19 +132,14 @@ export const FormButton: React.FC<FormButtonProps> = ({
         style={[
           styles.text,
           textSizeStyle,
-          variant === 'primary' && styles.primaryText, variant === 'primary' && { color: colors.white },
-          variant === 'secondary' && [
-            styles.secondaryText,
-            { color: colors.textPrimary },
-          ],
-          variant === 'outline' && styles.outlineText, variant === 'outline' && { color: colors.primary },
-          variant === 'muted' && [
-            styles.mutedText,
-            { color: colors.textSecondary },
-          ],
-          variant === 'danger' && styles.dangerText, variant === 'danger' && { color: colors.white },
-          isDisabled && styles.disabledText, isDisabled && { color: colors.outline },
-          textStyle]}
+          variant === 'primary' && { color: colors.white },
+          variant === 'secondary' && { color: colors.ink },
+          variant === 'outline' && { color: colors.cobalt },
+          variant === 'muted' && { color: colors.inkSecondary },
+          variant === 'danger' && { color: colors.white },
+          isDisabled && { color: colors.inkMuted },
+          textStyle,
+        ]}
       >
         {title}
       </Text>
@@ -158,7 +154,7 @@ export const FormButton: React.FC<FormButtonProps> = ({
     </View>
   );
 
-  // Primary variant gets the glow gradient
+  // Primary variant gets the gradient
   if (variant === 'primary' && !isDisabled) {
     return (
       <Pressable
@@ -166,14 +162,16 @@ export const FormButton: React.FC<FormButtonProps> = ({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={isDisabled}
+        accessibilityRole="button"
+        accessibilityLabel={title}
         style={style}
       >
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
           <LinearGradient
-            colors={[colors.primary, colors.primaryContainer]}
+            colors={[colors.cobalt, colors.cobaltMid]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.button, sizeStyle, styles.primary]}
+            style={[styles.button, sizeStyle]}
           >
             {content}
           </LinearGradient>
@@ -188,25 +186,26 @@ export const FormButton: React.FC<FormButtonProps> = ({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
     >
       <Animated.View
         style={[
           styles.button,
           sizeStyle,
-          variant === 'primary' && styles.primaryFlat, variant === 'primary' && { backgroundColor: colors.surfaceContainerHigh },
-          variant === 'secondary' && [
-            styles.secondary,
-            { backgroundColor: colors.bgSubtle },
-          ],
-          variant === 'outline' && [
-            styles.outline,
-            { borderColor: colors.border },
-          ],
-          variant === 'muted' && styles.muted,
-          variant === 'danger' && styles.danger, variant === 'danger' && { backgroundColor: colors.error },
-          isDisabled && styles.disabled, isDisabled && { backgroundColor: colors.surfaceDim, borderColor: colors.surfaceDim },
+          variant === 'primary' && { backgroundColor: colors.border },
+          variant === 'secondary' && { backgroundColor: colors.bgSubtle },
+          variant === 'outline' && {
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderColor: colors.border,
+          },
+          variant === 'muted' && { backgroundColor: 'transparent' },
+          variant === 'danger' && { backgroundColor: colors.error },
+          isDisabled && { backgroundColor: colors.border },
           style,
-          { transform: [{ scale: scaleAnim }] }]}
+          { transform: [{ scale: scaleAnim }] },
+        ]}
       >
         {content}
       </Animated.View>
@@ -226,12 +225,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontFamily: fonts.ui,
+    fontFamily: tokenFontFamily.uiBold,
     textAlign: 'center',
     letterSpacing: -0.1,
   },
-
-  // Size variants
   small: {
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -247,39 +244,9 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     minHeight: 58,
   },
-
-  // Text sizes
   smallText: { fontSize: 14 },
   mediumText: { fontSize: 16 },
   largeText: { fontSize: 18 },
-
-  // Color variants
-  primary: {},
-  primaryFlat: {},
-  primaryText: {},
-
-  secondary: {},
-  secondaryText: {},
-
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-  },
-  outlineText: {},
-
-  muted: {
-    backgroundColor: 'transparent',
-  },
-  mutedText: {},
-
-  danger: {},
-  dangerText: {},
-
-  // Disabled
-  disabled: {},
-  disabledText: {},
-
-  // Icons
   leftIcon: { marginRight: 8 },
   rightIcon: { marginLeft: 8 },
 });

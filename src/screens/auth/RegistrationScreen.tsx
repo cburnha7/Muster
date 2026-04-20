@@ -253,7 +253,7 @@ export const RegistrationScreen: React.FC = () => {
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.75}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={colors.ink} />
           </TouchableOpacity>
 
           <View style={styles.progressBar}>
@@ -261,8 +261,8 @@ export const RegistrationScreen: React.FC = () => {
               <View
                 key={i}
                 style={[
-                  styles.progressDot, { backgroundColor: colors.outlineVariant },
-                  i <= step && styles.progressDotActive, i <= step && { backgroundColor: colors.primary }]}
+                  styles.progressDot, { backgroundColor: colors.border },
+                  i <= step && styles.progressDotActive, i <= step && { backgroundColor: colors.cobalt }]}
               />
             ))}
           </View>
@@ -274,13 +274,13 @@ export const RegistrationScreen: React.FC = () => {
         {/* Animated step content */}
         <Animated.View style={[styles.inner, { opacity: fadeAnim }]}>
           {/* Header */}
-          <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
-          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{subtitle}</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+          <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>{subtitle}</Text>
 
           {/* General error */}
           {errors.general && (
-            <View style={[styles.errorBanner, { backgroundColor: colors.errorContainer }]}>
-              <Text style={[styles.errorText, { color: colors.onErrorContainer }]}>{errors.general}</Text>
+            <View style={[styles.errorBanner, { backgroundColor: colors.errorLight }]}>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.general}</Text>
             </View>
           )}
 
@@ -303,9 +303,9 @@ export const RegistrationScreen: React.FC = () => {
                     disabled={isLoading || ssoLoading !== null}
                   />
                   <View style={styles.divider}>
-                    <View style={[styles.dividerLine, { backgroundColor: colors.outlineVariant }]} />
-                    <Text style={[styles.dividerText, { color: colors.outline }]}>or</Text>
-                    <View style={[styles.dividerLine, { backgroundColor: colors.outlineVariant }]} />
+                    <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                    <Text style={[styles.dividerText, { color: colors.inkSecondary }]}>or</Text>
+                    <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
                   </View>
                 </>
               )}
@@ -388,13 +388,13 @@ export const RegistrationScreen: React.FC = () => {
               <View style={styles.termsSection}>
                 <Checkbox
                   label={
-                    <Text style={[styles.checkboxLabel, { color: colors.onSurfaceVariant }]}>
+                    <Text style={[styles.checkboxLabel, { color: colors.inkSecondary }]}>
                       I agree to the{' '}
-                      <Text style={[styles.link, { color: colors.primary }]} onPress={handleOpenTerms}>
+                      <Text style={[styles.link, { color: colors.cobalt }]} onPress={handleOpenTerms}>
                         Terms of Service
                       </Text>{' '}
                       and{' '}
-                      <Text style={[styles.link, { color: colors.primary }]} onPress={handleOpenPrivacy}>
+                      <Text style={[styles.link, { color: colors.cobalt }]} onPress={handleOpenPrivacy}>
                         Privacy Policy
                       </Text>
                     </Text>
@@ -427,8 +427,8 @@ export const RegistrationScreen: React.FC = () => {
               onPress={() => navigation.navigate('Login' as never)}
               activeOpacity={0.75}
             >
-              <Text style={[styles.loginLinkText, { color: colors.onSurfaceVariant }]}>
-                Already have an account? <Text style={[styles.link, { color: colors.primary }]}>Log In</Text>
+              <Text style={[styles.loginLinkText, { color: colors.inkSecondary }]}>
+                Already have an account? <Text style={[styles.link, { color: colors.cobalt }]}>Log In</Text>
               </Text>
             </TouchableOpacity>
           )}

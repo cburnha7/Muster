@@ -153,14 +153,14 @@ export function NewConversationScreen() {
           onPress={() => openTeamChat(item.id, item.name)}
         >
           <View
-            style={[styles.avatar, { backgroundColor: colors.primaryFixed }]}
+            style={[styles.avatar, { backgroundColor: colors.cobaltLight }]}
           >
-            <Ionicons name="people" size={20} color={colors.primary} />
+            <Ionicons name="people" size={20} color={colors.cobalt} />
           </View>
           <Text style={styles.rowName} numberOfLines={1}>
             {item.name}
           </Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.outline} />
+          <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
         </TouchableOpacity>
       );
     }
@@ -175,7 +175,7 @@ export function NewConversationScreen() {
         <View
           style={[
             styles.avatar,
-            { backgroundColor: colors.surfaceContainerHigh },
+            { backgroundColor: colors.border },
           ]}
         >
           <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
@@ -183,7 +183,7 @@ export function NewConversationScreen() {
         <Text style={styles.rowName} numberOfLines={1}>
           {item.name}
         </Text>
-        <Ionicons name="chevron-forward" size={18} color={colors.outline} />
+        <Ionicons name="chevron-forward" size={18} color={colors.inkSecondary} />
       </TouchableOpacity>
     );
   };
@@ -203,13 +203,13 @@ export function NewConversationScreen() {
           <Ionicons
             name="search"
             size={18}
-            color={colors.onSurfaceVariant}
+            color={colors.inkSecondary}
             style={{ marginRight: 8 }}
           />
           <TextInput
             style={styles.searchInput}
             placeholder="Search people or teams..."
-            placeholderTextColor={colors.outline}
+            placeholderTextColor={colors.inkSecondary}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
@@ -221,7 +221,7 @@ export function NewConversationScreen() {
               onPress={() => setQuery('')}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="close-circle" size={18} color={colors.outline} />
+              <Ionicons name="close-circle" size={18} color={colors.inkSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -229,14 +229,14 @@ export function NewConversationScreen() {
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size="small" color={colors.cobalt} />
         </View>
       ) : sections.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons
             name="people-outline"
             size={40}
-            color={colors.outline}
+            color={colors.inkSecondary}
             style={{ marginBottom: 12 }}
           />
           <Text style={styles.emptyTitle}>
@@ -262,7 +262,7 @@ export function NewConversationScreen() {
 
       {navigating && (
         <View style={styles.overlay}>
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size="small" color={colors.cobalt} />
         </View>
       )}
     </View>
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainer,
+    backgroundColor: colors.bgSubtle,
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 44,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
     padding: 0,
   },
   listContent: {
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.label,
     fontSize: 12,
     letterSpacing: 1.6,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textTransform: 'uppercase',
   },
   row: {
@@ -336,13 +336,13 @@ const styles = StyleSheet.create({
   avatarText: {
     fontFamily: fonts.headingSemi,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   rowName: {
     flex: 1,
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   centered: {
     flex: 1,
@@ -353,13 +353,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: colors.onSurface,
+    color: colors.ink,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textAlign: 'center',
   },
   overlay: {

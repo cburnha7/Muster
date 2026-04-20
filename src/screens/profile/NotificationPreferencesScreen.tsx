@@ -90,11 +90,11 @@ export function NotificationPreferencesScreen(): JSX.Element {
         value={preferences[key]}
         onValueChange={() => handleToggle(key)}
         trackColor={{
-          false: colors.surfaceContainerHigh,
-          true: colors.primary + '50',
+          false: colors.border,
+          true: colors.cobalt + '50',
         }}
         thumbColor={
-          preferences[key] ? colors.primary : colors.surfaceContainerLow
+          preferences[key] ? colors.cobalt : colors.background
         }
         disabled={disabled}
         style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginTop: 24,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   cardDescription: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant + '60',
+    borderBottomColor: colors.border + '60',
   },
   preferenceItemLast: {
     borderBottomWidth: 0,
@@ -223,13 +223,13 @@ const styles = StyleSheet.create({
   preferenceLabel: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
     marginBottom: 2,
   },
   preferenceDescription: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     lineHeight: 16,
   },
   saveButton: {

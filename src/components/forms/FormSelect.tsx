@@ -77,24 +77,24 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   const renderOption = ({ item }: { item: SelectOption }) => (
     <TouchableOpacity
       style={[
-        styles.option, { borderBottomColor: colors.surfaceContainerLow },
+        styles.option, { borderBottomColor: colors.background },
         { borderBottomColor: colors.border },
-        item.disabled && styles.optionDisabled, item.disabled && { backgroundColor: colors.surfaceContainerLow },
-        item.value === value && styles.optionSelected, item.value === value && { backgroundColor: colors.primaryFixed }]}
+        item.disabled && styles.optionDisabled, item.disabled && { backgroundColor: colors.background },
+        item.value === value && styles.optionSelected, item.value === value && { backgroundColor: colors.cobaltLight }]}
       onPress={() => handleSelect(item)}
       disabled={item.disabled}
     >
       <Text
         style={[
-          styles.optionText, { color: colors.onSurface },
+          styles.optionText, { color: colors.ink },
           { color: colors.textPrimary },
-          item.disabled && styles.optionTextDisabled, item.disabled && { color: colors.outline },
-          item.value === value && styles.optionTextSelected, item.value === value && { color: colors.primary }]}
+          item.disabled && styles.optionTextDisabled, item.disabled && { color: colors.inkSecondary },
+          item.value === value && styles.optionTextSelected, item.value === value && { color: colors.cobalt }]}
       >
         {item.label}
       </Text>
       {item.value === value && (
-        <Ionicons name="checkmark" size={20} color={colors.primary} />
+        <Ionicons name="checkmark" size={20} color={colors.cobalt} />
       )}
     </TouchableOpacity>
   );
@@ -103,7 +103,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && (
         <Text
-          style={[styles.label, { color: colors.onSurface }, { color: colors.textPrimary }, labelStyle]}
+          style={[styles.label, { color: colors.ink }, { color: colors.textPrimary }, labelStyle]}
         >
           {label}
           {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
@@ -112,23 +112,23 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 
       <TouchableOpacity
         style={[
-          styles.select, { backgroundColor: colors.surfaceContainerLowest, borderColor: colors.outlineVariant, shadowColor: colors.ink },
+          styles.select, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.ink },
           {
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
           },
-          error && styles.selectError, error && { borderColor: colors.error, backgroundColor: colors.errorContainer },
-          disabled && styles.selectDisabled, disabled && { backgroundColor: colors.surfaceContainerLow, borderColor: colors.outlineVariant },
+          error && styles.selectError, error && { borderColor: colors.error, backgroundColor: colors.errorLight },
+          disabled && styles.selectDisabled, disabled && { backgroundColor: colors.background, borderColor: colors.border },
           selectStyle]}
         onPress={() => !disabled && setIsModalVisible(true)}
         disabled={disabled}
       >
         <Text
           style={[
-            styles.selectText, { color: colors.onSurface },
+            styles.selectText, { color: colors.ink },
             { color: colors.textPrimary },
-            !selectedOption && styles.placeholderText, !selectedOption && { color: colors.outline },
-            disabled && styles.selectTextDisabled, disabled && { color: colors.outline }]}
+            !selectedOption && styles.placeholderText, !selectedOption && { color: colors.inkSecondary },
+            disabled && styles.selectTextDisabled, disabled && { color: colors.inkSecondary }]}
         >
           {selectedOption ? selectedOption.label : placeholder}
         </Text>
@@ -137,7 +137,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
           size={20}
           color={
             disabled
-              ? colors.outline
+              ? colors.inkSecondary
               : error
                 ? colors.error
                 : colors.textSecondary
@@ -155,19 +155,19 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       >
         <SafeAreaView
           style={[
-            styles.modalContainer, { backgroundColor: colors.surfaceContainerLowest },
+            styles.modalContainer, { backgroundColor: colors.surface },
             { backgroundColor: colors.bgScreen }]}
         >
           <View
             style={[
-              styles.modalHeader, { borderBottomColor: colors.surfaceContainerLow },
+              styles.modalHeader, { borderBottomColor: colors.background },
               { borderBottomColor: colors.border }]}
           >
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-              <Text style={[styles.cancelText, { color: colors.primary }]}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: colors.cobalt }]}>Cancel</Text>
             </TouchableOpacity>
             <Text
-              style={[styles.modalTitle, { color: colors.onSurface }, { color: colors.textPrimary }]}
+              style={[styles.modalTitle, { color: colors.ink }, { color: colors.textPrimary }]}
             >
               {label || 'Select Option'}
             </Text>
@@ -183,7 +183,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
             ListFooterComponent={
               footerOption ? (
                 <TouchableOpacity
-                  style={[styles.footerOption, { borderTopColor: colors.outlineVariant, backgroundColor: colors.surfaceContainerLow }]}
+                  style={[styles.footerOption, { borderTopColor: colors.border, backgroundColor: colors.background }]}
                   onPress={() => {
                     setIsModalVisible(false);
                     footerOption.onPress();
@@ -193,17 +193,17 @@ export const FormSelect: React.FC<FormSelectProps> = ({
                     <Ionicons
                       name={footerOption.icon as any}
                       size={20}
-                      color={colors.primary}
+                      color={colors.cobalt}
                       style={{ marginRight: 10 }}
                     />
                   )}
-                  <Text style={[styles.footerOptionText, { color: colors.primary }]}>
+                  <Text style={[styles.footerOptionText, { color: colors.cobalt }]}>
                     {footerOption.label}
                   </Text>
                   <Ionicons
                     name="arrow-forward"
                     size={16}
-                    color={colors.primary}
+                    color={colors.cobalt}
                   />
                 </TouchableOpacity>
               ) : null

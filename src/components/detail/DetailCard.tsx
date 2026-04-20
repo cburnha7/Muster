@@ -37,16 +37,16 @@ export function DetailCard({ title, children, action, style, delay = 0 }: Detail
   return (
     <Animated.View
       style={[
-        styles.card, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.onSurface },
+        styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink },
         { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         style]}
     >
       {title ? (
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
+          <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
           {action ? (
             <TouchableOpacity onPress={action.onPress} activeOpacity={0.7}>
-              <Text style={[styles.action, { color: colors.primary }]}>{action.label}</Text>
+              <Text style={[styles.action, { color: colors.cobalt }]}>{action.label}</Text>
             </TouchableOpacity>
           ) : null}
         </View>

@@ -64,12 +64,12 @@ export function HeaderSearchPill({
   if (active) {
     return (
       <View
-        style={[styles.pillActive, { backgroundColor: colors.surfaceContainerLowest, borderColor: colors.cobalt, shadowColor: colors.cobalt }, { backgroundColor: colors.bgCard }]}
+        style={[styles.pillActive, { backgroundColor: colors.surface, borderColor: colors.cobalt, shadowColor: colors.cobalt }, { backgroundColor: colors.bgCard }]}
       >
         <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
           ref={inputRef}
-          style={[styles.activeInput, { color: colors.onSurface }, { color: colors.textPrimary }]}
+          style={[styles.activeInput, { color: colors.ink }, { color: colors.textPrimary }]}
           placeholder={placeholder}
           placeholderTextColor={colors.textSecondary}
           value={query}
@@ -82,7 +82,7 @@ export function HeaderSearchPill({
             onPress={() => handleChangeText('')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close-circle" size={20} color={colors.outline} />
+            <Ionicons name="close-circle" size={20} color={colors.inkSecondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -91,7 +91,7 @@ export function HeaderSearchPill({
 
   return (
     <TouchableOpacity
-      style={[styles.pill, { backgroundColor: colors.surfaceContainer, borderColor: colors.outlineVariant, shadowColor: colors.black }, { backgroundColor: colors.bgInput }]}
+      style={[styles.pill, { backgroundColor: colors.bgSubtle, borderColor: colors.border, shadowColor: colors.black }, { backgroundColor: colors.bgInput }]}
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityRole="button"
@@ -99,7 +99,7 @@ export function HeaderSearchPill({
     >
       <Ionicons name="search" size={20} color={colors.textSecondary} />
       <Text
-        style={[styles.text, { color: colors.outline }, { color: colors.textSecondary }]}
+        style={[styles.text, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
         numberOfLines={1}
       >
         {placeholder}

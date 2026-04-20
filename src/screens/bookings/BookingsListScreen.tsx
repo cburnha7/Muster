@@ -477,8 +477,8 @@ export function BookingsListScreen(): JSX.Element {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
+              tintColor={colors.cobalt}
+              colors={[colors.cobalt]}
             />
           }
           onEndReached={loadMoreBookings}

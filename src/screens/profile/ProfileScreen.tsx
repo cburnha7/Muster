@@ -166,7 +166,7 @@ export function ProfileScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.primary}
+          tintColor={colors.cobalt}
         />
       }
       showsVerticalScrollIndicator={false}
@@ -191,15 +191,15 @@ export function ProfileScreen() {
       {/* Action buttons */}
       <View style={styles.actionRow}>
         <TouchableOpacity
-          style={[styles.actionBtn, { borderColor: colors.primary }]}
+          style={[styles.actionBtn, { borderColor: colors.cobalt }]}
           onPress={() => (navigation as any).navigate('EditProfile')}
           activeOpacity={0.7}
         >
-          <Ionicons name="create-outline" size={18} color={colors.primary} />
-          <Text style={[styles.actionBtnText, { color: colors.primary }]}>Edit</Text>
+          <Ionicons name="create-outline" size={18} color={colors.cobalt} />
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { borderColor: colors.primary }, styles.actionBtnCobalt, { borderColor: colors.cobalt }]}
+          style={[styles.actionBtn, { borderColor: colors.cobalt }, styles.actionBtnCobalt, { borderColor: colors.cobalt }]}
           onPress={() =>
             (navigation as any).navigate('AvailabilityCalendar', {
               userId: authUser.id,
@@ -208,7 +208,7 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, { color: colors.primary }, styles.actionBtnTextCobalt, { color: colors.cobalt }]}>
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }, styles.actionBtnTextCobalt, { color: colors.cobalt }]}>
             Availability
           </Text>
         </TouchableOpacity>
@@ -224,9 +224,9 @@ export function ProfileScreen() {
             <Ionicons
               name="calendar-outline"
               size={32}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
-            <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No games played yet</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No games played yet</Text>
             <TouchableOpacity
               onPress={() =>
                 (navigation as any)
@@ -246,7 +246,7 @@ export function ProfileScreen() {
               <PressableCard
                 key={event.id}
                 style={[
-                  styles.gameRow, { borderBottomColor: colors.outlineVariant + '50' },
+                  styles.gameRow, { borderBottomColor: colors.border + '50' },
                   idx === recentGames.length - 1 && styles.gameRowLast]}
                 onPress={() =>
                   (navigation as any).navigate('Home', {
@@ -259,10 +259,10 @@ export function ProfileScreen() {
                   style={[styles.sportDot, { backgroundColor: sportColor }]}
                 />
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.onSurface }]} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
                     {event.title}
                   </Text>
-                  <Text style={[styles.gameMeta, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]} numberOfLines={1}>
                     {formatEventDate(event.startTime as any)}{' '}
                     {(event as any).facility?.name
                       ? `· ${(event as any).facility.name}`
@@ -272,7 +272,7 @@ export function ProfileScreen() {
                 <Ionicons
                   name="chevron-forward"
                   size={14}
-                  color={colors.outlineVariant}
+                  color={colors.border}
                 />
               </PressableCard>
             );
@@ -290,9 +290,9 @@ export function ProfileScreen() {
             <Ionicons
               name="people-outline"
               size={32}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
-            <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No teams yet</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No teams yet</Text>
             <TouchableOpacity
               onPress={() =>
                 (navigation as any)
@@ -313,7 +313,7 @@ export function ProfileScreen() {
               <PressableCard
                 key={team.id}
                 style={[
-                  styles.gameRow, { borderBottomColor: colors.outlineVariant + '50' },
+                  styles.gameRow, { borderBottomColor: colors.border + '50' },
                   idx === myTeams.length - 1 && styles.gameRowLast]}
                 onPress={() =>
                   (navigation as any).getParent()?.navigate('Teams', {
@@ -331,17 +331,17 @@ export function ProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.onSurface }]} numberOfLines={1}>
+                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
                     {team.name}
                   </Text>
-                  <Text style={[styles.gameMeta, { color: colors.onSurfaceVariant }]}>
+                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]}>
                     {team.members?.length ?? 0} players
                   </Text>
                 </View>
                 <Ionicons
                   name="chevron-forward"
                   size={14}
-                  color={colors.outlineVariant}
+                  color={colors.border}
                 />
               </PressableCard>
             );

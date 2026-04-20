@@ -16,8 +16,8 @@ export function EmptyHomeState({ userName, onCreateEvent }: EmptyHomeStateProps)
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.greeting, { color: colors.onSurface }]}>{greeting}, {firstName}</Text>
-      <Text style={[styles.message, { color: colors.onSurfaceVariant }]}>
+      <Text style={[styles.greeting, { color: colors.ink }]}>{greeting}, {firstName}</Text>
+      <Text style={[styles.message, { color: colors.inkSecondary }]}>
         No games on the schedule yet.{'\n'}Time to get one going.
       </Text>
 

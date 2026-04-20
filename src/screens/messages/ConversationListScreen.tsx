@@ -202,17 +202,17 @@ export function ConversationListScreen() {
         <Ionicons
           name={emptyState.icon}
           size={56}
-          color={colors.outlineVariant}
+          color={colors.border}
         />
-        <Text style={[styles.emptyTitle, { color: colors.onSurface }, { color: colors.textPrimary }]}>
+        <Text style={[styles.emptyTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
           {emptyState.title}
         </Text>
-        <Text style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }, { color: colors.textSecondary }]}>
           {emptyState.subtitle}
         </Text>
         {emptyState.actionLabel && (
           <TouchableOpacity
-            style={[styles.emptyAction, { backgroundColor: colors.primary }]}
+            style={[styles.emptyAction, { backgroundColor: colors.cobalt }]}
             onPress={handleEmptyAction}
             activeOpacity={0.7}
           >
@@ -255,7 +255,7 @@ export function ConversationListScreen() {
           <TouchableOpacity
             key={f.key}
             style={[
-              styles.chip, { backgroundColor: colors.surfaceContainer },
+              styles.chip, { backgroundColor: colors.bgSubtle },
               activeFilter === f.key && styles.chipActive, activeFilter === f.key && { backgroundColor: colors.cobalt },
               activeFilter !== f.key && { backgroundColor: colors.bgCard }]}
             onPress={() => setActiveFilter(f.key)}
@@ -263,7 +263,7 @@ export function ConversationListScreen() {
           >
             <Text
               style={[
-                styles.chipText, { color: colors.onSurfaceVariant },
+                styles.chipText, { color: colors.inkSecondary },
                 activeFilter === f.key && styles.chipTextActive, activeFilter === f.key && { color: colors.white }]}
             >
               {f.label}
@@ -285,12 +285,12 @@ export function ConversationListScreen() {
             onMute={handleMute}
           />
         )}
-        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.outlineVariant + '50' }]} />}
+        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.border + '50' }]} />}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.cobalt}
           />
         }
         ListEmptyComponent={renderEmptyState}
@@ -300,7 +300,7 @@ export function ConversationListScreen() {
       <FloatingActionButton
         icon="create-outline"
         onPress={() => navigation.navigate('NewConversation')}
-        backgroundColor={colors.primary}
+        backgroundColor={colors.cobalt}
         iconColor={colors.white}
       />
     </View>

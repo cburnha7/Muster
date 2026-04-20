@@ -14,14 +14,14 @@ export function SystemMessage({ content, priority }: SystemMessageProps) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.line, { backgroundColor: colors.outlineVariant }, isUrgent && styles.lineUrgent, isUrgent && { backgroundColor: colors.warning + '60' }]} />
+      <View style={[styles.line, { backgroundColor: colors.border }, isUrgent && styles.lineUrgent, isUrgent && { backgroundColor: colors.warning + '60' }]} />
       <Text
-        style={[styles.text, { color: colors.onSurfaceVariant }, isUrgent && styles.textUrgent, isUrgent && { color: colors.warning }]}
+        style={[styles.text, { color: colors.inkSecondary }, isUrgent && styles.textUrgent, isUrgent && { color: colors.warning }]}
         numberOfLines={2}
       >
         {content}
       </Text>
-      <View style={[styles.line, { backgroundColor: colors.outlineVariant }, isUrgent && styles.lineUrgent, isUrgent && { backgroundColor: colors.warning + '60' }]} />
+      <View style={[styles.line, { backgroundColor: colors.border }, isUrgent && styles.lineUrgent, isUrgent && { backgroundColor: colors.warning + '60' }]} />
     </View>
   );
 }

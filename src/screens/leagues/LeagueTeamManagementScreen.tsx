@@ -611,9 +611,9 @@ const styles = StyleSheet.create({
   summaryStrip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
+    borderBottomColor: colors.border,
   },
   summaryText: {
     fontSize: 14,
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   teamCard: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.background,
   },
   assignCoachButtonText: {
     fontSize: 14,
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   modalContent: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -767,14 +767,14 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
     fontFamily: fonts.body,
     color: colors.ink,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.background,
     marginBottom: 12,
   },
   inputHint: {
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.background,
     borderRadius: 8,
     marginBottom: 6,
   },
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.outlineVariant,
+    backgroundColor: colors.border,
   },
   dividerText: {
     fontSize: 12,

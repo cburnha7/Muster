@@ -334,16 +334,16 @@ export function DependentFormScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.surfaceContainerLowest }]}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.surfaceContainerLowest }, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.screen, { backgroundColor: colors.surface }, { backgroundColor: colors.bgScreen }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -389,7 +389,7 @@ export function DependentFormScreen() {
 
           {/* Gender */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionLabel, { color: colors.onSurface }]}>Gender</Text>
+            <Text style={[styles.sectionLabel, { color: colors.ink }]}>Gender</Text>
             <View style={styles.chipContainer}>
               {[
                 { label: 'Male', value: 'male' },
@@ -399,7 +399,7 @@ export function DependentFormScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.value}
-                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                     onPress={() =>
                       setGender(gender === opt.value ? '' : opt.value)
                     }
@@ -415,7 +415,7 @@ export function DependentFormScreen() {
                     )}
                     <Text
                       style={[
-                        styles.chipText, { color: colors.onSurface },
+                        styles.chipText, { color: colors.ink },
                         selected && styles.chipTextSelected, selected && { color: colors.white }]}
                     >
                       {opt.label}
@@ -428,14 +428,14 @@ export function DependentFormScreen() {
 
           {/* Sport preferences — chip-style multi-select */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionLabel, { color: colors.onSurface }]}>Sport Preferences</Text>
+            <Text style={[styles.sectionLabel, { color: colors.ink }]}>Sport Preferences</Text>
             <View style={styles.chipContainer}>
               {SPORT_OPTIONS.map(sport => {
                 const selected = sportPreferences.includes(sport.value);
                 return (
                   <TouchableOpacity
                     key={sport.value}
-                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
                     onPress={() => toggleSport(sport.value)}
                     activeOpacity={0.7}
                     accessibilityRole="checkbox"
@@ -452,7 +452,7 @@ export function DependentFormScreen() {
                     )}
                     <Text
                       style={[
-                        styles.chipText, { color: colors.onSurface },
+                        styles.chipText, { color: colors.ink },
                         selected && styles.chipTextSelected, selected && { color: colors.white }]}
                     >
                       {sport.label}

@@ -835,7 +835,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                 : {})}
             >
               {activeMembers.length <= 1 && (
-                <Text style={[styles.emptyMsg, { color: colors.onSurfaceVariant }]}>
+                <Text style={[styles.emptyMsg, { color: colors.inkSecondary }]}>
                   Your roster needs more players — share the code to grow
                 </Text>
               )}
@@ -904,7 +904,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                                 <Ionicons
                                   name="chatbubble-outline"
                                   size={18}
-                                  color={colors.primary}
+                                  color={colors.cobalt}
                                 />
                               </TouchableOpacity>
                             ),
@@ -916,7 +916,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
               })}
               {pendingMembers.length > 0 && (
                 <>
-                  <Text style={[styles.pendingHeader, { color: colors.onSurfaceVariant }]}>Pending</Text>
+                  <Text style={[styles.pendingHeader, { color: colors.inkSecondary }]}>Pending</Text>
                   {pendingMembers.map(m => (
                     <PersonRow
                       key={m.userId}
@@ -971,8 +971,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           color={isPending ? colors.gold : colors.cobalt}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.leagueName, { color: colors.onSurface }]}>{league.name}</Text>
-                          <Text style={[styles.leagueSport, { color: colors.onSurfaceVariant }]}>
+                          <Text style={[styles.leagueName, { color: colors.ink }]}>{league.name}</Text>
+                          <Text style={[styles.leagueSport, { color: colors.inkSecondary }]}>
                             {league.sportType}
                           </Text>
                         </View>
@@ -986,7 +986,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                         <Ionicons
                           name="chevron-forward"
                           size={16}
-                          color={colors.onSurfaceVariant}
+                          color={colors.inkSecondary}
                         />
                       </View>
                     </TouchableOpacity>
@@ -998,7 +998,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
             {/* ── Upcoming games card ── */}
             <DetailCard title="Upcoming games" delay={150}>
               {upcomingEvents.length === 0 ? (
-                <Text style={[styles.emptyMsg, { color: colors.onSurfaceVariant }]}>No games scheduled yet</Text>
+                <Text style={[styles.emptyMsg, { color: colors.inkSecondary }]}>No games scheduled yet</Text>
               ) : (
                 upcomingEvents.slice(0, 3).map(event => (
                   <TouchableOpacity
@@ -1011,14 +1011,14 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                     style={styles.eventRow}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.eventDate, { color: colors.onSurfaceVariant }]}>
+                    <Text style={[styles.eventDate, { color: colors.inkSecondary }]}>
                       {formatDate(event.startTime)}
                     </Text>
-                    <Text style={[styles.eventTitle, { color: colors.onSurface }]}>{event.title}</Text>
+                    <Text style={[styles.eventTitle, { color: colors.ink }]}>{event.title}</Text>
                     <Ionicons
                       name="chevron-forward"
                       size={16}
-                      color={colors.onSurfaceVariant}
+                      color={colors.inkSecondary}
                     />
                   </TouchableOpacity>
                 ))

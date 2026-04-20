@@ -265,7 +265,7 @@ export function LeaguesBrowserScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.cobalt}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -295,7 +295,7 @@ export function LeaguesBrowserScreen() {
             <Ionicons
               name="trophy-outline"
               size={40}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
               No active leagues
@@ -333,7 +333,7 @@ export function LeaguesBrowserScreen() {
                 <Ionicons
                   name={pastExpanded ? 'chevron-up' : 'chevron-down'}
                   size={18}
-                  color={colors.onSurfaceVariant}
+                  color={colors.inkSecondary}
                 />
               </TouchableOpacity>
               {pastExpanded &&
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   chipTextActive: {
     color: colors.white,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
     letterSpacing: -0.3,
     paddingHorizontal: 20,
     paddingTop: 4,
@@ -429,12 +429,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   fab: {
     position: 'absolute',

@@ -33,13 +33,13 @@ export function SportIconGrid({
         return (
           <View key={sport.key} style={styles.cellWrapper}>
             <TouchableOpacity
-              style={[styles.card, { backgroundColor: colors.surface }, isSelected && styles.cardSelected, isSelected && { backgroundColor: colors.primary }]}
+              style={[styles.card, { backgroundColor: colors.surface }, isSelected && styles.cardSelected, isSelected && { backgroundColor: colors.cobalt }]}
               onPress={() => onSelect(sport.key)}
               activeOpacity={0.75}
             >
               <Text style={styles.emoji}>{sport.emoji}</Text>
               <Text
-                style={[styles.label, { color: colors.onSurface }, isSelected && styles.labelSelected, isSelected && { color: colors.white }]}
+                style={[styles.label, { color: colors.ink }, isSelected && styles.labelSelected, isSelected && { color: colors.white }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >

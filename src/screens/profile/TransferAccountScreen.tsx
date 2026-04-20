@@ -146,14 +146,14 @@ export function TransferAccountScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Permanent action warning */}
-          <View style={[styles.warningCard, { backgroundColor: colors.tertiary + '15', borderColor: colors.tertiary + '30' }]}>
+          <View style={[styles.warningCard, { backgroundColor: colors.gold + '15', borderColor: colors.gold + '30' }]}>
             <Ionicons
               name="warning-outline"
               size={24}
-              color={colors.tertiary}
+              color={colors.gold}
             />
             <View style={styles.warningTextContainer}>
-              <Text style={[styles.warningTitle, { color: colors.onSurface }]}>This action is permanent</Text>
+              <Text style={[styles.warningTitle, { color: colors.ink }]}>This action is permanent</Text>
               <Text style={[styles.warningBody, { color: colors.onSurfaceFaint }]}>
                 Transferring this account will create an independent Muster
                 account for the dependent. They will be removed from your
@@ -165,7 +165,7 @@ export function TransferAccountScreen() {
           </View>
 
           {/* Credential fields */}
-          <Text style={[styles.sectionLabel, { color: colors.onSurface }]}>New Account Credentials</Text>
+          <Text style={[styles.sectionLabel, { color: colors.ink }]}>New Account Credentials</Text>
 
           <FormInput
             label="Email Address"

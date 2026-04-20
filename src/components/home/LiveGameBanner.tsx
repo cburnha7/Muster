@@ -60,20 +60,20 @@ export function LiveGameBanner({ booking, onPress }: LiveGameBannerProps) {
       </View>
       <View style={styles.info}>
         <Text
-          style={[styles.title, { color: colors.onSurface }, { color: colors.textPrimary }]}
+          style={[styles.title, { color: colors.ink }, { color: colors.textPrimary }]}
           numberOfLines={1}
         >
           {emoji} {event.title}
         </Text>
         <Text
-          style={[styles.meta, { color: colors.onSurfaceVariant }, { color: colors.textSecondary }]}
+          style={[styles.meta, { color: colors.inkSecondary }, { color: colors.textSecondary }]}
           numberOfLines={1}
         >
           {event.facility?.name || event.locationName || 'Game'} Â· Started{' '}
           {mins}m ago
         </Text>
       </View>
-      <Text style={[styles.arrow, { color: colors.onSurfaceVariant }]}>â†’</Text>
+      <Text style={[styles.arrow, { color: colors.inkSecondary }]}>â†’</Text>
     </TouchableOpacity>
   );
 }

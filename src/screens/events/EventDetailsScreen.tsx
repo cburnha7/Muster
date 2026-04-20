@@ -684,7 +684,7 @@ export function EventDetailsScreen() {
                 <Ionicons
                   name="shield-outline"
                   size={14}
-                  color={colors.primary}
+                  color={colors.cobalt}
                 />
                 <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
                 {roster.isHome && (
@@ -887,7 +887,7 @@ export function EventDetailsScreen() {
               ? [
                   {
                     label: 'Cancelled',
-                    bgColor: colors.errorContainer,
+                    bgColor: colors.errorLight,
                     textColor: colors.error,
                   },
                 ]
@@ -896,8 +896,8 @@ export function EventDetailsScreen() {
               ? [
                   {
                     label: 'Live',
-                    bgColor: colors.secondaryContainer,
-                    textColor: colors.secondary,
+                    bgColor: colors.successLight,
+                    textColor: colors.pine,
                   },
                 ]
               : []),
@@ -1006,7 +1006,7 @@ export function EventDetailsScreen() {
             <Ionicons
               name="chatbubbles-outline"
               size={18}
-              color={colors.primary}
+              color={colors.cobalt}
             />
             <Text style={styles.chatBtnText}>Game Thread</Text>
           </TouchableOpacity>
@@ -1038,7 +1038,7 @@ export function EventDetailsScreen() {
                         <Ionicons
                           name="shield-outline"
                           size={20}
-                          color={colors.primary}
+                          color={colors.cobalt}
                         />
                         <Text style={styles.leagueName}>{leagueName}</Text>
                         <Ionicons
@@ -1139,7 +1139,7 @@ export function EventDetailsScreen() {
                     <Ionicons
                       name="checkmark-circle"
                       size={16}
-                      color={colors.primary}
+                      color={colors.cobalt}
                     />
                     <Text style={styles.submittedText}>Submitted</Text>
                   </View>
@@ -1187,7 +1187,7 @@ export function EventDetailsScreen() {
                   <Ionicons
                     name="checkmark-circle"
                     size={48}
-                    color={colors.primary}
+                    color={colors.cobalt}
                   />
                   <Text style={styles.salutesSubmittedTitle}>
                     Salutes Submitted!
@@ -1499,7 +1499,7 @@ export function EventDetailsScreen() {
               <Ionicons
                 name={waiverAgreed ? 'checkbox' : 'square-outline'}
                 size={22}
-                color={waiverAgreed ? colors.primary : colors.inkFaint}
+                color={waiverAgreed ? colors.cobalt : colors.inkFaint}
               />
               <Text
                 style={{
@@ -1515,7 +1515,7 @@ export function EventDetailsScreen() {
             <TouchableOpacity
               style={{
                 backgroundColor: waiverAgreed
-                  ? colors.primary
+                  ? colors.cobalt
                   : colors.inkFaint,
                 borderRadius: 12,
                 paddingVertical: 14,
@@ -1759,7 +1759,7 @@ const styles = StyleSheet.create({
   teamScore: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.cobalt,
     marginLeft: 8,
   },
   vsText: {
@@ -1820,7 +1820,7 @@ const styles = StyleSheet.create({
   // Participants
   personRowDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.outlineVariant,
+    backgroundColor: colors.border,
     marginLeft: 52,
   },
   emptyParticipantsText: {
@@ -1950,7 +1950,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rosterSaluteHomeBadge: {
-    backgroundColor: colors.primary + '20',
+    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1958,7 +1958,7 @@ const styles = StyleSheet.create({
   rosterSaluteHomeBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.primary,
+    color: colors.cobalt,
   },
   participantCard: {
     width: '30%',
@@ -1988,7 +1988,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -2034,7 +2034,7 @@ const styles = StyleSheet.create({
   submittedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryFixed + '20',
+    backgroundColor: colors.cobaltLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -2043,7 +2043,7 @@ const styles = StyleSheet.create({
   submittedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
+    color: colors.cobalt,
   },
   submitSalutesContainer: {
     marginTop: 20,
@@ -2078,7 +2078,7 @@ const styles = StyleSheet.create({
   salutesSubmittedTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.cobalt,
     marginTop: 16,
     marginBottom: 8,
   },
@@ -2114,7 +2114,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -2196,12 +2196,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: colors.primary + '12',
+    backgroundColor: colors.cobalt + '12',
     gap: 8,
   },
   chatBtnText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.primary,
+    color: colors.cobalt,
   },
 });

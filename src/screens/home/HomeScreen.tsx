@@ -681,7 +681,7 @@ export function HomeScreen() {
   if (authLoading || isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <LoadingSpinner size={40} color={colors.primary} />
+        <LoadingSpinner size={40} color={colors.cobalt} />
       </View>
     );
   }
@@ -706,7 +706,7 @@ export function HomeScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.cobalt}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -737,7 +737,7 @@ export function HomeScreen() {
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
             <View
-              style={[styles.calendarCard, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.ink }, { backgroundColor: colors.bgCard }]}
+              style={[styles.calendarCard, { backgroundColor: colors.surface, shadowColor: colors.ink }, { backgroundColor: colors.bgCard }]}
             >
               <Calendar
                 current={selectedDate}
@@ -761,7 +761,7 @@ export function HomeScreen() {
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.onSurface }, { color: colors.textPrimary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
               Games near you
             </Text>
             <TouchableOpacity
@@ -774,7 +774,7 @@ export function HomeScreen() {
           {discoverLoading ? (
             <ActivityIndicator
               size="small"
-              color={colors.primary}
+              color={colors.cobalt}
               style={{ marginVertical: 16 }}
             />
           ) : discoverEvents.length > 0 ? (
@@ -782,7 +782,7 @@ export function HomeScreen() {
               <TouchableOpacity
                 key={event.id}
                 style={[
-                  styles.discoverCard, { backgroundColor: colors.surfaceContainerLowest },
+                  styles.discoverCard, { backgroundColor: colors.surface },
                   { backgroundColor: colors.bgCard }]}
                 onPress={() =>
                   navigation.navigate('EventDetails', { eventId: event.id })
@@ -791,7 +791,7 @@ export function HomeScreen() {
               >
                 <View
                   style={[
-                    styles.discoverIcon, { backgroundColor: colors.surfaceContainerLow },
+                    styles.discoverIcon, { backgroundColor: colors.background },
                     { backgroundColor: colors.bgSubtle }]}
                 >
                   <Text style={{ fontSize: 20 }}>
@@ -801,7 +801,7 @@ export function HomeScreen() {
                 <View style={styles.discoverInfo}>
                   <Text
                     style={[
-                      styles.discoverTitle, { color: colors.onSurface },
+                      styles.discoverTitle, { color: colors.ink },
                       { color: colors.textPrimary }]}
                     numberOfLines={1}
                   >
@@ -809,7 +809,7 @@ export function HomeScreen() {
                   </Text>
                   <Text
                     style={[
-                      styles.discoverMeta, { color: colors.onSurfaceVariant },
+                      styles.discoverMeta, { color: colors.inkSecondary },
                       { color: colors.textSecondary }]}
                     numberOfLines={1}
                   >
@@ -837,9 +837,9 @@ export function HomeScreen() {
             ))
           ) : (
             <View
-              style={[styles.discoverEmpty, { backgroundColor: colors.surfaceContainerLowest }, { backgroundColor: colors.bgCard }]}
+              style={[styles.discoverEmpty, { backgroundColor: colors.surface }, { backgroundColor: colors.bgCard }]}
             >
-              <Text style={[styles.discoverEmptyText, { color: colors.onSurfaceVariant }]}>
+              <Text style={[styles.discoverEmptyText, { color: colors.inkSecondary }]}>
                 No games near you yet
               </Text>
               <TouchableOpacity

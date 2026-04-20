@@ -37,7 +37,7 @@ function getConversationIcon(
 function getConversationColor(type: Conversation['type']): string {
   switch (type) {
     case 'TEAM_CHAT':
-      return colors.primary;
+      return colors.cobalt;
     case 'GAME_THREAD':
       return tokenSport.basketball.solid;
     case 'LEAGUE_CHANNEL':
@@ -103,7 +103,7 @@ function ConversationRowInner({
     });
     return (
       <TouchableOpacity
-        style={[styles.swipeActionLeft, { backgroundColor: colors.onSurfaceVariant }]}
+        style={[styles.swipeActionLeft, { backgroundColor: colors.inkSecondary }]}
         onPress={() => {
           swipeableRef.current?.close();
           onMute?.(conversation);
@@ -137,7 +137,7 @@ function ConversationRowInner({
     });
     return (
       <TouchableOpacity
-        style={[styles.swipeActionRight, { backgroundColor: colors.primary }]}
+        style={[styles.swipeActionRight, { backgroundColor: colors.cobalt }]}
         onPress={() => {
           swipeableRef.current?.close();
           onPin?.(conversation);
@@ -157,9 +157,9 @@ function ConversationRowInner({
   const rowContent = (
     <TouchableOpacity
       style={[
-        styles.row, { backgroundColor: colors.surfaceContainerLowest },
+        styles.row, { backgroundColor: colors.surface },
         { backgroundColor: colors.bgCard },
-        hasUnread && styles.rowUnread, hasUnread && { backgroundColor: colors.primary + '08' },
+        hasUnread && styles.rowUnread, hasUnread && { backgroundColor: colors.cobalt + '08' },
         isMuted && styles.rowMuted]}
       onPress={() => onPress(conversation)}
       activeOpacity={0.7}
@@ -198,7 +198,7 @@ function ConversationRowInner({
         <View style={styles.topRow}>
           <Text
             style={[
-              styles.name, { color: colors.onSurface },
+              styles.name, { color: colors.ink },
               { color: colors.textPrimary },
               hasUnread && styles.nameUnread]}
             numberOfLines={1}
@@ -208,9 +208,9 @@ function ConversationRowInner({
           {lastMsg && (
             <Text
               style={[
-                styles.timestamp, { color: colors.onSurfaceVariant },
+                styles.timestamp, { color: colors.inkSecondary },
                 { color: colors.textSecondary },
-                hasUnread && styles.timestampUnread, hasUnread && { color: colors.primary }]}
+                hasUnread && styles.timestampUnread, hasUnread && { color: colors.cobalt }]}
             >
               {formatTimestamp(lastMsg.createdAt)}
             </Text>
@@ -219,9 +219,9 @@ function ConversationRowInner({
         <View style={styles.bottomRow}>
           <Text
             style={[
-              styles.preview, { color: colors.onSurfaceVariant },
+              styles.preview, { color: colors.inkSecondary },
               { color: colors.textSecondary },
-              hasUnread && styles.previewUnread, hasUnread && { color: colors.onSurface },
+              hasUnread && styles.previewUnread, hasUnread && { color: colors.ink },
               isSystemPreview && styles.previewSystem]}
             numberOfLines={1}
           >
@@ -232,7 +232,7 @@ function ConversationRowInner({
               : 'No messages yet'}
           </Text>
           {hasUnread && (
-            <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+            <View style={[styles.badge, { backgroundColor: colors.cobalt }]}>
               <Text style={[styles.badgeText, { color: colors.white }]}>
                 {conversation.unreadCount > 99
                   ? '99+'

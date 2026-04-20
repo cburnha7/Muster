@@ -651,7 +651,7 @@ export function EditProfileScreen(): JSX.Element {
                       backgroundColor: colors.surface,
                       borderRadius: 10,
                       borderWidth: 1,
-                      borderColor: colors.outlineVariant,
+                      borderColor: colors.border,
                       marginTop: -8,
                       marginBottom: 8,
                     }}
@@ -663,7 +663,7 @@ export function EditProfileScreen(): JSX.Element {
                           paddingHorizontal: 14,
                           paddingVertical: 10,
                           borderBottomWidth: idx < 4 ? 1 : 0,
-                          borderBottomColor: colors.outlineVariant,
+                          borderBottomColor: colors.border,
                         }}
                         onPress={() => {
                           setAddress(suggestion);
@@ -675,7 +675,7 @@ export function EditProfileScreen(): JSX.Element {
                           style={{
                             fontFamily: fonts.body,
                             fontSize: 14,
-                            color: colors.onSurface,
+                            color: colors.ink,
                           }}
                         >
                           {suggestion}
@@ -736,7 +736,7 @@ export function EditProfileScreen(): JSX.Element {
           paddingVertical: 12,
           backgroundColor: colors.bgScreen,
           borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.outlineVariant,
+          borderTopColor: colors.border,
         }}
       >
         <FormButton
@@ -752,7 +752,7 @@ export function EditProfileScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
   },
   content: {
     padding: 16,
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
   sportsLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginBottom: 12,
   },
   sportsList: {
@@ -855,21 +855,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.border,
   },
   sportTagSelected: {
-    backgroundColor: colors.primaryFixed,
-    borderColor: colors.primary,
+    backgroundColor: colors.cobaltLight,
+    borderColor: colors.cobalt,
   },
   sportTagText: {
     fontSize: 14,
-    color: colors.outline,
+    color: colors.inkSecondary,
     fontWeight: '500',
   },
   sportTagTextSelected: {
-    color: colors.primary,
+    color: colors.cobalt,
   },
   saveButton: {
     marginTop: 24,

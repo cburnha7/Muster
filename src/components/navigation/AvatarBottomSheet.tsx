@@ -141,11 +141,11 @@ export function AvatarBottomSheet() {
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {/* ── Profiles ─────────────────────────── */}
-        <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>PROFILES</Text>
+        <Text style={[styles.sectionLabel, { color: colors.inkSecondary }]}>PROFILES</Text>
 
         {/* Current user */}
         <TouchableOpacity
-          style={[styles.personRow, !activeUserId && styles.personRowActive, !activeUserId && { backgroundColor: colors.primaryFixed || `${colors.primary}10` }]}
+          style={[styles.personRow, !activeUserId && styles.personRowActive, !activeUserId && { backgroundColor: colors.cobaltLight || `${colors.cobalt}10` }]}
           onPress={() => {
             handleSwitchUser(null);
             navigateTo('ProfileScreen');
@@ -184,14 +184,14 @@ export function AvatarBottomSheet() {
           <View style={styles.personInfo}>
             <Text
               style={[
-                styles.personName, { color: colors.onSurface },
-                !activeUserId && styles.personNameActive, !activeUserId && { color: colors.primary }]}
+                styles.personName, { color: colors.ink },
+                !activeUserId && styles.personNameActive, !activeUserId && { color: colors.cobalt }]}
             >
               {user.firstName} {user.lastName}
             </Text>
           </View>
           {!activeUserId && (
-            <Ionicons name="checkmark" size={20} color={colors.secondary} />
+            <Ionicons name="checkmark" size={20} color={colors.pine} />
           )}
         </TouchableOpacity>
 
@@ -207,7 +207,7 @@ export function AvatarBottomSheet() {
           return (
             <TouchableOpacity
               key={dep.id}
-              style={[styles.personRow, isActive && styles.personRowActive, isActive && { backgroundColor: colors.primaryFixed || `${colors.primary}10` }]}
+              style={[styles.personRow, isActive && styles.personRowActive, isActive && { backgroundColor: colors.cobaltLight || `${colors.cobalt}10` }]}
               onPress={() => {
                 handleSwitchUser(dep.id);
                 navigateTo('DependentProfile', { dependentId: dep.id });
@@ -240,15 +240,15 @@ export function AvatarBottomSheet() {
               <View style={styles.personInfo}>
                 <Text
                   style={[
-                    styles.personName, { color: colors.onSurface },
-                    isActive && styles.personNameActive, isActive && { color: colors.primary }]}
+                    styles.personName, { color: colors.ink },
+                    isActive && styles.personNameActive, isActive && { color: colors.cobalt }]}
                 >
                   {dep.firstName}
                 </Text>
               </View>
-              <Text style={[styles.ageText, { color: colors.onSurfaceVariant }]}>age {age}</Text>
+              <Text style={[styles.ageText, { color: colors.inkSecondary }]}>age {age}</Text>
               {isActive && (
-                <Ionicons name="checkmark" size={20} color={colors.secondary} />
+                <Ionicons name="checkmark" size={20} color={colors.pine} />
               )}
             </TouchableOpacity>
           );
@@ -260,14 +260,14 @@ export function AvatarBottomSheet() {
           onPress={() => navigateTo('DependentForm', {})}
           activeOpacity={0.7}
         >
-          <View style={[styles.personAvatar, styles.addChildAvatar, { backgroundColor: colors.surfaceContainer }]}>
-            <Ionicons name="add" size={20} color={colors.primary} />
+          <View style={[styles.personAvatar, styles.addChildAvatar, { backgroundColor: colors.bgSubtle }]}>
+            <Ionicons name="add" size={20} color={colors.cobalt} />
           </View>
-          <Text style={[styles.addChildText, { color: colors.primary }]}>Add a child</Text>
+          <Text style={[styles.addChildText, { color: colors.cobalt }]}>Add a child</Text>
         </TouchableOpacity>
 
         {/* ── Quick Actions ────────────────────── */}
-        <View style={[styles.divider, { backgroundColor: colors.outlineVariant + '80' }]} />
+        <View style={[styles.divider, { backgroundColor: colors.border + '80' }]} />
 
         <TouchableOpacity
           style={styles.menuRow}
@@ -280,13 +280,13 @@ export function AvatarBottomSheet() {
           <Ionicons
             name="notifications-outline"
             size={20}
-            color={colors.onSurface}
+            color={colors.ink}
           />
-          <Text style={[styles.menuText, { color: colors.onSurface }]}>Notifications</Text>
+          <Text style={[styles.menuText, { color: colors.ink }]}>Notifications</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={colors.outlineVariant}
+            color={colors.border}
           />
         </TouchableOpacity>
 
@@ -301,26 +301,26 @@ export function AvatarBottomSheet() {
           <Ionicons
             name="settings-outline"
             size={20}
-            color={colors.onSurface}
+            color={colors.ink}
           />
-          <Text style={[styles.menuText, { color: colors.onSurface }]}>Settings</Text>
+          <Text style={[styles.menuText, { color: colors.ink }]}>Settings</Text>
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={colors.outlineVariant}
+            color={colors.border}
           />
         </TouchableOpacity>
 
         {/* ── Plan Section ────────────────────── */}
         {isFreeTier && (
           <>
-            <View style={[styles.divider, { backgroundColor: colors.outlineVariant + '80' }]} />
+            <View style={[styles.divider, { backgroundColor: colors.border + '80' }]} />
             <View style={styles.planRow}>
-              <Text style={[styles.planText, { color: colors.onSurfaceVariant }]}>
-                Plan: <Text style={[styles.planTier, { color: colors.onSurface }]}>{tierName}</Text>
+              <Text style={[styles.planText, { color: colors.inkSecondary }]}>
+                Plan: <Text style={[styles.planTier, { color: colors.ink }]}>{tierName}</Text>
               </Text>
               <TouchableOpacity
-                style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
+                style={[styles.upgradeBtn, { backgroundColor: colors.cobalt }]}
                 activeOpacity={0.7}
                 onPress={() => {
                   close();
@@ -346,7 +346,7 @@ export function AvatarBottomSheet() {
         )}
 
         {/* ── Log Out ─────────────────────────── */}
-        <View style={[styles.divider, { backgroundColor: colors.outlineVariant + '80' }]} />
+        <View style={[styles.divider, { backgroundColor: colors.border + '80' }]} />
         <TouchableOpacity
           style={styles.logoutRow}
           onPress={handleLogout}

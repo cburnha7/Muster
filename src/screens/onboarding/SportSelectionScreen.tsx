@@ -65,14 +65,14 @@ export const SportSelectionScreen: React.FC = () => {
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={colors.ink} />
           </TouchableOpacity>
 
           <View style={styles.progressBar}>
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
               <View
                 key={i}
-                style={[styles.progressDot, { backgroundColor: colors.outlineVariant }, i <= 1 && styles.progressDotActive, i <= 1 && { backgroundColor: colors.primary }]}
+                style={[styles.progressDot, { backgroundColor: colors.border }, i <= 1 && styles.progressDotActive, i <= 1 && { backgroundColor: colors.cobalt }]}
               />
             ))}
           </View>
@@ -86,10 +86,10 @@ export const SportSelectionScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <Text style={[styles.title, { color: colors.onSurface }]}>
+            <Text style={[styles.title, { color: colors.ink }]}>
               {isGuardian ? 'Sports your kids play' : 'Sports you play'}
             </Text>
-            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+            <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
               We'll personalize your feed and recommendations
             </Text>
 
@@ -105,7 +105,7 @@ export const SportSelectionScreen: React.FC = () => {
         <View style={styles.bottomSection}>
           <TouchableOpacity
             style={[
-              styles.continueButton, { backgroundColor: colors.primary },
+              styles.continueButton, { backgroundColor: colors.cobalt },
               !canContinue && styles.continueButtonDisabled]}
             onPress={handleContinue}
             disabled={!canContinue}

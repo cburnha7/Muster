@@ -26,7 +26,7 @@ export function FamilyPulseSection() {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Family</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Family</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -54,10 +54,10 @@ export function FamilyPulseSection() {
               <View style={[styles.depAvatar, { backgroundColor: color }]}>
                 <Text style={[styles.depInitial, { color: colors.white }]}>{initial}</Text>
               </View>
-              <Text style={[styles.depName, { color: colors.onSurface }]} numberOfLines={1}>
+              <Text style={[styles.depName, { color: colors.ink }]} numberOfLines={1}>
                 {dep.firstName}
               </Text>
-              <Text style={[styles.depAge, { color: colors.onSurfaceVariant }]}>Age {age}</Text>
+              <Text style={[styles.depAge, { color: colors.inkSecondary }]}>Age {age}</Text>
               <TouchableOpacity
                 style={styles.findGameCta}
                 onPress={() =>
@@ -66,7 +66,7 @@ export function FamilyPulseSection() {
                     ?.navigate('Home', { screen: 'HomeScreen' })
                 }
               >
-                <Text style={[styles.findGameText, { color: colors.primary }]}>Find game Ã¢â€ â€™</Text>
+                <Text style={[styles.findGameText, { color: colors.cobalt }]}>Find game Ã¢â€ â€™</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           );

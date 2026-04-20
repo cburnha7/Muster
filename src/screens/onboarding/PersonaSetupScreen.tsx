@@ -140,7 +140,7 @@ export const PersonaSetupScreen: React.FC = () => {
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={colors.ink} />
           </TouchableOpacity>
 
           <View style={styles.progressBar}>
@@ -283,10 +283,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.outlineVariant,
+    backgroundColor: colors.border,
   },
   progressDotActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     width: 24,
     borderRadius: 4,
   },
@@ -300,14 +300,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: fonts.heading,
-    color: colors.onSurface,
+    color: colors.ink,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     lineHeight: 24,
     marginBottom: 40,
   },
@@ -319,18 +319,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   skillChip: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 9999,
     paddingVertical: 16,
     paddingHorizontal: 28,
   },
   skillChipSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
   },
   skillChipText: {
     fontSize: 16,
     fontFamily: fonts.headingSemi,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   skillChipTextSelected: {
     color: colors.white,
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   actionButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   laterButton: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   laterButtonText: {
     fontSize: 18,
     fontFamily: fonts.ui,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     letterSpacing: -0.1,
   },
 
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   continueButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
@@ -400,6 +400,6 @@ const styles = StyleSheet.create({
   skipLinkText: {
     fontSize: 15,
     fontFamily: fonts.headingSemi,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 });

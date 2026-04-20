@@ -52,7 +52,7 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Coming Up</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Coming Up</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -67,36 +67,36 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
           return (
             <TouchableOpacity
               key={booking.id}
-              style={[styles.card, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.ink }, isToday && styles.cardToday, isToday && { backgroundColor: colors.primaryFixed }]}
+              style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink }, isToday && styles.cardToday, isToday && { backgroundColor: colors.cobaltLight }]}
               onPress={() => onPress(booking)}
               activeOpacity={0.85}
             >
               {/* Date chip */}
-              <View style={[styles.dateChip, { backgroundColor: colors.surfaceContainerHigh }, isToday && styles.dateChipToday, isToday && { backgroundColor: colors.primary }]}>
+              <View style={[styles.dateChip, { backgroundColor: colors.border }, isToday && styles.dateChipToday, isToday && { backgroundColor: colors.cobalt }]}>
                 <Text
-                  style={[styles.dateWeekday, { color: colors.onSurfaceVariant }, isToday && styles.dateTextToday, isToday && { color: colors.white }]}
+                  style={[styles.dateWeekday, { color: colors.inkSecondary }, isToday && styles.dateTextToday, isToday && { color: colors.white }]}
                 >
                   {weekday}
                 </Text>
-                <Text style={[styles.dateDay, { color: colors.onSurface }, isToday && styles.dateTextToday, isToday && { color: colors.white }]}>
+                <Text style={[styles.dateDay, { color: colors.ink }, isToday && styles.dateTextToday, isToday && { color: colors.white }]}>
                   {day}
                 </Text>
               </View>
 
               {/* Event info */}
-              <Text style={[styles.eventTitle, { color: colors.onSurface }]} numberOfLines={2}>
+              <Text style={[styles.eventTitle, { color: colors.ink }]} numberOfLines={2}>
                 {event.title}
               </Text>
-              <Text style={[styles.eventTime, { color: colors.onSurfaceVariant }]}>{formatTime(startDate)}</Text>
+              <Text style={[styles.eventTime, { color: colors.inkSecondary }]}>{formatTime(startDate)}</Text>
 
               {(event.facility?.name || event.locationName) && (
                 <View style={styles.locationRow}>
                   <Ionicons
                     name="location-outline"
                     size={12}
-                    color={colors.outline}
+                    color={colors.inkSecondary}
                   />
-                  <Text style={[styles.locationText, { color: colors.outline }]} numberOfLines={1}>
+                  <Text style={[styles.locationText, { color: colors.inkSecondary }]} numberOfLines={1}>
                     {event.facility?.name || event.locationName}
                   </Text>
                 </View>
@@ -107,9 +107,9 @@ export function UpcomingRow({ bookings, onPress }: UpcomingRowProps) {
                 <Ionicons
                   name="checkmark-circle"
                   size={12}
-                  color={colors.secondary}
+                  color={colors.pine}
                 />
-                <Text style={[styles.youreInText, { color: colors.secondary }]}>You're in</Text>
+                <Text style={[styles.youreInText, { color: colors.pine }]}>You're in</Text>
               </View>
             </TouchableOpacity>
           );

@@ -334,7 +334,7 @@ export function FacilitiesListScreen() {
             <Ionicons
               name="location-outline"
               size={16}
-              color={colors.onSurfaceVariant}
+              color={colors.inkSecondary}
             />
             <Text style={styles.facilityAddress} numberOfLines={1}>
               {formattedAddress}
@@ -382,7 +382,7 @@ export function FacilitiesListScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Filter Grounds</Text>
             <TouchableOpacity onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={24} color={colors.onSurface} />
+              <Ionicons name="close" size={24} color={colors.ink} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.filterContent}>
@@ -492,7 +492,7 @@ export function FacilitiesListScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.cobalt}
           />
         }
       >
@@ -516,7 +516,7 @@ export function FacilitiesListScreen() {
             <Ionicons
               name="map-outline"
               size={48}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
               No grounds found
@@ -550,7 +550,7 @@ export function FacilitiesListScreen() {
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={colors.onSurfaceVariant}
+            color={colors.inkSecondary}
           />
         </TouchableOpacity>
       )}
@@ -572,7 +572,7 @@ export function FacilitiesListScreen() {
               <TouchableOpacity
                 onPress={() => setReservationsModalVisible(false)}
               >
-                <Ionicons name="close" size={22} color={colors.onSurface} />
+                <Ionicons name="close" size={22} color={colors.ink} />
               </TouchableOpacity>
             </View>
             <ScrollView
@@ -634,7 +634,7 @@ export function FacilitiesListScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={18}
-                      color={colors.onSurfaceVariant}
+                      color={colors.inkSecondary}
                     />
                   </TouchableOpacity>
                 );
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   chipTextActive: {
     color: colors.white,
@@ -715,12 +715,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
     letterSpacing: -0.3,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.primary}20`,
+    backgroundColor: `${colors.cobalt}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.primary,
+    color: colors.cobalt,
   },
   header: {
     flexDirection: 'row',
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     height: 400,
   },
   facilityCard: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
   facilityName: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.onSurface,
+    color: colors.ink,
     marginBottom: 4,
   },
   ownerBadge: {
@@ -822,7 +822,7 @@ const styles = StyleSheet.create({
   facilityAddress: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginLeft: 6,
     flex: 1,
   },
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     fontWeight: '500',
   },
   facilityFooter: {
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 14,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginLeft: 6,
     fontWeight: '500',
   },
@@ -874,14 +874,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.onSurface,
+    color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   filterContent: {
     padding: Spacing.lg,
@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.onSurface,
+    color: colors.ink,
     marginBottom: Spacing.md,
   },
   sportTypeContainer: {
@@ -942,9 +942,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 9999,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.border,
   },
   sportChipSelected: {
     backgroundColor: colors.cobalt,
@@ -953,7 +953,7 @@ const styles = StyleSheet.create({
   sportChipText: {
     fontSize: 13,
     fontFamily: fonts.headingSemi,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   sportChipTextSelected: {
     color: colors.white,
@@ -968,13 +968,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 9999,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.border,
     alignItems: 'center',
   },
   clearButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   applyButton: {
     flex: 1,
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
   reservationsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 16,
@@ -1009,7 +1009,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   resBackdrop: {
     flex: 1,
@@ -1019,11 +1019,11 @@ const styles = StyleSheet.create({
     paddingBottom: 70,
   },
   resModal: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 24,
     maxHeight: '80%',
     overflow: 'hidden',
-    shadowColor: colors.onSurface,
+    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
   resTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   resScroll: {
     paddingVertical: 8,
@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
   resCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1059,7 +1059,7 @@ const styles = StyleSheet.create({
   resCardFacility: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
     flex: 1,
   },
   pendingBadge: {
@@ -1076,13 +1076,13 @@ const styles = StyleSheet.create({
   resCardCourt: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginTop: 2,
   },
   resCardMeta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginTop: 1,
   },
 });

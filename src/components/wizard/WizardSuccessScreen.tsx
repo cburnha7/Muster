@@ -67,7 +67,7 @@ export function WizardSuccessScreen({
       {/* Celebration icon */}
       <Animated.View
         style={[
-          styles.emojiCircle, { backgroundColor: colors.secondaryContainer },
+          styles.emojiCircle, { backgroundColor: colors.successLight },
           {
             opacity: opacityAnim,
             transform: [{ scale: scaleAnim }],
@@ -77,15 +77,15 @@ export function WizardSuccessScreen({
       </Animated.View>
 
       <Animated.View style={{ opacity: opacityAnim }}>
-        <Text style={[styles.title, { color: colors.onSurface }]}>{title}</Text>
-        {subtitle && <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{subtitle}</Text>}
+        <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+        {subtitle && <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>{subtitle}</Text>}
       </Animated.View>
 
       {/* Summary card */}
       {summaryRows && summaryRows.length > 0 && (
         <Animated.View
           style={[
-            styles.summaryCard, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.onSurface },
+            styles.summaryCard, { backgroundColor: colors.surface, shadowColor: colors.ink },
             {
               opacity: cardAnim,
               transform: [
@@ -103,10 +103,10 @@ export function WizardSuccessScreen({
               key={i}
               style={[
                 styles.summaryRow,
-                i < summaryRows.length - 1 && styles.summaryRowBorder, i < summaryRows.length - 1 && { borderBottomColor: colors.outlineVariant }]}
+                i < summaryRows.length - 1 && styles.summaryRowBorder, i < summaryRows.length - 1 && { borderBottomColor: colors.border }]}
             >
-              <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>{row.label}</Text>
-              <Text style={[styles.summaryValue, { color: colors.onSurface }]}>{row.value}</Text>
+              <Text style={[styles.summaryLabel, { color: colors.inkSecondary }]}>{row.label}</Text>
+              <Text style={[styles.summaryValue, { color: colors.ink }]}>{row.value}</Text>
             </View>
           ))}
         </Animated.View>
@@ -121,7 +121,7 @@ export function WizardSuccessScreen({
               key={i}
               style={[
                 styles.actionBtn,
-                isPrimary ? styles.actionPrimary : styles.actionSecondary, isPrimary ? { backgroundColor: colors.primary } : {}]}
+                isPrimary ? styles.actionPrimary : styles.actionSecondary, isPrimary ? { backgroundColor: colors.cobalt } : {}]}
               onPress={action.onPress}
               activeOpacity={0.7}
             >
@@ -129,7 +129,7 @@ export function WizardSuccessScreen({
                 <Ionicons
                   name={action.icon}
                   size={18}
-                  color={isPrimary ? colors.white : colors.primary}
+                  color={isPrimary ? colors.white : colors.cobalt}
                 />
               )}
               <Text

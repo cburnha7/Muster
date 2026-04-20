@@ -59,7 +59,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     <View
       style={[
         styles.container,
-        { borderBottomColor: colors.outlineVariant, shadowColor: colors.ink },
+        { borderBottomColor: colors.border, shadowColor: colors.ink },
         {
           resolvedBg,
           paddingTop: insets.top,

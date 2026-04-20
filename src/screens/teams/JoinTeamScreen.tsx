@@ -314,7 +314,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
               <Ionicons
                 name="chevron-forward"
                 size={20}
-                color={colors.onSurfaceVariant}
+                color={colors.inkSecondary}
               />
             </TouchableOpacity>
 
@@ -342,7 +342,7 @@ export function JoinTeamScreen({ route }: JoinTeamScreenProps) {
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color={colors.onSurfaceVariant}
+                  color={colors.inkSecondary}
                 />
               </TouchableOpacity>
             ))}

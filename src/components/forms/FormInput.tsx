@@ -66,7 +66,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
         {label && (
           <Text
             style={[
-              styles.label, { color: colors.onSurface },
+              styles.label, { color: colors.ink },
               { color: colors.textPrimary },
               labelStyle]}
           >
@@ -77,13 +77,13 @@ export const FormInput = forwardRef<any, FormInputProps>(
 
         <View
           style={[
-            styles.inputContainer, { backgroundColor: colors.surfaceContainer },
+            styles.inputContainer, { backgroundColor: colors.bgSubtle },
             { backgroundColor: colors.bgInput },
             isFocused && [
               styles.inputContainerFocused,
               { backgroundColor: colors.bgCard },
             ],
-            error && styles.inputContainerError, error && { backgroundColor: colors.errorContainer }]}
+            error && styles.inputContainerError, error && { backgroundColor: colors.errorLight }]}
         >
           {leftIcon && (
             <Ionicons
@@ -93,8 +93,8 @@ export const FormInput = forwardRef<any, FormInputProps>(
                 error
                   ? colors.error
                   : isFocused
-                    ? colors.primary
-                    : colors.outline
+                    ? colors.cobalt
+                    : colors.inkSecondary
               }
               style={styles.leftIcon}
             />
@@ -103,7 +103,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
           <TextInput
             ref={inputRef}
             style={[
-              styles.input, { color: colors.onSurface },
+              styles.input, { color: colors.ink },
               { color: colors.textPrimary },
               leftIcon && styles.inputWithLeftIcon,
               (rightIcon || showPasswordToggle) && styles.inputWithRightIcon,
@@ -130,7 +130,7 @@ export const FormInput = forwardRef<any, FormInputProps>(
               <Ionicons
                 name={isSecure ? 'eye-off-outline' : 'eye-outline'}
                 size={20}
-                color={colors.outline}
+                color={colors.inkSecondary}
               />
             </TouchableOpacity>
           )}
@@ -147,8 +147,8 @@ export const FormInput = forwardRef<any, FormInputProps>(
                   error
                     ? colors.error
                     : isFocused
-                      ? colors.primary
-                      : colors.outline
+                      ? colors.cobalt
+                      : colors.inkSecondary
                 }
               />
             </TouchableOpacity>

@@ -65,19 +65,19 @@ export function DatePickerInput({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <Text style={[styles.label, { color: colors.onSurface }]}>
+      <Text style={[styles.label, { color: colors.ink }]}>
         {label}
         {required && <Text style={[styles.required, { color: colors.error }]}> *</Text>}
       </Text>
       <TouchableOpacity
-        style={[styles.trigger, { backgroundColor: colors.surfaceContainer }, error ? styles.triggerError : null, error ? { borderColor: colors.error } : {}]}
+        style={[styles.trigger, { backgroundColor: colors.bgSubtle }, error ? styles.triggerError : null, error ? { borderColor: colors.error } : {}]}
         onPress={() => setShowPicker(true)}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${formatDisplay(value)}`}
       >
-        <Ionicons name="calendar-outline" size={18} color={colors.onSurfaceVariant} />
-        <Text style={[styles.triggerText, { color: colors.onSurface }, !value && styles.placeholder, !value && { color: colors.onSurfaceVariant }]}>
+        <Ionicons name="calendar-outline" size={18} color={colors.inkSecondary} />
+        <Text style={[styles.triggerText, { color: colors.ink }, !value && styles.placeholder, !value && { color: colors.inkSecondary }]}>
           {formatDisplay(value)}
         </Text>
       </TouchableOpacity>
@@ -95,7 +95,7 @@ export function DatePickerInput({
           />
           {Platform.OS === 'ios' && (
             <TouchableOpacity style={styles.doneButton} onPress={handleConfirmIOS}>
-              <Text style={[styles.doneText, { color: colors.primary }]}>Done</Text>
+              <Text style={[styles.doneText, { color: colors.cobalt }]}>Done</Text>
             </TouchableOpacity>
           )}
         </>

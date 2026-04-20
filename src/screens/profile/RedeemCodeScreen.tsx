@@ -113,11 +113,11 @@ export function RedeemCodeScreen() {
             <Ionicons
               name="checkmark-circle"
               size={48}
-              color={colors.secondary}
+              color={colors.pine}
             />
-            <Text style={[styles.successText, { color: colors.onSurface }]}>{successMsg}</Text>
+            <Text style={[styles.successText, { color: colors.ink }]}>{successMsg}</Text>
             <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              style={[styles.primaryBtn, { backgroundColor: colors.cobalt }]}
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
@@ -127,12 +127,12 @@ export function RedeemCodeScreen() {
         ) : (
           <>
             {/* Code Input */}
-            <Text style={[styles.label, { color: colors.outline }]}>Promo Code</Text>
+            <Text style={[styles.label, { color: colors.inkSecondary }]}>Promo Code</Text>
             <View style={styles.inputRow}>
               <TextInput
-                style={[styles.input, { backgroundColor: colors.white, color: colors.onSurface, borderColor: `${colors.outline}30` }, validated && styles.inputDisabled, validated && { backgroundColor: `${colors.primary}10`, borderColor: colors.primary }]}
+                style={[styles.input, { backgroundColor: colors.white, color: colors.ink, borderColor: `${colors.inkSecondary}30` }, validated && styles.inputDisabled, validated && { backgroundColor: `${colors.cobalt}10`, borderColor: colors.cobalt }]}
                 placeholder="Enter your code"
-                placeholderTextColor={colors.outline}
+                placeholderTextColor={colors.inkSecondary}
                 value={code}
                 onChangeText={t => {
                   setCode(t);
@@ -145,7 +145,7 @@ export function RedeemCodeScreen() {
               />
               {!validated && (
                 <TouchableOpacity
-                  style={[styles.validateBtn, { backgroundColor: colors.primary }]}
+                  style={[styles.validateBtn, { backgroundColor: colors.cobalt }]}
                   onPress={handleValidate}
                   disabled={isValidating}
                   activeOpacity={0.7}
@@ -163,36 +163,36 @@ export function RedeemCodeScreen() {
 
             {validated && (
               <>
-                <Text style={[styles.label, { color: colors.outline }]}>Select Your Tier</Text>
+                <Text style={[styles.label, { color: colors.inkSecondary }]}>Select Your Tier</Text>
                 {TIERS.map(tier => {
                   const active = selectedTier === tier.key;
                   return (
                     <TouchableOpacity
                       key={tier.key}
-                      style={[styles.tierCard, { backgroundColor: colors.white }, active && styles.tierCardActive, active && { borderColor: colors.primary, backgroundColor: `${colors.primary}08` }]}
+                      style={[styles.tierCard, { backgroundColor: colors.white }, active && styles.tierCardActive, active && { borderColor: colors.cobalt, backgroundColor: `${colors.cobalt}08` }]}
                       onPress={() => setSelectedTier(tier.key)}
                       activeOpacity={0.7}
                     >
                       <Ionicons
                         name={tier.icon}
                         size={24}
-                        color={active ? colors.primary : colors.outline}
+                        color={active ? colors.cobalt : colors.inkSecondary}
                       />
                       <View style={styles.tierInfo}>
                         <Text
                           style={[
-                            styles.tierLabel, { color: colors.onSurface },
-                            active && styles.tierLabelActive, active && { color: colors.primary }]}
+                            styles.tierLabel, { color: colors.ink },
+                            active && styles.tierLabelActive, active && { color: colors.cobalt }]}
                         >
                           {tier.label}
                         </Text>
-                        <Text style={[styles.tierDesc, { color: colors.outline }]}>{tier.desc}</Text>
+                        <Text style={[styles.tierDesc, { color: colors.inkSecondary }]}>{tier.desc}</Text>
                       </View>
                       {active && (
                         <Ionicons
                           name="checkmark-circle"
                           size={22}
-                          color={colors.primary}
+                          color={colors.cobalt}
                         />
                       )}
                     </TouchableOpacity>
@@ -201,7 +201,7 @@ export function RedeemCodeScreen() {
 
                 <TouchableOpacity
                   style={[
-                    styles.primaryBtn, { backgroundColor: colors.primary },
+                    styles.primaryBtn, { backgroundColor: colors.cobalt },
                     !selectedTier && styles.primaryBtnDisabled]}
                   onPress={handleRedeem}
                   disabled={!selectedTier || isRedeeming}

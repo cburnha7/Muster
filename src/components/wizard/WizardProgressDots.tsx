@@ -16,8 +16,8 @@ export function WizardProgressDots({ total, current }: WizardProgressDotsProps) 
           key={i}
           style={[
             styles.dot,
-            i <= current ? styles.dotActive : styles.dotInactive, i <= current ? { backgroundColor: colors.primary } : {},
-            i < current && styles.dotCompleted, i < current && { backgroundColor: colors.primary }]}
+            i <= current ? styles.dotActive : styles.dotInactive, i <= current ? { backgroundColor: colors.cobalt } : {},
+            i < current && styles.dotCompleted, i < current && { backgroundColor: colors.cobalt }]}
         />
       ))}
     </View>

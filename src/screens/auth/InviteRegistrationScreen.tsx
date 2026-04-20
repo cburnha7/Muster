@@ -466,7 +466,7 @@ export function InviteRegistrationScreen({
         onPress={() => setStep(0)}
         disabled={isLoading}
       >
-        <Ionicons name="arrow-back" size={18} color={colors.onSurfaceVariant} />
+        <Ionicons name="arrow-back" size={18} color={colors.inkSecondary} />
         <Text style={styles.backBtnText}>Back</Text>
       </TouchableOpacity>
     </>

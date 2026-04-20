@@ -117,7 +117,7 @@ export function CreationWizard({
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             activeOpacity={0.75}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.onSurface} />
+            <Ionicons name="arrow-back" size={24} color={colors.ink} />
           </TouchableOpacity>
 
           <WizardProgressDots total={steps.length} current={currentStep} />
@@ -134,9 +134,9 @@ export function CreationWizard({
         >
           {step && (
             <>
-              <Text style={[styles.headline, { color: colors.onSurface }]}>{step.headline}</Text>
+              <Text style={[styles.headline, { color: colors.ink }]}>{step.headline}</Text>
               {step.subtitle && (
-                <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{step.subtitle}</Text>
+                <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>{step.subtitle}</Text>
               )}
               <View style={styles.stepContent}>{step.content}</View>
             </>
@@ -147,7 +147,7 @@ export function CreationWizard({
         <View style={styles.bottomBar}>
           <TouchableOpacity
             style={[
-              styles.continueBtn, { backgroundColor: colors.primary },
+              styles.continueBtn, { backgroundColor: colors.cobalt },
               (!canAdvance || isSubmitting) && styles.continueBtnDisabled]}
             onPress={handleNext}
             disabled={!canAdvance || isSubmitting}

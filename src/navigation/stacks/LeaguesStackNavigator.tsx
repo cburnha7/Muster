@@ -13,7 +13,7 @@ import SchedulingScreen from '../../screens/leagues/SchedulingScreen';
 import { ScheduleWizardScreen } from '../../screens/leagues/ScheduleWizardScreen';
 import { LeagueDeletionConfirmScreen } from '../../screens/leagues/LeagueDeletionConfirmScreen';
 import { LeagueTeamManagementScreen } from '../../screens/leagues/LeagueTeamManagementScreen';
-import { colors, fonts } from '../../theme';
+import { lightColors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<LeaguesStackParamList>();
 
@@ -21,14 +21,14 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerBackTitleVisible: false,
-  headerTintColor: colors.onSurface,
+  headerTintColor: lightColors.ink,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.background },
+  headerStyle: { backgroundColor: lightColors.background },
   headerShadowVisible: false,
   headerTitleStyle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: colors.onSurface,
+    color: lightColors.ink,
   },
 };
 

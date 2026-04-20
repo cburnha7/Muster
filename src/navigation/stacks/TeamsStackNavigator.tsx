@@ -7,7 +7,7 @@ import { CreateTeamScreen } from '../../screens/teams/CreateTeamScreen';
 import { JoinTeamScreen } from '../../screens/teams/JoinTeamScreen';
 import { EventDetailsScreen } from '../../screens/events/EventDetailsScreen';
 import { ScheduleReviewScreen } from '../../screens/teams/ScheduleReviewScreen';
-import { colors, fonts } from '../../theme';
+import { lightColors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<TeamsStackParamList>();
 
@@ -15,14 +15,14 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerBackTitleVisible: false,
-  headerTintColor: colors.onSurface,
+  headerTintColor: lightColors.ink,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.background },
+  headerStyle: { backgroundColor: lightColors.background },
   headerShadowVisible: false,
   headerTitleStyle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: colors.onSurface,
+    color: lightColors.ink,
   },
 };
 

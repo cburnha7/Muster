@@ -304,12 +304,12 @@ export function TeamsListScreen() {
         onPress={handleJoinTeam}
         activeOpacity={0.85}
       >
-        <Ionicons name="key-outline" size={18} color={colors.primary} />
+        <Ionicons name="key-outline" size={18} color={colors.cobalt} />
         <Text style={styles.joinBtnText}>Join a Roster with Code</Text>
         <Ionicons
           name="chevron-forward"
           size={16}
-          color={colors.outlineVariant}
+          color={colors.border}
         />
       </TouchableOpacity>
 
@@ -341,7 +341,7 @@ export function TeamsListScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.cobalt}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -353,7 +353,7 @@ export function TeamsListScreen() {
               <Ionicons
                 name="people-outline"
                 size={36}
-                color={colors.outlineVariant}
+                color={colors.border}
               />
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
                 No rosters yet
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     alignSelf: 'flex-start' as any,
   },
   chipActive: {
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   chipTextActive: {
     color: colors.white,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
     letterSpacing: -0.3,
     marginBottom: 10,
     marginTop: 8,
@@ -446,13 +446,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.onSurface,
+    color: colors.ink,
     marginTop: 8,
   },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 
   // ── Join button ─────────────────────────

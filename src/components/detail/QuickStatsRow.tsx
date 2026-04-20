@@ -18,24 +18,24 @@ interface QuickStatsRowProps {
 export function QuickStatsRow({ stats }: QuickStatsRowProps) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.row, { backgroundColor: colors.surfaceContainerLowest, shadowColor: colors.onSurface }]}>
+    <View style={[styles.row, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
       {stats.map((stat, i) => (
         <View
           key={i}
-          style={[styles.card, i < stats.length - 1 && styles.cardBorder, i < stats.length - 1 && { borderRightColor: colors.outlineVariant }]}
+          style={[styles.card, i < stats.length - 1 && styles.cardBorder, i < stats.length - 1 && { borderRightColor: colors.border }]}
         >
-          <Text style={[styles.value, { color: colors.onSurface }]}>{stat.value}</Text>
-          <Text style={[styles.label, { color: colors.onSurfaceVariant }]}>{stat.label}</Text>
+          <Text style={[styles.value, { color: colors.ink }]}>{stat.value}</Text>
+          <Text style={[styles.label, { color: colors.inkSecondary }]}>{stat.label}</Text>
           {stat.fillRatio !== undefined && (
-            <View style={[styles.bar, { backgroundColor: colors.outlineVariant }]}>
+            <View style={[styles.bar, { backgroundColor: colors.border }]}>
               <View
                 style={[
-                  styles.barFill, { backgroundColor: colors.primary },
+                  styles.barFill, { backgroundColor: colors.cobalt },
                   { width: `${Math.min(stat.fillRatio, 1) * 100}%` as any }]}
               />
             </View>
           )}
-          {stat.sub ? <Text style={[styles.sub, { color: colors.onSurfaceVariant }]}>{stat.sub}</Text> : null}
+          {stat.sub ? <Text style={[styles.sub, { color: colors.inkSecondary }]}>{stat.sub}</Text> : null}
         </View>
       ))}
     </View>

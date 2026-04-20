@@ -33,14 +33,14 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.container, { backgroundColor: colors.surfaceContainerLowest, borderTopColor: colors.outlineVariant }]}>
+      <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TextInput
           ref={inputRef}
-          style={[styles.input, { backgroundColor: colors.surfaceContainer, color: colors.onSurface }]}
+          style={[styles.input, { backgroundColor: colors.bgSubtle, color: colors.ink }]}
           value={text}
           onChangeText={setText}
           placeholder="Message"
-          placeholderTextColor={colors.onSurfaceVariant}
+          placeholderTextColor={colors.inkSecondary}
           multiline
           maxLength={2000}
           returnKeyType="send"
@@ -49,7 +49,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
         />
         {hasText && (
           <TouchableOpacity
-            style={[styles.sendBtn, { backgroundColor: colors.primary }, disabled && styles.sendBtnDisabled]}
+            style={[styles.sendBtn, { backgroundColor: colors.cobalt }, disabled && styles.sendBtnDisabled]}
             onPress={handleSend}
             disabled={disabled}
             activeOpacity={0.7}

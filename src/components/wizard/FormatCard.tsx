@@ -20,19 +20,19 @@ export function FormatCard({
   const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.surfaceContainerLowest }, selected && styles.cardSelected, selected && { borderColor: colors.primary, backgroundColor: colors.primaryFixed }]}
+      style={[styles.card, { backgroundColor: colors.surface }, selected && styles.cardSelected, selected && { borderColor: colors.cobalt, backgroundColor: colors.cobaltLight }]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <Text style={styles.emoji}>{emoji}</Text>
       <View style={styles.textBlock}>
-        <Text style={[styles.title, { color: colors.onSurface }, selected && styles.titleSelected, selected && { color: colors.primary }]}>
+        <Text style={[styles.title, { color: colors.ink }, selected && styles.titleSelected, selected && { color: colors.cobalt }]}>
           {title}
         </Text>
-        <Text style={[styles.description, { color: colors.onSurfaceVariant }]}>{description}</Text>
+        <Text style={[styles.description, { color: colors.inkSecondary }]}>{description}</Text>
       </View>
       {selected && (
-        <View style={[styles.checkCircle, { backgroundColor: colors.primary }]}>
+        <View style={[styles.checkCircle, { backgroundColor: colors.cobalt }]}>
           <Text style={[styles.checkmark, { color: colors.white }]}>Ã¢Å“â€œ</Text>
         </View>
       )}

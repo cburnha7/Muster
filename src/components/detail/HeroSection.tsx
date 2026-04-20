@@ -73,7 +73,7 @@ export function HeroSection({
     >
       {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
 
-      <Text style={[styles.title, { color: colors.onSurface }]} numberOfLines={3}>
+      <Text style={[styles.title, { color: colors.ink }]} numberOfLines={3}>
         {title}
       </Text>
 
@@ -97,17 +97,17 @@ export function HeroSection({
         </View>
       )}
 
-      {headline ? <Text style={[styles.headline, { color: colors.onSurface }]}>{headline}</Text> : null}
+      {headline ? <Text style={[styles.headline, { color: colors.ink }]}>{headline}</Text> : null}
 
       {subline ? (
         onSublinePress ? (
           <TouchableOpacity onPress={onSublinePress} activeOpacity={0.7}>
-            <Text style={[styles.subline, { color: colors.onSurfaceVariant }, styles.sublineTappable, { color: colors.primary }]}>
+            <Text style={[styles.subline, { color: colors.inkSecondary }, styles.sublineTappable, { color: colors.cobalt }]}>
               {subline}
             </Text>
           </TouchableOpacity>
         ) : (
-          <Text style={[styles.subline, { color: colors.onSurfaceVariant }]}>{subline}</Text>
+          <Text style={[styles.subline, { color: colors.inkSecondary }]}>{subline}</Text>
         )
       ) : null}
 

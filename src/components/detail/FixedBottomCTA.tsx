@@ -57,7 +57,7 @@ export function FixedBottomCTA({
 
   return (
     <View
-      style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.outlineVariant }, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }, { paddingBottom: Math.max(insets.bottom, 12) }]}
     >
       <TouchableOpacity
         style={buttonStyle}
@@ -67,7 +67,7 @@ export function FixedBottomCTA({
       >
         {loading ? (
           <ActivityIndicator
-            color={variant === 'secondary' ? colors.primary : colors.white}
+            color={variant === 'secondary' ? colors.cobalt : colors.white}
             size="small"
           />
         ) : (
@@ -77,7 +77,7 @@ export function FixedBottomCTA({
                 name={icon}
                 size={18}
                 color={
-                  variant === 'secondary' ? colors.primary : colors.white
+                  variant === 'secondary' ? colors.cobalt : colors.white
                 }
                 style={styles.icon}
               />
@@ -93,7 +93,7 @@ export function FixedBottomCTA({
           activeOpacity={0.7}
           style={styles.secondary2}
         >
-          <Text style={[styles.secondaryText, { color: colors.onSurfaceVariant }]}>{secondaryLabel}</Text>
+          <Text style={[styles.secondaryText, { color: colors.inkSecondary }]}>{secondaryLabel}</Text>
         </TouchableOpacity>
       ) : null}
     </View>

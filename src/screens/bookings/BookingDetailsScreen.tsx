@@ -255,15 +255,15 @@ export function BookingDetailsScreen(): JSX.Element {
   const getStatusColor = (status: BookingStatus) => {
     switch (status) {
       case BookingStatus.CONFIRMED:
-        return colors.secondary;
+        return colors.pine;
       case BookingStatus.CANCELLED:
         return colors.error;
       case BookingStatus.COMPLETED:
-        return colors.primary;
+        return colors.cobalt;
       case BookingStatus.NO_SHOW:
         return colors.warning;
       default:
-        return colors.onSurfaceVariant;
+        return colors.inkSecondary;
     }
   };
 
@@ -271,15 +271,15 @@ export function BookingDetailsScreen(): JSX.Element {
   const getPaymentStatusColor = (status: PaymentStatus) => {
     switch (status) {
       case PaymentStatus.PAID:
-        return colors.secondary;
+        return colors.pine;
       case PaymentStatus.PENDING:
         return colors.warning;
       case PaymentStatus.FAILED:
         return colors.error;
       case PaymentStatus.REFUNDED:
-        return colors.primary;
+        return colors.cobalt;
       default:
-        return colors.onSurfaceVariant;
+        return colors.inkSecondary;
     }
   };
 
@@ -334,7 +334,7 @@ export function BookingDetailsScreen(): JSX.Element {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadBooking(true)}
-            colors={[colors.primary]}
+            colors={[colors.cobalt]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -409,7 +409,7 @@ export function BookingDetailsScreen(): JSX.Element {
               <Ionicons
                 name={getSportIcon(event.sportType) as any}
                 size={24}
-                color={colors.primary}
+                color={colors.cobalt}
               />
               <Text style={styles.eventTitle}>{event.title}</Text>
             </View>
@@ -420,7 +420,7 @@ export function BookingDetailsScreen(): JSX.Element {
               <Ionicons
                 name="calendar-outline"
                 size={16}
-                color={colors.onSurfaceVariant}
+                color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Date & Time</Text>
@@ -438,7 +438,7 @@ export function BookingDetailsScreen(): JSX.Element {
               <Ionicons
                 name="location-outline"
                 size={16}
-                color={colors.onSurfaceVariant}
+                color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Location</Text>
@@ -457,7 +457,7 @@ export function BookingDetailsScreen(): JSX.Element {
               <Ionicons
                 name="trophy-outline"
                 size={16}
-                color={colors.onSurfaceVariant}
+                color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Skill Level</Text>
@@ -473,7 +473,7 @@ export function BookingDetailsScreen(): JSX.Element {
               <Ionicons
                 name="people-outline"
                 size={16}
-                color={colors.onSurfaceVariant}
+                color={colors.inkSecondary}
               />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Participants</Text>
@@ -488,7 +488,7 @@ export function BookingDetailsScreen(): JSX.Element {
                 <Ionicons
                   name="construct-outline"
                   size={16}
-                  color={colors.onSurfaceVariant}
+                  color={colors.inkSecondary}
                 />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Equipment Needed</Text>
@@ -646,14 +646,14 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 20,
     fontFamily: fonts.headingSemi,
-    color: colors.onSurface,
+    color: colors.ink,
     marginLeft: 8,
     flex: 1,
   },
   eventDescription: {
     fontSize: 16,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     lineHeight: 24,
     marginBottom: 16,
   },
@@ -670,20 +670,20 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.outline,
+    color: colors.inkSecondary,
     marginBottom: 2,
     flex: 1,
   },
   detailValue: {
     fontSize: 16,
-    color: colors.onSurface,
+    color: colors.ink,
     fontFamily: fonts.label,
     flex: 2,
   },
   detailSubtext: {
     fontSize: 14,
     fontFamily: fonts.body,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     marginTop: 2,
   },
   paymentStatusBadge: {
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceContainerLow,
+    borderTopColor: colors.background,
   },
   actionButton: {
     flex: 1,

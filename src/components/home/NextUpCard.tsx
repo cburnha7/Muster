@@ -66,8 +66,8 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
       <LinearGradient
         colors={
           live
-            ? [colors.secondary, '#004D23']
-            : [colors.primary, colors.primaryContainer]
+            ? [colors.pine, '#004D23']
+            : [colors.cobalt, colors.cobaltMid]
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -76,7 +76,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
         {/* Top row: badge + relative time */}
         <View style={styles.topRow}>
           <View style={styles.badge}>
-            {live && <View style={[styles.liveDot, { backgroundColor: colors.secondaryContainer }]} />}
+            {live && <View style={[styles.liveDot, { backgroundColor: colors.successLight }]} />}
             <Text style={[styles.badgeText, { color: colors.white }]}>{live ? 'LIVE' : 'NEXT UP'}</Text>
           </View>
           <Text style={styles.relativeTime}>{relativeTime}</Text>
@@ -171,7 +171,7 @@ export function NextUpCard({ booking, onPress }: NextUpCardProps) {
             <Ionicons
               name="arrow-forward"
               size={16}
-              color={live ? colors.secondary : colors.primary}
+              color={live ? colors.pine : colors.cobalt}
             />
           </View>
         </View>

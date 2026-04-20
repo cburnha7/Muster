@@ -55,7 +55,7 @@ export function PlayerCard({
         <Pressable style={[styles.card, { backgroundColor: colors.white, shadowColor: colors.black }]} onPress={() => {}}>
           {/* Close button */}
           <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: colors.surfaceContainerHigh }]}
+            style={[styles.closeButton, { backgroundColor: colors.border }]}
             onPress={onClose}
             activeOpacity={0.7}
             accessibilityRole="button"
@@ -72,8 +72,8 @@ export function PlayerCard({
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatar} />
             ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.surfaceContainerHigh }]}>
-                <Ionicons name="person" size={34} color={colors.outline} />
+              <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.border }]}>
+                <Ionicons name="person" size={34} color={colors.inkSecondary} />
               </View>
             )}
           </View>

@@ -76,12 +76,12 @@ export function UserStatsScreen(): JSX.Element {
       <Text style={styles.sectionHeader}>Overview</Text>
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+          <Ionicons name="calendar-outline" size={24} color={colors.cobalt} />
           <Text style={styles.statValue}>{stats.totalBookings}</Text>
           <Text style={styles.statLabel}>Bookings</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="flag-outline" size={24} color={colors.secondary} />
+          <Ionicons name="flag-outline" size={24} color={colors.pine} />
           <Text style={styles.statValue}>{stats.totalEventsOrganized}</Text>
           <Text style={styles.statLabel}>Organized</Text>
         </View>
@@ -124,7 +124,7 @@ export function UserStatsScreen(): JSX.Element {
           <View style={styles.financialDivider} />
           <View style={styles.financialItem}>
             <Text style={styles.financialLabel}>Total Earned</Text>
-            <Text style={[styles.financialValue, { color: colors.secondary }]}>
+            <Text style={[styles.financialValue, { color: colors.pine }]}>
               ${stats.totalEarned.toFixed(2)}
             </Text>
           </View>
@@ -155,7 +155,7 @@ export function UserStatsScreen(): JSX.Element {
             <Ionicons
               name="medal-outline"
               size={40}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
             <Text style={styles.emptyText}>No achievements yet</Text>
             <Text style={styles.emptySubtext}>
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginTop: 24,
@@ -262,13 +262,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.onSurface,
+    color: colors.ink,
     letterSpacing: -0.5,
   },
   statLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -282,12 +282,12 @@ const styles = StyleSheet.create({
   ratingValue: {
     fontFamily: fonts.heading,
     fontSize: 22,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   ratingMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 
   // Financial
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   financialLabel: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   financialValue: {
     fontFamily: fonts.heading,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   financialDivider: {
     width: StyleSheet.hairlineWidth,
     height: 48,
-    backgroundColor: colors.outlineVariant,
+    backgroundColor: colors.border,
   },
 
   // Sports
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.primaryFixed,
+    backgroundColor: colors.cobaltLight,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 9999,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   sportTagText: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.primary,
+    color: colors.cobalt,
   },
 
   // Empty
@@ -343,12 +343,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   emptySubtext: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
     textAlign: 'center',
   },
 
@@ -358,13 +358,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant + '60',
+    borderBottomColor: colors.border + '60',
   },
   achievementIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primaryFixed,
+    backgroundColor: colors.cobaltLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -378,12 +378,12 @@ const styles = StyleSheet.create({
   achievementName: {
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   achievementDesc: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   progressRow: {
     flexDirection: 'row',
@@ -394,19 +394,19 @@ const styles = StyleSheet.create({
   progressTrack: {
     flex: 1,
     height: 4,
-    backgroundColor: colors.surfaceContainerHigh,
+    backgroundColor: colors.border,
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.cobalt,
     borderRadius: 2,
   },
   progressText: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 
   // Summary
@@ -419,11 +419,11 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   summaryValue: {
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.primary,
+    color: colors.cobalt,
   },
 });

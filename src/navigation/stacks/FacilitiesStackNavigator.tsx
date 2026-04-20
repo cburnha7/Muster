@@ -12,7 +12,7 @@ import { GroundAvailabilityScreen } from '../../screens/facilities/GroundAvailab
 import { CourtAvailabilityScreen } from '../../screens/facilities/CourtAvailabilityScreen';
 import { MyRentalsScreen } from '../../screens/facilities/MyRentalsScreen';
 import { CancellationPolicyScreen } from '../../screens/facilities/CancellationPolicyScreen';
-import { colors, fonts } from '../../theme';
+import { lightColors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
 
@@ -20,14 +20,14 @@ const detailHeader = {
   headerShown: true as const,
   headerBackVisible: false,
   headerBackTitleVisible: false,
-  headerTintColor: colors.onSurface,
+  headerTintColor: lightColors.ink,
   headerTitleAlign: 'center' as const,
-  headerStyle: { backgroundColor: colors.background },
+  headerStyle: { backgroundColor: lightColors.background },
   headerShadowVisible: false,
   headerTitleStyle: {
     fontFamily: fonts.headingSemi,
     fontSize: 17,
-    color: colors.onSurface,
+    color: lightColors.ink,
   },
 };
 

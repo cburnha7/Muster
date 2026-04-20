@@ -41,8 +41,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       >
         <View
           style={[
-            styles.checkbox, { borderColor: colors.outlineVariant, backgroundColor: colors.surfaceContainerLowest },
-            checked && styles.checkboxChecked, checked && { backgroundColor: colors.primary, borderColor: colors.primary },
+            styles.checkbox, { borderColor: colors.border, backgroundColor: colors.surface },
+            checked && styles.checkboxChecked, checked && { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
             error && styles.checkboxError, error && { borderColor: colors.error }]}
         >
           {checked && (
@@ -51,7 +51,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
         </View>
         <View style={styles.labelContainer}>
           {typeof label === 'string' ? (
-            <Text style={[styles.label, { color: colors.onSurfaceVariant }]}>{label}</Text>
+            <Text style={[styles.label, { color: colors.inkSecondary }]}>{label}</Text>
           ) : (
             label
           )}

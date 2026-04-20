@@ -63,12 +63,12 @@ export function ContextIndicator() {
         accessibilityRole="button"
         accessibilityLabel={`Active account: ${displayName}. ${hasDependents ? 'Tap to switch.' : ''}`}
       >
-        <Ionicons name="person" size={14} color={colors.onSurface} />
-        <Text style={[styles.name, { color: colors.onSurface }]} numberOfLines={1}>
+        <Ionicons name="person" size={14} color={colors.ink} />
+        <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
           {displayName}
         </Text>
         {hasDependents && (
-          <Ionicons name="chevron-down" size={14} color={colors.onSurface} />
+          <Ionicons name="chevron-down" size={14} color={colors.ink} />
         )}
       </TouchableOpacity>
 
@@ -87,7 +87,7 @@ export function ContextIndicator() {
                 const isActive = item.id === activeUserId;
                 return (
                   <TouchableOpacity
-                    style={[styles.row, isActive && styles.activeRow, isActive && { backgroundColor: colors.primary + '0D' }]}
+                    style={[styles.row, isActive && styles.activeRow, isActive && { backgroundColor: colors.cobalt + '0D' }]}
                     onPress={() => handleSwitch(item.id)}
                     accessibilityRole="menuitem"
                     accessibilityLabel={`Switch to ${item.name}`}
@@ -95,17 +95,17 @@ export function ContextIndicator() {
                     <Ionicons
                       name="person"
                       size={16}
-                      color={isActive ? colors.primary : colors.onSurfaceVariant}
+                      color={isActive ? colors.cobalt : colors.inkSecondary}
                       style={styles.rowIcon}
                     />
                     <Text
-                      style={[styles.rowText, { color: colors.onSurface }, isActive && styles.activeRowText, isActive && { color: colors.primary }]}
+                      style={[styles.rowText, { color: colors.ink }, isActive && styles.activeRowText, isActive && { color: colors.cobalt }]}
                       numberOfLines={1}
                     >
                       {item.name}
                     </Text>
                     {isActive && (
-                      <Ionicons name="checkmark" size={18} color={colors.primary} />
+                      <Ionicons name="checkmark" size={18} color={colors.cobalt} />
                     )}
                   </TouchableOpacity>
                 );

@@ -140,7 +140,7 @@ export function DependentProfileScreen() {
         <Ionicons
           name="person-outline"
           size={48}
-          color={colors.outlineVariant}
+          color={colors.border}
         />
         <Text style={styles.emptyText}>Could not load profile.</Text>
       </View>
@@ -164,7 +164,7 @@ export function DependentProfileScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.primary}
+          tintColor={colors.cobalt}
         />
       }
       showsVerticalScrollIndicator={false}
@@ -188,7 +188,7 @@ export function DependentProfileScreen() {
           }
           activeOpacity={0.7}
         >
-          <Ionicons name="create-outline" size={18} color={colors.primary} />
+          <Ionicons name="create-outline" size={18} color={colors.cobalt} />
           <Text style={styles.actionBtnText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -220,7 +220,7 @@ export function DependentProfileScreen() {
           <Ionicons
             name="arrow-forward-circle-outline"
             size={18}
-            color={canTransfer ? colors.onSurface : colors.outlineVariant}
+            color={canTransfer ? colors.ink : colors.border}
           />
           <Text
             style={[
@@ -247,7 +247,7 @@ export function DependentProfileScreen() {
             <Ionicons
               name="calendar-outline"
               size={32}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
             <Text style={styles.emptyText}>No games played yet</Text>
           </View>
@@ -287,7 +287,7 @@ export function DependentProfileScreen() {
                 <Ionicons
                   name="chevron-forward"
                   size={14}
-                  color={colors.outlineVariant}
+                  color={colors.border}
                 />
               </PressableCard>
             );
@@ -303,7 +303,7 @@ export function DependentProfileScreen() {
             <Ionicons
               name="people-outline"
               size={32}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
             <Text style={styles.emptyText}>Not a member of any Rosters</Text>
           </View>
@@ -346,7 +346,7 @@ export function DependentProfileScreen() {
                 <Ionicons
                   name="chevron-forward"
                   size={14}
-                  color={colors.outlineVariant}
+                  color={colors.border}
                 />
               </PressableCard>
             );
@@ -362,7 +362,7 @@ export function DependentProfileScreen() {
             <Ionicons
               name="trophy-outline"
               size={32}
-              color={colors.outlineVariant}
+              color={colors.border}
             />
             <Text style={styles.emptyText}>Not a member of any Leagues</Text>
           </View>
@@ -403,7 +403,7 @@ export function DependentProfileScreen() {
                 <Ionicons
                   name="chevron-forward"
                   size={14}
-                  color={colors.outlineVariant}
+                  color={colors.border}
                 />
               </PressableCard>
             );
@@ -438,44 +438,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.cobalt,
     gap: 4,
   },
   actionBtnCobalt: {
     borderColor: colors.cobalt,
   },
   actionBtnTransfer: {
-    borderColor: colors.onSurface,
+    borderColor: colors.ink,
   },
   actionBtnDisabled: {
-    borderColor: colors.outlineVariant,
+    borderColor: colors.border,
     opacity: 0.6,
   },
   actionBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.primary,
+    color: colors.cobalt,
   },
   actionBtnTextCobalt: {
     color: colors.cobalt,
   },
   actionBtnTextTransfer: {
-    color: colors.onSurface,
+    color: colors.ink,
   },
   actionBtnTextDisabled: {
-    color: colors.outlineVariant,
+    color: colors.border,
   },
   transferHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.outlineVariant,
+    color: colors.border,
     marginTop: 6,
     fontStyle: 'italic',
   },
   sectionTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.onSurface,
+    color: colors.ink,
     marginTop: 24,
     marginBottom: 10,
     letterSpacing: -0.2,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.outlineVariant + '50',
+    borderBottomColor: colors.border + '50',
   },
   gameRowLast: {
     borderBottomWidth: 0,
@@ -519,12 +519,12 @@ const styles = StyleSheet.create({
   gameName: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.onSurface,
+    color: colors.ink,
   },
   gameMeta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
   emptySection: {
     alignItems: 'center',
@@ -535,6 +535,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.onSurfaceVariant,
+    color: colors.inkSecondary,
   },
 });

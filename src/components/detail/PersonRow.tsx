@@ -59,20 +59,20 @@ export function PersonRow({
 
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={[styles.name, { color: colors.onSurface }]} numberOfLines={1}>{name}</Text>
+          <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>{name}</Text>
           {role ? (
-            <View style={[styles.roleBadge, { backgroundColor: colors.secondaryContainer }]}>
-              <Text style={[styles.roleText, { color: colors.secondary }]}>{role}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: colors.successLight }]}>
+              <Text style={[styles.roleText, { color: colors.pine }]}>{role}</Text>
             </View>
           ) : null}
         </View>
-        {subtitle ? <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]} numberOfLines={1}>{subtitle}</Text> : null}
+        {subtitle ? <Text style={[styles.subtitle, { color: colors.inkSecondary }]} numberOfLines={1}>{subtitle}</Text> : null}
       </View>
 
       {rightElement ? (
         rightElement
       ) : onPress ? (
-        <Ionicons name="chevron-forward" size={16} color={colors.onSurfaceVariant} />
+        <Ionicons name="chevron-forward" size={16} color={colors.inkSecondary} />
       ) : null}
     </View>
   );
