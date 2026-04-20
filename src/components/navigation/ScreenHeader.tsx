@@ -38,8 +38,8 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   onRightPress,
   leftText,
   rightText,
-  backgroundColor = colors.background,
-  textColor = colors.onSurface,
+  resolvedBg,
+  textColor,
   showBorder = true,
   style,
   showBack = false,
@@ -47,6 +47,8 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   rightComponent,
 }) => {
   const { colors } = useTheme();
+  const resolvedBg = backgroundColor ?? colors.background;
+  const resolvedText = textColor ?? colors.ink;
   const insets = useSafeAreaInsets();
 
   // If showBack is true, use back arrow as left icon
@@ -56,22 +58,24 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   return (
     <View
       style={[
-        styles.container, { borderBottomColor: colors.outlineVariant, shadowColor: colors.ink },
+        styles.container,
+        { borderBottomColor: colors.outlineVariant, shadowColor: colors.ink },
         {
-          backgroundColor,
+          resolvedBg,
           paddingTop: insets.top,
           borderBottomWidth: showBorder ? 1 : 0,
         },
-        style]}
+        style,
+      ]}
     >
       <StatusBar
         barStyle={
-          backgroundColor === colors.background ||
-          backgroundColor === colors.white
+          resolvedBg === colors.background ||
+          resolvedBg === colors.white
             ? 'dark-content'
             : 'light-content'
         }
-        backgroundColor={backgroundColor}
+        backgroundColor={resolvedBg}
       />
 
       <View style={styles.header}>
@@ -86,11 +90,11 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
                 <Ionicons
                   name={effectiveLeftIcon as any}
                   size={24}
-                  color={textColor}
+                  color={resolvedText}
                 />
               )}
               {leftText && (
-                <Text style={[styles.actionText, { color: textColor }]}>
+                <Text style={[styles.actionText, { color: resolvedText }]}>
                   {leftText}
                 </Text>
               )}
@@ -99,12 +103,12 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
         </View>
 
         <View style={styles.centerSection}>
-          <Text style={[styles.title, { color: textColor }]} numberOfLines={1}>
+          <Text style={[styles.title, { color: resolvedText }]} numberOfLines={1}>
             {title}
           </Text>
           {subtitle && (
             <Text
-              style={[styles.subtitle, { color: textColor }]}
+              style={[styles.subtitle, { color: resolvedText }]}
               numberOfLines={1}
             >
               {subtitle}
@@ -122,12 +126,12 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
               disabled={!onRightPress}
             >
               {rightText && (
-                <Text style={[styles.actionText, { color: textColor }]}>
+                <Text style={[styles.actionText, { color: resolvedText }]}>
                   {rightText}
                 </Text>
               )}
               {rightIcon && (
-                <Ionicons name={rightIcon as any} size={24} color={textColor} />
+                <Ionicons name={rightIcon as any} size={24} color={resolvedText} />
               )}
             </TouchableOpacity>
           ) : null}
@@ -191,3 +195,4 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+

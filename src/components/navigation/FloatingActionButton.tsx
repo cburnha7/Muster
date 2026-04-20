@@ -21,8 +21,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   icon,
   onPress,
   size = 56,
-  backgroundColor = colors.cobalt,
-  iconColor = colors.white,
+  backgroundColor,
+  iconColor,
   position = 'bottom-right',
   bottom = 20,
   right = 20,
@@ -31,6 +31,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   style,
 }) => {
   const { colors } = useTheme();
+  const resolvedBg = backgroundColor ?? colors.cobalt;
+  const resolvedIcon = iconColor ?? colors.white;
   const getPositionStyle = () => {
     const baseStyle = {
       position: 'absolute' as const,
@@ -52,15 +54,17 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   return (
     <TouchableOpacity
       style={[
-        styles.container, { shadowColor: colors.black },
+        styles.container,
+        { shadowColor: colors.black },
         {
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: disabled ? colors.inkMuted : backgroundColor,
+          backgroundColor: disabled ? colors.inkMuted : resolvedBg,
         },
         getPositionStyle(),
-        style]}
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.8}
@@ -69,7 +73,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         <Ionicons
           name={icon as any}
           size={size * 0.4}
-          color={disabled ? colors.inkMuted : iconColor}
+          color={disabled ? colors.inkMuted : resolvedIcon}
         />
       </View>
     </TouchableOpacity>

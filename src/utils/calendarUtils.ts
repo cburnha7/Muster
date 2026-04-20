@@ -1,23 +1,25 @@
-import { colors, fonts } from '../theme';
+import { lightColors } from '../theme/tokens';
+import { fonts } from '../theme';
 
 /**
  * Calendar theme configuration for react-native-calendars
- * Matches Muster Kinetic Anchor design system
+ * Uses lightColors directly since this is a non-component utility file.
+ * For dark mode, consumers should override these values from useTheme().
  */
 export const calendarTheme = {
   backgroundColor: 'transparent',
   calendarBackground: 'transparent',
-  textSectionTitleColor: colors.onSurfaceVariant,
-  selectedDayBackgroundColor: colors.pine,
-  selectedDayTextColor: '#FFFFFF',
-  todayTextColor: colors.pine,
-  dayTextColor: colors.onSurface,
-  textDisabledColor: colors.outlineVariant,
-  dotColor: colors.pine,
-  selectedDotColor: '#FFFFFF',
-  arrowColor: colors.ink,
-  monthTextColor: colors.onSurface,
-  indicatorColor: colors.pine,
+  textSectionTitleColor: lightColors.inkSecondary,
+  selectedDayBackgroundColor: lightColors.success,
+  selectedDayTextColor: lightColors.white,
+  todayTextColor: lightColors.success,
+  dayTextColor: lightColors.ink,
+  textDisabledColor: lightColors.border,
+  dotColor: lightColors.success,
+  selectedDotColor: lightColors.white,
+  arrowColor: lightColors.ink,
+  monthTextColor: lightColors.ink,
+  indicatorColor: lightColors.success,
   textDayFontFamily: fonts.body,
   textMonthFontFamily: fonts.heading,
   textDayHeaderFontFamily: fonts.headingSemi,
@@ -33,10 +35,10 @@ export const calendarTheme = {
  * Marking colors for calendar dates
  */
 export const calendarMarkingColors = {
-  available: colors.pine,
-  blocked: colors.error,
-  rented: colors.onSurface,
-  selected: colors.pine,
+  available: lightColors.success,
+  blocked: lightColors.error,
+  rented: lightColors.ink,
+  selected: lightColors.success,
 };
 
 /**
