@@ -4,7 +4,7 @@ import type { Transporter } from 'nodemailer';
 /**
  * EmailService handles sending authentication-related emails
  * including password reset emails, welcome emails, and account linking notifications.
- * 
+ *
  * Configuration is done via environment variables:
  * - SMTP_HOST: SMTP server hostname
  * - SMTP_PORT: SMTP server port
@@ -36,8 +36,12 @@ class EmailService {
     // If SMTP is not configured, log a warning but don't throw
     // This allows the app to run in development without email configured
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-      console.warn('SMTP configuration incomplete. Email functionality will be disabled.');
-      console.warn('Required environment variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD');
+      console.warn(
+        'SMTP configuration incomplete. Email functionality will be disabled.'
+      );
+      console.warn(
+        'Required environment variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD'
+      );
       return;
     }
 
@@ -65,9 +69,14 @@ class EmailService {
    * @param resetToken - Unique password reset token
    * @throws Error if email sending fails
    */
-  async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
+  async sendPasswordResetEmail(
+    email: string,
+    resetToken: string
+  ): Promise<void> {
     if (!this.transporter) {
-      console.warn(`Email not sent (SMTP not configured): Password reset to ${email}`);
+      console.warn(
+        `Email not sent (SMTP not configured): Password reset to ${email}`
+      );
       console.log(`Reset token: ${resetToken}`);
       return;
     }
@@ -104,7 +113,9 @@ class EmailService {
    */
   async sendWelcomeEmail(email: string, firstName: string): Promise<void> {
     if (!this.transporter) {
-      console.warn(`Email not sent (SMTP not configured): Welcome email to ${email}`);
+      console.warn(
+        `Email not sent (SMTP not configured): Welcome email to ${email}`
+      );
       return;
     }
 
@@ -135,7 +146,9 @@ class EmailService {
    */
   async sendAccountLinkedEmail(email: string, provider: string): Promise<void> {
     if (!this.transporter) {
-      console.warn(`Email not sent (SMTP not configured): Account linked email to ${email}`);
+      console.warn(
+        `Email not sent (SMTP not configured): Account linked email to ${email}`
+      );
       return;
     }
 
@@ -319,7 +332,7 @@ Need help? Contact us at support@muster.app
    */
   private getWelcomeEmailTemplate(firstName: string): string {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8081';
-    
+
     return `
 <!DOCTYPE html>
 <html>
@@ -443,7 +456,7 @@ Need help? Contact us at support@muster.app
    */
   private getWelcomeEmailText(firstName: string): string {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8081';
-    
+
     return `
 Welcome to Muster!
 
@@ -603,6 +616,88 @@ Need help? Contact us at support@muster.app
 
 © ${new Date().getFullYear()} Muster. All rights reserved.
     `.trim();
+  }
+
+  /**
+   * Send an invite email to someone who isn't on Muster yet
+   */
+  async sendInviteEmail(
+    email: string,
+    recipientName: string,
+    inviterName: string,
+    contextName: string,
+    context: string
+  ): Promise<void> {
+    if (!this.transporter) {
+      console.warn(
+        `Email not sent (SMTP not configured): Invite to ${email} from ${inviterName}`
+      );
+      return;
+    }
+
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'https://muster-ecru.vercel.app';
+    const signUpLink = `${frontendUrl}/Auth/Register`;
+    const contextLabel = context === 'event' ? 'an event' : contextName;
+
+    const subject = `${inviterName} invited you to join ${contextLabel} on Muster`;
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#F7F4EF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div style="background:#2040E0;padding:24px 32px;text-align:center;">
+      <h1 style="color:#FFFFFF;margin:0;font-size:28px;">Muster</h1>
+      <p style="color:rgba(255,255,255,0.8);margin:4px 0 0;font-size:14px;">the Troops.</p>
+    </div>
+    <div style="padding:32px 24px;">
+      <p style="color:#1C2320;font-size:16px;margin:0 0 16px;">Hey ${recipientName},</p>
+      <p style="color:#1C2320;font-size:16px;margin:0 0 16px;">
+        <strong>${inviterName}</strong> invited you to join <strong>${contextLabel}</strong> on Muster — the app for organizing pickup games, managing rosters, and getting your crew together.
+      </p>
+      <p style="color:#1C2320;font-size:16px;margin:0 0 24px;">
+        Sign up with this email address (<strong>${email}</strong>) and the invite will be waiting for you.
+      </p>
+      <div style="text-align:center;">
+        <a href="${signUpLink}" style="display:inline-block;background-color:#2040E0;color:#FFFFFF;text-decoration:none;padding:14px 32px;border-radius:9999px;font-weight:600;font-size:16px;">
+          Join Muster
+        </a>
+      </div>
+    </div>
+    <div style="background:#F7F4EF;padding:20px 24px;text-align:center;color:#6B7C76;font-size:13px;">
+      <p style="margin:0;">© ${new Date().getFullYear()} Muster. All rights reserved.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>`.trim();
+
+    const textContent = `
+Hey ${recipientName},
+
+${inviterName} invited you to join ${contextLabel} on Muster.
+
+Sign up at ${signUpLink} using this email address (${email}) and the invite will be waiting for you.
+
+© ${new Date().getFullYear()} Muster. All rights reserved.
+    `.trim();
+
+    try {
+      await this.transporter.sendMail({
+        from: `"${this.fromName}" <${this.fromEmail}>`,
+        to: email,
+        subject,
+        text: textContent,
+        html: htmlContent,
+      });
+      console.log(`Invite email sent to ${email}`);
+    } catch (error) {
+      console.error(`Failed to send invite email to ${email}:`, error);
+      // Don't throw — the invite record is already created
+    }
   }
 }
 

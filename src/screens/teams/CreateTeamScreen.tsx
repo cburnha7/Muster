@@ -23,6 +23,8 @@ import { useAuth } from '../../context/AuthContext';
 import { SportType, SkillLevel } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
 import { getSportEmoji } from '../../constants/sports';
+import TokenStorage from '../../services/auth/TokenStorage';
+import { API_BASE_URL } from '../../services/api/config';
 import { useTheme } from '../../theme';
 
 function CreateTeamInner() {
@@ -46,9 +48,15 @@ function CreateTeamInner() {
     }
     dispatch({ type: 'SUBMIT_START' });
     try {
-      const playerIds = state.invitedItems
-        .filter(i => i.type === 'player')
-        .map(i => i.id);
+      // Separate existing players from pending email invites
+      const existingPlayers = state.invitedItems.filter(
+        i => i.type === 'player' && !i.id.startsWith('pending-')
+      );
+      const pendingInvites = state.invitedItems.filter(
+        i => i.id.startsWith('pending-') && (i as any).email
+      );
+
+      const playerIds = existingPlayers.map(i => i.id);
       const newTeam = await teamService.createTeam({
         name: state.name.trim(),
         description: '',
@@ -62,6 +70,30 @@ function CreateTeamInner() {
       } as any);
       reduxDispatch(addTeam(newTeam));
       reduxDispatch(joinTeam(newTeam));
+
+      // Send pending email invites now that we have the roster ID
+      for (const invite of pendingInvites) {
+        try {
+          const token = await TokenStorage.getAccessToken();
+          await fetch(`${API_BASE_URL}/invites/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              name: invite.name,
+              email: (invite as any).email,
+              context: 'roster',
+              contextId: newTeam.id,
+              contextName: state.name.trim(),
+            }),
+          });
+        } catch {
+          // Non-fatal — roster was created, invite just didn't send
+        }
+      }
+
       dispatch({ type: 'SUBMIT_SUCCESS', rosterId: newTeam.id });
     } catch (error: any) {
       dispatch({ type: 'SUBMIT_FAIL' });

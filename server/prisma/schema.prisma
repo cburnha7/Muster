@@ -1508,6 +1508,29 @@ model InviteLink {
   @@map("invite_links")
 }
 
+// ─── Pending Email Invites ───────────────────────────────────────────────────
+// Created when a user invites someone who isn't on Muster yet.
+// On registration, if the new user's email matches, the invite is claimed
+// and the user is added to the roster/event with a pending notification.
+
+model PendingInvite {
+  id          String   @id @default(uuid())
+  email       String   // invitee email (lowercased)
+  name        String   // invitee display name
+  invitedBy   String   // userId of the person who sent the invite
+  context     String   // "roster" | "event"
+  contextId   String   // team ID or event ID
+  contextName String?  // team/event name for the email
+  claimed     Boolean  @default(false)
+  claimedBy   String?  // userId who claimed it on registration
+  claimedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([contextId])
+  @@map("pending_invites")
+}
+
 // ─── Messaging ───────────────────────────────────────────────────────────────
 
 enum ConversationType {

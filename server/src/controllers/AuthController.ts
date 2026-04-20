@@ -19,6 +19,71 @@ import {
   TokenResponse,
   ErrorResponse,
 } from '../types/auth';
+import { NotificationService } from '../services/NotificationService';
+
+/**
+ * Claim all pending email invites for a newly registered user.
+ * For each unclaimed invite:
+ * - If context is "roster", add user as pending team member
+ * - Mark the invite as claimed
+ * - Send a notification to the new user
+ */
+async function claimPendingInvites(
+  userId: string,
+  email: string
+): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const invites = await prisma.pendingInvite.findMany({
+    where: { email: normalizedEmail, claimed: false },
+  });
+
+  if (invites.length === 0) return;
+
+  for (const invite of invites) {
+    try {
+      // Add to roster if context is roster
+      if (invite.context === 'roster' && invite.contextId) {
+        const alreadyMember = await prisma.teamMember.findFirst({
+          where: { teamId: invite.contextId, userId },
+        });
+        if (!alreadyMember) {
+          await prisma.teamMember.create({
+            data: {
+              teamId: invite.contextId,
+              userId,
+              role: 'member',
+              status: 'pending',
+            },
+          });
+        }
+      }
+
+      // Mark invite as claimed
+      await prisma.pendingInvite.update({
+        where: { id: invite.id },
+        data: { claimed: true, claimedBy: userId, claimedAt: new Date() },
+      });
+
+      // Send push notification
+      const contextLabel =
+        invite.contextName ||
+        (invite.context === 'roster' ? 'a roster' : 'an event');
+      await NotificationService.sendToUsers([userId], {
+        title: 'You have a roster invitation!',
+        body: `You've been invited to join ${contextLabel}. Check your rosters to accept.`,
+        data:
+          invite.context === 'roster'
+            ? { teamId: invite.contextId }
+            : { eventId: invite.contextId },
+      });
+    } catch (err) {
+      console.error(`Failed to claim invite ${invite.id}:`, err);
+    }
+  }
+
+  console.log(`Claimed ${invites.length} pending invite(s) for ${email}`);
+}
 
 /**
  * AuthController - Handles authentication HTTP requests
@@ -122,6 +187,11 @@ class AuthController {
           console.error('Failed to send welcome email:', error);
         }
       );
+
+      // Claim any pending invites for this email address
+      claimPendingInvites(user.id, user.email!).catch(err => {
+        console.error('Failed to claim pending invites:', err);
+      });
 
       // Return success response
       const response: AuthResponse = {
@@ -536,6 +606,13 @@ class AuthController {
       const exp = TokenService.getExpirationDate(refreshToken);
       if (exp)
         await TokenService.storeRefreshToken(user!.id, refreshToken, exp);
+
+      // Claim any pending invites for this email address
+      if (user!.email) {
+        claimPendingInvites(user!.id, user!.email).catch(err => {
+          console.error('Failed to claim pending invites:', err);
+        });
+      }
 
       res.status(200).json({
         user: toUserResponse(user!),
