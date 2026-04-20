@@ -1017,14 +1017,17 @@ model Match {
   id String @id @default(uuid())
 
   // Match details
-  scheduledAt DateTime
+  scheduledAt DateTime?
   playedAt    DateTime?
-  status      String    @default("scheduled") // scheduled, in_progress, completed, cancelled
+  status      String    @default("pending") // pending, scheduled, in_progress, completed, cancelled
 
   // Results
   homeScore Int?
   awayScore Int?
   outcome   String? // home_win, away_win, draw
+
+  // Suggested game days (copied from league config at generation time)
+  suggestedDays String[] @default([]) // e.g. ["Mon", "Wed"]
 
   // Optional event linking
   eventId String?

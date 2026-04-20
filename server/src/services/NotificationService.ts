@@ -509,11 +509,13 @@ export class NotificationService {
         return;
       }
 
-      const scheduledDate = match.scheduledAt.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      });
+      const scheduledDate = match.scheduledAt
+        ? match.scheduledAt.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+          })
+        : 'a date TBD';
 
       const notification: NotificationTemplate = {
         title: 'Facility Needed',

@@ -25,26 +25,15 @@ function canContinue(state: LeagueWizardState, step: number): boolean {
     case 0:
       return false; // auto-advance on sport tap
     case 1: {
-      // Screen 2 — How: all fields required
+      // Screen 2 — How: host name, format, game days, frequency, number of games
       const hasHost = state.hostName.trim().length >= 2;
       const hasFormat = state.leagueFormat !== null;
       const hasDays = state.gameDays.length > 0;
-      const hasTime = !!state.timeStart && !!state.timeEnd;
       const hasFreq = state.frequency !== null;
-      const hasDuration = state.gameDuration > 0;
       const hasGames = parseInt(state.numberOfGames) > 0;
       const hasGpp =
         state.frequency === 'block' || parseInt(state.gamesPerPeriod) > 0;
-      return (
-        hasHost &&
-        hasFormat &&
-        hasDays &&
-        hasTime &&
-        hasFreq &&
-        hasDuration &&
-        hasGames &&
-        hasGpp
-      );
+      return hasHost && hasFormat && hasDays && hasFreq && hasGames && hasGpp;
     }
     case 2: {
       // Screen 3 — Who: visibility required, private needs exact team count
@@ -90,7 +79,13 @@ export function LeagueFlowContainer({ children, onSubmit }: Props) {
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
+    <SafeAreaView
+      style={[
+        styles.root,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
+    >
       <View style={styles.headerRow}>
         <TouchableOpacity
           onPress={handleBack}
@@ -112,7 +107,12 @@ export function LeagueFlowContainer({ children, onSubmit }: Props) {
         {showButton && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.pine }, !enabled && styles.buttonDisabled, !enabled && { backgroundColor: colors.inkSoft }]}
+              style={[
+                styles.button,
+                { backgroundColor: colors.pine },
+                !enabled && styles.buttonDisabled,
+                !enabled && { backgroundColor: colors.inkSoft },
+              ]}
               onPress={handlePress}
               disabled={!enabled || state.isSubmitting}
               activeOpacity={0.8}
