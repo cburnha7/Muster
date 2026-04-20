@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export interface NotificationTemplate {
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export class NotificationService {
