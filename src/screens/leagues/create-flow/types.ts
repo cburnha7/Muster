@@ -121,7 +121,7 @@ export function createInitialLeagueState(): LeagueWizardState {
     visibility: null,
     invitedRosters: [],
     minPlayerRating: '',
-    startDate: null,
+    startDate: new Date(),
     endDate: null,
     gamesPerRound: '',
     numberOfRounds: '',
