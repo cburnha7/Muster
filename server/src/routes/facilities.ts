@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { rateCalculator } from '../services/RateCalculator';
 import { availabilityService } from '../services/AvailabilityService';
@@ -20,60 +20,30 @@ import { isValidPolicyHours } from '../services/cancellation-window';
 import { requireNonDependent } from '../middleware/require-non-dependent';
 import { sendError, ErrorCode, asyncHandler } from '../utils/errors';
 
+// ─── Service imports ────────────────────────────────────────────────────────
+import * as FacilityCrudService from '../services/FacilityCrudService';
+
 const router = Router();
 const timeSlotGenerator = new TimeSlotGeneratorService();
+
+// ─── Error helper ───────────────────────────────────────────────────────────
+function sendServiceError(res: Response, error: any) {
+  const status = error.statusCode || 500;
+  const body: any = { error: error.message || 'Internal error' };
+  if (error.extra) Object.assign(body, error.extra);
+  res.status(status).json(body);
+}
 
 // Get all facilities
 router.get('/', async (req, res) => {
   try {
-    const { sportType, ownerId, page = '1', limit = '10' } = req.query;
-
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
-    const take = parseInt(limit as string);
-
-    const where: any = { isActive: true };
-    if (sportType) {
-      where.sportTypes = { has: sportType };
-    }
-    if (ownerId) {
-      where.ownerId = ownerId as string;
-    }
-
-    const [facilities, total] = await Promise.all([
-      prisma.facility.findMany({
-        where,
-        skip,
-        take,
-        include: {
-          owner: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          courts: {
-            orderBy: {
-              displayOrder: 'asc',
-            },
-          },
-        },
-      }),
-      prisma.facility.count({ where }),
-    ]);
-
-    res.json({
-      data: facilities,
-      pagination: {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        total,
-        totalPages: Math.ceil(total / take),
-      },
-    });
-  } catch (error) {
+    const result = await FacilityCrudService.getFacilities(
+      req.query as FacilityCrudService.GetFacilitiesFilters
+    );
+    res.json(result);
+  } catch (error: any) {
     console.error('Get facilities error:', error);
-    res.status(500).json({ error: 'Failed to fetch facilities' });
+    sendServiceError(res, error);
   }
 });
 
@@ -81,53 +51,11 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-
-    const facility = await prisma.facility.findUnique({
-      where: { id },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        verification: {
-          include: {
-            documents: true,
-          },
-        },
-        rateSchedules: {
-          where: { isActive: true },
-          orderBy: { priority: 'desc' },
-        },
-        availabilitySlots: true,
-        photos: {
-          orderBy: { displayOrder: 'asc' },
-        },
-        accessImages: {
-          orderBy: { displayOrder: 'asc' },
-        },
-        courts: {
-          where: { isActive: true },
-          orderBy: { displayOrder: 'asc' },
-          include: {
-            availability: {
-              orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
-            },
-          },
-        },
-      },
-    });
-
-    if (!facility) {
-      return res.status(404).json({ error: 'Facility not found' });
-    }
-
+    const facility = await FacilityCrudService.getFacilityById(id);
     res.json(facility);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get facility error:', error);
-    res.status(500).json({ error: 'Failed to fetch facility' });
+    sendServiceError(res, error);
   }
 });
 
@@ -135,292 +63,43 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/events', async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const { page = '1', limit = '10' } = req.query;
-
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
-    const take = parseInt(limit as string);
-
-    // Check if facility exists
-    const facility = await prisma.facility.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-
-    if (!facility) {
-      return res.status(404).json({ error: 'Facility not found' });
-    }
-
-    const [events, total] = await Promise.all([
-      prisma.event.findMany({
-        where: { facilityId: id },
-        skip,
-        take,
-        include: {
-          organizer: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          facility: {
-            select: {
-              id: true,
-              name: true,
-              street: true,
-              city: true,
-              state: true,
-            },
-          },
-          rental: {
-            include: {
-              timeSlot: {
-                include: {
-                  court: {
-                    select: {
-                      id: true,
-                      name: true,
-                      sportType: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        orderBy: { startTime: 'asc' },
-      }),
-      prisma.event.count({ where: { facilityId: id } }),
-    ]);
-
-    res.json({
-      data: events,
-      pagination: {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        total,
-        totalPages: Math.ceil(total / take),
-      },
-    });
-  } catch (error) {
+    const result = await FacilityCrudService.getFacilityEvents(
+      id,
+      req.query as FacilityCrudService.GetFacilityEventsParams
+    );
+    res.json(result);
+  } catch (error: any) {
     console.error('Get facility events error:', error);
-    res.status(500).json({ error: 'Failed to fetch facility events' });
+    sendServiceError(res, error);
   }
 });
 
 // ---------------------------------------------------------------------------
 // GET /facilities/for-event — All facilities matching a sport type, with user context
-// Returns all active facilities that have courts for the given sport.
-// Marks which ones the user owns or has reservations at.
 // ---------------------------------------------------------------------------
 router.get('/for-event', async (req, res) => {
   try {
-    const { sportType, userId } = req.query;
-
-    if (!sportType) {
-      return res.status(400).json({ error: 'sportType is required' });
-    }
-
-    // Find all active facilities that have at least one court matching the sport
-    const facilities = await prisma.facility.findMany({
-      where: {
-        isActive: true,
-        courts: {
-          some: {
-            sportType: sportType as string,
-            isActive: true,
-          },
-        },
-      },
-      include: {
-        owner: {
-          select: { id: true, firstName: true, lastName: true },
-        },
-        courts: {
-          where: { sportType: sportType as string, isActive: true },
-          select: { id: true, name: true, sportType: true },
-        },
-      },
-      orderBy: { name: 'asc' },
-    });
-
-    // If userId provided, check ownership and reservations
-    let ownedIds = new Set<string>();
-    let reservedIds = new Set<string>();
-
-    if (userId) {
-      // Owned facilities
-      const owned = await prisma.facility.findMany({
-        where: { ownerId: userId as string, isActive: true },
-        select: { id: true },
-      });
-      ownedIds = new Set(owned.map(f => f.id));
-
-      // Facilities with confirmed future rentals
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const rentals = await prisma.facilityRental.findMany({
-        where: {
-          userId: userId as string,
-          status: 'confirmed',
-          usedForEventId: null,
-          timeSlot: { date: { gte: today } },
-        },
-        select: {
-          timeSlot: {
-            select: { court: { select: { facilityId: true } } },
-          },
-        },
-      });
-      for (const r of rentals) {
-        if (r.timeSlot?.court?.facilityId) {
-          reservedIds.add(r.timeSlot.court.facilityId);
-        }
-      }
-    }
-
-    const data = facilities.map(f => ({
-      id: f.id,
-      name: f.name,
-      city: f.city,
-      state: f.state,
-      sportTypes: [...new Set(f.courts.map(c => c.sportType))],
-      courtCount: f.courts.length,
-      isOwned: ownedIds.has(f.id),
-      hasRentals: reservedIds.has(f.id),
-    }));
-
-    res.json({ data, total: data.length });
-  } catch (error) {
+    const result = await FacilityCrudService.getFacilitiesForEvent(
+      req.query.sportType as string | undefined,
+      req.query.userId as string | undefined
+    );
+    res.json(result);
+  } catch (error: any) {
     console.error('Facilities for-event error:', error);
-    res.status(500).json({ error: 'Failed to load facilities' });
+    sendServiceError(res, error);
   }
 });
 
 // Get authorized facilities for event creation
-// Returns facilities where user is owner OR has confirmed rentals
 router.get('/authorized/for-events', async (req, res) => {
   try {
-    const { userId } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
-
-    // Get facilities owned by user
-    const ownedFacilities = await prisma.facility.findMany({
-      where: {
-        ownerId: userId as string,
-        isActive: true,
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-      // Cancellation policy fields (noticeWindowHours, teamPenaltyPct, penaltyDestination)
-      // are included by default since we use include (not select)
-    });
-
-    // Normalize today's date to midnight UTC for comparison
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    // Get facilities where user has confirmed rentals
-    let rentalsWithFacilities: any[] = [];
-    try {
-      rentalsWithFacilities = await prisma.facilityRental.findMany({
-        where: {
-          userId: userId as string,
-          status: 'confirmed',
-          usedForEventId: null,
-          timeSlot: {
-            date: { gte: today },
-          },
-        },
-        include: {
-          timeSlot: {
-            include: {
-              court: {
-                include: {
-                  facility: {
-                    include: {
-                      owner: {
-                        select: {
-                          id: true,
-                          firstName: true,
-                          lastName: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-    } catch (rentalErr: any) {
-      console.error(
-        'Rental query failed, continuing with owned facilities only:',
-        rentalErr?.message
-      );
-    }
-
-    // Filter out rentals with inactive facilities (in JS to avoid nested where issues)
-    rentalsWithFacilities = rentalsWithFacilities.filter(
-      (r: any) => r.timeSlot?.court?.facility?.isActive !== false
+    const result = await FacilityCrudService.getAuthorizedFacilities(
+      req.query.userId as string | undefined
     );
-
-    // Extract unique facilities from rentals
-    const rentalFacilityIds = new Set<string>();
-    const rentalFacilitiesMap = new Map();
-
-    rentalsWithFacilities.forEach(rental => {
-      const facility = rental.timeSlot.court.facility;
-      if (!rentalFacilityIds.has(facility.id)) {
-        rentalFacilityIds.add(facility.id);
-        rentalFacilitiesMap.set(facility.id, facility);
-      }
-    });
-
-    // Combine owned and rental facilities (avoid duplicates)
-    const ownedFacilityIds = new Set(ownedFacilities.map(f => f.id));
-    const allFacilities = [
-      ...ownedFacilities.map(f => ({ ...f, isOwned: true, hasRentals: false })),
-      ...Array.from(rentalFacilitiesMap.values())
-        .filter(f => !ownedFacilityIds.has(f.id))
-        .map(f => ({ ...f, isOwned: false, hasRentals: true })),
-    ];
-
-    // Mark facilities that are both owned and have rentals,
-    // and flag whether they have a cancellation policy set (required for booking flows)
-    const facilitiesWithBoth = allFacilities.map(f => {
-      const hasCancellationPolicy =
-        f.noticeWindowHours !== null &&
-        f.teamPenaltyPct !== null &&
-        f.penaltyDestination !== null;
-
-      const base = { ...f, hasCancellationPolicy };
-
-      if (f.isOwned && rentalFacilityIds.has(f.id)) {
-        return { ...base, hasRentals: true };
-      }
-      return base;
-    });
-
-    res.json({
-      data: facilitiesWithBoth,
-      total: facilitiesWithBoth.length,
-    });
+    res.json(result);
   } catch (error: any) {
     console.error('Get authorized facilities error:', error?.message || error);
-    console.error('Stack:', error?.stack);
-    res.status(500).json({ error: 'Failed to fetch authorized facilities' });
+    sendServiceError(res, error);
   }
 });
 
@@ -586,7 +265,10 @@ router.get('/:facilityId/courts-for-event', async (req, res) => {
 // Returns dates filtered by ownership (all future dates with available slots) or rentals (only user's rental dates)
 router.get('/:facilityId/courts/:courtId/dates', async (req, res) => {
   try {
-    const { facilityId, courtId } = req.params as { facilityId: string; courtId: string };
+    const { facilityId, courtId } = req.params as {
+      facilityId: string;
+      courtId: string;
+    };
     const { userId } = req.query;
 
     if (!userId) {
@@ -676,7 +358,10 @@ router.get('/:facilityId/courts/:courtId/dates', async (req, res) => {
 // Returns slots filtered by ownership (all available slots) or rentals (only user's rental slots)
 router.get('/:facilityId/courts/:courtId/slots', async (req, res) => {
   try {
-    const { facilityId, courtId } = req.params as { facilityId: string; courtId: string };
+    const { facilityId, courtId } = req.params as {
+      facilityId: string;
+      courtId: string;
+    };
     const { userId, date } = req.query;
 
     if (!userId) {
@@ -771,211 +456,28 @@ router.get('/:facilityId/courts/:courtId/slots', async (req, res) => {
 // Check for duplicate facilities at address
 router.post('/check-duplicates', async (req, res) => {
   try {
-    const { street, city, state, zipCode } = req.body;
-
-    if (!street || !city || !state || !zipCode) {
-      return res.status(400).json({ error: 'Address fields required' });
-    }
-
-    const existingFacilities = await prisma.facility.findMany({
-      where: {
-        street: { equals: street, mode: 'insensitive' },
-        city: { equals: city, mode: 'insensitive' },
-        state: { equals: state, mode: 'insensitive' },
-        zipCode,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        sportTypes: true,
-        street: true,
-        city: true,
-        state: true,
-        zipCode: true,
-        imageUrl: true,
-      },
-    });
-
-    res.json({ duplicates: existingFacilities });
-  } catch (error) {
+    const result = await FacilityCrudService.checkDuplicates(req.body);
+    res.json(result);
+  } catch (error: any) {
     console.error('Check duplicates error:', error);
-    res.status(500).json({ error: 'Failed to check for duplicates' });
+    sendServiceError(res, error);
   }
 });
 
 // Create facility
 router.post('/', requireNonDependent, async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      sportTypes,
-      amenities = [],
-      imageUrl,
-      rating = 0,
-      pricePerHour = 0,
-      isVerified = false,
-      verificationStatus = 'pending',
-      accessInstructions,
-      parkingInfo,
-      minimumBookingHours = 1,
-      bufferTimeMins = 0,
-      contactName,
-      contactPhone,
-      contactEmail,
-      contactWebsite,
-      street,
-      city,
-      state,
-      zipCode,
-      latitude = 0,
-      longitude = 0,
-      ownerId,
-      hoursOfOperation = [],
-      cancellationPolicyHours,
-      requiresInsurance = false,
-      requiresBookingConfirmation = false,
-    } = req.body;
-
-    // Validate required fields
-    if (!name || !sportTypes || !street || !city || !state || !zipCode) {
-      return res.status(400).json({
-        error:
-          'Missing required fields: name, sportTypes, street, city, state, zipCode',
-      });
-    }
-
-    // Validate cancellation policy hours if provided
-    if (
-      cancellationPolicyHours !== undefined &&
-      !isValidPolicyHours(cancellationPolicyHours)
-    ) {
-      return res.status(400).json({
-        error:
-          'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
-      });
-    }
-
-    // Get ownerId from auth token/header — never trust client-supplied value
     const authenticatedUserId =
       (req as any).user?.userId ||
       (req.headers['x-user-id'] as string | undefined);
-    let facilityOwnerId = authenticatedUserId || ownerId;
-    if (!facilityOwnerId) {
-      // For testing: use the first user in the database
-      const firstUser = await prisma.user.findFirst();
-      if (!firstUser) {
-        return res
-          .status(400)
-          .json({ error: 'No users found. Please create a user first.' });
-      }
-      facilityOwnerId = firstUser.id;
-    }
-
-    // Plan gate: facility creation requires facility_basic; 4th+ requires facility_pro
-    const { userBypassesPlanGate } = require('../middleware/subscription');
-    const bypassed = await userBypassesPlanGate(
-      facilityOwnerId,
-      'facility_basic'
+    const facility = await FacilityCrudService.createFacility(
+      req.body,
+      authenticatedUserId
     );
-    if (!bypassed) {
-      const PLAN_HIERARCHY = [
-        'free',
-        'roster',
-        'league',
-        'facility_basic',
-        'facility_pro',
-      ];
-      const existingFacilityCount = await prisma.facility.count({
-        where: { ownerId: facilityOwnerId },
-      });
-      const sub = await prisma.subscription.findUnique({
-        where: { userId: facilityOwnerId },
-        select: { plan: true, status: true },
-      });
-      const userPlan = sub?.plan || 'free';
-      const isActive =
-        !sub || sub.status === 'active' || sub.status === 'trialing';
-      const userPlanIndex = PLAN_HIERARCHY.indexOf(userPlan);
-
-      if (
-        existingFacilityCount >= 3 &&
-        (!isActive || userPlanIndex < PLAN_HIERARCHY.indexOf('facility_pro'))
-      ) {
-        return res.status(403).json({
-          error: 'Plan upgrade required',
-          requiredPlan: 'facility_pro',
-          currentPlan: userPlan,
-        });
-      } else if (
-        !isActive ||
-        userPlanIndex < PLAN_HIERARCHY.indexOf('facility_basic')
-      ) {
-        return res.status(403).json({
-          error: 'Plan upgrade required',
-          requiredPlan: 'facility_basic',
-          currentPlan: userPlan,
-        });
-      }
-    }
-
-    const facility = await prisma.facility.create({
-      data: {
-        name,
-        description,
-        sportTypes,
-        amenities,
-        imageUrl,
-        rating,
-        pricePerHour,
-        isVerified,
-        verificationStatus,
-        accessInstructions,
-        parkingInfo,
-        minimumBookingHours,
-        bufferTimeMins,
-        contactName,
-        contactPhone,
-        contactEmail,
-        contactWebsite,
-        street,
-        city,
-        state,
-        zipCode,
-        latitude,
-        longitude,
-        ownerId: facilityOwnerId,
-        requiresInsurance: requiresInsurance === true,
-        requiresBookingConfirmation: requiresBookingConfirmation === true,
-        ...(cancellationPolicyHours !== undefined && {
-          cancellationPolicyHours,
-        }),
-      },
-    });
-
-    // Create hours of operation if provided
-    if (hoursOfOperation && hoursOfOperation.length > 0) {
-      const availabilityData = hoursOfOperation.map((hours: any) => ({
-        facilityId: facility.id,
-        dayOfWeek: hours.dayOfWeek,
-        startTime: hours.startTime,
-        endTime: hours.endTime,
-        isRecurring: true,
-        isBlocked: hours.isClosed || false,
-        blockReason: hours.isClosed ? 'Closed' : null,
-      }));
-
-      await prisma.facilityAvailability.createMany({
-        data: availabilityData,
-      });
-    }
-
     res.status(201).json(facility);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create facility error:', error);
-    res.status(500).json({ error: 'Failed to create facility' });
+    sendServiceError(res, error);
   }
 });
 
@@ -983,233 +485,17 @@ router.post('/', requireNonDependent, async (req, res) => {
 router.put('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const {
-      hoursOfOperation,
-      slotIncrementMinutes,
-      requiresInsurance,
-      requiresBookingConfirmation,
-      ...rawData
-    } = req.body;
-
-    // Authorization check - only owner can update
     const userId =
       (req as any).user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId) {
-      return sendError(
-        res,
-        401,
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required'
-      );
-    }
-
-    const existingFacility = await prisma.facility.findUnique({
-      where: { id },
-      select: { ownerId: true },
-    });
-
-    if (!existingFacility) {
-      return sendError(res, 404, ErrorCode.NOT_FOUND, 'Facility not found');
-    }
-
-    if (existingFacility.ownerId !== userId) {
-      return sendError(
-        res,
-        403,
-        ErrorCode.FORBIDDEN,
-        'Only the facility owner can update this facility'
-      );
-    }
-
-    // Whitelist only known Facility columns to prevent Prisma "Unknown arg" errors
-    const ALLOWED_FIELDS = [
-      'name',
-      'description',
-      'sportTypes',
-      'amenities',
-      'imageUrl',
-      'rating',
-      'pricePerHour',
-      'isActive',
-      'isVerified',
-      'verificationStatus',
-      'accessInstructions',
-      'parkingInfo',
-      'minimumBookingHours',
-      'bufferTimeMins',
-      'contactName',
-      'contactPhone',
-      'contactEmail',
-      'contactWebsite',
-      'facilityMapUrl',
-      'facilityMapThumbnailUrl',
-      'street',
-      'city',
-      'state',
-      'zipCode',
-      'country',
-      'latitude',
-      'longitude',
-      'noticeWindowHours',
-      'teamPenaltyPct',
-      'penaltyDestination',
-      'policyVersion',
-      'cancellationPolicyHours',
-      'stripeConnectAccountId',
-      'requiresInsurance',
-      'requiresBookingConfirmation',
-      'waiverRequired',
-      'waiverText',
-    ];
-
-    const updateData: Record<string, any> = {};
-    for (const key of ALLOWED_FIELDS) {
-      if (key in rawData) {
-        updateData[key] = rawData[key];
-      }
-    }
-
-    // Coerce requiresInsurance to boolean if provided
-    if (requiresInsurance !== undefined) {
-      updateData.requiresInsurance = requiresInsurance === true;
-    }
-
-    // Coerce requiresBookingConfirmation to boolean if provided
-    if (requiresBookingConfirmation !== undefined) {
-      updateData.requiresBookingConfirmation =
-        requiresBookingConfirmation === true;
-      // If confirmation is turned off, also turn off insurance requirement
-      if (!updateData.requiresBookingConfirmation) {
-        updateData.requiresInsurance = false;
-      }
-    }
-
-    // Validate cancellation policy hours if provided
-    if (
-      updateData.cancellationPolicyHours !== undefined &&
-      !isValidPolicyHours(updateData.cancellationPolicyHours)
-    ) {
-      return res.status(400).json({
-        error:
-          'Invalid cancellation policy value. Allowed values: none, 0, 12, 24, 48, or 72 hours.',
-      });
-    }
-
-    // Check if slot increment is changing
-    let incrementChanged = false;
-    let oldIncrement: number | undefined;
-
-    if (slotIncrementMinutes !== undefined) {
-      // Validate slot increment (must be 30 or 60)
-      if (slotIncrementMinutes !== 30 && slotIncrementMinutes !== 60) {
-        return res.status(400).json({
-          error: 'Invalid slot increment. Must be 30 or 60 minutes.',
-        });
-      }
-
-      // Get current increment value
-      const currentFacility = await prisma.facility.findUnique({
-        where: { id },
-        select: { slotIncrementMinutes: true },
-      });
-
-      if (
-        currentFacility &&
-        currentFacility.slotIncrementMinutes !== slotIncrementMinutes
-      ) {
-        incrementChanged = true;
-        oldIncrement = currentFacility.slotIncrementMinutes;
-      }
-    }
-
-    // Auto-bump waiverVersion if waiverText changed
-    if (updateData.waiverText !== undefined) {
-      const current = await prisma.facility.findUnique({
-        where: { id },
-        select: { waiverText: true },
-      });
-      if (current && updateData.waiverText !== current.waiverText) {
-        updateData.waiverVersion = new Date().toISOString();
-      }
-    }
-    // If waiverRequired is turned off, clear waiver fields
-    if (updateData.waiverRequired === false) {
-      updateData.waiverText = null;
-      updateData.waiverVersion = null;
-    }
-
-    // Update facility
-    const facility = await prisma.facility.update({
-      where: { id },
-      data: {
-        ...updateData,
-        ...(slotIncrementMinutes !== undefined && { slotIncrementMinutes }),
-      },
-    });
-
-    // Update hours of operation if provided
-    if (hoursOfOperation && hoursOfOperation.length > 0) {
-      // Delete existing hours
-      await prisma.facilityAvailability.deleteMany({
-        where: {
-          facilityId: id,
-          isRecurring: true,
-          specificDate: null,
-        },
-      });
-
-      // Create new hours
-      const availabilityData = hoursOfOperation.map((hours: any) => ({
-        facilityId: id,
-        dayOfWeek: hours.dayOfWeek,
-        startTime: hours.startTime,
-        endTime: hours.endTime,
-        isRecurring: true,
-        isBlocked: hours.isClosed || false,
-        blockReason: hours.isClosed ? 'Closed' : null,
-      }));
-
-      await prisma.facilityAvailability.createMany({
-        data: availabilityData,
-      });
-    }
-
-    // Regenerate time slots if increment changed
-    if (incrementChanged) {
-      try {
-        const regenerateResult =
-          await timeSlotGenerator.regenerateSlotsAfterIncrementChange(
-            id,
-            slotIncrementMinutes
-          );
-
-        res.json({
-          ...facility,
-          slotRegenerationResult: {
-            success: true,
-            ...regenerateResult,
-          },
-        });
-      } catch (regenerateError: any) {
-        console.error('❌ Slot regeneration failed:', regenerateError);
-
-        // Return facility update success but note regeneration failure
-        res.json({
-          ...facility,
-          slotRegenerationResult: {
-            success: false,
-            error: regenerateError.message,
-            message:
-              'Facility updated but slot regeneration failed. Please regenerate slots manually.',
-          },
-        });
-      }
-    } else {
-      res.json(facility);
-    }
-  } catch (error) {
+    const result = await FacilityCrudService.updateFacility(
+      id,
+      req.body,
+      userId
+    );
+    res.json(result);
+  } catch (error: any) {
     console.error('Update facility error:', error);
-    res.status(500).json({ error: 'Failed to update facility' });
+    sendServiceError(res, error);
   }
 });
 
@@ -1217,182 +503,13 @@ router.put('/:id', requireNonDependent, async (req, res) => {
 router.delete('/:id', requireNonDependent, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-
-    // Authorization check - only owner can delete
     const userId =
       (req as any).user?.userId || (req.headers['x-user-id'] as string);
-    if (!userId) {
-      return sendError(
-        res,
-        401,
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required'
-      );
-    }
-
-    // Check if facility exists and verify ownership
-    const facility = await prisma.facility.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        ownerId: true,
-        facilityMapUrl: true,
-        facilityMapThumbnailUrl: true,
-      },
-    });
-
-    if (!facility) {
-      return sendError(res, 404, ErrorCode.NOT_FOUND, 'Facility not found');
-    }
-
-    if (facility.ownerId !== userId) {
-      return sendError(
-        res,
-        403,
-        ErrorCode.FORBIDDEN,
-        'Only the facility owner can delete this facility'
-      );
-    }
-
-    // Check for future rentals
-    const futureRentalsList = await prisma.facilityRental.findMany({
-      where: {
-        timeSlot: {
-          court: {
-            facilityId: id,
-          },
-          date: { gte: new Date() },
-        },
-        status: 'confirmed',
-      },
-      select: {
-        id: true,
-        timeSlot: {
-          select: {
-            date: true,
-            startTime: true,
-            endTime: true,
-            court: { select: { name: true } },
-          },
-        },
-        user: { select: { username: true } },
-      },
-      orderBy: { timeSlot: { date: 'asc' } },
-      take: 20,
-    });
-
-    if (futureRentalsList.length > 0) {
-      return res.status(400).json({
-        error:
-          'Cannot delete ground with future rentals. Cancel all rentals first.',
-        rentals: futureRentalsList.map((r: any) => ({
-          id: r.id,
-          court: r.timeSlot?.court?.name || 'Unknown court',
-          date: r.timeSlot?.date,
-          startTime: r.timeSlot?.startTime,
-          endTime: r.timeSlot?.endTime,
-          user: r.user?.username || 'Unknown',
-        })),
-      });
-    }
-
-    // Check for future events
-    const futureEventsList = await prisma.event.findMany({
-      where: {
-        facilityId: id,
-        startTime: { gte: new Date() },
-      },
-      select: {
-        id: true,
-        title: true,
-        startTime: true,
-        endTime: true,
-      },
-      orderBy: { startTime: 'asc' },
-      take: 20,
-    });
-
-    if (futureEventsList.length > 0) {
-      return res.status(400).json({
-        error:
-          'Cannot delete ground with future events. Cancel all events first.',
-        events: futureEventsList.map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          startTime: e.startTime,
-          endTime: e.endTime,
-        })),
-      });
-    }
-
-    // Delete facility map images if they exist
-    if (facility.facilityMapUrl) {
-      try {
-        await deleteImageFiles(
-          facility.facilityMapUrl,
-          facility.facilityMapThumbnailUrl || undefined
-        );
-      } catch (error) {
-        console.error('Error deleting map images:', error);
-        // Continue with deletion even if image cleanup fails
-      }
-    }
-
-    // Delete all facility photo files from disk
-    const facilityPhotos = await prisma.facilityPhoto.findMany({
-      where: { facilityId: id },
-      select: { imageUrl: true },
-    });
-    for (const photo of facilityPhotos) {
-      try {
-        const photoPath = path.join(
-          __dirname,
-          '../../uploads',
-          photo.imageUrl.replace('/uploads/', '')
-        );
-        if (fs.existsSync(photoPath)) {
-          fs.unlinkSync(photoPath);
-        }
-      } catch (err) {
-        console.error('Error deleting photo file:', err);
-      }
-    }
-
-    // Clean up references that don't cascade before deleting
-    await prisma.$transaction(async tx => {
-      // Nullify facility references on events
-      await tx.event.updateMany({
-        where: { facilityId: id },
-        data: { facilityId: null },
-      });
-
-      // Nullify facility references on bookings
-      await tx.booking.updateMany({
-        where: { facilityId: id },
-        data: { facilityId: null },
-      });
-
-      // Delete reviews for this facility
-      await tx.review.deleteMany({
-        where: { facilityId: id },
-      });
-
-      // Delete facility ratings
-      await tx.facilityRating.deleteMany({
-        where: { facilityId: id },
-      });
-
-      // Delete facility (cascade handles courts, time slots, rentals, etc.)
-      await tx.facility.delete({
-        where: { id },
-      });
-    });
-
+    await FacilityCrudService.deleteFacility(id, userId);
     res.status(204).send();
   } catch (error: any) {
     console.error('Delete facility error:', error?.message || error);
-    console.error('Delete facility error code:', error?.code);
-    res.status(500).json({ error: 'Failed to delete facility' });
+    sendServiceError(res, error);
   }
 });
 

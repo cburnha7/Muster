@@ -1,22 +1,8 @@
 import { prisma } from '../lib/prisma';
 import { LeagueDeletionService } from './LeagueDeletionService';
+import { ServiceError } from '../utils/ServiceError';
 
 const leagueDeletionService = new LeagueDeletionService();
-
-/** Service error with HTTP status code */
-class ServiceError extends Error {
-  statusCode: number;
-  extra?: Record<string, any>;
-  constructor(
-    message: string,
-    statusCode: number,
-    extra?: Record<string, any>
-  ) {
-    super(message);
-    this.statusCode = statusCode;
-    this.extra = extra;
-  }
-}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

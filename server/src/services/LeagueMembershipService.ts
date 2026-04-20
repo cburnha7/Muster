@@ -1,21 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { NotificationService } from './NotificationService';
 import { checkLeagueReady } from '../jobs/league-ready-check';
-
-/** Service error with HTTP status code */
-class ServiceError extends Error {
-  statusCode: number;
-  extra?: Record<string, any>;
-  constructor(
-    message: string,
-    statusCode: number,
-    extra?: Record<string, any>
-  ) {
-    super(message);
-    this.statusCode = statusCode;
-    this.extra = extra;
-  }
-}
+import { ServiceError } from '../utils/ServiceError';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
