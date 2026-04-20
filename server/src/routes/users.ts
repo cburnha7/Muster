@@ -668,44 +668,40 @@ router.get('/invitations', authMiddleware, async (req, res) => {
 });
 
 // Get leagues ready to schedule for the current user (Commissioner only)
-router.get(
-  '/leagues-ready-to-schedule',
-  authMiddleware,
-  async (req, res) => {
-    try {
-      let userId = resolveUserId(req);
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // Find leagues where user is commissioner, notification was sent, and schedule not yet generated
-      const readyLeagues = await prisma.league.findMany({
-        where: {
-          organizerId: userId,
-          readyNotificationSent: true,
-          scheduleGenerated: false,
-          isActive: true,
-          OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
-        },
-        select: {
-          id: true,
-          name: true,
-          sportType: true,
-          endDate: true,
-          isActive: true,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      res.json(readyLeagues);
-    } catch (error) {
-      console.error('Get leagues ready to schedule error:', error);
-      res
-        .status(500)
-        .json({ error: 'Failed to fetch leagues ready to schedule' });
+router.get('/leagues-ready-to-schedule', authMiddleware, async (req, res) => {
+  try {
+    let userId = resolveUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
+
+    // Find leagues where user is commissioner, notification was sent, and schedule not yet generated
+    const readyLeagues = await prisma.league.findMany({
+      where: {
+        organizerId: userId,
+        readyNotificationSent: true,
+        scheduleGenerated: false,
+        isActive: true,
+        OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+      },
+      select: {
+        id: true,
+        name: true,
+        sportType: true,
+        endDate: true,
+        isActive: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(readyLeagues);
+  } catch (error) {
+    console.error('Get leagues ready to schedule error:', error);
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch leagues ready to schedule' });
   }
-);
+});
 
 // Get current user's events (organized + confirmed participant)
 router.get('/events', authMiddleware, async (req, res) => {
@@ -972,6 +968,12 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
     const userId = req.user!.userId;
 
     const {
+      firstName,
+      lastName,
+      dateOfBirth,
+      phoneNumber,
+      email,
+      profileImage,
       intents,
       sportPreferences,
       locationCity,
@@ -980,30 +982,70 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
       locationLng,
     } = req.body;
 
-    if (!intents || !Array.isArray(intents) || intents.length === 0) {
-      return res.status(400).json({ error: 'At least one intent is required' });
+    // Build update payload — only include fields that were provided
+    const updateData: Record<string, unknown> = {
+      onboardingComplete: true,
+    };
+
+    // Name fields
+    if (firstName && typeof firstName === 'string' && firstName.trim()) {
+      updateData.firstName = firstName.trim();
     }
+    if (lastName && typeof lastName === 'string' && lastName.trim()) {
+      updateData.lastName = lastName.trim();
+    }
+
+    // Date of birth
+    if (dateOfBirth) {
+      updateData.dateOfBirth = new Date(dateOfBirth);
+    }
+
+    // Phone number (optional)
+    if (phoneNumber && typeof phoneNumber === 'string') {
+      updateData.phoneNumber = phoneNumber.trim();
+    }
+
+    // Email — only update if provided AND not an Apple relay address
     if (
-      !sportPreferences ||
-      !Array.isArray(sportPreferences) ||
-      sportPreferences.length === 0
+      email &&
+      typeof email === 'string' &&
+      !email.includes('privaterelay.appleid.com')
     ) {
-      return res
-        .status(400)
-        .json({ error: 'At least one sport preference is required' });
+      updateData.email = email.trim().toLowerCase();
     }
+
+    // Profile image (optional)
+    if (profileImage && typeof profileImage === 'string') {
+      updateData.profileImage = profileImage;
+    }
+
+    // Intents and sport preferences — default to empty arrays if not provided
+    // (SSO onboarding doesn't collect these; they're handled post-onboarding)
+    if (intents && Array.isArray(intents) && intents.length > 0) {
+      updateData.intents = intents;
+    } else if (!intents) {
+      updateData.intents = [];
+    }
+
+    if (
+      sportPreferences &&
+      Array.isArray(sportPreferences) &&
+      sportPreferences.length > 0
+    ) {
+      updateData.sportPreferences = sportPreferences;
+    } else if (!sportPreferences) {
+      updateData.sportPreferences = [];
+    }
+
+    // Location fields
+    if (locationCity) updateData.locationCity = locationCity;
+    if (locationState) updateData.locationState = locationState;
+    if (locationLat != null) updateData.locationLat = locationLat;
+    if (locationLng != null) updateData.locationLng = locationLng;
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: {
-        intents,
-        sportPreferences,
-        locationCity: locationCity || null,
-        locationState: locationState || null,
-        locationLat: locationLat || null,
-        locationLng: locationLng || null,
-        onboardingComplete: true,
-      },
+      data: updateData as any,
     });
 
     res.json({ success: true, user });
@@ -1212,29 +1254,25 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // ── Open Ground saved locations ──────────────────────────────────────────────
 
 // GET /users/open-ground-locations — fetch saved locations for the current user
-router.get(
-  '/open-ground-locations',
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const userId = req.user?.userId;
-      if (!userId)
-        return res.status(401).json({ error: 'Authentication required' });
+router.get('/open-ground-locations', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId)
+      return res.status(401).json({ error: 'Authentication required' });
 
-      const locations = await prisma.savedOpenGroundLocation.findMany({
-        where: { userId },
-        orderBy: { lastUsedAt: 'desc' },
-        select: { id: true, name: true, address: true, lastUsedAt: true },
-        take: 10,
-      });
+    const locations = await prisma.savedOpenGroundLocation.findMany({
+      where: { userId },
+      orderBy: { lastUsedAt: 'desc' },
+      select: { id: true, name: true, address: true, lastUsedAt: true },
+      take: 10,
+    });
 
-      res.json(locations);
-    } catch (error) {
-      console.error('Get open ground locations error:', error);
-      res.status(500).json({ error: 'Failed to fetch locations' });
-    }
+    res.json(locations);
+  } catch (error) {
+    console.error('Get open ground locations error:', error);
+    res.status(500).json({ error: 'Failed to fetch locations' });
   }
-);
+});
 
 // POST /users/open-ground-locations — upsert a location (create or bump lastUsedAt)
 router.post('/open-ground-locations', authMiddleware, async (req, res) => {
@@ -1266,4 +1304,3 @@ router.post('/open-ground-locations', authMiddleware, async (req, res) => {
 });
 
 export default router;
-

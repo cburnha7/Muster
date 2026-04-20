@@ -1,6 +1,6 @@
 /**
  * Authentication and Registration Type Definitions
- * 
+ *
  * This file contains all TypeScript interfaces and types for the authentication system.
  * Requirements: 1.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1
  */
@@ -169,14 +169,27 @@ export interface ForgotPasswordFormData {
 /**
  * User intent types for onboarding
  */
-export type UserIntent = 'PLAYER' | 'CAPTAIN' | 'GUARDIAN' | 'COMMISSIONER' | 'FACILITY_OWNER';
+export type UserIntent =
+  | 'PLAYER'
+  | 'CAPTAIN'
+  | 'GUARDIAN'
+  | 'COMMISSIONER'
+  | 'FACILITY_OWNER';
 
 /**
  * Onboarding data submitted during the onboarding flow
  */
 export interface OnboardingData {
-  intents: UserIntent[];
-  sportPreferences: string[];
+  // Profile fields (SSO onboarding)
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string; // ISO 8601
+  phoneNumber?: string;
+  email?: string;
+  profileImage?: string;
+  // Preferences (standard onboarding)
+  intents?: UserIntent[];
+  sportPreferences?: string[];
   locationCity?: string;
   locationState?: string;
   locationLat?: number;
