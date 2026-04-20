@@ -24,6 +24,7 @@ import { useDependentContext } from '../../hooks/useDependentContext';
 import { userService } from '../../services/api/UserService';
 import { setUser } from '../../store/slices/authSlice';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { useGetInsuranceDocumentsQuery } from '../../store/api/insuranceDocumentsApi';
 import { loggingService } from '../../services/LoggingService';
 import appJson from '../../../app.json';
@@ -420,18 +421,19 @@ function AccountsTab({
   const [paymentOnboarding, setPaymentOnboarding] = useState(false);
 
   // ── Auth headers helper ──
-  const authHeaders = useCallback((): Record<string, string> => {
-    const h: Record<string, string> = { 'x-user-id': userId };
-    if (token) h['Authorization'] = `Bearer ${token}`;
+  const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    const tkn = token || (await TokenStorage.getAccessToken());
+    const h: Record<string, string> = {};
+    if (tkn) h['Authorization'] = `Bearer ${tkn}`;
     return h;
-  }, [userId, token]);
+  }, [token]);
 
   // ── Load user-level payment account status ──
   const loadPaymentStatus = useCallback(async () => {
     try {
       setPaymentLoading(true);
       const res = await fetch(`${API_BASE_URL}/stripe/connect/status`, {
-        headers: authHeaders(),
+        headers: await authHeaders(),
       });
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
@@ -454,7 +456,10 @@ function AccountsTab({
           : 'muster://settings/accounts';
       const res = await fetch(`${API_BASE_URL}/stripe/connect/onboard`, {
         method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        headers: {
+          ...(await authHeaders()),
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ refreshUrl: returnUrl, returnUrl }),
       });
       if (!res.ok) {
@@ -480,7 +485,7 @@ function AccountsTab({
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE_URL}/connect/accounts`, {
-        headers: authHeaders(),
+        headers: await authHeaders(),
       });
       if (!res.ok) throw new Error('Failed to load accounts');
       const data = await res.json();
@@ -510,7 +515,7 @@ function AccountsTab({
       try {
         const res = await fetch(
           `${API_BASE_URL}/connect/status/${entityType}/${entityId}`,
-          { headers: authHeaders() }
+          { headers: await authHeaders() }
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -577,7 +582,10 @@ function AccountsTab({
 
         const res = await fetch(`${API_BASE_URL}/connect/onboard`, {
           method: 'POST',
-          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          headers: {
+            ...(await authHeaders()),
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             entityType,
             entityId,
@@ -879,8 +887,10 @@ function AccountBooksTab({
   useEffect(() => {
     (async () => {
       try {
-        const headers: Record<string, string> = { 'x-user-id': userId };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const tkn = token || (await TokenStorage.getAccessToken());
+        const headers: Record<string, string> = {
+          ...(tkn ? { Authorization: `Bearer ${tkn}` } : {}),
+        };
         const res = await fetch(
           `${API_BASE_URL}/rentals/my-rentals?userId=${userId}`,
           { headers }

@@ -48,6 +48,7 @@ import {
 import { RecurringConflictsModal } from '../../components/bookings/RecurringConflictsModal';
 import { InsuranceDocumentSelector } from '../../components/bookings/InsuranceDocumentSelector';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 
 type CourtAvailabilityScreenNavigationProp = NativeStackNavigationProp<
@@ -528,9 +529,13 @@ export function CourtAvailabilityScreen() {
       if (requiresInsurance && selectedInsuranceDocumentId) {
         body.insuranceDocumentId = selectedInsuranceDocumentId;
       }
+      const token = await TokenStorage.getAccessToken();
       const response = await fetch(`${API_BASE_URL}/rentals/book-range`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-User-Id': user.id },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(body),
       });
       if (response.status === 201) {

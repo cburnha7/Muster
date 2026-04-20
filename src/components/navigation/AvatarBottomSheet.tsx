@@ -141,11 +141,19 @@ export function AvatarBottomSheet() {
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {/* ── Profiles ─────────────────────────── */}
-        <Text style={[styles.sectionLabel, { color: colors.inkSecondary }]}>PROFILES</Text>
+        <Text style={[styles.sectionLabel, { color: colors.inkSecondary }]}>
+          PROFILES
+        </Text>
 
         {/* Current user */}
         <TouchableOpacity
-          style={[styles.personRow, !activeUserId && styles.personRowActive, !activeUserId && { backgroundColor: colors.cobaltLight || `${colors.cobalt}10` }]}
+          style={[
+            styles.personRow,
+            !activeUserId && styles.personRowActive,
+            !activeUserId && {
+              backgroundColor: colors.cobaltLight || `${colors.cobalt}10`,
+            },
+          ]}
           onPress={() => {
             handleSwitchUser(null);
             navigateTo('ProfileScreen');
@@ -184,10 +192,17 @@ export function AvatarBottomSheet() {
           <View style={styles.personInfo}>
             <Text
               style={[
-                styles.personName, { color: colors.ink },
-                !activeUserId && styles.personNameActive, !activeUserId && { color: colors.cobalt }]}
+                styles.personName,
+                { color: colors.ink },
+                !activeUserId && styles.personNameActive,
+                !activeUserId && { color: colors.cobalt },
+              ]}
             >
-              {user.firstName} {user.lastName}
+              {user.firstName?.trim() || user.lastName?.trim()
+                ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+                : user.email && !user.email.includes('privaterelay.appleid.com')
+                  ? user.email
+                  : 'Muster Player'}
             </Text>
           </View>
           {!activeUserId && (
@@ -207,7 +222,13 @@ export function AvatarBottomSheet() {
           return (
             <TouchableOpacity
               key={dep.id}
-              style={[styles.personRow, isActive && styles.personRowActive, isActive && { backgroundColor: colors.cobaltLight || `${colors.cobalt}10` }]}
+              style={[
+                styles.personRow,
+                isActive && styles.personRowActive,
+                isActive && {
+                  backgroundColor: colors.cobaltLight || `${colors.cobalt}10`,
+                },
+              ]}
               onPress={() => {
                 handleSwitchUser(dep.id);
                 navigateTo('DependentProfile', { dependentId: dep.id });
@@ -240,13 +261,18 @@ export function AvatarBottomSheet() {
               <View style={styles.personInfo}>
                 <Text
                   style={[
-                    styles.personName, { color: colors.ink },
-                    isActive && styles.personNameActive, isActive && { color: colors.cobalt }]}
+                    styles.personName,
+                    { color: colors.ink },
+                    isActive && styles.personNameActive,
+                    isActive && { color: colors.cobalt },
+                  ]}
                 >
                   {dep.firstName}
                 </Text>
               </View>
-              <Text style={[styles.ageText, { color: colors.inkSecondary }]}>age {age}</Text>
+              <Text style={[styles.ageText, { color: colors.inkSecondary }]}>
+                age {age}
+              </Text>
               {isActive && (
                 <Ionicons name="checkmark" size={20} color={colors.pine} />
               )}
@@ -260,14 +286,24 @@ export function AvatarBottomSheet() {
           onPress={() => navigateTo('DependentForm', {})}
           activeOpacity={0.7}
         >
-          <View style={[styles.personAvatar, styles.addChildAvatar, { backgroundColor: colors.bgSubtle }]}>
+          <View
+            style={[
+              styles.personAvatar,
+              styles.addChildAvatar,
+              { backgroundColor: colors.bgSubtle },
+            ]}
+          >
             <Ionicons name="add" size={20} color={colors.cobalt} />
           </View>
-          <Text style={[styles.addChildText, { color: colors.cobalt }]}>Add a child</Text>
+          <Text style={[styles.addChildText, { color: colors.cobalt }]}>
+            Add a child
+          </Text>
         </TouchableOpacity>
 
         {/* ── Quick Actions ────────────────────── */}
-        <View style={[styles.divider, { backgroundColor: colors.border + '80' }]} />
+        <View
+          style={[styles.divider, { backgroundColor: colors.border + '80' }]}
+        />
 
         <TouchableOpacity
           style={styles.menuRow}
@@ -277,17 +313,11 @@ export function AvatarBottomSheet() {
           }}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name="notifications-outline"
-            size={20}
-            color={colors.ink}
-          />
-          <Text style={[styles.menuText, { color: colors.ink }]}>Notifications</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={colors.border}
-          />
+          <Ionicons name="notifications-outline" size={20} color={colors.ink} />
+          <Text style={[styles.menuText, { color: colors.ink }]}>
+            Notifications
+          </Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.border} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -298,26 +328,26 @@ export function AvatarBottomSheet() {
           }}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name="settings-outline"
-            size={20}
-            color={colors.ink}
-          />
+          <Ionicons name="settings-outline" size={20} color={colors.ink} />
           <Text style={[styles.menuText, { color: colors.ink }]}>Settings</Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={colors.border}
-          />
+          <Ionicons name="chevron-forward" size={16} color={colors.border} />
         </TouchableOpacity>
 
         {/* ── Plan Section ────────────────────── */}
         {isFreeTier && (
           <>
-            <View style={[styles.divider, { backgroundColor: colors.border + '80' }]} />
+            <View
+              style={[
+                styles.divider,
+                { backgroundColor: colors.border + '80' },
+              ]}
+            />
             <View style={styles.planRow}>
               <Text style={[styles.planText, { color: colors.inkSecondary }]}>
-                Plan: <Text style={[styles.planTier, { color: colors.ink }]}>{tierName}</Text>
+                Plan:{' '}
+                <Text style={[styles.planTier, { color: colors.ink }]}>
+                  {tierName}
+                </Text>
               </Text>
               <TouchableOpacity
                 style={[styles.upgradeBtn, { backgroundColor: colors.cobalt }]}
@@ -346,14 +376,18 @@ export function AvatarBottomSheet() {
         )}
 
         {/* ── Log Out ─────────────────────────── */}
-        <View style={[styles.divider, { backgroundColor: colors.border + '80' }]} />
+        <View
+          style={[styles.divider, { backgroundColor: colors.border + '80' }]}
+        />
         <TouchableOpacity
           style={styles.logoutRow}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={[styles.logoutText, { color: colors.error }]}>Log out</Text>
+          <Text style={[styles.logoutText, { color: colors.error }]}>
+            Log out
+          </Text>
         </TouchableOpacity>
 
         <View style={{ height: 32 }} />

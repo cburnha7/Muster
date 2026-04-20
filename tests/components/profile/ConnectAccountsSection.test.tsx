@@ -8,6 +8,14 @@ jest.mock('../../../src/context/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
+// Mock TokenStorage
+jest.mock('../../../src/services/auth/TokenStorage', () => ({
+  __esModule: true,
+  default: {
+    getAccessToken: jest.fn().mockResolvedValue('test-token'),
+  },
+}));
+
 // Mock useFocusEffect (global setup only mocks useNavigation/useRoute)
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() }),
@@ -44,7 +52,9 @@ describe('ConnectAccountsSection', () => {
     const { getByText } = render(<ConnectAccountsSection userId="user-1" />);
 
     await waitFor(() => {
-      expect(getByText("You don't manage any rosters, facilities, or leagues yet.")).toBeTruthy();
+      expect(
+        getByText("You don't manage any rosters, facilities, or leagues yet.")
+      ).toBeTruthy();
     });
   });
 
@@ -58,13 +68,19 @@ describe('ConnectAccountsSection', () => {
             entityId: 'r1',
             entityName: 'Weekend Warriors',
             accountId: 'acct_123',
-            status: { chargesEnabled: true, payoutsEnabled: true, detailsSubmitted: true },
+            status: {
+              chargesEnabled: true,
+              payoutsEnabled: true,
+              detailsSubmitted: true,
+            },
           },
         ],
       }),
     });
 
-    const { getByText, queryByText } = render(<ConnectAccountsSection userId="user-1" />);
+    const { getByText, queryByText } = render(
+      <ConnectAccountsSection userId="user-1" />
+    );
 
     await waitFor(() => {
       expect(getByText('Weekend Warriors')).toBeTruthy();
@@ -85,7 +101,11 @@ describe('ConnectAccountsSection', () => {
             entityId: 'f1',
             entityName: 'Downtown Courts',
             accountId: 'acct_456',
-            status: { chargesEnabled: false, payoutsEnabled: false, detailsSubmitted: true },
+            status: {
+              chargesEnabled: false,
+              payoutsEnabled: false,
+              detailsSubmitted: true,
+            },
           },
         ],
       }),
@@ -157,7 +177,9 @@ describe('ConnectAccountsSection', () => {
       expect(onboardUrl).toContain('/connect/onboard');
       expect(onboardOpts.method).toBe('POST');
       expect(onboardOpts.headers['Authorization']).toBe('Bearer test-token');
-      expect(Linking.openURL).toHaveBeenCalledWith('https://connect.stripe.com/setup/abc');
+      expect(Linking.openURL).toHaveBeenCalledWith(
+        'https://connect.stripe.com/setup/abc'
+      );
     });
   });
 
@@ -173,7 +195,6 @@ describe('ConnectAccountsSection', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [, opts] = mockFetch.mock.calls[0];
       expect(opts.headers['Authorization']).toBe('Bearer test-token');
-      expect(opts.headers['x-user-id']).toBe('user-1');
     });
   });
 
@@ -183,7 +204,9 @@ describe('ConnectAccountsSection', () => {
     const { getByText } = render(<ConnectAccountsSection userId="user-1" />);
 
     await waitFor(() => {
-      expect(getByText("You don't manage any rosters, facilities, or leagues yet.")).toBeTruthy();
+      expect(
+        getByText("You don't manage any rosters, facilities, or leagues yet.")
+      ).toBeTruthy();
     });
   });
 
@@ -203,7 +226,9 @@ describe('ConnectAccountsSection', () => {
       }),
     });
 
-    const { getByText, queryByText } = render(<ConnectAccountsSection userId="user-1" />);
+    const { getByText, queryByText } = render(
+      <ConnectAccountsSection userId="user-1" />
+    );
 
     await waitFor(() => expect(getByText('My Roster')).toBeTruthy());
 

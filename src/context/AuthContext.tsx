@@ -128,11 +128,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       // Hydrate dependents into context slice for the ContextIndicator pill
-      import('../services/api/config')
-        .then(({ API_BASE_URL }) =>
-          fetch(`${API_BASE_URL}/dependents`, {
-            headers: { 'X-User-Id': reduxUser.id },
-          })
+      TokenStorage.getAccessToken()
+        .then(tkn =>
+          import('../services/api/config').then(({ API_BASE_URL }) =>
+            fetch(`${API_BASE_URL}/dependents`, {
+              headers: { ...(tkn ? { Authorization: `Bearer ${tkn}` } : {}) },
+            })
+          )
         )
         .then(res => (res.ok ? res.json() : []))
         .then(data => dispatch(setDependents(data)))

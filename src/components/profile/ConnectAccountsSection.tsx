@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { fonts, typeScale, Spacing, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
 
@@ -69,11 +70,11 @@ export function ConnectAccountsSection({
     try {
       setLoading(true);
       const url = `${API_BASE_URL}/connect/accounts`;
+      const tkn = token || (await TokenStorage.getAccessToken());
       const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (tkn) {
+        headers['Authorization'] = `Bearer ${tkn}`;
       }
-      headers['x-user-id'] = userId;
 
       const response = await fetch(url, { headers });
       if (!response.ok) throw new Error('Failed to load Connect accounts');
@@ -102,13 +103,13 @@ export function ConnectAccountsSection({
     try {
       setOnboardingEntityId(entityId);
       const url = `${API_BASE_URL}/connect/onboard`;
+      const tkn = token || (await TokenStorage.getAccessToken());
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (tkn) {
+        headers['Authorization'] = `Bearer ${tkn}`;
       }
-      headers['x-user-id'] = userId;
 
       const currentUrl =
         Platform.OS === 'web' ? window.location.href : 'muster://profile';
@@ -160,10 +161,15 @@ export function ConnectAccountsSection({
             return (
               <View
                 key={`${account.entityType}-${account.entityId}`}
-                style={[styles.entityRow, { borderBottomColor: `${colors.inkFaint}30` }]}
+                style={[
+                  styles.entityRow,
+                  { borderBottomColor: `${colors.inkFaint}30` },
+                ]}
               >
                 <View style={styles.entityInfo}>
-                  <Text style={[styles.entityName, { color: colors.ink }]}>{account.entityName}</Text>
+                  <Text style={[styles.entityName, { color: colors.ink }]}>
+                    {account.entityName}
+                  </Text>
                   <Text style={[styles.entityType, { color: colors.inkFaint }]}>
                     {getEntityLabel(account.entityType)}
                   </Text>
@@ -172,7 +178,10 @@ export function ConnectAccountsSection({
                   <StatusBadge status={status} />
                   {status !== 'active' && (
                     <TouchableOpacity
-                      style={[styles.onboardButton, { backgroundColor: colors.cobalt }]}
+                      style={[
+                        styles.onboardButton,
+                        { backgroundColor: colors.cobalt },
+                      ]}
                       onPress={() =>
                         handleOnboard(account.entityType, account.entityId)
                       }
@@ -182,7 +191,12 @@ export function ConnectAccountsSection({
                       {isOnboarding ? (
                         <ActivityIndicator size="small" color={colors.white} />
                       ) : (
-                        <Text style={[styles.onboardButtonText, { color: colors.white }]}>
+                        <Text
+                          style={[
+                            styles.onboardButtonText,
+                            { color: colors.white },
+                          ]}
+                        >
                           {status === 'pending' ? 'Resume' : 'Set Up'}
                         </Text>
                       )}

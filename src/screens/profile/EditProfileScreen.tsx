@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { userService } from '../../services/api/UserService';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { User, UpdateProfileData } from '../../types';
 import { setUser as setReduxUser } from '../../store/slices/authSlice';
 import { FormInput } from '../../components/forms/FormInput';
@@ -108,13 +109,17 @@ export function EditProfileScreen(): JSX.Element {
       setLoading(true);
       setError(null);
 
+      const token = await TokenStorage.getAccessToken();
+      const authHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
       if (isDependent && authUser?.id) {
         // Load dependent profile
         const response = await fetch(
           `${API_BASE_URL}/dependents/${dependentId}`,
-          {
-            headers: { 'X-User-Id': authUser.id },
-          }
+          { headers: authHeaders }
         );
         if (!response.ok) throw new Error('Failed to load dependent profile');
         const depData = await response.json();
@@ -297,6 +302,7 @@ export function EditProfileScreen(): JSX.Element {
     loggingService.logButton('Save Changes', 'EditProfileScreen');
     try {
       setSaving(true);
+      setError(null);
 
       if (isDependent && authUser?.id) {
         // Save dependent profile
@@ -311,13 +317,14 @@ export function EditProfileScreen(): JSX.Element {
           ...(gender ? { gender } : {}),
           ...(profileImage ? { profileImage } : {}),
         };
+        const saveToken = await TokenStorage.getAccessToken();
         const response = await fetch(
           `${API_BASE_URL}/dependents/${dependentId}`,
           {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              'X-User-Id': authUser.id,
+              ...(saveToken ? { Authorization: `Bearer ${saveToken}` } : {}),
             },
             body: JSON.stringify(depUpdates),
           }
@@ -330,8 +337,11 @@ export function EditProfileScreen(): JSX.Element {
         }
         // Refresh dependents in Redux
         try {
+          const refreshToken = await TokenStorage.getAccessToken();
           const depRes = await fetch(`${API_BASE_URL}/dependents`, {
-            headers: { 'X-User-Id': authUser.id },
+            headers: refreshToken
+              ? { Authorization: `Bearer ${refreshToken}` }
+              : {},
           });
           if (depRes.ok) {
             const {

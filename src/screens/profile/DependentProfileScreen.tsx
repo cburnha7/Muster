@@ -19,6 +19,7 @@ import { ProfileCard } from '../../components/profile/ProfileCard';
 import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { useAuth } from '../../context/AuthContext';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
@@ -63,9 +64,13 @@ export function DependentProfileScreen() {
   const fetchProfile = useCallback(async () => {
     if (!authUser?.id || !dependentId) return;
     try {
+      const token = await TokenStorage.getAccessToken();
+      const headers: Record<string, string> = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
       const response = await fetch(
         `${API_BASE_URL}/dependents/${dependentId}`,
-        { headers: { 'X-User-Id': authUser.id } }
+        { headers }
       );
       if (!response.ok) throw new Error('Failed to fetch dependent profile');
       const data: DependentProfile = await response.json();
@@ -137,11 +142,7 @@ export function DependentProfileScreen() {
           { justifyContent: 'center', alignItems: 'center' },
         ]}
       >
-        <Ionicons
-          name="person-outline"
-          size={48}
-          color={colors.border}
-        />
+        <Ionicons name="person-outline" size={48} color={colors.border} />
         <Text style={styles.emptyText}>Could not load profile.</Text>
       </View>
     );
@@ -244,11 +245,7 @@ export function DependentProfileScreen() {
       <View style={styles.sectionCard}>
         {recentGames.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons
-              name="calendar-outline"
-              size={32}
-              color={colors.border}
-            />
+            <Ionicons name="calendar-outline" size={32} color={colors.border} />
             <Text style={styles.emptyText}>No games played yet</Text>
           </View>
         ) : (
@@ -300,11 +297,7 @@ export function DependentProfileScreen() {
       <View style={styles.sectionCard}>
         {rosterMemberships.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons
-              name="people-outline"
-              size={32}
-              color={colors.border}
-            />
+            <Ionicons name="people-outline" size={32} color={colors.border} />
             <Text style={styles.emptyText}>Not a member of any Rosters</Text>
           </View>
         ) : (
@@ -359,11 +352,7 @@ export function DependentProfileScreen() {
       <View style={styles.sectionCard}>
         {leagueMemberships.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons
-              name="trophy-outline"
-              size={32}
-              color={colors.border}
-            />
+            <Ionicons name="trophy-outline" size={32} color={colors.border} />
             <Text style={styles.emptyText}>Not a member of any Leagues</Text>
           </View>
         ) : (

@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { fonts, typeScale, Spacing, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
 
@@ -37,9 +38,9 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
   const loadStatus = useCallback(async () => {
     try {
       const url = `${API_BASE_URL}/stripe/connect/status`;
+      const tkn = token || (await TokenStorage.getAccessToken());
       const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      headers['x-user-id'] = userId;
+      if (tkn) headers['Authorization'] = `Bearer ${tkn}`;
 
       const response = await fetch(url, { headers });
       if (!response.ok) throw new Error('Failed to load Connect status');
@@ -65,11 +66,11 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
     try {
       setOnboarding(true);
       const url = `${API_BASE_URL}/stripe/connect/onboard`;
+      const tkn = token || (await TokenStorage.getAccessToken());
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      headers['x-user-id'] = userId;
+      if (tkn) headers['Authorization'] = `Bearer ${tkn}`;
 
       const currentUrl =
         Platform.OS === 'web' ? window.location.href : 'muster://profile';
@@ -140,7 +141,9 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
               {onboarding ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={[styles.buttonText, { color: colors.white }]}>Resume</Text>
+                <Text style={[styles.buttonText, { color: colors.white }]}>
+                  Resume
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -159,7 +162,9 @@ export function UserConnectSection({ userId }: UserConnectSectionProps) {
               {onboarding ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={[styles.buttonText, { color: colors.white }]}>Set Up Payments</Text>
+                <Text style={[styles.buttonText, { color: colors.white }]}>
+                  Set Up Payments
+                </Text>
               )}
             </TouchableOpacity>
           </View>

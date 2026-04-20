@@ -16,6 +16,7 @@ import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { useAuth } from '../../context/AuthContext';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { resetContext } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
 import { fonts, Spacing, useTheme } from '../../theme';
@@ -88,13 +89,14 @@ export function TransferAccountScreen() {
 
     setIsSubmitting(true);
     try {
+      const token = await TokenStorage.getAccessToken();
       const response = await fetch(
         `${API_BASE_URL}/dependents/${dependentId}/transfer`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-User-Id': authUser.id,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             email: email.trim(),
@@ -134,7 +136,13 @@ export function TransferAccountScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}>
+    <View
+      style={[
+        styles.screen,
+        { backgroundColor: colors.background },
+        { backgroundColor: colors.bgScreen },
+      ]}
+    >
       <ScreenHeader title="Transfer Account" />
       <KeyboardAvoidingView
         style={styles.flex}
@@ -146,15 +154,23 @@ export function TransferAccountScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Permanent action warning */}
-          <View style={[styles.warningCard, { backgroundColor: colors.gold + '15', borderColor: colors.gold + '30' }]}>
-            <Ionicons
-              name="warning-outline"
-              size={24}
-              color={colors.gold}
-            />
+          <View
+            style={[
+              styles.warningCard,
+              {
+                backgroundColor: colors.gold + '15',
+                borderColor: colors.gold + '30',
+              },
+            ]}
+          >
+            <Ionicons name="warning-outline" size={24} color={colors.gold} />
             <View style={styles.warningTextContainer}>
-              <Text style={[styles.warningTitle, { color: colors.ink }]}>This action is permanent</Text>
-              <Text style={[styles.warningBody, { color: colors.onSurfaceFaint }]}>
+              <Text style={[styles.warningTitle, { color: colors.ink }]}>
+                This action is permanent
+              </Text>
+              <Text
+                style={[styles.warningBody, { color: colors.onSurfaceFaint }]}
+              >
                 Transferring this account will create an independent Muster
                 account for the dependent. They will be removed from your
                 dependents list and will manage their own account going forward.
@@ -165,7 +181,9 @@ export function TransferAccountScreen() {
           </View>
 
           {/* Credential fields */}
-          <Text style={[styles.sectionLabel, { color: colors.ink }]}>New Account Credentials</Text>
+          <Text style={[styles.sectionLabel, { color: colors.ink }]}>
+            New Account Credentials
+          </Text>
 
           <FormInput
             label="Email Address"

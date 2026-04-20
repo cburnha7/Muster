@@ -26,6 +26,7 @@ import { UserReservationsTab } from '../../components/facilities/UserReservation
 import { ContextualReturnButton } from '../../components/navigation/ContextualReturnButton';
 import { EntityHeader } from '../../components/ui/EntityHeader';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 import * as ImagePicker from 'expo-image-picker';
 import {
   setSelectedFacility,
@@ -223,11 +224,12 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         name: asset.fileName || 'cover.jpg',
         type: asset.mimeType || 'image/jpeg',
       } as any);
+      const token = await TokenStorage.getAccessToken();
       const res = await fetch(
         `${API_BASE_URL}/facilities/${selectedFacility.id}/cover`,
         {
           method: 'POST',
-          headers: { 'X-User-Id': currentUser?.id || '' },
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: formData,
         }
       );

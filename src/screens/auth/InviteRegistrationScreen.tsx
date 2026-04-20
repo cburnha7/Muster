@@ -238,7 +238,6 @@ export function InviteRegistrationScreen({
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
-              'X-User-Id': userId,
             },
             body: JSON.stringify({
               firstName: childFirstName.trim(),

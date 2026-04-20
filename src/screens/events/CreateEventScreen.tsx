@@ -16,6 +16,7 @@ import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen
 import { eventService } from '../../services/api/EventService';
 import { addEvent } from '../../store/slices/eventsSlice';
 import { useAuth } from '../../context/AuthContext';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { getSportEmoji } from '../../constants/sports';
 import { EventType, SkillLevel } from '../../types';
 import { useTheme } from '../../theme';
@@ -136,20 +137,23 @@ function CreateEventInner() {
         state.locationName.trim() &&
         user?.id
       ) {
-        fetch(
-          `${require('../../services/api/config').API_BASE_URL}/users/open-ground-locations`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-user-id': user.id,
-            },
-            body: JSON.stringify({
-              name: state.locationName.trim(),
-              address: state.locationAddress.trim() || undefined,
-            }),
-          }
-        ).catch(() => {}); // fire-and-forget
+        TokenStorage.getAccessToken().then(tkn => {
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...(tkn ? { Authorization: `Bearer ${tkn}` } : {}),
+          };
+          fetch(
+            `${require('../../services/api/config').API_BASE_URL}/users/open-ground-locations`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                name: state.locationName.trim(),
+                address: state.locationAddress.trim() || undefined,
+              }),
+            }
+          ).catch(() => {});
+        }); // fire-and-forget
       }
 
       dispatch({ type: 'SUBMIT_SUCCESS', eventId: newEvent.id });

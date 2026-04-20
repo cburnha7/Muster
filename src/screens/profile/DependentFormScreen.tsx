@@ -20,6 +20,7 @@ import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { DatePickerInput } from '../../components/forms/DatePickerInput';
 import { useAuth } from '../../context/AuthContext';
+import TokenStorage from '../../services/auth/TokenStorage';
 import { setDependents } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
 import { fonts, Spacing, useTheme } from '../../theme';
@@ -132,9 +133,12 @@ export function DependentFormScreen() {
 
     const fetchDependent = async () => {
       try {
+        const token = await TokenStorage.getAccessToken();
         const response = await fetch(
           `${API_BASE_URL}/dependents/${dependentId}`,
-          { headers: { 'X-User-Id': authUser.id } }
+          {
+            headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          }
         );
         if (!response.ok) throw new Error('Failed to load dependent');
         const data: DependentProfile = await response.json();
@@ -203,8 +207,9 @@ export function DependentFormScreen() {
   const refreshDependents = async () => {
     if (!authUser?.id) return;
     try {
+      const token = await TokenStorage.getAccessToken();
       const res = await fetch(`${API_BASE_URL}/dependents`, {
-        headers: { 'X-User-Id': authUser.id },
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });
       if (res.ok) {
         const data = await res.json();
@@ -226,6 +231,7 @@ export function DependentFormScreen() {
     setIsSubmitting(true);
     setErrors({});
     try {
+      const token = await TokenStorage.getAccessToken();
       const url = isEditMode
         ? `${API_BASE_URL}/dependents/${dependentId}`
         : `${API_BASE_URL}/dependents`;
@@ -245,7 +251,7 @@ export function DependentFormScreen() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': authUser.id,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(body),
       });
@@ -334,7 +340,9 @@ export function DependentFormScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.surface }]}
+      >
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color={colors.cobalt} />
         </View>
@@ -343,7 +351,13 @@ export function DependentFormScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.surface }, { backgroundColor: colors.bgScreen }]}>
+    <View
+      style={[
+        styles.screen,
+        { backgroundColor: colors.surface },
+        { backgroundColor: colors.bgScreen },
+      ]}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -389,7 +403,9 @@ export function DependentFormScreen() {
 
           {/* Gender */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionLabel, { color: colors.ink }]}>Gender</Text>
+            <Text style={[styles.sectionLabel, { color: colors.ink }]}>
+              Gender
+            </Text>
             <View style={styles.chipContainer}>
               {[
                 { label: 'Male', value: 'male' },
@@ -399,7 +415,18 @@ export function DependentFormScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.value}
-                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: colors.white,
+                        borderColor: colors.border,
+                      },
+                      selected && styles.chipSelected,
+                      selected && {
+                        backgroundColor: colors.cobalt,
+                        borderColor: colors.cobalt,
+                      },
+                    ]}
                     onPress={() =>
                       setGender(gender === opt.value ? '' : opt.value)
                     }
@@ -415,8 +442,11 @@ export function DependentFormScreen() {
                     )}
                     <Text
                       style={[
-                        styles.chipText, { color: colors.ink },
-                        selected && styles.chipTextSelected, selected && { color: colors.white }]}
+                        styles.chipText,
+                        { color: colors.ink },
+                        selected && styles.chipTextSelected,
+                        selected && { color: colors.white },
+                      ]}
                     >
                       {opt.label}
                     </Text>
@@ -428,14 +458,27 @@ export function DependentFormScreen() {
 
           {/* Sport preferences — chip-style multi-select */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionLabel, { color: colors.ink }]}>Sport Preferences</Text>
+            <Text style={[styles.sectionLabel, { color: colors.ink }]}>
+              Sport Preferences
+            </Text>
             <View style={styles.chipContainer}>
               {SPORT_OPTIONS.map(sport => {
                 const selected = sportPreferences.includes(sport.value);
                 return (
                   <TouchableOpacity
                     key={sport.value}
-                    style={[styles.chip, { backgroundColor: colors.white, borderColor: colors.border }, selected && styles.chipSelected, selected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt }]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: colors.white,
+                        borderColor: colors.border,
+                      },
+                      selected && styles.chipSelected,
+                      selected && {
+                        backgroundColor: colors.cobalt,
+                        borderColor: colors.cobalt,
+                      },
+                    ]}
                     onPress={() => toggleSport(sport.value)}
                     activeOpacity={0.7}
                     accessibilityRole="checkbox"
@@ -452,8 +495,11 @@ export function DependentFormScreen() {
                     )}
                     <Text
                       style={[
-                        styles.chipText, { color: colors.ink },
-                        selected && styles.chipTextSelected, selected && { color: colors.white }]}
+                        styles.chipText,
+                        { color: colors.ink },
+                        selected && styles.chipTextSelected,
+                        selected && { color: colors.white },
+                      ]}
                     >
                       {sport.label}
                     </Text>
@@ -462,7 +508,9 @@ export function DependentFormScreen() {
               })}
             </View>
             {errors.sportPreferences && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{errors.sportPreferences}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>
+                {errors.sportPreferences}
+              </Text>
             )}
           </View>
 
@@ -529,9 +577,16 @@ export function DependentFormScreen() {
 
           {/* General error */}
           {errors.general && (
-            <View style={[styles.generalErrorContainer, { backgroundColor: colors.error + '10' }]}>
+            <View
+              style={[
+                styles.generalErrorContainer,
+                { backgroundColor: colors.error + '10' },
+              ]}
+            >
               <Ionicons name="alert-circle" size={16} color={colors.error} />
-              <Text style={[styles.generalErrorText, { color: colors.error }]}>{errors.general}</Text>
+              <Text style={[styles.generalErrorText, { color: colors.error }]}>
+                {errors.general}
+              </Text>
             </View>
           )}
 
