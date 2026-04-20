@@ -5,11 +5,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
+import { tokenFontFamily } from '../../theme/tokens';
 
 interface ScreenHeaderProps {
   title: string;
@@ -38,7 +38,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   onRightPress,
   leftText,
   rightText,
-  resolvedBg,
+  backgroundColor,
   textColor,
   showBorder = true,
   style,
@@ -47,11 +47,10 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   rightComponent,
 }) => {
   const { colors } = useTheme();
-  const resolvedBg = backgroundColor ?? colors.background;
-  const resolvedText = textColor ?? colors.ink;
+  const bg = backgroundColor ?? colors.background;
+  const text = textColor ?? colors.ink;
   const insets = useSafeAreaInsets();
 
-  // If showBack is true, use back arrow as left icon
   const effectiveLeftIcon = showBack ? 'arrow-back' : leftIcon;
   const effectiveOnLeftPress = showBack ? onBackPress : onLeftPress;
 
@@ -59,9 +58,10 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     <View
       style={[
         styles.container,
-        { borderBottomColor: colors.border, shadowColor: colors.ink },
         {
-          resolvedBg,
+          borderBottomColor: colors.border,
+          shadowColor: colors.ink,
+          backgroundColor: bg,
           paddingTop: insets.top,
           borderBottomWidth: showBorder ? 1 : 0,
         },
@@ -70,12 +70,11 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     >
       <StatusBar
         barStyle={
-          resolvedBg === colors.background ||
-          resolvedBg === colors.white
+          bg === colors.background || bg === colors.white
             ? 'dark-content'
             : 'light-content'
         }
-        backgroundColor={resolvedBg}
+        backgroundColor={bg}
       />
 
       <View style={styles.header}>
@@ -90,11 +89,11 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
                 <Ionicons
                   name={effectiveLeftIcon as any}
                   size={24}
-                  color={resolvedText}
+                  color={text}
                 />
               )}
               {leftText && (
-                <Text style={[styles.actionText, { color: resolvedText }]}>
+                <Text style={[styles.actionText, { color: text }]}>
                   {leftText}
                 </Text>
               )}
@@ -103,14 +102,11 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
         </View>
 
         <View style={styles.centerSection}>
-          <Text style={[styles.title, { color: resolvedText }]} numberOfLines={1}>
+          <Text style={[styles.title, { color: text }]} numberOfLines={1}>
             {title}
           </Text>
           {subtitle && (
-            <Text
-              style={[styles.subtitle, { color: resolvedText }]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.subtitle, { color: text }]} numberOfLines={1}>
               {subtitle}
             </Text>
           )}
@@ -126,12 +122,12 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
               disabled={!onRightPress}
             >
               {rightText && (
-                <Text style={[styles.actionText, { color: resolvedText }]}>
+                <Text style={[styles.actionText, { color: text }]}>
                   {rightText}
                 </Text>
               )}
               {rightIcon && (
-                <Ionicons name={rightIcon as any} size={24} color={resolvedText} />
+                <Ionicons name={rightIcon as any} size={24} color={text} />
               )}
             </TouchableOpacity>
           ) : null}
@@ -143,10 +139,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
@@ -180,19 +173,18 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 16,
-    fontFamily: fonts.label,
+    fontFamily: tokenFontFamily.uiSemiBold,
   },
   title: {
     fontSize: 18,
-    fontFamily: fonts.headingSemi,
+    fontFamily: tokenFontFamily.uiSemiBold,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: fonts.body,
+    fontFamily: tokenFontFamily.uiRegular,
     textAlign: 'center',
     marginTop: 2,
     opacity: 0.7,
   },
 });
-
