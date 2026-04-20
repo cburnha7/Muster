@@ -698,7 +698,13 @@ class AuthController {
       }
 
       // Verify refresh token
-      const isValid = await TokenService.isRefreshTokenValid(body.refreshToken);
+      let isValid: boolean;
+      try {
+        isValid = await TokenService.isRefreshTokenValid(body.refreshToken);
+      } catch (dbError) {
+        console.error('Refresh token DB validation error:', dbError);
+        isValid = false;
+      }
 
       if (!isValid) {
         res.status(401).json({

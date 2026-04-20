@@ -32,14 +32,25 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
+    const failedToken = (api.getState() as RootState).auth.accessToken;
+
+    // Check if token was already refreshed by login or another interceptor
+    const currentToken = (api.getState() as RootState).auth.accessToken;
+    if (currentToken && currentToken !== failedToken) {
+      return await baseQuery(args, api, extraOptions);
+    }
+
     let refreshToken = (api.getState() as RootState).auth.refreshToken;
     if (!refreshToken) {
       refreshToken = await TokenStorage.getRefreshToken();
     }
 
     if (!refreshToken) {
-      await TokenStorage.clearAll();
-      api.dispatch(clearAuth());
+      const latestToken = (api.getState() as RootState).auth.accessToken;
+      if (!latestToken || latestToken === failedToken) {
+        await TokenStorage.clearAll();
+        api.dispatch(clearAuth());
+      }
       return result;
     }
 
@@ -70,8 +81,11 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
       );
       result = await baseQuery(args, api, extraOptions);
     } else {
-      await TokenStorage.clearAll();
-      api.dispatch(clearAuth());
+      const latestToken = (api.getState() as RootState).auth.accessToken;
+      if (!latestToken || latestToken === failedToken) {
+        await TokenStorage.clearAll();
+        api.dispatch(clearAuth());
+      }
     }
   }
 

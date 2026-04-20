@@ -24,6 +24,10 @@ export interface SemanticColors {
   ink: string;
   inkSecondary: string;
   inkMuted: string;
+  /** @alias inkMuted — legacy name used across many components */
+  inkFaint: string;
+  /** @alias inkSecondary — legacy name */
+  inkSoft: string;
   border: string;
   surface: string;
   background: string;
@@ -61,6 +65,8 @@ export interface SemanticColors {
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
+  /** @alias inkMuted — legacy name */
+  textTertiary: string;
   textInverse: string;
   cobaltTint: string;
   pineTint: string;
@@ -91,6 +97,8 @@ export const lightColors: SemanticColors = {
   ink: '#1C2320',
   inkSecondary: '#6B7C76',
   inkMuted: '#94A3B8',
+  inkFaint: '#94A3B8',
+  inkSoft: '#6B7C76',
   border: '#E2E4E9',
   surface: '#FFFFFF',
   background: '#F7F4EF',
@@ -124,6 +132,7 @@ export const lightColors: SemanticColors = {
   textPrimary: '#1C2320',
   textSecondary: '#6B7C76',
   textMuted: '#94A3B8',
+  textTertiary: '#94A3B8',
   textInverse: '#FFFFFF',
   cobaltTint: '#EEF1FC',
   pineTint: '#D1FAE5',
@@ -153,6 +162,8 @@ export const darkColors: SemanticColors = {
   ink: '#E8ECF0',
   inkSecondary: '#9BA8A3',
   inkMuted: '#5C6B66',
+  inkFaint: '#5C6B66',
+  inkSoft: '#9BA8A3',
   border: '#2A3530',
   surface: '#1A2020',
   background: '#111816',
@@ -186,6 +197,7 @@ export const darkColors: SemanticColors = {
   textPrimary: '#E8ECF0',
   textSecondary: '#9BA8A3',
   textMuted: '#5C6B66',
+  textTertiary: '#5C6B66',
   textInverse: '#111816',
   cobaltTint: '#1A2340',
   pineTint: '#132A1E',
@@ -316,7 +328,7 @@ export function getAvatarColor(userId: string): string {
   let h = 0;
   for (let i = 0; i < userId.length; i++)
     h = userId.charCodeAt(i) + ((h << 5) - h);
-  return AVATAR_POOL[Math.abs(h) % AVATAR_POOL.length];
+  return AVATAR_POOL[Math.abs(h) % AVATAR_POOL.length] ?? AVATAR_POOL[0]!;
 }
 
 // ─── Spacing ─────────────────────────────────────────────────

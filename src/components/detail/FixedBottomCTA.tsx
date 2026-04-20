@@ -36,31 +36,59 @@ export function FixedBottomCTA({
   const insets = useSafeAreaInsets();
   const isDisabled = variant === 'disabled' || loading;
 
-  const buttonStyle = [
-    styles.button,
-    variant === 'primary' && styles.primary,
-    variant === 'confirmed' && styles.confirmed,
-    variant === 'secondary' && styles.secondary,
-    variant === 'danger' && styles.danger,
-    isDisabled && styles.disabled,
-  ];
+  // Resolve dynamic colors per variant
+  const bgColor = (() => {
+    if (isDisabled) return colors.border;
+    switch (variant) {
+      case 'primary':
+        return colors.cobalt;
+      case 'confirmed':
+        return colors.pine;
+      case 'danger':
+        return colors.heart;
+      case 'secondary':
+        return colors.transparent;
+      default:
+        return colors.cobalt;
+    }
+  })();
 
-  const textStyle = [
-    styles.label,
-    (variant === 'primary' ||
-      variant === 'confirmed' ||
-      variant === 'danger') &&
-      styles.labelLight,
-    variant === 'secondary' && styles.labelPrimary,
-    isDisabled && styles.labelDimmed,
-  ];
+  const labelColor = (() => {
+    if (isDisabled) return colors.inkMuted;
+    switch (variant) {
+      case 'primary':
+      case 'confirmed':
+      case 'danger':
+        return colors.white;
+      case 'secondary':
+        return colors.cobalt;
+      default:
+        return colors.white;
+    }
+  })();
+
+  const borderColor = variant === 'secondary' ? colors.cobalt : 'transparent';
 
   return (
     <View
-      style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
+          paddingBottom: Math.max(insets.bottom, 12),
+        },
+      ]}
     >
       <TouchableOpacity
-        style={buttonStyle}
+        style={[
+          styles.button,
+          {
+            backgroundColor: bgColor,
+            borderColor,
+            borderWidth: variant === 'secondary' ? 1.5 : 0,
+          },
+        ]}
         onPress={onPress}
         disabled={isDisabled}
         activeOpacity={0.8}
@@ -76,13 +104,11 @@ export function FixedBottomCTA({
               <Ionicons
                 name={icon}
                 size={18}
-                color={
-                  variant === 'secondary' ? colors.cobalt : colors.white
-                }
+                color={labelColor}
                 style={styles.icon}
               />
             )}
-            <Text style={textStyle}>{label}</Text>
+            <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -91,9 +117,11 @@ export function FixedBottomCTA({
         <TouchableOpacity
           onPress={onSecondaryPress}
           activeOpacity={0.7}
-          style={styles.secondary2}
+          style={styles.secondaryBtn}
         >
-          <Text style={[styles.secondaryText, { color: colors.inkSecondary }]}>{secondaryLabel}</Text>
+          <Text style={[styles.secondaryText, { color: colors.inkSecondary }]}>
+            {secondaryLabel}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -120,21 +148,11 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 6,
   },
-  primary: {},
-  confirmed: {},
-  secondary: {
-    borderWidth: 1.5,
-  },
-  danger: {},
-  disabled: {},
   label: {
     fontFamily: fonts.ui,
     fontSize: 16,
   },
-  labelLight: {},
-  labelPrimary: {},
-  labelDimmed: {},
-  secondary2: {
+  secondaryBtn: {
     alignItems: 'center',
     paddingVertical: 10,
   },

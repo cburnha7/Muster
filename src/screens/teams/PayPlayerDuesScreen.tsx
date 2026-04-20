@@ -6,7 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert } from 'react-native';
+  Alert,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,8 @@ import { useDependentContext } from '../../hooks/useDependentContext';
 import { fonts, Spacing, useTheme } from '../../theme';
 import {
   playerDuesService,
-  DuesStatusResponse } from '../../services/api/PlayerDuesService';
+  DuesStatusResponse,
+} from '../../services/api/PlayerDuesService';
 import { TeamsStackParamList } from '../../navigation/types';
 
 type PayPlayerDuesRouteProp = RouteProp<TeamsStackParamList, 'PayPlayerDues'>;
@@ -39,7 +41,11 @@ export const PayPlayerDuesScreen: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const status = await playerDuesService.getStatus(user.id, rosterId, seasonId);
+      const status = await playerDuesService.getStatus(
+        user.id,
+        rosterId,
+        seasonId
+      );
       setDuesStatus(status);
     } catch (err) {
       setError('Failed to load dues information');
@@ -64,17 +70,21 @@ export const PayPlayerDuesScreen: React.FC = () => {
       const result = await playerDuesService.createPayment({
         playerId: user.id,
         rosterId,
-        seasonId });
+        seasonId,
+      });
 
       // In a full implementation, the clientSecret would be passed to
       // Stripe's confirmPayment SDK. For now, we confirm immediately
       // to demonstrate the flow end-to-end.
-      await playerDuesService.confirmPayment(result.paymentId, result.clientSecret);
+      await playerDuesService.confirmPayment(
+        result.paymentId,
+        result.clientSecret
+      );
 
       Alert.alert(
         'Dues Paid',
         'Your season dues have been paid successfully.',
-        [{ text: 'OK', onPress: () => navigation.goBack() }],
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (err: any) {
       const message = err?.message || 'Failed to process dues payment';
@@ -86,15 +96,19 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
-        <ScreenHeader
-          title="Season Dues"
-          leftIcon="""
-          
-        />
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.white },
+          { backgroundColor: colors.bgScreen },
+        ]}
+      >
+        <ScreenHeader title="Season Dues" leftIcon="arrow-back" />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.cobalt} />
-          <Text style={[styles.loadingText, { color: colors.inkFaint }]}>Loading dues information...</Text>
+          <Text style={[styles.loadingText, { color: colors.inkFaint }]}>
+            Loading dues information...
+          </Text>
         </View>
       </View>
     );
@@ -102,17 +116,31 @@ export const PayPlayerDuesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
-        <ScreenHeader
-          title="Season Dues"
-          leftIcon="""
-          
-        />
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.white },
+          { backgroundColor: colors.bgScreen },
+        ]}
+      >
+        <ScreenHeader title="Season Dues" leftIcon="arrow-back" />
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.heart} />
-          <Text style={[styles.errorText, { color: colors.heart }]}>{error}</Text>
-          <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.cobalt }]} onPress={loadStatus} activeOpacity={0.75}>
-            <Text style={[styles.retryButtonText, { color: colors.white }]}>Retry</Text>
+          <Ionicons
+            name="alert-circle-outline"
+            size={48}
+            color={colors.heart}
+          />
+          <Text style={[styles.errorText, { color: colors.heart }]}>
+            {error}
+          </Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: colors.cobalt }]}
+            onPress={loadStatus}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.retryButtonText, { color: colors.white }]}>
+              Retry
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -125,27 +153,57 @@ export const PayPlayerDuesScreen: React.FC = () => {
     : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}>
-      <ScreenHeader
-        title="Season Dues"
-        leftIcon="""
-        
-      />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
+    >
+      <ScreenHeader title="Season Dues" leftIcon="arrow-back" />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.card, { backgroundColor: colors.white }]}>
-          <Text style={[styles.cardTitle, { color: colors.ink }]}>Season Dues</Text>
+          <Text style={[styles.cardTitle, { color: colors.ink }]}>
+            Season Dues
+          </Text>
 
-          <View style={[styles.detailRow, { borderBottomColor: colors.surface }]}>
-            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>AMOUNT</Text>
+          <View
+            style={[styles.detailRow, { borderBottomColor: colors.surface }]}
+          >
+            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>
+              AMOUNT
+            </Text>
             <Text style={[styles.detailValue, { color: colors.ink }]}>
-              {duesAmountCents > 0 ? formatCurrency(duesAmountCents) : 'Not set'}
+              {duesAmountCents > 0
+                ? formatCurrency(duesAmountCents)
+                : 'Not set'}
             </Text>
           </View>
 
-          <View style={[styles.detailRow, { borderBottomColor: colors.surface }]}>
-            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>STATUS</Text>
-            <View style={[styles.statusBadge, isPaid ? styles.statusPaid : styles.statusUnpaid, isPaid ? { backgroundColor: colors.pineTint } : {}]}>
-              <Text style={[styles.statusText, isPaid ? styles.statusTextPaid : styles.statusTextUnpaid, isPaid ? { color: colors.pine } : {}]}>
+          <View
+            style={[styles.detailRow, { borderBottomColor: colors.surface }]}
+          >
+            <Text style={[styles.detailLabel, { color: colors.inkFaint }]}>
+              STATUS
+            </Text>
+            <View
+              style={[
+                styles.statusBadge,
+                isPaid ? styles.statusPaid : styles.statusUnpaid,
+                isPaid ? { backgroundColor: colors.pineTint } : {},
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  isPaid ? styles.statusTextPaid : styles.statusTextUnpaid,
+                  isPaid ? { color: colors.pine } : {},
+                ]}
+              >
                 {isPaid ? 'Paid' : 'Unpaid'}
               </Text>
             </View>
@@ -163,17 +221,28 @@ export const PayPlayerDuesScreen: React.FC = () => {
       </ScrollView>
 
       {!isPaid && duesAmountCents > 0 && !isDependent && (
-        <View style={[styles.bottomBar, { borderTopColor: colors.border, backgroundColor: colors.white }]}>
+        <View
+          style={[
+            styles.bottomBar,
+            { borderTopColor: colors.border, backgroundColor: colors.white },
+          ]}
+        >
           <TouchableOpacity
             style={[styles.cancelButton, { borderColor: colors.inkFaint }]}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
             activeOpacity={0.75}
           >
-            <Text style={[styles.cancelButtonText, { color: colors.ink }]}>Go Back</Text>
+            <Text style={[styles.cancelButtonText, { color: colors.ink }]}>
+              Go Back
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.payButton, { backgroundColor: colors.cobalt }, paying && styles.payButtonDisabled]}
+            style={[
+              styles.payButton,
+              { backgroundColor: colors.cobalt },
+              paying && styles.payButtonDisabled,
+            ]}
             onPress={handlePayDues}
             disabled={paying}
             testID="pay-dues-button"
@@ -194,9 +263,18 @@ export const PayPlayerDuesScreen: React.FC = () => {
       )}
 
       {!isPaid && isDependent && (
-        <View style={[styles.bottomBar, { borderTopColor: colors.border, backgroundColor: colors.white }]}>
+        <View
+          style={[
+            styles.bottomBar,
+            { borderTopColor: colors.border, backgroundColor: colors.white },
+          ]}
+        >
           <View style={styles.dependentNotice}>
-            <Ionicons name="information-circle-outline" size={20} color={colors.ink} />
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={colors.ink}
+            />
             <Text style={[styles.dependentNoticeText, { color: colors.ink }]}>
               Payments for {activeName} must be made from the parent account.
             </Text>
@@ -215,7 +293,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xxl },
+    padding: Spacing.xxl,
+  },
   loadingText: {
     marginTop: Spacing.md,
     fontFamily: fonts.body,
@@ -238,10 +317,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   scrollView: {
-    flex: 1 },
+    flex: 1,
+  },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: 120 },
+    paddingBottom: 120,
+  },
   card: {
     borderRadius: 12,
     padding: Spacing.lg,
@@ -273,12 +354,14 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
-    borderRadius: 6 },
+    borderRadius: 6,
+  },
   statusPaid: {},
   statusUnpaid: {},
   statusText: {
     fontFamily: fonts.label,
-    fontSize: 12 },
+    fontSize: 12,
+  },
   statusTextPaid: {},
   statusTextUnpaid: {},
   successCard: {
@@ -321,7 +404,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   payButtonDisabled: {
-    opacity: 0.5 },
+    opacity: 0.5,
+  },
   payButtonText: {
     fontFamily: fonts.ui,
     fontSize: 15,
@@ -330,11 +414,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.sm },
+    paddingVertical: Spacing.sm,
+  },
   dependentNoticeText: {
     fontFamily: fonts.body,
     fontSize: 14,
     marginLeft: Spacing.sm,
     flex: 1,
     lineHeight: 20,
-  } });
+  },
+});

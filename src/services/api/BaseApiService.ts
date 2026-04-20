@@ -147,6 +147,23 @@ export class BaseApiService {
           !error.config?.url?.includes('/auth/')
         ) {
           try {
+            // Capture the token that was used for the failed request
+            const failedToken = error.config?.headers?.Authorization;
+
+            // Check if a fresh token is already available (e.g. from a concurrent login)
+            const currentToken = await TokenStorage.getAccessToken();
+            if (
+              currentToken &&
+              failedToken &&
+              `Bearer ${currentToken}` !== failedToken
+            ) {
+              // Token was already refreshed — just retry with the new token
+              if (error.config) {
+                error.config.headers.Authorization = `Bearer ${currentToken}`;
+                return this.client.request(error.config);
+              }
+            }
+
             const currentRefreshToken = await TokenStorage.getRefreshToken();
             if (!currentRefreshToken) {
               throw new Error('No refresh token available');
@@ -165,19 +182,27 @@ export class BaseApiService {
               return this.client.request(error.config);
             }
           } catch (refreshError: any) {
-            // Any refresh failure (missing token or actual failure) — clear session
-            console.error(
-              '🔒 Token refresh failed, clearing session:',
-              refreshError.message || refreshError
-            );
-            await TokenStorage.clearAll();
+            // Only clear session if no fresh login has happened in the meantime
+            const latestToken = await TokenStorage.getAccessToken();
+            const failedToken = error.config?.headers?.Authorization;
+            const tokenStillStale =
+              !latestToken ||
+              (failedToken && `Bearer ${latestToken}` === failedToken);
 
-            // Dispatch a global event so the app can redirect to login
-            if (
-              Platform.OS === 'web' &&
-              typeof window?.dispatchEvent === 'function'
-            ) {
-              window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
+            if (tokenStillStale) {
+              console.error(
+                '🔒 Token refresh failed, clearing session:',
+                refreshError.message || refreshError
+              );
+              await TokenStorage.clearAll();
+
+              // Dispatch a global event so the app can redirect to login
+              if (
+                Platform.OS === 'web' &&
+                typeof window?.dispatchEvent === 'function'
+              ) {
+                window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
+              }
             }
 
             // Reject with a clear auth error

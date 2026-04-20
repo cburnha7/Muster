@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
 
@@ -18,9 +13,9 @@ const AVATAR_PALETTE = [
   { bg: '#FFD6D6', text: '#410002' },
 ];
 
-function avatarColors(name: string) {
-  const { colors } = useTheme();
-  const idx = (name.charCodeAt(0) + (name.charCodeAt(1) || 0)) % AVATAR_PALETTE.length;
+function getAvatarPalette(name: string) {
+  const idx =
+    (name.charCodeAt(0) + (name.charCodeAt(1) || 0)) % AVATAR_PALETTE.length;
   return AVATAR_PALETTE[idx] ?? AVATAR_PALETTE[0]!;
 }
 
@@ -46,7 +41,8 @@ export function PersonRow({
   avatarTextColor,
   rightElement,
 }: PersonRowProps) {
-  const palette = avatarColors(name);
+  const { colors } = useTheme();
+  const palette = getAvatarPalette(name);
   const bg = avatarBg ?? palette.bg;
   const textColor = avatarTextColor ?? palette.text;
   const initial = name.trim().charAt(0).toUpperCase();
@@ -59,20 +55,40 @@ export function PersonRow({
 
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>{name}</Text>
+          <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
+            {name}
+          </Text>
           {role ? (
-            <View style={[styles.roleBadge, { backgroundColor: colors.successLight }]}>
-              <Text style={[styles.roleText, { color: colors.pine }]}>{role}</Text>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: colors.successLight },
+              ]}
+            >
+              <Text style={[styles.roleText, { color: colors.pine }]}>
+                {role}
+              </Text>
             </View>
           ) : null}
         </View>
-        {subtitle ? <Text style={[styles.subtitle, { color: colors.inkSecondary }]} numberOfLines={1}>{subtitle}</Text> : null}
+        {subtitle ? (
+          <Text
+            style={[styles.subtitle, { color: colors.inkSecondary }]}
+            numberOfLines={1}
+          >
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
 
       {rightElement ? (
         rightElement
       ) : onPress ? (
-        <Ionicons name="chevron-forward" size={16} color={colors.inkSecondary} />
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={colors.inkSecondary}
+        />
       ) : null}
     </View>
   );

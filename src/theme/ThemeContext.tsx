@@ -8,7 +8,6 @@ import {
   tokenSport,
   tokenSpacing,
   tokenRadius,
-  tokenType,
   tokenFontFamily,
   makeShadows,
   getAvatarColor,

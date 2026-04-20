@@ -88,7 +88,10 @@ export const loginUser = createAsyncThunk(
       );
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Login failed');
+      return rejectWithValue({
+        message: error.message || 'Login failed',
+        status: error.status,
+      });
     }
   }
 );
@@ -392,7 +395,10 @@ const authSlice = createSlice({
       )
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        const payload = action.payload as
+          | { message: string; status?: number }
+          | string;
+        state.error = typeof payload === 'string' ? payload : payload.message;
       });
 
     // Login with SSO

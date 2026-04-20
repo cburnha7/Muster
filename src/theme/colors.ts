@@ -95,9 +95,24 @@ export const colors = {
   border: tokenColors.border,
   ink: tokenColors.ink,
   inkSoft: tokenColors.inkSecondary,
+  inkSecondary: tokenColors.inkSecondary,
   inkFaint: tokenColors.inkMuted,
+  inkMuted: tokenColors.inkMuted,
   overlay: tokenColors.overlay,
   scrim: tokenColors.scrim,
+  // Feedback
+  success: tokenColors.success,
+  successLight: tokenColors.successLight,
+  error: tokenColors.error,
+  errorLight: tokenColors.errorLight,
+  warning: tokenColors.warning,
+  warningLight: tokenColors.warningLight,
+  // Text semantic aliases
+  textPrimary: tokenColors.ink,
+  textSecondary: tokenColors.inkSecondary,
+  textTertiary: tokenColors.inkMuted,
+  textMuted: tokenColors.inkMuted,
+  textInverse: tokenColors.white,
   // Sport badge colors (old format)
   sportSoccer: '#16A34A',
   sportBasket: '#EA580C',
@@ -127,36 +142,6 @@ export const colors = {
   statusLeague: tokenColors.cobaltLight,
   statusLeagueText: tokenColors.cobalt,
 } as const;
-
-// Material Design 3 backward-compat aliases
-(colors as any).primary = tokenColors.cobalt;
-(colors as any).primaryContainer = tokenColors.cobaltMid;
-(colors as any).primaryFixed = tokenColors.cobaltLight;
-(colors as any).onPrimary = tokenColors.white;
-(colors as any).onPrimaryContainer = tokenColors.cobalt;
-(colors as any).secondary = tokenColors.success;
-(colors as any).secondaryContainer = tokenColors.successLight;
-(colors as any).onSecondary = tokenColors.white;
-(colors as any).onSecondaryContainer = tokenColors.success;
-(colors as any).tertiary = tokenColors.gold;
-(colors as any).tertiaryContainer = tokenColors.goldLight;
-(colors as any).error = tokenColors.error;
-(colors as any).errorContainer = tokenColors.errorLight;
-(colors as any).onError = tokenColors.white;
-(colors as any).onErrorContainer = tokenColors.error;
-(colors as any).background = tokenColors.background;
-(colors as any).onBackground = tokenColors.ink;
-(colors as any).onSurface = tokenColors.ink;
-(colors as any).onSurfaceVariant = tokenColors.inkSecondary;
-(colors as any).surfaceContainerLowest = tokenColors.surface;
-(colors as any).surfaceContainerLow = tokenColors.background;
-(colors as any).surfaceContainer = '#F1F5F9';
-(colors as any).surfaceContainerHigh = tokenColors.border;
-(colors as any).outline = tokenColors.inkSecondary;
-(colors as any).outlineVariant = tokenColors.border;
-(colors as any).textPrimary = tokenColors.ink;
-(colors as any).textSecondary = tokenColors.inkSecondary;
-(colors as any).textTertiary = tokenColors.inkMuted;
 
 export type ColorKey = keyof typeof colors;
 

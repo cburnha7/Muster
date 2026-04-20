@@ -29,7 +29,7 @@ interface HeroSectionProps {
 
 export function HeroSection({
   title,
-  sportColor = colors.cobalt,
+  sportColor,
   emoji,
   badges = [],
   headline,
@@ -39,6 +39,7 @@ export function HeroSection({
   children,
 }: HeroSectionProps) {
   const { colors } = useTheme();
+  const resolvedSportColor = sportColor ?? colors.cobalt;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(8)).current;
 
@@ -57,7 +58,7 @@ export function HeroSection({
     ]).start();
   }, []);
 
-  const tintColor = sportColor + '18'; // ~9% opacity
+  const tintColor = resolvedSportColor + '18'; // ~9% opacity
 
   return (
     <Animated.View
@@ -84,11 +85,14 @@ export function HeroSection({
               key={i}
               style={[
                 styles.badge,
-                { backgroundColor: b.bgColor ?? sportColor + '28' },
+                { backgroundColor: b.bgColor ?? resolvedSportColor + '28' },
               ]}
             >
               <Text
-                style={[styles.badgeText, { color: b.textColor ?? sportColor }]}
+                style={[
+                  styles.badgeText,
+                  { color: b.textColor ?? resolvedSportColor },
+                ]}
               >
                 {b.label}
               </Text>
@@ -97,17 +101,28 @@ export function HeroSection({
         </View>
       )}
 
-      {headline ? <Text style={[styles.headline, { color: colors.ink }]}>{headline}</Text> : null}
+      {headline ? (
+        <Text style={[styles.headline, { color: colors.ink }]}>{headline}</Text>
+      ) : null}
 
       {subline ? (
         onSublinePress ? (
           <TouchableOpacity onPress={onSublinePress} activeOpacity={0.7}>
-            <Text style={[styles.subline, { color: colors.inkSecondary }, styles.sublineTappable, { color: colors.cobalt }]}>
+            <Text
+              style={[
+                styles.subline,
+                { color: colors.inkSecondary },
+                styles.sublineTappable,
+                { color: colors.cobalt },
+              ]}
+            >
               {subline}
             </Text>
           </TouchableOpacity>
         ) : (
-          <Text style={[styles.subline, { color: colors.inkSecondary }]}>{subline}</Text>
+          <Text style={[styles.subline, { color: colors.inkSecondary }]}>
+            {subline}
+          </Text>
         )
       ) : null}
 

@@ -52,6 +52,16 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
   // If we get a 401, try to refresh the token
   if (result.error && result.error.status === 401) {
+    // Capture the token that was used for the failed request
+    const failedToken = (api.getState() as RootState).auth.accessToken;
+
+    // Check if the token has already been refreshed (e.g. by login or another refresh)
+    const currentToken = (api.getState() as RootState).auth.accessToken;
+    if (currentToken && currentToken !== failedToken) {
+      // Token was already refreshed — just retry with the new token
+      return await baseQuery(args, api, extraOptions);
+    }
+
     // Get refresh token from Redux state first, then fallback to TokenStorage
     let refreshToken = (api.getState() as RootState).auth.refreshToken;
     if (!refreshToken) {
@@ -59,9 +69,13 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     }
 
     if (!refreshToken) {
-      console.error('❌ No refresh token available, clearing session...');
-      await TokenStorage.clearAll();
-      api.dispatch(clearAuth());
+      // Only clear if the token hasn't changed since we started
+      const latestToken = (api.getState() as RootState).auth.accessToken;
+      if (!latestToken || latestToken === failedToken) {
+        console.error('❌ No refresh token available, clearing session...');
+        await TokenStorage.clearAll();
+        api.dispatch(clearAuth());
+      }
       return result;
     }
 
@@ -95,9 +109,15 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
       // Retry the original query with new token
       result = await baseQuery(args, api, extraOptions);
     } else {
-      console.error('❌ [eventsApi] Token refresh failed, clearing session...');
-      await TokenStorage.clearAll();
-      api.dispatch(clearAuth());
+      // Only clear session if no fresh login has happened in the meantime
+      const latestToken = (api.getState() as RootState).auth.accessToken;
+      if (!latestToken || latestToken === failedToken) {
+        console.error(
+          '❌ [eventsApi] Token refresh failed, clearing session...'
+        );
+        await TokenStorage.clearAll();
+        api.dispatch(clearAuth());
+      }
     }
   }
 

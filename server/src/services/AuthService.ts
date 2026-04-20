@@ -4,10 +4,10 @@ import { User, Prisma } from '@prisma/client';
 
 /**
  * AuthService - Core authentication business logic
- * 
+ *
  * Handles password hashing, user creation (manual and SSO), authentication,
  * and account linking for the Muster authentication system.
- * 
+ *
  * Requirements: 1.13, 1.14, 6.4, 13.1, 13.2, 13.3, 13.4
  */
 
@@ -98,7 +98,10 @@ class AuthService {
    * Authenticate a user with email/username and password
    * Requirements: 6.4
    */
-  async authenticateUser(emailOrUsername: string, password: string): Promise<User | null> {
+  async authenticateUser(
+    emailOrUsername: string,
+    password: string
+  ): Promise<User | null> {
     // Find user by email or username
     const user = await this.findUserByEmailOrUsername(emailOrUsername);
 
@@ -125,7 +128,10 @@ class AuthService {
    * Authenticate a user with SSO provider
    * Requirements: 7.5
    */
-  async authenticateSSOUser(provider: string, providerId: string): Promise<User | null> {
+  async authenticateSSOUser(
+    provider: string,
+    providerId: string
+  ): Promise<User | null> {
     return this.findUserBySSOProvider(provider, providerId);
   }
 
@@ -133,7 +139,11 @@ class AuthService {
    * Link an SSO provider to an existing user account
    * Requirements: 5.4, 21.6, 21.7
    */
-  async linkSSOProvider(userId: string, provider: string, providerId: string): Promise<User> {
+  async linkSSOProvider(
+    userId: string,
+    provider: string,
+    providerId: string
+  ): Promise<User> {
     // Get current user data
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -168,12 +178,12 @@ class AuthService {
   }
 
   /**
-   * Find a user by email
+   * Find a user by email (case-insensitive)
    * Requirements: 2.1
    */
   async findUserByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({
-      where: { email },
+    return prisma.user.findFirst({
+      where: { email: { equals: email.trim(), mode: 'insensitive' } },
     });
   }
 
@@ -188,15 +198,18 @@ class AuthService {
   }
 
   /**
-   * Find a user by email or username
+   * Find a user by email or username (case-insensitive for email)
    * Requirements: 6.4, 23.3
    */
-  async findUserByEmailOrUsername(emailOrUsername: string): Promise<User | null> {
+  async findUserByEmailOrUsername(
+    emailOrUsername: string
+  ): Promise<User | null> {
+    const normalized = emailOrUsername.trim();
     return prisma.user.findFirst({
       where: {
         OR: [
-          { email: emailOrUsername },
-          { username: emailOrUsername },
+          { email: { equals: normalized, mode: 'insensitive' } },
+          { username: normalized },
         ],
       },
     });
@@ -206,7 +219,10 @@ class AuthService {
    * Find a user by SSO provider and provider user ID
    * Requirements: 7.5, 23.9
    */
-  async findUserBySSOProvider(provider: string, providerId: string): Promise<User | null> {
+  async findUserBySSOProvider(
+    provider: string,
+    providerId: string
+  ): Promise<User | null> {
     // Query users where ssoProviders array contains the provider
     const users = await prisma.user.findMany({
       where: {
@@ -217,7 +233,7 @@ class AuthService {
     });
 
     // Filter by provider ID in the ssoProviderIds JSON object
-    const user = users.find((u) => {
+    const user = users.find(u => {
       const providerIds = u.ssoProviderIds as Record<string, string> | null;
       return providerIds && providerIds[provider] === providerId;
     });
