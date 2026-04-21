@@ -69,6 +69,7 @@ export function ProfileCard({
   phone,
   address,
 }: ProfileCardProps) {
+  const { colors } = useTheme();
   const age = dateOfBirth ? calculateAge(dateOfBirth) : null;
   const bornFormatted = dateOfBirth ? formatDate(dateOfBirth) : null;
 

@@ -62,6 +62,7 @@ export function MessageBubble({
   onLongPress,
   onToggleReaction,
 }: MessageBubbleProps) {
+  const { colors } = useTheme();
   const grouped = groupReactions(message.reactions, currentUserId);
 
   return (

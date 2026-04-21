@@ -51,6 +51,7 @@ function isLive(booking: Booking): boolean {
 }
 
 export function NextUpCard({ booking, onPress }: NextUpCardProps) {
+  const { colors } = useTheme();
   const event = booking.event;
   if (!event) return null;
 
