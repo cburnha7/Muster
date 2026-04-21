@@ -1,277 +1,159 @@
+import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { r2, R2_BUCKET, R2_PUBLIC_URL, R2_CONFIGURED } from '../lib/r2';
+import { v4 as uuid } from 'uuid';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { Request } from 'express';
-import sharp from 'sharp';
 
-// Configure storage for facility maps
-const mapStorage = multer.diskStorage({
-  destination: (req: Request, file: Express.Multer.File, cb) => {
-    const { id } = req.params; // facility ID
-    const facilityId = Array.isArray(id) ? id[0] : id;
-    const uploadPath = path.join(
-      __dirname,
-      '../../uploads/facility-maps',
-      facilityId || 'temp'
-    );
+export type ImageContext =
+  | 'profiles'
+  | 'grounds'
+  | 'rosters'
+  | 'events'
+  | 'dependents'
+  | 'leagues';
 
-    // Create directory if it doesn't exist
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
-  },
-  filename: (req: Request, file: Express.Multer.File, cb) => {
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    cb(null, `map-${timestamp}${ext}`);
-  },
-});
+export class ImageUploadService {
+  /**
+   * Generate a presigned URL for direct client-to-R2 upload.
+   * The image never passes through the backend server.
+   */
+  static async getPresignedUploadUrl(
+    context: ImageContext,
+    fileName: string,
+    contentType: string,
+    userId: string
+  ): Promise<{ uploadUrl: string; publicUrl: string; key: string }> {
+    if (!r2 || !R2_CONFIGURED) {
+      throw new Error('R2 storage is not configured');
+    }
 
-// File filter for maps - JPEG, PNG, and PDF
-const imageFilter = (
-  req: Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
-  const allowedMimeTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'application/pdf',
-  ];
+    const ext = fileName.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const key = `${context}/${userId}/${uuid()}.${ext}`;
 
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only JPEG, PNG, and PDF files are allowed'));
+    const command = new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(r2, command, { expiresIn: 300 });
+    const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+
+    return { uploadUrl, publicUrl, key };
   }
-};
 
-// Configure multer for map uploads
-export const uploadMap = multer({
-  storage: mapStorage,
-  fileFilter: imageFilter,
-  limits: {
-    fileSize: 20 * 1024 * 1024, // 20MB limit
-  },
-});
+  /**
+   * Delete an image from R2 by its key or full public URL.
+   * Best-effort — logs but doesn't throw.
+   */
+  static async deleteImage(keyOrUrl: string): Promise<void> {
+    if (!r2 || !R2_CONFIGURED) return;
 
-// Configure storage for facility photos
-const photoStorage = multer.diskStorage({
-  destination: (req: Request, file: Express.Multer.File, cb) => {
-    const { id } = req.params; // facility ID
-    const facilityId = Array.isArray(id) ? id[0] : id;
-    const uploadPath = path.join(
-      __dirname,
-      '../../uploads/facility-photos',
-      facilityId || 'temp'
-    );
+    try {
+      const key = keyOrUrl.startsWith('http')
+        ? keyOrUrl.replace(`${R2_PUBLIC_URL}/`, '')
+        : keyOrUrl;
 
-    // Create directory if it doesn't exist
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
-  },
-  filename: (req: Request, file: Express.Multer.File, cb) => {
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    cb(null, `photo-${timestamp}${ext}`);
-  },
-});
-
-// File filter for photos - JPEG and PNG only
-const photoFilter = (
-  req: Request,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only JPEG and PNG images are allowed'));
+      await r2.send(
+        new DeleteObjectCommand({
+          Bucket: R2_BUCKET,
+          Key: key,
+        })
+      );
+    } catch (err) {
+      console.error('R2 delete failed:', err);
+    }
   }
-};
+}
 
-// Configure multer for photo uploads
-export const uploadPhoto = multer({
-  storage: photoStorage,
-  fileFilter: photoFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-});
+// ── Legacy multer helpers (kept for backward compat during migration) ────────
 
-// Configure storage for cover images (facilities, teams, leagues)
+const UPLOAD_DIR = path.join(__dirname, '../../uploads');
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
 const coverStorage = multer.diskStorage({
-  destination: (req: Request, file: Express.Multer.File, cb) => {
-    const { id } = req.params;
-    const entityId = Array.isArray(id) ? id[0] : id;
-    const uploadPath = path.join(
-      __dirname,
-      '../../uploads/cover-images',
-      entityId || 'temp'
-    );
-
-    // Create directory if it doesn't exist
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
-  },
-  filename: (req: Request, file: Express.Multer.File, cb) => {
-    const timestamp = Date.now();
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, `cover-${timestamp}${ext}`);
+    cb(null, `cover-${uuid()}${ext}`);
   },
 });
 
-// Configure multer for cover image uploads
 export const uploadCover = multer({
   storage: coverStorage,
-  fileFilter: photoFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+    cb(null, allowed.includes(file.mimetype));
   },
 });
 
-// Validate map/image file (JPEG, PNG, PDF; ≤ 20 MB)
+const mapStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `map-${uuid()}${ext}`);
+  },
+});
+
+export const uploadMap = multer({
+  storage: mapStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+export const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `doc-${uuid()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
 export function validateImageFile(file: Express.Multer.File): {
   valid: boolean;
   error?: string;
 } {
-  if (!file) {
-    return { valid: false, error: 'No file provided' };
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+  if (!allowed.includes(file.mimetype)) {
+    return { valid: false, error: 'Invalid file type' };
   }
-
-  const allowedMimeTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'application/pdf',
-  ];
-  if (!allowedMimeTypes.includes(file.mimetype)) {
-    return { valid: false, error: 'Only JPEG, PNG, and PDF files are allowed' };
+  if (file.size > 10 * 1024 * 1024) {
+    return { valid: false, error: 'File too large (max 10MB)' };
   }
-
-  if (file.size > 20 * 1024 * 1024) {
-    return { valid: false, error: 'File size must not exceed 20MB' };
-  }
-
   return { valid: true };
 }
 
-// Validate photo file (JPEG/PNG only; ≤ 10 MB)
-// Returns an error string if invalid, null if valid
-export function validatePhotoFile(file: Express.Multer.File): string | null {
-  if (!file) {
-    return 'No file provided';
-  }
-
-  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-  if (!allowedMimeTypes.includes(file.mimetype)) {
-    return 'Only JPEG and PNG images are allowed';
-  }
-
-  if (file.size > 10 * 1024 * 1024) {
-    return 'File size must not exceed 10MB';
-  }
-
-  return null;
+export function generateImageUrl(req: any, filename: string): string {
+  return `/uploads/${filename}`;
 }
 
-// Generate image URL
-export function generateImageUrl(filePath: string): string {
-  // In production, this would return a signed S3 URL or CDN URL
-  // For development, return relative path
-  const relativePath = filePath.replace(/\\/g, '/').split('/uploads/')[1];
-  return `/uploads/${relativePath}`;
+export function generateFileUrl(req: any, filename: string): string {
+  return `/uploads/${filename}`;
 }
 
-// Process and optimize image
-export async function processMapImage(
-  filePath: string,
-  options: {
-    maxWidth?: number;
-    maxHeight?: number;
-    quality?: number;
-  } = {}
-): Promise<{ optimizedPath: string; thumbnailPath: string }> {
-  const { maxWidth = 4000, maxHeight = 4000, quality = 85 } = options;
-
-  const dir = path.dirname(filePath);
-  const ext = path.extname(filePath);
-  const basename = path.basename(filePath, ext);
-
-  const optimizedPath = path.join(dir, `${basename}-optimized${ext}`);
-  const thumbnailPath = path.join(dir, `${basename}-thumb${ext}`);
-
+export function deleteFile(filePath: string): void {
   try {
-    // Get image metadata
-    const metadata = await sharp(filePath).metadata();
-
-    // Validate dimensions
-    if (metadata.width && metadata.height) {
-      if (metadata.width < 800 || metadata.height < 600) {
-        throw new Error('Image dimensions must be at least 800x600px');
-      }
-    }
-
-    // Create optimized version
-    await sharp(filePath)
-      .resize(maxWidth, maxHeight, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .jpeg({ quality })
-      .toFile(optimizedPath);
-
-    // Create thumbnail (300x225)
-    await sharp(filePath)
-      .resize(300, 225, {
-        fit: 'cover',
-      })
-      .jpeg({ quality: 80 })
-      .toFile(thumbnailPath);
-
-    // Delete original file
-    fs.unlinkSync(filePath);
-
-    return { optimizedPath, thumbnailPath };
-  } catch (error) {
-    // Clean up on error
-    if (fs.existsSync(optimizedPath)) fs.unlinkSync(optimizedPath);
-    if (fs.existsSync(thumbnailPath)) fs.unlinkSync(thumbnailPath);
-    throw error;
+    const fullPath = filePath.startsWith('/uploads/')
+      ? path.join(UPLOAD_DIR, filePath.replace('/uploads/', ''))
+      : filePath;
+    if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+  } catch {
+    // best-effort
   }
 }
 
-// Delete image files
-export async function deleteImageFiles(
-  imageUrl: string,
-  thumbnailUrl?: string
-): Promise<void> {
-  try {
-    // Delete main image
-    const imagePath = path.join(
-      __dirname,
-      '../../uploads',
-      imageUrl.replace('/uploads/', '')
-    );
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
+export function deleteImageFiles(urls: string[]): void {
+  urls.forEach(deleteFile);
+}
 
-    // Delete thumbnail if provided
-    if (thumbnailUrl) {
-      const thumbPath = path.join(
-        __dirname,
-        '../../uploads',
-        thumbnailUrl.replace('/uploads/', '')
-      );
-      if (fs.existsSync(thumbPath)) {
-        fs.unlinkSync(thumbPath);
-      }
-    }
-  } catch (error) {
-    console.error('Error deleting image files:', error);
-    throw error;
-  }
+export function processMapImage(file: Express.Multer.File): string {
+  return `/uploads/${file.filename}`;
 }
