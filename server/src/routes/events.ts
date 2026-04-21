@@ -6,6 +6,7 @@ import {
   validate,
   CreateEventSchema,
   BookEventSchema,
+  SubmitSalutesSchema,
 } from '../validation/schemas';
 
 // ─── Service imports ────────────────────────────────────────────────────────

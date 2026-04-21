@@ -5,6 +5,12 @@ import {
   getAvailableSlots,
   getAvailableSlotsForRange,
 } from '../services/AvailabilityCalculator';
+import {
+  validate,
+  CreateCourtSchema,
+  UpdateCourtSchema,
+  BlockSlotSchema,
+} from '../validation/schemas';
 
 const router = Router();
 
@@ -115,14 +121,20 @@ router.post(
         displayOrder,
       } = req.body;
 
-      // TODO: Add authorization check - only facility owner can create courts
-      // For now, verify facility exists
+      // Authorization: only facility owner can create courts
       const facility = await prisma.facility.findUnique({
         where: { id: facilityId },
+        select: { id: true, ownerId: true },
       });
 
       if (!facility) {
         return res.status(404).json({ error: 'Facility not found' });
+      }
+
+      if (facility.ownerId !== req.user!.userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can manage courts' });
       }
 
       // Validate required fields
@@ -191,7 +203,16 @@ router.put(
         displayOrder,
       } = req.body;
 
-      // TODO: Add authorization check - only facility owner can update courts
+      // Authorization: only facility owner can update courts
+      const ownerCheck = await prisma.facility.findUnique({
+        where: { id: facilityId },
+        select: { ownerId: true },
+      });
+      if (!ownerCheck || ownerCheck.ownerId !== req.user!.userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can manage courts' });
+      }
 
       // Verify court exists and belongs to facility
       const existingCourt = await prisma.facilityCourt.findFirst({
@@ -255,7 +276,16 @@ router.delete(
         courtId: string;
       };
 
-      // TODO: Add authorization check - only facility owner can delete courts
+      // Authorization: only facility owner can delete courts
+      const ownerCheck2 = await prisma.facility.findUnique({
+        where: { id: facilityId },
+        select: { ownerId: true },
+      });
+      if (!ownerCheck2 || ownerCheck2.ownerId !== req.user!.userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can manage courts' });
+      }
 
       // Verify court exists and belongs to facility
       const court = await prisma.facilityCourt.findFirst({
@@ -522,7 +552,16 @@ router.post(
       };
       const { date, startTime, endTime, blockReason } = req.body;
 
-      // TODO: Add authorization check - only facility owner can block slots
+      // Authorization: only facility owner can block slots
+      const blockOwnerCheck = await prisma.facility.findUnique({
+        where: { id: facilityId },
+        select: { ownerId: true },
+      });
+      if (!blockOwnerCheck || blockOwnerCheck.ownerId !== req.user!.userId) {
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can block time slots' });
+      }
 
       // Verify court exists and belongs to facility
       const court = await prisma.facilityCourt.findFirst({
@@ -600,7 +639,19 @@ router.delete(
         slotId: string;
       };
 
-      // TODO: Add authorization check - only facility owner can unblock slots
+      // Authorization: only facility owner can unblock slots
+      const unblockOwnerCheck = await prisma.facility.findUnique({
+        where: { id: facilityId },
+        select: { ownerId: true },
+      });
+      if (
+        !unblockOwnerCheck ||
+        unblockOwnerCheck.ownerId !== req.user!.userId
+      ) {
+        return res
+          .status(403)
+          .json({ error: 'Only the facility owner can unblock time slots' });
+      }
 
       // Verify slot exists and belongs to court
       const timeSlot = await prisma.facilityTimeSlot.findFirst({

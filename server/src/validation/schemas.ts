@@ -212,3 +212,132 @@ export function validate(schema: z.ZodSchema) {
     next();
   };
 }
+
+// ── Teams (additional) ───────────────────────────────────────
+
+export const UpdateTeamSchema = z
+  .object({
+    name: nonEmptyString.max(100).optional(),
+    description: z.string().max(1000).optional(),
+    sportType: z.string().optional(),
+    sportTypes: z.array(z.string()).optional(),
+    skillLevel: z.string().optional(),
+    maxMembers: positiveInt.max(200).optional(),
+    isPublic: z.boolean().optional(),
+    genderRestriction: optionalString.nullable(),
+  })
+  .partial();
+
+export const JoinTeamSchema = z.object({
+  inviteCode: z.string().optional(),
+});
+
+export const AddMemberSchema = z.object({
+  userId: uuid,
+});
+
+// ── Facilities (additional) ──────────────────────────────────
+
+export const UpdateFacilitySchema = CreateFacilitySchema.partial();
+
+// ── Courts ───────────────────────────────────────────────────
+
+export const CreateCourtSchema = z.object({
+  name: nonEmptyString.max(100),
+  sportType: nonEmptyString,
+  capacity: positiveInt.max(1000).default(10),
+  isIndoor: z.boolean().default(false),
+  pricePerHour: nonNegativeFloat.optional(),
+  minimumBookingMinutes: z.number().int().min(15).max(480).default(60),
+  displayOrder: z.number().int().optional(),
+  boundaryCoordinates: z.any().optional(),
+});
+
+export const UpdateCourtSchema = CreateCourtSchema.partial().extend({
+  isActive: z.boolean().optional(),
+});
+
+export const BlockSlotSchema = z.object({
+  date: nonEmptyString,
+  startTime: nonEmptyString,
+  endTime: nonEmptyString,
+  blockReason: nonEmptyString.max(500),
+});
+
+// ── Leagues ──────────────────────────────────────────────────
+
+export const CreateLeagueSchema = z.object({
+  name: nonEmptyString.max(200),
+  sportType: nonEmptyString,
+  skillLevel: z.string().default('all_levels'),
+  leagueType: z.string().default('team'),
+  leagueFormat: z.string().optional().nullable(),
+  visibility: z.enum(['public', 'private']).default('public'),
+  startDate: isoDate.optional().nullable(),
+  endDate: isoDate.optional().nullable(),
+  seasonGameCount: z.number().int().optional(),
+  preferredGameDays: z.array(z.number()).optional(),
+  preferredTimeWindowStart: z.string().optional(),
+  preferredTimeWindowEnd: z.string().optional(),
+  gameFrequency: z.string().optional(),
+  trackStandings: z.boolean().default(true),
+  playoffTeamCount: z.number().int().optional(),
+  eliminationFormat: z.string().optional(),
+});
+
+export const UpdateLeagueSchema = CreateLeagueSchema.partial();
+
+// ── Matches ──────────────────────────────────────────────────
+
+export const CreateMatchSchema = z.object({
+  leagueId: uuid,
+  homeTeamId: uuid.optional().nullable(),
+  awayTeamId: uuid.optional().nullable(),
+  scheduledAt: isoDate.optional().nullable(),
+  roundNumber: z.number().int().optional(),
+  suggestedDays: z.array(z.string()).optional(),
+});
+
+export const UpdateMatchSchema = z
+  .object({
+    scheduledAt: isoDate.optional().nullable(),
+    homeScore: z.number().int().min(0).optional(),
+    awayScore: z.number().int().min(0).optional(),
+    status: z.string().optional(),
+    location: z.string().optional().nullable(),
+    facilityId: uuid.optional().nullable(),
+    courtId: uuid.optional().nullable(),
+  })
+  .partial();
+
+// ── Dependents ───────────────────────────────────────────────
+
+export const CreateDependentSchema = z.object({
+  firstName: nonEmptyString.max(100),
+  lastName: nonEmptyString.max(100),
+  dateOfBirth: isoDate,
+  gender: z.enum(['male', 'female']).optional().nullable(),
+  profileImage: optionalString.nullable(),
+});
+
+export const UpdateDependentSchema = CreateDependentSchema.partial();
+
+// ── Salutes ──────────────────────────────────────────────────
+
+export const SubmitSalutesSchema = z.object({
+  salutedUserIds: z.array(uuid).min(1).max(3),
+});
+
+// ── Waivers ──────────────────────────────────────────────────
+
+export const SignWaiverSchema = z.object({
+  facilityId: uuid,
+  waiverVersion: nonEmptyString,
+});
+
+// ── Debrief ──────────────────────────────────────────────────
+
+export const SubmitDebriefSchema = z.object({
+  ratings: z.record(z.string(), z.number().min(1).max(5)),
+  feedback: z.string().max(2000).optional(),
+});

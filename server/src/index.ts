@@ -9,6 +9,7 @@ import path from 'path';
 import { prisma } from './lib/prisma';
 import { requestLogger } from './middleware/requestLogger';
 import { Sentry, sentryEnabled } from './lib/sentry';
+import { activeContextMiddleware } from './middleware/activeContext';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -207,6 +208,9 @@ app.use(compression());
 
 // Structured request logging with correlation IDs
 app.use(requestLogger);
+
+// Validate X-Active-User-Id header (guardian/dependent context)
+app.use(activeContextMiddleware);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
