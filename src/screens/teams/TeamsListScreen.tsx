@@ -306,11 +306,7 @@ export function TeamsListScreen() {
       >
         <Ionicons name="key-outline" size={18} color={colors.cobalt} />
         <Text style={styles.joinBtnText}>Join a Roster with Code</Text>
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={colors.border}
-        />
+        <Ionicons name="chevron-forward" size={16} color={colors.border} />
       </TouchableOpacity>
 
       <View style={{ height: 100 }} />
@@ -350,11 +346,7 @@ export function TeamsListScreen() {
         ListEmptyComponent={
           myTeams.length === 0 && otherTeams.length === 0 ? (
             <View style={styles.empty}>
-              <Ionicons
-                name="people-outline"
-                size={36}
-                color={colors.border}
-              />
+              <Ionicons name="people-outline" size={36} color={colors.border} />
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
                 No rosters yet
               </Text>
@@ -479,7 +471,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: 24,
+    bottom: 90,
     width: 58,
     height: 58,
     borderRadius: 29,

@@ -292,11 +292,7 @@ export function LeaguesBrowserScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons
-              name="trophy-outline"
-              size={40}
-              color={colors.border}
-            />
+            <Ionicons name="trophy-outline" size={40} color={colors.border} />
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
               No active leagues
             </Text>
@@ -439,7 +435,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: 24,
+    bottom: 90,
     width: 58,
     height: 58,
     borderRadius: 29,

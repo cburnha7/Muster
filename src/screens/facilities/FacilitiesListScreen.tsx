@@ -513,11 +513,7 @@ export function FacilitiesListScreen() {
           </View>
         ) : displayFacilities.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons
-              name="map-outline"
-              size={48}
-              color={colors.border}
-            />
+            <Ionicons name="map-outline" size={48} color={colors.border} />
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
               No grounds found
             </Text>
@@ -888,7 +884,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: 24,
+    bottom: 90,
     width: 58,
     height: 58,
     borderRadius: 29,
