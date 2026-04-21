@@ -2,6 +2,11 @@ import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth';
 import { requireNonDependent } from '../middleware/require-non-dependent';
+import {
+  validate,
+  CreateEventSchema,
+  BookEventSchema,
+} from '../validation/schemas';
 
 // ─── Service imports ────────────────────────────────────────────────────────
 import * as EventCrudService from '../services/EventCrudService';
@@ -78,19 +83,25 @@ router.get('/:id/salutes/status', authMiddleware, async (req, res) => {
 });
 
 // Create event
-router.post('/', authMiddleware, requireNonDependent, async (req, res) => {
-  try {
-    const authenticatedUserId = req.user!.userId;
-    const result = await EventCrudService.createEvent(
-      req.body,
-      authenticatedUserId
-    );
-    res.status(201).json(result);
-  } catch (error: any) {
-    console.error('Create event error:', error);
-    sendServiceError(res, error);
+router.post(
+  '/',
+  authMiddleware,
+  requireNonDependent,
+  validate(CreateEventSchema),
+  async (req, res) => {
+    try {
+      const authenticatedUserId = req.user!.userId;
+      const result = await EventCrudService.createEvent(
+        req.body,
+        authenticatedUserId
+      );
+      res.status(201).json(result);
+    } catch (error: any) {
+      console.error('Create event error:', error);
+      sendServiceError(res, error);
+    }
   }
-});
+);
 
 // Update event
 router.put('/:id', authMiddleware, async (req, res) => {
@@ -125,8 +136,28 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 router.post('/:id/book', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    // Allow booking on behalf of a dependent — use body userId if provided, else authenticated user
-    const bookingUserId = req.body.userId || req.user!.userId;
+    const authenticatedUserId = req.user!.userId;
+    const requestedUserId = req.body.userId;
+
+    // If booking on behalf of someone else, verify guardian relationship
+    let bookingUserId = authenticatedUserId;
+    if (requestedUserId && requestedUserId !== authenticatedUserId) {
+      const dependent = await prisma.user.findFirst({
+        where: {
+          id: requestedUserId,
+          guardianId: authenticatedUserId,
+          isDependent: true,
+        },
+        select: { id: true },
+      });
+      if (!dependent) {
+        return res.status(403).json({
+          error: 'You can only book on behalf of your own dependents',
+        });
+      }
+      bookingUserId = requestedUserId;
+    }
+
     const booking = await EventCrudService.bookEvent(id, bookingUserId);
     res.status(201).json(booking);
   } catch (error: any) {

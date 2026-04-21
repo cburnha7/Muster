@@ -5,6 +5,14 @@ import {
   registrationRateLimiter,
   passwordResetRateLimiter,
 } from '../middleware/rateLimiter';
+import {
+  validate,
+  LoginSchema,
+  RegisterSchema,
+  RefreshTokenSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from '../validation/schemas';
 
 /**
  * Authentication Routes
@@ -24,9 +32,14 @@ const router = Router();
  * Rate Limited: 3 requests per 15 minutes per IP
  * Requirements: 22.1, 22.7
  */
-router.post('/register', registrationRateLimiter, (req, res) => {
-  AuthController.register(req, res);
-});
+router.post(
+  '/register',
+  registrationRateLimiter,
+  validate(RegisterSchema),
+  (req, res) => {
+    AuthController.register(req, res);
+  }
+);
 
 /**
  * POST /api/auth/register/sso
@@ -46,7 +59,7 @@ router.post('/register/sso', registrationRateLimiter, (req, res) => {
  * Rate Limited: 5 requests per 15 minutes per IP
  * Requirements: 23.1, 23.6
  */
-router.post('/login', loginRateLimiter, (req, res) => {
+router.post('/login', loginRateLimiter, validate(LoginSchema), (req, res) => {
   AuthController.login(req, res);
 });
 
@@ -87,7 +100,7 @@ router.post('/link-account', (req, res) => {
  * No rate limiting (requires valid refresh token)
  * Requirements: 25.1, 25.6
  */
-router.post('/refresh', (req, res) => {
+router.post('/refresh', validate(RefreshTokenSchema), (req, res) => {
   AuthController.refreshToken(req, res);
 });
 
@@ -109,9 +122,14 @@ router.post('/logout', (req, res) => {
  * Rate Limited: 3 requests per 15 minutes per IP
  * Requirements: 26.1, 26.5
  */
-router.post('/forgot-password', passwordResetRateLimiter, (req, res) => {
-  AuthController.forgotPassword(req, res);
-});
+router.post(
+  '/forgot-password',
+  passwordResetRateLimiter,
+  validate(ForgotPasswordSchema),
+  (req, res) => {
+    AuthController.forgotPassword(req, res);
+  }
+);
 
 /**
  * POST /api/auth/reset-password

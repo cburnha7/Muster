@@ -60,3 +60,15 @@ export function asyncHandler(
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
+
+/**
+ * Send a service error response. Extracts statusCode and message from
+ * ServiceError instances, falls back to 500 for unknown errors.
+ * Use this in route handlers: `sendServiceError(res, error)`
+ */
+export function sendServiceError(res: Response, error: any): void {
+  const status = error.statusCode || 500;
+  const body: any = { error: error.message || 'Internal error' };
+  if (error.extra) Object.assign(body, error.extra);
+  res.status(status).json(body);
+}

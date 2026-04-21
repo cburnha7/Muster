@@ -3,9 +3,12 @@ import cors from 'cors';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+dotenv.config(); // Load env before anything else
+
 import path from 'path';
 import { prisma } from './lib/prisma';
 import { requestLogger } from './middleware/requestLogger';
+import { Sentry, sentryEnabled } from './lib/sentry';
 
 // Routes
 import authRoutes from './routes/auth';
@@ -47,8 +50,6 @@ import placesRoutes from './routes/places';
 import uploadRoutes from './routes/uploads';
 import { conversationsRouter, messagesRouter } from './routes/conversations';
 import { registerLeagueLockMiddleware } from './middleware/league-lock';
-
-dotenv.config();
 
 /**
  * Validate critical Stripe Connect environment variables on startup.
@@ -273,6 +274,13 @@ app.use(
     next: express.NextFunction
   ) => {
     console.error('Error:', err);
+
+    // Report to Sentry
+    if (sentryEnabled) {
+      Sentry.captureException(err, {
+        extra: { method: req.method, url: req.originalUrl },
+      });
+    }
 
     // Log to app_logs table
     try {
