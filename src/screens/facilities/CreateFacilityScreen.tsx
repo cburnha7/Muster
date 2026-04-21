@@ -14,6 +14,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../../context/AuthContext';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
 import { facilityService } from '../../services/api/FacilityService';
+import TokenStorage from '../../services/auth/TokenStorage';
+import { API_BASE_URL } from '../../services/api/config';
 import { courtService } from '../../services/api/CourtService';
 import {
   addFacility,
@@ -120,17 +122,27 @@ function CreateFacilityInner() {
       }
     }
 
-    // Task 8.1 — upload pending photos
+    // Save photos — already uploaded to R2, just save URLs to facility record
     if (state.pendingPhotos.length > 0) {
       try {
+        const token = await TokenStorage.getAccessToken();
         for (const photo of state.pendingPhotos) {
-          await facilityService.uploadFacilityPhoto(newFacility.id, photo);
+          await fetch(
+            `${API_BASE_URL}/facilities/${newFacility.id}/photos/url`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ imageUrl: photo.uri }),
+            }
+          );
         }
       } catch (uploadErr: any) {
-        // Task 8.3 — facility created but photo upload failed
         Alert.alert(
           'Ground created',
-          'Your ground was created successfully, but some photos could not be uploaded. You can add them from the Edit screen.'
+          'Your ground was created successfully, but some photos could not be saved. You can add them from the Edit screen.'
         );
         reduxDispatch(
           addFacility({ ...newFacility, courts: createdCourts } as any)
@@ -324,10 +336,17 @@ function CreateFacilityInner() {
         onRequestClose={() => setShowDuplicateModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.duplicateModalContent, { backgroundColor: colors.white }]}>
+          <View
+            style={[
+              styles.duplicateModalContent,
+              { backgroundColor: colors.white },
+            ]}
+          >
             <View style={styles.duplicateModalHeader}>
               <Ionicons name="warning" size={32} color={colors.gold} />
-              <Text style={[styles.modalTitle, { color: colors.ink }]}>Grounds Already Exist</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
+                Grounds Already Exist
+              </Text>
             </View>
 
             <Text style={[styles.modalDescription, { color: colors.inkSoft }]}>
@@ -337,16 +356,42 @@ function CreateFacilityInner() {
 
             <ScrollView style={styles.duplicateList}>
               {duplicates.map(facility => (
-                <View key={facility.id} style={[styles.duplicateCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Text style={[styles.duplicateName, { color: colors.ink }]}>{facility.name}</Text>
-                  <Text style={[styles.duplicateAddress, { color: colors.inkSoft }]}>
+                <View
+                  key={facility.id}
+                  style={[
+                    styles.duplicateCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.duplicateName, { color: colors.ink }]}>
+                    {facility.name}
+                  </Text>
+                  <Text
+                    style={[styles.duplicateAddress, { color: colors.inkSoft }]}
+                  >
                     {facility.street}, {facility.city}, {facility.state}{' '}
                     {facility.zipCode}
                   </Text>
                   <View style={styles.sportTypeRow}>
                     {facility.sportTypes.map(sport => (
-                      <View key={sport} style={[styles.sportBadge, { backgroundColor: colors.cobalt }]}>
-                        <Text style={[styles.sportBadgeText, { color: colors.white }]}>{sport}</Text>
+                      <View
+                        key={sport}
+                        style={[
+                          styles.sportBadge,
+                          { backgroundColor: colors.cobalt },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.sportBadgeText,
+                            { color: colors.white },
+                          ]}
+                        >
+                          {sport}
+                        </Text>
                       </View>
                     ))}
                   </View>
@@ -360,16 +405,32 @@ function CreateFacilityInner() {
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.surface }]}
+                style={[
+                  styles.modalButton,
+                  styles.cancelButton,
+                  { backgroundColor: colors.surface },
+                ]}
                 onPress={() => setShowDuplicateModal(false)}
               >
-                <Text style={[styles.cancelButtonText, { color: colors.inkSoft }]}>Go Back</Text>
+                <Text
+                  style={[styles.cancelButtonText, { color: colors.inkSoft }]}
+                >
+                  Go Back
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.continueButton, { backgroundColor: colors.cobalt }]}
+                style={[
+                  styles.modalButton,
+                  styles.continueButton,
+                  { backgroundColor: colors.cobalt },
+                ]}
                 onPress={handleContinueAnyway}
               >
-                <Text style={[styles.continueButtonText, { color: colors.white }]}>Create Anyway</Text>
+                <Text
+                  style={[styles.continueButtonText, { color: colors.white }]}
+                >
+                  Create Anyway
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

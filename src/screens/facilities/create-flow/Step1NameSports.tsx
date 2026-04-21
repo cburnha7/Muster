@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SportIconGrid } from '../../../components/wizard/SportIconGrid';
 import { useCreateFacility } from './CreateFacilityContext';
 import { SportType } from '../../../types';
+import { ImageService } from '../../../services/ImageService';
 import { fonts, useTheme } from '../../../theme';
 
 export function Step1NameSports() {
@@ -29,18 +30,22 @@ export function Step1NameSports() {
   };
 
   const handlePickPhotos = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsMultipleSelection: true,
-      mediaTypes: ['images'] as ImagePicker.MediaType[],
-      quality: 0.9,
-    });
-    if (result.canceled) return;
-    const photos = result.assets.map(a => ({
-      uri: a.uri,
-      name: a.fileName || 'photo.jpg',
-      type: a.mimeType || 'image/jpeg',
-    }));
-    dispatch({ type: 'SET_PENDING_PHOTOS', photos });
+    try {
+      const results = await ImageService.pickMultipleAndUpload('grounds', {
+        quality: 0.9,
+        maxSelections: 20,
+      });
+      if (results.length === 0) return;
+      const photos = results.map(r => ({
+        uri: r.publicUrl,
+        name: r.key.split('/').pop() || 'photo.jpg',
+        type: 'image/jpeg',
+      }));
+      dispatch({ type: 'SET_PENDING_PHOTOS', photos });
+    } catch (err: any) {
+      const { Alert } = require('react-native');
+      Alert.alert('Error', err.message || 'Failed to upload photos');
+    }
   };
 
   const handlePickMap = async () => {
@@ -61,15 +66,28 @@ export function Step1NameSports() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>Name your ground</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        Name your ground
+      </Text>
 
       <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+        style={[
+          styles.textInput,
+          {
+            borderColor: colors.border,
+            color: colors.ink,
+            backgroundColor: colors.white,
+          },
+        ]}
         value={state.name}
         onChangeText={v =>
           dispatch({ type: 'SET_FIELD', field: 'name', value: v })
@@ -78,7 +96,9 @@ export function Step1NameSports() {
         placeholderTextColor={colors.inkSoft}
       />
 
-      <Text style={[styles.fieldLabel, { color: colors.inkSoft }]}>Sport types</Text>
+      <Text style={[styles.fieldLabel, { color: colors.inkSoft }]}>
+        Sport types
+      </Text>
       <SportIconGrid
         selected={state.sportTypes}
         onSelect={toggleSport}
@@ -86,7 +106,13 @@ export function Step1NameSports() {
       />
 
       {/* Optional photos picker */}
-      <Text style={[styles.fieldLabel, { color: colors.inkSoft }, { marginTop: 20 }]}>
+      <Text
+        style={[
+          styles.fieldLabel,
+          { color: colors.inkSoft },
+          { marginTop: 20 },
+        ]}
+      >
         Photos (optional)
       </Text>
       <TouchableOpacity
@@ -103,7 +129,13 @@ export function Step1NameSports() {
       </TouchableOpacity>
 
       {/* Optional map picker */}
-      <Text style={[styles.fieldLabel, { color: colors.inkSoft }, { marginTop: 16 }]}>
+      <Text
+        style={[
+          styles.fieldLabel,
+          { color: colors.inkSoft },
+          { marginTop: 16 },
+        ]}
+      >
         Facility map (optional)
       </Text>
       <TouchableOpacity

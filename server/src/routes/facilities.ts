@@ -894,6 +894,47 @@ router.post(
   }
 );
 
+// Save a facility photo by URL (already uploaded to R2)
+router.post('/:id/photos/url', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params as { id: string };
+    const { imageUrl } = req.body as { imageUrl: string };
+
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      return res.status(400).json({ error: 'imageUrl is required' });
+    }
+
+    const facility = await prisma.facility.findUnique({
+      where: { id },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    // Get next display order
+    const lastPhoto = await prisma.facilityPhoto.findFirst({
+      where: { facilityId: id },
+      orderBy: { displayOrder: 'desc' },
+      select: { displayOrder: true },
+    });
+
+    const photo = await prisma.facilityPhoto.create({
+      data: {
+        facilityId: id,
+        imageUrl,
+        displayOrder: (lastPhoto?.displayOrder ?? -1) + 1,
+      },
+    });
+
+    res.status(201).json(photo);
+  } catch (error: any) {
+    console.error('Save facility photo URL error:', error);
+    res.status(500).json({ error: 'Failed to save photo' });
+  }
+});
+
 // Delete a facility photo
 router.delete('/:id/photos/:photoId', authMiddleware, async (req, res) => {
   try {

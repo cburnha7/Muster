@@ -46,7 +46,19 @@ export class ImageService {
     const fileName = uri.split('/').pop() ?? 'photo.jpg';
     const contentType = asset.mimeType ?? 'image/jpeg';
 
-    // 3. Get presigned URL from backend
+    return ImageService.uploadAsset(context, uri, fileName, contentType);
+  }
+
+  /**
+   * Upload a single asset (already picked) directly to R2.
+   * Used internally and by pickMultipleAndUpload.
+   */
+  static async uploadAsset(
+    context: ImageContext,
+    uri: string,
+    fileName: string,
+    contentType: string
+  ): Promise<UploadResult> {
     const token = await TokenStorage.getAccessToken();
     const presignRes = await fetch(`${API_BASE_URL}/uploads/presign`, {
       method: 'POST',
@@ -64,9 +76,7 @@ export class ImageService {
 
     const { uploadUrl, publicUrl, key } = await presignRes.json();
 
-    // 4. Upload directly to R2
     if (Platform.OS === 'web') {
-      // On web, fetch the blob and PUT it
       const blob = await fetch(uri).then(r => r.blob());
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
@@ -77,7 +87,6 @@ export class ImageService {
         throw new Error(`Upload failed with status ${uploadRes.status}`);
       }
     } else {
-      // On native, use FileSystem for efficient binary upload
       const FileSystem = require('expo-file-system');
       const uploadRes = await FileSystem.uploadAsync(uploadUrl, uri, {
         httpMethod: 'PUT',
@@ -90,6 +99,44 @@ export class ImageService {
     }
 
     return { publicUrl, key };
+  }
+
+  /**
+   * Open the native image picker for multiple images, upload all to R2.
+   * Returns array of results, or empty array if cancelled.
+   */
+  static async pickMultipleAndUpload(
+    context: ImageContext,
+    options?: { quality?: number; maxSelections?: number }
+  ): Promise<UploadResult[]> {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      throw new Error('Photo library permission is required to upload images.');
+    }
+
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: options?.quality ?? 0.85,
+      selectionLimit: options?.maxSelections ?? 20,
+    });
+
+    if (picked.canceled || !picked.assets?.length) return [];
+
+    const results: UploadResult[] = [];
+    for (const asset of picked.assets) {
+      const fileName = asset.uri.split('/').pop() ?? 'photo.jpg';
+      const contentType = asset.mimeType ?? 'image/jpeg';
+      const result = await ImageService.uploadAsset(
+        context,
+        asset.uri,
+        fileName,
+        contentType
+      );
+      results.push(result);
+    }
+
+    return results;
   }
 
   /**
