@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { fonts, useTheme } from '../../theme';
+import { colors, fonts, useTheme } from '../../theme';
 import { tokenSport } from '../../theme/tokens';
 import type { Conversation } from '../../types/messaging';
 
@@ -103,7 +103,10 @@ function ConversationRowInner({
     });
     return (
       <TouchableOpacity
-        style={[styles.swipeActionLeft, { backgroundColor: colors.inkSecondary }]}
+        style={[
+          styles.swipeActionLeft,
+          { backgroundColor: colors.inkSecondary },
+        ]}
         onPress={() => {
           swipeableRef.current?.close();
           onMute?.(conversation);
@@ -148,7 +151,9 @@ function ConversationRowInner({
           style={[styles.swipeActionContent, { transform: [{ scale }] }]}
         >
           <Ionicons name="pin" size={22} color={colors.white} />
-          <Text style={[styles.swipeActionText, { color: colors.white }]}>Pin</Text>
+          <Text style={[styles.swipeActionText, { color: colors.white }]}>
+            Pin
+          </Text>
         </Animated.View>
       </TouchableOpacity>
     );
@@ -157,10 +162,13 @@ function ConversationRowInner({
   const rowContent = (
     <TouchableOpacity
       style={[
-        styles.row, { backgroundColor: colors.surface },
+        styles.row,
+        { backgroundColor: colors.surface },
         { backgroundColor: colors.bgCard },
-        hasUnread && styles.rowUnread, hasUnread && { backgroundColor: colors.cobalt + '08' },
-        isMuted && styles.rowMuted]}
+        hasUnread && styles.rowUnread,
+        hasUnread && { backgroundColor: colors.cobalt + '08' },
+        isMuted && styles.rowMuted,
+      ]}
       onPress={() => onPress(conversation)}
       activeOpacity={0.7}
     >
@@ -198,9 +206,11 @@ function ConversationRowInner({
         <View style={styles.topRow}>
           <Text
             style={[
-              styles.name, { color: colors.ink },
+              styles.name,
+              { color: colors.ink },
               { color: colors.textPrimary },
-              hasUnread && styles.nameUnread]}
+              hasUnread && styles.nameUnread,
+            ]}
             numberOfLines={1}
           >
             {displayName}
@@ -208,9 +218,12 @@ function ConversationRowInner({
           {lastMsg && (
             <Text
               style={[
-                styles.timestamp, { color: colors.inkSecondary },
+                styles.timestamp,
+                { color: colors.inkSecondary },
                 { color: colors.textSecondary },
-                hasUnread && styles.timestampUnread, hasUnread && { color: colors.cobalt }]}
+                hasUnread && styles.timestampUnread,
+                hasUnread && { color: colors.cobalt },
+              ]}
             >
               {formatTimestamp(lastMsg.createdAt)}
             </Text>
@@ -219,10 +232,13 @@ function ConversationRowInner({
         <View style={styles.bottomRow}>
           <Text
             style={[
-              styles.preview, { color: colors.inkSecondary },
+              styles.preview,
+              { color: colors.inkSecondary },
               { color: colors.textSecondary },
-              hasUnread && styles.previewUnread, hasUnread && { color: colors.ink },
-              isSystemPreview && styles.previewSystem]}
+              hasUnread && styles.previewUnread,
+              hasUnread && { color: colors.ink },
+              isSystemPreview && styles.previewSystem,
+            ]}
             numberOfLines={1}
           >
             {lastMsg
