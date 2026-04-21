@@ -15,9 +15,19 @@ router.get('/autocomplete', async (req, res) => {
       return res.json({ predictions: [] });
     }
 
+    if (!GOOGLE_API_KEY) {
+      console.error('Places proxy: GOOGLE_PLACES_API_KEY is not set');
+      return res.json({ predictions: [], error: 'API key not configured' });
+    }
+
     const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&language=en&key=${GOOGLE_API_KEY}`;
     const response = await fetch(url);
     const data = await response.json();
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      console.error('Places API error:', data.status, data.error_message);
+    }
+
     res.json(data);
   } catch (error) {
     console.error('Places autocomplete proxy error:', error);

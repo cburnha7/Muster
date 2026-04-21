@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -43,32 +43,44 @@ export function AddressAutocomplete({
 
   const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
 
-  // On web, Google Places API blocks CORS — proxy through our backend
-  const getAutocompleteUrl = (text: string) =>
-    Platform.OS === 'web'
-      ? `${API_BASE_URL}/places/autocomplete?input=${encodeURIComponent(text)}`
-      : `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`;
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const getDetailsUrl = (placeId: string) =>
-    Platform.OS === 'web'
-      ? `${API_BASE_URL}/places/details?place_id=${encodeURIComponent(placeId)}`
-      : `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=address_components,geometry&key=${apiKey}`;
+  const fetchSuggestions = useCallback(
+    (text: string) => {
+      const url =
+        Platform.OS === 'web'
+          ? `${API_BASE_URL}/places/autocomplete?input=${encodeURIComponent(text)}`
+          : `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`;
+
+      setLoading(true);
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          setSuggestions(data.predictions || []);
+        })
+        .catch(err => {
+          console.error('Address autocomplete fetch error:', err);
+          setSuggestions([]);
+        })
+        .finally(() => setLoading(false));
+    },
+    [apiKey]
+  );
 
   const handleTextChange = useCallback(
     (text: string) => {
       onChangeText(text);
+
+      // Debounce: wait 300ms after last keystroke before fetching
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
       if (text.length >= 3 && (apiKey || Platform.OS === 'web')) {
-        setLoading(true);
-        fetch(getAutocompleteUrl(text))
-          .then(r => r.json())
-          .then(data => setSuggestions(data.predictions || []))
-          .catch(() => setSuggestions([]))
-          .finally(() => setLoading(false));
+        debounceRef.current = setTimeout(() => fetchSuggestions(text), 300);
       } else {
         setSuggestions([]);
       }
     },
-    [apiKey, onChangeText]
+    [apiKey, onChangeText, fetchSuggestions]
   );
 
   const handleSelect = useCallback(
@@ -77,7 +89,11 @@ export function AddressAutocomplete({
       setSuggestions([]);
 
       if ((apiKey || Platform.OS === 'web') && suggestion.place_id) {
-        fetch(getDetailsUrl(suggestion.place_id))
+        const url =
+          Platform.OS === 'web'
+            ? `${API_BASE_URL}/places/details?place_id=${encodeURIComponent(suggestion.place_id)}`
+            : `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(suggestion.place_id)}&fields=address_components,geometry&key=${apiKey}`;
+        fetch(url)
           .then(r => r.json())
           .then(data => {
             const components = data.result?.address_components || [];
