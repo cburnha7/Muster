@@ -106,6 +106,23 @@ export const uploadMap = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+const photoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `photo-${uuid()}${ext}`);
+  },
+});
+
+export const uploadPhoto = multer({
+  storage: photoStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});
+
 export const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
@@ -131,8 +148,25 @@ export function validateImageFile(file: Express.Multer.File): {
   return { valid: true };
 }
 
-export function generateImageUrl(req: any, filename: string): string {
-  return `/uploads/${filename}`;
+export function generateImageUrl(reqOrPath: any, filename?: string): string {
+  if (filename) return `/uploads/${filename}`;
+  // If called with just a path
+  if (typeof reqOrPath === 'string')
+    return reqOrPath.startsWith('/uploads/')
+      ? reqOrPath
+      : `/uploads/${path.basename(reqOrPath)}`;
+  return '/uploads/unknown';
+}
+
+export function validatePhotoFile(file: Express.Multer.File): string | null {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+  if (!allowed.includes(file.mimetype)) {
+    return 'Invalid file type. Must be JPEG, PNG, WebP, or HEIC.';
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return 'File too large (max 10MB)';
+  }
+  return null;
 }
 
 export function generateFileUrl(req: any, filename: string): string {
@@ -150,10 +184,23 @@ export function deleteFile(filePath: string): void {
   }
 }
 
-export function deleteImageFiles(urls: string[]): void {
+export function deleteImageFiles(
+  ...args: (string | string[] | undefined | null)[]
+): void {
+  const urls: string[] = [];
+  for (const arg of args) {
+    if (Array.isArray(arg)) urls.push(...arg);
+    else if (typeof arg === 'string') urls.push(arg);
+  }
   urls.forEach(deleteFile);
 }
 
-export function processMapImage(file: Express.Multer.File): string {
-  return `/uploads/${file.filename}`;
+export function processMapImage(
+  filePath: string,
+  _options?: { maxWidth?: number; maxHeight?: number; quality?: number }
+): { optimizedPath: string; thumbnailPath: string } {
+  return {
+    optimizedPath: `/uploads/${path.basename(filePath)}`,
+    thumbnailPath: `/uploads/${path.basename(filePath)}`,
+  };
 }

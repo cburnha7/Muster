@@ -15,6 +15,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageService } from '../../services/ImageService';
 
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
@@ -528,17 +529,18 @@ export function DependentFormScreen() {
             }}
             onPress={async () => {
               try {
-                const result = await ImagePicker.launchImageLibraryAsync({
-                  mediaTypes: ['images'] as ImagePicker.MediaType[],
-                  allowsEditing: true,
+                if (profileImage && profileImage.includes('media.muster.app')) {
+                  await ImageService.deleteImage(profileImage);
+                }
+                const result = await ImageService.pickAndUpload('dependents', {
                   aspect: [1, 1],
                   quality: 0.8,
                 });
-                if (!result.canceled && result.assets[0]) {
-                  setProfileImage(result.assets[0].uri);
+                if (result) {
+                  setProfileImage(result.publicUrl);
                 }
-              } catch {
-                Alert.alert('Error', 'Failed to pick image');
+              } catch (err: any) {
+                Alert.alert('Error', err.message || 'Failed to pick image');
               }
             }}
             activeOpacity={0.7}

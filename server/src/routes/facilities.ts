@@ -863,7 +863,7 @@ router.post(
       // Create DB records
       const createdPhotos = await Promise.all(
         files.map((file, index) => {
-          const imageUrl = generateImageUrl(file.path);
+          const imageUrl = generateImageUrl(req, file.filename);
           return prisma.facilityPhoto.create({
             data: {
               facilityId: id,
@@ -1002,8 +1002,8 @@ router.post(
       );
 
       // Generate URLs
-      const facilityMapUrl = generateImageUrl(optimizedPath);
-      const facilityMapThumbnailUrl = generateImageUrl(thumbnailPath);
+      const facilityMapUrl = optimizedPath;
+      const facilityMapThumbnailUrl = thumbnailPath;
 
       // Delete old images if they exist
       if (facility.facilityMapUrl) {

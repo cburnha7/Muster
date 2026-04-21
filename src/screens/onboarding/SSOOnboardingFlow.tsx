@@ -27,6 +27,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageService } from '../../services/ImageService';
 import * as Location from 'expo-location';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../theme';
@@ -587,15 +588,16 @@ export function SSOOnboardingFlow() {
 
   const PhotoScreen = () => {
     const handlePickImage = async () => {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        updateForm({ profileImage: result.assets[0].uri });
+      try {
+        const result = await ImageService.pickAndUpload('profiles', {
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+        if (result) {
+          updateForm({ profileImage: result.publicUrl });
+        }
+      } catch (err: any) {
+        Alert.alert('Error', err.message || 'Failed to upload photo');
       }
     };
 

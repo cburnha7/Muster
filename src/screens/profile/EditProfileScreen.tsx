@@ -14,6 +14,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageService } from '../../services/ImageService';
 import { userService } from '../../services/api/UserService';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../services/api/config';
@@ -215,51 +216,29 @@ export function EditProfileScreen(): JSX.Element {
 
   const handlePickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'] as ImagePicker.MediaType[],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-        base64: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        await uploadImage(result.assets[0]);
-      }
-    } catch (err: any) {
-      Alert.alert('Error', 'Failed to pick image: ' + err.message);
-    }
-  };
-
-  const uploadImage = async (asset: ImagePicker.ImagePickerAsset) => {
-    try {
       setUploadingImage(true);
 
-      let imageData: string;
-
-      if (asset.base64) {
-        // Use base64 from image picker (works on all platforms)
-        imageData = `data:image/jpeg;base64,${asset.base64}`;
-      } else if (Platform.OS === 'web') {
-        // Fallback for web: convert blob to base64
-        const response = await fetch(asset.uri);
-        const blob = await response.blob();
-        imageData = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } else {
-        // Fallback: send URI (won't persist for other users but won't crash)
-        imageData = asset.uri;
+      // Delete old image from R2 if it exists and is an R2 URL
+      if (profileImage && profileImage.includes('media.muster.app')) {
+        await ImageService.deleteImage(profileImage);
       }
 
-      const result = await userService.uploadProfileImageData(imageData);
-      setProfileImage(result.imageUrl);
+      const result = await ImageService.pickAndUpload('profiles', {
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result) {
+        setUploadingImage(false);
+        return; // user cancelled
+      }
+
+      // Save the public URL to the user's profile
+      await userService.updateProfile({ profileImage: result.publicUrl });
+      setProfileImage(result.publicUrl);
       Alert.alert('Success', 'Profile image updated successfully');
     } catch (err: any) {
-      Alert.alert('Error', 'Failed to upload image: ' + err.message);
+      Alert.alert('Error', err.message || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
     }
