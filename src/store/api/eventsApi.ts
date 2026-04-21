@@ -1,8 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../store';
-import { apiConfig } from '../../services/api/config';
-import { clearAuth, setTokens } from '../slices/authSlice';
-import TokenStorage from '../../services/auth/TokenStorage';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createAuthenticatedBaseQuery } from './createAuthenticatedApi';
 import {
   Event,
   EventFilters,
@@ -18,116 +15,10 @@ export const DEFAULT_EVENT_FILTERS: EventFilters = {
   // Location-based sorting will be handled by backend based on user location
 };
 
-// Define base query with authentication
-const baseQuery = fetchBaseQuery({
-  baseUrl: apiConfig.baseURL,
-  prepareHeaders: (headers, { getState }) => {
-    const state = getState() as RootState;
-
-    // Get token from auth state (note: field is 'accessToken' not 'token')
-    const token = state.auth.accessToken;
-
-    // If we have a token, include it in the Authorization header
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-
-    // User identity is handled via JWT Bearer token only
-    const userId = state.auth.user?.id;
-
-    // Attach X-Active-User-Id header when acting on behalf of a dependent
-    const activeUserId = state.context?.activeUserId;
-    if (activeUserId && activeUserId !== userId) {
-      headers.set('X-Active-User-Id', activeUserId);
-    }
-
-    headers.set('content-type', 'application/json');
-    return headers;
-  },
-});
-
-// Base query with re-authentication logic
-const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
-  let result = await baseQuery(args, api, extraOptions);
-
-  // If we get a 401, try to refresh the token
-  if (result.error && result.error.status === 401) {
-    // Capture the token that was used for the failed request
-    const failedToken = (api.getState() as RootState).auth.accessToken;
-
-    // Check if the token has already been refreshed (e.g. by login or another refresh)
-    const currentToken = (api.getState() as RootState).auth.accessToken;
-    if (currentToken && currentToken !== failedToken) {
-      // Token was already refreshed — just retry with the new token
-      return await baseQuery(args, api, extraOptions);
-    }
-
-    // Get refresh token from Redux state first, then fallback to TokenStorage
-    let refreshToken = (api.getState() as RootState).auth.refreshToken;
-    if (!refreshToken) {
-      refreshToken = await TokenStorage.getRefreshToken();
-    }
-
-    if (!refreshToken) {
-      // Only clear if the token hasn't changed since we started
-      const latestToken = (api.getState() as RootState).auth.accessToken;
-      if (!latestToken || latestToken === failedToken) {
-        console.error('❌ No refresh token available, clearing session...');
-        await TokenStorage.clearAll();
-        api.dispatch(clearAuth());
-      }
-      return result;
-    }
-
-    const refreshResult = await baseQuery(
-      {
-        url: '/auth/refresh',
-        method: 'POST',
-        body: { refreshToken },
-      },
-      api,
-      extraOptions
-    );
-
-    if (refreshResult.data) {
-      const tokenData = refreshResult.data as {
-        accessToken: string;
-        refreshToken: string;
-      };
-
-      await TokenStorage.storeTokens(
-        tokenData.accessToken,
-        tokenData.refreshToken
-      );
-      api.dispatch(
-        setTokens({
-          accessToken: tokenData.accessToken,
-          refreshToken: tokenData.refreshToken,
-        })
-      );
-
-      // Retry the original query with new token
-      result = await baseQuery(args, api, extraOptions);
-    } else {
-      // Only clear session if no fresh login has happened in the meantime
-      const latestToken = (api.getState() as RootState).auth.accessToken;
-      if (!latestToken || latestToken === failedToken) {
-        console.error(
-          '❌ [eventsApi] Token refresh failed, clearing session...'
-        );
-        await TokenStorage.clearAll();
-        api.dispatch(clearAuth());
-      }
-    }
-  }
-
-  return result;
-};
-
 // Create RTK Query API for events
 export const eventsApi = createApi({
   reducerPath: 'eventsApi',
-  baseQuery: baseQueryWithReauth,
+  baseQuery: createAuthenticatedBaseQuery(),
   tagTypes: ['Events', 'Bookings'],
   endpoints: builder => ({
     // Get events with filters and pagination
