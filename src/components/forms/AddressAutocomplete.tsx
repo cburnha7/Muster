@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, useTheme } from '../../theme';
+import { API_BASE_URL } from '../../services/api/config';
 
 interface AddressResult {
   street: string;
@@ -41,13 +43,23 @@ export function AddressAutocomplete({
 
   const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
 
+  // On web, Google Places API blocks CORS — proxy through our backend
+  const getAutocompleteUrl = (text: string) =>
+    Platform.OS === 'web'
+      ? `${API_BASE_URL}/places/autocomplete?input=${encodeURIComponent(text)}`
+      : `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`;
+
+  const getDetailsUrl = (placeId: string) =>
+    Platform.OS === 'web'
+      ? `${API_BASE_URL}/places/details?place_id=${encodeURIComponent(placeId)}`
+      : `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=address_components,geometry&key=${apiKey}`;
+
   const handleTextChange = useCallback(
     (text: string) => {
       onChangeText(text);
-      if (text.length >= 3 && apiKey) {
+      if (text.length >= 3 && (apiKey || Platform.OS === 'web')) {
         setLoading(true);
-        fetch(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&types=address&key=${apiKey}`
+        fetch(getAutocompleteUrl(text))
         )
           .then(r => r.json())
           .then(data => setSuggestions(data.predictions || []))
@@ -65,10 +77,8 @@ export function AddressAutocomplete({
       onChangeText(suggestion.description);
       setSuggestions([]);
 
-      if (apiKey && suggestion.place_id) {
-        fetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${suggestion.place_id}&fields=address_components,geometry&key=${apiKey}`
-        )
+      if ((apiKey || Platform.OS === 'web') && suggestion.place_id) {
+        fetch(getDetailsUrl(suggestion.place_id))
           .then(r => r.json())
           .then(data => {
             const components = data.result?.address_components || [];
@@ -111,8 +121,15 @@ export function AddressAutocomplete({
 
   return (
     <View style={styles.container}>
-      {label ? <Text style={[styles.label, { color: colors.inkSoft }]}>{label}</Text> : null}
-      <View style={[styles.inputRow, { backgroundColor: colors.white, borderColor: colors.border }]}>
+      {label ? (
+        <Text style={[styles.label, { color: colors.inkSoft }]}>{label}</Text>
+      ) : null}
+      <View
+        style={[
+          styles.inputRow,
+          { backgroundColor: colors.white, borderColor: colors.border },
+        ]}
+      >
         <Ionicons
           name="search-outline"
           size={18}
@@ -137,14 +154,27 @@ export function AddressAutocomplete({
       </View>
 
       {suggestions.length > 0 && (
-        <View style={[styles.suggestionsContainer, { backgroundColor: colors.white, borderColor: colors.border, shadowColor: colors.black }]}>
+        <View
+          style={[
+            styles.suggestionsContainer,
+            {
+              backgroundColor: colors.white,
+              borderColor: colors.border,
+              shadowColor: colors.black,
+            },
+          ]}
+        >
           {suggestions.slice(0, 5).map((suggestion, idx) => (
             <TouchableOpacity
               key={suggestion.place_id || idx}
               style={[
                 styles.suggestionItem,
                 idx < Math.min(suggestions.length, 5) - 1 &&
-                  styles.suggestionBorder, idx < Math.min(suggestions.length, 5) - 1 && { borderBottomColor: colors.border }]}
+                  styles.suggestionBorder,
+                idx < Math.min(suggestions.length, 5) - 1 && {
+                  borderBottomColor: colors.border,
+                },
+              ]}
               onPress={() => handleSelect(suggestion)}
               activeOpacity={0.7}
             >
@@ -155,17 +185,28 @@ export function AddressAutocomplete({
                 style={styles.suggestionIcon}
               />
               <View style={styles.suggestionTextContainer}>
-                <Text style={[styles.suggestionMain, { color: colors.ink }]} numberOfLines={1}>
+                <Text
+                  style={[styles.suggestionMain, { color: colors.ink }]}
+                  numberOfLines={1}
+                >
                   {suggestion.structured_formatting?.main_text ||
                     suggestion.description}
                 </Text>
-                <Text style={[styles.suggestionSecondary, { color: colors.inkSoft }]} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.suggestionSecondary,
+                    { color: colors.inkSoft },
+                  ]}
+                  numberOfLines={1}
+                >
                   {suggestion.structured_formatting?.secondary_text || ''}
                 </Text>
               </View>
             </TouchableOpacity>
           ))}
-          <Text style={[styles.poweredBy, { color: colors.inkFaint }]}>powered by Google</Text>
+          <Text style={[styles.poweredBy, { color: colors.inkFaint }]}>
+            powered by Google
+          </Text>
         </View>
       )}
     </View>

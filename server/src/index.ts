@@ -43,6 +43,7 @@ import availabilityRoutes from './routes/availability';
 import scheduleRoutes from './routes/schedule';
 import pushTokenRoutes from './routes/push-tokens';
 import inviteRoutes from './routes/invites';
+import placesRoutes from './routes/places';
 import { conversationsRouter, messagesRouter } from './routes/conversations';
 import { registerLeagueLockMiddleware } from './middleware/league-lock';
 
@@ -257,6 +258,7 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/push-tokens', pushTokenRoutes);
 app.use('/api/invites', inviteRoutes);
+app.use('/api/places', placesRoutes);
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/messages', messagesRouter);
 
