@@ -60,7 +60,6 @@ export function AddressAutocomplete({
       if (text.length >= 3 && (apiKey || Platform.OS === 'web')) {
         setLoading(true);
         fetch(getAutocompleteUrl(text))
-        )
           .then(r => r.json())
           .then(data => setSuggestions(data.predictions || []))
           .catch(() => setSuggestions([]))
