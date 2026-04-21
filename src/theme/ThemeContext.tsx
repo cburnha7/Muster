@@ -1,5 +1,13 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
 import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   lightColors,
   darkColors,
@@ -14,6 +22,8 @@ import {
 } from './tokens';
 import { typeScale, TypeKey } from './typography';
 
+const THEME_PREF_KEY = '@muster_dark_mode';
+
 // ─── Theme shape ─────────────────────────────────────────────
 
 export interface Theme {
@@ -27,6 +37,8 @@ export interface Theme {
   shadow: ReturnType<typeof makeShadows>;
   fonts: typeof tokenFontFamily;
   getAvatarColor: typeof getAvatarColor;
+  /** Toggle dark mode on/off. Persists to AsyncStorage. */
+  setDarkMode: (dark: boolean) => void;
 }
 
 // ─── Context ─────────────────────────────────────────────────
@@ -35,7 +47,30 @@ const ThemeContext = createContext<Theme | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme(); // 'light' | 'dark' | null
-  const isDark = systemScheme === 'dark';
+
+  // null = not yet loaded from storage; use system default
+  const [userPref, setUserPref] = useState<boolean | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // Load persisted preference on mount
+  useEffect(() => {
+    AsyncStorage.getItem(THEME_PREF_KEY)
+      .then(val => {
+        if (val === 'true') setUserPref(true);
+        else if (val === 'false') setUserPref(false);
+        // else null — follow system
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  const setDarkMode = useCallback((dark: boolean) => {
+    setUserPref(dark);
+    AsyncStorage.setItem(THEME_PREF_KEY, String(dark)).catch(() => {});
+  }, []);
+
+  // Resolve: user preference wins, then system, then light
+  const isDark = userPref !== null ? userPref : systemScheme === 'dark';
 
   const theme = useMemo<Theme>(() => {
     const colors = isDark ? darkColors : lightColors;
@@ -50,8 +85,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       shadow: makeShadows(isDark),
       fonts: tokenFontFamily,
       getAvatarColor,
+      setDarkMode,
     };
-  }, [isDark]);
+  }, [isDark, setDarkMode]);
 
   return (
     <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>

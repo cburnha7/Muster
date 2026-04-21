@@ -800,7 +800,7 @@ interface PreferencesTabProps {
 }
 
 function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDark, setDarkMode } = useTheme();
   const [locationServices, setLocationServices] = useState(true);
 
   return (
@@ -811,7 +811,7 @@ function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
           icon="moon-outline"
           iconBg={colors.surface}
           label="Dark Mode"
-          value={darkMode}
+          value={isDark}
           onValueChange={setDarkMode}
         />
         <ToggleRow
