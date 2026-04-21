@@ -1320,14 +1320,35 @@ export function EventDetailsScreen() {
         {isUpcoming && isOrganizer && (
           <View style={styles.ownerActions}>
             {isUserBooked ? (
-              <TouchableOpacity
-                style={styles.ownerStepOutBtn}
-                onPress={handleCancelBooking}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="exit-outline" size={18} color={colors.gold} />
-                <Text style={styles.ownerStepOutBtnText}>Step Out</Text>
-              </TouchableOpacity>
+              <>
+                {/* Add family member link — shown when organizer is booked and has unjoined dependents */}
+                {unjoinedDependents.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.familyLink}
+                    onPress={handleMoreFromFamily}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name="people-outline"
+                      size={16}
+                      color={colors.cobalt}
+                    />
+                    <Text
+                      style={[styles.familyLinkText, { color: colors.cobalt }]}
+                    >
+                      Add another member of the family
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={styles.ownerStepOutBtn}
+                  onPress={handleCancelBooking}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="exit-outline" size={18} color={colors.gold} />
+                  <Text style={styles.ownerStepOutBtnText}>Step Out</Text>
+                </TouchableOpacity>
+              </>
             ) : (
               <TouchableOpacity
                 style={[
@@ -1368,8 +1389,8 @@ export function EventDetailsScreen() {
         )}
       </ScrollView>
 
-      {/* FixedBottomCTA — hidden for past events and when organizer has inline Join Up */}
-      {!isPastEvent && !(isOrganizer && !isUserBooked) && (
+      {/* FixedBottomCTA — hidden for past events and all organizer views */}
+      {!isPastEvent && !isOrganizer && (
         <FixedBottomCTA
           label={ctaLabel}
           onPress={ctaAction}
@@ -1884,6 +1905,17 @@ const styles = StyleSheet.create({
   ownerJoinBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
+  },
+  familyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+  },
+  familyLinkText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
   },
   ownerStepOutBtn: {
     flexDirection: 'row',

@@ -125,8 +125,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 router.post('/:id/book', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const userId = req.user!.userId;
-    const booking = await EventCrudService.bookEvent(id, userId);
+    // Allow booking on behalf of a dependent — use body userId if provided, else authenticated user
+    const bookingUserId = req.body.userId || req.user!.userId;
+    const booking = await EventCrudService.bookEvent(id, bookingUserId);
     res.status(201).json(booking);
   } catch (error: any) {
     console.error('Book event error:', error);
