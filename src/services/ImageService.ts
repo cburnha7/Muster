@@ -76,7 +76,9 @@ export class ImageService {
 
     const { uploadUrl, publicUrl, key } = await presignRes.json();
 
-    if (Platform.OS === 'web') {
+    // Upload directly to R2
+    const isWeb = Platform.OS === 'web';
+    if (isWeb) {
       const blob = await fetch(uri).then(r => r.blob());
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
@@ -87,14 +89,28 @@ export class ImageService {
         throw new Error(`Upload failed with status ${uploadRes.status}`);
       }
     } else {
+      // Native only — expo-file-system not available on web
       const FileSystem = require('expo-file-system');
-      const uploadRes = await FileSystem.uploadAsync(uploadUrl, uri, {
-        httpMethod: 'PUT',
-        headers: { 'Content-Type': contentType },
-        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-      });
-      if (uploadRes.status !== 200) {
-        throw new Error(`Upload failed with status ${uploadRes.status}`);
+      if (FileSystem.uploadAsync && FileSystem.FileSystemUploadType) {
+        const uploadRes = await FileSystem.uploadAsync(uploadUrl, uri, {
+          httpMethod: 'PUT',
+          headers: { 'Content-Type': contentType },
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+        });
+        if (uploadRes.status !== 200) {
+          throw new Error(`Upload failed with status ${uploadRes.status}`);
+        }
+      } else {
+        // Fallback for environments where FileSystem upload isn't available
+        const blob = await fetch(uri).then(r => r.blob());
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': contentType },
+          body: blob,
+        });
+        if (!uploadRes.ok) {
+          throw new Error(`Upload failed with status ${uploadRes.status}`);
+        }
       }
     }
 
