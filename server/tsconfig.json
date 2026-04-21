@@ -24,6 +24,9 @@
     "dist",
     "src/scripts",
     "src/tests",
+    "src/__tests__",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
     "src/prisma/seed.ts",
     "src/middleware/rateLimiter.test.ts",
     "src/services/__tests__"
