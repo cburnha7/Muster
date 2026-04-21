@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, View, Text, TextInput, StyleSheet } from 'react-native';
 import { useCreateFacility } from './CreateFacilityContext';
 import { fonts, useTheme } from '../../../theme';
+import { AddressAutocomplete } from '../../../components/forms/AddressAutocomplete';
 
 export function Step2Location() {
   const { colors } = useTheme();
@@ -12,44 +13,71 @@ export function Step2Location() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       <Text style={[styles.heading, { color: colors.ink }]}>Where is it?</Text>
 
-      <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+      <AddressAutocomplete
         value={state.street}
         onChangeText={v => setField('street', v)}
-        placeholder="Street address"
-        placeholderTextColor={colors.inkSoft}
+        onAddressSelected={addr => {
+          setField('street', addr.street || addr.formatted);
+          setField('city', addr.city);
+          setField('state', addr.state);
+          setField('zipCode', addr.zipCode);
+        }}
+        label="Address"
+        placeholder="Search address..."
       />
 
       <TextInput
-        style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }]}
+        style={[
+          styles.textInput,
+          {
+            borderColor: colors.border,
+            color: colors.inkSecondary,
+            backgroundColor: colors.bgSubtle,
+          },
+        ]}
         value={state.city}
-        onChangeText={v => setField('city', v)}
         placeholder="City"
-        placeholderTextColor={colors.inkSoft}
+        placeholderTextColor={colors.inkMuted}
+        editable={false}
       />
 
       <View style={styles.row}>
         <TextInput
-          style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }, styles.halfInput]}
+          style={[
+            styles.textInput,
+            {
+              borderColor: colors.border,
+              color: colors.inkSecondary,
+              backgroundColor: colors.bgSubtle,
+            },
+            styles.halfInput,
+          ]}
           value={state.state}
-          onChangeText={v => setField('state', v)}
           placeholder="State"
-          placeholderTextColor={colors.inkSoft}
+          placeholderTextColor={colors.inkMuted}
+          editable={false}
         />
         <TextInput
-          style={[styles.textInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.white }, styles.halfInput]}
+          style={[
+            styles.textInput,
+            {
+              borderColor: colors.border,
+              color: colors.inkSecondary,
+              backgroundColor: colors.bgSubtle,
+            },
+            styles.halfInput,
+          ]}
           value={state.zipCode}
-          onChangeText={v => setField('zipCode', v)}
           placeholder="ZIP code"
-          placeholderTextColor={colors.inkSoft}
-          keyboardType="numeric"
+          placeholderTextColor={colors.inkMuted}
+          editable={false}
         />
       </View>
     </ScrollView>

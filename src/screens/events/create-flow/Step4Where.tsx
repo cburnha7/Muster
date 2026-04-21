@@ -17,6 +17,7 @@ import TokenStorage from '../../../services/auth/TokenStorage';
 import { facilityService } from '../../../services/api/FacilityService';
 import { API_BASE_URL } from '../../../services/api/config';
 import { fonts, useTheme } from '../../../theme';
+import { AddressAutocomplete } from '../../../components/forms/AddressAutocomplete';
 
 interface SavedLocation {
   id: string;
@@ -322,10 +323,10 @@ export function Step4Where() {
     <ScrollView
       style={[
         styles.container,
-        { backgroundColor: colors.white },
         { backgroundColor: colors.bgScreen },
       ]}
       contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
     >
       <Text style={[styles.heading, { color: colors.ink }]}>
         Where's the game?
@@ -338,8 +339,8 @@ export function Step4Where() {
             { backgroundColor: colors.surface, borderColor: colors.border },
             isMuster && styles.modeBtnActive,
             isMuster && {
-              backgroundColor: colors.pine,
-              borderColor: colors.pine,
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
             },
           ]}
           onPress={() =>
@@ -369,8 +370,8 @@ export function Step4Where() {
             { backgroundColor: colors.surface, borderColor: colors.border },
             isOpen && styles.modeBtnActive,
             isOpen && {
-              backgroundColor: colors.pine,
-              borderColor: colors.pine,
+              backgroundColor: colors.cobalt,
+              borderColor: colors.cobalt,
             },
           ]}
           onPress={() => dispatch({ type: 'SET_LOCATION_MODE', mode: 'open' })}
@@ -570,20 +571,7 @@ export function Step4Where() {
               dispatch({ type: 'SET_FIELD', field: 'locationName', value: v })
             }
           />
-          <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-            Street Address
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                color: colors.ink,
-              },
-            ]}
-            placeholder="123 Main St"
-            placeholderTextColor={colors.inkSoft}
+          <AddressAutocomplete
             value={state.locationAddress}
             onChangeText={v =>
               dispatch({
@@ -592,6 +580,16 @@ export function Step4Where() {
                 value: v,
               })
             }
+            onAddressSelected={addr => {
+              dispatch({ type: 'SET_FIELD', field: 'locationAddress', value: addr.street || addr.formatted });
+              dispatch({ type: 'SET_FIELD', field: 'locationCity', value: addr.city });
+              dispatch({ type: 'SET_FIELD', field: 'locationState', value: addr.state });
+              dispatch({ type: 'SET_FIELD', field: 'locationZip', value: addr.zipCode });
+              if (addr.latitude != null) dispatch({ type: 'SET_FIELD', field: 'locationLat', value: addr.latitude });
+              if (addr.longitude != null) dispatch({ type: 'SET_FIELD', field: 'locationLng', value: addr.longitude });
+            }}
+            label="Street Address"
+            placeholder="Search address..."
           />
           <View style={styles.addressRow}>
             <View style={{ flex: 2 }}>
@@ -602,21 +600,15 @@ export function Step4Where() {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.bgSubtle,
                     borderColor: colors.border,
-                    color: colors.ink,
+                    color: colors.inkSecondary,
                   },
                 ]}
                 placeholder="City"
-                placeholderTextColor={colors.inkSoft}
+                placeholderTextColor={colors.inkMuted}
                 value={(state as any).locationCity || ''}
-                onChangeText={v =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'locationCity',
-                    value: v,
-                  })
-                }
+                editable={false}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -627,21 +619,15 @@ export function Step4Where() {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.bgSubtle,
                     borderColor: colors.border,
-                    color: colors.ink,
+                    color: colors.inkSecondary,
                   },
                 ]}
                 placeholder="ST"
-                placeholderTextColor={colors.inkSoft}
+                placeholderTextColor={colors.inkMuted}
                 value={(state as any).locationState || ''}
-                onChangeText={v =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'locationState',
-                    value: v,
-                  })
-                }
+                editable={false}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -652,22 +638,16 @@ export function Step4Where() {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.bgSubtle,
                     borderColor: colors.border,
-                    color: colors.ink,
+                    color: colors.inkSecondary,
                   },
                 ]}
                 placeholder="00000"
-                placeholderTextColor={colors.inkSoft}
-                keyboardType="numeric"
+                placeholderTextColor={colors.inkMuted}
                 value={(state as any).locationZip || ''}
-                onChangeText={v =>
-                  dispatch({
-                    type: 'SET_FIELD',
-                    field: 'locationZip',
-                    value: v,
-                  })
-                }
+                editable={false}
+              />
               />
             </View>
           </View>
