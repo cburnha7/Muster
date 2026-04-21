@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ScrollView,
   View,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import CrossPlatformDateTimePicker from '../../../components/ui/CrossPlatformDateTimePicker';
@@ -26,6 +27,14 @@ function formatDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function formatTime(d: Date): string {
+  const h = d.getHours();
+  const m = d.getMinutes();
+  const h12 = h % 12 || 12;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 export function Step3When() {
   const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
@@ -34,6 +43,9 @@ export function Step3When() {
   const startTime = state.startTime ?? new Date();
   const endTime = state.endTime ?? new Date();
   const selectedDateStr = formatDateStr(startDate);
+
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const dayMismatch = useMemo(() => {
     if (
@@ -131,65 +143,148 @@ export function Step3When() {
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.heading}>When's it happening?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        When's it happening?
+      </Text>
 
-      <Text style={styles.label}>Date</Text>
+      <Text style={[styles.label, { color: colors.ink }]}>Date</Text>
       <Calendar
         current={selectedDateStr}
         onDayPress={handleDayPress}
         markedDates={markedDates}
         minDate={formatDateStr(new Date())}
         theme={{
+          calendarBackground: colors.surface,
           todayTextColor: colors.cobalt,
           selectedDayBackgroundColor: colors.cobalt,
           selectedDayTextColor: colors.white,
+          dayTextColor: colors.ink,
+          textDisabledColor: colors.inkMuted,
           arrowColor: colors.cobalt,
           monthTextColor: colors.ink,
           textMonthFontFamily: fonts.heading,
           textDayFontFamily: fonts.body,
           textDayHeaderFontFamily: fonts.label,
         }}
-        style={styles.calendar}
+        style={[styles.calendar, { backgroundColor: colors.surface }]}
       />
 
-      <View style={styles.timeRow}>
-        <View style={styles.timeCol}>
-          <Text style={styles.timeLabelCentered}>Start Time</Text>
-          <CrossPlatformDateTimePicker
-            value={startTime}
-            mode="time"
-            minuteInterval={15}
-            onChange={(_, d) => {
-              if (d) {
-                dispatch({ type: 'SET_FIELD', field: 'startTime', value: d });
-                // Auto-set end time to start + 1 hour
-                const autoEnd = new Date(d.getTime());
-                autoEnd.setHours(autoEnd.getHours() + 1);
-                dispatch({
-                  type: 'SET_FIELD',
-                  field: 'endTime',
-                  value: autoEnd,
-                });
-              }
+      {/* Start Time / End Time — each label centered above its button */}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'flex-start',
+          width: '100%',
+          marginTop: 24,
+        }}
+      >
+        <View style={{ alignItems: 'center', flex: 1 }}>
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 14,
+              color: colors.inkSecondary,
+              marginBottom: 8,
             }}
-          />
+          >
+            Start Time
+          </Text>
+          <TouchableOpacity
+            onPress={() => setShowStartPicker(true)}
+            style={{
+              backgroundColor: colors.bgSubtle,
+              borderRadius: 999,
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 15,
+                color: colors.ink,
+              }}
+            >
+              {formatTime(startTime)}
+            </Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.timeCol}>
-          <Text style={styles.timeLabelCentered}>End Time</Text>
-          <CrossPlatformDateTimePicker
-            value={endTime}
-            mode="time"
-            minuteInterval={15}
-            onChange={(_, d) => {
-              if (d)
-                dispatch({ type: 'SET_FIELD', field: 'endTime', value: d });
+
+        <View style={{ alignItems: 'center', flex: 1 }}>
+          <Text
+            style={{
+              fontFamily: fonts.body,
+              fontSize: 14,
+              color: colors.inkSecondary,
+              marginBottom: 8,
             }}
-          />
+          >
+            End Time
+          </Text>
+          <TouchableOpacity
+            onPress={() => setShowEndPicker(true)}
+            style={{
+              backgroundColor: colors.bgSubtle,
+              borderRadius: 999,
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: fonts.body,
+                fontSize: 15,
+                color: colors.ink,
+              }}
+            >
+              {formatTime(endTime)}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
+      {/* Native time pickers — render one at a time below the row */}
+      {showStartPicker && (
+        <CrossPlatformDateTimePicker
+          value={startTime}
+          mode="time"
+          minuteInterval={15}
+          onChange={(_, date) => {
+            if (date) {
+              dispatch({ type: 'SET_FIELD', field: 'startTime', value: date });
+              // Auto-set end time to start + 1 hour
+              const autoEnd = new Date(date.getTime());
+              autoEnd.setHours(autoEnd.getHours() + 1);
+              dispatch({ type: 'SET_FIELD', field: 'endTime', value: autoEnd });
+            }
+            if (Platform.OS !== 'ios') setShowStartPicker(false);
+          }}
+        />
+      )}
+      {showEndPicker && (
+        <CrossPlatformDateTimePicker
+          value={endTime}
+          mode="time"
+          minuteInterval={15}
+          onChange={(_, date) => {
+            if (date) {
+              dispatch({ type: 'SET_FIELD', field: 'endTime', value: date });
+            }
+            if (Platform.OS !== 'ios') setShowEndPicker(false);
+          }}
+        />
+      )}
+
       <View style={styles.recurringRow}>
-        <Text style={styles.label}>Recurring</Text>
+        <Text
+          style={[
+            styles.label,
+            { color: colors.ink, marginTop: 0, marginBottom: 0 },
+          ]}
+        >
+          Recurring
+        </Text>
         <Switch
           value={state.recurring}
           onValueChange={v =>
@@ -215,14 +310,26 @@ export function Step3When() {
               })
             }
           />
-          <Text style={styles.label}>Days of Week</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Days of Week
+          </Text>
           <View style={styles.daysRow}>
             {ALL_DAYS.map(day => {
               const active = state.recurringDays.includes(day);
               return (
                 <TouchableOpacity
                   key={day}
-                  style={[styles.dayChip, active && styles.dayChipActive]}
+                  style={[
+                    styles.dayChip,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                    active && {
+                      backgroundColor: colors.cobalt,
+                      borderColor: colors.cobalt,
+                    },
+                  ]}
                   onPress={() =>
                     dispatch({ type: 'TOGGLE_RECURRING_DAY', day })
                   }
@@ -231,7 +338,8 @@ export function Step3When() {
                   <Text
                     style={[
                       styles.dayChipText,
-                      active && styles.dayChipTextActive,
+                      { color: colors.ink },
+                      active && { color: colors.white },
                     ]}
                   >
                     {day}
@@ -241,15 +349,24 @@ export function Step3When() {
             })}
           </View>
           {dayMismatch && (
-            <Text style={styles.warningText}>
+            <Text style={[styles.warningText, { color: colors.heart }]}>
               Your start date doesn't fall on a selected day.
             </Text>
           )}
-          <Text style={styles.label}>Number of Events</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Number of Events
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="e.g. 8"
-            placeholderTextColor={colors.inkSoft}
+            placeholderTextColor={colors.inkMuted}
             keyboardType="numeric"
             value={state.numberOfEvents}
             onChangeText={v =>
@@ -257,9 +374,15 @@ export function Step3When() {
             }
           />
           {seriesEndDate !== '' && (
-            <View style={styles.endDateRow}>
-              <Text style={styles.label}>Series End Date</Text>
-              <Text style={styles.endDateValue}>{seriesEndDate}</Text>
+            <View
+              style={[styles.endDateRow, { backgroundColor: colors.surface }]}
+            >
+              <Text style={[styles.label, { color: colors.ink }]}>
+                Series End Date
+              </Text>
+              <Text style={[styles.endDateValue, { color: colors.cobalt }]}>
+                {seriesEndDate}
+              </Text>
             </View>
           )}
         </>
@@ -269,18 +392,16 @@ export function Step3When() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
   heading: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
     marginBottom: 24,
   },
   label: {
     fontFamily: fonts.heading,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 8,
     marginTop: 16,
   },
@@ -288,20 +409,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 8,
-    elevation: 2,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-  },
-  timeRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  timeCol: { flex: 1 },
-  timeLabelCentered: {
-    fontFamily: fonts.heading,
-    fontSize: 16,
-    color: colors.ink,
-    marginBottom: 4,
-    textAlign: 'center',
   },
   recurringRow: {
     flexDirection: 'row',
@@ -315,33 +422,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  dayChipActive: { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-  dayChipText: { fontFamily: fonts.ui, fontSize: 13, color: colors.ink },
-  dayChipTextActive: { color: colors.white },
+  dayChipText: { fontFamily: fonts.ui, fontSize: 13 },
   warningText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.heart,
     marginBottom: 12,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 16,
   },
   endDateRow: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -349,7 +447,6 @@ const styles = StyleSheet.create({
   endDateValue: {
     fontFamily: fonts.label,
     fontSize: 16,
-    color: colors.cobalt,
     marginTop: 4,
   },
 });
