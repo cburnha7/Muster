@@ -293,23 +293,18 @@ export function DependentFormScreen() {
         isEditMode ? 'Updated' : 'Dependent Added',
         isEditMode
           ? `${firstName}'s profile has been updated.`
-          : `${firstName} has been added to your family.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              if (isEditMode) {
-                (navigation as any).goBack();
-              } else {
-                (navigation as any).reset({
-                  index: 0,
-                  routes: [{ name: 'Main' }],
-                });
-              }
-            },
-          },
-        ]
+          : `${firstName} has been added to your family.`
       );
+
+      // Navigate immediately — don't wait for alert dismissal
+      if (isEditMode) {
+        (navigation as any).goBack();
+      } else {
+        (navigation as any).reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+      }
     } catch (err: any) {
       console.error('Dependent submit error:', err);
       console.error(
