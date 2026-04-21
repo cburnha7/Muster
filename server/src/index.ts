@@ -118,6 +118,8 @@ const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       'https://muster-ecru.vercel.app',
+      'https://playmuster.com',
+      'https://www.playmuster.com',
       'http://localhost:3000',
       'http://localhost:8081',
       'http://localhost:19006',
