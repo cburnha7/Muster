@@ -38,14 +38,14 @@ export function Step2Location() {
           styles.textInput,
           {
             borderColor: colors.border,
-            color: colors.inkSecondary,
-            backgroundColor: colors.bgSubtle,
+            color: colors.ink,
+            backgroundColor: colors.surface,
           },
         ]}
         value={state.city}
+        onChangeText={v => setField('city', v)}
         placeholder="City"
         placeholderTextColor={colors.inkMuted}
-        editable={false}
       />
 
       <View style={styles.row}>
@@ -54,30 +54,31 @@ export function Step2Location() {
             styles.textInput,
             {
               borderColor: colors.border,
-              color: colors.inkSecondary,
-              backgroundColor: colors.bgSubtle,
+              color: colors.ink,
+              backgroundColor: colors.surface,
             },
             styles.halfInput,
           ]}
           value={state.state}
+          onChangeText={v => setField('state', v)}
           placeholder="State"
           placeholderTextColor={colors.inkMuted}
-          editable={false}
         />
         <TextInput
           style={[
             styles.textInput,
             {
               borderColor: colors.border,
-              color: colors.inkSecondary,
-              backgroundColor: colors.bgSubtle,
+              color: colors.ink,
+              backgroundColor: colors.surface,
             },
             styles.halfInput,
           ]}
           value={state.zipCode}
+          onChangeText={v => setField('zipCode', v)}
           placeholder="ZIP code"
           placeholderTextColor={colors.inkMuted}
-          editable={false}
+          keyboardType="numeric"
         />
       </View>
     </ScrollView>

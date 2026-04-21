@@ -321,10 +321,7 @@ export function Step4Where() {
 
   return (
     <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: colors.bgScreen },
-      ]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
@@ -581,12 +578,38 @@ export function Step4Where() {
               })
             }
             onAddressSelected={addr => {
-              dispatch({ type: 'SET_FIELD', field: 'locationAddress', value: addr.street || addr.formatted });
-              dispatch({ type: 'SET_FIELD', field: 'locationCity', value: addr.city });
-              dispatch({ type: 'SET_FIELD', field: 'locationState', value: addr.state });
-              dispatch({ type: 'SET_FIELD', field: 'locationZip', value: addr.zipCode });
-              if (addr.latitude != null) dispatch({ type: 'SET_FIELD', field: 'locationLat', value: addr.latitude });
-              if (addr.longitude != null) dispatch({ type: 'SET_FIELD', field: 'locationLng', value: addr.longitude });
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'locationAddress',
+                value: addr.street || addr.formatted,
+              });
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'locationCity',
+                value: addr.city,
+              });
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'locationState',
+                value: addr.state,
+              });
+              dispatch({
+                type: 'SET_FIELD',
+                field: 'locationZip',
+                value: addr.zipCode,
+              });
+              if (addr.latitude != null)
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'locationLat',
+                  value: addr.latitude,
+                });
+              if (addr.longitude != null)
+                dispatch({
+                  type: 'SET_FIELD',
+                  field: 'locationLng',
+                  value: addr.longitude,
+                });
             }}
             label="Street Address"
             placeholder="Search address..."
@@ -600,15 +623,21 @@ export function Step4Where() {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.bgSubtle,
+                    backgroundColor: colors.surface,
                     borderColor: colors.border,
-                    color: colors.inkSecondary,
+                    color: colors.ink,
                   },
                 ]}
                 placeholder="City"
                 placeholderTextColor={colors.inkMuted}
                 value={(state as any).locationCity || ''}
-                editable={false}
+                onChangeText={v =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'locationCity',
+                    value: v,
+                  })
+                }
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -619,15 +648,21 @@ export function Step4Where() {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.bgSubtle,
+                    backgroundColor: colors.surface,
                     borderColor: colors.border,
-                    color: colors.inkSecondary,
+                    color: colors.ink,
                   },
                 ]}
                 placeholder="ST"
                 placeholderTextColor={colors.inkMuted}
                 value={(state as any).locationState || ''}
-                editable={false}
+                onChangeText={v =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'locationState',
+                    value: v,
+                  })
+                }
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -638,16 +673,22 @@ export function Step4Where() {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.bgSubtle,
+                    backgroundColor: colors.surface,
                     borderColor: colors.border,
-                    color: colors.inkSecondary,
+                    color: colors.ink,
                   },
                 ]}
                 placeholder="00000"
                 placeholderTextColor={colors.inkMuted}
+                keyboardType="numeric"
                 value={(state as any).locationZip || ''}
-                editable={false}
-              />
+                onChangeText={v =>
+                  dispatch({
+                    type: 'SET_FIELD',
+                    field: 'locationZip',
+                    value: v,
+                  })
+                }
               />
             </View>
           </View>
