@@ -162,7 +162,8 @@ router.post(
         data: {
           facilityId,
           name,
-          sportType,
+          sportType: sportType || (req.body.sportTypes?.[0] ?? ''),
+          sportTypes: req.body.sportTypes || (sportType ? [sportType] : []),
           capacity: capacity || 1,
           isIndoor: isIndoor || false,
           boundaryCoordinates: boundaryCoordinates || null,
@@ -248,6 +249,7 @@ router.put(
         data: {
           ...(name && { name }),
           ...(sportType && { sportType }),
+          ...(req.body.sportTypes && { sportTypes: req.body.sportTypes }),
           ...(capacity !== undefined && { capacity }),
           ...(isIndoor !== undefined && { isIndoor }),
           ...(isActive !== undefined && { isActive }),

@@ -777,9 +777,10 @@ model SavedOpenGroundLocation {
 }
 
 model FacilityCourt {
-  id        String  @id @default(uuid())
-  name      String // "Court 1", "Field A", etc.
-  sportType String
+  id        String   @id @default(uuid())
+  name      String   // "Court 1", "Field A", etc.
+  sportType String   // @deprecated — use sportTypes[0]. Kept for backward compat.
+  sportTypes String[] @default([]) // Multiple sports this court supports
   capacity  Int     @default(1)
   isIndoor  Boolean @default(false)
   isActive  Boolean @default(true)

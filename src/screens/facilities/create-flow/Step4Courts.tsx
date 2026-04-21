@@ -19,6 +19,7 @@ const EMPTY_COURT: CourtFormData = {
   id: '',
   name: '',
   sportType: '',
+  sportTypes: [],
   capacity: 10,
   isIndoor: false,
   pricePerHour: 0,
@@ -50,7 +51,7 @@ export function Step4Courts() {
   };
 
   const handleSave = () => {
-    if (!draft.name.trim() || !draft.sportType) return;
+    if (!draft.name.trim() || (draft.sportTypes || []).length === 0) return;
     if (editingId) {
       dispatch({ type: 'UPDATE_COURT', court: draft });
     } else {
@@ -117,9 +118,10 @@ export function Step4Courts() {
                   {court.name}
                 </Text>
                 <Text style={[styles.courtDetails, { color: colors.inkSoft }]}>
-                  {court.sportType.charAt(0).toUpperCase() +
-                    court.sportType.slice(1)}{' '}
-                  • {court.isIndoor ? 'Indoor' : 'Outdoor'} • Capacity:{' '}
+                  {court.sportTypes && court.sportTypes.length > 0
+                    ? court.sportTypes.map(s => formatSportType(s)).join(', ')
+                    : formatSportType(court.sportType)}{' '}
+                  · {court.isIndoor ? 'Indoor' : 'Outdoor'} · Capacity:{' '}
                   {court.capacity}
                 </Text>
                 <Text style={[styles.courtPrice, { color: colors.cobalt }]}>
@@ -208,7 +210,7 @@ export function Step4Courts() {
               <View style={{ height: 8 }} />
               <View style={styles.sportChipRow}>
                 {availableSports.map(sport => {
-                  const isSelected = draft.sportType === sport;
+                  const isSelected = (draft.sportTypes || []).includes(sport);
                   return (
                     <TouchableOpacity
                       key={sport}
@@ -223,7 +225,17 @@ export function Step4Courts() {
                           borderColor: colors.cobalt,
                         },
                       ]}
-                      onPress={() => setDraft({ ...draft, sportType: sport })}
+                      onPress={() => {
+                        const current = draft.sportTypes || [];
+                        const next = isSelected
+                          ? current.filter(s => s !== sport)
+                          : [...current, sport];
+                        setDraft({
+                          ...draft,
+                          sportTypes: next,
+                          sportType: next[0] || '',
+                        });
+                      }}
                     >
                       <Text
                         style={[

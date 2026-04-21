@@ -9,7 +9,8 @@ export type MediaFile = { uri: string; name: string; type: string };
 export interface CourtFormData {
   id: string;
   name: string;
-  sportType: string;
+  sportType: string; // primary sport (backward compat)
+  sportTypes: string[]; // all sports this court supports
   capacity: number;
   isIndoor: boolean;
   pricePerHour: number;
