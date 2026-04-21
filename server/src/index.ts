@@ -290,9 +290,15 @@ app.use(
       console.error('Failed to write error log:', logErr);
     }
 
+    // Ensure CORS headers are present on error responses
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
     res.status(err.status || 500).json({
       error: err.message || 'Internal server error',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
   }
 );
