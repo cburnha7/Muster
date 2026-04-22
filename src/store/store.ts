@@ -1,54 +1,41 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import { persistStore, persistReducer, createTransform } from 'redux-persist';
+import { persistStore, persistReducer } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import { eventsApi } from './api/eventsApi';
 import { cancelRequestsApi } from './api/cancelRequestsApi';
 import { insuranceDocumentsApi } from './api/insuranceDocumentsApi';
-import { authSlice, eventsSlice, facilitiesSlice, teamsSlice, bookingsSlice, leaguesSlice, matchesSlice, subscriptionSlice, contextSlice, scheduleSlice } from './slices';
+import {
+  authSlice,
+  eventsSlice,
+  facilitiesSlice,
+  teamsSlice,
+  bookingsSlice,
+  leaguesSlice,
+  matchesSlice,
+  subscriptionSlice,
+  contextSlice,
+  scheduleSlice,
+} from './slices';
 import messagingReducer from './slices/messagingSlice';
 import { contextRecoveryMiddleware } from './middleware/contextRecovery';
 
-// Transform to handle cache expiration and selective persistence
-const cacheTransform = createTransform(
-  // Transform state on its way to being serialized and persisted
-  (inboundState: any, key) => {
-    // Add timestamp to track when data was cached
-    return {
-      ...inboundState,
-      _cachedAt: Date.now(),
-    };
-  },
-  // Transform state being rehydrated
-  (outboundState: any, key) => {
-    const MAX_CACHE_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
-    const cachedAt = outboundState._cachedAt || 0;
-    const age = Date.now() - cachedAt;
-
-    // If cache is too old, return initial state
-    if (age > MAX_CACHE_AGE) {
-      const { _cachedAt, ...rest } = outboundState;
-      // Return empty state for expired cache
-      return {};
-    }
-
-    // Remove metadata before returning to store
-    const { _cachedAt, ...cleanState } = outboundState;
-    return cleanState;
-  },
-  // Apply to specific slices
-  { whitelist: ['events', 'facilities', 'teams', 'bookings'] }
-);
-
-// Redux Persist configuration with selective caching
+// Redux Persist configuration — only persist auth + subscription.
+// Server data (events, facilities, teams, bookings, leagues, matches)
+// is owned by RTK Query and the service-layer cache. Persisting it
+// here caused redundant AsyncStorage writes on every list screen.
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['auth', 'events', 'facilities', 'teams', 'bookings', 'leagues', 'matches', 'subscription'], // Only persist these slices
-  blacklist: ['api', 'eventsApi', 'cancelRequestsApi', 'insuranceDocumentsApi', 'context'], // Don't persist RTK Query cache or context state
-  transforms: [cacheTransform],
-  // Throttle writes to storage
+  whitelist: ['auth', 'subscription'],
+  blacklist: [
+    'api',
+    'eventsApi',
+    'cancelRequestsApi',
+    'insuranceDocumentsApi',
+    'context',
+  ],
   throttle: 1000,
 };
 
@@ -77,11 +64,15 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 // Configure store with RTK Query and Redux Persist
 export const store = configureStore({
   reducer: persistedReducer,
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', eventsApi.reducerPath],
+        ignoredActions: [
+          'persist/PERSIST',
+          'persist/REHYDRATE',
+          eventsApi.reducerPath,
+        ],
         // Ignore these paths in the state
         ignoredPaths: [
           'events.events',
@@ -100,7 +91,13 @@ export const store = configureStore({
           return true;
         },
       },
-    }).concat(api.middleware, eventsApi.middleware, cancelRequestsApi.middleware, insuranceDocumentsApi.middleware, contextRecoveryMiddleware),
+    }).concat(
+      api.middleware,
+      eventsApi.middleware,
+      cancelRequestsApi.middleware,
+      insuranceDocumentsApi.middleware,
+      contextRecoveryMiddleware
+    ),
   devTools: process.env.NODE_ENV !== 'production',
 });
 
