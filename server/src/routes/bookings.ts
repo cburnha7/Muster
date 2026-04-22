@@ -1,17 +1,19 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
-// Get all bookings (with optional userId filter)
-router.get('/', async (req, res) => {
+// Get all bookings for the authenticated user
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { userId, page = '1', limit = '20' } = req.query;
-    
+    const { page = '1', limit = '20' } = req.query;
+    const userId = req.user!.userId;
+
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
 
-    const where = userId ? { userId: userId as string } : {};
+    const where = { userId };
 
     const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
@@ -51,11 +53,14 @@ router.get('/', async (req, res) => {
 });
 
 // Get user bookings
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', authMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
+    if (req.user!.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const { page = '1', limit = '10' } = req.query;
-    
+
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const take = parseInt(limit as string);
 

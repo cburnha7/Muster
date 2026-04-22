@@ -637,18 +637,12 @@ router.post(
 );
 
 // Get user's rentals (MUST be before /:rentalId to avoid route conflict)
-router.get('/rentals/my-rentals', optionalAuthMiddleware, async (req, res) => {
+router.get('/rentals/my-rentals', authMiddleware, async (req, res) => {
   try {
     const { status, upcoming } = req.query;
-    const userId = req.user?.userId || (req.query.userId as string);
+    const userId = req.user!.userId;
 
-    // TODO: Get userId from auth token
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    const where: any = { userId: userId as string };
+    const where: any = { userId };
 
     if (status) {
       where.status = status;
@@ -696,7 +690,7 @@ router.get('/rentals/my-rentals', optionalAuthMiddleware, async (req, res) => {
 });
 
 // Get single rental by ID
-router.get('/rentals/:rentalId', async (req, res) => {
+router.get('/rentals/:rentalId', authMiddleware, async (req, res) => {
   try {
     const { rentalId } = req.params as { rentalId: string };
 
@@ -728,7 +722,11 @@ router.get('/rentals/:rentalId', async (req, res) => {
       return res.status(404).json({ error: 'Rental not found' });
     }
 
-    // TODO: Add authorization check - only rental owner or facility owner can view
+    const requesterId = req.user!.userId;
+    const facilityOwnerId = (rental.timeSlot as any)?.court?.facility?.ownerId;
+    if (rental.userId !== requesterId && facilityOwnerId !== requesterId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     res.json(rental);
   } catch (error) {
@@ -738,68 +736,79 @@ router.get('/rentals/:rentalId', async (req, res) => {
 });
 
 // Get all rentals for a facility (operator view)
-router.get('/rentals/facilities/:facilityId/rentals', async (req, res) => {
-  try {
-    const { facilityId } = req.params as { facilityId: string };
-    const { status, startDate, endDate } = req.query;
+router.get(
+  '/rentals/facilities/:facilityId/rentals',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { facilityId } = req.params as { facilityId: string };
+      const { status, startDate, endDate } = req.query;
 
-    // TODO: Add authorization check - only facility owner can view
+      const facility = await prisma.facility.findUnique({
+        where: { id: facilityId },
+        select: { ownerId: true },
+      });
+      if (!facility)
+        return res.status(404).json({ error: 'Facility not found' });
+      if (facility.ownerId !== req.user!.userId)
+        return res.status(403).json({ error: 'Access denied' });
 
-    const where: any = {
-      timeSlot: {
-        court: {
-          facilityId,
+      const where: any = {
+        timeSlot: {
+          court: {
+            facilityId,
+          },
         },
-      },
-    };
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (startDate || endDate) {
-      where.timeSlot = {
-        ...where.timeSlot,
-        date: {},
       };
-      if (startDate) {
-        where.timeSlot.date.gte = new Date(startDate as string);
+
+      if (status) {
+        where.status = status;
       }
-      if (endDate) {
-        where.timeSlot.date.lte = new Date(endDate as string);
+
+      if (startDate || endDate) {
+        where.timeSlot = {
+          ...where.timeSlot,
+          date: {},
+        };
+        if (startDate) {
+          where.timeSlot.date.gte = new Date(startDate as string);
+        }
+        if (endDate) {
+          where.timeSlot.date.lte = new Date(endDate as string);
+        }
       }
+
+      const rentals = await prisma.facilityRental.findMany({
+        where,
+        include: {
+          timeSlot: {
+            include: {
+              court: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          timeSlot: {
+            date: 'asc',
+          },
+        },
+      });
+
+      res.json(rentals);
+    } catch (error) {
+      console.error('Get facility rentals error:', error);
+      res.status(500).json({ error: 'Failed to fetch rentals' });
     }
-
-    const rentals = await prisma.facilityRental.findMany({
-      where,
-      include: {
-        timeSlot: {
-          include: {
-            court: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        timeSlot: {
-          date: 'asc',
-        },
-      },
-    });
-
-    res.json(rentals);
-  } catch (error) {
-    console.error('Get facility rentals error:', error);
-    res.status(500).json({ error: 'Failed to fetch rentals' });
   }
-});
+);
 
 // ─── Recurring Bookings ───────────────────────────────────────────────
 
