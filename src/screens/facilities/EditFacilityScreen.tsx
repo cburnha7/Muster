@@ -742,7 +742,7 @@ export function EditFacilityScreen({
             </View>
 
             <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
-              PHOTOS
+              SEARCH ADDRESS
             </Text>
             <View
               style={[
@@ -751,122 +751,25 @@ export function EditFacilityScreen({
               ]}
             >
               <View style={{ padding: 16 }}>
-                {photos.length > 0 && (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={{ marginBottom: 12 }}
-                    contentContainerStyle={{ gap: 8 }}
-                  >
-                    {photos.map(photo => (
-                      <View
-                        key={photo.id}
-                        style={{
-                          position: 'relative',
-                          borderRadius: 8,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <OptimizedImage
-                          source={{ uri: photo.imageUrl }}
-                          style={{ width: 200, height: 150, borderRadius: 8 }}
-                          resizeMode="cover"
-                          fallback={
-                            <View
-                              style={{
-                                width: 200,
-                                height: 150,
-                                backgroundColor: colors.surface,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <Ionicons
-                                name="camera-outline"
-                                size={32}
-                                color={colors.inkSoft}
-                              />
-                            </View>
-                          }
-                        />
-                        <TouchableOpacity
-                          style={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            backgroundColor: 'rgba(255,255,255,0.85)',
-                            borderRadius: 12,
-                          }}
-                          onPress={() => handleDeletePhoto(photo)}
-                          activeOpacity={0.8}
-                        >
-                          <Ionicons
-                            name="close-circle"
-                            size={22}
-                            color={colors.heart}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </ScrollView>
-                )}
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: colors.cobalt,
-                    alignSelf: 'flex-start',
+                <AddressAutocomplete
+                  value={addressQuery}
+                  onChangeText={setAddressQuery}
+                  onAddressSelected={addr => {
+                    updateNestedField(
+                      'address',
+                      'street',
+                      addr.street || addr.formatted
+                    );
+                    updateNestedField('address', 'city', addr.city);
+                    updateNestedField('address', 'state', addr.state);
+                    updateNestedField('address', 'zipCode', addr.zipCode);
+                    setAddressQuery(addr.formatted || addr.street);
                   }}
-                  onPress={handleAddPhotos}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="images-outline"
-                    size={16}
-                    color={colors.cobalt}
-                  />
-                  <Text
-                    style={{
-                      fontFamily: fonts.ui,
-                      fontSize: 14,
-                      color: colors.cobalt,
-                    }}
-                  >
-                    {photos.length > 0 ? 'Add more photos' : 'Add photos'}
-                  </Text>
-                </TouchableOpacity>
-                {photoError ? (
-                  <Text
-                    style={{ fontSize: 13, color: colors.heart, marginTop: 6 }}
-                  >
-                    {photoError}
-                  </Text>
-                ) : null}
+                  label=""
+                  placeholder="Start typing an address..."
+                />
               </View>
             </View>
-
-            <AddressAutocomplete
-              value={addressQuery}
-              onChangeText={setAddressQuery}
-              onAddressSelected={addr => {
-                updateNestedField(
-                  'address',
-                  'street',
-                  addr.street || addr.formatted
-                );
-                updateNestedField('address', 'city', addr.city);
-                updateNestedField('address', 'state', addr.state);
-                updateNestedField('address', 'zipCode', addr.zipCode);
-                setAddressQuery(addr.formatted || addr.street);
-              }}
-              label="Search Address"
-              placeholder="Start typing an address..."
-            />
 
             <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
               ADDRESS DETAILS
