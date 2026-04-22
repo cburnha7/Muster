@@ -18,6 +18,8 @@ import TokenStorage from '../auth/TokenStorage';
 import { acquireRefresh, performTokenRefresh } from '../auth/tokenRefreshLock';
 import { cacheService, CacheService } from './CacheService';
 import { ApiError } from '../../types';
+import { store } from '../../store/store';
+import { setTokens, clearAuth } from '../../store/slices/authSlice';
 
 export interface ApiServiceConfig {
   baseURL: string;
@@ -129,9 +131,26 @@ export class BaseApiService {
       if (refreshToken) {
         try {
           await acquireRefresh(() => performTokenRefresh(refreshToken));
+          // Sync new tokens into Redux so RTK Query picks them up
+          const newAccess = await TokenStorage.getAccessToken();
+          const newRefresh = await TokenStorage.getRefreshToken();
+          if (newAccess && newRefresh) {
+            store.dispatch(
+              setTokens({ accessToken: newAccess, refreshToken: newRefresh })
+            );
+          }
           return this.request<T>(method, url, body, extraHeaders, 1);
         } catch {
-          // Refresh failed — fall through to error handling
+          // Refresh failed — clear session and signal the app
+          await TokenStorage.clearAll();
+          store.dispatch(clearAuth());
+          if (
+            Platform.OS === 'web' &&
+            typeof window?.dispatchEvent === 'function'
+          ) {
+            window.dispatchEvent(new CustomEvent('auth:sessionExpired'));
+          }
+          // fall through to throw the 401 error
         }
       }
     }

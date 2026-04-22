@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   selectUser,
@@ -78,11 +78,7 @@ export function useAuthSync() {
 
     const handleSessionExpired = () => {
       dispatch(clearAuth());
-      Alert.alert(
-        'Session Expired',
-        'Your session has expired. Please log in again.',
-        [{ text: 'OK' }]
-      );
+      // Navigation to login happens automatically via RootNavigator's user check
     };
 
     window.addEventListener('auth:sessionExpired', handleSessionExpired);

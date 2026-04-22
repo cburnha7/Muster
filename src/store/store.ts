@@ -102,6 +102,21 @@ export const store = configureStore({
 // Setup RTK Query listeners for caching and synchronization
 setupListeners(store.dispatch);
 
+// Reset all RTK Query caches on every successful login so stale error
+// states from the previous session don't persist across re-logins.
+let previousIsAuthenticated = false;
+store.subscribe(() => {
+  const state = store.getState();
+  const isNowAuthenticated = !!state.auth.user;
+  if (isNowAuthenticated && !previousIsAuthenticated) {
+    store.dispatch(api.util.resetApiState());
+    store.dispatch(eventsApi.util.resetApiState());
+    store.dispatch(cancelRequestsApi.util.resetApiState());
+    store.dispatch(insuranceDocumentsApi.util.resetApiState());
+  }
+  previousIsAuthenticated = isNowAuthenticated;
+});
+
 // Create persistor for Redux Persist
 export const persistor = persistStore(store);
 
