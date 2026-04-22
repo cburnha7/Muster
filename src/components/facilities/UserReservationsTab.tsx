@@ -13,6 +13,7 @@ import { useSelector } from 'react-redux';
 import { fonts, useTheme } from '../../theme';
 import { selectUser } from '../../store/slices/authSlice';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 
 interface UserRental {
   id: string;
@@ -51,7 +52,10 @@ export function UserReservationsTab({
     try {
       setLoading(true);
       const url = `${API_BASE_URL}/rentals/my-rentals?userId=${currentUser.id}&status=confirmed&upcoming=true`;
-      const res = await fetch(url);
+      const token = await TokenStorage.getAccessToken();
+      const res = await fetch(url, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
       if (!res.ok) throw new Error('Failed');
       const data: UserRental[] = await res.json();
 
@@ -142,7 +146,9 @@ export function UserReservationsTab({
     return (
       <View style={st.centered}>
         <Ionicons name="calendar-outline" size={40} color={colors.inkFaint} />
-        <Text style={[st.emptyTitle, { color: colors.ink }]}>No upcoming reservations</Text>
+        <Text style={[st.emptyTitle, { color: colors.ink }]}>
+          No upcoming reservations
+        </Text>
         <Text style={[st.emptySubtitle, { color: colors.inkSoft }]}>
           You don't have any upcoming court time at {facilityName}.
         </Text>
@@ -157,7 +163,9 @@ export function UserReservationsTab({
           }
         >
           <Ionicons name="add-circle-outline" size={18} color={colors.white} />
-          <Text style={[st.bookBtnText, { color: colors.white }]}>Book Court Time</Text>
+          <Text style={[st.bookBtnText, { color: colors.white }]}>
+            Book Court Time
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -165,14 +173,27 @@ export function UserReservationsTab({
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40, paddingTop: 8 }}>
-      <Text style={[st.sectionLabel, { color: colors.inkSoft }]}>YOUR UPCOMING RESERVATIONS</Text>
+      <Text style={[st.sectionLabel, { color: colors.inkSoft }]}>
+        YOUR UPCOMING RESERVATIONS
+      </Text>
       <View style={{ paddingHorizontal: 16, gap: 10 }}>
         {rentals.map(r => (
-          <View key={r.id} style={[st.card, { backgroundColor: colors.white, shadowColor: colors.black }]}>
-            <Text style={[st.courtName, { color: colors.ink }]} numberOfLines={1}>
+          <View
+            key={r.id}
+            style={[
+              st.card,
+              { backgroundColor: colors.white, shadowColor: colors.black },
+            ]}
+          >
+            <Text
+              style={[st.courtName, { color: colors.ink }]}
+              numberOfLines={1}
+            >
               {r.timeSlot.court.name}
             </Text>
-            <Text style={[st.dateTime, { color: colors.inkSoft }]}>{formatDate(r.timeSlot.date)}</Text>
+            <Text style={[st.dateTime, { color: colors.inkSoft }]}>
+              {formatDate(r.timeSlot.date)}
+            </Text>
             <Text style={[st.timeRange, { color: colors.cobalt }]}>
               {formatTime(r.timeSlot.startTime)} –{' '}
               {formatTime(r.timeSlot.endTime)}

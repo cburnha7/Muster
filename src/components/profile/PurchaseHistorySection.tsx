@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 
 interface PastReservation {
   id: string;
@@ -52,7 +53,10 @@ export function PurchaseHistorySection({
     try {
       setLoading(true);
       const url = `${API_BASE_URL}/rentals/my-rentals?userId=${userId}`;
-      const response = await fetch(url);
+      const token = await TokenStorage.getAccessToken();
+      const response = await fetch(url, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
       if (!response.ok) throw new Error('Failed to load purchase history');
       const data: PastReservation[] = await response.json();
 
@@ -160,9 +164,18 @@ export function PurchaseHistorySection({
           {purchases.map(purchase => {
             const status = getStatusInfo(purchase);
             return (
-              <View key={purchase.id} style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
+              <View
+                key={purchase.id}
+                style={[
+                  styles.card,
+                  { backgroundColor: colors.surface, shadowColor: colors.ink },
+                ]}
+              >
                 <View style={styles.purchaseHeader}>
-                  <Text style={[styles.facilityName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.facilityName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {purchase.timeSlot.court.facility.name}
                   </Text>
                   <Text style={[styles.price, { color: colors.cobalt }]}>

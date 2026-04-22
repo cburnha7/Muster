@@ -15,6 +15,7 @@ import { CancelReservationModal } from '../facilities/CancelReservationModal';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { fonts, Spacing, useTheme } from '../../theme';
 import { API_BASE_URL } from '../../services/api/config';
+import TokenStorage from '../../services/auth/TokenStorage';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -70,7 +71,10 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
     try {
       setLoading(true);
       const url = `${API_BASE_URL}/rentals/my-rentals?userId=${userId}&upcoming=true`;
-      const response = await fetch(url);
+      const token = await TokenStorage.getAccessToken();
+      const response = await fetch(url, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
       if (!response.ok) throw new Error('Failed to load reservations');
       const data = await response.json();
       setReservations(data);
@@ -232,9 +236,18 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
       >
         <View style={styles.sectionInner}>
           {Array.from(facilityGroups.values()).map(group => (
-            <View key={group.id} style={[styles.facilityGroup, { backgroundColor: colors.surface, shadowColor: colors.ink }]}>
+            <View
+              key={group.id}
+              style={[
+                styles.facilityGroup,
+                { backgroundColor: colors.surface, shadowColor: colors.ink },
+              ]}
+            >
               <TouchableOpacity
-                style={[styles.facilityHeader, { backgroundColor: colors.surface }]}
+                style={[
+                  styles.facilityHeader,
+                  { backgroundColor: colors.surface },
+                ]}
                 onPress={() =>
                   (navigation as any).navigate('FacilityDetails', {
                     facilityId: group.id,
@@ -242,7 +255,10 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 }
                 activeOpacity={0.7}
               >
-                <Text style={[styles.facilityName, { color: colors.ink }]} numberOfLines={1}>
+                <Text
+                  style={[styles.facilityName, { color: colors.ink }]}
+                  numberOfLines={1}
+                >
                   {group.name}
                 </Text>
                 <Ionicons
@@ -252,39 +268,66 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                 />
               </TouchableOpacity>
               {group.items.map(r => (
-                <View key={r.id} style={[styles.slotRow, { borderTopColor: `${colors.inkFaint}20` }]}>
+                <View
+                  key={r.id}
+                  style={[
+                    styles.slotRow,
+                    { borderTopColor: `${colors.inkFaint}20` },
+                  ]}
+                >
                   <View style={styles.slotInfo}>
                     <Text style={[styles.slotCourt, { color: colors.ink }]}>
                       {r.timeSlot.court.name}
                     </Text>
-                    <Text style={[styles.slotDateTime, { color: colors.inkFaint }]}>
+                    <Text
+                      style={[styles.slotDateTime, { color: colors.inkFaint }]}
+                    >
                       {formatDate(r.timeSlot.date)} ·{' '}
                       {formatTime(r.timeSlot.startTime)} –{' '}
                       {formatTime(r.timeSlot.endTime)}
                     </Text>
                   </View>
                   {r.cancellationStatus === 'pending_cancellation' ? (
-                    <View style={[styles.pendingBadge, { backgroundColor: `${colors.warning}15` }]}>
+                    <View
+                      style={[
+                        styles.pendingBadge,
+                        { backgroundColor: `${colors.warning}15` },
+                      ]}
+                    >
                       <Ionicons
                         name="time-outline"
                         size={14}
                         color={colors.warning}
                       />
-                      <Text style={[styles.pendingText, { color: colors.warning }]}>Pending</Text>
+                      <Text
+                        style={[styles.pendingText, { color: colors.warning }]}
+                      >
+                        Pending
+                      </Text>
                     </View>
                   ) : r.usedForEventId ? (
                     <TouchableOpacity
-                      style={[styles.viewEventButton, { backgroundColor: `${colors.ink}10` }]}
+                      style={[
+                        styles.viewEventButton,
+                        { backgroundColor: `${colors.ink}10` },
+                      ]}
                       onPress={() => handleViewEvent(r.usedForEventId!)}
                       activeOpacity={0.7}
                     >
                       <Ionicons name="calendar" size={16} color={colors.ink} />
-                      <Text style={[styles.viewEventText, { color: colors.ink }]}>View Event</Text>
+                      <Text
+                        style={[styles.viewEventText, { color: colors.ink }]}
+                      >
+                        View Event
+                      </Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.slotActions}>
                       <TouchableOpacity
-                        style={[styles.createButton, { backgroundColor: `${colors.cobalt}10` }]}
+                        style={[
+                          styles.createButton,
+                          { backgroundColor: `${colors.cobalt}10` },
+                        ]}
                         onPress={() => handleCreateEvent(r)}
                         activeOpacity={0.7}
                       >
@@ -293,12 +336,20 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                           size={16}
                           color={colors.cobalt}
                         />
-                        <Text style={[styles.createButtonText, { color: colors.cobalt }]}>
+                        <Text
+                          style={[
+                            styles.createButtonText,
+                            { color: colors.cobalt },
+                          ]}
+                        >
                           Create Event
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.cancelButton, { backgroundColor: `${colors.heart}10` }]}
+                        style={[
+                          styles.cancelButton,
+                          { backgroundColor: `${colors.heart}10` },
+                        ]}
                         onPress={() => handleCancelReservation(r)}
                         activeOpacity={0.7}
                       >
@@ -307,7 +358,14 @@ export function MyReservationsSection({ userId }: MyReservationsSectionProps) {
                           size={16}
                           color={colors.heart}
                         />
-                        <Text style={[styles.cancelButtonText, { color: colors.heart }]}>Cancel</Text>
+                        <Text
+                          style={[
+                            styles.cancelButtonText,
+                            { color: colors.heart },
+                          ]}
+                        >
+                          Cancel
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   )}
