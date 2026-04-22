@@ -140,7 +140,10 @@ router.post('/', async (req: Request, res: Response) => {
               where: { id: bookingId },
               data: { paymentStatus: 'paid' },
             }),
-            // TODO: Update BookingParticipant.paymentStatus to 'captured' when table exists (task 3.2)
+            prisma.bookingParticipant.updateMany({
+              where: { stripePaymentIntentId: paymentIntent.id },
+              data: { paymentStatus: 'captured' },
+            }),
           ]);
         }
         break;
@@ -157,7 +160,10 @@ router.post('/', async (req: Request, res: Response) => {
               where: { id: bookingId },
               data: { paymentStatus: 'failed' },
             }),
-            // TODO: Update BookingParticipant.paymentStatus to 'failed' when table exists (task 3.2)
+            prisma.bookingParticipant.updateMany({
+              where: { stripePaymentIntentId: paymentIntent.id },
+              data: { paymentStatus: 'failed' },
+            }),
           ]);
         }
         break;
@@ -174,7 +180,10 @@ router.post('/', async (req: Request, res: Response) => {
               where: { id: bookingId },
               data: { paymentStatus: 'refunded' },
             }),
-            // TODO: Update BookingParticipant.paymentStatus to 'refunded' when table exists (task 3.2)
+            prisma.bookingParticipant.updateMany({
+              where: { stripePaymentIntentId: paymentIntent.id },
+              data: { paymentStatus: 'refunded' },
+            }),
           ]);
         }
         break;
@@ -183,7 +192,18 @@ router.post('/', async (req: Request, res: Response) => {
       case 'transfer.reversed': {
         const transfer = event.data.object as Stripe.Transfer;
         console.log('[Stripe] Transfer reversed:', transfer.id);
-        // TODO: Handle transfer reversal — update booking and participant records
+        const bookingId = transfer.transfer_group;
+        if (bookingId) {
+          await prisma.booking.update({
+            where: { id: bookingId },
+            data: { paymentStatus: 'refunded' },
+          });
+          console.log(`[Stripe] Transfer reversed for booking ${bookingId}`);
+        } else {
+          console.warn(
+            '[Stripe] transfer.reversed received with no transfer_group — cannot link to booking'
+          );
+        }
         break;
       }
 
