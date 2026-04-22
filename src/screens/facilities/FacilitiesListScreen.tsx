@@ -40,7 +40,7 @@ import {
   selectFacilitiesLoading,
   selectFacilitiesError,
 } from '../../store/slices/facilitiesSlice';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import { Facility, SportType, FacilityFilters } from '../../types';
 import { formatSportType } from '../../utils/formatters';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
@@ -72,7 +72,7 @@ export function FacilitiesListScreen() {
   const isLoading = useSelector(selectFacilitiesLoading);
   const error = useSelector(selectFacilitiesError);
 
-  const { user: currentUser } = useAuth();
+  const currentUser = useSelector(selectUser);
   const { isDependent } = useDependentContext();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -5,7 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from './types';
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser, selectBootLoading } from '../store/slices/authSlice';
+import { useAuthSync } from '../hooks/useAuthSync';
 import { useNetworkState } from '../services/network';
 
 // Direct imports instead of lazy loading for web compatibility
@@ -40,7 +42,9 @@ function extractInviteCode(url: string): string | null {
 }
 
 export function RootNavigator() {
-  const { user, isLoading: authLoading } = useAuth();
+  const user = useSelector(selectUser);
+  const authLoading = useSelector(selectBootLoading);
+  useAuthSync();
   useNetworkState();
   const pendingInviteHandled = useRef(false);
 

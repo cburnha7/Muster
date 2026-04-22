@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, View, Image, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import { useAvatarSheet } from '../../context/AvatarSheetContext';
 import {
   selectActiveUserId,
@@ -14,7 +14,7 @@ import type { RootState } from '../../store/store';
 
 export function HeaderUserSelector() {
   const { colors } = useTheme();
-  const { user: guardian } = useAuth();
+  const guardian = useSelector(selectUser);
   const { open } = useAvatarSheet();
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
@@ -63,13 +63,19 @@ export function HeaderUserSelector() {
           <View
             style={[styles.avatarFallback, { backgroundColor: avatarColor }]}
           >
-            <Text style={[styles.avatarInitial, { color: colors.white }]}>{initial}</Text>
+            <Text style={[styles.avatarInitial, { color: colors.white }]}>
+              {initial}
+            </Text>
           </View>
         )}
       </TouchableOpacity>
       {unreadCount > 0 && (
         <View
-          style={[styles.notifDot, { backgroundColor: colors.heart }, { borderColor: colors.bgScreen }]}
+          style={[
+            styles.notifDot,
+            { backgroundColor: colors.heart },
+            { borderColor: colors.bgScreen },
+          ]}
         />
       )}
     </View>

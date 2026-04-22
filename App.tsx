@@ -9,7 +9,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 
 import { ReduxProvider } from './src/store/Provider';
-import { AuthProvider } from './src/context/AuthContext';
 import { NotificationProvider } from './src/services/notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ErrorBoundary } from './src/components/error/ErrorBoundary';
@@ -74,14 +73,12 @@ export default function App() {
       <ThemeProvider>
         <ErrorBoundary>
           <ReduxProvider>
-            <AuthProvider>
-              <NotificationProvider>
-                <GestureHandlerRootView style={styles.root}>
-                  <AppNavigation />
-                  <StatusBar style="auto" />
-                </GestureHandlerRootView>
-              </NotificationProvider>
-            </AuthProvider>
+            <NotificationProvider>
+              <GestureHandlerRootView style={styles.root}>
+                <AppNavigation />
+                <StatusBar style="auto" />
+              </GestureHandlerRootView>
+            </NotificationProvider>
           </ReduxProvider>
         </ErrorBoundary>
       </ThemeProvider>

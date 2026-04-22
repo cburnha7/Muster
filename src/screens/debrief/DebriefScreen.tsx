@@ -20,7 +20,8 @@ import {
   DebriefDetails,
 } from '../../services/api/DebriefService';
 import { SaluteOverlay } from '../../components/SaluteOverlay';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/authSlice';
 import { eventService } from '../../services/api/EventService';
 import { notificationsEventBus } from '../../utils/notificationsEventBus';
 
@@ -28,7 +29,7 @@ export function DebriefScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const { eventId, readonly: readonlyParam } =
     (route.params as {
       eventId: string;
@@ -158,7 +159,9 @@ export function DebriefScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.centered, { backgroundColor: colors.bgScreen }]}>
+      <SafeAreaView
+        style={[styles.centered, { backgroundColor: colors.bgScreen }]}
+      >
         <ActivityIndicator size="large" color={colors.pine} />
       </SafeAreaView>
     );
@@ -220,14 +223,27 @@ export function DebriefScreen() {
                         style={styles.avatar}
                       />
                     ) : (
-                      <View style={[styles.avatarPlaceholder, { backgroundColor: colors.pine }]}>
-                        <Text style={[styles.avatarInitials, { color: colors.white }]}>
+                      <View
+                        style={[
+                          styles.avatarPlaceholder,
+                          { backgroundColor: colors.pine },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.avatarInitials,
+                            { color: colors.white },
+                          ]}
+                        >
                           {getInitials(p)}
                         </Text>
                       </View>
                     )}
                   </SaluteOverlay>
-                  <Text style={[styles.participantName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.participantName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {p.firstName} {p.lastName?.[0]}.
                   </Text>
                 </TouchableOpacity>
@@ -244,7 +260,11 @@ export function DebriefScreen() {
                 ? `${details.event.facility.name || 'the venue'}`
                 : `Rate ${details.event.facility.name || 'the venue'}`}
             </Text>
-            {!isReadonly && <Text style={[styles.ratingHint, { color: colors.inkFaint }]}>Optional</Text>}
+            {!isReadonly && (
+              <Text style={[styles.ratingHint, { color: colors.inkFaint }]}>
+                Optional
+              </Text>
+            )}
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(star => (
                 <TouchableOpacity
@@ -267,7 +287,9 @@ export function DebriefScreen() {
               ))}
             </View>
             {isReadonly && facilityRating === 0 && (
-              <Text style={[styles.ratingHint, { color: colors.inkFaint }]}>No rating submitted</Text>
+              <Text style={[styles.ratingHint, { color: colors.inkFaint }]}>
+                No rating submitted
+              </Text>
             )}
           </View>
         )}
@@ -275,13 +297,31 @@ export function DebriefScreen() {
 
       {/* Footer button */}
       {hasSubmitted ? (
-        <View style={[styles.footer, { backgroundColor: colors.bgCard, borderTopColor: colors.border }]}>
-          <View style={[styles.submitButton, { backgroundColor: colors.pine }, styles.submitButtonDisabled]}>
-            <Text style={[styles.submitButtonText, { color: colors.white }]}>Submitted</Text>
+        <View
+          style={[
+            styles.footer,
+            { backgroundColor: colors.bgCard, borderTopColor: colors.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.submitButton,
+              { backgroundColor: colors.pine },
+              styles.submitButtonDisabled,
+            ]}
+          >
+            <Text style={[styles.submitButtonText, { color: colors.white }]}>
+              Submitted
+            </Text>
           </View>
         </View>
       ) : !isReadonly ? (
-        <View style={[styles.footer, { backgroundColor: colors.bgCard, borderTopColor: colors.border }]}>
+        <View
+          style={[
+            styles.footer,
+            { backgroundColor: colors.bgCard, borderTopColor: colors.border },
+          ]}
+        >
           <TouchableOpacity
             style={[
               styles.submitButton,

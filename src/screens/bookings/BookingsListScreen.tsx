@@ -11,7 +11,6 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
 
 import { BookingCard } from '../../components/ui/BookingCard';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -39,6 +38,10 @@ import {
   selectBookingsLoadingMore,
   selectBookingsError,
 } from '../../store/slices/bookingsSlice';
+import {
+  selectUser,
+  selectIsAuthenticated,
+} from '../../store/slices/authSlice';
 import { Booking, BookingStatus } from '../../types';
 import { fonts, Spacing, useTheme } from '../../theme';
 
@@ -48,7 +51,8 @@ export function BookingsListScreen(): JSX.Element {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useAuth();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   // Redux state
   const allBookings = useSelector(selectBookings);
@@ -308,7 +312,9 @@ export function BookingsListScreen(): JSX.Element {
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <View style={styles.emptyState}>
           <Ionicons name="log-in-outline" size={64} color={colors.inkFaint} />
-          <Text style={[styles.emptyTitle, { color: colors.ink }]}>Not Logged In</Text>
+          <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+            Not Logged In
+          </Text>
           <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>
             Please log in to view your schedule
           </Text>
@@ -316,7 +322,9 @@ export function BookingsListScreen(): JSX.Element {
             style={[styles.browseButton, { backgroundColor: colors.pine }]}
             onPress={() => navigation.navigate('Auth' as never)}
           >
-            <Text style={[styles.browseButtonText, { color: colors.white }]}>Log In</Text>
+            <Text style={[styles.browseButtonText, { color: colors.white }]}>
+              Log In
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -359,7 +367,12 @@ export function BookingsListScreen(): JSX.Element {
     ];
 
     return (
-      <View style={[styles.filterTabs, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.filterTabs,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         {filters.map(filter => (
           <TouchableOpacity
             key={filter.key}
@@ -423,14 +436,20 @@ export function BookingsListScreen(): JSX.Element {
           size={64}
           color={colors.inkFaint}
         />
-        <Text style={[styles.emptyTitle, { color: colors.ink }]}>{emptyState.title}</Text>
-        <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>{emptyState.subtitle}</Text>
+        <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+          {emptyState.title}
+        </Text>
+        <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>
+          {emptyState.subtitle}
+        </Text>
         {activeFilter === 'upcoming' && (
           <TouchableOpacity
             style={[styles.browseButton, { backgroundColor: colors.pine }]}
             onPress={() => navigation.navigate('Home' as never)}
           >
-            <Text style={[styles.browseButtonText, { color: colors.white }]}>Browse Events</Text>
+            <Text style={[styles.browseButtonText, { color: colors.white }]}>
+              Browse Events
+            </Text>
           </TouchableOpacity>
         )}
       </View>

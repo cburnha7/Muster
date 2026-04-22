@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   CreateEventProvider,
   useCreateEvent,
@@ -15,7 +15,7 @@ import { Step5Invite } from './create-flow/Step5Invite';
 import { WizardSuccessScreen } from '../../components/wizard/WizardSuccessScreen';
 import { eventService } from '../../services/api/EventService';
 import { addEvent } from '../../store/slices/eventsSlice';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { getSportEmoji } from '../../constants/sports';
 import { EventType, SkillLevel } from '../../types';
@@ -26,7 +26,7 @@ function CreateEventInner() {
   const { state, dispatch } = useCreateEvent();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   const handleSubmit = useCallback(async () => {
     if (!user || !state.sport) return;

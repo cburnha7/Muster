@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../store/slices/authSlice';
 import {
   userService,
   RosterInvitation,
@@ -26,7 +27,7 @@ export interface NotificationItem {
 }
 
 export function useNotifications() {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
 

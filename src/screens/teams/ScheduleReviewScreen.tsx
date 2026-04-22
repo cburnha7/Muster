@@ -11,7 +11,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/authSlice';
 import { GameRow, ConfirmedGame } from '../../types/scheduleImport';
 import {
   identifyOpponent,
@@ -28,7 +29,7 @@ export function ScheduleReviewScreen() {
   const { colors, type, spacing, radius, shadow } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const { gameRows, team } = (route.params as RouteParams) || {
     gameRows: [],
     team: null,

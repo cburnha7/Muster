@@ -18,7 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ProfileCard } from '../../components/profile/ProfileCard';
 import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/authSlice';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { API_BASE_URL } from '../../services/api/config';
 import { getSportEmoji } from '../../constants/sports';
@@ -51,7 +52,7 @@ export function DependentProfileScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { user: authUser } = useAuth();
+  const authUser = useSelector(selectUser);
   const { width } = useWindowDimensions();
 
   const params = (route.params as { dependentId: string }) || {};
@@ -143,7 +144,9 @@ export function DependentProfileScreen() {
         ]}
       >
         <Ionicons name="person-outline" size={48} color={colors.border} />
-        <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>Could not load profile.</Text>
+        <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+          Could not load profile.
+        </Text>
       </View>
     );
   }
@@ -190,10 +193,16 @@ export function DependentProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="create-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>Edit</Text>
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>
+            Edit
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { borderColor: colors.cobalt }, styles.actionBtnCobalt]}
+          style={[
+            styles.actionBtn,
+            { borderColor: colors.cobalt },
+            styles.actionBtnCobalt,
+          ]}
           onPress={() =>
             (navigation as any).navigate('AvailabilityCalendar', {
               userId: dependentId,
@@ -202,7 +211,13 @@ export function DependentProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, { color: colors.cobalt }, styles.actionBtnTextCobalt]}>
+          <Text
+            style={[
+              styles.actionBtnText,
+              { color: colors.cobalt },
+              styles.actionBtnTextCobalt,
+            ]}
+          >
             Availability
           </Text>
         </TouchableOpacity>
@@ -241,12 +256,16 @@ export function DependentProfileScreen() {
       )}
 
       {/* ── Recent Games ── */}
-      <Text style={[styles.sectionTitle, { color: colors.ink }]}>Recent Games</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+        Recent Games
+      </Text>
       <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
         {recentGames.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="calendar-outline" size={32} color={colors.border} />
-            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No games played yet</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+              No games played yet
+            </Text>
           </View>
         ) : (
           recentGames.map((booking: any, idx: number) => {
@@ -271,11 +290,17 @@ export function DependentProfileScreen() {
                   style={[styles.sportDot, { backgroundColor: sportColor }]}
                 />
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.gameName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {event.title ?? `Event ${idx + 1}`}
                   </Text>
                   {event.startTime && (
-                    <Text style={[styles.gameMeta, { color: colors.inkSecondary }]} numberOfLines={1}>
+                    <Text
+                      style={[styles.gameMeta, { color: colors.inkSecondary }]}
+                      numberOfLines={1}
+                    >
                       {formatEventDate(event.startTime)}{' '}
                       {event.facility?.name ? `· ${event.facility.name}` : ''}
                     </Text>
@@ -298,7 +323,9 @@ export function DependentProfileScreen() {
         {rosterMemberships.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="people-outline" size={32} color={colors.border} />
-            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>Not a member of any Rosters</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+              Not a member of any Rosters
+            </Text>
           </View>
         ) : (
           rosterMemberships.map((member: any, idx: number) => {
@@ -329,10 +356,15 @@ export function DependentProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.gameName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {team.name ?? `Roster ${idx + 1}`}
                   </Text>
-                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]}>
+                  <Text
+                    style={[styles.gameMeta, { color: colors.inkSecondary }]}
+                  >
                     {team.members?.length ?? 0} players
                   </Text>
                 </View>
@@ -348,12 +380,16 @@ export function DependentProfileScreen() {
       </View>
 
       {/* ── League Memberships ── */}
-      <Text style={[styles.sectionTitle, { color: colors.ink }]}>League Memberships</Text>
+      <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+        League Memberships
+      </Text>
       <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
         {leagueMemberships.length === 0 ? (
           <View style={styles.emptySection}>
             <Ionicons name="trophy-outline" size={32} color={colors.border} />
-            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>Not a member of any Leagues</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+              Not a member of any Leagues
+            </Text>
           </View>
         ) : (
           leagueMemberships.map((membership: any, idx: number) => {
@@ -382,10 +418,15 @@ export function DependentProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.gameName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {league.name ?? `League ${idx + 1}`}
                   </Text>
-                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]}>
+                  <Text
+                    style={[styles.gameMeta, { color: colors.inkSecondary }]}
+                  >
                     {sport ? formatSportType(sport) : ''}
                   </Text>
                 </View>

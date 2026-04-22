@@ -15,7 +15,8 @@ import { useDispatch } from 'react-redux';
 import { ScreenHeader } from '../../components/navigation/ScreenHeader';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/authSlice';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { resetContext } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
@@ -45,7 +46,7 @@ export function TransferAccountScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { user: authUser } = useAuth();
+  const authUser = useSelector(selectUser);
   const dispatch = useDispatch();
 
   const params = (route.params as { dependentId: string }) || {};

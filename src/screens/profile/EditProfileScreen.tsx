@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { userService } from '../../services/api/UserService';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import { API_BASE_URL } from '../../services/api/config';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { User, UpdateProfileData } from '../../types';
@@ -50,7 +50,7 @@ export function EditProfileScreen(): JSX.Element {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
-  const { user: authUser } = useAuth();
+  const authUser = useSelector(selectUser);
 
   // If dependentId is passed, we're editing a dependent
   const dependentId = (route.params as any)?.dependentId as string | undefined;
@@ -337,7 +337,12 @@ export function EditProfileScreen(): JSX.Element {
           />
 
           {/* Form Fields */}
-          <View style={[styles.formSection, { backgroundColor: colors.bgCard, shadowColor: colors.ink }]}>
+          <View
+            style={[
+              styles.formSection,
+              { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+            ]}
+          >
             <FormInput
               label="First Name"
               value={firstName}

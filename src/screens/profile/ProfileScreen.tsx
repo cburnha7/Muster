@@ -17,9 +17,12 @@ import { PressableCard } from '../../components/ui/PressableCard';
 import { SkeletonRow } from '../../components/ui/SkeletonBox';
 import { ProfileCard } from '../../components/profile/ProfileCard';
 import { fonts, useTheme } from '../../theme';
-import { useAuth } from '../../context/AuthContext';
-import { useDispatch } from 'react-redux';
-import { setUser as setReduxUser } from '../../store/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  setUser as setReduxUser,
+  selectUser,
+  logoutUser,
+} from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
 import { getSportEmoji } from '../../constants/sports';
 import { getSportColor } from '../../constants/sportColors';
@@ -38,7 +41,7 @@ export function ProfileScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user: authUser, logout } = useAuth();
+  const authUser = useSelector(selectUser);
   const { width } = useWindowDimensions();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -123,12 +126,16 @@ export function ProfileScreen() {
   const handleLogout = () => {
     if (Platform.OS === 'web') {
       if (window.confirm('Are you sure you want to log out?')) {
-        logout();
+        dispatch(logoutUser());
       }
     } else {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
         { text: 'Not Now', style: 'cancel' },
-        { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: () => dispatch(logoutUser()),
+        },
       ]);
     }
   };

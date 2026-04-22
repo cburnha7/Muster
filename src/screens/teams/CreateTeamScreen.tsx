@@ -19,7 +19,7 @@ import {
   selectUserTeams,
 } from '../../store/slices/teamsSlice';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import { SportType, SkillLevel } from '../../types';
 import { SubscriptionPlan } from '../../types/subscription';
 import { getSportEmoji } from '../../constants/sports';
@@ -32,7 +32,7 @@ function CreateTeamInner() {
   const { state, dispatch } = useCreateRoster();
   const navigation = useNavigation<any>();
   const reduxDispatch = useDispatch();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const userTeams = useSelector(selectUserTeams);
   const { allowed: rosterAllowed, requiredPlan } =
     useFeatureGate('create_roster');

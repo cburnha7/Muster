@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts, Spacing, useTheme } from '../../theme';
 import { TeamCard } from '../../components/ui/TeamCard';
@@ -24,7 +24,7 @@ import { teamService } from '../../services/api/TeamService';
 import { userService } from '../../services/api/UserService';
 import { setUserTeams } from '../../store/slices/teamsSlice';
 import { Team, SportType } from '../../types';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { useActiveUserId } from '../../hooks/useActiveUserId';
 import { searchEventBus } from '../../utils/searchEventBus';
@@ -64,7 +64,7 @@ export function TeamsListScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const { isDependent } = useDependentContext();
   const effectiveUserId = useActiveUserId();
   const { width: screenWidth } = useWindowDimensions();
@@ -251,12 +251,20 @@ export function TeamsListScreen() {
           const isActive = sportFilter === item.value;
           return (
             <TouchableOpacity
-              style={[styles.chip, { backgroundColor: colors.surface }, isActive && styles.chipActive]}
+              style={[
+                styles.chip,
+                { backgroundColor: colors.surface },
+                isActive && styles.chipActive,
+              ]}
               onPress={() => setSportFilter(item.value)}
               activeOpacity={0.8}
             >
               <Text
-                style={[styles.chipText, { color: colors.inkSecondary }, isActive && styles.chipTextActive]}
+                style={[
+                  styles.chipText,
+                  { color: colors.inkSecondary },
+                  isActive && styles.chipTextActive,
+                ]}
               >
                 {item.label}
               </Text>
@@ -267,7 +275,13 @@ export function TeamsListScreen() {
 
       {/* My Teams section */}
       {myTeams.length > 0 && (
-        <Text style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: colors.ink },
+            { color: colors.textPrimary },
+          ]}
+        >
           My Rosters
         </Text>
       )}
@@ -300,12 +314,21 @@ export function TeamsListScreen() {
 
       {/* Join with code */}
       <TouchableOpacity
-        style={[styles.joinBtn, { backgroundColor: colors.cobaltTint, borderColor: colors.cobalt + '30' }, { backgroundColor: colors.cobaltTint }]}
+        style={[
+          styles.joinBtn,
+          {
+            backgroundColor: colors.cobaltTint,
+            borderColor: colors.cobalt + '30',
+          },
+          { backgroundColor: colors.cobaltTint },
+        ]}
         onPress={handleJoinTeam}
         activeOpacity={0.85}
       >
         <Ionicons name="key-outline" size={18} color={colors.cobalt} />
-        <Text style={[styles.joinBtnText, { color: colors.cobalt }]}>Join a Roster with Code</Text>
+        <Text style={[styles.joinBtnText, { color: colors.cobalt }]}>
+          Join a Roster with Code
+        </Text>
         <Ionicons name="chevron-forward" size={16} color={colors.border} />
       </TouchableOpacity>
 
@@ -347,10 +370,22 @@ export function TeamsListScreen() {
           myTeams.length === 0 && otherTeams.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={36} color={colors.border} />
-              <Text style={[styles.emptyTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
+              <Text
+                style={[
+                  styles.emptyTitle,
+                  { color: colors.ink },
+                  { color: colors.textPrimary },
+                ]}
+              >
                 No rosters yet
               </Text>
-              <Text style={[styles.emptyText, { color: colors.inkSecondary }, { color: colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.emptyText,
+                  { color: colors.inkSecondary },
+                  { color: colors.textSecondary },
+                ]}
+              >
                 Create a roster or join one with a code
               </Text>
             </View>
@@ -361,7 +396,10 @@ export function TeamsListScreen() {
       {/* FAB */}
       {!isDependent && (
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.cobalt }]}
+          style={[
+            styles.fab,
+            { backgroundColor: colors.cobalt, shadowColor: colors.cobalt },
+          ]}
           onPress={handleCreateTeam}
           activeOpacity={0.85}
         >

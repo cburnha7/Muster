@@ -15,7 +15,7 @@ import BottomSheet, {
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, CommonActions } from '@react-navigation/native';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser, logoutUser } from '../../store/slices/authSlice';
 import { useAvatarSheet } from '../../context/AvatarSheetContext';
 import {
   selectActiveUserId,
@@ -40,7 +40,7 @@ export function AvatarBottomSheet() {
   const { registerSheet } = useAvatarSheet();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user, logout } = useAuth();
+  const user = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
 
@@ -96,15 +96,19 @@ export function AvatarBottomSheet() {
     handleClose();
     if (Platform.OS === 'web') {
       if (window.confirm('Are you sure you want to log out?')) {
-        logout();
+        dispatch(logoutUser());
       }
     } else {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
         { text: 'Not Now', style: 'cancel' },
-        { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: () => dispatch(logoutUser()),
+        },
       ]);
     }
-  }, [logout, handleClose]);
+  }, [dispatch, handleClose]);
 
   const renderBackdrop = useCallback(
     (props: any) => (

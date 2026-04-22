@@ -20,7 +20,8 @@ import { ImageService } from '../../services/ImageService';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { DatePickerInput } from '../../components/forms/DatePickerInput';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/authSlice';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { setDependents } from '../../store/slices/contextSlice';
 import { API_BASE_URL } from '../../services/api/config';
@@ -103,7 +104,7 @@ export function DependentFormScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
-  const { user: authUser } = useAuth();
+  const authUser = useSelector(selectUser);
 
   const params = (route.params as { dependentId?: string }) || {};
   const dependentId = params.dependentId;

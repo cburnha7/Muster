@@ -14,14 +14,14 @@
  */
 
 import { useSelector } from 'react-redux';
-import { useAuth } from '../context/AuthContext';
+import { selectUser } from '../store/slices/authSlice';
 import {
   selectActiveUserId,
   selectDependents,
 } from '../store/slices/contextSlice';
 
 export function useDependentContext() {
-  const { user: guardian } = useAuth();
+  const guardian = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
 
@@ -29,11 +29,11 @@ export function useDependentContext() {
   const isDependent =
     !!activeUserId &&
     activeUserId !== guardian?.id &&
-    dependents.some((d) => d.id === activeUserId);
+    dependents.some(d => d.id === activeUserId);
 
   const activeName = isDependent
-    ? dependents.find((d) => d.id === activeUserId)?.firstName ?? ''
-    : guardian?.firstName ?? '';
+    ? (dependents.find(d => d.id === activeUserId)?.firstName ?? '')
+    : (guardian?.firstName ?? '');
 
   return { isDependent, activeUserId, activeName };
 }

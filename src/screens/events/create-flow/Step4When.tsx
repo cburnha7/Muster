@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
-import { useAuth } from '../../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/slices/authSlice';
 import { facilityService } from '../../../services/api/FacilityService';
 import { fonts, useTheme } from '../../../theme';
 import { SlotData } from './types';
@@ -25,7 +26,7 @@ const FREQUENCY_OPTIONS: SelectOption[] = [
 export function Step4When() {
   const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   const [dateOptions, setDateOptions] = useState<SelectOption[]>([]);
   const [loadingDates, setLoadingDates] = useState(false);
@@ -139,10 +140,16 @@ export function Step4When() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>When's it happening?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        When's it happening?
+      </Text>
 
       {loadingDates ? (
         <ActivityIndicator
@@ -151,7 +158,9 @@ export function Step4When() {
           style={styles.loader}
         />
       ) : dateError ? (
-        <Text style={[styles.errorText, { color: colors.heart }]}>{dateError}</Text>
+        <Text style={[styles.errorText, { color: colors.heart }]}>
+          {dateError}
+        </Text>
       ) : (
         <FormSelect
           label="Date"
@@ -172,9 +181,13 @@ export function Step4When() {
               style={styles.loader}
             />
           ) : slotError ? (
-            <Text style={[styles.errorText, { color: colors.heart }]}>{slotError}</Text>
+            <Text style={[styles.errorText, { color: colors.heart }]}>
+              {slotError}
+            </Text>
           ) : slotsForDate.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.inkSoft }]}>No time slots available</Text>
+            <Text style={[styles.emptyText, { color: colors.inkSoft }]}>
+              No time slots available
+            </Text>
           ) : (
             <View style={styles.slotsGrid}>
               {slotsForDate
@@ -186,18 +199,31 @@ export function Step4When() {
                     <TouchableOpacity
                       key={slot.id}
                       style={[
-                        styles.slotChip, { backgroundColor: colors.surface, borderColor: colors.border },
-                        selected && styles.slotChipSelected, selected && { backgroundColor: colors.cobalt, borderColor: colors.cobalt },
-                        disabled && styles.slotChipDisabled]}
+                        styles.slotChip,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                        },
+                        selected && styles.slotChipSelected,
+                        selected && {
+                          backgroundColor: colors.cobalt,
+                          borderColor: colors.cobalt,
+                        },
+                        disabled && styles.slotChipDisabled,
+                      ]}
                       onPress={() => handleSlotToggle(slot)}
                       disabled={disabled}
                       activeOpacity={0.7}
                     >
                       <Text
                         style={[
-                          styles.slotText, { color: colors.ink },
-                          selected && styles.slotTextSelected, selected && { color: colors.white },
-                          disabled && styles.slotTextDisabled, disabled && { color: colors.inkSoft }]}
+                          styles.slotText,
+                          { color: colors.ink },
+                          selected && styles.slotTextSelected,
+                          selected && { color: colors.white },
+                          disabled && styles.slotTextDisabled,
+                          disabled && { color: colors.inkSoft },
+                        ]}
                       >
                         {slot.startTime} – {slot.endTime}
                       </Text>
@@ -237,9 +263,18 @@ export function Step4When() {
             }
           />
 
-          <Text style={[styles.label, { color: colors.ink }]}>Series End Date</Text>
+          <Text style={[styles.label, { color: colors.ink }]}>
+            Series End Date
+          </Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.ink }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                color: colors.ink,
+              },
+            ]}
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.inkSoft}
             value={state.recurringEndDate}

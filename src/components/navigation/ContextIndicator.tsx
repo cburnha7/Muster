@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { fonts, Spacing, BorderRadius, Shadows, useTheme } from '../../theme';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import {
   selectActiveUserId,
   selectDependents,
@@ -26,7 +26,7 @@ import {
  */
 export function ContextIndicator() {
   const { colors } = useTheme();
-  const { user: guardian } = useAuth();
+  const guardian = useSelector(selectUser);
   const dispatch = useDispatch();
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
@@ -35,7 +35,7 @@ export function ContextIndicator() {
   if (!guardian) return null;
 
   const activeDependent = activeUserId
-    ? dependents.find((d) => d.id === activeUserId)
+    ? dependents.find(d => d.id === activeUserId)
     : null;
 
   const displayName = activeDependent
@@ -50,8 +50,14 @@ export function ContextIndicator() {
   };
 
   const switcherItems: { id: string | null; name: string }[] = [
-    { id: null, name: `${guardian.firstName} ${guardian.lastName ?? ''}`.trim() },
-    ...dependents.map((d) => ({ id: d.id, name: `${d.firstName} ${d.lastName}` })),
+    {
+      id: null,
+      name: `${guardian.firstName} ${guardian.lastName ?? ''}`.trim(),
+    },
+    ...dependents.map(d => ({
+      id: d.id,
+      name: `${d.firstName} ${d.lastName}`,
+    })),
   ];
 
   return (
@@ -78,16 +84,23 @@ export function ContextIndicator() {
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}
       >
-        <Pressable style={styles.backdrop} onPress={() => setMenuVisible(false)}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => setMenuVisible(false)}
+        >
           <View style={[styles.dropdown, { backgroundColor: colors.surface }]}>
             <FlatList
               data={switcherItems}
-              keyExtractor={(item) => item.id ?? 'guardian'}
+              keyExtractor={item => item.id ?? 'guardian'}
               renderItem={({ item }) => {
                 const isActive = item.id === activeUserId;
                 return (
                   <TouchableOpacity
-                    style={[styles.row, isActive && styles.activeRow, isActive && { backgroundColor: colors.cobalt + '0D' }]}
+                    style={[
+                      styles.row,
+                      isActive && styles.activeRow,
+                      isActive && { backgroundColor: colors.cobalt + '0D' },
+                    ]}
                     onPress={() => handleSwitch(item.id)}
                     accessibilityRole="menuitem"
                     accessibilityLabel={`Switch to ${item.name}`}
@@ -99,13 +112,22 @@ export function ContextIndicator() {
                       style={styles.rowIcon}
                     />
                     <Text
-                      style={[styles.rowText, { color: colors.ink }, isActive && styles.activeRowText, isActive && { color: colors.cobalt }]}
+                      style={[
+                        styles.rowText,
+                        { color: colors.ink },
+                        isActive && styles.activeRowText,
+                        isActive && { color: colors.cobalt },
+                      ]}
                       numberOfLines={1}
                     >
                       {item.name}
                     </Text>
                     {isActive && (
-                      <Ionicons name="checkmark" size={18} color={colors.cobalt} />
+                      <Ionicons
+                        name="checkmark"
+                        size={18}
+                        color={colors.cobalt}
+                      />
                     )}
                   </TouchableOpacity>
                 );

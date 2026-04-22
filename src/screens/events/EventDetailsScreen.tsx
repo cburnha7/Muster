@@ -38,7 +38,6 @@ import { formatSportType } from '../../utils/formatters';
 import { eventService } from '../../services/api/EventService';
 import { conversationService } from '../../services/api/ConversationService';
 import { BookingValidationService } from '../../services/booking';
-import { useAuth } from '../../context/AuthContext';
 import {
   setSelectedEvent,
   updateEventParticipants,
@@ -46,6 +45,7 @@ import {
 } from '../../store/slices/eventsSlice';
 import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
+import { selectUser } from '../../store/slices/authSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
 import { fonts, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
@@ -96,7 +96,7 @@ export function EventDetailsScreen() {
   const selectedEvent = useSelector(selectSelectedEvent);
 
   // Auth context
-  const { user: currentUser } = useAuth();
+  const currentUser = useSelector(selectUser);
 
   // RTK Query mutations
   const [cancelBookingMutation] = useCancelBookingMutation();

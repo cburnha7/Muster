@@ -8,6 +8,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../../services/api/AuthService';
 import TokenStorage from '../../services/auth/TokenStorage';
+import { loggingService } from '../../services/LoggingService';
 import {
   User,
   RegisterData,
@@ -26,6 +27,8 @@ export interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** True while the app is loading the cached session on startup */
+  isBootLoading: boolean;
   error: string | null;
 }
 
@@ -36,6 +39,7 @@ const initialState: AuthState = {
   refreshToken: null,
   isAuthenticated: false,
   isLoading: false,
+  isBootLoading: true,
   error: null,
 };
 
@@ -180,12 +184,23 @@ export const linkAccount = createAsyncThunk(
  */
 export const logoutUser = createAsyncThunk(
   'auth/logout',
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
     try {
       await authService.logout();
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Logout failed');
+    } catch {
+      // Continue cleanup even if server logout fails
     }
+    try {
+      await TokenStorage.clearAll();
+    } catch {
+      // Best-effort
+    }
+    // Clear related slices
+    const { clearSubscription } = await import('./subscriptionSlice');
+    const { resetContext } = await import('./contextSlice');
+    dispatch(clearSubscription());
+    dispatch(resetContext());
+    loggingService.setUserId(null);
   }
 );
 
@@ -522,7 +537,7 @@ const authSlice = createSlice({
     // Load cached user
     builder
       .addCase(loadCachedUser.pending, state => {
-        state.isLoading = true;
+        state.isBootLoading = true;
       })
       .addCase(loadCachedUser.fulfilled, (state, action) => {
         if (action.payload) {
@@ -531,9 +546,11 @@ const authSlice = createSlice({
           state.refreshToken = action.payload.refreshToken || null;
           state.isAuthenticated = true;
         }
+        state.isBootLoading = false;
         state.isLoading = false;
       })
       .addCase(loadCachedUser.rejected, state => {
+        state.isBootLoading = false;
         state.isLoading = false;
       });
 
@@ -578,6 +595,8 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) =>
   state.auth.isAuthenticated;
 export const selectAuthLoading = (state: { auth: AuthState }) =>
   state.auth.isLoading;
+export const selectBootLoading = (state: { auth: AuthState }) =>
+  state.auth.isBootLoading;
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
 export const selectAccessToken = (state: { auth: AuthState }) =>
   state.auth.accessToken;

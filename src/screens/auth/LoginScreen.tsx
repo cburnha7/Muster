@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
-import { useAuth } from '../../context/AuthContext';
 import { MusterIcon } from '../../theme/MusterIcon';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
@@ -23,7 +22,6 @@ import { useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 
 export function LoginScreen() {
-  const { login } = useAuth();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { colors, type, spacing, radius, shadow, isDark } = useTheme();

@@ -11,7 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { fonts, typeScale, Spacing, useTheme } from '../../theme';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectAccessToken } from '../../store/slices/authSlice';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { API_BASE_URL } from '../../services/api/config';
@@ -30,7 +31,7 @@ interface UserConnectSectionProps {
 
 export function UserConnectSection({ userId }: UserConnectSectionProps) {
   const { colors } = useTheme();
-  const { token } = useAuth();
+  const token = useSelector(selectAccessToken);
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [onboarding, setOnboarding] = useState(false);

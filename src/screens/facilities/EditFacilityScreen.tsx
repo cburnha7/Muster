@@ -15,10 +15,10 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { useAuth } from '../../context/AuthContext';
+import { selectUser } from '../../store/slices/authSlice';
 import { FormInput } from '../../components/forms/FormInput';
 import { FormButton } from '../../components/forms/FormButton';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -138,7 +138,7 @@ export function EditFacilityScreen({
   const { facilityId } = route.params ?? {};
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const { width: screenWidth } = useWindowDimensions();
 
   const [isLoading, setIsLoading] = useState(true);

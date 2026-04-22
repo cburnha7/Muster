@@ -39,7 +39,8 @@ import {
 } from '../../components/facilities/VisualDaySchedule';
 import type { CartSlot } from '../../components/facilities/BulkBookingConfirmationModal';
 import type { ConflictSlot } from '../../components/facilities/BookingConflictModal';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../store/slices/authSlice';
 import {
   RecurringBookingToggle,
   RecurringConfig,
@@ -94,7 +95,7 @@ export function CourtAvailabilityScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<CourtAvailabilityScreenNavigationProp>();
   const route = useRoute<CourtAvailabilityScreenRouteProp>();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   const {
     facilityId,

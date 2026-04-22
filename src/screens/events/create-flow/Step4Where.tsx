@@ -12,7 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
-import { useAuth } from '../../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/slices/authSlice';
 import TokenStorage from '../../../services/auth/TokenStorage';
 import { facilityService } from '../../../services/api/FacilityService';
 import { API_BASE_URL } from '../../../services/api/config';
@@ -28,7 +29,7 @@ interface SavedLocation {
 export function Step4Where() {
   const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const navigation = useNavigation<any>();
   const route = useRoute();
   const routeParams = (route.params || {}) as any;

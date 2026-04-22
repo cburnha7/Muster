@@ -6,19 +6,19 @@
 
 import { useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useAuth } from '../context/AuthContext';
 import {
   selectActiveUserId,
   selectDependents,
   setActiveUser,
 } from '../store/slices/contextSlice';
+import { selectUser } from '../store/slices/authSlice';
 import { PERSON_COLORS } from '../types/eventsCalendar';
 import { assignPersonColors } from '../utils/eventsCalendarUtils';
 import type { CrewMember } from '../components/home/MyCrewRow';
 
 export function useCrewSelector() {
   const dispatch = useDispatch();
-  const { user: currentUser } = useAuth();
+  const currentUser = useSelector(selectUser);
   const activeUserId = useSelector(selectActiveUserId);
   const dependents = useSelector(selectDependents);
 

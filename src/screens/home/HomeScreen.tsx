@@ -42,10 +42,10 @@ import {
 } from '../../services/api/UserService';
 
 // Context
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
 
 // Store
-import { selectUser } from '../../store/slices/authSlice';
+import { selectUser, selectAuthLoading } from '../../store/slices/authSlice';
 import {
   selectActiveUserId,
   selectDependents,
@@ -91,7 +91,8 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<
 export function HomeScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { isLoading: authLoading, user: currentUser } = useAuth();
+  const authLoading = useSelector(selectAuthLoading);
+  const currentUser = useSelector(selectUser);
   const { width: screenWidth } = useWindowDimensions();
   const { pendingMilestone, dismissMilestone } = useMilestoneCheck();
 

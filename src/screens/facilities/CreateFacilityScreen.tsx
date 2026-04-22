@@ -11,8 +11,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { useAuth } from '../../context/AuthContext';
 import { useFeatureGate } from '../../hooks/useFeatureGate';
+import { selectUser } from '../../store/slices/authSlice';
 import { facilityService } from '../../services/api/FacilityService';
 import TokenStorage from '../../services/auth/TokenStorage';
 import { API_BASE_URL } from '../../services/api/config';
@@ -47,7 +47,7 @@ function CreateFacilityInner() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const reduxDispatch = useDispatch();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const allFacilities = useSelector(selectFacilities);
   const userFacilityCount = allFacilities.filter(
     f => f.ownerId === user?.id

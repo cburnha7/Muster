@@ -11,14 +11,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { FormSelect, SelectOption } from '../../../components/forms/FormSelect';
 import { useCreateEvent } from './CreateEventContext';
-import { useAuth } from '../../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/slices/authSlice';
 import { facilityService } from '../../../services/api/FacilityService';
 import { fonts, useTheme } from '../../../theme';
 
 export function Step3Ground() {
   const { colors } = useTheme();
   const { state, dispatch } = useCreateEvent();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const navigation = useNavigation<any>();
 
   const [facilities, setFacilities] = useState<
@@ -114,10 +115,16 @@ export function Step3Ground() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.white }, { backgroundColor: colors.bgScreen }]}
+      style={[
+        styles.container,
+        { backgroundColor: colors.white },
+        { backgroundColor: colors.bgScreen },
+      ]}
       contentContainerStyle={styles.content}
     >
-      <Text style={[styles.heading, { color: colors.ink }]}>Where's the game?</Text>
+      <Text style={[styles.heading, { color: colors.ink }]}>
+        Where's the game?
+      </Text>
 
       {loadingFacilities ? (
         <ActivityIndicator
@@ -127,7 +134,9 @@ export function Step3Ground() {
         />
       ) : facilityError ? (
         <TouchableOpacity onPress={loadFacilities}>
-          <Text style={[styles.errorText, { color: colors.heart }]}>{facilityError}</Text>
+          <Text style={[styles.errorText, { color: colors.heart }]}>
+            {facilityError}
+          </Text>
         </TouchableOpacity>
       ) : (
         <FormSelect
@@ -148,7 +157,9 @@ export function Step3Ground() {
               style={styles.loader}
             />
           ) : courtError ? (
-            <Text style={[styles.errorText, { color: colors.heart }]}>{courtError}</Text>
+            <Text style={[styles.errorText, { color: colors.heart }]}>
+              {courtError}
+            </Text>
           ) : (
             <FormSelect
               label="Court"
@@ -168,7 +179,9 @@ export function Step3Ground() {
         activeOpacity={0.8}
       >
         <Ionicons name="calendar-outline" size={20} color={colors.cobalt} />
-        <Text style={[styles.bookButtonText, { color: colors.cobalt }]}>Book Court Time</Text>
+        <Text style={[styles.bookButtonText, { color: colors.cobalt }]}>
+          Book Court Time
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
