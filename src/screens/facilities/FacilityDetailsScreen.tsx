@@ -47,13 +47,7 @@ if (Platform.OS !== 'web') {
   PROVIDER_GOOGLE = MapViewModule.PROVIDER_GOOGLE;
 }
 
-const BASE_TABS = [
-  'Basics',
-  'Location',
-  'Contact',
-  'Site Details',
-  'Courts / Fields',
-];
+const BASE_TABS = ['Location', 'Contact', 'Site Details', 'Courts / Fields'];
 
 interface FacilityDetailsScreenProps {
   route: {
@@ -159,39 +153,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   const handleEdit = () => {
     (navigation as any).navigate('EditFacility', { facilityId });
-  };
-
-  const handleDeleteGround = () => {
-    if (!selectedFacility) return;
-    if (Platform.OS === 'web') {
-      if (
-        window.confirm(
-          `Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`
-        )
-      ) {
-        doDeleteGround();
-      }
-    } else {
-      Alert.alert(
-        'Delete Ground',
-        `Are you sure you want to delete "${selectedFacility.name}"? This cannot be undone.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: doDeleteGround },
-        ]
-      );
-    }
-  };
-
-  const doDeleteGround = async () => {
-    try {
-      await facilityService.deleteFacility(facilityId);
-      navigation.goBack();
-    } catch (err: any) {
-      const msg =
-        err instanceof Error ? err.message : 'Failed to delete ground';
-      Alert.alert('Error', msg);
-    }
   };
 
   const handleTabPress = (index: number) => {
@@ -303,9 +264,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         onScroll={handlePagerScroll}
         style={{ flex: 1 }}
       >
-        {/* ── TAB 1 — Basics ─────────────────────────────────────────────── */}
+        {/* ── TAB 1 — Location ───────────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            {/* Photos gallery */}
             {photos.length > 0 && (
               <ScrollView
                 horizontal
@@ -346,6 +308,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </ScrollView>
             )}
 
+            {/* Description */}
             {facility.description ? (
               <>
                 <Text style={s.sectionLabel}>DESCRIPTION</Text>
@@ -366,71 +329,6 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </>
             ) : null}
 
-            {/* Field map — tap to open fullscreen */}
-            {facilityMapUrl ? (
-              <TouchableOpacity
-                onPress={() => setShowFullMap(true)}
-                activeOpacity={0.8}
-                style={{ marginHorizontal: 16, marginTop: 16 }}
-              >
-                <OptimizedImage
-                  source={{ uri: facilityMapUrl }}
-                  style={{ width: '100%', height: 200, borderRadius: 12 }}
-                  resizeMode="cover"
-                  fallback={
-                    <View
-                      style={{
-                        width: '100%',
-                        height: 200,
-                        borderRadius: 12,
-                        backgroundColor: colors.surface,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Ionicons
-                        name="map-outline"
-                        size={48}
-                        color={colors.inkSoft}
-                      />
-                    </View>
-                  }
-                />
-                <View
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'rgba(0,0,0,0.55)',
-                    padding: 10,
-                    borderBottomLeftRadius: 12,
-                    borderBottomRightRadius: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                  }}
-                >
-                  <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
-                  <Text
-                    style={{
-                      color: '#FFFFFF',
-                      fontFamily: fonts.label,
-                      fontSize: 12,
-                    }}
-                  >
-                    View Field Map
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ) : null}
-          </ScrollView>
-        </View>
-
-        {/* ── TAB 2 — Location ───────────────────────────────────────────── */}
-        <View style={{ width: screenWidth }}>
-          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             <Text style={s.sectionLabel}>ADDRESS</Text>
             <View style={s.card}>
               <View style={{ padding: 16 }}>
@@ -567,7 +465,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           </ScrollView>
         </View>
 
-        {/* ── TAB 3 — Contact ────────────────────────────────────────────── */}
+        {/* ── TAB 2 — Contact ────────────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             {facility.contactName ||
@@ -678,7 +576,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           </ScrollView>
         </View>
 
-        {/* ── TAB 4 — Site Details ───────────────────────────────────────── */}
+        {/* ── TAB 3 — Site Details ───────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Hours of operation */}
@@ -777,6 +675,69 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </>
             )}
 
+            {/* Field map — tap to open fullscreen */}
+            {facilityMapUrl ? (
+              <>
+                <Text style={s.sectionLabel}>FACILITY MAP</Text>
+                <TouchableOpacity
+                  onPress={() => setShowFullMap(true)}
+                  activeOpacity={0.8}
+                  style={{ marginHorizontal: 16, marginBottom: 16 }}
+                >
+                  <OptimizedImage
+                    source={{ uri: facilityMapUrl }}
+                    style={{ width: '100%', height: 200, borderRadius: 12 }}
+                    resizeMode="cover"
+                    fallback={
+                      <View
+                        style={{
+                          width: '100%',
+                          height: 200,
+                          borderRadius: 12,
+                          backgroundColor: colors.surface,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Ionicons
+                          name="map-outline"
+                          size={48}
+                          color={colors.inkSoft}
+                        />
+                      </View>
+                    }
+                  />
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'rgba(0,0,0,0.55)',
+                      padding: 10,
+                      borderBottomLeftRadius: 12,
+                      borderBottomRightRadius: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
+                    <Text
+                      style={{
+                        color: '#FFFFFF',
+                        fontFamily: fonts.label,
+                        fontSize: 12,
+                      }}
+                    >
+                      View Field Map
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            ) : null}
+
             {/* Cancellation policy */}
             {showCancellationPolicy && (
               <>
@@ -795,7 +756,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           </ScrollView>
         </View>
 
-        {/* ── TAB 5 — Courts / Fields ────────────────────────────────────── */}
+        {/* ── TAB 4 — Courts / Fields ────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Facility map */}
@@ -932,7 +893,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
           </ScrollView>
         </View>
 
-        {/* ── TAB 6 — Schedule (owner) / Reservations (non-owner) ────── */}
+        {/* ── TAB 5 — Schedule (owner) / Reservations (non-owner) ────── */}
         <View style={{ width: screenWidth }}>
           {isOwner ? (
             <OwnerScheduleTab facilityId={facility.id} />
@@ -945,27 +906,8 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         </View>
       </ScrollView>
 
-      {/* Fixed bottom — Edit for owner, Book for non-owner */}
-      {isOwner ? (
-        <View style={s.ownerBottomBar}>
-          <TouchableOpacity
-            style={s.editBtn}
-            onPress={handleEdit}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="create-outline" size={18} color={colors.white} />
-            <Text style={s.editBtnText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={s.deleteBtn}
-            onPress={handleDeleteGround}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="trash-outline" size={18} color={colors.heart} />
-            <Text style={s.deleteBtnText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      {/* Fixed bottom — Book for non-owner */}
+      {!isOwner && (
         <FixedBottomCTA
           label="Book a court"
           onPress={() =>

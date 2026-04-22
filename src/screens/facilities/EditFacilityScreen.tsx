@@ -554,10 +554,7 @@ export function EditFacilityScreen({
 
       dispatch(updateFacility(updatedFacility));
       setIsSubmitting(false);
-      navigation.navigate(
-        'Facilities' as never,
-        { screen: 'FacilitiesList', params: { refresh: Date.now() } } as never
-      );
+      navigation.goBack();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to update ground');
     } finally {
@@ -630,6 +627,43 @@ export function EditFacilityScreen({
 
   const primarySport = (formData.sportTypes?.[0] ?? 'other') as string;
   const surfaceName = getSurfaceName(primarySport);
+
+  /* ─── Action buttons (rendered at the bottom of every tab) ──────────── */
+
+  const renderActionButtons = () => (
+    <View style={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16 }}>
+      <FormButton
+        title="Update Ground"
+        onPress={handleSubmit}
+        loading={isSubmitting}
+        disabled={isSubmitting}
+      />
+      <TouchableOpacity
+        style={{
+          backgroundColor: colors.heart,
+          paddingVertical: 14,
+          paddingHorizontal: 24,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 16,
+        }}
+        onPress={handleDelete}
+        disabled={isSubmitting}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={{
+            color: colors.white,
+            fontSize: 16,
+            fontWeight: '600',
+          }}
+        >
+          Delete Ground
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   /* ─── Render ────────────────────────────────────────────────────────────── */
 
@@ -799,6 +833,7 @@ export function EditFacilityScreen({
                 ) : null}
               </View>
             </View>
+            {renderActionButtons()}
           </ScrollView>
         </View>
 
@@ -965,6 +1000,7 @@ export function EditFacilityScreen({
                 </View>
               </View>
             </View>
+            {renderActionButtons()}
           </ScrollView>
         </View>
 
@@ -1013,6 +1049,7 @@ export function EditFacilityScreen({
                 />
               </View>
             </View>
+            {renderActionButtons()}
           </ScrollView>
         </View>
 
@@ -1206,6 +1243,7 @@ export function EditFacilityScreen({
                 />
               </View>
             </View>
+            {renderActionButtons()}
           </ScrollView>
         </View>
 
@@ -1448,40 +1486,7 @@ export function EditFacilityScreen({
               </TouchableOpacity>
             </View>
 
-            {/* Save & Delete buttons at bottom of last tab */}
-            <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
-              <FormButton
-                title="Update Ground"
-                onPress={handleSubmit}
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              />
-            </View>
-            <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: colors.heart,
-                  paddingVertical: 14,
-                  paddingHorizontal: 24,
-                  borderRadius: 8,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                onPress={handleDelete}
-                disabled={isSubmitting}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={{
-                    color: colors.white,
-                    fontSize: 16,
-                    fontWeight: '600',
-                  }}
-                >
-                  Delete Ground
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {renderActionButtons()}
           </ScrollView>
         </View>
       </ScrollView>
