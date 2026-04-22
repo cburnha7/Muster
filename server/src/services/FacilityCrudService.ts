@@ -687,6 +687,8 @@ export async function updateFacility(
     'contactWebsite',
     'facilityMapUrl',
     'facilityMapThumbnailUrl',
+    'coverImageUrl',
+    'coverImageThumbnailUrl',
     'street',
     'city',
     'state',
