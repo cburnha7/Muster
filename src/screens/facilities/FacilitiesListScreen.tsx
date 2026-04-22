@@ -26,7 +26,7 @@ import {
 } from '../../components/search/TabSearchModal';
 import { facilityService } from '../../services/api/FacilityService';
 import { courtService, Rental } from '../../services/api/CourtService';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { searchEventBus } from '../../utils/searchEventBus';
 import {
   setFacilities,
@@ -311,15 +311,21 @@ export function FacilitiesListScreen() {
       >
         {/* Owner badge — top right */}
         {item.ownerId === currentUser?.id && (
-          <View style={styles.ownerBadge}>
+          <View style={[styles.ownerBadge, { backgroundColor: colors.pine }]}>
             <Ionicons name="star" size={10} color={colors.white} />
-            <Text style={styles.ownerText}>Owner</Text>
+            <Text style={[styles.ownerText, { color: colors.white }]}>
+              Owner
+            </Text>
           </View>
         )}
         <View style={styles.cardContent}>
           <View style={styles.facilityHeader}>
-            <View style={styles.numberBadge}>
-              <Text style={styles.numberText}>{index + 1}</Text>
+            <View
+              style={[styles.numberBadge, { backgroundColor: colors.pine }]}
+            >
+              <Text style={[styles.numberText, { color: colors.white }]}>
+                {index + 1}
+              </Text>
             </View>
             <View style={styles.facilityTitleContainer}>
               <Text
@@ -336,21 +342,30 @@ export function FacilitiesListScreen() {
               size={16}
               color={colors.inkSecondary}
             />
-            <Text style={styles.facilityAddress} numberOfLines={1}>
+            <Text
+              style={[styles.facilityAddress, { color: colors.inkSecondary }]}
+              numberOfLines={1}
+            >
               {formattedAddress}
             </Text>
           </View>
           {item.sportTypes && item.sportTypes.length > 0 && (
             <View style={styles.sportTypes}>
               {item.sportTypes.slice(0, 3).map((sport, idx) => (
-                <View key={idx} style={styles.sportTag}>
-                  <Text style={styles.sportTagText}>
+                <View
+                  key={idx}
+                  style={[
+                    styles.sportTag,
+                    { backgroundColor: colors.cobaltTint },
+                  ]}
+                >
+                  <Text style={[styles.sportTagText, { color: colors.cobalt }]}>
                     {formatSportType(sport)}
                   </Text>
                 </View>
               ))}
               {item.sportTypes.length > 3 && (
-                <Text style={styles.moreText}>
+                <Text style={[styles.moreText, { color: colors.inkSecondary }]}>
                   +{item.sportTypes.length - 3}
                 </Text>
               )}
@@ -358,7 +373,9 @@ export function FacilitiesListScreen() {
               {item.rating && item.rating > 0 && (
                 <View style={styles.rating}>
                   <Ionicons name="star" size={14} color={colors.gold} />
-                  <Text style={styles.ratingText}>
+                  <Text
+                    style={[styles.ratingText, { color: colors.inkSecondary }]}
+                  >
                     {item.rating.toFixed(1)}
                   </Text>
                 </View>
@@ -377,16 +394,20 @@ export function FacilitiesListScreen() {
       transparent={true}
       onRequestClose={() => setShowFilters(false)}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+        <View style={[styles.modalContent, { backgroundColor: colors.bgCard }]}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Filter Grounds</Text>
+            <Text style={[styles.modalTitle, { color: colors.ink }]}>
+              Filter Grounds
+            </Text>
             <TouchableOpacity onPress={() => setShowFilters(false)}>
               <Ionicons name="close" size={24} color={colors.ink} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.filterContent}>
-            <Text style={styles.filterLabel}>Sport Type</Text>
+            <Text style={[styles.filterLabel, { color: colors.ink }]}>
+              Sport Type
+            </Text>
             <View style={styles.sportTypeContainer}>
               {Object.values(SportType).map(sport => {
                 const isSelected = localFilters.sportTypes?.includes(sport);
@@ -395,7 +416,14 @@ export function FacilitiesListScreen() {
                     key={sport}
                     style={[
                       styles.sportChip,
-                      isSelected && styles.sportChipSelected,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.cobalt,
+                        borderColor: colors.cobalt,
+                      },
                     ]}
                     onPress={() => {
                       const currentSports = localFilters.sportTypes || [];
@@ -411,7 +439,8 @@ export function FacilitiesListScreen() {
                     <Text
                       style={[
                         styles.sportChipText,
-                        isSelected && styles.sportChipTextSelected,
+                        { color: colors.inkSecondary },
+                        isSelected && { color: colors.white },
                       ]}
                     >
                       {formatSportType(sport)}
@@ -423,16 +452,20 @@ export function FacilitiesListScreen() {
           </ScrollView>
           <View style={styles.modalActions}>
             <TouchableOpacity
-              style={styles.clearButton}
+              style={[styles.clearButton, { borderColor: colors.border }]}
               onPress={handleClearFilters}
             >
-              <Text style={styles.clearButtonText}>Clear All</Text>
+              <Text style={[styles.clearButtonText, { color: colors.ink }]}>
+                Clear All
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.applyButton}
+              style={[styles.applyButton, { backgroundColor: colors.pine }]}
               onPress={handleApplyFilters}
             >
-              <Text style={styles.applyButtonText}>Apply Filters</Text>
+              <Text style={[styles.applyButtonText, { color: colors.white }]}>
+                Apply Filters
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -442,14 +475,14 @@ export function FacilitiesListScreen() {
 
   if (error && !facilities.length) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay message={error} onRetry={loadFacilities} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Contextual return button when navigated from another flow */}
       <ContextualReturnButton />
       {/* Sport filter chips */}
@@ -464,12 +497,20 @@ export function FacilitiesListScreen() {
           const isActive = sportFilter === item.value;
           return (
             <TouchableOpacity
-              style={[styles.chip, isActive && styles.chipActive]}
+              style={[
+                styles.chip,
+                { backgroundColor: colors.surface },
+                isActive && { backgroundColor: colors.cobalt },
+              ]}
               onPress={() => setSportFilter(item.value)}
               activeOpacity={0.8}
             >
               <Text
-                style={[styles.chipText, isActive && styles.chipTextActive]}
+                style={[
+                  styles.chipText,
+                  { color: colors.inkSecondary },
+                  isActive && { color: colors.white },
+                ]}
               >
                 {item.label}
               </Text>
@@ -535,12 +576,14 @@ export function FacilitiesListScreen() {
       {/* Reservations button */}
       {reservations.length > 0 && (
         <TouchableOpacity
-          style={styles.reservationsBtn}
+          style={[styles.reservationsBtn, { backgroundColor: colors.bgCard }]}
           onPress={() => setReservationsModalVisible(true)}
           activeOpacity={0.85}
         >
-          <View style={styles.reservationsDot} />
-          <Text style={styles.reservationsBtnText}>
+          <View
+            style={[styles.reservationsDot, { backgroundColor: colors.pine }]}
+          />
+          <Text style={[styles.reservationsBtnText, { color: colors.ink }]}>
             Reservations ({reservations.length})
           </Text>
           <Ionicons
@@ -559,12 +602,19 @@ export function FacilitiesListScreen() {
         onRequestClose={() => setReservationsModalVisible(false)}
       >
         <Pressable
-          style={styles.resBackdrop}
+          style={[styles.resBackdrop, { backgroundColor: colors.overlay }]}
           onPress={() => setReservationsModalVisible(false)}
         >
-          <View style={styles.resModal}>
+          <View
+            style={[
+              styles.resModal,
+              { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+            ]}
+          >
             <View style={styles.resHeader}>
-              <Text style={styles.resTitle}>Reservations</Text>
+              <Text style={[styles.resTitle, { color: colors.ink }]}>
+                Reservations
+              </Text>
               <TouchableOpacity
                 onPress={() => setReservationsModalVisible(false)}
               >
@@ -602,7 +652,7 @@ export function FacilitiesListScreen() {
                 return (
                   <TouchableOpacity
                     key={r.id}
-                    style={styles.resCard}
+                    style={[styles.resCard, { backgroundColor: colors.bgCard }]}
                     onPress={() => {
                       setReservationsModalVisible(false);
                       (navigation as any).navigate('CourtAvailability', {
@@ -613,17 +663,47 @@ export function FacilitiesListScreen() {
                   >
                     <View style={styles.resCardBody}>
                       <View style={styles.resCardTop}>
-                        <Text style={styles.resCardFacility} numberOfLines={1}>
+                        <Text
+                          style={[
+                            styles.resCardFacility,
+                            { color: colors.ink },
+                          ]}
+                          numberOfLines={1}
+                        >
                           {facilityName}
                         </Text>
                         {isPending && (
-                          <View style={styles.pendingBadge}>
-                            <Text style={styles.pendingBadgeText}>Pending</Text>
+                          <View
+                            style={[
+                              styles.pendingBadge,
+                              { backgroundColor: colors.goldTint },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.pendingBadgeText,
+                                { color: colors.gold },
+                              ]}
+                            >
+                              Pending
+                            </Text>
                           </View>
                         )}
                       </View>
-                      <Text style={styles.resCardCourt}>{courtName}</Text>
-                      <Text style={styles.resCardMeta}>
+                      <Text
+                        style={[
+                          styles.resCardCourt,
+                          { color: colors.inkSecondary },
+                        ]}
+                      >
+                        {courtName}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.resCardMeta,
+                          { color: colors.inkSecondary },
+                        ]}
+                      >
                         {date} · {time}
                       </Text>
                     </View>
@@ -642,7 +722,13 @@ export function FacilitiesListScreen() {
 
       {/* FAB — hidden for dependents */}
       {!isDependent && (
-        <TouchableOpacity style={styles.fab} onPress={handleCreateFacility}>
+        <TouchableOpacity
+          style={[
+            styles.fab,
+            { backgroundColor: colors.cobalt, shadowColor: colors.cobalt },
+          ]}
+          onPress={handleCreateFacility}
+        >
           <Ionicons name="add" size={28} color={colors.white} />
         </TouchableOpacity>
       )}
@@ -664,7 +750,6 @@ export function FacilitiesListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
 
   // ── Sport filter chips ──────────────────
@@ -678,20 +763,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: colors.surface,
     alignSelf: 'flex-start' as any,
   },
-  chipActive: {
-    backgroundColor: colors.cobalt,
-  },
+  chipActive: {},
   chipText: {
     fontFamily: fonts.headingSemi,
     fontSize: 13,
-    color: colors.inkSecondary,
   },
-  chipTextActive: {
-    color: colors.white,
-  },
+  chipTextActive: {},
 
   scrollView: {
     flex: 1,
@@ -705,18 +784,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
-    backgroundColor: colors.background,
     gap: 6,
   },
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     letterSpacing: -0.3,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: `${colors.cobalt}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -724,14 +800,12 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.background,
     gap: Spacing.sm,
   },
   searchBar: {
@@ -748,13 +822,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.error,
   },
   mapContainer: {
     height: 400,
   },
   facilityCard: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
@@ -773,14 +845,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.pine,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   numberText: {
     fontSize: 16,
-    color: colors.white,
     fontWeight: '700',
   },
   facilityTitleContainer: {
@@ -789,7 +859,6 @@ const styles = StyleSheet.create({
   facilityName: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 4,
   },
   ownerBadge: {
@@ -798,7 +867,6 @@ const styles = StyleSheet.create({
     right: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.pine,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
@@ -807,7 +875,6 @@ const styles = StyleSheet.create({
   },
   ownerText: {
     fontSize: 10,
-    color: colors.white,
     fontFamily: fonts.label,
   },
   facilityInfo: {
@@ -818,7 +885,6 @@ const styles = StyleSheet.create({
   facilityAddress: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSecondary,
     marginLeft: 6,
     flex: 1,
   },
@@ -830,7 +896,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sportTag: {
-    backgroundColor: colors.cobaltTint,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 9999,
@@ -838,11 +903,9 @@ const styles = StyleSheet.create({
   sportTagText: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.cobalt,
   },
   moreText: {
     fontSize: 13,
-    color: colors.inkSecondary,
     fontWeight: '500',
   },
   facilityFooter: {
@@ -857,7 +920,6 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 14,
-    color: colors.inkSecondary,
     marginLeft: 6,
     fontWeight: '500',
   },
@@ -870,14 +932,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.inkSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -888,10 +948,8 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -899,11 +957,9 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -917,7 +973,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
   },
   filterContent: {
     padding: Spacing.lg,
@@ -925,7 +980,6 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontFamily: fonts.headingSemi,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   sportTypeContainer: {
@@ -938,22 +992,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 9999,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  sportChipSelected: {},
   sportChipText: {
     fontSize: 13,
     fontFamily: fonts.headingSemi,
-    color: colors.inkSecondary,
   },
-  sportChipTextSelected: {
-    color: colors.white,
-  },
+  sportChipTextSelected: {},
   modalActions: {
     flexDirection: 'row',
     padding: Spacing.lg,
@@ -964,30 +1010,25 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 9999,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
   },
   clearButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.ink,
   },
   applyButton: {
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: 9999,
-    backgroundColor: colors.pine,
     alignItems: 'center',
   },
   applyButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   reservationsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 16,
@@ -999,27 +1040,22 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.pine,
   },
   reservationsBtnText: {
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
   },
   resBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingBottom: 70,
   },
   resModal: {
-    backgroundColor: colors.surface,
     borderRadius: 24,
     maxHeight: '80%',
     overflow: 'hidden',
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -1035,7 +1071,6 @@ const styles = StyleSheet.create({
   resTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
   },
   resScroll: {
     paddingVertical: 8,
@@ -1044,7 +1079,6 @@ const styles = StyleSheet.create({
   resCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1055,11 +1089,9 @@ const styles = StyleSheet.create({
   resCardFacility: {
     fontFamily: fonts.label,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
   pendingBadge: {
-    backgroundColor: colors.goldTint,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1067,18 +1099,15 @@ const styles = StyleSheet.create({
   pendingBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.gold,
   },
   resCardCourt: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSecondary,
     marginTop: 2,
   },
   resCardMeta: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSecondary,
     marginTop: 1,
   },
 });

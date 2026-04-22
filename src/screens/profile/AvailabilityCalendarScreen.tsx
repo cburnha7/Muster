@@ -19,7 +19,7 @@ import { selectUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/api/UserService';
 import { API_BASE_URL } from '../../services/api/config';
 import { authService } from '../../services/auth/AuthService';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 
 // ── Types ──
 
@@ -340,8 +340,10 @@ export function AvailabilityCalendarScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Availability</Text>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>
+          Availability
+        </Text>
       </View>
 
       <ScrollView
@@ -351,7 +353,7 @@ export function AvailabilityCalendarScreen() {
       >
         {/* Single Import Calendar button */}
         <TouchableOpacity
-          style={styles.importBtn}
+          style={[styles.importBtn, { backgroundColor: colors.cobalt }]}
           onPress={openImportModal}
           activeOpacity={0.7}
         >
@@ -360,7 +362,9 @@ export function AvailabilityCalendarScreen() {
             size={20}
             color={colors.white}
           />
-          <Text style={styles.importBtnText}>Import Calendar</Text>
+          <Text style={[styles.importBtnText, { color: colors.white }]}>
+            Import Calendar
+          </Text>
         </TouchableOpacity>
 
         <Calendar
@@ -377,30 +381,40 @@ export function AvailabilityCalendarScreen() {
             textDayFontFamily: fonts.body,
             textDayHeaderFontFamily: fonts.label,
           }}
-          style={styles.calendar}
+          style={[styles.calendar, { shadowColor: colors.black }]}
         />
 
         {/* Events for selected day */}
         {selectedDate ? (
           <View style={styles.daySection}>
-            <Text style={styles.daySectionTitle}>
+            <Text style={[styles.daySectionTitle, { color: colors.ink }]}>
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString(
                 undefined,
                 { weekday: 'long', month: 'long', day: 'numeric' }
               )}
             </Text>
             {eventsForDay.length === 0 ? (
-              <View style={styles.emptyCard}>
+              <View
+                style={[styles.emptyCard, { backgroundColor: colors.surface }]}
+              >
                 <Ionicons
                   name="time-outline"
                   size={24}
                   color={colors.inkSoft}
                 />
-                <Text style={styles.emptyCardText}>No events this day</Text>
+                <Text style={[styles.emptyCardText, { color: colors.inkSoft }]}>
+                  No events this day
+                </Text>
               </View>
             ) : (
               eventsForDay.map(evt => (
-                <View key={evt.id} style={styles.eventCard}>
+                <View
+                  key={evt.id}
+                  style={[
+                    styles.eventCard,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
                   <View
                     style={[
                       styles.eventDot,
@@ -411,11 +425,15 @@ export function AvailabilityCalendarScreen() {
                     ]}
                   />
                   <View style={styles.eventInfo}>
-                    <Text style={styles.eventTitle}>{evt.title}</Text>
-                    <Text style={styles.eventTime}>
+                    <Text style={[styles.eventTitle, { color: colors.ink }]}>
+                      {evt.title}
+                    </Text>
+                    <Text style={[styles.eventTime, { color: colors.inkSoft }]}>
                       {evt.startTime} · {evt.duration}
                     </Text>
-                    <Text style={styles.eventSource}>
+                    <Text
+                      style={[styles.eventSource, { color: colors.inkSoft }]}
+                    >
                       {evt.source === 'muster' ? 'Muster Event' : 'Imported'}
                     </Text>
                   </View>
@@ -437,7 +455,9 @@ export function AvailabilityCalendarScreen() {
           </View>
         ) : (
           <View style={styles.daySection}>
-            <Text style={styles.emptyCardText}>Tap a day to view events</Text>
+            <Text style={[styles.emptyCardText, { color: colors.inkSoft }]}>
+              Tap a day to view events
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -449,19 +469,28 @@ export function AvailabilityCalendarScreen() {
         animationType="slide"
         onRequestClose={() => setImportModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+        <View
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
+        >
+          <View style={[styles.modalCard, { backgroundColor: colors.bgCard }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Import Calendar</Text>
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
+                Import Calendar
+              </Text>
               <TouchableOpacity onPress={() => setImportModalVisible(false)}>
                 <Ionicons name="close" size={22} color={colors.ink} />
               </TouchableOpacity>
             </View>
 
             {/* Batch name */}
-            <Text style={styles.fieldLabel}>Batch Name</Text>
+            <Text style={[styles.fieldLabel, { color: colors.ink }]}>
+              Batch Name
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                { borderColor: colors.border, color: colors.ink },
+              ]}
               placeholder="e.g. Spring Soccer Schedule"
               placeholderTextColor={colors.inkSoft}
               value={batchName}
@@ -470,7 +499,10 @@ export function AvailabilityCalendarScreen() {
 
             {/* Drop zone */}
             <TouchableOpacity
-              style={styles.dropZone}
+              style={[
+                styles.dropZone,
+                { borderColor: colors.cobalt, backgroundColor: colors.surface },
+              ]}
               onPress={handleFilePick}
               activeOpacity={0.7}
             >
@@ -479,10 +511,12 @@ export function AvailabilityCalendarScreen() {
                 size={36}
                 color={colors.cobalt}
               />
-              <Text style={styles.dropZoneText}>
+              <Text style={[styles.dropZoneText, { color: colors.cobalt }]}>
                 {importedFileName || 'Drop a file or tap to browse'}
               </Text>
-              <Text style={styles.dropZoneHint}>Excel, CSV, or PDF</Text>
+              <Text style={[styles.dropZoneHint, { color: colors.inkSoft }]}>
+                Excel, CSV, or PDF
+              </Text>
             </TouchableOpacity>
 
             {Platform.OS === 'web' && (
@@ -497,26 +531,55 @@ export function AvailabilityCalendarScreen() {
 
             {/* Parsed events list or error */}
             {parseError ? (
-              <View style={styles.parseErrorBox}>
+              <View
+                style={[
+                  styles.parseErrorBox,
+                  {
+                    backgroundColor: colors.errorLight,
+                    borderColor: colors.heart,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="alert-circle-outline"
                   size={20}
                   color={colors.heart}
                 />
-                <Text style={styles.parseErrorText}>{parseError}</Text>
+                <Text style={[styles.parseErrorText, { color: colors.heart }]}>
+                  {parseError}
+                </Text>
               </View>
             ) : parsedEvents.length > 0 ? (
               <View style={styles.parsedSection}>
-                <Text style={styles.parsedCount}>
+                <Text style={[styles.parsedCount, { color: colors.ink }]}>
                   {parsedEvents.length} event
                   {parsedEvents.length !== 1 ? 's' : ''} found
                 </Text>
                 <ScrollView style={styles.parsedList} nestedScrollEnabled>
                   {parsedEvents.map(pe => (
-                    <View key={pe.id} style={styles.parsedRow}>
-                      <Text style={styles.parsedDate}>{pe.date}</Text>
-                      <Text style={styles.parsedTime}>{pe.startTime}</Text>
-                      <Text style={styles.parsedDuration}>{pe.duration}</Text>
+                    <View
+                      key={pe.id}
+                      style={[
+                        styles.parsedRow,
+                        { backgroundColor: colors.surface },
+                      ]}
+                    >
+                      <Text style={[styles.parsedDate, { color: colors.ink }]}>
+                        {pe.date}
+                      </Text>
+                      <Text
+                        style={[styles.parsedTime, { color: colors.inkSoft }]}
+                      >
+                        {pe.startTime}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.parsedDuration,
+                          { color: colors.inkSoft },
+                        ]}
+                      >
+                        {pe.duration}
+                      </Text>
                     </View>
                   ))}
                 </ScrollView>
@@ -526,22 +589,29 @@ export function AvailabilityCalendarScreen() {
             {/* Actions */}
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalCancelBtn}
+                style={[styles.modalCancelBtn, { borderColor: colors.border }]}
                 onPress={() => setImportModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text
+                  style={[styles.modalCancelText, { color: colors.inkSoft }]}
+                >
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.modalConfirmBtn,
+                  { backgroundColor: colors.cobalt },
                   parsedEvents.length === 0 && styles.modalConfirmBtnDisabled,
                 ]}
                 onPress={handleConfirmImport}
                 disabled={parsedEvents.length === 0}
                 activeOpacity={0.7}
               >
-                <Text style={styles.modalConfirmText}>
+                <Text
+                  style={[styles.modalConfirmText, { color: colors.white }]}
+                >
                   Import{' '}
                   {parsedEvents.length > 0 ? `(${parsedEvents.length})` : ''}
                 </Text>
@@ -555,7 +625,7 @@ export function AvailabilityCalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -563,9 +633,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
-  headerTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.ink },
+  headerTitle: { fontFamily: fonts.heading, fontSize: 20 },
   body: { flex: 1 },
   bodyContent: { paddingBottom: 40 },
   importBtn: {
@@ -578,16 +647,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.cobalt,
   },
-  importBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
+  importBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   calendar: {
     marginHorizontal: 16,
     marginTop: 8,
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -596,11 +663,9 @@ const styles = StyleSheet.create({
   daySectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     marginBottom: 10,
   },
   emptyCard: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
@@ -608,42 +673,36 @@ const styles = StyleSheet.create({
   emptyCardText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     marginTop: 6,
     textAlign: 'center',
   },
   eventCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
   },
   eventDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
   eventInfo: { flex: 1 },
-  eventTitle: { fontFamily: fonts.label, fontSize: 14, color: colors.ink },
+  eventTitle: { fontFamily: fonts.label, fontSize: 14 },
   eventTime: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     marginTop: 2,
   },
   eventSource: {
     fontFamily: fonts.body,
     fontSize: 11,
-    color: colors.inkSoft,
     marginTop: 2,
   },
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   modalCard: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 20,
     maxHeight: '85%',
@@ -654,45 +713,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  modalTitle: { fontFamily: fonts.heading, fontSize: 20, color: colors.ink },
+  modalTitle: { fontFamily: fonts.heading, fontSize: 20 },
   fieldLabel: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
     marginBottom: 6,
     marginTop: 12,
   },
   textInput: {
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   dropZone: {
     borderWidth: 2,
-    borderColor: colors.cobalt,
     borderStyle: 'dashed',
     borderRadius: 14,
     paddingVertical: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
     marginTop: 16,
   },
   dropZoneText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.cobalt,
     marginTop: 8,
   },
   dropZoneHint: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSoft,
     marginTop: 4,
   },
   parsedSection: { marginTop: 16 },
@@ -702,21 +754,17 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 16,
     padding: 14,
-    backgroundColor: colors.errorLight,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.heart,
   },
   parseErrorText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.heart,
     flex: 1,
   },
   parsedCount: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
     marginBottom: 8,
   },
   parsedList: { maxHeight: 200 },
@@ -725,7 +773,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: colors.surface,
     borderRadius: 8,
     marginBottom: 4,
     gap: 12,
@@ -733,19 +780,16 @@ const styles = StyleSheet.create({
   parsedDate: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
     width: 90,
   },
   parsedTime: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     width: 50,
   },
   parsedDuration: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkSoft,
     flex: 1,
   },
   modalActions: {
@@ -759,19 +803,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   modalCancelText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.inkSoft,
   },
   modalConfirmBtn: {
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: colors.cobalt,
   },
   modalConfirmBtnDisabled: { opacity: 0.4 },
-  modalConfirmText: { fontFamily: fonts.ui, fontSize: 14, color: colors.white },
+  modalConfirmText: { fontFamily: fonts.ui, fontSize: 14 },
 });

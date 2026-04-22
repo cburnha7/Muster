@@ -696,7 +696,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
 
   if (error || !team) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay
           message={error || 'Roster not found'}
           onRetry={loadTeamDetails}
@@ -1176,9 +1176,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                     style={[
                       styles.editInput,
                       {
-                        backgroundColor: colors.white,
+                        backgroundColor: colors.bgCard,
                         color: colors.ink,
-                        borderColor: colors.white,
+                        borderColor: colors.bgCard,
                       },
                     ]}
                     value={formName}
@@ -1225,8 +1225,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           style={[
                             styles.editToggle,
                             {
-                              backgroundColor: colors.white,
-                              borderColor: colors.white,
+                              backgroundColor: colors.bgCard,
+                              borderColor: colors.bgCard,
                             },
                             !formIsPublic && styles.editToggleActive,
                             !formIsPublic && {
@@ -1257,8 +1257,8 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                           style={[
                             styles.editToggle,
                             {
-                              backgroundColor: colors.white,
-                              borderColor: colors.white,
+                              backgroundColor: colors.bgCard,
+                              borderColor: colors.bgCard,
                             },
                             formIsPublic && styles.editToggleActive,
                             formIsPublic && {
@@ -1303,9 +1303,9 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
                         style={[
                           styles.editInput,
                           {
-                            backgroundColor: colors.white,
+                            backgroundColor: colors.bgCard,
                             color: colors.ink,
-                            borderColor: colors.white,
+                            borderColor: colors.bgCard,
                           },
                         ]}
                         value={formMaxMembers}
@@ -1422,7 +1422,7 @@ export function TeamDetailsScreen({ route }: TeamDetailsScreenProps) {
           onPress={() => setShowConflictModal(false)}
         >
           <View
-            style={[styles.conflictModal, { backgroundColor: colors.white }]}
+            style={[styles.conflictModal, { backgroundColor: colors.bgCard }]}
           >
             <Ionicons
               name="warning-outline"

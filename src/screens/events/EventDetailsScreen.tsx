@@ -47,7 +47,7 @@ import {
 import { addBooking, removeBooking } from '../../store/slices/bookingsSlice';
 import { selectSelectedEvent } from '../../store/slices/eventsSlice';
 import { useCancelBookingMutation } from '../../store/api/eventsApi';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -601,7 +601,14 @@ export function EventDetailsScreen() {
         key={participant.userId}
         style={[
           styles.participantCard,
-          isSaluted && styles.participantCardSaluted,
+          { backgroundColor: colors.bgScreen },
+          isSaluted && [
+            styles.participantCardSaluted,
+            {
+              borderColor: colors.gold,
+              backgroundColor: colors.goldLight + '10',
+            },
+          ],
           isCurrentUser && styles.participantCardDisabled,
         ]}
         onPress={() => handleParticipantClick(participant)}
@@ -614,26 +621,38 @@ export function EventDetailsScreen() {
             style={styles.participantAvatar}
           />
         ) : (
-          <View style={styles.participantAvatarPlaceholder}>
-            <Text style={styles.participantAvatarText}>
+          <View
+            style={[
+              styles.participantAvatarPlaceholder,
+              { backgroundColor: colors.cobalt },
+            ]}
+          >
+            <Text
+              style={[styles.participantAvatarText, { color: colors.white }]}
+            >
               {participant.user?.firstName?.[0] || '?'}
               {participant.user?.lastName?.[0] || ''}
             </Text>
           </View>
         )}
-        <Text style={styles.participantCardName} numberOfLines={2}>
+        <Text
+          style={[styles.participantCardName, { color: colors.ink }]}
+          numberOfLines={2}
+        >
           {participant.user
             ? `${participant.user.firstName} ${participant.user.lastName}`
             : 'Unknown Player'}
         </Text>
         {isSaluted && (
-          <View style={styles.saluteBadge}>
+          <View style={[styles.saluteBadge, { backgroundColor: colors.gold }]}>
             <Text style={styles.saluteBadgeText}>≡ƒÖî</Text>
           </View>
         )}
         {isCurrentUser && (
-          <View style={styles.youBadge}>
-            <Text style={styles.youBadgeText}>You</Text>
+          <View style={[styles.youBadge, { backgroundColor: colors.ink }]}>
+            <Text style={[styles.youBadgeText, { color: colors.white }]}>
+              You
+            </Text>
           </View>
         )}
       </TouchableOpacity>
@@ -677,16 +696,35 @@ export function EventDetailsScreen() {
           const rosterParticipants = byRoster.get(roster.id) ?? [];
           return (
             <View key={roster.id} style={{ marginBottom: 16 }}>
-              <View style={styles.rosterSaluteHeader}>
+              <View
+                style={[
+                  styles.rosterSaluteHeader,
+                  { borderBottomColor: colors.surface },
+                ]}
+              >
                 <Ionicons
                   name="shield-outline"
                   size={14}
                   color={colors.cobalt}
                 />
-                <Text style={styles.rosterSaluteLabel}>{roster.name}</Text>
+                <Text style={[styles.rosterSaluteLabel, { color: colors.ink }]}>
+                  {roster.name}
+                </Text>
                 {roster.isHome && (
-                  <View style={styles.rosterSaluteHomeBadge}>
-                    <Text style={styles.rosterSaluteHomeBadgeText}>HOME</Text>
+                  <View
+                    style={[
+                      styles.rosterSaluteHomeBadge,
+                      { backgroundColor: colors.cobalt + '20' },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.rosterSaluteHomeBadgeText,
+                        { color: colors.cobalt },
+                      ]}
+                    >
+                      HOME
+                    </Text>
                   </View>
                 )}
               </View>
@@ -698,13 +736,20 @@ export function EventDetailsScreen() {
         })}
         {unassigned.length > 0 && (
           <View style={{ marginBottom: 16 }}>
-            <View style={styles.rosterSaluteHeader}>
+            <View
+              style={[
+                styles.rosterSaluteHeader,
+                { borderBottomColor: colors.surface },
+              ]}
+            >
               <Ionicons
                 name="people-outline"
                 size={14}
                 color={colors.inkFaint}
               />
-              <Text style={styles.rosterSaluteLabel}>Other Players</Text>
+              <Text style={[styles.rosterSaluteLabel, { color: colors.ink }]}>
+                Other Players
+              </Text>
             </View>
             <View style={styles.participantsGrid}>
               {unassigned.map(renderSaluteCard)}
@@ -717,7 +762,7 @@ export function EventDetailsScreen() {
 
   if (isLoading && !event) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <LoadingSpinner />
       </View>
     );
@@ -725,7 +770,7 @@ export function EventDetailsScreen() {
 
   if (error && !event) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay message={error} onRetry={() => loadEvent()} />
       </View>
     );
@@ -733,7 +778,7 @@ export function EventDetailsScreen() {
 
   if (!event) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay message="Event not found" onRetry={() => loadEvent()} />
       </View>
     );
@@ -919,15 +964,23 @@ export function EventDetailsScreen() {
                 }
                 activeOpacity={0.7}
               >
-                <Text style={styles.locationNameLink}>
+                <Text
+                  style={[styles.locationNameLink, { color: colors.cobalt }]}
+                >
                   {event.facility.name}
                 </Text>
               </TouchableOpacity>
             ) : event.locationName ? (
-              <Text style={styles.locationNameText}>{event.locationName}</Text>
+              <Text style={[styles.locationNameText, { color: colors.ink }]}>
+                {event.locationName}
+              </Text>
             ) : null}
             {locationAddress ? (
-              <Text style={styles.locationAddressText}>{locationAddress}</Text>
+              <Text
+                style={[styles.locationAddressText, { color: colors.inkSoft }]}
+              >
+                {locationAddress}
+              </Text>
             ) : null}
             <View style={{ marginTop: 10 }}>
               <GetDirectionsButton
@@ -939,14 +992,16 @@ export function EventDetailsScreen() {
           </DetailCard>
         ) : (
           <DetailCard title="Location" delay={25}>
-            <Text style={styles.locationTBD}>Location TBD</Text>
+            <Text style={[styles.locationTBD, { color: colors.inkFaint }]}>
+              Location TBD
+            </Text>
           </DetailCard>
         )}
 
         {/* Game Thread Chat button */}
         {isUserBooked && (
           <TouchableOpacity
-            style={styles.chatBtn}
+            style={[styles.chatBtn, { backgroundColor: colors.cobalt + '12' }]}
             onPress={async () => {
               try {
                 const conv =
@@ -974,7 +1029,9 @@ export function EventDetailsScreen() {
               size={18}
               color={colors.cobalt}
             />
-            <Text style={styles.chatBtnText}>Game Thread</Text>
+            <Text style={[styles.chatBtnText, { color: colors.cobalt }]}>
+              Game Thread
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -994,9 +1051,18 @@ export function EventDetailsScreen() {
                     onPress={() => handleNavigateToLeague(match.leagueId)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.leagueBadge}>
+                    <View
+                      style={[
+                        styles.leagueBadge,
+                        { backgroundColor: colors.goldLight + '20' },
+                      ]}
+                    >
                       <Ionicons name="trophy" size={16} color={colors.gold} />
-                      <Text style={styles.leagueBadgeText}>LEAGUE MATCH</Text>
+                      <Text
+                        style={[styles.leagueBadgeText, { color: colors.gold }]}
+                      >
+                        LEAGUE MATCH
+                      </Text>
                     </View>
 
                     <View style={styles.leagueContent}>
@@ -1006,7 +1072,11 @@ export function EventDetailsScreen() {
                           size={20}
                           color={colors.cobalt}
                         />
-                        <Text style={styles.leagueName}>{leagueName}</Text>
+                        <Text
+                          style={[styles.leagueName, { color: colors.ink }]}
+                        >
+                          {leagueName}
+                        </Text>
                         <Ionicons
                           name="chevron-forward"
                           size={20}
@@ -1016,26 +1086,44 @@ export function EventDetailsScreen() {
 
                       <View style={styles.matchDetails}>
                         <View style={styles.teamInfo}>
-                          <Text style={styles.teamName}>
+                          <Text
+                            style={[styles.teamName, { color: colors.ink }]}
+                          >
                             {match.homeTeam?.name || 'Home Roster'}
                           </Text>
                           {match.homeScore !== undefined &&
                             match.homeScore !== null && (
-                              <Text style={styles.teamScore}>
+                              <Text
+                                style={[
+                                  styles.teamScore,
+                                  { color: colors.cobalt },
+                                ]}
+                              >
                                 {match.homeScore}
                               </Text>
                             )}
                         </View>
 
-                        <Text style={styles.vsText}>vs</Text>
+                        <Text
+                          style={[styles.vsText, { color: colors.inkFaint }]}
+                        >
+                          vs
+                        </Text>
 
                         <View style={styles.teamInfo}>
-                          <Text style={styles.teamName}>
+                          <Text
+                            style={[styles.teamName, { color: colors.ink }]}
+                          >
                             {match.awayTeam?.name || 'Away Roster'}
                           </Text>
                           {match.awayScore !== undefined &&
                             match.awayScore !== null && (
-                              <Text style={styles.teamScore}>
+                              <Text
+                                style={[
+                                  styles.teamScore,
+                                  { color: colors.cobalt },
+                                ]}
+                              >
                                 {match.awayScore}
                               </Text>
                             )}
@@ -1049,7 +1137,12 @@ export function EventDetailsScreen() {
                             size={14}
                             color={colors.inkFaint}
                           />
-                          <Text style={styles.matchMetaText}>
+                          <Text
+                            style={[
+                              styles.matchMetaText,
+                              { color: colors.inkFaint },
+                            ]}
+                          >
                             {new Date(match.scheduledAt).toLocaleDateString(
                               'en-US',
                               {
@@ -1061,11 +1154,21 @@ export function EventDetailsScreen() {
                           </Text>
                           {match.status && (
                             <>
-                              <Text style={styles.matchMetaDot}>·</Text>
+                              <Text
+                                style={[
+                                  styles.matchMetaDot,
+                                  { color: colors.inkFaint },
+                                ]}
+                              >
+                                ·
+                              </Text>
                               <Text
                                 style={[
                                   styles.matchMetaText,
-                                  { textTransform: 'capitalize' },
+                                  {
+                                    textTransform: 'capitalize',
+                                    color: colors.inkFaint,
+                                  },
                                 ]}
                               >
                                 {match.status.replace('_', ' ')}
@@ -1096,36 +1199,58 @@ export function EventDetailsScreen() {
             <>
               <View style={styles.participantsHeader}>
                 {salutedParticipants.size > 0 && !salutesSubmitted && (
-                  <Text style={styles.saluteCount}>
+                  <Text style={[styles.saluteCount, { color: colors.gold }]}>
                     ≡ƒÖî {salutedParticipants.size}/3 saluted
                   </Text>
                 )}
                 {salutesSubmitted && (
-                  <View style={styles.submittedBadge}>
+                  <View
+                    style={[
+                      styles.submittedBadge,
+                      { backgroundColor: colors.cobaltLight + '20' },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={16}
                       color={colors.cobalt}
                     />
-                    <Text style={styles.submittedText}>Submitted</Text>
+                    <Text
+                      style={[styles.submittedText, { color: colors.cobalt }]}
+                    >
+                      Submitted
+                    </Text>
                   </View>
                 )}
               </View>
               {!salutesSubmitted ? (
                 <>
-                  <Text style={styles.saluteInstructions}>
+                  <Text
+                    style={[
+                      styles.saluteInstructions,
+                      { color: colors.inkSecondary },
+                    ]}
+                  >
                     Tap a participant to salute them (max 3 per event)
                   </Text>
                   {renderSaluteGrid()}
                   {salutedParticipants.size > 0 && (
                     <View style={styles.submitSalutesContainer}>
                       <TouchableOpacity
-                        style={styles.submitSalutesButton}
+                        style={[
+                          styles.submitSalutesButton,
+                          { backgroundColor: colors.gold },
+                        ]}
                         onPress={handleSubmitSalutes}
                         disabled={isSubmittingSalutes}
                       >
                         {isSubmittingSalutes ? (
-                          <Text style={styles.submitSalutesButtonText}>
+                          <Text
+                            style={[
+                              styles.submitSalutesButtonText,
+                              { color: colors.white },
+                            ]}
+                          >
                             Submitting...
                           </Text>
                         ) : (
@@ -1135,14 +1260,24 @@ export function EventDetailsScreen() {
                               size={20}
                               color={colors.white}
                             />
-                            <Text style={styles.submitSalutesButtonText}>
+                            <Text
+                              style={[
+                                styles.submitSalutesButtonText,
+                                { color: colors.white },
+                              ]}
+                            >
                               Submit {salutedParticipants.size} Salute
                               {salutedParticipants.size > 1 ? 's' : ''}
                             </Text>
                           </>
                         )}
                       </TouchableOpacity>
-                      <Text style={styles.submitSalutesHint}>
+                      <Text
+                        style={[
+                          styles.submitSalutesHint,
+                          { color: colors.inkSecondary },
+                        ]}
+                      >
                         This will update player ratings
                       </Text>
                     </View>
@@ -1155,10 +1290,20 @@ export function EventDetailsScreen() {
                     size={48}
                     color={colors.cobalt}
                   />
-                  <Text style={styles.salutesSubmittedTitle}>
+                  <Text
+                    style={[
+                      styles.salutesSubmittedTitle,
+                      { color: colors.cobalt },
+                    ]}
+                  >
                     Salutes Submitted!
                   </Text>
-                  <Text style={styles.salutesSubmittedDescription}>
+                  <Text
+                    style={[
+                      styles.salutesSubmittedDescription,
+                      { color: colors.inkSecondary },
+                    ]}
+                  >
                     You saluted {salutedParticipants.size} player
                     {salutedParticipants.size > 1 ? 's' : ''} and their ratings
                     have been updated.
@@ -1197,13 +1342,23 @@ export function EventDetailsScreen() {
                   <React.Fragment key={p.userId}>
                     <PersonRow {...personRowProps} />
                     {index < participants.length - 1 && (
-                      <View style={styles.personRowDivider} />
+                      <View
+                        style={[
+                          styles.personRowDivider,
+                          { backgroundColor: colors.border },
+                        ]}
+                      />
                     )}
                   </React.Fragment>
                 );
               })}
               {participants.length === 0 && (
-                <Text style={styles.emptyParticipantsText}>
+                <Text
+                  style={[
+                    styles.emptyParticipantsText,
+                    { color: colors.inkFaint },
+                  ]}
+                >
                   No players yet — be the first!
                 </Text>
               )}
@@ -1216,7 +1371,11 @@ export function EventDetailsScreen() {
           {/* Equipment checklist */}
           {event.equipment && event.equipment.length > 0 && (
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionLabel}>Equipment Needed</Text>
+              <Text
+                style={[styles.detailSectionLabel, { color: colors.inkFaint }]}
+              >
+                Equipment Needed
+              </Text>
               <View style={styles.equipmentList}>
                 {event.equipment.map((item, index) => (
                   <View key={index} style={styles.equipmentItem}>
@@ -1225,7 +1384,9 @@ export function EventDetailsScreen() {
                       size={16}
                       color={colors.success}
                     />
-                    <Text style={styles.equipmentText}>{item}</Text>
+                    <Text style={[styles.equipmentText, { color: colors.ink }]}>
+                      {item}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -1235,15 +1396,25 @@ export function EventDetailsScreen() {
           {/* Rules & Notes */}
           {event.rules ? (
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionLabel}>Rules & Notes</Text>
-              <Text style={styles.rulesText}>{event.rules}</Text>
+              <Text
+                style={[styles.detailSectionLabel, { color: colors.inkFaint }]}
+              >
+                Rules & Notes
+              </Text>
+              <Text style={[styles.rulesText, { color: colors.inkSoft }]}>
+                {event.rules}
+              </Text>
             </View>
           ) : null}
 
           {/* Organizer as PersonRow */}
           {event.organizer ? (
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionLabel}>Organizer</Text>
+              <Text
+                style={[styles.detailSectionLabel, { color: colors.inkFaint }]}
+              >
+                Organizer
+              </Text>
               <PersonRow
                 name={`${event.organizer.firstName} ${event.organizer.lastName}`}
                 role="Organizer"
@@ -1254,7 +1425,10 @@ export function EventDetailsScreen() {
           {/* Waiver banner (if required and not yet signed) */}
           {waiverStatus?.required && !waiverStatus?.signed && (
             <TouchableOpacity
-              style={styles.waiverBanner}
+              style={[
+                styles.waiverBanner,
+                { backgroundColor: colors.goldTint },
+              ]}
               onPress={() => {
                 setWaiverAgreed(false);
                 setShowWaiverModal(true);
@@ -1266,8 +1440,14 @@ export function EventDetailsScreen() {
                 color={colors.gold}
               />
               <View style={{ flex: 1 }}>
-                <Text style={styles.waiverBannerTitle}>Waiver Required</Text>
-                <Text style={styles.waiverBannerSub}>Read & Sign Waiver →</Text>
+                <Text style={[styles.waiverBannerTitle, { color: colors.ink }]}>
+                  Waiver Required
+                </Text>
+                <Text
+                  style={[styles.waiverBannerSub, { color: colors.inkSoft }]}
+                >
+                  Read & Sign Waiver →
+                </Text>
               </View>
             </TouchableOpacity>
           )}
@@ -1278,7 +1458,9 @@ export function EventDetailsScreen() {
         {/* Description (if exists) */}
         {event.description ? (
           <DetailCard delay={200}>
-            <Text style={styles.description}>{event.description}</Text>
+            <Text style={[styles.description, { color: colors.inkSoft }]}>
+              {event.description}
+            </Text>
           </DetailCard>
         ) : null}
 
@@ -1307,12 +1489,22 @@ export function EventDetailsScreen() {
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
-                  style={styles.ownerStepOutBtn}
+                  style={[
+                    styles.ownerStepOutBtn,
+                    {
+                      borderColor: colors.gold,
+                      backgroundColor: colors.goldTint,
+                    },
+                  ]}
                   onPress={handleCancelBooking}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="exit-outline" size={18} color={colors.gold} />
-                  <Text style={styles.ownerStepOutBtnText}>Step Out</Text>
+                  <Text
+                    style={[styles.ownerStepOutBtnText, { color: colors.gold }]}
+                  >
+                    Step Out
+                  </Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -1338,18 +1530,24 @@ export function EventDetailsScreen() {
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={styles.ownerEditBtn}
+              style={[styles.ownerEditBtn, { backgroundColor: colors.pine }]}
               onPress={handleEditEvent}
               activeOpacity={0.7}
             >
-              <Text style={styles.ownerEditBtnText}>Edit Event</Text>
+              <Text style={[styles.ownerEditBtnText, { color: colors.white }]}>
+                Edit Event
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.ownerDeleteBtn}
+              style={[styles.ownerDeleteBtn, { borderColor: colors.heart }]}
               onPress={() => setShowCancelModal(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.ownerDeleteBtnText}>Delete Event</Text>
+              <Text
+                style={[styles.ownerDeleteBtnText, { color: colors.heart }]}
+              >
+                Delete Event
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1583,12 +1781,12 @@ export function EventDetailsScreen() {
         onRequestClose={() => setShowSaluteModal(false)}
       >
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
           activeOpacity={1}
           onPress={() => setShowSaluteModal(false)}
         >
           <View
-            style={styles.modalContent}
+            style={[styles.modalContent, { backgroundColor: colors.bgCard }]}
             onStartShouldSetResponder={() => true}
           >
             {selectedParticipant && (
@@ -1600,8 +1798,15 @@ export function EventDetailsScreen() {
                     style={styles.modalAvatar}
                   />
                 ) : (
-                  <View style={styles.modalAvatarPlaceholder}>
-                    <Text style={styles.modalAvatarText}>
+                  <View
+                    style={[
+                      styles.modalAvatarPlaceholder,
+                      { backgroundColor: colors.cobalt },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.modalAvatarText, { color: colors.white }]}
+                    >
                       {selectedParticipant.user?.firstName?.[0] || '?'}
                       {selectedParticipant.user?.lastName?.[0] || ''}
                     </Text>
@@ -1609,7 +1814,7 @@ export function EventDetailsScreen() {
                 )}
 
                 {/* Participant Name */}
-                <Text style={styles.modalName}>
+                <Text style={[styles.modalName, { color: colors.ink }]}>
                   {selectedParticipant.user
                     ? `${selectedParticipant.user.firstName} ${selectedParticipant.user.lastName}`
                     : 'Unknown User'}
@@ -1618,33 +1823,74 @@ export function EventDetailsScreen() {
                 {/* Salute Status */}
                 {salutedParticipants.has(selectedParticipant.userId) ? (
                   <>
-                    <View style={styles.modalSalutedBadge}>
-                      <Text style={styles.modalSalutedText}>≡ƒÖî Saluted</Text>
+                    <View
+                      style={[
+                        styles.modalSalutedBadge,
+                        { backgroundColor: colors.goldLight + '20' },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.modalSalutedText,
+                          { color: colors.gold },
+                        ]}
+                      >
+                        ≡ƒÖî Saluted
+                      </Text>
                     </View>
-                    <Text style={styles.modalDescription}>
+                    <Text
+                      style={[
+                        styles.modalDescription,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
                       You've already saluted this player. You can remove your
                       salute if you'd like.
                     </Text>
                     <TouchableOpacity
-                      style={styles.modalButtonSecondary}
+                      style={[
+                        styles.modalButtonSecondary,
+                        {
+                          backgroundColor: colors.bgScreen,
+                          borderColor: colors.border,
+                        },
+                      ]}
                       onPress={handleUnsalute}
                     >
-                      <Text style={styles.modalButtonSecondaryText}>
+                      <Text
+                        style={[
+                          styles.modalButtonSecondaryText,
+                          { color: colors.inkSecondary },
+                        ]}
+                      >
                         Remove Salute
                       </Text>
                     </TouchableOpacity>
                   </>
                 ) : (
                   <>
-                    <Text style={styles.modalDescription}>
+                    <Text
+                      style={[
+                        styles.modalDescription,
+                        { color: colors.inkSecondary },
+                      ]}
+                    >
                       Give this player a salute to recognize their great
                       sportsmanship and skills!
                     </Text>
                     <TouchableOpacity
-                      style={styles.modalButtonPrimary}
+                      style={[
+                        styles.modalButtonPrimary,
+                        { backgroundColor: colors.gold },
+                      ]}
                       onPress={handleSalute}
                     >
-                      <Text style={styles.modalButtonPrimaryText}>
+                      <Text
+                        style={[
+                          styles.modalButtonPrimaryText,
+                          { color: colors.white },
+                        ]}
+                      >
                         ≡ƒÖî Salute Player
                       </Text>
                     </TouchableOpacity>
@@ -1656,7 +1902,14 @@ export function EventDetailsScreen() {
                   style={styles.modalButtonClose}
                   onPress={() => setShowSaluteModal(false)}
                 >
-                  <Text style={styles.modalButtonCloseText}>Close</Text>
+                  <Text
+                    style={[
+                      styles.modalButtonCloseText,
+                      { color: colors.inkSecondary },
+                    ]}
+                  >
+                    Close
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -1670,32 +1923,27 @@ export function EventDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   // Location card styles
   locationNameLink: {
     fontFamily: fonts.heading,
     fontSize: 16,
-    color: colors.cobalt,
     textDecorationLine: 'underline',
     marginBottom: 2,
   },
   locationNameText: {
     fontFamily: fonts.heading,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 2,
   },
   locationAddressText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkSoft,
     lineHeight: 20,
   },
   locationTBD: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     fontStyle: 'italic',
   },
   // League match card styles
@@ -1703,14 +1951,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.goldLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     marginBottom: 12,
   },
   leagueBadgeText: {
-    color: colors.gold,
     fontSize: 12,
     fontWeight: '700',
     marginLeft: 4,
@@ -1727,7 +1973,6 @@ const styles = StyleSheet.create({
   leagueName: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
     flex: 1,
   },
   matchDetails: {
@@ -1745,19 +1990,16 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.ink,
     flex: 1,
   },
   teamScore: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.cobalt,
     marginLeft: 8,
   },
   vsText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.inkFaint,
     marginHorizontal: 12,
   },
   matchMeta: {
@@ -1767,11 +2009,9 @@ const styles = StyleSheet.create({
   },
   matchMetaText: {
     fontSize: 13,
-    color: colors.inkFaint,
   },
   matchMetaDot: {
     fontSize: 13,
-    color: colors.inkFaint,
   },
   // Details card sub-sections
   detailSection: {
@@ -1780,7 +2020,6 @@ const styles = StyleSheet.create({
   detailSectionLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -1794,31 +2033,26 @@ const styles = StyleSheet.create({
   },
   equipmentText: {
     fontSize: 16,
-    color: colors.ink,
     marginLeft: 8,
   },
   rulesText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSoft,
     lineHeight: 22,
   },
   description: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSoft,
     lineHeight: 24,
   },
   // Participants
   personRowDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
     marginLeft: 52,
   },
   emptyParticipantsText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     textAlign: 'center',
     paddingVertical: 16,
   },
@@ -1826,7 +2060,6 @@ const styles = StyleSheet.create({
   waiverBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.goldTint,
     padding: 12,
     borderRadius: 10,
     marginTop: 8,
@@ -1835,12 +2068,10 @@ const styles = StyleSheet.create({
   waiverBannerTitle: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
   },
   waiverBannerSub: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSoft,
   },
   // Owner edit/delete actions (bottom of scroll)
   ownerActions: {
@@ -1850,7 +2081,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ownerEditBtn: {
-    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1858,7 +2088,6 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   ownerJoinBtn: {
     flexDirection: 'row',
@@ -1889,19 +2118,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: colors.gold,
     borderRadius: 12,
     paddingVertical: 14,
-    backgroundColor: colors.goldTint,
   },
   ownerStepOutBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.gold,
   },
   ownerDeleteBtn: {
     borderWidth: 2,
-    borderColor: colors.heart,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1909,7 +2134,6 @@ const styles = StyleSheet.create({
   ownerDeleteBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.heart,
   },
   // Participants Grid Styles (salute grid — kept exactly as-is)
   participantsHeader: {
@@ -1920,12 +2144,10 @@ const styles = StyleSheet.create({
   },
   saluteCount: {
     fontSize: 14,
-    color: colors.gold,
     fontWeight: '600',
   },
   saluteInstructions: {
     fontSize: 14,
-    color: colors.inkSecondary,
     marginBottom: 16,
   },
   participantsGrid: {
@@ -1940,17 +2162,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
   },
   rosterSaluteLabel: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.ink,
     textTransform: 'uppercase',
     flex: 1,
   },
   rosterSaluteHomeBadge: {
-    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1958,12 +2177,10 @@ const styles = StyleSheet.create({
   rosterSaluteHomeBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.cobalt,
   },
   participantCard: {
     width: '30%',
     aspectRatio: 0.75,
-    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -1971,10 +2188,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  participantCardSaluted: {
-    borderColor: colors.gold,
-    backgroundColor: colors.goldLight + '10',
-  },
+  participantCardSaluted: {},
   participantCardDisabled: {
     opacity: 0.5,
   },
@@ -1988,7 +2202,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -1996,19 +2209,16 @@ const styles = StyleSheet.create({
   participantAvatarText: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.white,
   },
   participantCardName: {
     fontSize: 13,
     fontWeight: '500',
-    color: colors.ink,
     textAlign: 'center',
   },
   saluteBadge: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: colors.gold,
     borderRadius: 12,
     width: 24,
     height: 24,
@@ -2021,7 +2231,6 @@ const styles = StyleSheet.create({
   youBadge: {
     position: 'absolute',
     bottom: 8,
-    backgroundColor: colors.ink,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -2029,12 +2238,10 @@ const styles = StyleSheet.create({
   youBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.white,
   },
   submittedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cobaltLight + '20',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -2043,14 +2250,12 @@ const styles = StyleSheet.create({
   submittedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.cobalt,
   },
   submitSalutesContainer: {
     marginTop: 20,
     alignItems: 'center',
   },
   submitSalutesButton: {
-    backgroundColor: colors.gold,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2063,11 +2268,9 @@ const styles = StyleSheet.create({
   submitSalutesButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.white,
   },
   submitSalutesHint: {
     fontSize: 13,
-    color: colors.inkSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -2078,26 +2281,22 @@ const styles = StyleSheet.create({
   salutesSubmittedTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.cobalt,
     marginTop: 16,
     marginBottom: 8,
   },
   salutesSubmittedDescription: {
     fontSize: 16,
-    color: colors.inkSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalContent: {
-    backgroundColor: colors.white,
     borderRadius: 20,
     padding: 24,
     width: '100%',
@@ -2114,7 +2313,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -2122,17 +2320,14 @@ const styles = StyleSheet.create({
   modalAvatarText: {
     fontSize: 40,
     fontWeight: '700',
-    color: colors.white,
   },
   modalName: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.ink,
     marginBottom: 16,
     textAlign: 'center',
   },
   modalSalutedBadge: {
-    backgroundColor: colors.goldLight + '20',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -2141,17 +2336,14 @@ const styles = StyleSheet.create({
   modalSalutedText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gold,
   },
   modalDescription: {
     fontSize: 16,
-    color: colors.inkSecondary,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
   },
   modalButtonPrimary: {
-    backgroundColor: colors.gold,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -2162,10 +2354,8 @@ const styles = StyleSheet.create({
   modalButtonPrimaryText: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.white,
   },
   modalButtonSecondary: {
-    backgroundColor: colors.background,
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -2173,19 +2363,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   modalButtonSecondaryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.inkSecondary,
   },
   modalButtonClose: {
     paddingVertical: 12,
   },
   modalButtonCloseText: {
     fontSize: 16,
-    color: colors.inkSecondary,
   },
   chatBtn: {
     flexDirection: 'row',
@@ -2196,12 +2383,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: colors.cobalt + '12',
     gap: 8,
   },
   chatBtnText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.cobalt,
   },
 });

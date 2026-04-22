@@ -137,7 +137,7 @@ export function ProfileScreen() {
 
   if (!authUser) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <EmptyState
           icon="person-outline"
           title="Profile Unavailable"
@@ -151,7 +151,7 @@ export function ProfileScreen() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }, { backgroundColor: colors.bgScreen }]}
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={[
         styles.content,
         contentMaxWidth
@@ -196,10 +196,12 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="create-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>Edit</Text>
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>
+            Edit
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { borderColor: colors.cobalt }, styles.actionBtnCobalt, { borderColor: colors.cobalt }]}
+          style={[styles.actionBtn, { borderColor: colors.cobalt }]}
           onPress={() =>
             (navigation as any).navigate('AvailabilityCalendar', {
               userId: authUser.id,
@@ -208,25 +210,30 @@ export function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="calendar-outline" size={18} color={colors.cobalt} />
-          <Text style={[styles.actionBtnText, { color: colors.cobalt }, styles.actionBtnTextCobalt, { color: colors.cobalt }]}>
+          <Text style={[styles.actionBtnText, { color: colors.cobalt }]}>
             Availability
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Recent Games ───────────────────────────── */}
-      <Text style={[styles.sectionTitle, { color: colors.pine }]}>Recent Games</Text>
-      <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Text style={[styles.sectionTitle, { color: colors.pine }]}>
+        Recent Games
+      </Text>
+      <View
+        style={[
+          styles.sectionCard,
+          { backgroundColor: colors.bgCard, borderColor: colors.border },
+        ]}
+      >
         {loadingStats ? (
           Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
         ) : recentGames.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons
-              name="calendar-outline"
-              size={32}
-              color={colors.border}
-            />
-            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No games played yet</Text>
+            <Ionicons name="calendar-outline" size={32} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+              No games played yet
+            </Text>
             <TouchableOpacity
               onPress={() =>
                 (navigation as any)
@@ -235,7 +242,9 @@ export function ProfileScreen() {
               }
               activeOpacity={0.7}
             >
-              <Text style={[styles.emptyAction, { color: colors.pine }]}>Find one nearby</Text>
+              <Text style={[styles.emptyAction, { color: colors.pine }]}>
+                Find one nearby
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -246,8 +255,10 @@ export function ProfileScreen() {
               <PressableCard
                 key={event.id}
                 style={[
-                  styles.gameRow, { borderBottomColor: colors.border + '50' },
-                  idx === recentGames.length - 1 && styles.gameRowLast]}
+                  styles.gameRow,
+                  { borderBottomColor: colors.border + '50' },
+                  idx === recentGames.length - 1 && styles.gameRowLast,
+                ]}
                 onPress={() =>
                   (navigation as any).navigate('Home', {
                     screen: 'EventDetails',
@@ -259,10 +270,16 @@ export function ProfileScreen() {
                   style={[styles.sportDot, { backgroundColor: sportColor }]}
                 />
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.gameName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {event.title}
                   </Text>
-                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.gameMeta, { color: colors.inkSecondary }]}
+                    numberOfLines={1}
+                  >
                     {formatEventDate(event.startTime as any)}{' '}
                     {(event as any).facility?.name
                       ? `· ${(event as any).facility.name}`
@@ -282,17 +299,20 @@ export function ProfileScreen() {
 
       {/* ── Teams ──────────────────────────────────── */}
       <Text style={[styles.sectionTitle, { color: colors.pine }]}>Teams</Text>
-      <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.sectionCard,
+          { backgroundColor: colors.bgCard, borderColor: colors.border },
+        ]}
+      >
         {loadingStats ? (
           Array.from({ length: 2 }).map((_, i) => <SkeletonRow key={i} />)
         ) : myTeams.length === 0 ? (
           <View style={styles.emptySection}>
-            <Ionicons
-              name="people-outline"
-              size={32}
-              color={colors.border}
-            />
-            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No teams yet</Text>
+            <Ionicons name="people-outline" size={32} color={colors.border} />
+            <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
+              No teams yet
+            </Text>
             <TouchableOpacity
               onPress={() =>
                 (navigation as any)
@@ -301,7 +321,9 @@ export function ProfileScreen() {
               }
               activeOpacity={0.7}
             >
-              <Text style={[styles.emptyAction, { color: colors.pine }]}>Join or create one</Text>
+              <Text style={[styles.emptyAction, { color: colors.pine }]}>
+                Join or create one
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -313,8 +335,10 @@ export function ProfileScreen() {
               <PressableCard
                 key={team.id}
                 style={[
-                  styles.gameRow, { borderBottomColor: colors.border + '50' },
-                  idx === myTeams.length - 1 && styles.gameRowLast]}
+                  styles.gameRow,
+                  { borderBottomColor: colors.border + '50' },
+                  idx === myTeams.length - 1 && styles.gameRowLast,
+                ]}
                 onPress={() =>
                   (navigation as any).getParent()?.navigate('Teams', {
                     screen: 'TeamDetails',
@@ -331,10 +355,15 @@ export function ProfileScreen() {
                   <Text style={styles.teamEmoji}>{getSportEmoji(sport)}</Text>
                 </View>
                 <View style={styles.gameInfo}>
-                  <Text style={[styles.gameName, { color: colors.ink }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.gameName, { color: colors.ink }]}
+                    numberOfLines={1}
+                  >
                     {team.name}
                   </Text>
-                  <Text style={[styles.gameMeta, { color: colors.inkSecondary }]}>
+                  <Text
+                    style={[styles.gameMeta, { color: colors.inkSecondary }]}
+                  >
                     {team.members?.length ?? 0} players
                   </Text>
                 </View>
@@ -356,7 +385,9 @@ export function ProfileScreen() {
         activeOpacity={0.7}
       >
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
-        <Text style={[styles.logoutText, { color: colors.error }]}>Log Out</Text>
+        <Text style={[styles.logoutText, { color: colors.error }]}>
+          Log Out
+        </Text>
       </TouchableOpacity>
 
       <View style={{ height: 32 }} />

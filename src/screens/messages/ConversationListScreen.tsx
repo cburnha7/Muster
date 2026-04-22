@@ -199,15 +199,11 @@ export function ConversationListScreen() {
     const emptyState = EMPTY_STATES[activeFilter];
     return (
       <View style={styles.emptyState}>
-        <Ionicons
-          name={emptyState.icon}
-          size={56}
-          color={colors.border}
-        />
-        <Text style={[styles.emptyTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
+        <Ionicons name={emptyState.icon} size={56} color={colors.border} />
+        <Text style={[styles.emptyTitle, { color: colors.ink }]}>
           {emptyState.title}
         </Text>
-        <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }, { color: colors.textSecondary }]}>
+        <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
           {emptyState.subtitle}
         </Text>
         {emptyState.actionLabel && (
@@ -216,7 +212,9 @@ export function ConversationListScreen() {
             onPress={handleEmptyAction}
             activeOpacity={0.7}
           >
-            <Text style={[styles.emptyActionText, { color: colors.white }]}>{emptyState.actionLabel}</Text>
+            <Text style={[styles.emptyActionText, { color: colors.white }]}>
+              {emptyState.actionLabel}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -225,7 +223,7 @@ export function ConversationListScreen() {
 
   if (isLoading && conversations.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonConversationRow key={i} />
         ))}
@@ -234,7 +232,7 @@ export function ConversationListScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface }, { backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* Family crew selector */}
       {hasDependents && (
         <MyCrewRow
@@ -255,16 +253,21 @@ export function ConversationListScreen() {
           <TouchableOpacity
             key={f.key}
             style={[
-              styles.chip, { backgroundColor: colors.bgSubtle },
-              activeFilter === f.key && styles.chipActive, activeFilter === f.key && { backgroundColor: colors.cobalt },
-              activeFilter !== f.key && { backgroundColor: colors.bgCard }]}
+              styles.chip,
+              activeFilter === f.key
+                ? { backgroundColor: colors.cobalt }
+                : { backgroundColor: colors.bgCard },
+            ]}
             onPress={() => setActiveFilter(f.key)}
             activeOpacity={0.75}
           >
             <Text
               style={[
-                styles.chipText, { color: colors.inkSecondary },
-                activeFilter === f.key && styles.chipTextActive, activeFilter === f.key && { color: colors.white }]}
+                styles.chipText,
+                { color: colors.inkSecondary },
+                activeFilter === f.key && styles.chipTextActive,
+                activeFilter === f.key && { color: colors.white },
+              ]}
             >
               {f.label}
             </Text>
@@ -285,7 +288,14 @@ export function ConversationListScreen() {
             onMute={handleMute}
           />
         )}
-        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: colors.border + '50' }]} />}
+        ItemSeparatorComponent={() => (
+          <View
+            style={[
+              styles.separator,
+              { backgroundColor: colors.border + '50' },
+            ]}
+          />
+        )}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

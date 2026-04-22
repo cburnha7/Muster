@@ -680,7 +680,9 @@ export function HomeScreen() {
 
   if (authLoading || isLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
+      >
         <LoadingSpinner size={40} color={colors.cobalt} />
       </View>
     );
@@ -688,14 +690,16 @@ export function HomeScreen() {
 
   if (error) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
+      >
         <ErrorDisplay message={error} onRetry={handleRefresh} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+    <View style={[styles.screen, { backgroundColor: colors.bgScreen }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -737,7 +741,10 @@ export function HomeScreen() {
           {/* ── Calendar (always visible) ──────── */}
           <View style={styles.calendarSection}>
             <View
-              style={[styles.calendarCard, { backgroundColor: colors.surface, shadowColor: colors.ink }, { backgroundColor: colors.bgCard }]}
+              style={[
+                styles.calendarCard,
+                { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+              ]}
             >
               <Calendar
                 current={selectedDate}
@@ -761,13 +768,15 @@ export function HomeScreen() {
 
           {/* ── Games near you ─────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.ink }, { color: colors.textPrimary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]}>
               Games near you
             </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Events' as any)}
             >
-              <Text style={[styles.seeAll, { color: colors.cobalt }]}>See all</Text>
+              <Text style={[styles.seeAll, { color: colors.cobalt }]}>
+                See all
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -782,8 +791,9 @@ export function HomeScreen() {
               <TouchableOpacity
                 key={event.id}
                 style={[
-                  styles.discoverCard, { backgroundColor: colors.surface },
-                  { backgroundColor: colors.bgCard }]}
+                  styles.discoverCard,
+                  { backgroundColor: colors.bgCard },
+                ]}
                 onPress={() =>
                   navigation.navigate('EventDetails', { eventId: event.id })
                 }
@@ -791,8 +801,9 @@ export function HomeScreen() {
               >
                 <View
                   style={[
-                    styles.discoverIcon, { backgroundColor: colors.background },
-                    { backgroundColor: colors.bgSubtle }]}
+                    styles.discoverIcon,
+                    { backgroundColor: colors.bgSubtle },
+                  ]}
                 >
                   <Text style={{ fontSize: 20 }}>
                     {getSportEmoji(event.sportType)}
@@ -800,17 +811,16 @@ export function HomeScreen() {
                 </View>
                 <View style={styles.discoverInfo}>
                   <Text
-                    style={[
-                      styles.discoverTitle, { color: colors.ink },
-                      { color: colors.textPrimary }]}
+                    style={[styles.discoverTitle, { color: colors.ink }]}
                     numberOfLines={1}
                   >
                     {event.title}
                   </Text>
                   <Text
                     style={[
-                      styles.discoverMeta, { color: colors.inkSecondary },
-                      { color: colors.textSecondary }]}
+                      styles.discoverMeta,
+                      { color: colors.inkSecondary },
+                    ]}
                     numberOfLines={1}
                   >
                     {formatEventTime(event.startTime)} {'\u00B7'}{' '}
@@ -825,11 +835,7 @@ export function HomeScreen() {
                   style={styles.joinBtn}
                   onPress={() => handleJoinEvent(event.id)}
                 >
-                  <Text
-                    style={[
-                      styles.joinBtnText, { color: colors.cobalt },
-                      { color: colors.textSecondary }]}
-                  >
+                  <Text style={[styles.joinBtnText, { color: colors.cobalt }]}>
                     Join
                   </Text>
                 </TouchableOpacity>
@@ -837,16 +843,28 @@ export function HomeScreen() {
             ))
           ) : (
             <View
-              style={[styles.discoverEmpty, { backgroundColor: colors.surface }, { backgroundColor: colors.bgCard }]}
+              style={[styles.discoverEmpty, { backgroundColor: colors.bgCard }]}
             >
-              <Text style={[styles.discoverEmptyText, { color: colors.inkSecondary }]}>
+              <Text
+                style={[
+                  styles.discoverEmptyText,
+                  { color: colors.inkSecondary },
+                ]}
+              >
                 No games near you yet
               </Text>
               <TouchableOpacity
-                style={[styles.hostFirstBtn, { backgroundColor: colors.cobalt }]}
+                style={[
+                  styles.hostFirstBtn,
+                  { backgroundColor: colors.cobalt },
+                ]}
                 onPress={handleCreateEvent}
               >
-                <Text style={[styles.hostFirstBtnText, { color: colors.white }]}>Host the first one</Text>
+                <Text
+                  style={[styles.hostFirstBtnText, { color: colors.white }]}
+                >
+                  Host the first one
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -855,7 +873,10 @@ export function HomeScreen() {
 
       {/* FAB */}
       <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.cobalt, shadowColor: colors.cobalt }]}
+        style={[
+          styles.fab,
+          { backgroundColor: colors.cobalt, shadowColor: colors.cobalt },
+        ]}
         onPress={handleCreateEvent}
         activeOpacity={0.85}
         accessibilityRole="button"

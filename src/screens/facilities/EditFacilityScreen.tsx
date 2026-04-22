@@ -40,7 +40,7 @@ import {
   Facility,
   FacilityPhoto,
 } from '../../types';
-import { colors, fonts, Spacing, TextStyles, useTheme } from '../../theme';
+import { fonts, Spacing, TextStyles, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import { getSurfaceName } from '../../utils/getSurfaceName';
 import { getSportLabel } from '../../constants/sports';
@@ -61,8 +61,14 @@ function TabBar({
   activeIndex: number;
   onPress: (i: number) => void;
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={s.tabBarOuter}>
+    <View
+      style={[
+        s.tabBarOuter,
+        { backgroundColor: colors.bgCard, borderBottomColor: colors.border },
+      ]}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -77,10 +83,20 @@ function TabBar({
               onPress={() => onPress(i)}
               activeOpacity={0.7}
             >
-              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+              <Text
+                style={[
+                  s.tabLabel,
+                  { color: colors.inkSoft },
+                  active && { color: colors.cobalt },
+                ]}
+              >
                 {tab}
               </Text>
-              {active && <View style={s.tabUnderline} />}
+              {active && (
+                <View
+                  style={[s.tabUnderline, { backgroundColor: colors.cobalt }]}
+                />
+              )}
             </TouchableOpacity>
           );
         })}
@@ -682,8 +698,15 @@ export function EditFacilityScreen({
         {/* ── TAB 1 — Location ───────────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            <Text style={s.sectionLabel}>GROUND NAME</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              GROUND NAME
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 <FormInput
                   label="Ground Name *"
@@ -695,8 +718,15 @@ export function EditFacilityScreen({
               </View>
             </View>
 
-            <Text style={s.sectionLabel}>DESCRIPTION</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              DESCRIPTION
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 <FormInput
                   label="Description *"
@@ -710,8 +740,15 @@ export function EditFacilityScreen({
               </View>
             </View>
 
-            <Text style={s.sectionLabel}>PHOTOS</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              PHOTOS
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 {photos.length > 0 && (
                   <ScrollView
@@ -812,11 +849,25 @@ export function EditFacilityScreen({
               </View>
             </View>
 
-            <Text style={s.sectionLabel}>SEARCH ADDRESS</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              SEARCH ADDRESS
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 <TextInput
-                  style={s.addressSearchInput}
+                  style={[
+                    s.addressSearchInput,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      color: colors.ink,
+                    },
+                  ]}
                   placeholder="Start typing an address..."
                   placeholderTextColor={colors.inkSoft}
                   value={addressQuery}
@@ -841,7 +892,15 @@ export function EditFacilityScreen({
                   }}
                 />
                 {addressSuggestions.length > 0 && (
-                  <View style={s.suggestionsContainer}>
+                  <View
+                    style={[
+                      s.suggestionsContainer,
+                      {
+                        backgroundColor: colors.bgCard,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
                     {addressSuggestions
                       .slice(0, 5)
                       .map((suggestion: any, idx: number) => (
@@ -849,7 +908,10 @@ export function EditFacilityScreen({
                           key={suggestion.place_id || idx}
                           style={[
                             s.suggestionItem,
-                            idx < 4 && s.suggestionBorder,
+                            idx < 4 && [
+                              s.suggestionBorder,
+                              { borderBottomColor: colors.border },
+                            ],
                           ]}
                           onPress={() => {
                             const apiKey =
@@ -909,7 +971,10 @@ export function EditFacilityScreen({
                             color={colors.inkSoft}
                             style={{ marginRight: 8 }}
                           />
-                          <Text style={s.suggestionText} numberOfLines={1}>
+                          <Text
+                            style={[s.suggestionText, { color: colors.ink }]}
+                            numberOfLines={1}
+                          >
                             {suggestion.description}
                           </Text>
                         </TouchableOpacity>
@@ -919,8 +984,15 @@ export function EditFacilityScreen({
               </View>
             </View>
 
-            <Text style={s.sectionLabel}>ADDRESS DETAILS</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              ADDRESS DETAILS
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 <FormInput
                   label="Street Address *"
@@ -979,8 +1051,15 @@ export function EditFacilityScreen({
         {/* ── TAB 2 — Contact ────────────────────────────────────────────── */}
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            <Text style={s.sectionLabel}>CONTACT INFORMATION</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              CONTACT INFORMATION
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 <FormInput
                   label="Contact Name"
@@ -1035,8 +1114,15 @@ export function EditFacilityScreen({
             />
 
             {/* Sports Available — SportIconGrid */}
-            <Text style={s.sectionLabel}>SPORTS AVAILABLE</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              SPORTS AVAILABLE
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 {errors.sportTypes && (
                   <Text
@@ -1058,16 +1144,25 @@ export function EditFacilityScreen({
             </View>
 
             {/* Booking Confirmation Required */}
-            <Text style={s.sectionLabel}>REQUIREMENTS</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              REQUIREMENTS
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 {/* Toggle 1: Booking Confirmation */}
                 <View style={s.toggleRow}>
                   <View style={{ flex: 1, marginRight: Spacing.md }}>
-                    <Text style={s.toggleLabel}>
+                    <Text style={[s.toggleLabel, { color: colors.ink }]}>
                       Requires Booking Confirmation
                     </Text>
-                    <Text style={s.toggleDescription}>
+                    <Text
+                      style={[s.toggleDescription, { color: colors.inkFaint }]}
+                    >
                       All reservation requests must be approved before they are
                       confirmed
                     </Text>
@@ -1094,10 +1189,15 @@ export function EditFacilityScreen({
                 {requiresBookingConfirmation && (
                   <View style={[s.toggleRow, { marginTop: 16 }]}>
                     <View style={{ flex: 1, marginRight: Spacing.md }}>
-                      <Text style={s.toggleLabel}>
+                      <Text style={[s.toggleLabel, { color: colors.ink }]}>
                         Requires Proof of Insurance
                       </Text>
-                      <Text style={s.toggleDescription}>
+                      <Text
+                        style={[
+                          s.toggleDescription,
+                          { color: colors.inkFaint },
+                        ]}
+                      >
                         Renters must attach a valid insurance document when
                         reserving a court
                       </Text>
@@ -1119,8 +1219,12 @@ export function EditFacilityScreen({
                 {/* Toggle 3: Waiver Required */}
                 <View style={[s.toggleRow, { marginTop: 16 }]}>
                   <View style={{ flex: 1, marginRight: Spacing.md }}>
-                    <Text style={s.toggleLabel}>Require Waiver</Text>
-                    <Text style={s.toggleDescription}>
+                    <Text style={[s.toggleLabel, { color: colors.ink }]}>
+                      Require Waiver
+                    </Text>
+                    <Text
+                      style={[s.toggleDescription, { color: colors.inkFaint }]}
+                    >
                       Players must sign a waiver before attending events at this
                       facility.
                     </Text>
@@ -1138,8 +1242,12 @@ export function EditFacilityScreen({
 
                 {waiverRequired && (
                   <View style={{ marginTop: 12 }}>
-                    <Text style={s.toggleLabel}>Waiver Document</Text>
-                    <Text style={s.toggleDescription}>
+                    <Text style={[s.toggleLabel, { color: colors.ink }]}>
+                      Waiver Document
+                    </Text>
+                    <Text
+                      style={[s.toggleDescription, { color: colors.inkFaint }]}
+                    >
                       Players will be required to read and accept this waiver
                       before joining events. Uploading a new version will
                       require all players to re-sign.
@@ -1206,8 +1314,15 @@ export function EditFacilityScreen({
             </View>
 
             {/* Cancellation Policy */}
-            <Text style={s.sectionLabel}>CANCELLATION POLICY</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              CANCELLATION POLICY
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 <CancellationPolicyPicker
                   value={formData.cancellationPolicyHours ?? null}
@@ -1223,8 +1338,15 @@ export function EditFacilityScreen({
         <View style={{ width: screenWidth }}>
           <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Facility Map */}
-            <Text style={s.sectionLabel}>FACILITY MAP</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              FACILITY MAP
+            </Text>
+            <View
+              style={[
+                s.card,
+                { backgroundColor: colors.bgCard, shadowColor: colors.black },
+              ]}
+            >
               <View style={{ padding: 16 }}>
                 {facilityMapUrl ? (
                   <OptimizedImage
@@ -1332,9 +1454,16 @@ export function EditFacilityScreen({
             </View>
 
             {/* Courts / Fields list */}
-            <Text style={s.sectionLabel}>{surfaceName.toUpperCase()}S</Text>
+            <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+              {surfaceName.toUpperCase()}S
+            </Text>
             {courts.length === 0 ? (
-              <View style={s.card}>
+              <View
+                style={[
+                  s.card,
+                  { backgroundColor: colors.bgCard, shadowColor: colors.black },
+                ]}
+              >
                 <View style={{ padding: 24, alignItems: 'center' }}>
                   <Text
                     style={{
@@ -1355,7 +1484,15 @@ export function EditFacilityScreen({
                   onPress={() => handleEditCourt(court)}
                   activeOpacity={0.7}
                 >
-                  <View style={s.card}>
+                  <View
+                    style={[
+                      s.card,
+                      {
+                        backgroundColor: colors.bgCard,
+                        shadowColor: colors.black,
+                      },
+                    ]}
+                  >
                     <View
                       style={{
                         flexDirection: 'row',
@@ -1481,10 +1618,12 @@ export function EditFacilityScreen({
           });
         }}
       >
-        <View style={s.modalOverlay}>
-          <View style={s.courtModal}>
-            <View style={s.modalHeader}>
-              <Text style={s.modalTitle}>
+        <View
+          style={[s.modalOverlay, { backgroundColor: colors.overlayGrounds }]}
+        >
+          <View style={[s.courtModal, { backgroundColor: colors.bgCard }]}>
+            <View style={[s.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[s.modalTitle, { color: colors.ink }]}>
                 {editingCourtId ? `Edit ${surfaceName}` : `Add ${surfaceName}`}
               </Text>
               <TouchableOpacity
@@ -1533,7 +1672,11 @@ export function EditFacilityScreen({
                   return (
                     <TouchableOpacity
                       key={sport}
-                      style={[s.sportChip, isSelected && s.sportChipSelected]}
+                      style={[
+                        s.sportChip,
+                        { backgroundColor: colors.surface },
+                        isSelected && { backgroundColor: colors.cobalt },
+                      ]}
                       onPress={() =>
                         setNewCourt({ ...newCourt, sportType: sport })
                       }
@@ -1541,7 +1684,11 @@ export function EditFacilityScreen({
                       <Text
                         style={[
                           s.sportChipText,
-                          isSelected && s.sportChipTextSelected,
+                          { color: colors.inkSoft },
+                          isSelected && [
+                            s.sportChipTextSelected,
+                            { color: colors.white },
+                          ],
                         ]}
                       >
                         {formatSportType(sport)}
@@ -1572,7 +1719,14 @@ export function EditFacilityScreen({
                 }
               >
                 <View
-                  style={[s.checkbox, newCourt.isIndoor && s.checkboxChecked]}
+                  style={[
+                    s.checkbox,
+                    { borderColor: colors.border },
+                    newCourt.isIndoor && {
+                      backgroundColor: colors.cobalt,
+                      borderColor: colors.cobalt,
+                    },
+                  ]}
                 >
                   {newCourt.isIndoor && (
                     <Ionicons
@@ -1798,14 +1952,11 @@ export function EditFacilityScreen({
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
 
   /* ── Tab bar ── */
   tabBarOuter: {
-    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   tabBarContent: {
     flexDirection: 'row',
@@ -1821,18 +1972,14 @@ const s = StyleSheet.create({
   tabLabel: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.inkSoft,
   },
-  tabLabelActive: {
-    color: colors.cobalt,
-  },
+  tabLabelActive: {},
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
     left: 16,
     right: 16,
     height: 2,
-    backgroundColor: colors.cobalt,
     borderRadius: 1,
   },
 
@@ -1840,7 +1987,6 @@ const s = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginHorizontal: 16,
@@ -1850,11 +1996,9 @@ const s = StyleSheet.create({
 
   /* ── Card ── */
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -1872,34 +2016,27 @@ const s = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 15,
     lineHeight: 22,
-    color: colors.ink,
     marginBottom: Spacing.xs,
   },
   toggleDescription: {
     fontFamily: fonts.body,
     fontSize: 14,
     lineHeight: 20,
-    color: colors.inkFaint,
   },
 
   /* ── Address search ── */
   addressSearchInput: {
-    backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 8,
   },
   suggestionsContainer: {
-    backgroundColor: colors.white,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: 12,
     overflow: 'hidden',
   },
@@ -1911,12 +2048,10 @@ const s = StyleSheet.create({
   },
   suggestionBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   suggestionText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     flex: 1,
   },
 
@@ -1925,20 +2060,15 @@ const s = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.surface,
     marginRight: Spacing.sm,
     marginBottom: Spacing.sm,
   },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-  },
+  sportChipSelected: {},
   sportChipText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSoft,
   },
   sportChipTextSelected: {
-    color: colors.white,
     fontWeight: '600',
   },
 
@@ -1948,25 +2078,19 @@ const s = StyleSheet.create({
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
+  checkboxChecked: {},
 
   /* ── Modals ── */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(32, 64, 224, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,
   },
   courtModal: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     width: '100%',
     maxWidth: 500,
@@ -1978,11 +2102,9 @@ const s = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
   },
 });

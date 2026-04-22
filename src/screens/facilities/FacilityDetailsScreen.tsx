@@ -27,7 +27,7 @@ import {
   setSelectedFacility,
   selectSelectedFacility,
 } from '../../store/slices/facilitiesSlice';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { FacilityPhoto, FacilityWithVerification } from '../../types';
 import { selectUser } from '../../store/slices/authSlice';
 import { FixedBottomCTA } from '../../components/detail';
@@ -69,8 +69,14 @@ function TabBar({
   activeIndex: number;
   onPress: (i: number) => void;
 }) {
+  const { colors } = useTheme();
   return (
-    <View style={s.tabBarOuter}>
+    <View
+      style={[
+        s.tabBarOuter,
+        { backgroundColor: colors.bgCard, borderBottomColor: colors.border },
+      ]}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -85,10 +91,20 @@ function TabBar({
               onPress={() => onPress(i)}
               activeOpacity={0.7}
             >
-              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+              <Text
+                style={[
+                  s.tabLabel,
+                  { color: colors.inkSecondary },
+                  active && { color: colors.cobalt },
+                ]}
+              >
                 {tab}
               </Text>
-              {active && <View style={s.tabUnderline} />}
+              {active && (
+                <View
+                  style={[s.tabUnderline, { backgroundColor: colors.cobalt }]}
+                />
+              )}
             </TouchableOpacity>
           );
         })}
@@ -196,7 +212,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   if (isLoading) {
     return (
-      <View style={s.container}>
+      <View style={[s.container, { backgroundColor: colors.bgScreen }]}>
         <LoadingSpinner />
       </View>
     );
@@ -204,7 +220,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
   if (error || !selectedFacility) {
     return (
-      <View style={s.container}>
+      <View style={[s.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay
           message={error || 'Ground not found'}
           onRetry={loadFacilityDetails}
@@ -332,8 +348,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {/* Description */}
             {facility.description ? (
               <>
-                <Text style={s.sectionLabel}>DESCRIPTION</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  DESCRIPTION
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <View style={{ padding: 16 }}>
                     <Text
                       style={{
@@ -350,8 +368,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </>
             ) : null}
 
-            <Text style={s.sectionLabel}>ADDRESS</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+              ADDRESS
+            </Text>
+            <View style={[s.card, { backgroundColor: colors.bgCard }]}>
               <View style={{ padding: 16 }}>
                 <Text
                   style={{
@@ -365,8 +385,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
               </View>
             </View>
 
-            <Text style={s.sectionLabel}>MAP</Text>
-            <View style={s.card}>
+            <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+              MAP
+            </Text>
+            <View style={[s.card, { backgroundColor: colors.bgCard }]}>
               <View
                 style={{ height: 200, borderRadius: 16, overflow: 'hidden' }}
               >
@@ -426,8 +448,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
             {facility.accessInstructions ? (
               <>
-                <Text style={s.sectionLabel}>ACCESS INSTRUCTIONS</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  ACCESS INSTRUCTIONS
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <View style={{ padding: 16 }}>
                     <Text
                       style={{
@@ -446,8 +470,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
             {facility.parkingInfo ? (
               <>
-                <Text style={s.sectionLabel}>PARKING</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  PARKING
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -494,8 +520,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             facility.contactEmail ||
             facility.contactWebsite ? (
               <>
-                <Text style={s.sectionLabel}>CONTACT INFO</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  CONTACT INFO
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <View style={{ padding: 16 }}>
                     {facility.contactName ? (
                       <View style={s.contactRow}>
@@ -504,7 +532,7 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
                           size={16}
                           color={colors.cobalt}
                         />
-                        <Text style={s.contactText}>
+                        <Text style={[s.contactText, { color: colors.ink }]}>
                           {facility.contactName}
                         </Text>
                       </View>
@@ -604,8 +632,12 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {facility.availabilitySlots &&
               facility.availabilitySlots.length > 0 && (
                 <>
-                  <Text style={s.sectionLabel}>HOURS OF OPERATION</Text>
-                  <View style={s.card}>
+                  <Text
+                    style={[s.sectionLabel, { color: colors.inkSecondary }]}
+                  >
+                    HOURS OF OPERATION
+                  </Text>
+                  <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                     <View style={{ padding: 16 }}>
                       {DAYS.map((day, idx) => {
                         const hours = formatHoursForDay(idx);
@@ -654,8 +686,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {/* Sports */}
             {facility.sportTypes && facility.sportTypes.length > 0 && (
               <>
-                <Text style={s.sectionLabel}>SPORTS AVAILABLE</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  SPORTS AVAILABLE
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -699,7 +733,9 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {/* Field map — tap to open fullscreen */}
             {facilityMapUrl ? (
               <>
-                <Text style={s.sectionLabel}>FACILITY MAP</Text>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  FACILITY MAP
+                </Text>
                 <TouchableOpacity
                   onPress={() => setShowFullMap(true)}
                   activeOpacity={0.8}
@@ -762,8 +798,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {/* Cancellation policy */}
             {showCancellationPolicy && (
               <>
-                <Text style={s.sectionLabel}>CANCELLATION POLICY</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  CANCELLATION POLICY
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <View style={{ padding: 16 }}>
                     <CancellationPolicyDisplay
                       noticeWindowHours={facility.noticeWindowHours!}
@@ -783,8 +821,10 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {/* Facility map */}
             {facilityMapUrl ? (
               <>
-                <Text style={s.sectionLabel}>FACILITY MAP</Text>
-                <View style={s.card}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
+                  FACILITY MAP
+                </Text>
+                <View style={[s.card, { backgroundColor: colors.bgCard }]}>
                   <TouchableOpacity
                     onPress={() => setShowFullMap(true)}
                     activeOpacity={0.8}
@@ -848,11 +888,14 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
             {/* Courts list */}
             {courts.length > 0 ? (
               <>
-                <Text style={s.sectionLabel}>
+                <Text style={[s.sectionLabel, { color: colors.inkSecondary }]}>
                   {getSurfaceName(primarySport).toUpperCase()}S
                 </Text>
                 {courts.map((court: any) => (
-                  <View key={court.id} style={s.card}>
+                  <View
+                    key={court.id}
+                    style={[s.card, { backgroundColor: colors.bgCard }]}
+                  >
                     <View style={{ padding: 16 }}>
                       <Text
                         style={{
@@ -929,14 +972,21 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 
       {/* Fixed bottom — Edit for owner, Book for non-owner */}
       {isOwner ? (
-        <View style={s.ownerBottomBar}>
+        <View
+          style={[
+            s.ownerBottomBar,
+            { backgroundColor: colors.bgCard, borderTopColor: colors.border },
+          ]}
+        >
           <TouchableOpacity
-            style={s.editBtn}
+            style={[s.editBtn, { backgroundColor: colors.pine }]}
             onPress={handleEdit}
             activeOpacity={0.7}
           >
             <Ionicons name="create-outline" size={18} color={colors.white} />
-            <Text style={s.editBtnText}>Edit Grounds</Text>
+            <Text style={[s.editBtnText, { color: colors.white }]}>
+              Edit Grounds
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -966,9 +1016,19 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
         onRequestClose={() => setShowFullMap(false)}
       >
         <View style={s.modalContainer}>
-          <View style={s.modalContent}>
-            <View style={s.modalHeader}>
-              <Text style={s.modalTitle}>Facility Layout</Text>
+          <View style={[s.modalContent, { backgroundColor: colors.bgCard }]}>
+            <View
+              style={[
+                s.modalHeader,
+                {
+                  backgroundColor: colors.bgCard,
+                  borderBottomColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[s.modalTitle, { color: colors.ink }]}>
+                Facility Layout
+              </Text>
               <TouchableOpacity
                 style={{ padding: 4 }}
                 onPress={() => setShowFullMap(false)}
@@ -1031,14 +1091,11 @@ export function FacilityDetailsScreen({ route }: FacilityDetailsScreenProps) {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
 
   /* ── Tab bar ── */
   tabBarOuter: {
-    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   tabBarContent: {
     flexDirection: 'row',
@@ -1054,18 +1111,14 @@ const s = StyleSheet.create({
   tabLabel: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.inkSoft,
   },
-  tabLabelActive: {
-    color: colors.cobalt,
-  },
+  tabLabelActive: {},
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
     left: 16,
     right: 16,
     height: 2,
-    backgroundColor: colors.cobalt,
     borderRadius: 1,
   },
 
@@ -1073,7 +1126,6 @@ const s = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginHorizontal: 16,
@@ -1083,11 +1135,9 @@ const s = StyleSheet.create({
 
   /* ── Card ── */
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -1105,7 +1155,6 @@ const s = StyleSheet.create({
   contactText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
 
@@ -1118,9 +1167,7 @@ const s = StyleSheet.create({
     flexDirection: 'column',
     gap: 10,
     padding: 20,
-    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   editBtn: {
     flexDirection: 'row',
@@ -1129,9 +1176,8 @@ const s = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: colors.pine,
   },
-  editBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.white },
+  editBtnText: { fontFamily: fonts.ui, fontSize: 15 },
   deleteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1140,9 +1186,8 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.heart,
   },
-  deleteBtnText: { fontFamily: fonts.ui, fontSize: 15, color: colors.heart },
+  deleteBtnText: { fontFamily: fonts.ui, fontSize: 15 },
 
   /* ── Modal ── */
   modalContainer: {
@@ -1154,7 +1199,6 @@ const s = StyleSheet.create({
   modalContent: {
     width: '95%',
     height: '90%',
-    backgroundColor: colors.white,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -1164,12 +1208,9 @@ const s = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.white,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.ink,
   },
 });

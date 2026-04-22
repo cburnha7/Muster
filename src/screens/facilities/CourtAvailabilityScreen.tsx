@@ -14,7 +14,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Calendar, DateData } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  colors,
   fonts,
   typeScale,
   Spacing,
@@ -694,19 +693,27 @@ export function CourtAvailabilityScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: colors.bgScreen }]}
+      >
         <ActivityIndicator size="large" color={colors.cobalt} />
-        <Text style={styles.loadingText}>Loading courts...</Text>
+        <Text style={[styles.loadingText, { color: colors.inkFaint }]}>
+          Loading courts...
+        </Text>
       </View>
     );
   }
 
   if (courts.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
+      <View
+        style={[styles.emptyContainer, { backgroundColor: colors.bgScreen }]}
+      >
         <Ionicons name="basketball-outline" size={64} color={colors.inkFaint} />
-        <Text style={styles.emptyTitle}>No Courts Available</Text>
-        <Text style={styles.emptySubtitle}>
+        <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+          No Courts Available
+        </Text>
+        <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>
           This facility doesn't have any courts set up yet.
         </Text>
       </View>
@@ -721,14 +728,20 @@ export function CourtAvailabilityScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.facilityName}>{facilityName}</Text>
-          <Text style={styles.subtitle}>Select a date and time to book</Text>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.facilityName, { color: colors.ink }]}>
+            {facilityName}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.inkFaint }]}>
+            Select a date and time to book
+          </Text>
         </View>
 
         {/* Court Selector */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Court</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Select Court
+          </Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -743,7 +756,13 @@ export function CourtAvailabilityScreen() {
                   key={court.id}
                   style={[
                     styles.courtCard,
-                    selectedCourt?.id === court.id && styles.courtCardSelected,
+                    {
+                      backgroundColor: colors.bgCard,
+                      borderColor: colors.border,
+                    },
+                    selectedCourt?.id === court.id && {
+                      borderColor: colors.cobalt,
+                    },
                   ]}
                   onPress={() => handleCourtSelect(court)}
                 >
@@ -760,23 +779,39 @@ export function CourtAvailabilityScreen() {
                     <Text
                       style={[
                         styles.courtName,
-                        selectedCourt?.id === court.id &&
-                          styles.courtNameSelected,
+                        { color: colors.ink },
+                        selectedCourt?.id === court.id && {
+                          color: colors.cobalt,
+                        },
                       ]}
                     >
                       {court.name}
                     </Text>
                     {courtCartCount > 0 && (
-                      <View style={styles.courtBadge}>
-                        <Text style={styles.courtBadgeText}>
+                      <View
+                        style={[
+                          styles.courtBadge,
+                          { backgroundColor: colors.gold },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.courtBadgeText,
+                            { color: colors.white },
+                          ]}
+                        >
                           {courtCartCount}
                         </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={styles.courtSportType}>{court.sportType}</Text>
+                  <Text
+                    style={[styles.courtSportType, { color: colors.inkFaint }]}
+                  >
+                    {court.sportType}
+                  </Text>
                   {court.pricePerHour != null && (
-                    <Text style={styles.courtPrice}>
+                    <Text style={[styles.courtPrice, { color: colors.cobalt }]}>
                       ${court.pricePerHour}/hr
                     </Text>
                   )}
@@ -788,20 +823,27 @@ export function CourtAvailabilityScreen() {
 
         {/* Calendar */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Date</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Select Date
+          </Text>
           <Calendar
             current={selectedDate}
             onDayPress={handleDateSelect}
             markedDates={markedDates}
             minDate={formatDateForCalendar(new Date())}
             theme={calendarTheme}
-            style={styles.calendar}
+            style={[
+              styles.calendar,
+              { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+            ]}
           />
         </View>
 
         {/* Start/End Time + Visual Schedule */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Time</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Select Time
+          </Text>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
             <View style={{ flex: 1 }}>
               <Text
@@ -922,7 +964,11 @@ export function CourtAvailabilityScreen() {
           {loadingSlots ? (
             <View style={styles.loadingSlotsContainer}>
               <ActivityIndicator size="small" color={colors.pine} />
-              <Text style={styles.loadingSlotsText}>Loading schedule...</Text>
+              <Text
+                style={[styles.loadingSlotsText, { color: colors.inkFaint }]}
+              >
+                Loading schedule...
+              </Text>
             </View>
           ) : scheduleData.length > 0 ? (
             <VisualDaySchedule
@@ -938,7 +984,7 @@ export function CourtAvailabilityScreen() {
                 size={48}
                 color={colors.inkFaint}
               />
-              <Text style={styles.noSlotsText}>
+              <Text style={[styles.noSlotsText, { color: colors.inkFaint }]}>
                 No schedule available for this date
               </Text>
             </View>
@@ -972,17 +1018,24 @@ export function CourtAvailabilityScreen() {
 
       {/* Time-range booking footer — shown when start/end are selected and cart is empty */}
       {bookingStart && bookingEnd && cartSlots.length === 0 && (
-        <View style={styles.footer}>
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: colors.border, backgroundColor: colors.bgCard },
+          ]}
+        >
           <View style={styles.footerSummary}>
             <View style={styles.footerStats}>
               <Ionicons name="time-outline" size={18} color={colors.cobalt} />
-              <Text style={styles.footerStatsText}>
+              <Text
+                style={[styles.footerStatsText, { color: colors.inkFaint }]}
+              >
                 {fmt12Time(bookingStart)} – {fmt12Time(bookingEnd)} ·{' '}
                 {selectedCourt?.name || 'Court'}
               </Text>
             </View>
             {selectedCourt && (
-              <Text style={styles.footerPrice}>
+              <Text style={[styles.footerPrice, { color: colors.cobalt }]}>
                 $
                 {(
                   ((selectedCourt.pricePerHour || 0) / 60) *
@@ -996,31 +1049,36 @@ export function CourtAvailabilityScreen() {
             onPress={handleBookTimeRange}
             disabled={submitting || !!overlapError}
           >
-            <Text style={styles.bookButtonText}>
+            <Text style={[styles.bookButtonText, { color: colors.white }]}>
               {submitting ? 'Booking...' : 'Confirm Reservation'}
             </Text>
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color={colors.surface}
-            />
+            <Ionicons name="checkmark-circle" size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
       )}
 
       {/* Selection Summary Footer */}
       {cartSlots.length > 0 && (
-        <View style={styles.footer}>
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: colors.border, backgroundColor: colors.bgCard },
+          ]}
+        >
           <View style={styles.footerSummary}>
             <View style={styles.footerStats}>
               <Ionicons name="cart" size={18} color={colors.cobalt} />
-              <Text style={styles.footerStatsText}>
+              <Text
+                style={[styles.footerStatsText, { color: colors.inkFaint }]}
+              >
                 {cartSlots.length} slot{cartSlots.length !== 1 ? 's' : ''}
                 {cartCourtCount > 1 ? ` · ${cartCourtCount} courts` : ''}
                 {cartDayCount > 1 ? ` · ${cartDayCount} days` : ''}
               </Text>
             </View>
-            <Text style={styles.footerPrice}>${cartTotal.toFixed(2)}</Text>
+            <Text style={[styles.footerPrice, { color: colors.cobalt }]}>
+              ${cartTotal.toFixed(2)}
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.bookButton}
@@ -1032,12 +1090,12 @@ export function CourtAvailabilityScreen() {
               }
             }}
           >
-            <Text style={styles.bookButtonText}>
+            <Text style={[styles.bookButtonText, { color: colors.white }]}>
               {isRecurringReady
                 ? `Book Recurring ${recurringConfig.frequency === 'weekly' ? 'Weekly' : 'Monthly'}`
                 : `Book ${cartSlots.length} Slot${cartSlots.length !== 1 ? 's' : ''}`}
             </Text>
-            <Ionicons name="arrow-forward" size={20} color={colors.surface} />
+            <Ionicons name="arrow-forward" size={20} color={colors.white} />
           </TouchableOpacity>
         </View>
       )}
@@ -1090,42 +1148,36 @@ export function CourtAvailabilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   scrollView: { flex: 1 },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
   },
   loadingText: {
     marginTop: Spacing.md,
     ...TextStyles.body,
-    color: colors.inkFaint,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
     padding: Spacing.xxl,
   },
-  emptyTitle: { ...TextStyles.h3, color: colors.ink, marginTop: Spacing.lg },
+  emptyTitle: { ...TextStyles.h3, marginTop: Spacing.lg },
   emptySubtitle: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
   header: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  facilityName: { ...TextStyles.h2, color: colors.ink },
+  facilityName: { ...TextStyles.h2 },
   subtitle: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
   },
   section: { padding: Spacing.lg },
@@ -1138,38 +1190,30 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.semibold,
     ...typeScale.h3,
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   availabilityCount: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
   },
   courtList: { flexDirection: 'row' },
   courtCard: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: Spacing.md,
     marginRight: Spacing.md,
     borderWidth: 2,
-    borderColor: colors.border,
     minWidth: 140,
   },
-  courtCardSelected: {
-    borderColor: colors.cobalt,
-    backgroundColor: colors.white,
-  },
+  courtCardSelected: {},
   courtCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
     marginBottom: Spacing.xs,
   },
-  courtName: { ...TextStyles.bodyLarge, fontWeight: '600', color: colors.ink },
-  courtNameSelected: { color: colors.cobalt },
+  courtName: { ...TextStyles.bodyLarge, fontWeight: '600' },
+  courtNameSelected: {},
   courtBadge: {
-    backgroundColor: colors.gold,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -1180,23 +1224,18 @@ const styles = StyleSheet.create({
   courtBadgeText: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.white,
   },
   courtSportType: {
     ...TextStyles.caption,
-    color: colors.inkFaint,
     marginTop: Spacing.xs,
   },
   courtPrice: {
     ...TextStyles.body,
-    color: colors.cobalt,
     fontWeight: '600',
     marginTop: Spacing.xs,
   },
   calendar: {
     borderRadius: 12,
-    backgroundColor: colors.white,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -1211,16 +1250,13 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
     padding: Spacing.md,
-    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   toggleLabel: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   toggleText: {
     fontFamily: fonts.semibold,
     ...typeScale.body,
-    color: colors.ink,
   },
   // Slots loading / empty
   loadingSlotsContainer: {
@@ -1230,18 +1266,16 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     gap: Spacing.md,
   },
-  loadingSlotsText: { ...TextStyles.body, color: colors.inkFaint },
+  loadingSlotsText: { ...TextStyles.body },
   noSlotsContainer: { alignItems: 'center', padding: Spacing.xxl },
   noSlotsText: {
     ...TextStyles.body,
-    color: colors.inkFaint,
     marginTop: Spacing.md,
     textAlign: 'center',
   },
   // Legend
   legend: {
     padding: Spacing.lg,
-    backgroundColor: colors.white,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
     borderRadius: 12,
@@ -1249,13 +1283,12 @@ const styles = StyleSheet.create({
   legendTitle: {
     ...TextStyles.bodyLarge,
     fontWeight: '600',
-    color: colors.ink,
     marginBottom: Spacing.sm,
   },
   legendItems: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
   legendDot: { width: 12, height: 12, borderRadius: 6 },
-  legendText: { ...TextStyles.body, color: colors.ink },
+  legendText: { ...TextStyles.body },
   // Footer
   footer: {
     position: 'absolute',
@@ -1264,8 +1297,6 @@ const styles = StyleSheet.create({
     right: 0,
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.white,
   },
   footerSummary: {
     flexDirection: 'row',
@@ -1277,12 +1308,10 @@ const styles = StyleSheet.create({
   footerStatsText: {
     fontFamily: fonts.body,
     ...typeScale.bodySm,
-    color: colors.inkFaint,
   },
   footerPrice: {
     fontFamily: fonts.heading,
     ...typeScale.h3,
-    color: colors.cobalt,
   },
   bookButton: {
     ...ComponentStyles.button.primary,
@@ -1291,5 +1320,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
   },
-  bookButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.surface },
+  bookButtonText: { fontFamily: fonts.ui, fontSize: 16 },
 });

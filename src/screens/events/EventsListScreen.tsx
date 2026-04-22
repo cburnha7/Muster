@@ -17,7 +17,7 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../components/ui/ErrorDisplay';
 import { ViewToggle } from '../../components/maps/ViewToggle';
 import { EventsMapViewWrapper } from '../../components/maps/EventsMapViewWrapper';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { formatSportType } from '../../utils/formatters';
 
 import { eventService } from '../../services/api/EventService';
@@ -152,36 +152,51 @@ export function EventsListScreen(): React.JSX.Element {
   const renderEventCard = (item: Event, index: number) => (
     <TouchableOpacity
       key={item.id}
-      style={styles.eventCard}
+      style={[
+        styles.eventCard,
+        { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+      ]}
       onPress={() => handleEventPress(item)}
       activeOpacity={0.7}
     >
       <View style={styles.cardContent}>
         <View style={styles.eventHeader}>
-          <View style={styles.numberBadge}>
-            <Text style={styles.numberText}>{index + 1}</Text>
+          <View
+            style={[styles.numberBadge, { backgroundColor: colors.cobalt }]}
+          >
+            <Text style={[styles.numberText, { color: colors.white }]}>
+              {index + 1}
+            </Text>
           </View>
-          <Text style={styles.eventName} numberOfLines={1}>
+          <Text
+            style={[styles.eventName, { color: colors.ink }]}
+            numberOfLines={1}
+          >
             {item.title}
           </Text>
         </View>
         {item.sportType && (
-          <View style={styles.sportTag}>
-            <Text style={styles.sportTagText}>
+          <View
+            style={[styles.sportTag, { backgroundColor: colors.cobaltTint }]}
+          >
+            <Text style={[styles.sportTagText, { color: colors.cobalt }]}>
               {formatSportType(item.sportType)}
             </Text>
           </View>
         )}
         <View style={styles.detailRow}>
           <Ionicons name="calendar-outline" size={15} color={colors.inkFaint} />
-          <Text style={styles.detailText}>
+          <Text style={[styles.detailText, { color: colors.inkFaint }]}>
             {formatDate(item.startTime as unknown as string)} at{' '}
             {formatTime(item.startTime as unknown as string)}
           </Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="location-outline" size={15} color={colors.inkFaint} />
-          <Text style={styles.detailText} numberOfLines={1}>
+          <Text
+            style={[styles.detailText, { color: colors.inkFaint }]}
+            numberOfLines={1}
+          >
             {item.facility?.name || 'Location TBD'}
           </Text>
         </View>
@@ -191,7 +206,7 @@ export function EventsListScreen(): React.JSX.Element {
 
   if (eventsError && events.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay
           message="Unable to load events. Pull down to refresh."
           onRetry={() => refetchEvents()}
@@ -214,9 +229,15 @@ export function EventsListScreen(): React.JSX.Element {
         }
       >
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Upcoming Events</Text>
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{events.length}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.ink }]}>
+            Upcoming Events
+          </Text>
+          <View
+            style={[styles.countBadge, { backgroundColor: colors.cobaltTint }]}
+          >
+            <Text style={[styles.countBadgeText, { color: colors.cobalt }]}>
+              {events.length}
+            </Text>
           </View>
         </View>
 
@@ -234,7 +255,11 @@ export function EventsListScreen(): React.JSX.Element {
             onPress={() => setShowFilters(true)}
           >
             <Ionicons name="filter" size={24} color={colors.cobalt} />
-            {selectedSports.length > 0 && <View style={styles.filterBadge} />}
+            {selectedSports.length > 0 && (
+              <View
+                style={[styles.filterBadge, { backgroundColor: colors.heart }]}
+              />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -255,8 +280,10 @@ export function EventsListScreen(): React.JSX.Element {
               size={64}
               color={colors.inkFaint}
             />
-            <Text style={styles.emptyTitle}>No Upcoming Events</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+              No Upcoming Events
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.inkFaint }]}>
               {searchQuery
                 ? 'Try adjusting your search or filters'
                 : 'Check back soon for upcoming events'}
@@ -270,8 +297,14 @@ export function EventsListScreen(): React.JSX.Element {
       </ScrollView>
 
       {!isDependent && (
-        <TouchableOpacity style={styles.fab} onPress={handleCreateEvent}>
-          <Ionicons name="add" size={28} color={colors.surface} />
+        <TouchableOpacity
+          style={[
+            styles.fab,
+            { backgroundColor: colors.cobalt, shadowColor: colors.cobalt },
+          ]}
+          onPress={handleCreateEvent}
+        >
+          <Ionicons name="add" size={28} color={colors.white} />
         </TouchableOpacity>
       )}
 
@@ -281,16 +314,26 @@ export function EventsListScreen(): React.JSX.Element {
         transparent
         onRequestClose={() => setShowFilters(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Events</Text>
+        <View
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
+        >
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.bgCard }]}
+          >
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
+              <Text style={[styles.modalTitle, { color: colors.ink }]}>
+                Filter Events
+              </Text>
               <TouchableOpacity onPress={() => setShowFilters(false)}>
                 <Ionicons name="close" size={24} color={colors.ink} />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.filterContent}>
-              <Text style={styles.filterLabel}>Sport Type</Text>
+              <Text style={[styles.filterLabel, { color: colors.ink }]}>
+                Sport Type
+              </Text>
               <View style={styles.sportTypeContainer}>
                 {Object.values(SportType).map(sport => {
                   const isSelected = selectedSports.includes(sport);
@@ -299,14 +342,22 @@ export function EventsListScreen(): React.JSX.Element {
                       key={sport}
                       style={[
                         styles.sportChip,
-                        isSelected && styles.sportChipSelected,
+                        {
+                          backgroundColor: colors.bgCard,
+                          borderColor: colors.border,
+                        },
+                        isSelected && {
+                          backgroundColor: colors.cobalt,
+                          borderColor: colors.cobalt,
+                        },
                       ]}
                       onPress={() => toggleSport(sport)}
                     >
                       <Text
                         style={[
                           styles.sportChipText,
-                          isSelected && styles.sportChipTextSelected,
+                          { color: colors.ink },
+                          isSelected && { color: colors.white },
                         ]}
                       >
                         {formatSportType(sport)}
@@ -316,18 +367,24 @@ export function EventsListScreen(): React.JSX.Element {
                 })}
               </View>
             </ScrollView>
-            <View style={styles.modalActions}>
+            <View
+              style={[styles.modalActions, { borderTopColor: colors.border }]}
+            >
               <TouchableOpacity
-                style={styles.clearButton}
+                style={[styles.clearButton, { borderColor: colors.border }]}
                 onPress={handleClearFilters}
               >
-                <Text style={styles.clearButtonText}>Clear All</Text>
+                <Text style={[styles.clearButtonText, { color: colors.ink }]}>
+                  Clear All
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.applyButton}
+                style={[styles.applyButton, { backgroundColor: colors.cobalt }]}
                 onPress={handleApplyFilters}
               >
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
+                <Text style={[styles.applyButtonText, { color: colors.white }]}>
+                  Apply Filters
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -338,7 +395,7 @@ export function EventsListScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 16 },
   sectionHeader: {
@@ -352,11 +409,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 18,
-    color: colors.ink,
     flex: 1,
   },
   countBadge: {
-    backgroundColor: colors.cobalt + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -364,7 +419,6 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
   },
   header: {
     flexDirection: 'row',
@@ -382,16 +436,13 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.heart,
   },
   mapContainer: { height: 400 },
   eventCard: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
@@ -407,31 +458,27 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginRight: 12,
   },
   numberText: {
     fontSize: 16,
-    color: colors.white,
     fontFamily: fonts.heading,
   },
   eventName: {
     fontFamily: fonts.label,
     fontSize: 18,
-    color: colors.ink,
     flex: 1,
     paddingTop: 4,
   },
   sportTag: {
     alignSelf: 'flex-start' as const,
-    backgroundColor: colors.cobalt + '15',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  sportTagText: { fontFamily: fonts.label, fontSize: 13, color: colors.cobalt },
+  sportTagText: { fontFamily: fonts.label, fontSize: 13 },
   detailRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -440,7 +487,6 @@ const styles = StyleSheet.create({
   detailText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     flex: 1,
   },
   emptyState: {
@@ -452,14 +498,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: fonts.heading,
     fontSize: 20,
-    color: colors.ink,
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.inkFaint,
     textAlign: 'center' as const,
     lineHeight: 24,
   },
@@ -470,10 +514,8 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.cobalt,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    shadowColor: colors.cobalt,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.38,
     shadowRadius: 12,
@@ -488,7 +530,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.body,
     fontSize: 16,
-    color: colors.heart,
     textAlign: 'center' as const,
     marginTop: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -497,21 +538,17 @@ const styles = StyleSheet.create({
   retryButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: colors.cobalt,
     borderRadius: 9999,
   },
   retryButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.surface,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end' as const,
   },
   modalContent: {
-    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -522,14 +559,12 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inkFaint,
   },
-  modalTitle: { fontFamily: fonts.heading, fontSize: 18, color: colors.ink },
+  modalTitle: { fontFamily: fonts.heading, fontSize: 18 },
   filterContent: { padding: Spacing.lg },
   filterLabel: {
     fontFamily: fonts.label,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: Spacing.md,
   },
   sportTypeContainer: {
@@ -542,21 +577,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
   },
-  sportChipSelected: {
-    backgroundColor: colors.cobalt,
-    borderColor: colors.cobalt,
-  },
-  sportChipText: { fontFamily: fonts.body, fontSize: 14, color: colors.ink },
-  sportChipTextSelected: { color: colors.surface },
+  sportChipSelected: {},
+  sportChipText: { fontFamily: fonts.body, fontSize: 14 },
+  sportChipTextSelected: {},
   modalActions: {
     flexDirection: 'row' as const,
     padding: Spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.inkFaint,
     gap: 8,
   },
   clearButton: {
@@ -564,20 +593,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 9999,
     borderWidth: 1,
-    borderColor: colors.inkFaint,
     alignItems: 'center' as const,
   },
-  clearButtonText: { fontFamily: fonts.ui, fontSize: 16, color: colors.ink },
+  clearButtonText: { fontFamily: fonts.ui, fontSize: 16 },
   applyButton: {
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: 9999,
-    backgroundColor: colors.cobalt,
     alignItems: 'center' as const,
   },
   applyButtonText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.surface,
   },
 });

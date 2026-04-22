@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import * as StoreReview from 'expo-store-review';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { useDependentContext } from '../../hooks/useDependentContext';
 import { userService } from '../../services/api/UserService';
@@ -131,9 +131,10 @@ function MenuRow({
   badge,
   isLast,
 }: MenuRowProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={[s.row, isLast && s.rowLast]}
+      style={[s.row, { borderBottomColor: colors.border }, isLast && s.rowLast]}
       onPress={onPress}
       activeOpacity={onPress ? 0.6 : 1}
       disabled={!onPress}
@@ -143,19 +144,31 @@ function MenuRow({
       </View>
       <View style={{ flex: 1 }}>
         <Text
-          style={[s.rowLabel, labelColor ? { color: labelColor } : undefined]}
+          style={[
+            s.rowLabel,
+            { color: colors.ink },
+            labelColor ? { color: labelColor } : undefined,
+          ]}
           numberOfLines={1}
         >
           {label}
         </Text>
-        {subtitle ? <Text style={s.rowSubtitle}>{subtitle}</Text> : null}
+        {subtitle ? (
+          <Text style={[s.rowSubtitle, { color: colors.inkFaint }]}>
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
       {badge != null ? (
-        <View style={s.badge}>
-          <Text style={s.badgeText}>{badge}</Text>
+        <View style={[s.badge, { backgroundColor: colors.cobaltTint }]}>
+          <Text style={[s.badgeText, { color: colors.cobalt }]}>{badge}</Text>
         </View>
       ) : null}
-      {rightValue ? <Text style={s.rowValue}>{rightValue}</Text> : null}
+      {rightValue ? (
+        <Text style={[s.rowValue, { color: colors.inkSoft }]}>
+          {rightValue}
+        </Text>
+      ) : null}
       {chevron && !rightValue ? (
         <Ionicons name="chevron-forward" size={16} color={colors.inkFaint} />
       ) : null}
@@ -180,12 +193,17 @@ function ToggleRow({
   onValueChange,
   isLast,
 }: ToggleRowProps) {
+  const { colors } = useTheme();
   return (
-    <View style={[s.row, isLast && s.rowLast]}>
+    <View
+      style={[s.row, { borderBottomColor: colors.border }, isLast && s.rowLast]}
+    >
       <View style={[s.iconWrap, { backgroundColor: iconBg ?? colors.surface }]}>
         <Ionicons name={icon} size={18} color={colors.inkSoft} />
       </View>
-      <Text style={[s.rowLabel, { flex: 1 }]}>{label}</Text>
+      <Text style={[s.rowLabel, { color: colors.ink }, { flex: 1 }]}>
+        {label}
+      </Text>
       <Switch
         value={value}
         onValueChange={onValueChange}
@@ -207,8 +225,14 @@ interface TabBarProps {
 }
 
 function TabBar({ activeIndex, onPress }: TabBarProps) {
+  const { colors } = useTheme();
   return (
-    <View style={s.tabBarOuter}>
+    <View
+      style={[
+        s.tabBarOuter,
+        { backgroundColor: colors.bgCard, borderBottomColor: colors.border },
+      ]}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -223,10 +247,20 @@ function TabBar({ activeIndex, onPress }: TabBarProps) {
               onPress={() => onPress(i)}
               activeOpacity={0.7}
             >
-              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+              <Text
+                style={[
+                  s.tabLabel,
+                  { color: colors.inkSoft },
+                  active && { color: colors.cobalt },
+                ]}
+              >
                 {tab}
               </Text>
-              {active && <View style={s.tabUnderline} />}
+              {active && (
+                <View
+                  style={[s.tabUnderline, { backgroundColor: colors.cobalt }]}
+                />
+              )}
             </TouchableOpacity>
           );
         })}
@@ -267,6 +301,7 @@ function EntityRow({
   onboardingId,
   onOnboard,
 }: EntityRowProps) {
+  const { colors } = useTheme();
   const state = getConnectState(account);
   const isOnboarding = onboardingId === account.entityId;
 
@@ -307,9 +342,13 @@ function EntityRow({
   const btnLabel = state === 'connected' ? 'Manage' : 'Connect';
 
   return (
-    <View style={[s.row, isLast && s.rowLast]}>
+    <View
+      style={[s.row, { borderBottomColor: colors.border }, isLast && s.rowLast]}
+    >
       <View style={{ flex: 1 }}>
-        <Text style={s.entityName}>{account.entityName}</Text>
+        <Text style={[s.entityName, { color: colors.ink }]}>
+          {account.entityName}
+        </Text>
         <Text style={[s.entityStatus, { color: statusColor }]}>
           {statusText}
         </Text>
@@ -361,17 +400,25 @@ function AccountGroup({
   onOnboard,
   loading,
 }: AccountGroupProps) {
+  const { colors } = useTheme();
   return (
     <View>
-      <Text style={s.sectionLabel}>{label}</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>{label}</Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         {loading ? (
           <View style={s.groupLoadingRow}>
             <ActivityIndicator size="small" color={colors.cobalt} />
           </View>
         ) : entities.length === 0 ? (
           <View style={[s.row, s.rowLast]}>
-            <Text style={s.emptyText}>No {label.toLowerCase()} yet</Text>
+            <Text style={[s.emptyText, { color: colors.inkFaint }]}>
+              No {label.toLowerCase()} yet
+            </Text>
           </View>
         ) : (
           entities.map((account, idx) => (
@@ -406,6 +453,7 @@ function AccountsTab({
   deleting,
   onDeleteAccount,
 }: AccountsTabProps) {
+  const { colors } = useTheme();
   const [accounts, setAccounts] = useState<ConnectAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [onboardingId, setOnboardingId] = useState<string | null>(null);
@@ -632,8 +680,15 @@ function AccountsTab({
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
       {/* Payment Account — user-level Stripe Connect */}
-      <Text style={s.sectionLabel}>Payment Account</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+        Payment Account
+      </Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         {paymentLoading ? (
           <View style={[s.row, s.rowLast]}>
             <ActivityIndicator size="small" color={colors.cobalt} />
@@ -644,13 +699,13 @@ function AccountsTab({
               <Ionicons name="checkmark-circle" size={18} color={colors.pine} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.rowLabel}>Connected</Text>
+              <Text style={[s.rowLabel, { color: colors.ink }]}>Connected</Text>
               <Text style={[s.rowSubtitle, { color: colors.pine }]}>
                 You can receive payments from bookings and join fees
               </Text>
             </View>
             <TouchableOpacity
-              style={s.btnFilled}
+              style={[s.btnFilled, { backgroundColor: colors.cobalt }]}
               onPress={handlePaymentOnboard}
               disabled={paymentOnboarding}
               activeOpacity={0.7}
@@ -658,7 +713,9 @@ function AccountsTab({
               {paymentOnboarding ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={s.btnFilledText}>Manage</Text>
+                <Text style={[s.btnFilledText, { color: colors.white }]}>
+                  Manage
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -668,13 +725,15 @@ function AccountsTab({
               <Ionicons name="time-outline" size={18} color={colors.gold} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.rowLabel}>Pending Review</Text>
-              <Text style={s.rowSubtitle}>
+              <Text style={[s.rowLabel, { color: colors.ink }]}>
+                Pending Review
+              </Text>
+              <Text style={[s.rowSubtitle, { color: colors.inkFaint }]}>
                 Your account is under review. Resume onboarding if needed.
               </Text>
             </View>
             <TouchableOpacity
-              style={s.btnGhost}
+              style={[s.btnGhost, { borderColor: colors.cobalt }]}
               onPress={handlePaymentOnboard}
               disabled={paymentOnboarding}
               activeOpacity={0.7}
@@ -682,7 +741,9 @@ function AccountsTab({
               {paymentOnboarding ? (
                 <ActivityIndicator size="small" color={colors.cobalt} />
               ) : (
-                <Text style={s.btnGhostText}>Resume</Text>
+                <Text style={[s.btnGhostText, { color: colors.cobalt }]}>
+                  Resume
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -692,13 +753,15 @@ function AccountsTab({
               <Ionicons name="card-outline" size={18} color={colors.cobalt} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.rowLabel}>Set Up Payments</Text>
-              <Text style={s.rowSubtitle}>
+              <Text style={[s.rowLabel, { color: colors.ink }]}>
+                Set Up Payments
+              </Text>
+              <Text style={[s.rowSubtitle, { color: colors.inkFaint }]}>
                 Connect a payment account to receive funds
               </Text>
             </View>
             <TouchableOpacity
-              style={s.btnGhost}
+              style={[s.btnGhost, { borderColor: colors.cobalt }]}
               onPress={handlePaymentOnboard}
               disabled={paymentOnboarding}
               activeOpacity={0.7}
@@ -706,7 +769,9 @@ function AccountsTab({
               {paymentOnboarding ? (
                 <ActivityIndicator size="small" color={colors.cobalt} />
               ) : (
-                <Text style={s.btnGhostText}>Connect</Text>
+                <Text style={[s.btnGhostText, { color: colors.cobalt }]}>
+                  Connect
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -735,8 +800,13 @@ function AccountsTab({
         loading={loading}
       />
 
-      <Text style={s.sectionLabel}>Account</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>Account</Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <MenuRow
           icon="log-out-outline"
           iconBg={colors.surface}
@@ -769,13 +839,19 @@ interface DocumentsTabProps {
 }
 
 function DocumentsTab({ userId, navigation }: DocumentsTabProps) {
+  const { colors } = useTheme();
   const { data: docs } = useGetInsuranceDocumentsQuery({ userId });
   const count = docs?.length ?? 0;
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={s.sectionLabel}>Documents</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>Documents</Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <MenuRow
           icon="document-text-outline"
           iconBg={colors.cobaltTint}
@@ -805,8 +881,15 @@ function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={s.sectionLabel}>Preferences</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+        Preferences
+      </Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <ToggleRow
           icon="moon-outline"
           iconBg={colors.surface}
@@ -824,13 +907,27 @@ function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
         />
       </View>
 
-      <Text style={s.sectionLabel}>How I Use Muster</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+        How I Use Muster
+      </Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         {INTENT_OPTIONS.map((opt, idx) => {
           const isOn = intents.includes(opt.key);
           const isLast = idx === INTENT_OPTIONS.length - 1;
           return (
-            <View key={opt.key} style={[s.row, isLast && s.rowLast]}>
+            <View
+              key={opt.key}
+              style={[
+                s.row,
+                { borderBottomColor: colors.border },
+                isLast && s.rowLast,
+              ]}
+            >
               <View
                 style={[
                   s.iconWrap,
@@ -844,8 +941,12 @@ function PreferencesTab({ intents, onToggleIntent }: PreferencesTabProps) {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.intentTitle}>{opt.title}</Text>
-                <Text style={s.intentSubtitle}>{opt.subtitle}</Text>
+                <Text style={[s.intentTitle, { color: colors.ink }]}>
+                  {opt.title}
+                </Text>
+                <Text style={[s.intentSubtitle, { color: colors.inkSoft }]}>
+                  {opt.subtitle}
+                </Text>
               </View>
               <Switch
                 value={isOn}
@@ -882,6 +983,7 @@ function AccountBooksTab({
   navigation,
   onExportData,
 }: AccountBooksTabProps) {
+  const { colors } = useTheme();
   const [purchaseCount, setPurchaseCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -912,8 +1014,15 @@ function AccountBooksTab({
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={s.sectionLabel}>Account Books</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>
+        Account Books
+      </Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <MenuRow
           icon="receipt-outline"
           iconBg={colors.cobaltTint}
@@ -947,6 +1056,7 @@ function AccountBooksTab({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AboutTab() {
+  const { colors } = useTheme();
   const version = `${appJson.expo.version} (${appJson.expo.android?.versionCode ?? 1})`;
 
   const handleRateApp = async () => {
@@ -961,8 +1071,13 @@ function AboutTab() {
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={s.sectionLabel}>About</Text>
-      <View style={s.card}>
+      <Text style={[s.sectionLabel, { color: colors.inkSoft }]}>About</Text>
+      <View
+        style={[
+          s.card,
+          { backgroundColor: colors.bgCard, shadowColor: colors.ink },
+        ]}
+      >
         <MenuRow
           icon="shield-outline"
           iconBg={colors.surface}
@@ -1171,14 +1286,11 @@ export function SettingsScreen(): JSX.Element {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
 
   // ── Tab bar ──
   tabBarOuter: {
-    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   tabBarContent: {
     flexDirection: 'row',
@@ -1194,18 +1306,14 @@ const s = StyleSheet.create({
   tabLabel: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.inkSoft,
   },
-  tabLabelActive: {
-    color: colors.cobalt,
-  },
+  tabLabelActive: {},
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
     left: 16,
     right: 16,
     height: 2,
-    backgroundColor: colors.cobalt,
     borderRadius: 1,
   },
 
@@ -1213,7 +1321,6 @@ const s = StyleSheet.create({
   sectionLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginHorizontal: 16,
@@ -1223,11 +1330,9 @@ const s = StyleSheet.create({
 
   // ── Card ──
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 16,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -1243,7 +1348,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
   rowLast: {
     borderBottomWidth: 0,
@@ -1251,18 +1355,15 @@ const s = StyleSheet.create({
   rowLabel: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   rowSubtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 1,
   },
   rowValue: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSoft,
   },
 
   // ── Icon wrap ──
@@ -1276,7 +1377,6 @@ const s = StyleSheet.create({
 
   // ── Badge ──
   badge: {
-    backgroundColor: colors.cobaltTint,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1285,7 +1385,6 @@ const s = StyleSheet.create({
   badgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.cobalt,
   },
 
   // ── Account groups ──
@@ -1300,7 +1399,6 @@ const s = StyleSheet.create({
   groupHeaderText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
@@ -1311,7 +1409,6 @@ const s = StyleSheet.create({
   },
   groupDivider: {
     height: 1,
-    backgroundColor: colors.border,
   },
   groupLoadingRow: {
     paddingVertical: 16,
@@ -1322,7 +1419,6 @@ const s = StyleSheet.create({
   entityName: {
     fontFamily: fonts.headingSemi,
     fontSize: 15,
-    color: colors.ink,
   },
   entityStatus: {
     fontFamily: fonts.body,
@@ -1332,13 +1428,11 @@ const s = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
   },
 
   // ── Buttons ──
   entityBtn: {
     borderWidth: 1,
-    borderColor: colors.cobalt,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 8,
@@ -1353,7 +1447,6 @@ const s = StyleSheet.create({
   },
   // kept for any remaining references
   btnFilled: {
-    backgroundColor: colors.cobalt,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 8,
@@ -1363,11 +1456,9 @@ const s = StyleSheet.create({
   btnFilledText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.white,
   },
   btnGhost: {
     borderWidth: 1,
-    borderColor: colors.cobalt,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 8,
@@ -1377,19 +1468,16 @@ const s = StyleSheet.create({
   btnGhostText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.cobalt,
   },
 
   // ── Intent rows ──
   intentTitle: {
     fontFamily: fonts.headingSemi,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: 1,
   },
   intentSubtitle: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkSoft,
   },
 });

@@ -21,7 +21,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { MessageBubble } from '../../components/messages/MessageBubble';
 import { SystemMessage } from '../../components/messages/SystemMessage';
 import { MessageInput } from '../../components/messages/MessageInput';
@@ -363,7 +363,14 @@ export function ChatScreen() {
     if (item.kind === 'dayHeader') {
       return (
         <View style={styles.dayHeader}>
-          <Text style={styles.dayHeaderText}>{item.label}</Text>
+          <Text
+            style={[
+              styles.dayHeaderText,
+              { color: colors.inkSecondary, backgroundColor: colors.bgSubtle },
+            ]}
+          >
+            {item.label}
+          </Text>
         </View>
       );
     }
@@ -472,7 +479,9 @@ export function ChatScreen() {
             }
             ListEmptyComponent={
               <View style={styles.emptyChat}>
-                <Text style={styles.emptyChatText}>
+                <Text
+                  style={[styles.emptyChatText, { color: colors.inkSecondary }]}
+                >
                   No messages yet. Start the{' '}
                   {conversationTypeName().toLowerCase()}!
                 </Text>
@@ -485,12 +494,19 @@ export function ChatScreen() {
           {/* New messages pill */}
           {showNewMessagesPill && (
             <TouchableOpacity
-              style={styles.newMessagesPill}
+              style={[
+                styles.newMessagesPill,
+                { backgroundColor: colors.cobalt, shadowColor: colors.ink },
+              ]}
               onPress={scrollToBottom}
               activeOpacity={0.85}
             >
               <Ionicons name="arrow-down" size={14} color={colors.white} />
-              <Text style={styles.newMessagesPillText}>New messages</Text>
+              <Text
+                style={[styles.newMessagesPillText, { color: colors.white }]}
+              >
+                New messages
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -512,7 +528,7 @@ export function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
+  container: { flex: 1 },
   loadingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingTop: 12, paddingBottom: 8 },
   dayHeader: {
@@ -522,8 +538,6 @@ const styles = StyleSheet.create({
   dayHeaderText: {
     fontFamily: fonts.label,
     fontSize: 12,
-    color: colors.inkSecondary,
-    backgroundColor: colors.bgSubtle,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -537,7 +551,6 @@ const styles = StyleSheet.create({
   emptyChatText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.inkSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -548,11 +561,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.cobalt,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -561,6 +572,5 @@ const styles = StyleSheet.create({
   newMessagesPillText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.white,
   },
 });

@@ -28,7 +28,7 @@ import { userService } from '../../services/api/UserService';
 import { cacheService } from '../../services/api/CacheService';
 import { Team, UpdateLeagueData, TeamRole } from '../../types';
 import { League, LeagueMembership } from '../../types/league';
-import { colors, fonts, useTheme } from '../../theme';
+import { fonts, useTheme } from '../../theme';
 import { LeagueLedger } from '../../components/league/LeagueLedger';
 import { RootState } from '../../store/store';
 import { selectUserTeams } from '../../store/slices/teamsSlice';
@@ -489,7 +489,12 @@ export function LeagueDetailsScreen(): React.ReactElement {
   };
 
   const renderTabBar = () => (
-    <View style={styles.tabBar}>
+    <View
+      style={[
+        styles.tabBar,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border },
+      ]}
+    >
       {(
         [
           {
@@ -512,7 +517,13 @@ export function LeagueDetailsScreen(): React.ReactElement {
       ).map(tab => (
         <TouchableOpacity
           key={tab.key}
-          style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+          style={[
+            styles.tab,
+            activeTab === tab.key && [
+              styles.tabActive,
+              { borderBottomColor: colors.cobalt },
+            ],
+          ]}
           onPress={() => setActiveTab(tab.key)}
           accessibilityRole="tab"
           accessibilityState={{ selected: activeTab === tab.key }}
@@ -526,7 +537,8 @@ export function LeagueDetailsScreen(): React.ReactElement {
           <Text
             style={[
               styles.tabLabel,
-              activeTab === tab.key && styles.tabLabelActive,
+              { color: colors.inkFaint },
+              activeTab === tab.key && { color: colors.cobalt },
             ]}
           >
             {tab.label}
@@ -539,7 +551,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Loading / Error states ──────────────────────────────────────
   if (isLoading && !league) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <LoadingSpinner />
       </View>
     );
@@ -547,7 +559,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   if (error && !league) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay message={error} onRetry={() => loadLeague()} />
       </View>
     );
@@ -555,7 +567,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
 
   if (!league) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ErrorDisplay message="League not found" />
       </View>
     );
@@ -564,7 +576,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
   // ── Commissioner view (edit mode) ────────────────────────────────
   if (isOperator && editMode) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
@@ -578,7 +590,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
         >
           {/* Commissioner: Schedule button — navigate to Scheduling Screen */}
           <TouchableOpacity
-            style={styles.scheduleBtn}
+            style={[styles.scheduleBtn, { backgroundColor: colors.cobalt }]}
             onPress={() =>
               (navigation as any).navigate('LeagueScheduling', { leagueId })
             }
@@ -586,7 +598,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
             accessibilityLabel="Schedule"
           >
             <Ionicons name="calendar-outline" size={20} color={colors.white} />
-            <Text style={styles.scheduleBtnText}>Schedule</Text>
+            <Text style={[styles.scheduleBtnText, { color: colors.white }]}>
+              Schedule
+            </Text>
           </TouchableOpacity>
 
           {/* League edit form — includes Delete/Cancel/Save at bottom */}
@@ -798,10 +812,20 @@ export function LeagueDetailsScreen(): React.ReactElement {
       >
         {/* Pending roster invitations the commissioner can confirm */}
         {isOperator && pendingUserRosterInvitations.length > 0 && (
-          <View style={styles.commissionerInviteBanner}>
+          <View
+            style={[
+              styles.commissionerInviteBanner,
+              {
+                backgroundColor: colors.warningLight,
+                borderLeftColor: colors.gold,
+              },
+            ]}
+          >
             <Ionicons name="mail-outline" size={20} color={colors.gold} />
             <View style={styles.invitationBannerContent}>
-              <Text style={styles.invitationBannerTitle}>
+              <Text
+                style={[styles.invitationBannerTitle, { color: colors.ink }]}
+              >
                 Your Roster Invitations
               </Text>
               {pendingUserRosterInvitations.map(inv => {
@@ -810,27 +834,49 @@ export function LeagueDetailsScreen(): React.ReactElement {
                   'Your roster';
                 return (
                   <View key={inv.id} style={styles.invitationRow}>
-                    <Text style={styles.invitationText}>
+                    <Text
+                      style={[styles.invitationText, { color: colors.ink }]}
+                    >
                       {rosterName} has been invited to this league
                     </Text>
                     <View style={styles.invitationActions}>
                       <TouchableOpacity
-                        style={styles.confirmBtn}
+                        style={[
+                          styles.confirmBtn,
+                          { backgroundColor: colors.cobalt },
+                        ]}
                         onPress={() => handleConfirmInvitation(inv)}
                         disabled={isActionLoading}
                         accessibilityRole="button"
                         accessibilityLabel={`Confirm ${rosterName}`}
                       >
-                        <Text style={styles.confirmBtnText}>Confirm</Text>
+                        <Text
+                          style={[
+                            styles.confirmBtnText,
+                            { color: colors.white },
+                          ]}
+                        >
+                          Confirm
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.declineBtnSmall}
+                        style={[
+                          styles.declineBtnSmall,
+                          { borderColor: colors.heart },
+                        ]}
                         onPress={() => handleDeclineInvitation(inv)}
                         disabled={isActionLoading}
                         accessibilityRole="button"
                         accessibilityLabel={`Decline ${rosterName}`}
                       >
-                        <Text style={styles.declineBtnSmallText}>Decline</Text>
+                        <Text
+                          style={[
+                            styles.declineBtnSmallText,
+                            { color: colors.heart },
+                          ]}
+                        >
+                          Decline
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -864,7 +910,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
         {/* League Channel Chat button */}
         {(isOperator || userActiveRosterInLeague) && (
           <TouchableOpacity
-            style={styles.chatBtn}
+            style={[styles.chatBtn, { backgroundColor: colors.cobalt + '12' }]}
             onPress={async () => {
               try {
                 const conv =
@@ -892,7 +938,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
               size={18}
               color={colors.cobalt}
             />
-            <Text style={styles.chatBtnText}>League Channel</Text>
+            <Text style={[styles.chatBtnText, { color: colors.cobalt }]}>
+              League Channel
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -915,7 +963,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
             {/* Season card — only show if there are real values */}
             {hasSeasonInfo && (
               <DetailCard title="The season" delay={0}>
-                <Text style={styles.seasonSummary}>
+                <Text style={[styles.seasonSummary, { color: colors.ink }]}>
                   {buildSeasonSummary(league)}
                 </Text>
               </DetailCard>
@@ -924,7 +972,9 @@ export function LeagueDetailsScreen(): React.ReactElement {
             {/* Teams card */}
             <DetailCard title={`Teams (${confirmedRosters.length})`} delay={50}>
               {confirmedRosters.length === 0 ? (
-                <Text style={styles.emptyMsg}>No teams registered yet</Text>
+                <Text style={[styles.emptyMsg, { color: colors.inkFaint }]}>
+                  No teams registered yet
+                </Text>
               ) : (
                 confirmedRosters.map((m: any) => {
                   const team = m.team;
@@ -945,7 +995,7 @@ export function LeagueDetailsScreen(): React.ReactElement {
                 })
               )}
               {registrationOpen && maxRosters != null && spotsRemaining > 0 && (
-                <Text style={styles.spotsText}>
+                <Text style={[styles.spotsText, { color: colors.cobalt }]}>
                   {spotsRemaining} spots remaining
                 </Text>
               )}
@@ -976,9 +1026,16 @@ export function LeagueDetailsScreen(): React.ReactElement {
                   <TouchableOpacity
                     key={r.id}
                     onPress={() => handleAddRosterToLeague(r)}
-                    style={styles.joinRosterRow}
+                    style={[
+                      styles.joinRosterRow,
+                      { borderBottomColor: colors.border },
+                    ]}
                   >
-                    <Text style={styles.joinRosterName}>{r.name}</Text>
+                    <Text
+                      style={[styles.joinRosterName, { color: colors.cobalt }]}
+                    >
+                      {r.name}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </DetailCard>
@@ -990,18 +1047,24 @@ export function LeagueDetailsScreen(): React.ReactElement {
         {isOperator && (
           <View style={styles.ownerActions}>
             <TouchableOpacity
-              style={styles.ownerEditBtn}
+              style={[styles.ownerEditBtn, { backgroundColor: colors.pine }]}
               onPress={() => setEditMode(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.ownerEditBtnText}>Edit League</Text>
+              <Text style={[styles.ownerEditBtnText, { color: colors.white }]}>
+                Edit League
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.ownerDeleteBtn}
+              style={[styles.ownerDeleteBtn, { borderColor: colors.heart }]}
               onPress={handleDeleteLeague}
               activeOpacity={0.7}
             >
-              <Text style={styles.ownerDeleteBtnText}>Delete League</Text>
+              <Text
+                style={[styles.ownerDeleteBtnText, { color: colors.heart }]}
+              >
+                Delete League
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1014,12 +1077,11 @@ export function LeagueDetailsScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1 },
   scrollView: { flex: 1 },
   ledgerSection: { paddingHorizontal: 16, paddingBottom: 24 },
-  formSection: { backgroundColor: colors.surface, marginBottom: 12 },
+  formSection: { marginBottom: 12 },
   section: {
-    backgroundColor: colors.surface,
     marginBottom: 12,
     paddingBottom: 12,
   },
@@ -1033,22 +1095,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.heading,
     fontSize: 24,
-    color: colors.ink,
   },
   sectionSubtext: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
   countText: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.cobalt,
   },
   countBadge: {
-    backgroundColor: colors.gold,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -1059,13 +1117,11 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.white,
   },
   emptyState: { alignItems: 'center', padding: 24 },
   emptyText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: 8,
   },
   errorRow: {
@@ -1078,7 +1134,6 @@ const styles = StyleSheet.create({
   errorRowText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.heart,
     flex: 1,
   },
   // Join request styles
@@ -1089,19 +1144,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   requestInfo: { flex: 1, marginRight: 12 },
-  requestName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  requestName: { fontFamily: fonts.semibold, fontSize: 15 },
   requestMeta: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   requestActions: { flexDirection: 'row', gap: 8 },
   approveBtn: {
-    backgroundColor: colors.cobalt,
     borderRadius: 8,
     width: 34,
     height: 34,
@@ -1109,7 +1161,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   declineBtn: {
-    backgroundColor: colors.heart,
     borderRadius: 8,
     width: 34,
     height: 34,
@@ -1124,33 +1175,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   memberInfo: { flex: 1, marginRight: 12 },
-  memberName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  memberName: { fontFamily: fonts.semibold, fontSize: 15 },
   memberMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginTop: 4,
   },
-  memberStats: { fontFamily: fonts.body, fontSize: 13, color: colors.inkFaint },
+  memberStats: { fontFamily: fonts.body, fontSize: 13 },
   statusBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  statusActive: { backgroundColor: colors.successLight },
-  statusPending: { backgroundColor: colors.goldLight },
+  statusActive: {},
+  statusPending: {},
   statusText: {
     fontFamily: fonts.label,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  statusTextActive: { color: colors.cobalt },
-  statusTextPending: { color: colors.ink },
+  statusTextActive: {},
+  statusTextPending: {},
   removeBtn: { padding: 6 },
   // Confirm / decline invitation
   confirmActions: { flexDirection: 'row', gap: 6 },
   confirmBtn: {
-    backgroundColor: colors.cobalt,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -1159,11 +1208,9 @@ const styles = StyleSheet.create({
   confirmBtnText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.white,
   },
   declineBtnSmall: {
     borderWidth: 1,
-    borderColor: colors.heart,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -1172,7 +1219,6 @@ const styles = StyleSheet.create({
   declineBtnSmallText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: colors.heart,
   },
   // Events section
   generateBtn: {
@@ -1180,7 +1226,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.cobalt,
     borderRadius: 10,
     marginHorizontal: 16,
     paddingVertical: 12,
@@ -1189,13 +1234,11 @@ const styles = StyleSheet.create({
   generateBtnText: {
     fontFamily: fonts.ui,
     fontSize: 15,
-    color: colors.white,
   },
   matchupList: { paddingHorizontal: 16 },
   matchupLabel: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 8,
@@ -1204,26 +1247,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.warningLight,
     borderRadius: 10,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.goldLight,
   },
   matchupInfo: { flex: 1, marginRight: 12 },
-  matchupTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  matchupTitle: { fontFamily: fonts.semibold, fontSize: 15 },
   matchupRosters: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   unscheduledBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   unscheduledText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.gold,
     textTransform: 'uppercase',
   },
   // Event action buttons
@@ -1239,14 +1278,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: colors.cobalt,
     borderRadius: 10,
     paddingVertical: 12,
   },
   createEventBtnText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.cobalt,
   },
   viewMatchupsBtn: {
     flexDirection: 'row',
@@ -1254,14 +1291,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: colors.gold,
     borderRadius: 10,
     paddingVertical: 12,
   },
   viewMatchupsBtnText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: colors.gold,
   },
   // Event card styles
   eventCard: {
@@ -1270,22 +1305,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   eventDateCol: { marginRight: 14, alignItems: 'center', minWidth: 60 },
-  eventDay: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
+  eventDay: { fontFamily: fonts.semibold, fontSize: 13 },
   eventTime: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   eventDetails: { flex: 1, marginRight: 8 },
-  eventTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  eventTitle: { fontFamily: fonts.semibold, fontSize: 15 },
   eventRosters: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   // Add roster option
@@ -1296,19 +1328,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   addRosterName: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.cobalt,
   },
   // Tab bar
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
     marginBottom: 2,
   },
   tab: {
@@ -1319,44 +1347,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: colors.cobalt },
+  tabActive: {},
   tabLabel: {
     fontFamily: fonts.label,
     fontSize: 10,
-    color: colors.inkFaint,
     textTransform: 'uppercase',
   },
-  tabLabelActive: { color: colors.cobalt },
+  tabLabelActive: {},
   // Action bar (bottom) — kept for backwards compat
   actionBar: {
-    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   joinBtn: {
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  joinBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.white },
+  joinBtnText: { fontFamily: fonts.ui, fontSize: 16 },
   stepOutBtn: {
     borderWidth: 2,
-    borderColor: colors.inkFaint,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  stepOutBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.ink },
+  stepOutBtnText: { fontFamily: fonts.ui, fontSize: 16 },
   // Commissioner action buttons
   scheduleBtn: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
-    backgroundColor: colors.cobalt,
     borderRadius: 12,
     marginHorizontal: 16,
     marginTop: 12,
@@ -1366,7 +1388,6 @@ const styles = StyleSheet.create({
   scheduleBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   commissionerActions: {
     paddingHorizontal: 16,
@@ -1379,11 +1400,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: colors.heart,
     borderRadius: 12,
     paddingVertical: 14,
   },
-  deleteBtnText: { fontFamily: fonts.ui, fontSize: 16, color: colors.heart },
+  deleteBtnText: { fontFamily: fonts.ui, fontSize: 16 },
   // Owner edit/delete actions
   ownerActions: {
     paddingHorizontal: 20,
@@ -1392,7 +1412,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ownerEditBtn: {
-    backgroundColor: colors.pine,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
@@ -1400,11 +1419,9 @@ const styles = StyleSheet.create({
   ownerEditBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.white,
   },
   ownerDeleteBtn: {
     borderWidth: 2,
-    borderColor: colors.heart,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
@@ -1412,11 +1429,9 @@ const styles = StyleSheet.create({
   ownerDeleteBtnText: {
     fontFamily: fonts.ui,
     fontSize: 16,
-    color: colors.heart,
   },
   // Read-only league header
   leagueHeader: {
-    backgroundColor: colors.surface,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: 12,
@@ -1426,23 +1441,20 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.successLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   headerTitleArea: { flex: 1 },
-  leagueName: { fontFamily: fonts.heading, fontSize: 22, color: colors.ink },
+  leagueName: { fontFamily: fonts.heading, fontSize: 22 },
   leagueType: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   leagueDescription: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     lineHeight: 22,
     marginBottom: 12,
   },
@@ -1450,64 +1462,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
     borderRadius: 12,
     paddingVertical: 12,
     marginBottom: 8,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statValue: { fontFamily: fonts.semibold, fontSize: 18, color: colors.ink },
+  statValue: { fontFamily: fonts.semibold, fontSize: 18 },
   statLabel: {
     fontFamily: fonts.body,
     fontSize: 12,
-    color: colors.inkFaint,
     marginTop: 2,
   },
-  statDivider: { width: 1, height: 28, backgroundColor: colors.border },
+  statDivider: { width: 1, height: 28 },
   headerDates: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     textAlign: 'center',
     marginTop: 4,
   },
   // Invitation banner
   invitationBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.warningLight,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.gold,
   },
   commissionerInviteBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.warningLight,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.gold,
   },
   invitationBannerContent: { flex: 1, marginLeft: 12 },
   invitationBannerTitle: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.ink,
     marginBottom: 6,
   },
   invitationRow: { marginBottom: 8 },
   invitationText: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.ink,
     marginBottom: 6,
   },
   invitationActions: { flexDirection: 'row', gap: 8 },
   // Roster list sections (non-commissioner view)
   rosterListSection: {
-    backgroundColor: colors.surface,
     borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 12,
@@ -1517,19 +1519,16 @@ const styles = StyleSheet.create({
   rosterListTitle: {
     fontFamily: fonts.semibold,
     fontSize: 16,
-    color: colors.ink,
     marginBottom: 4,
   },
   rosterListSubtext: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginBottom: 4,
   },
   rosterListEmpty: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     paddingVertical: 8,
   },
   rosterListItem: {
@@ -1537,13 +1536,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   rosterListIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: `${colors.gold}18`,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -1552,18 +1549,15 @@ const styles = StyleSheet.create({
   rosterListName: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
   rosterListPlayerCount: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.inkFaint,
     marginTop: 2,
   },
   rosterListMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
   invitedBadge: {
-    backgroundColor: `${colors.gold}18`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1571,36 +1565,30 @@ const styles = StyleSheet.create({
   invitedBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.gold,
   },
   // Info tab — new design system styles
   seasonSummary: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     lineHeight: 22,
   },
   emptyMsg: {
     fontFamily: fonts.body,
     fontSize: 14,
-    color: colors.inkFaint,
     paddingVertical: 4,
   },
   spotsText: {
     fontFamily: fonts.body,
     fontSize: 13,
-    color: colors.cobalt,
     marginTop: 8,
   },
   joinRosterRow: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   joinRosterName: {
     fontFamily: fonts.semibold,
     fontSize: 15,
-    color: colors.cobalt,
   },
   chatBtn: {
     flexDirection: 'row',
@@ -1611,12 +1599,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: colors.cobalt + '12',
     gap: 8,
   },
   chatBtnText: {
     fontFamily: fonts.label,
     fontSize: 14,
-    color: colors.cobalt,
   },
 });

@@ -28,7 +28,7 @@ import { eventService } from '../../services/api/EventService';
 import { facilityService } from '../../services/api/FacilityService';
 import { teamService } from '../../services/api/TeamService';
 import { updateEvent } from '../../store/slices/eventsSlice';
-import { colors, fonts, Spacing, useTheme } from '../../theme';
+import { fonts, Spacing, useTheme } from '../../theme';
 import { loggingService } from '../../services/LoggingService';
 import {
   Event,
@@ -556,7 +556,7 @@ export function EditEventScreen(): JSX.Element {
 
   if (isLoadingEvent) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Edit Event"
           showBack={true}
@@ -569,7 +569,7 @@ export function EditEventScreen(): JSX.Element {
 
   if (loadError) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         <ScreenHeader
           title="Edit Event"
           showBack={true}
@@ -755,11 +755,16 @@ export function EditEventScreen(): JSX.Element {
           />
 
           {event && (
-            <View style={styles.eventInfo}>
-              <Text style={styles.infoLabel}>
+            <View
+              style={[
+                styles.eventInfo,
+                { backgroundColor: colors.surface, shadowColor: colors.ink },
+              ]}
+            >
+              <Text style={[styles.infoLabel, { color: colors.inkSecondary }]}>
                 Current Participants: {event.currentParticipants}
               </Text>
-              <Text style={styles.infoLabel}>
+              <Text style={[styles.infoLabel, { color: colors.inkSecondary }]}>
                 Created: {new Date(event.createdAt).toLocaleDateString()}
               </Text>
             </View>
@@ -768,7 +773,11 @@ export function EditEventScreen(): JSX.Element {
           {/* Players list */}
           {players.length > 0 && (
             <View style={styles.playersSection}>
-              <Text style={styles.playersSectionTitle}>Players</Text>
+              <Text
+                style={[styles.playersSectionTitle, { color: colors.inkSoft }]}
+              >
+                Players
+              </Text>
               {players.map(p => (
                 <View key={p.userId} style={styles.playerRow}>
                   {p.profileImage ? (
@@ -777,17 +786,34 @@ export function EditEventScreen(): JSX.Element {
                       style={styles.playerAvatar}
                     />
                   ) : (
-                    <View style={styles.playerAvatarFallback}>
+                    <View
+                      style={[
+                        styles.playerAvatarFallback,
+                        { backgroundColor: colors.cobalt },
+                      ]}
+                    >
                       <Ionicons name="person" size={16} color={colors.white} />
                     </View>
                   )}
-                  <Text style={styles.playerName}>
+                  <Text style={[styles.playerName, { color: colors.ink }]}>
                     {p.firstName} {p.lastName}
                   </Text>
                   {p.status === 'invited' && (
                     <>
-                      <View style={styles.invitedBadge}>
-                        <Text style={styles.invitedBadgeText}>Invited</Text>
+                      <View
+                        style={[
+                          styles.invitedBadge,
+                          { backgroundColor: colors.goldTint },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.invitedBadgeText,
+                            { color: colors.gold },
+                          ]}
+                        >
+                          Invited
+                        </Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => removeInvite(p.userId)}
@@ -808,9 +834,20 @@ export function EditEventScreen(): JSX.Element {
 
           {/* Invite search */}
           <View style={styles.inviteSection}>
-            <Text style={styles.playersSectionTitle}>Invite Players</Text>
+            <Text
+              style={[styles.playersSectionTitle, { color: colors.inkSoft }]}
+            >
+              Invite Players
+            </Text>
             <TextInput
-              style={styles.inviteInput}
+              style={[
+                styles.inviteInput,
+                {
+                  backgroundColor: colors.bgCard,
+                  color: colors.ink,
+                  borderColor: colors.border,
+                },
+              ]}
               placeholder={
                 formData.eventType === EventType.GAME
                   ? 'Search rosters...'
@@ -821,11 +858,22 @@ export function EditEventScreen(): JSX.Element {
               onChangeText={setInviteQuery}
             />
             {inviteResults.length > 0 && (
-              <View style={styles.inviteDropdown}>
+              <View
+                style={[
+                  styles.inviteDropdown,
+                  {
+                    backgroundColor: colors.bgCard,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
                 {inviteResults.slice(0, 8).map(item => (
                   <TouchableOpacity
                     key={item.id}
-                    style={styles.inviteDropdownRow}
+                    style={[
+                      styles.inviteDropdownRow,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() => addInvite(item)}
                   >
                     {item.type === 'roster' ? (
@@ -842,7 +890,11 @@ export function EditEventScreen(): JSX.Element {
                         color={colors.inkFaint}
                       />
                     )}
-                    <Text style={styles.inviteDropdownText}>{item.name}</Text>
+                    <Text
+                      style={[styles.inviteDropdownText, { color: colors.ink }]}
+                    >
+                      {item.name}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -851,7 +903,16 @@ export function EditEventScreen(): JSX.Element {
         </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View
+        style={[
+          styles.actions,
+          {
+            backgroundColor: colors.bgCard,
+            borderTopColor: colors.border,
+            shadowColor: colors.ink,
+          },
+        ]}
+      >
         <FormButton
           title="Delete"
           variant="danger"
@@ -881,7 +942,6 @@ export function EditEventScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   scrollView: {
     flex: 1,
@@ -913,11 +973,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   eventInfo: {
-    backgroundColor: colors.surface,
     padding: 12,
     borderRadius: 8,
     marginTop: 16,
-    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -928,17 +986,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: colors.inkSecondary,
     marginBottom: 4,
   },
   actions: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    shadowColor: colors.ink,
     shadowOffset: {
       width: 0,
       height: -2,
@@ -961,7 +1015,6 @@ const styles = StyleSheet.create({
   playersSectionTitle: {
     fontFamily: fonts.label,
     fontSize: 13,
-    color: colors.inkSoft,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 10,
@@ -981,7 +1034,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.cobalt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -989,10 +1041,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
   },
   invitedBadge: {
-    backgroundColor: colors.gold + '20',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1000,28 +1050,22 @@ const styles = StyleSheet.create({
   invitedBadgeText: {
     fontFamily: fonts.label,
     fontSize: 11,
-    color: colors.gold,
   },
   inviteSection: {
     marginTop: 20,
   },
   inviteInput: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   inviteDropdown: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: colors.border,
     maxHeight: 240,
   },
   inviteDropdownRow: {
@@ -1031,7 +1075,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   inviteDropdownAvatar: {
     width: 24,
@@ -1041,7 +1084,6 @@ const styles = StyleSheet.create({
   inviteDropdownText: {
     fontFamily: fonts.body,
     fontSize: 15,
-    color: colors.ink,
     flex: 1,
   },
 });
