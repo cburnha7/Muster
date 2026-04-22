@@ -111,10 +111,7 @@ export function ManageGroundScreen() {
   };
 
   const handleViewEscrowLog = () => {
-    Alert.alert(
-      'Coming Soon',
-      'Payment history will be available in a future update.'
-    );
+    navigation.navigate('EscrowTransactions', { facilityId, facilityName });
   };
 
   if (loading) {

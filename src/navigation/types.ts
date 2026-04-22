@@ -183,6 +183,7 @@ export type FacilitiesStackParamList = {
   };
   CancellationPolicy: { facilityId: string };
   FacilityRentals: { facilityId: string; facilityName: string };
+  EscrowTransactions: { facilityId: string; facilityName: string };
   MyRentals: undefined;
 };
 

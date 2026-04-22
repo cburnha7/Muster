@@ -13,6 +13,7 @@ import { CourtAvailabilityScreen } from '../../screens/facilities/CourtAvailabil
 import { MyRentalsScreen } from '../../screens/facilities/MyRentalsScreen';
 import { CancellationPolicyScreen } from '../../screens/facilities/CancellationPolicyScreen';
 import { FacilityRentalsScreen } from '../../screens/facilities/FacilityRentalsScreen';
+import { EscrowTransactionsScreen } from '../../screens/facilities/EscrowTransactionsScreen';
 import { lightColors, fonts } from '../../theme';
 
 const Stack = createNativeStackNavigator<FacilitiesStackParamList>();
@@ -92,6 +93,11 @@ export function FacilitiesStackNavigator(): JSX.Element {
       <Stack.Screen
         name="FacilityRentals"
         component={FacilityRentalsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EscrowTransactions"
+        component={EscrowTransactionsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
